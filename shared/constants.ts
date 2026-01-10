@@ -23,4 +23,5 @@ const parseEnvInt = (value: string | undefined, fallback: number, min: number): 
 export const DEATH_RESPAWN_DELAY_MS = parseEnvInt(process.env.DEATH_RESPAWN_DELAY_MS, 15_000, 0);
 export const DEATH_REPUTATION_PENALTY = parseEnvInt(process.env.DEATH_REPUTATION_PENALTY, 1, 0);
 export const DEATH_TEST_ENABLED = process.env.ALLOW_TEST_DEATH === '1';
+export const LAST_DAMAGE_WINDOW_MS = parseEnvInt(process.env.LAST_DAMAGE_WINDOW_MS, 5_000, 0);
 

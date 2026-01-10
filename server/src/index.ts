@@ -54,6 +54,7 @@ type Session = {
   lastMoveAppliedAt: number | null;
   lastChatAcceptedAt: number | null;
   respawnTimer: NodeJS.Timeout | null;
+  lastDamage?: { at_ms: number; source_type: 'player' | 'tile' | 'status' | 'unknown'; source_id: string | null };
 };
 
 const sessions = new Map<string, Session>();
@@ -702,6 +703,8 @@ function processSessionQueue(s: Session, now: number) {
           result: 'requested',
         });
 
+        s.lastDamage = { at_ms: msgNow, source_type: 'status', source_id: 'test' };
+
         if (s.respawnTimer) {
           clearTimeout(s.respawnTimer);
           s.respawnTimer = null;
@@ -717,6 +720,7 @@ function processSessionQueue(s: Session, now: number) {
           respawn_delay_ms: DEATH_RESPAWN_DELAY_MS,
           current_status: s.player!.status,
           current_dead_until_ms: s.player!.dead_until_ms,
+          lastDamage: s.lastDamage,
           audit,
           setDead: (dead_until_ms) => {
             if (!s.player) return;
