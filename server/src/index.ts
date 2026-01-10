@@ -60,7 +60,13 @@ const sessions = new Map<string, Session>();
 const audit = createAuditLogger();
 const receiptsReader = createReceiptsReader('audit');
 
-type GuestSession = { player_id: string; name: string; minted_at_ms: number; expires_at_ms: number };
+type GuestSession = {
+  player_id: string;
+  name: string;
+  minted_at_ms: number;
+  expires_at_ms: number;
+  consumed: boolean;
+};
 const guestSessions = new Map<string, GuestSession>(); // key = guest_token
 type SessionMeResult = SessionMeResponse | { error: string; status: number };
 
@@ -140,7 +146,7 @@ const httpServer = http.createServer((req, res) => {
       const guest_token = `gt_${randomUUID()}`;
       const name = `Guest_${player_id.slice(-4)}`;
       const expires_at_ms = now + GUEST_SESSION_TTL_MS;
-      guestSessions.set(guest_token, { player_id, name, minted_at_ms: now, expires_at_ms });
+      guestSessions.set(guest_token, { player_id, name, minted_at_ms: now, expires_at_ms, consumed: false });
       audit.write({
         player_id,
         action: 'session_guest_minted',
@@ -467,13 +473,24 @@ function processSessionQueue(s: Session, now: number) {
             break;
           }
 
+          if (minted.consumed) {
+            send(s.ws, ServerMessages.error('not_authenticated', 'Guest token already used'));
+            audit.write({
+              player_id: minted.player_id,
+              action: 'login',
+              inputs: { guest_token_provided: true, reason: 'consumed' },
+              result: 'invalid_token',
+            });
+            break;
+          }
+
           // bind session
           player_id = minted.player_id;
           guest_token = msg.guest_token;
           name = minted.name;
 
-          // one-time use: prevent token replay
-          guestSessions.delete(msg.guest_token);
+          // mark consumed but keep for control-plane introspection
+          minted.consumed = true;
 
           audit.write({
             player_id,
