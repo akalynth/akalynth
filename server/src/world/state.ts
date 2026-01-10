@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type { MapData, Player, PlayerPublic } from '../../../shared/types';
+import type { MapData, Player, PlayerPublic } from '../../../shared/types.js';
 
 export interface WorldState {
   map: MapData;

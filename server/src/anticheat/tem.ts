@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import type { AntiCheatState } from '../../../shared/types';
-import { TEM_CHALLENGE_TIMEOUT_MS, TEM_CHALLENGE_RESPONSE, THROTTLE_DURATION_MS } from '../../../shared/types';
+import type { AntiCheatState } from '../../../shared/types.js';
+import { TEM_CHALLENGE_TIMEOUT_MS, TEM_CHALLENGE_RESPONSE, THROTTLE_DURATION_MS } from '../../../shared/types.js';
 
 export interface TemChallenge {
   challenge_id: string;

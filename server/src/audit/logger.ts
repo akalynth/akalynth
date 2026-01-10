@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import type { AuditReceipt } from '../../../shared/types';
+import type { AuditReceipt } from '../../../shared/types.js';
 
 export interface AuditLogger {
   write(receipt: Omit<AuditReceipt, 'timestamp' | 'evidence_hash'>): void;

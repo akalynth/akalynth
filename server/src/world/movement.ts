@@ -1,5 +1,5 @@
-import type { Direction, MapData, Player, Position } from '../../../shared/types';
-import { DIRECTION_OFFSETS, WALKABLE_TILES } from '../../../shared/types';
+import type { Direction, MapData, Player, Position } from '../../../shared/types.js';
+import { DIRECTION_OFFSETS, WALKABLE_TILES } from '../../../shared/types.js';
 
 export type MoveRejectReason = 'tile_blocked' | 'out_of_bounds';
 

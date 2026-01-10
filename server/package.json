@@ -1,0 +1,20 @@
+{
+  "name": "akalynth-server",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "preinstall": "node ../scripts/refuse_windows.js",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/ws": "^8.5.10",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}
