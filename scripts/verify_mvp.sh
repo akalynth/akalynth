@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+set -o monitor
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SERVER_DIR="$ROOT_DIR/server"
 RECEIPTS="${RECEIPTS:-$SERVER_DIR/audit/receipts.jsonl}"
@@ -16,7 +17,16 @@ die() { echo -e "❌ $*" >&2; exit 1; }
 need_cmd() { command -v "$1" >/dev/null 2>&1 || die "Missing command: $1"; }
 TIMEOUT_BIN="$(command -v timeout || true)"
 run_timeout() { local secs="$1"; shift; [[ -n "$TIMEOUT_BIN" ]] && "$TIMEOUT_BIN" "$secs" "$@" || "$@"; }
+
+WITNESS_BG_PID=""
+cleanup_bg() {
+  if [[ -n "${WITNESS_BG_PID:-}" ]] && kill -0 "$WITNESS_BG_PID" 2>/dev/null; then
+    kill "$WITNESS_BG_PID" 2>/dev/null || true
+  fi
+}
+
 cleanup() {
+  cleanup_bg
   if [[ -n "${SERVER_PID:-}" ]] && kill -0 "$SERVER_PID" 2>/dev/null; then
     log "Stopping server (pid=$SERVER_PID)…"
     if command -v pkill >/dev/null 2>&1; then pkill -P "$SERVER_PID" 2>/dev/null || true; fi
@@ -28,6 +38,27 @@ cleanup() {
 }
 trap cleanup EXIT
 port_in_use() { command -v lsof >/dev/null 2>&1 && lsof -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; }
+port_in_use_port() { local p="$1"; command -v lsof >/dev/null 2>&1 && lsof -iTCP:"$p" -sTCP:LISTEN >/dev/null 2>&1; }
+kill_port() {
+  local p="$1"
+  if command -v lsof >/dev/null 2>&1; then
+    local pids
+    pids="$(lsof -ti:"$p" 2>/dev/null || true)"
+    if [[ -n "$pids" ]]; then
+      echo "$pids" | xargs kill -9 2>/dev/null || true
+      sleep 1
+    fi
+  fi
+}
+pick_free_port() {
+  local p="$1"
+  local tries=0
+  while port_in_use_port "$p" && (( tries < 50 )); do
+    p=$((p + 1))
+    tries=$((tries + 1))
+  done
+  echo "$p"
+}
 wait_for_health() {
   local deadline=$((SECONDS + 10))
   while (( SECONDS < deadline )); do
@@ -35,6 +66,17 @@ wait_for_health() {
     sleep 0.3
   done
   die "Server not ready on $HTTP_URL. Check /tmp/akalynth_verify_server.log"
+}
+wait_for_http_code() {
+  local url="$1" want="$2" timeout_s="${3:-12}"
+  local deadline=$((SECONDS + timeout_s))
+  while (( SECONDS < deadline )); do
+    local code
+    code="$(curl -s -o /dev/null -w "%{http_code}" "$url" || true)"
+    [[ "$code" == "$want" ]] && return 0
+    sleep 0.3
+  done
+  die "Server not ready for $url (wanted HTTP $want)"
 }
 poll_json() {
   local desc="$1" url="$2" filter="$3" timeout_s="${4:-6}"
@@ -74,6 +116,39 @@ run_ws_scenario() {
     --guest-token "$token" \
     --scenario "$SCENARIOS_DIR/$scenario.json" || true
 }
+run_ws_scenario_bg() {
+  local scenario="$1" token="$2" outfile="$3" timeout_s="${4:-$TIMEOUT_SECONDS}"
+  rm -f "$outfile" "${outfile}.code"
+  (
+    set +e
+    run_timeout "$timeout_s" node "$HARNESS" \
+      --ws-url "$WS_URL" \
+      --guest-token "$token" \
+      --scenario "$SCENARIOS_DIR/$scenario.json" \
+      >"$outfile" 2>&1
+    echo $? >"${outfile}.code"
+  ) &
+  WITNESS_BG_PID=$!
+}
+wait_ws_bg_ok() {
+  local label="$1" outfile="$2" timeout_s="${3:-$TIMEOUT_SECONDS}"
+  local deadline=$((SECONDS + timeout_s))
+  while (( SECONDS < deadline )); do
+    if [[ -f "${outfile}.code" ]]; then
+      local code
+      code="$(cat "${outfile}.code" 2>/dev/null || echo 1)"
+      if [[ "$code" != "0" ]]; then
+        die "$label harness exited non-zero (code=$code). Output:\n$(cat "$outfile" 2>/dev/null || true)"
+      fi
+      local json
+      json="$(cat "$outfile" 2>/dev/null || true)"
+      echo "$json" | jq -e '.ok == true' >/dev/null 2>&1 || die "$label harness not ok. Output:\n$json"
+      return 0
+    fi
+    sleep 0.2
+  done
+  die "$label harness timed out. Output so far:\n$(cat "$outfile" 2>/dev/null || true)"
+}
 assert_ws_ok() {
   local label="$1" json="$2"
   if ! echo "$json" | jq -e '.ok == true' >/dev/null 2>&1; then
@@ -97,24 +172,41 @@ for cmd in node npm bash curl jq; do need_cmd "$cmd"; done
 cd "$SERVER_DIR"
 npm install --silent
 [[ -f "$HARNESS" ]] || die "Missing harness: $HARNESS"
+
+# Clean up any lingering processes on test ports
+log "Cleaning up test ports..."
+kill_port "$PORT"
+kill_port "$((PORT + 1))"
+kill_port "$((PORT + 50))"
+kill_port "$((PORT + 51))"
+
 port_in_use && die "PORT=$PORT already in use. Set PORT to a free port and re-run."
 mkdir -p "$(dirname "$RECEIPTS")"
 touch "$RECEIPTS"
+
+ORIG_PORT="$PORT"
+ORIG_HTTP_URL="$HTTP_URL"
+ORIG_WS_URL="$WS_URL"
+TLS_SPOOF_PORT="${TLS_SPOOF_PORT:-$((ORIG_PORT + 50))}"
+TLS_TRUST_PORT="${TLS_TRUST_PORT:-$((ORIG_PORT + 51))}"
+TLS_SPOOF_PORT="$(pick_free_port "$TLS_SPOOF_PORT")"
+TLS_TRUST_PORT="$(pick_free_port "$TLS_TRUST_PORT")"
+
+log "TLS spoofing test (TRUST_PROXY=0 blocks x-forwarded-proto spoof)…"
+cleanup
+sleep 1
+PORT="$TLS_SPOOF_PORT"; HTTP_URL="http://localhost:$PORT"; WS_URL="ws://localhost:$PORT"
 DEBUG=1 \
-ALLOW_TEST_DEATH=1 \
 REQUIRE_TLS=1 \
-ALLOW_INSECURE_LOCAL=1 \
-DEATH_RESPAWN_DELAY_MS="$DEATH_RESPAWN_DELAY_MS_OVERRIDE" \
-PUBLIC_RECEIPTS_DELAY_MS=0 \
-PUBLIC_RECEIPTS_DELAY_PROFILE=default \
-PUBLIC_RECEIPTS_JITTER_MS=0 \
+TRUST_PROXY=0 \
+ALLOW_INSECURE_LOCAL=0 \
 PORT="$PORT" \
-npm run dev >/tmp/akalynth_verify_server.log 2>&1 &
+npm run dev >/tmp/akalynth_verify_server_tls_spoof.log 2>&1 &
 SERVER_PID=$!
-wait_for_health
-TLS_HTTP_CODE="$(curl -s -o /dev/null -w "%{http_code}" -H "x-forwarded-proto: http" "$HTTP_URL/v1/maps")"
-[[ "$TLS_HTTP_CODE" == "403" ]] || die "TLS gate did not reject forwarded http (got $TLS_HTTP_CODE)"
-if ! HTTP_URL="$HTTP_URL" node <<'NODE'
+wait_for_http_code "$HTTP_URL/v1/health" "403"
+SPOOF_HTTP_CODE="$(curl -s -o /dev/null -w "%{http_code}" -H "x-forwarded-proto: https" "$HTTP_URL/v1/maps")"
+[[ "$SPOOF_HTTP_CODE" == "403" ]] || die "Spoofed x-forwarded-proto:https bypassed TLS gate (got $SPOOF_HTTP_CODE)"
+if HTTP_URL="$HTTP_URL" node <<'NODE'
 const http = require('http');
 const url = new URL(process.env.HTTP_URL);
 const options = {
@@ -126,7 +218,7 @@ const options = {
     Upgrade: 'websocket',
     'Sec-WebSocket-Version': '13',
     'Sec-WebSocket-Key': 'dGhlIHNhbXBsZSBub25jZQ==',
-    'x-forwarded-proto': 'http',
+    'x-forwarded-proto': 'https',
   },
 };
 const req = http.request(options);
@@ -141,13 +233,96 @@ req.on('response', (res) => {
 });
 req.on('error', () => {
   clearTimeout(timer);
-  process.exit(0);
+  process.exit(1);
 });
 req.end();
 NODE
 then
-  die "TLS gate did not reject WS upgrade with x-forwarded-proto:http"
+  :
+else
+  die "Spoofed WS upgrade with x-forwarded-proto:https bypassed TLS gate"
 fi
+
+log "TLS trusted proxy test (TRUST_PROXY=1 honors forwarded headers from loopback proxy)…"
+cleanup
+sleep 1
+PORT="$TLS_TRUST_PORT"; HTTP_URL="http://localhost:$PORT"; WS_URL="ws://localhost:$PORT"
+DEBUG=1 \
+REQUIRE_TLS=1 \
+TRUST_PROXY=1 \
+TRUST_PROXY_LOOPBACK_ONLY=1 \
+ALLOW_INSECURE_LOCAL=0 \
+PORT="$PORT" \
+npm run dev >/tmp/akalynth_verify_server_tls_trust.log 2>&1 &
+SERVER_PID=$!
+wait_for_http_code "$HTTP_URL/v1/health" "403"
+NOHDR_CODE="$(curl -s -o /dev/null -w "%{http_code}" "$HTTP_URL/v1/maps")"
+[[ "$NOHDR_CODE" == "403" ]] || die "TRUST_PROXY=1 should require x-forwarded-proto:https (got $NOHDR_CODE)"
+OK_CODE="$(curl -s -o /dev/null -w "%{http_code}" -H "x-forwarded-proto: https" "$HTTP_URL/v1/maps")"
+[[ "$OK_CODE" == "200" ]] || die "Trusted proxy x-forwarded-proto:https did not allow request (got $OK_CODE)"
+BAD_CODE="$(curl -s -o /dev/null -w "%{http_code}" -H "x-forwarded-proto: http" "$HTTP_URL/v1/maps")"
+[[ "$BAD_CODE" == "403" ]] || die "Trusted proxy x-forwarded-proto:http was not rejected (got $BAD_CODE)"
+if HTTP_URL="$HTTP_URL" node <<'NODE'
+const http = require('http');
+const url = new URL(process.env.HTTP_URL);
+const options = {
+  host: url.hostname,
+  port: url.port,
+  path: '/',
+  headers: {
+    Connection: 'Upgrade',
+    Upgrade: 'websocket',
+    'Sec-WebSocket-Version': '13',
+    'Sec-WebSocket-Key': 'dGhlIHNhbXBsZSBub25jZQ==',
+    'x-forwarded-proto': 'https',
+  },
+};
+const req = http.request(options);
+const timer = setTimeout(() => process.exit(1), 800);
+req.on('upgrade', () => {
+  clearTimeout(timer);
+  process.exit(0);
+});
+req.on('response', () => {
+  clearTimeout(timer);
+  process.exit(1);
+});
+req.on('error', () => {
+  clearTimeout(timer);
+  process.exit(1);
+});
+req.end();
+NODE
+then
+  :
+else
+  die "Trusted proxy WS upgrade with x-forwarded-proto:https did not upgrade"
+fi
+
+cleanup
+sleep 1
+PORT="$ORIG_PORT"; HTTP_URL="$ORIG_HTTP_URL"; WS_URL="$ORIG_WS_URL"
+
+DEBUG=1 \
+ALLOW_TEST_DEATH=1 \
+REQUIRE_TLS=1 \
+ALLOW_INSECURE_LOCAL=1 \
+TRUST_PROXY=0 \
+DEATH_RESPAWN_DELAY_MS="$DEATH_RESPAWN_DELAY_MS_OVERRIDE" \
+PUBLIC_RECEIPTS_DELAY_MS=0 \
+PUBLIC_RECEIPTS_DELAY_PROFILE=default \
+PUBLIC_RECEIPTS_JITTER_MS=0 \
+HEAT_PENALTY_THRESHOLD=30 \
+WITNESS_COUNT=1 \
+SOVEREIGN_ENABLED=1 \
+SOVEREIGN_FORCE_NEXT_GUEST=1 \
+SOVEREIGN_ALLOW_NAME_MATCH=1 \
+CAPS_ENABLED=1 \
+CAPS_DEBUG_GRANT_SOVEREIGN=1 \
+PORT="$PORT" \
+npm run dev >/tmp/akalynth_verify_server.log 2>&1 &
+SERVER_PID=$!
+wait_for_health
 curl -sf "$HTTP_URL/v1/maps" | grep -q 'Rookguard' || die "HTTP /v1/maps missing Rookguard"
 curl -sf "$HTTP_URL/v1/maps/Azura" | grep -q '"name":"Azura"' || die "HTTP /v1/maps/Azura failed"
 WORLD_STATE_RG="$(poll_json "Invalid JSON from /v1/world/Rookguard/state" \
@@ -230,6 +405,133 @@ if ! try_receipt "heat_tem_escalation" "$HEAT_PLAYER_ID" '(.receipts | length) >
   try_receipt "tem_challenge_issued" "$HEAT_PLAYER_ID" \
     '[.receipts[] | select(.inputs.trigger=="heat")] | length > 0' 6 || die "Heat escalation receipt missing"
 fi
+
+# Witness flow requires separate server without SOVEREIGN_FORCE_NEXT_GUEST
+# (because we need multiple concurrent non-sovereign guests for witness selection)
+log "Witness flow (separate server without SOVEREIGN_FORCE_NEXT_GUEST)..."
+cleanup
+sleep 1
+WITNESS_PORT="${WITNESS_PORT:-$((PORT + 2))}"
+WITNESS_PORT="$(pick_free_port "$WITNESS_PORT")"
+PORT="$WITNESS_PORT"; HTTP_URL="http://localhost:$PORT"; WS_URL="ws://localhost:$PORT"
+DEBUG=1 \
+ALLOW_TEST_DEATH=1 \
+REQUIRE_TLS=1 \
+ALLOW_INSECURE_LOCAL=1 \
+TRUST_PROXY=0 \
+HEAT_PENALTY_THRESHOLD=30 \
+WITNESS_COUNT=1 \
+PORT="$PORT" \
+npm run dev >/tmp/akalynth_verify_server_witness.log 2>&1 &
+SERVER_PID=$!
+wait_for_health
+
+# 1) Connect witness client first and let it sit waiting for request
+read -r WITNESS_PLAYER_ID WITNESS_TOKEN <<<"$(mint_guest)"
+WITNESS_OUT="/tmp/akalynth_witness_harness.json"
+run_ws_scenario_bg "witness" "$WITNESS_TOKEN" "$WITNESS_OUT" 25
+
+# Give witness time to connect and enter world before triggering heat
+sleep 2
+
+# 2) Trigger a heat penalty on a separate target (this should emit ledger_marked → witness_requested)
+read -r TARGET_PLAYER_ID TARGET_TOKEN <<<"$(mint_guest)"
+TARGET_JSON="$(run_ws_scenario witness_trigger "$TARGET_TOKEN" 15)"
+assert_ws_ok "witness_target" "$TARGET_JSON"
+
+# 3) Witness harness must complete (received request + sent response)
+wait_ws_bg_ok "witness" "$WITNESS_OUT" 25
+
+# 4) Assert receipts exist (private only)
+wait_for_receipt "witness_requested" "$TARGET_PLAYER_ID" '[.receipts[] | select(.inputs.kind=="heat_penalty")] | length > 0' >/dev/null
+wait_for_receipt "witness_response" "$WITNESS_PLAYER_ID" '[.receipts[] | select(.inputs.request_id and .inputs.response)] | length > 0' >/dev/null
+
+# 5) Ensure no player_id leaks in witness WS output
+if grep -q '"player_id"' "$WITNESS_OUT" 2>/dev/null; then
+  # Check if the player_id is in tem_witness_request (should not be)
+  if cat "$WITNESS_OUT" 2>/dev/null | jq -e '.messages[] | select(.type=="tem_witness_request") | has("player_id")' >/dev/null 2>&1; then
+    die "Witness WS output leaked player_id in tem_witness_request"
+  fi
+fi
+
+# 6) Quorum resolution check: verify the receipt exists
+log "Witness quorum resolved check (TTL-based)..."
+QUORUM_RECEIPT="$(wait_for_receipt "witness_quorum_resolved" "$TARGET_PLAYER_ID" '[.receipts[] | select(.inputs.outcome)] | length > 0' 15)"
+QUORUM_OUTCOME="$(echo "$QUORUM_RECEIPT" | jq -r '.receipts[] | select(.inputs.outcome) | .inputs.outcome' | head -n1)"
+[[ -n "$QUORUM_OUTCOME" ]] || die "Witness quorum outcome missing"
+QUORUM_TRIGGERED_BY="$(echo "$QUORUM_RECEIPT" | jq -r '.receipts[] | select(.inputs.triggered_by) | .inputs.triggered_by' | head -n1)"
+log "Quorum resolved: outcome=$QUORUM_OUTCOME triggered_by=$QUORUM_TRIGGERED_BY"
+
+# Restart main server for sovereign/echo tests
+cleanup
+sleep 1
+PORT="$ORIG_PORT"; HTTP_URL="$ORIG_HTTP_URL"; WS_URL="$ORIG_WS_URL"
+DEBUG=1 \
+ALLOW_TEST_DEATH=1 \
+REQUIRE_TLS=1 \
+ALLOW_INSECURE_LOCAL=1 \
+TRUST_PROXY=0 \
+DEATH_RESPAWN_DELAY_MS="$DEATH_RESPAWN_DELAY_MS_OVERRIDE" \
+PUBLIC_RECEIPTS_DELAY_MS=0 \
+PUBLIC_RECEIPTS_DELAY_PROFILE=default \
+PUBLIC_RECEIPTS_JITTER_MS=0 \
+HEAT_PENALTY_THRESHOLD=30 \
+WITNESS_COUNT=1 \
+SOVEREIGN_ENABLED=1 \
+SOVEREIGN_FORCE_NEXT_GUEST=1 \
+SOVEREIGN_ALLOW_NAME_MATCH=1 \
+CAPS_ENABLED=1 \
+CAPS_DEBUG_GRANT_SOVEREIGN=1 \
+PORT="$PORT" \
+npm run dev >/tmp/akalynth_verify_server.log 2>&1 &
+SERVER_PID=$!
+wait_for_health
+log "Sovereign presence flow..."
+read -r SOV_PLAYER_ID SOV_TOKEN <<<"$(mint_guest)"
+SOV_JSON="$(run_ws_scenario sovereign "$SOV_TOKEN")"
+assert_ws_ok "sovereign" "$SOV_JSON"
+wait_for_receipt "sovereign_declared" "$SOV_PLAYER_ID" '(.receipts | length) > 0' >/dev/null
+wait_for_receipt "sovereign_marked" "$SOV_PLAYER_ID" '(.receipts | length) > 0' >/dev/null
+wait_for_receipt "sovereign_presence" "$SOV_PLAYER_ID" '(.receipts | length) > 0' >/dev/null
+PUBLIC_SOV_JSON="$(poll_json "Public receipts feed invalid" "$HTTP_URL/v1/receipts/public?limit=50" 'has("receipts")')"
+echo "$PUBLIC_SOV_JSON" | grep -q 'sovereign_' && die "Public receipts feed leaked sovereign action"
+log "Capability binding assertions..."
+wait_for_receipt "capability_granted" "$SOV_PLAYER_ID" '(.receipts | length) > 0' >/dev/null
+wait_for_receipt "capability_granted" "$SOV_PLAYER_ID" \
+  '[.receipts[] | select(.inputs.cap=="house:buy")] | length > 0' >/dev/null
+wait_for_receipt "capability_granted" "$SOV_PLAYER_ID" \
+  '[.receipts[] | select(.inputs.cap=="echo:spawn")] | length > 0' >/dev/null
+# Assert public feed does NOT contain capability_* actions
+echo "$PUBLIC_SOV_JSON" | grep -q 'capability_granted' && die "Public receipts feed leaked capability_granted"
+echo "$PUBLIC_SOV_JSON" | grep -q 'capability_revoked' && die "Public receipts feed leaked capability_revoked"
+echo "$PUBLIC_SOV_JSON" | grep -q 'capability_gated' && die "Public receipts feed leaked capability_gated"
+log "Sovereign Echo spawn/despawn flow..."
+# Previous sovereign session already disconnected, check spawn receipt exists with synthetic echo_id
+SPAWN_RECEIPT="$(wait_for_receipt "sovereign_echo_spawned" "$SOV_PLAYER_ID" \
+  '[.receipts[] | select(.inputs.echo_id | startswith("echo:"))] | length > 0')"
+# Verify spawn receipt has all required fields
+echo "$SPAWN_RECEIPT" | jq -e '.receipts[0].inputs | has("echo_id") and has("map") and has("x") and has("y") and has("cause")' >/dev/null \
+  || die "Echo spawn receipt missing required fields"
+echo "$SPAWN_RECEIPT" | jq -e '.receipts[0].inputs.cause == "disconnect"' >/dev/null \
+  || die "Echo spawn cause should be 'disconnect'"
+
+# New Sovereign session triggers despawn (SOVEREIGN_FORCE_NEXT_GUEST still on)
+# Note: With SOVEREIGN_FORCE_NEXT_GUEST=1, every guest is sovereign, so despawn triggers on login
+read -r SOV2_PLAYER_ID SOV2_TOKEN <<<"$(mint_guest)"
+SOV2_JSON="$(run_ws_scenario sovereign_echo "$SOV2_TOKEN")"
+assert_ws_ok "sovereign_reconnect" "$SOV2_JSON"
+
+# Check despawn receipt with synthetic echo_id and cause='replaced' (uses original owner_player_id)
+DESPAWN_RECEIPT="$(wait_for_receipt "sovereign_echo_despawned" "$SOV_PLAYER_ID" \
+  '[.receipts[] | select(.inputs.cause=="replaced" and (.inputs.echo_id | startswith("echo:")))] | length > 0')"
+# Verify despawn receipt has all required fields
+echo "$DESPAWN_RECEIPT" | jq -e '.receipts[0].inputs | has("echo_id") and has("map") and has("x") and has("y") and has("cause")' >/dev/null \
+  || die "Echo despawn receipt missing required fields"
+
+# Fetch fresh public receipts and assert no echo leaks
+PUBLIC_ECHO_JSON="$(poll_json "Public receipts feed invalid" "$HTTP_URL/v1/receipts/public?limit=100" 'has("receipts")')"
+echo "$PUBLIC_ECHO_JSON" | grep -q 'sovereign_echo_spawned' && die "Public receipts leaked echo_spawned"
+echo "$PUBLIC_ECHO_JSON" | grep -q 'sovereign_echo_despawned' && die "Public receipts leaked echo_despawned"
 log "Trinity of Shadow flow (forced face)..."
 cleanup
 sleep 1
@@ -240,6 +542,7 @@ DEBUG=1 \
 ALLOW_TEST_DEATH=1 \
 REQUIRE_TLS=1 \
 ALLOW_INSECURE_LOCAL=1 \
+TRUST_PROXY=0 \
 DEATH_RESPAWN_DELAY_MS="$DEATH_RESPAWN_DELAY_MS_OVERRIDE" \
 PUBLIC_RECEIPTS_DELAY_MS=0 \
 PUBLIC_RECEIPTS_DELAY_PROFILE=default \
