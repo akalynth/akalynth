@@ -2,6 +2,7 @@
 // All messages sent over WebSocket
 
 import type { Direction, PlayerPublic } from './types';
+import type { MapName } from './http';
 
 // ============================================================================
 // Base Message
@@ -43,13 +44,18 @@ export interface TemResponseMessage extends BaseMessage {
   response: string;
 }
 
+export interface KillSelfMessage extends BaseMessage {
+  type: 'kill_self';
+}
+
 export type ClientMessage =
   | ConnectMessage
   | LoginMessage
   | EnterWorldMessage
   | MoveIntentMessage
   | ChatMessage
-  | TemResponseMessage;
+  | TemResponseMessage
+  | KillSelfMessage;
 
 // ============================================================================
 // Server → Client Messages
@@ -118,6 +124,15 @@ export interface ErrorMessage extends BaseMessage {
   message: string;
 }
 
+export interface DeathNoticeMessage extends BaseMessage {
+  type: 'death_notice';
+  ok: true;
+  respawn_in_ms: number;
+  map: MapName;
+  spawn: { x: number; y: number };
+  reason: string;
+}
+
 export type ErrorCode =
   | 'invalid_message'
   | 'not_authenticated'
@@ -135,7 +150,8 @@ export type ServerMessage =
   | PlayerLeftMessage
   | ChatBroadcastMessage
   | TemChallengeMessage
-  | ErrorMessage;
+  | ErrorMessage
+  | DeathNoticeMessage;
 
 // ============================================================================
 // Message Factories
@@ -199,6 +215,20 @@ export const ServerMessages = {
     timeout_seconds,
   }),
 
+  deathNotice: (
+    respawn_in_ms: number,
+    map: MapName,
+    spawn: { x: number; y: number },
+    reason: string
+  ): DeathNoticeMessage => ({
+    type: 'death_notice',
+    ok: true,
+    respawn_in_ms,
+    map,
+    spawn,
+    reason,
+  }),
+
   error: (code: ErrorCode, message: string): ErrorMessage => ({
     type: 'error',
     code,
@@ -244,6 +274,9 @@ export function parseClientMessage(data: unknown): ClientMessage | null {
     case 'tem_response':
       if (typeof msg.response !== 'string') return null;
       return { type: 'tem_response', response: msg.response };
+
+    case 'kill_self':
+      return { type: 'kill_self' };
 
     default:
       return null;

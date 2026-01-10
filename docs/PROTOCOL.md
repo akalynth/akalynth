@@ -236,6 +236,35 @@ Response to Tem challenge.
 
 ---
 
+### Death (test-only)
+
+#### `kill_self` (client → server)
+
+Test-only helper to trigger death/respawn. Requires environment variable
+`ALLOW_TEST_DEATH=1`. Otherwise returns `error: "invalid_message"`.
+
+```json
+{"type": "kill_self"}
+```
+
+#### `death_notice` (server → client)
+
+Sent immediately after death is handled. Provides respawn timing and spawn
+location. Detailed truth lives in receipts.
+
+```json
+{
+  "type": "death_notice",
+  "ok": true,
+  "respawn_in_ms": 15000,
+  "map": "Rookguard",
+  "spawn": {"x": 32, "y": 32},
+  "reason": "test"
+}
+```
+
+---
+
 ### Errors
 
 #### `error` (server → client)
