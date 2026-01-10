@@ -52,6 +52,30 @@ export interface WorldPlayersQuery {
   limit?: number;
 }
 
+export interface WorldStateResponse {
+  ok: true;
+  version: string;
+  tick_ms: number;
+  updated_at_ms: number;
+  map: {
+    name: MapName;
+    width: number;
+    height: number;
+    spawn: { x: number; y: number };
+  };
+  player_count: number;
+  me?: {
+    player_id: string;
+    name: string;
+    guest_token: string;
+    minted_at_ms: number;
+    expires_at_ms: number;
+    ttl_ms_remaining: number;
+  };
+}
+
+export type WorldStateResult = WorldStateResponse | { error: string; status: number };
+
 // ============================================================================
 // Receipts API
 // ============================================================================
