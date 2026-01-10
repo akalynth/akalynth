@@ -17,6 +17,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Make scripts executable
+        run: chmod +x scripts/*.sh
+
+      - name: API-first invariant guard
+        run: ./scripts/ci_invariant_guard.sh
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -26,9 +34,7 @@ jobs:
           cache-dependency-path: server/package-lock.json
 
       - name: Verify protocol docs are in sync
-        run: |
-          chmod +x scripts/verify_protocol_sync.sh
-          ./scripts/verify_protocol_sync.sh
+        run: ./scripts/verify_protocol_sync.sh
 
       - name: Install dependencies
         run: cd server && npm ci
@@ -37,6 +43,4 @@ jobs:
         run: cd server && npm run build
 
       - name: Run MVP verification
-        run: |
-          chmod +x scripts/verify_mvp.sh
-          ./scripts/verify_mvp.sh
+        run: ./scripts/verify_mvp.sh

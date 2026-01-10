@@ -332,7 +332,8 @@ function processSessionQueue(s: Session, now: number) {
   let processed = 0;
   while (s.queue.length && processed < 25) {
     processed++;
-    const { msg } = s.queue.shift()!;
+    const { msg, receivedAt } = s.queue.shift()!;
+    const msgNow = Date.now();
 
     switch (msg.type) {
       case 'connect': {
@@ -349,7 +350,6 @@ function processSessionQueue(s: Session, now: number) {
 
         // HTTP-first: token provided
         if (msg.guest_token) {
-          const nowMs = Date.now();
           const minted = guestSessions.get(msg.guest_token);
 
           if (!minted) {
@@ -363,7 +363,7 @@ function processSessionQueue(s: Session, now: number) {
             break;
           }
 
-          if (minted.expires_at_ms <= nowMs) {
+          if (minted.expires_at_ms <= msgNow) {
             guestSessions.delete(msg.guest_token);
             send(s.ws, ServerMessages.error('not_authenticated', 'Guest token expired'));
             audit.write({
@@ -512,9 +512,9 @@ function processSessionQueue(s: Session, now: number) {
           }
         }
 
-        if (isThrottled(s.anti.state, now)) {
+        if (isThrottled(s.anti.state, msgNow)) {
           const last = s.lastChatAcceptedAt ?? 0;
-          if (now - last < 10_000) {
+          if (msgNow - last < 10_000) {
             send(s.ws, ServerMessages.error('rate_limited', 'Chat throttled'));
             audit.write({
               player_id: s.player!.id,
@@ -526,10 +526,10 @@ function processSessionQueue(s: Session, now: number) {
           }
         }
 
-        s.lastChatAcceptedAt = now;
-        const act = onChat(s.anti, now);
+        s.lastChatAcceptedAt = msgNow;
+        const act = onChat(s.anti, msgNow);
         if (act.action === 'throttle') {
-          applyThrottle(s.anti.state, now);
+          applyThrottle(s.anti.state, msgNow);
           audit.write({
             player_id: s.player!.id,
             action: 'throttle',
@@ -572,9 +572,9 @@ function processSessionQueue(s: Session, now: number) {
           break;
         }
 
-        const act = onMoveIntent(s.anti, now);
+        const act = onMoveIntent(s.anti, msgNow);
         if (act.action === 'request_tem') {
-          const out = issueTemChallenge(s.anti.state, now);
+          const out = issueTemChallenge(s.anti.state, msgNow);
           if (out.outcome === 'issued') {
             send(s.ws, { type: 'tem_challenge', ...out.challenge });
             audit.write({
@@ -589,9 +589,9 @@ function processSessionQueue(s: Session, now: number) {
           break;
         }
 
-        if (isThrottled(s.anti.state, now)) {
+        if (isThrottled(s.anti.state, msgNow)) {
           const last = s.lastMoveAppliedAt ?? 0;
-          if (now - last < 200) {
+          if (msgNow - last < 200) {
             send(s.ws, ServerMessages.moveResult(false, s.player!.x, s.player!.y, 'rate_limited'));
             audit.write({
               player_id: s.player!.id,
@@ -606,10 +606,10 @@ function processSessionQueue(s: Session, now: number) {
         const before = { x: s.player!.x, y: s.player!.y, map: s.currentMap };
         const w = worldFor(s);
         const res = tryMove(w.map, s.player!, msg.direction);
-        s.lastMoveAppliedAt = now;
+        s.lastMoveAppliedAt = msgNow;
 
         if (res.ok) {
-          const cadenceAct = onMoveApplied(s.anti, now);
+          const cadenceAct = onMoveApplied(s.anti, receivedAt);
           if (cadenceAct.action === 'request_tem') {
             audit.write({
               player_id: s.player!.id,
@@ -617,7 +617,7 @@ function processSessionQueue(s: Session, now: number) {
               inputs: cadenceAct.signal.details,
               result: 'suspected',
             });
-            const out = issueTemChallenge(s.anti.state, now);
+            const out = issueTemChallenge(s.anti.state, msgNow);
             if (out.outcome === 'issued') {
               send(s.ws, { type: 'tem_challenge', ...out.challenge });
               audit.write({

@@ -4,13 +4,14 @@ import {
   THROTTLE_DURATION_MS,
 } from '../../../shared/types.js';
 import {
-  CADENCE_IDLE_RESET_MS,
-  CADENCE_MEAN_MAX_MS,
-  CADENCE_MEAN_MIN_MS,
-  CADENCE_STDDEV_MAX_MS,
-  CADENCE_WINDOW_N,
   MIN_MOVE_INTERVAL_MS,
 } from '../../../shared/constants.js';
+
+const CADENCE_WINDOW_N = 12;
+const CADENCE_MEAN_MIN_MS = 80;
+const CADENCE_MEAN_MAX_MS = 400;
+const CADENCE_STDDEV_MAX_MS = 10;
+const CADENCE_IDLE_RESET_MS = 5_000;
 
 export interface AntiCheatRuntime {
   state: AntiCheatState;
