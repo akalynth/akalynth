@@ -1,3 +1,4 @@
+import http from 'node:http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { randomUUID } from 'node:crypto';
 
@@ -6,8 +7,11 @@ import { ServerMessages, parseClientMessage } from '../../shared/protocol.js';
 import type { Player, TutorialProgress } from '../../shared/types.js';
 import { TileCode } from '../../shared/types.js';
 import { TICK_MS } from '../../shared/constants.js';
+import type { MapName } from '../../shared/http.js';
+import { handleHttp } from './api/http.js';
 
 import { createAuditLogger } from './audit/logger.js';
+import { createReceiptsReader } from './audit/reader.js';
 import { createAntiCheatRuntime, onChat, onMoveIntent } from './anticheat/detector.js';
 import { applyThrottle, checkTemTimeout, handleTemResponse, issueTemChallenge, isThrottled } from './anticheat/tem.js';
 import { loadSharedMap, createWorldState, toPublicPlayer } from './world/state.js';
@@ -32,14 +36,48 @@ type Session = {
   lastChatAcceptedAt: number | null;
 };
 
-const wss = new WebSocketServer({ port: PORT });
 const sessions = new Map<string, Session>();
 const audit = createAuditLogger();
+const receiptsReader = createReceiptsReader('audit');
 
 const worlds = {
   Rookguard: createWorldState(loadSharedMap('rookguard.json')),
   Azura: createWorldState(loadSharedMap('azura.json')),
 } as const;
+
+// HTTP control plane
+const httpServer = http.createServer((req, res) => {
+  const handled = handleHttp(req, res, {
+    getVersion: () => VERSION,
+    getTickMs: () => TICK_MS,
+    listMaps: () =>
+      (Object.keys(worlds) as MapName[]).map((name) => ({
+        name,
+        width: worlds[name].map.width,
+        height: worlds[name].map.height,
+      })),
+    getMap: (name: MapName) => {
+      const w = worlds[name];
+      if (!w) return null;
+      return {
+        name,
+        width: w.map.width,
+        height: w.map.height,
+        spawn: w.map.spawn,
+        landmarks: w.map.landmarks,
+      };
+    },
+    queryReceipts: (params) => receiptsReader.query(params),
+  });
+
+  if (!handled) {
+    res.statusCode = 404;
+    res.end('not found');
+  }
+});
+
+// WebSocket data plane (attached to same port)
+const wss = new WebSocketServer({ server: httpServer });
 
 function worldFor(s: Session) {
   return worlds[s.currentMap];
@@ -502,4 +540,8 @@ setInterval(() => {
   for (const s of sessions.values()) processSessionQueue(s, now);
 }, TICK_MS);
 
-console.log(`Akalynth server listening on ws://0.0.0.0:${PORT}`);
+httpServer.listen(PORT, '0.0.0.0', () => {
+  console.log(`HTTP+WS listening on :${PORT}`);
+  console.log(`HTTP health: http://localhost:${PORT}/v1/health`);
+  console.log(`WS: ws://localhost:${PORT}`);
+});

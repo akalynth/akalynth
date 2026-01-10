@@ -70,6 +70,23 @@ for _ in {1..12}; do
 done
 [[ "$READY" -eq 1 ]] || die "Server not ready on $WS_URL. Check /tmp/akalynth_verify_server.log"
 
+# HTTP control plane checks
+log "Checking HTTP control plane..."
+HTTP_URL="${HTTP_URL:-http://localhost:3000}"
+
+need_cmd curl
+
+curl -sf "$HTTP_URL/v1/health" | grep -q '"ok":true' \
+  || die "HTTP /v1/health failed"
+
+curl -sf "$HTTP_URL/v1/maps" | grep -q 'Rookguard' \
+  || die "HTTP /v1/maps missing Rookguard"
+
+curl -sf "$HTTP_URL/v1/maps/Azura" | grep -q '"name":"Azura"' \
+  || die "HTTP /v1/maps/Azura failed"
+
+log "HTTP checks passed"
+
 log "Running scripted WS flow (timeout ${TIMEOUT_SECONDS}s)…"
 RESP="$(
   run_timeout "$TIMEOUT_SECONDS" node -e '
