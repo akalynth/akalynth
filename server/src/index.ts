@@ -7,11 +7,18 @@ import { ServerMessages, parseClientMessage } from '../../shared/protocol.js';
 import type { Player, TutorialProgress } from '../../shared/types.js';
 import { TileCode } from '../../shared/types.js';
 import { DEATH_TEST_ENABLED, DEATH_RESPAWN_DELAY_MS, LAST_DAMAGE_WINDOW_MS, TICK_MS } from '../../shared/constants.js';
-import type { MapName, SessionMeResponse, WorldStateResult } from '../../shared/http.js';
+import type {
+  MapName,
+  PublicReceiptsActorMode,
+  PublicReceiptsMode,
+  SessionMeResponse,
+  WorldStateResult,
+} from '../../shared/http.js';
 import { handleHttp } from './api/http.js';
 
 import { createAuditLogger } from './audit/logger.js';
 import { createReceiptsReader } from './audit/reader.js';
+import { toPublicReceipt } from './audit/public_receipts.js';
 import { createAntiCheatRuntime, onChat, onMoveApplied, onMoveIntent } from './anticheat/detector.js';
 import { applyThrottle, checkTemTimeout, handleTemResponse, issueTemChallenge, isThrottled } from './anticheat/tem.js';
 import { loadSharedMap, createWorldState, toPublicPlayer } from './world/state.js';
@@ -25,12 +32,31 @@ const DEFAULT_GUEST_SESSION_CLEANUP_MS = 60 * 1000;
 const MAX_GUEST_SESSIONS = 10_000;
 const DEBUG_MODE = process.env.DEBUG === '1';
 const PUBLIC_RECEIPTS_DELAY_MS = parseEnvMs(process.env.PUBLIC_RECEIPTS_DELAY_MS, 15 * 60 * 1000, 0);
+const PUBLIC_RECEIPTS_MODE = parsePublicReceiptsMode(process.env.PUBLIC_RECEIPTS_MODE);
+const PUBLIC_RECEIPTS_BUCKET_SIZE = parseEnvInt(process.env.PUBLIC_RECEIPTS_BUCKET_SIZE, 8, 1);
+const PUBLIC_RECEIPTS_ACTOR_MODE = parsePublicReceiptsActorMode(process.env.PUBLIC_RECEIPTS_ACTOR_MODE);
+const PUBLIC_RECEIPTS_HASH_SALT = process.env.PUBLIC_RECEIPTS_HASH_SALT || 'akalynth-public-receipts';
 
 function parseEnvMs(envValue: string | undefined, fallback: number, min: number): number {
   if (!envValue) return fallback;
   const parsed = parseInt(envValue, 10);
   if (Number.isFinite(parsed) && parsed >= min) return parsed;
   return fallback;
+}
+
+function parseEnvInt(envValue: string | undefined, fallback: number, min: number): number {
+  if (!envValue) return fallback;
+  const parsed = parseInt(envValue, 10);
+  if (Number.isFinite(parsed) && parsed >= min) return parsed;
+  return fallback;
+}
+
+function parsePublicReceiptsMode(envValue: string | undefined): PublicReceiptsMode {
+  return envValue === 'raw' ? 'raw' : 'strict';
+}
+
+function parsePublicReceiptsActorMode(envValue: string | undefined): PublicReceiptsActorMode {
+  return envValue === 'daily_hash' ? 'daily_hash' : 'anon';
 }
 
 const GUEST_SESSION_TTL_MS = parseEnvMs(process.env.GUEST_SESSION_TTL_MS, DEFAULT_GUEST_SESSION_TTL_MS, 1000);
@@ -146,7 +172,19 @@ const httpServer = http.createServer((req, res) => {
         'first_death_after_gate_unlock',
       ]);
       const now = Date.now();
-      return receiptsReader.queryPublic(params, now, PUBLIC_RECEIPTS_DELAY_MS, allow);
+      const raw = receiptsReader.queryPublic(params, now, PUBLIC_RECEIPTS_DELAY_MS, allow);
+      if (PUBLIC_RECEIPTS_MODE === 'raw') return raw;
+      return {
+        receipts: raw.receipts.map((receipt) =>
+          toPublicReceipt(receipt, {
+            actorMode: PUBLIC_RECEIPTS_ACTOR_MODE,
+            bucketSize: PUBLIC_RECEIPTS_BUCKET_SIZE,
+            hashSalt: PUBLIC_RECEIPTS_HASH_SALT,
+          })
+        ),
+        total: raw.total,
+        has_more: raw.has_more,
+      };
     },
     mintGuestSession: () => {
       const now = Date.now();

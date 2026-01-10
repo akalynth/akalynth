@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type { PublicReceiptsQueryParams, PublicReceiptsResponse, Receipt, ReceiptsQueryParams, ReceiptsResponse } from '../../../shared/http.js';
+import type { PublicReceiptsQueryParams, Receipt, ReceiptsQueryParams, ReceiptsResponse } from '../../../shared/http.js';
 
 const DEFAULT_LIMIT = 100;
 const MAX_LIMIT = 1000;
@@ -18,7 +18,7 @@ export function createReceiptsReader(auditDir: string) {
       nowMs: number,
       delayMs: number,
       allowActions: Set<string>
-    ): PublicReceiptsResponse {
+    ): ReceiptsResponse {
       const windowStart = nowMs - delayMs;
       const predicate = (r: Receipt) => {
         if (!allowActions.has(r.action)) return false;
