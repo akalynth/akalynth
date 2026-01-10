@@ -122,6 +122,31 @@ TTL_MS="$(echo "$SESSION_ME_JSON" | jq -r '.ttl_ms_remaining // -1')"
 HTTP_ME_STATUS="$(run_timeout 5 curl -s -o /dev/null -w "%{http_code}" "$HTTP_URL/v1/session/me")"
 [[ "$HTTP_ME_STATUS" == "401" ]] || die "/v1/session/me without auth should be 401, got $HTTP_ME_STATUS"
 
+log "Checking world state snapshots via HTTP..."
+WORLD_STATE_RG="$(run_timeout 5 curl -s "$HTTP_URL/v1/world/Rookguard/state" || true)"
+echo "$WORLD_STATE_RG" | jq . >/dev/null 2>&1 || die "Invalid JSON from /v1/world/Rookguard/state: $WORLD_STATE_RG"
+[[ "$(echo "$WORLD_STATE_RG" | jq -r '.ok // empty')" == "true" ]] \
+  || die "/v1/world/Rookguard/state missing ok=true: $WORLD_STATE_RG"
+[[ "$(echo "$WORLD_STATE_RG" | jq -r '.map.name // empty')" == "Rookguard" ]] \
+  || die "/v1/world/Rookguard/state wrong map: $WORLD_STATE_RG"
+[[ "$(echo "$WORLD_STATE_RG" | jq -r '.tick_ms // empty')" == "100" ]] \
+  || die "/v1/world/Rookguard/state tick_ms mismatch: $WORLD_STATE_RG"
+PC_RG="$(echo "$WORLD_STATE_RG" | jq -r '.player_count // -1')"
+[[ "$PC_RG" -ge 0 ]] || die "/v1/world/Rookguard/state player_count invalid: $WORLD_STATE_RG"
+
+WORLD_STATE_AZ="$(run_timeout 5 curl -s "$HTTP_URL/v1/world/Azura/state" || true)"
+echo "$WORLD_STATE_AZ" | jq . >/dev/null 2>&1 || die "Invalid JSON from /v1/world/Azura/state: $WORLD_STATE_AZ"
+[[ "$(echo "$WORLD_STATE_AZ" | jq -r '.map.name // empty')" == "Azura" ]] \
+  || die "/v1/world/Azura/state wrong map: $WORLD_STATE_AZ"
+
+WORLD_STATE_RG_AUTH="$(run_timeout 5 curl -s -H "Authorization: Bearer $GUEST_TOKEN" "$HTTP_URL/v1/world/Rookguard/state" || true)"
+echo "$WORLD_STATE_RG_AUTH" | jq . >/dev/null 2>&1 || die "Invalid JSON from authed /v1/world/Rookguard/state: $WORLD_STATE_RG_AUTH"
+[[ "$(echo "$WORLD_STATE_RG_AUTH" | jq -r '.me.player_id // empty')" == "$PLAYER_ID" ]] \
+  || die "/v1/world/Rookguard/state auth me mismatch: $WORLD_STATE_RG_AUTH"
+
+WORLD_STATE_UNKNOWN_STATUS="$(run_timeout 5 curl -s -o /dev/null -w "%{http_code}" "$HTTP_URL/v1/world/Unknown/state")"
+[[ "$WORLD_STATE_UNKNOWN_STATUS" == "404" ]] || die "/v1/world/Unknown/state should be 404, got $WORLD_STATE_UNKNOWN_STATUS"
+
 log "Running scripted WS flow (timeout ${TIMEOUT_SECONDS}s)…"
 RESP="$(
   run_timeout "$TIMEOUT_SECONDS" node -e '

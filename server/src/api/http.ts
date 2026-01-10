@@ -11,6 +11,7 @@ import type {
   GuestSessionResponse,
   SessionMeResponse,
   WorldPlayersResponse,
+  WorldStateResult,
   Receipt,
   ReceiptsQueryParams,
   ReceiptsResponse,
@@ -29,6 +30,7 @@ export interface ApiDeps {
   mintGuestSession?: () => GuestSessionMintResult;
   getSessionMe?: (guest_token: string) => SessionMeResult;
   getWorldPlayers?: (map: MapName, query: WorldPlayersQuery) => WorldPlayersResult;
+  getWorldState?: (map: MapName, guest_token: string | null) => WorldStateResult;
   queryReceipts: (params: ReceiptsQueryParams) => ReceiptsResponse;
 }
 
@@ -61,6 +63,10 @@ function isSessionMeError(x: SessionMeResult): x is { error: string; status: num
 }
 
 function isWorldPlayersError(x: WorldPlayersResult): x is { error: string; status: number } {
+  return typeof (x as { error?: unknown }).error === 'string';
+}
+
+function isWorldStateError(x: WorldStateResult): x is { error: string; status: number } {
   return typeof (x as { error?: unknown }).error === 'string';
 }
 
@@ -174,6 +180,35 @@ export function handleHttp(
 
     const result = deps.getWorldPlayers(map, q);
     if (isWorldPlayersError(result)) {
+      json(res, result.status, { error: result.error });
+    } else {
+      json(res, 200, result);
+    }
+    return true;
+  }
+
+  const worldStateMatch = path.match(/^\/v1\/world\/([^/]+)\/state$/);
+  if (method === 'GET' && worldStateMatch) {
+    if (!deps.getWorldState) return (json(res, 501, { error: 'not_implemented' }), true);
+    const map = worldStateMatch[1];
+    if (!isMapName(map)) {
+      json(res, 404, { error: 'unknown_map' });
+      return true;
+    }
+
+    const authHeader = req.headers['authorization'] ?? '';
+    let token: string | null = null;
+    if (authHeader) {
+      const mAuth = /^Bearer\s+(.+)$/i.exec(authHeader);
+      if (!mAuth || !mAuth[1].trim()) {
+        json(res, 401, { error: 'invalid_auth' });
+        return true;
+      }
+      token = mAuth[1].trim();
+    }
+
+    const result = deps.getWorldState(map, token);
+    if (isWorldStateError(result)) {
       json(res, result.status, { error: result.error });
     } else {
       json(res, 200, result);

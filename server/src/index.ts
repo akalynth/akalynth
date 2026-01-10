@@ -7,7 +7,7 @@ import { ServerMessages, parseClientMessage } from '../../shared/protocol.js';
 import type { Player, TutorialProgress } from '../../shared/types.js';
 import { TileCode } from '../../shared/types.js';
 import { TICK_MS } from '../../shared/constants.js';
-import type { MapName } from '../../shared/http.js';
+import type { MapName, SessionMeResponse, WorldStateResult } from '../../shared/http.js';
 import { handleHttp } from './api/http.js';
 
 import { createAuditLogger } from './audit/logger.js';
@@ -59,6 +59,7 @@ const receiptsReader = createReceiptsReader('audit');
 
 type GuestSession = { player_id: string; name: string; minted_at_ms: number; expires_at_ms: number };
 const guestSessions = new Map<string, GuestSession>(); // key = guest_token
+type SessionMeResult = SessionMeResponse | { error: string; status: number };
 
 const worlds = {
   Rookguard: createWorldState(loadSharedMap('rookguard.json')),
@@ -71,6 +72,34 @@ function pruneExpiredGuestSessions(now: number) {
       guestSessions.delete(token);
     }
   }
+}
+
+function resolveSessionMe(guest_token: string, expiredReason: string): SessionMeResult {
+  const now = Date.now();
+  const minted = guestSessions.get(guest_token);
+  if (!minted) return { error: 'not_authenticated', status: 401 };
+
+  if (minted.expires_at_ms <= now) {
+    guestSessions.delete(guest_token);
+    audit.write({
+      player_id: minted.player_id,
+      action: 'session_guest_expired',
+      inputs: { reason: expiredReason },
+      result: 'not_authenticated',
+    });
+    return { error: 'token_expired', status: 401 };
+  }
+
+  const ttl_ms_remaining = Math.max(0, minted.expires_at_ms - now);
+  return {
+    ok: true as const,
+    player_id: minted.player_id,
+    guest_token,
+    name: minted.name,
+    minted_at_ms: minted.minted_at_ms,
+    expires_at_ms: minted.expires_at_ms,
+    ttl_ms_remaining,
+  };
 }
 
 // HTTP control plane
@@ -117,33 +146,7 @@ const httpServer = http.createServer((req, res) => {
       });
       return { player_id, guest_token, name };
     },
-    getSessionMe: (guest_token: string) => {
-      const now = Date.now();
-      const minted = guestSessions.get(guest_token);
-      if (!minted) return { error: 'not_authenticated', status: 401 };
-
-      if (minted.expires_at_ms <= now) {
-        guestSessions.delete(guest_token);
-        audit.write({
-          player_id: minted.player_id,
-          action: 'session_guest_expired',
-          inputs: { reason: 'expired_on_me' },
-          result: 'not_authenticated',
-        });
-        return { error: 'token_expired', status: 401 };
-      }
-
-      const ttl_ms_remaining = Math.max(0, minted.expires_at_ms - now);
-      return {
-        ok: true as const,
-        player_id: minted.player_id,
-        guest_token,
-        name: minted.name,
-        minted_at_ms: minted.minted_at_ms,
-        expires_at_ms: minted.expires_at_ms,
-        ttl_ms_remaining,
-      };
-    },
+    getSessionMe: (guest_token: string) => resolveSessionMe(guest_token, 'expired_on_me'),
     getWorldPlayers: (map: MapName, query) => {
       const w = worlds[map];
       if (!w) return { error: 'unknown_map', status: 404 };
@@ -155,6 +158,33 @@ const httpServer = http.createServer((req, res) => {
       }
 
       return { players };
+    },
+    getWorldState: (map: MapName, guest_token: string | null): WorldStateResult => {
+      const w = worlds[map];
+      if (!w) return { error: 'unknown_map', status: 404 };
+
+      const now = Date.now();
+      const me = guest_token ? resolveSessionMe(guest_token, 'expired_on_world_state') : null;
+      if (me && 'error' in me) return me;
+
+      const base = {
+        ok: true as const,
+        version: VERSION,
+        tick_ms: TICK_MS,
+        updated_at_ms: now,
+        map: {
+          name: map,
+          width: w.map.width,
+          height: w.map.height,
+          spawn: w.map.spawn,
+        },
+        player_count: w.players.size,
+      };
+
+      if (me && me.ok) {
+        return { ...base, me };
+      }
+      return base;
     },
   });
 
