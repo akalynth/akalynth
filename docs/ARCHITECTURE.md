@@ -76,7 +76,7 @@ Intent → Detector → Decision → Enforcement → Audit
 
 ### Runestone Ritual System (`server/src/world/runestone.ts`)
 
-A social gambling/ritual artifact inspired by Tibia's dice system, but with Akalynth's twist: the Ledger is authoritative and Tem gates access.
+A social gambling/ritual artifact inspired by Tibia's dice system, but with Akalynth's twist: the Ledger is authoritative; Tem gating is planned (DEBUG-only today).
 
 **Core mechanics:**
 - Runestone tables are world landmarks (not inventory items yet)
@@ -106,6 +106,11 @@ A social gambling/ritual artifact inspired by Tibia's dice system, but with Akal
 
 **Testing:**
 - Set `RUNESTONE_TEST_FORCE_FACE=shadow` (requires `DEBUG=1`) to force specific outcome
+
+### Verification Harness (`scripts/verify`)
+
+- `scripts/verify/ws_harness.mjs` drives deterministic WS scenarios for MVP verification.
+- `scripts/verify/scenarios/*.json` define the message sequences and expectations used by `scripts/verify_mvp.sh`.
 
 ## Data Flow
 
