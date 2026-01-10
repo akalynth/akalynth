@@ -1058,6 +1058,18 @@
       "y": 2,
       "width": 1,
       "height": 1
+    },
+    "legend_stone": {
+      "x": 6,
+      "y": 6,
+      "width": 1,
+      "height": 1
+    },
+    "runestone_table": {
+      "x": 4,
+      "y": 4,
+      "width": 1,
+      "height": 1
     }
   }
 }

@@ -5,7 +5,14 @@ import { createHash, randomUUID } from 'node:crypto';
 import type { ClientMessage, ServerMessage } from '../../shared/protocol.js';
 import { ServerMessages, parseClientMessage } from '../../shared/protocol.js';
 import type { Player, TutorialProgress } from '../../shared/types.js';
-import { LEDGER_HESITATION_ACTION, RUMOR_SEEDED_ACTION } from '../../shared/types.js';
+import {
+  FIRST_ATTEMPT_STONE_ACTION,
+  LEDGER_HESITATION_ACTION,
+  LEGEND_ATTEMPTED_ACTION,
+  LEGEND_REFUSED_ACTION,
+  LEGEND_SIGHTED_ACTION,
+  RUMOR_SEEDED_ACTION,
+} from '../../shared/types.js';
 import { TileCode } from '../../shared/types.js';
 import { DEATH_TEST_ENABLED, DEATH_RESPAWN_DELAY_MS, LAST_DAMAGE_WINDOW_MS, TICK_MS } from '../../shared/constants.js';
 import type {
@@ -26,6 +33,22 @@ import { applyThrottle, checkTemTimeout, handleTemResponse, issueTemChallenge, i
 import { loadSharedMap, createWorldState, toPublicPlayer } from './world/state.js';
 import { indexFor, tryMove } from './world/movement.js';
 import { applyDeath, applyRespawn } from './world/death.js';
+import {
+  findRunestoneTable,
+  isNearRunestoneTable,
+  rollRunestoneFace,
+  runestoneWhisper,
+  checkTrinityOfShadow,
+  RUNESTONE_COOLDOWN_MS,
+  RUNESTONE_BROADCAST_RADIUS,
+} from './world/runestone.js';
+import type { Element } from '../../shared/types.js';
+import {
+  RUNESTONE_CAST_ACTION,
+  RUNESTONE_RESULT_ACTION,
+  RUNESTONE_DENIED_ACTION,
+  TRINITY_OF_SHADOW_ACTION,
+} from '../../shared/types.js';
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const VERSION = '0.1.0';
@@ -95,12 +118,17 @@ type Session = {
   ledgerHesitationArmed: boolean;
   ledgerHesitationDeathTs: string | null;
   lastDamage?: { at_ms: number; source_type: 'player' | 'tile' | 'status' | 'unknown'; source_id: string | null };
+  // Runestone state
+  lastRunestoneCastAtMs: number | null;
+  lastRunestoneFaces: Element[];
 };
 
 const sessions = new Map<string, Session>();
 const audit = createAuditLogger();
 const receiptsReader = createReceiptsReader('audit');
 const legendFirsts = new Set<string>();
+const legendSightedByPlayer = new Set<string>();
+const legendAttemptCountByPlayer = new Map<string, number>();
 const PUBLIC_RECEIPTS_ALLOW = new Set<string>([
   'death_in_rookguard',
   'death_in_azura',
@@ -108,7 +136,12 @@ const PUBLIC_RECEIPTS_ALLOW = new Set<string>([
   'first_unknown_cause_death',
   'first_death_after_gate_unlock',
   RUMOR_SEEDED_ACTION,
+  LEGEND_REFUSED_ACTION,
+  FIRST_ATTEMPT_STONE_ACTION,
+  TRINITY_OF_SHADOW_ACTION,
 ]);
+// Runestone trinity tracking (per player, per process lifetime)
+const trinityEmitted = new Set<string>();
 const PUBLIC_RUMORS_ALLOW = new Set<string>([RUMOR_SEEDED_ACTION]);
 type LedgerHesitationState = {
   death_ts: string;
@@ -117,15 +150,26 @@ type LedgerHesitationState = {
 };
 const ledgerHesitationByPlayer = new Map<string, LedgerHesitationState>();
 const RUMOR_NOTHING_FINISHES_ID = 'nothing_finishes';
-const RUMOR_NOTHING_FINISHES_TEXT = 'There’s a place in Rookguard where nothing finishes.';
+const RUMOR_NOTHING_FINISHES_TEXT = "There's a place in Rookguard where nothing finishes.";
 const RUMOR_NOTHING_FINISHES_MAP: MapName = 'Rookguard';
 let rumorSeeded = false;
+const LEGEND_STONE_ID = 'stone_cannot_obtain';
+const LEGEND_STONE_MAP: MapName = 'Rookguard';
+const LEGEND_STONE_LANDMARK = 'legend_stone';
+const LEGEND_STONE_HESITATION_MS = 500;
+const RUMOR_STONE_REFUSES_ID = 'stone_refuses';
+const RUMOR_STONE_REFUSES_TEXT = 'Somewhere in Rookguard, the world refuses to finish what you start.';
+const RUMOR_STONE_REFUSES_MAP: MapName = 'Rookguard';
+let stoneRumorSeeded = false;
 const PUBLIC_RECEIPTS_ACTION_DELAYS_TIBIA: Record<string, number> = {
   death_in_rookguard: 10 * 60 * 1000,
   death_in_azura: 15 * 60 * 1000,
   first_death_in_azura: 30 * 60 * 1000,
   first_unknown_cause_death: 45 * 60 * 1000,
   first_death_after_gate_unlock: 60 * 60 * 1000,
+  [RUMOR_SEEDED_ACTION]: 2 * 60 * 1000,
+  [LEGEND_REFUSED_ACTION]: 60 * 60 * 1000,
+  [FIRST_ATTEMPT_STONE_ACTION]: 60 * 60 * 1000,
 };
 
 function publicReceiptDelayForAction(action: string): number {
@@ -185,6 +229,51 @@ function seedRumorIfNeeded(playerId: string) {
     },
     result: 'ok',
   });
+}
+
+function seedStoneRumorIfNeeded(playerId: string) {
+  if (stoneRumorSeeded) return;
+  stoneRumorSeeded = true;
+  audit.write({
+    player_id: playerId,
+    action: RUMOR_SEEDED_ACTION,
+    inputs: {
+      rumor_id: RUMOR_STONE_REFUSES_ID,
+      text: RUMOR_STONE_REFUSES_TEXT,
+      map: RUMOR_STONE_REFUSES_MAP,
+    },
+    result: 'ok',
+  });
+}
+
+type LandmarkBox = { x: number; y: number; width: number; height: number };
+
+function asLandmarkBox(value: unknown): LandmarkBox | null {
+  if (!value || typeof value !== 'object') return null;
+  const obj = value as Record<string, unknown>;
+  const x = typeof obj.x === 'number' ? obj.x : null;
+  const y = typeof obj.y === 'number' ? obj.y : null;
+  const width = typeof obj.width === 'number' ? obj.width : null;
+  const height = typeof obj.height === 'number' ? obj.height : null;
+  if (x === null || y === null || width === null || height === null) return null;
+  if (width <= 0 || height <= 0) return null;
+  return { x, y, width, height };
+}
+
+function landmarkContains(pos: { x: number; y: number }, landmark: LandmarkBox): boolean {
+  return (
+    pos.x >= landmark.x &&
+    pos.y >= landmark.y &&
+    pos.x < landmark.x + landmark.width &&
+    pos.y < landmark.y + landmark.height
+  );
+}
+
+function legendStoneLandmark(map: { landmarks?: unknown }): LandmarkBox | null {
+  const landmarks = map.landmarks;
+  if (!landmarks || typeof landmarks !== 'object') return null;
+  const stone = (landmarks as Record<string, unknown>)[LEGEND_STONE_LANDMARK];
+  return asLandmarkBox(stone);
 }
 
 function toPublicRumor(receipt: Receipt): PublicRumor | null {
@@ -540,6 +629,8 @@ wss.on('connection', (ws) => {
     respawnTimer: null,
     ledgerHesitationArmed: false,
     ledgerHesitationDeathTs: null,
+    lastRunestoneCastAtMs: null,
+    lastRunestoneFaces: [],
   };
 
   sessions.set(connId, s);
@@ -1106,6 +1197,83 @@ function processSessionQueue(s: Session, now: number) {
         let transferred = false;
 
         if (res.ok) {
+          const stoneLandmark =
+            s.currentMap === LEGEND_STONE_MAP ? legendStoneLandmark(w.map) : null;
+
+          if (stoneLandmark && landmarkContains({ x: res.x, y: res.y }, stoneLandmark)) {
+            const attempt_n = (legendAttemptCountByPlayer.get(s.player!.id) ?? 0) + 1;
+            legendAttemptCountByPlayer.set(s.player!.id, attempt_n);
+
+            if (!legendSightedByPlayer.has(s.player!.id)) {
+              legendSightedByPlayer.add(s.player!.id);
+              audit.write({
+                player_id: s.player!.id,
+                action: LEGEND_SIGHTED_ACTION,
+                inputs: {
+                  legend_id: LEGEND_STONE_ID,
+                  map: LEGEND_STONE_MAP,
+                  position: { x: res.x, y: res.y },
+                  context_flags: [],
+                },
+                result: 'ok',
+              });
+            }
+
+            audit.write({
+              player_id: s.player!.id,
+              action: LEGEND_ATTEMPTED_ACTION,
+              inputs: {
+                legend_id: LEGEND_STONE_ID,
+                map: LEGEND_STONE_MAP,
+                position: { x: res.x, y: res.y },
+                approach_vector: msg.direction,
+                attempt_n,
+              },
+              result: 'attempted',
+            });
+
+            const spawn = w.map.spawn;
+            audit.write({
+              player_id: s.player!.id,
+              action: LEGEND_REFUSED_ACTION,
+              inputs: {
+                legend_id: LEGEND_STONE_ID,
+                reason: 'cannot_obtain',
+                outcome: 'displace',
+                to: { map: LEGEND_STONE_MAP, x: spawn.x, y: spawn.y },
+                attempt_n,
+              },
+              result: 'refused',
+            });
+
+            audit.write({
+              player_id: s.player!.id,
+              action: LEDGER_HESITATION_ACTION,
+              inputs: {
+                legend_id: LEGEND_STONE_ID,
+                duration_ms: LEGEND_STONE_HESITATION_MS,
+                effect: 'world_refuses',
+              },
+              result: 'applied',
+            });
+
+            if (!legendFirsts.has(FIRST_ATTEMPT_STONE_ACTION)) {
+              legendFirsts.add(FIRST_ATTEMPT_STONE_ACTION);
+              audit.write({
+                player_id: s.player!.id,
+                action: FIRST_ATTEMPT_STONE_ACTION,
+                inputs: { map: LEGEND_STONE_MAP },
+                result: 'ok',
+              });
+              seedStoneRumorIfNeeded(s.player!.id);
+            }
+
+            s.player!.x = spawn.x;
+            s.player!.y = spawn.y;
+            finalX = spawn.x;
+            finalY = spawn.y;
+          }
+
           const tile = w.map.tiles[indexFor(w.map, { x: res.x, y: res.y })] ?? TileCode.Wall;
 
           if (s.currentMap === 'Rookguard') {
@@ -1183,6 +1351,148 @@ function processSessionQueue(s: Session, now: number) {
 
         send(s.ws, ServerMessages.moveResult(res.ok, finalX, finalY, res.reason));
         if (res.ok && !transferred) broadcastToMap(s.currentMap, ServerMessages.playerMoved(s.player!.id, finalX, finalY), s.connId);
+        break;
+      }
+
+      case 'runestone_cast': {
+        // DEBUG gate: if DEBUG!=1 -> deny not_authorized
+        if (!DEBUG_MODE) {
+          send(s.ws, ServerMessages.runestoneDenied('not_authorized'));
+          audit.write({
+            player_id: s.player?.id ?? s.connId,
+            action: RUNESTONE_DENIED_ACTION,
+            inputs: { table_id: msg.table_id, reason: 'not_authorized' },
+            result: 'denied',
+          });
+          break;
+        }
+
+        // Require auth + in_world
+        if (!requireWorld(s)) break;
+
+        // Find the table
+        const table = findRunestoneTable(msg.table_id);
+        if (!table) {
+          send(s.ws, ServerMessages.runestoneDenied('not_near_table'));
+          audit.write({
+            player_id: s.player!.id,
+            action: RUNESTONE_DENIED_ACTION,
+            inputs: { table_id: msg.table_id, reason: 'not_near_table' },
+            result: 'denied',
+          });
+          break;
+        }
+
+        // Check map matches
+        if (table.map !== s.currentMap) {
+          send(s.ws, ServerMessages.runestoneDenied('not_near_table'));
+          audit.write({
+            player_id: s.player!.id,
+            action: RUNESTONE_DENIED_ACTION,
+            inputs: { table_id: msg.table_id, reason: 'not_near_table' },
+            result: 'denied',
+          });
+          break;
+        }
+
+        // Proximity check: player must be within 1 tile of table
+        if (!isNearRunestoneTable({ x: s.player!.x, y: s.player!.y }, { x: table.x, y: table.y }, 1)) {
+          send(s.ws, ServerMessages.runestoneDenied('not_near_table'));
+          audit.write({
+            player_id: s.player!.id,
+            action: RUNESTONE_DENIED_ACTION,
+            inputs: { table_id: msg.table_id, reason: 'not_near_table' },
+            result: 'denied',
+          });
+          break;
+        }
+
+        // Cooldown check: 2000ms between casts
+        if (s.lastRunestoneCastAtMs !== null && msgNow - s.lastRunestoneCastAtMs < RUNESTONE_COOLDOWN_MS) {
+          send(s.ws, ServerMessages.runestoneDenied('cooldown'));
+          audit.write({
+            player_id: s.player!.id,
+            action: RUNESTONE_DENIED_ACTION,
+            inputs: { table_id: msg.table_id, reason: 'cooldown' },
+            result: 'denied',
+          });
+          break;
+        }
+
+        // Roll the face (server-authoritative)
+        const face = rollRunestoneFace();
+        const whisper = runestoneWhisper(face);
+        s.lastRunestoneCastAtMs = msgNow;
+
+        // Emit cast receipt
+        audit.write({
+          player_id: s.player!.id,
+          action: RUNESTONE_CAST_ACTION,
+          inputs: {
+            table_id: msg.table_id,
+            map: s.currentMap,
+            position: { x: s.player!.x, y: s.player!.y },
+            guess: msg.guess,
+          },
+          result: 'ok',
+        });
+
+        // Emit result receipt
+        audit.write({
+          player_id: s.player!.id,
+          action: RUNESTONE_RESULT_ACTION,
+          inputs: {
+            table_id: msg.table_id,
+            map: s.currentMap,
+            position: { x: s.player!.x, y: s.player!.y },
+            face,
+          },
+          result: 'ok',
+        });
+
+        // Check for Trinity of Shadow
+        const trinity = checkTrinityOfShadow(s.lastRunestoneFaces, face, trinityEmitted, s.player!.id);
+        s.lastRunestoneFaces = trinity.updatedFaces;
+
+        if (trinity.isTrinity) {
+          audit.write({
+            player_id: s.player!.id,
+            action: TRINITY_OF_SHADOW_ACTION,
+            inputs: {
+              table_id: msg.table_id,
+              map: s.currentMap,
+              position: { x: s.player!.x, y: s.player!.y },
+            },
+            result: 'ok',
+          });
+        }
+
+        // Broadcast to players within RUNESTONE_BROADCAST_RADIUS tiles on same map
+        const resultMsg = ServerMessages.runestoneResult(
+          msg.table_id,
+          { id: s.player!.id, name: s.player!.name },
+          face,
+          whisper
+        );
+
+        // Send to caster
+        send(s.ws, resultMsg);
+
+        // Broadcast to nearby players (within radius, on same map)
+        for (const [otherConnId, other] of sessions) {
+          if (otherConnId === s.connId) continue;
+          if (!other.inWorld) continue;
+          if (other.currentMap !== s.currentMap) continue;
+          if (!other.player) continue;
+
+          // Manhattan distance check for broadcast radius
+          const dx = Math.abs(other.player.x - s.player!.x);
+          const dy = Math.abs(other.player.y - s.player!.y);
+          if (dx <= RUNESTONE_BROADCAST_RADIUS && dy <= RUNESTONE_BROADCAST_RADIUS) {
+            send(other.ws, resultMsg);
+          }
+        }
+
         break;
       }
     }
