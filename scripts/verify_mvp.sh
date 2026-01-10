@@ -8,6 +8,7 @@ RECEIPTS="${RECEIPTS:-$SERVER_DIR/audit/receipts.jsonl}"
 WS_URL="${WS_URL:-ws://localhost:3000}"
 TIMEOUT_SECONDS="${TIMEOUT_SECONDS:-12}"
 DEATH_TIMEOUT_SECONDS="${DEATH_TIMEOUT_SECONDS:-40}"
+DEATH_RESPAWN_DELAY_MS_OVERRIDE="${DEATH_RESPAWN_DELAY_MS_OVERRIDE:-300}"
 
 log() { echo -e "🧪 $*"; }
 die() { echo -e "❌ $*" >&2; exit 1; }
@@ -55,8 +56,8 @@ touch "$RECEIPTS"
 BASE_LINES="$(wc -l < "$RECEIPTS" | tr -d ' ')"
 log "Receipts baseline lines: $BASE_LINES"
 
-log "Starting server (ALLOW_TEST_DEATH=1 npm run dev)…"
-ALLOW_TEST_DEATH=1 npm run dev >/tmp/akalynth_verify_server.log 2>&1 &
+log "Starting server (DEBUG=1 ALLOW_TEST_DEATH=1 DEATH_RESPAWN_DELAY_MS=$DEATH_RESPAWN_DELAY_MS_OVERRIDE npm run dev)…"
+DEBUG=1 ALLOW_TEST_DEATH=1 DEATH_RESPAWN_DELAY_MS="$DEATH_RESPAWN_DELAY_MS_OVERRIDE" npm run dev >/tmp/akalynth_verify_server.log 2>&1 &
 SERVER_PID=$!
 sleep 1
 
@@ -269,8 +270,37 @@ log "Running death WS flow (timeout ${DEATH_TIMEOUT_SECONDS}s)…"
 DEATH_RESP="$(
   run_timeout "$DEATH_TIMEOUT_SECONDS" node -e '
 const WebSocket = require("ws");
+const http = require("http");
+const { URL } = require("url");
 const ws = new WebSocket(process.argv[1]);
 const guestToken = process.argv[2];
+const httpUrl = process.argv[3];
+
+function fetchState(label) {
+  try {
+    const target = new URL("/v1/world/Rookguard/state", httpUrl);
+    const req = http.request(
+      target,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${guestToken}`,
+        },
+      },
+      (res) => {
+        let body = "";
+        res.on("data", (chunk) => (body += chunk.toString()));
+        res.on("end", () => {
+          console.log(`${label}:${body}`);
+        });
+      }
+    );
+    req.on("error", () => {});
+    req.end();
+  } catch (_) {
+    // ignore HTTP errors in test helper
+  }
+}
 
 ws.on("open", () => {
   ws.send(JSON.stringify({ type: "connect" }));
@@ -285,13 +315,17 @@ ws.on("message", (data) => {
   try {
     const msg = JSON.parse(str);
     if (msg.type === "death_notice") {
+      fetchState("STATE_DEAD");
       setTimeout(() => {
         ws.send(JSON.stringify({ type: "move_intent", direction: "north" }));
-      }, 200);
+      }, 20);
       const waitMs = (msg.respawn_in_ms || 15000) + 500;
       setTimeout(() => {
         ws.send(JSON.stringify({ type: "move_intent", direction: "south" }));
-        setTimeout(() => ws.close(), 500);
+        setTimeout(() => {
+          fetchState("STATE_ALIVE");
+          ws.close();
+        }, 500);
       }, waitMs);
     }
   } catch (err) {
@@ -301,7 +335,7 @@ ws.on("message", (data) => {
 
 ws.on("close", () => process.exit(0));
 ws.on("error", (e) => { console.error(e.message); process.exit(1); });
-' "$WS_URL" "$DEATH_GUEST_TOKEN" 2>/dev/null || true
+' "$WS_URL" "$DEATH_GUEST_TOKEN" "$HTTP_URL" 2>/dev/null || true
 )"
 
 echo "$DEATH_RESP" | grep -q '"type":"death_notice"' \
@@ -311,18 +345,25 @@ echo "$DEATH_RESP" | grep -q '"reason":"dead"' \
 echo "$DEATH_RESP" | grep -Eq '"type":"move_result","ok":true' \
   || die "No successful move after respawn in death WS flow"
 
+DEAD_STATE_JSON="$(echo "$DEATH_RESP" | grep '^STATE_DEAD:' | sed 's/^STATE_DEAD://')"
+ALIVE_STATE_JSON="$(echo "$DEATH_RESP" | grep '^STATE_ALIVE:' | sed 's/^STATE_ALIVE://')"
+
+echo "$DEAD_STATE_JSON" | jq . >/dev/null 2>&1 || die "Invalid dead state JSON"
+echo "$ALIVE_STATE_JSON" | jq . >/dev/null 2>&1 || die "Invalid alive state JSON"
+
+[[ "$(echo "$DEAD_STATE_JSON" | jq -r '.me.status // empty')" == "dead" ]] \
+  || die "Caller status not dead in HTTP state during death window"
+[[ "$(echo "$ALIVE_STATE_JSON" | jq -r '.me.status // empty')" == "alive" ]] \
+  || die "Caller status not alive in HTTP state after respawn"
+
 log "Checking receipts API for death events..."
 if ! run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=death&player_id=$DEATH_PLAYER_ID&limit=20" \
   | grep -q "$DEATH_PLAYER_ID"; then
   die "Receipts API missing death for player_id=$DEATH_PLAYER_ID"
 fi
-if ! run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=death_penalty_applied&player_id=$DEATH_PLAYER_ID&limit=20" \
+if ! run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=respawn&player_id=$DEATH_PLAYER_ID&limit=20" \
   | grep -q "$DEATH_PLAYER_ID"; then
-  die "Receipts API missing death_penalty_applied for player_id=$DEATH_PLAYER_ID"
-fi
-if ! run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=respawn_completed&player_id=$DEATH_PLAYER_ID&limit=20" \
-  | grep -q "$DEATH_PLAYER_ID"; then
-  die "Receipts API missing respawn_completed for player_id=$DEATH_PLAYER_ID"
+  die "Receipts API missing respawn for player_id=$DEATH_PLAYER_ID"
 fi
 log "Death receipts present ✅"
 
