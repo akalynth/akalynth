@@ -281,10 +281,28 @@ const { URL } = require("url");
 const ws = new WebSocket(process.argv[1]);
 const guestToken = process.argv[2];
 const httpUrl = process.argv[3];
+const gateSequence = [
+  { type: "connect" },
+  { type: "login", guest_token: guestToken },
+  { type: "enter_world" },
+  { type: "move_intent", direction: "east" },
+  { type: "move_intent", direction: "east" },
+  { type: "move_intent", direction: "east" },
+  { type: "chat", message: "hi" },
+  { type: "move_intent", direction: "east" },
+  { type: "move_intent", direction: "east" },
+  { type: "chat", message: "AZURA" },
+  { type: "move_intent", direction: "east" },
+  { type: "move_intent", direction: "east" },
+  { type: "move_intent", direction: "east" },
+];
+let enteredAzura = false;
+let stage = "init";
+let stateMap = "Rookguard";
 
 function fetchState(label) {
   try {
-    const target = new URL("/v1/world/Rookguard/state", httpUrl);
+    const target = new URL(`/v1/world/${stateMap}/state`, httpUrl);
     const req = http.request(
       target,
       {
@@ -308,11 +326,21 @@ function fetchState(label) {
   }
 }
 
+function sendSeq(seq, delay, done) {
+  let idx = 0;
+  const send = () => {
+    if (idx < seq.length) {
+      ws.send(JSON.stringify(seq[idx++]));
+      setTimeout(send, delay);
+    } else if (done) {
+      done();
+    }
+  };
+  send();
+}
+
 ws.on("open", () => {
-  ws.send(JSON.stringify({ type: "connect" }));
-  ws.send(JSON.stringify({ type: "login", guest_token: guestToken }));
-  ws.send(JSON.stringify({ type: "enter_world" }));
-  ws.send(JSON.stringify({ type: "kill_self" }));
+  sendSeq(gateSequence, 200);
 });
 
 ws.on("message", (data) => {
@@ -320,6 +348,13 @@ ws.on("message", (data) => {
   console.log(str);
   try {
     const msg = JSON.parse(str);
+    if (msg.type === "world_state" && msg.player && msg.player.x === 32 && msg.player.y === 32 && !enteredAzura) {
+      enteredAzura = true;
+      stateMap = "Azura";
+      setTimeout(() => {
+        ws.send(JSON.stringify({ type: "kill_self" }));
+      }, 300);
+    }
     if (msg.type === "death_notice") {
       fetchState("STATE_DEAD");
       setTimeout(() => {
@@ -327,12 +362,25 @@ ws.on("message", (data) => {
       }, 20);
       const waitMs = (msg.respawn_in_ms || 15000) + 500;
       setTimeout(() => {
+        stage = "await_hesitation";
         ws.send(JSON.stringify({ type: "move_intent", direction: "south" }));
+      }, waitMs);
+    }
+    if (msg.type === "move_result") {
+      if (stage === "await_hesitation") {
+        console.log(`HESITATION_RESULT:${JSON.stringify(msg)}`);
+        stage = "await_success";
+        setTimeout(() => {
+          ws.send(JSON.stringify({ type: "move_intent", direction: "south" }));
+        }, 200);
+      } else if (stage === "await_success") {
+        console.log(`SUCCESS_RESULT:${JSON.stringify(msg)}`);
+        stage = "done";
         setTimeout(() => {
           fetchState("STATE_ALIVE");
-          ws.close();
+          setTimeout(() => ws.close(), 500);
         }, 500);
-      }, waitMs);
+      }
     }
   } catch (err) {
     // ignore parse errors
@@ -353,14 +401,22 @@ echo "$DEATH_RESP" | grep -Eq '"type":"move_result","ok":true' \
 
 DEAD_STATE_JSON="$(echo "$DEATH_RESP" | grep '^STATE_DEAD:' | sed 's/^STATE_DEAD://')"
 ALIVE_STATE_JSON="$(echo "$DEATH_RESP" | grep '^STATE_ALIVE:' | sed 's/^STATE_ALIVE://')"
+HESITATION_JSON="$(echo "$DEATH_RESP" | grep '^HESITATION_RESULT:' | head -n1 | sed 's/^HESITATION_RESULT://')"
+SUCCESS_JSON="$(echo "$DEATH_RESP" | grep '^SUCCESS_RESULT:' | head -n1 | sed 's/^SUCCESS_RESULT://')"
 
 echo "$DEAD_STATE_JSON" | jq . >/dev/null 2>&1 || die "Invalid dead state JSON"
 echo "$ALIVE_STATE_JSON" | jq . >/dev/null 2>&1 || die "Invalid alive state JSON"
+echo "$HESITATION_JSON" | jq . >/dev/null 2>&1 || die "Missing hesitation move_result JSON"
+echo "$SUCCESS_JSON" | jq . >/dev/null 2>&1 || die "Missing success move_result JSON"
 
 [[ "$(echo "$DEAD_STATE_JSON" | jq -r '.me.status // empty')" == "dead" ]] \
   || die "Caller status not dead in HTTP state during death window"
 [[ "$(echo "$ALIVE_STATE_JSON" | jq -r '.me.status // empty')" == "alive" ]] \
   || die "Caller status not alive in HTTP state after respawn"
+echo "$HESITATION_JSON" | jq -e '.ok == false' >/dev/null 2>&1 \
+  || die "Ledger hesitation did not reject first post-respawn move"
+echo "$SUCCESS_JSON" | jq -e '.ok == true' >/dev/null 2>&1 \
+  || die "Ledger hesitation did not allow subsequent move"
 
 log "Checking receipts API for death events..."
 if ! run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=death&player_id=$DEATH_PLAYER_ID&limit=20" \
@@ -372,15 +428,21 @@ LAST_DAMAGE_OK="$(run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=last_damag
 if [[ "${LAST_DAMAGE_OK:-0}" -lt 1 ]]; then
   die "Receipts API missing last_damage_attribution with status/test for player_id=$DEATH_PLAYER_ID"
 fi
-if ! run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=death_in_rookguard&player_id=$DEATH_PLAYER_ID&limit=20" \
+if ! run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=death_in_azura&player_id=$DEATH_PLAYER_ID&limit=20" \
   | grep -q "$DEATH_PLAYER_ID"; then
-  die "Receipts API missing death_in_rookguard for player_id=$DEATH_PLAYER_ID"
+  die "Receipts API missing death_in_azura for player_id=$DEATH_PLAYER_ID"
 fi
 if ! run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=respawn&player_id=$DEATH_PLAYER_ID&limit=20" \
   | grep -q "$DEATH_PLAYER_ID"; then
   die "Receipts API missing respawn for player_id=$DEATH_PLAYER_ID"
 fi
 log "Death receipts present ✅"
+
+LEDGER_HESITATION_COUNT="$(run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=ledger_hesitation&player_id=$DEATH_PLAYER_ID&limit=20" \
+  | jq '[.receipts[] | select(.inputs.type=="movement_block" and .inputs.map=="Azura")] | length' 2>/dev/null || echo 0)"
+if [[ "${LEDGER_HESITATION_COUNT:-0}" -ne 1 ]]; then
+  die "Expected one ledger_hesitation receipt for player_id=$DEATH_PLAYER_ID"
+fi
 
 log "Checking public receipts feed..."
 sleep 0.5  # Allow receipts to flush
@@ -411,6 +473,27 @@ if [[ "${FIRST_PUBLIC_COUNT:-0}" -lt 1 ]]; then
   fi
 fi
 log "Public receipts feed present ✅"
+
+log "Checking public rumors feed..."
+RUMOR_JSON="$(run_timeout 5 curl -s "$HTTP_URL/v1/rumors/public?limit=20" || true)"
+echo "$RUMOR_JSON" | jq . >/dev/null 2>&1 || die "Invalid JSON from public rumors feed"
+[[ "$(echo "$RUMOR_JSON" | jq -r 'has("rumors") and (.rumors | type == "array")')" == "true" ]] \
+  || die "Public rumors feed missing rumors array: $RUMOR_JSON"
+RUMOR_TEXT="$(echo "$RUMOR_JSON" | jq -r '.rumors[] | select(.rumor_id=="nothing_finishes") | .text' | head -n1)"
+[[ "$RUMOR_TEXT" == "There’s a place in Rookguard where nothing finishes." ]] \
+  || die "Public rumors feed missing exact rumor text"
+if echo "$RUMOR_JSON" | grep -q '"player_id"'; then
+  die "Public rumors feed leaked player_id"
+fi
+RUMOR_COORD_COUNT="$(echo "$RUMOR_JSON" | jq '[.rumors[] | paths(scalars) as $p | select(($p[-1]=="x" or $p[-1]=="y") and (getpath($p) | type=="number"))] | length' 2>/dev/null || echo 0)"
+if [[ "${RUMOR_COORD_COUNT:-0}" -gt 0 ]]; then
+  die "Public rumors feed leaked coordinate fields"
+fi
+RUMOR_ACTOR_COUNT="$(echo "$RUMOR_JSON" | jq '[.rumors[] | select(.actor? and (.actor | type=="string") and (.actor | length > 0))] | length' 2>/dev/null || echo 0)"
+if [[ "${RUMOR_ACTOR_COUNT:-0}" -lt 1 ]]; then
+  die "Public rumors feed missing actor field"
+fi
+log "Public rumors feed present ✅"
 
 log "✅ VERIFY PASS"
 log "Last receipts:"
