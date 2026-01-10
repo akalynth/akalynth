@@ -40,6 +40,9 @@ const sessions = new Map<string, Session>();
 const audit = createAuditLogger();
 const receiptsReader = createReceiptsReader('audit');
 
+type GuestSession = { player_id: string; name: string; minted_at: number };
+const guestSessions = new Map<string, GuestSession>(); // key = guest_token
+
 const worlds = {
   Rookguard: createWorldState(loadSharedMap('rookguard.json')),
   Azura: createWorldState(loadSharedMap('azura.json')),
@@ -68,6 +71,19 @@ const httpServer = http.createServer((req, res) => {
       };
     },
     queryReceipts: (params) => receiptsReader.query(params),
+    mintGuestSession: () => {
+      const player_id = `p_${randomUUID()}`;
+      const guest_token = `gt_${randomUUID()}`;
+      const name = `Guest_${player_id.slice(-4)}`;
+      guestSessions.set(guest_token, { player_id, name, minted_at: Date.now() });
+      audit.write({
+        player_id,
+        action: 'session_guest_minted',
+        inputs: {},
+        result: 'ok',
+      });
+      return { player_id, guest_token, name };
+    },
   });
 
   if (!handled) {
@@ -225,9 +241,52 @@ function processSessionQueue(s: Session, now: number) {
       }
 
       case 'login': {
-        const player_id = s.player?.id ?? `p_${randomUUID()}`;
-        const guest_token = msg.guest_token ?? `gt_${randomUUID()}`;
-        const name = `Guest_${player_id.slice(-4)}`;
+        let player_id: string;
+        let guest_token: string;
+        let name: string;
+
+        // HTTP-first: token provided
+        if (msg.guest_token) {
+          const minted = guestSessions.get(msg.guest_token);
+
+          if (!minted) {
+            send(s.ws, ServerMessages.error('not_authenticated', 'Invalid guest token'));
+            audit.write({
+              player_id: s.connId,
+              action: 'login',
+              inputs: { guest_token_provided: true },
+              result: 'invalid_token',
+            });
+            break;
+          }
+
+          // bind session
+          player_id = minted.player_id;
+          guest_token = msg.guest_token;
+          name = minted.name;
+
+          // one-time use: prevent token replay
+          guestSessions.delete(msg.guest_token);
+
+          audit.write({
+            player_id,
+            action: 'login',
+            inputs: { source: 'http_mint' },
+            result: 'ok',
+          });
+        } else {
+          // Legacy WS mint
+          player_id = s.player?.id ?? `p_${randomUUID()}`;
+          guest_token = `gt_${randomUUID()}`;
+          name = `Guest_${player_id.slice(-4)}`;
+
+          audit.write({
+            player_id,
+            action: 'login',
+            inputs: { source: 'ws_mint' },
+            result: 'ok',
+          });
+        }
 
         s.guestToken = guest_token;
         s.currentMap = 'Rookguard';
@@ -239,13 +298,6 @@ function processSessionQueue(s: Session, now: number) {
           y: worlds.Rookguard.map.spawn.y,
           state: 'authenticated',
         };
-
-        audit.write({
-          player_id,
-          action: 'login',
-          inputs: { guest_token_provided: !!msg.guest_token },
-          result: 'ok',
-        });
 
         send(s.ws, ServerMessages.loginAck(player_id, guest_token, name));
         break;

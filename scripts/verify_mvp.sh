@@ -75,6 +75,7 @@ log "Checking HTTP control plane..."
 HTTP_URL="${HTTP_URL:-http://localhost:3000}"
 
 need_cmd curl
+need_cmd jq
 
 curl -sf "$HTTP_URL/v1/health" | grep -q '"ok":true' \
   || die "HTTP /v1/health failed"
@@ -87,14 +88,28 @@ curl -sf "$HTTP_URL/v1/maps/Azura" | grep -q '"name":"Azura"' \
 
 log "HTTP checks passed"
 
+# Mint guest session via HTTP
+log "Minting guest session via HTTP..."
+MINT_JSON="$(run_timeout 5 curl -s -X POST "$HTTP_URL/v1/session/guest" || true)"
+echo "$MINT_JSON" | jq . >/dev/null 2>&1 || die "Invalid JSON from /v1/session/guest: $MINT_JSON"
+
+GUEST_TOKEN="$(echo "$MINT_JSON" | jq -r '.guest_token // empty')"
+PLAYER_ID="$(echo "$MINT_JSON" | jq -r '.player_id // empty')"
+
+[[ -n "$GUEST_TOKEN" ]] || die "Missing guest_token from mint response: $MINT_JSON"
+[[ -n "$PLAYER_ID" ]] || die "Missing player_id from mint response: $MINT_JSON"
+
+log "Minted session ok (player_id=$PLAYER_ID)"
+
 log "Running scripted WS flow (timeout ${TIMEOUT_SECONDS}s)…"
 RESP="$(
   run_timeout "$TIMEOUT_SECONDS" node -e '
 const WebSocket = require("ws");
 const ws = new WebSocket(process.argv[1]);
+const guestToken = process.argv[2];
 const messages = [
   {"type":"connect"},
-  {"type":"login","guest_token":null},
+  {"type":"login","guest_token":guestToken},
   {"type":"enter_world"},
   {"type":"move_intent","direction":"east"},
   {"type":"move_intent","direction":"east"},
@@ -122,7 +137,7 @@ ws.on("open", () => {
 ws.on("message", (data) => console.log(data.toString()));
 ws.on("close", () => process.exit(0));
 ws.on("error", (e) => { console.error(e.message); process.exit(1); });
-' "$WS_URL" 2>/dev/null || true
+' "$WS_URL" "$GUEST_TOKEN" 2>/dev/null || true
 )"
 
 echo "$RESP" | grep -q '"type":"welcome"'      || die "No welcome received"
@@ -154,6 +169,13 @@ if ! grep -Eq 'tutorial_step_complete|gate_unlock|tutorial_completed' "$RECEIPTS
 else
   log "Tutorial/gate receipts present ✅"
 fi
+
+log "Checking receipts API for session_guest_minted..."
+if ! run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=session_guest_minted&limit=20" \
+  | grep -q "$PLAYER_ID"; then
+  die "Receipts API missing session_guest_minted for player_id=$PLAYER_ID"
+fi
+log "Receipts API contains session_guest_minted ✅"
 
 log "✅ VERIFY PASS"
 log "Last receipts:"
