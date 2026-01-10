@@ -6,7 +6,7 @@ import type { ClientMessage, ServerMessage } from '../../shared/protocol.js';
 import { ServerMessages, parseClientMessage } from '../../shared/protocol.js';
 import type { Player, TutorialProgress } from '../../shared/types.js';
 import { TileCode } from '../../shared/types.js';
-import { DEATH_TEST_ENABLED, DEATH_RESPAWN_DELAY_MS, TICK_MS } from '../../shared/constants.js';
+import { DEATH_TEST_ENABLED, DEATH_RESPAWN_DELAY_MS, LAST_DAMAGE_WINDOW_MS, TICK_MS } from '../../shared/constants.js';
 import type { MapName, SessionMeResponse, WorldStateResult } from '../../shared/http.js';
 import { handleHttp } from './api/http.js';
 
@@ -24,6 +24,7 @@ const DEFAULT_GUEST_SESSION_TTL_MS = 10 * 60 * 1000;
 const DEFAULT_GUEST_SESSION_CLEANUP_MS = 60 * 1000;
 const MAX_GUEST_SESSIONS = 10_000;
 const DEBUG_MODE = process.env.DEBUG === '1';
+const PUBLIC_RECEIPTS_DELAY_MS = parseEnvMs(process.env.PUBLIC_RECEIPTS_DELAY_MS, 15 * 60 * 1000, 0);
 
 function parseEnvMs(envValue: string | undefined, fallback: number, min: number): number {
   if (!envValue) return fallback;
@@ -60,6 +61,7 @@ type Session = {
 const sessions = new Map<string, Session>();
 const audit = createAuditLogger();
 const receiptsReader = createReceiptsReader('audit');
+const legendFirsts = new Set<string>();
 
 type GuestSession = {
   player_id: string;
@@ -135,6 +137,17 @@ const httpServer = http.createServer((req, res) => {
       };
     },
     queryReceipts: (params) => receiptsReader.query(params),
+    queryPublicReceipts: (params) => {
+      const allow = new Set<string>([
+        'death_in_rookguard',
+        'death_in_azura',
+        'first_death_in_azura',
+        'first_unknown_cause_death',
+        'first_death_after_gate_unlock',
+      ]);
+      const now = Date.now();
+      return receiptsReader.queryPublic(params, now, PUBLIC_RECEIPTS_DELAY_MS, allow);
+    },
     mintGuestSession: () => {
       const now = Date.now();
       pruneExpiredGuestSessions(now);
@@ -715,12 +728,46 @@ function processSessionQueue(s: Session, now: number) {
           player_id: s.player!.id,
           map: s.currentMap,
           position: { x: s.player!.x, y: s.player!.y },
-          cause: 'test',
+          cause: 'unknown',
           killer_id: null,
           respawn_delay_ms: DEATH_RESPAWN_DELAY_MS,
           current_status: s.player!.status,
           current_dead_until_ms: s.player!.dead_until_ms,
           lastDamage: s.lastDamage,
+          gateUnlocked: s.tutorial.complete,
+          emitFirstOf: (info) => {
+            if (info.map === 'Azura' && !legendFirsts.has('first_death_in_azura')) {
+              legendFirsts.add('first_death_in_azura');
+              audit.write({
+                player_id: s.player!.id,
+                action: 'first_death_in_azura',
+                inputs: { map: info.map, position: info.position, cause: info.cause },
+                result: 'ok',
+              });
+            }
+
+            if (info.source_type === 'unknown' || info.cause === 'unknown') {
+              if (!legendFirsts.has('first_unknown_cause_death')) {
+                legendFirsts.add('first_unknown_cause_death');
+                audit.write({
+                  player_id: s.player!.id,
+                  action: 'first_unknown_cause_death',
+                  inputs: { map: info.map, position: info.position, cause: info.cause },
+                  result: 'ok',
+                });
+              }
+            }
+
+            if (info.gateUnlocked && !legendFirsts.has('first_death_after_gate_unlock')) {
+              legendFirsts.add('first_death_after_gate_unlock');
+              audit.write({
+                player_id: s.player!.id,
+                action: 'first_death_after_gate_unlock',
+                inputs: { map: info.map, position: info.position },
+                result: 'ok',
+              });
+            }
+          },
           audit,
           setDead: (dead_until_ms) => {
             if (!s.player) return;

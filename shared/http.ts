@@ -106,3 +106,18 @@ export interface ReceiptsResponse {
   total: number;
   has_more: boolean;
 }
+
+// Public receipts (delayed, filtered)
+export interface PublicReceiptsQueryParams {
+  action?: string;
+  since?: string;
+  until?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface PublicReceiptsResponse {
+  receipts: Receipt[];
+  total: number;
+  has_more: boolean;
+}

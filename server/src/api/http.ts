@@ -15,8 +15,10 @@ import type {
   Receipt,
   ReceiptsQueryParams,
   ReceiptsResponse,
+  PublicReceiptsQueryParams,
+  PublicReceiptsResponse,
+  WorldPlayersQuery,
 } from '../../../shared/http.js';
-import type { WorldPlayersQuery } from '../../../shared/http.js';
 
 type GuestSessionMintResult = GuestSessionResponse | { error: string; status?: number };
 type SessionMeResult = SessionMeResponse | { error: string; status: number };
@@ -32,6 +34,7 @@ export interface ApiDeps {
   getWorldPlayers?: (map: MapName, query: WorldPlayersQuery) => WorldPlayersResult;
   getWorldState?: (map: MapName, guest_token: string | null) => WorldStateResult;
   queryReceipts: (params: ReceiptsQueryParams) => ReceiptsResponse;
+  queryPublicReceipts?: (params: PublicReceiptsQueryParams) => PublicReceiptsResponse;
 }
 
 function json(res: ServerResponse, status: number, body: unknown) {
@@ -245,6 +248,36 @@ export function handleHttp(
     }
 
     const result = deps.queryReceipts(params);
+    json(res, 200, result);
+    return true;
+  }
+
+  if (method === 'GET' && path === '/v1/receipts/public') {
+    if (!deps.queryPublicReceipts) return false;
+    const params: PublicReceiptsQueryParams = {};
+
+    const action = url.searchParams.get('action');
+    if (action) params.action = action;
+
+    const since = url.searchParams.get('since');
+    if (since) params.since = since;
+
+    const until = url.searchParams.get('until');
+    if (until) params.until = until;
+
+    const limitStr = url.searchParams.get('limit');
+    if (limitStr) {
+      const limit = parseInt(limitStr, 10);
+      if (!isNaN(limit) && limit > 0) params.limit = Math.min(limit, 200);
+    }
+
+    const offsetStr = url.searchParams.get('offset');
+    if (offsetStr) {
+      const offset = parseInt(offsetStr, 10);
+      if (!isNaN(offset) && offset >= 0) params.offset = Math.min(offset, 10_000);
+    }
+
+    const result = deps.queryPublicReceipts(params);
     json(res, 200, result);
     return true;
   }

@@ -19,6 +19,15 @@ export interface ApplyDeathOptions {
     source_id: string | null;
   };
   lastDamageWindowMs?: number;
+  gateUnlocked?: boolean;
+  emitFirstOf?: (info: {
+    map: MapName;
+    position: Position;
+    cause: DeathCause;
+    source_type: 'player' | 'tile' | 'status' | 'unknown';
+    alias: string;
+    gateUnlocked: boolean;
+  }) => void;
   audit: AuditLogger;
   setDead: (dead_until_ms: number) => void;
   adjustReputation: (delta: number) => void;
@@ -129,6 +138,17 @@ export function applyDeath(opts: ApplyDeathOptions): ApplyDeathResult {
     },
     result: 'ok',
   });
+
+  if (opts.emitFirstOf) {
+    opts.emitFirstOf({
+      map: opts.map,
+      position: opts.position,
+      cause: opts.cause,
+      source_type,
+      alias: contextAction,
+      gateUnlocked: opts.gateUnlocked ?? false,
+    });
+  }
 
   if (reputation_delta !== 0) {
     opts.adjustReputation(reputation_delta);
