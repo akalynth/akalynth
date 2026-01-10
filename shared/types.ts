@@ -27,7 +27,27 @@ export enum TileType {
   Door = 4,
 }
 
-export const WALKABLE_TILES = new Set([TileType.Grass, TileType.Stone]);
+export enum TileCode {
+  Grass = 0,
+  Stone = 1,
+  Wall = 2,
+  Water = 3,
+  Door = 4,
+
+  TutorialMove = 5,
+  TutorialChat = 6,
+  TutorialTem = 7,
+  GateToAzura = 8,
+}
+
+export const WALKABLE_TILES = new Set<number>([
+  TileCode.Grass,
+  TileCode.Stone,
+  TileCode.TutorialMove,
+  TileCode.TutorialChat,
+  TileCode.TutorialTem,
+  TileCode.GateToAzura,
+]);
 
 // ============================================================================
 // Players
@@ -42,6 +62,16 @@ export interface Player {
 }
 
 export type PlayerState = 'connected' | 'authenticated' | 'in_world';
+
+export type TutorialStep = 'move' | 'chat' | 'tem' | 'gate';
+
+export interface TutorialProgress {
+  move: boolean;
+  chat: boolean;
+  tem: boolean;
+  gate: boolean;
+  complete: boolean;
+}
 
 export interface PlayerPublic {
   id: string;
