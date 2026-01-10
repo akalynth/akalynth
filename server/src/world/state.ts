@@ -7,8 +7,8 @@ export interface WorldState {
   players: Map<string, Player>;
 }
 
-export function loadAzuraMap(): MapData {
-  const mapPath = path.resolve(process.cwd(), '../shared/maps/azura.json');
+export function loadSharedMap(filename: string): MapData {
+  const mapPath = path.resolve(process.cwd(), '../shared/maps', filename);
   const raw = fs.readFileSync(mapPath, 'utf-8');
   return JSON.parse(raw) as MapData;
 }

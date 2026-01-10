@@ -3,14 +3,15 @@ import { randomUUID } from 'node:crypto';
 
 import type { ClientMessage, ServerMessage } from '../../shared/protocol.js';
 import { ServerMessages, parseClientMessage } from '../../shared/protocol.js';
-import type { Player } from '../../shared/types.js';
+import type { Player, TutorialProgress } from '../../shared/types.js';
+import { TileCode } from '../../shared/types.js';
 import { TICK_MS } from '../../shared/constants.js';
 
 import { createAuditLogger } from './audit/logger.js';
 import { createAntiCheatRuntime, onChat, onMoveIntent } from './anticheat/detector.js';
 import { applyThrottle, checkTemTimeout, handleTemResponse, issueTemChallenge, isThrottled } from './anticheat/tem.js';
-import { loadAzuraMap, createWorldState, toPublicPlayer } from './world/state.js';
-import { tryMove } from './world/movement.js';
+import { loadSharedMap, createWorldState, toPublicPlayer } from './world/state.js';
+import { indexFor, tryMove } from './world/movement.js';
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const VERSION = '0.1.0';
@@ -24,6 +25,8 @@ type Session = {
   player: Player | null;
   guestToken: string | null;
   inWorld: boolean;
+  currentMap: 'Rookguard' | 'Azura';
+  tutorial: TutorialProgress;
   anti: ReturnType<typeof createAntiCheatRuntime>;
   lastMoveAppliedAt: number | null;
   lastChatAcceptedAt: number | null;
@@ -33,16 +36,25 @@ const wss = new WebSocketServer({ port: PORT });
 const sessions = new Map<string, Session>();
 const audit = createAuditLogger();
 
-const world = createWorldState(loadAzuraMap());
+const worlds = {
+  Rookguard: createWorldState(loadSharedMap('rookguard.json')),
+  Azura: createWorldState(loadSharedMap('azura.json')),
+} as const;
+
+function worldFor(s: Session) {
+  return worlds[s.currentMap];
+}
 
 function send(ws: WebSocket, message: ServerMessage) {
   if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(message));
 }
 
-function broadcast(message: ServerMessage, excludeConnId?: string) {
+function broadcastToMap(map: 'Rookguard' | 'Azura', message: ServerMessage, excludeConnId?: string) {
   const data = JSON.stringify(message);
   for (const [connId, s] of sessions) {
     if (excludeConnId && connId === excludeConnId) continue;
+    if (!s.inWorld) continue;
+    if (s.currentMap !== map) continue;
     if (s.ws.readyState === WebSocket.OPEN) s.ws.send(data);
   }
 }
@@ -89,6 +101,8 @@ wss.on('connection', (ws) => {
     player: null,
     guestToken: null,
     inWorld: false,
+    currentMap: 'Rookguard',
+    tutorial: { move: false, chat: false, tem: false, gate: false, complete: false },
     anti: createAntiCheatRuntime(now),
     lastMoveAppliedAt: null,
     lastChatAcceptedAt: null,
@@ -126,8 +140,9 @@ wss.on('connection', (ws) => {
   ws.on('close', () => {
     sessions.delete(connId);
     if (s.player && s.inWorld) {
-      world.players.delete(s.player.id);
-      broadcast(ServerMessages.playerLeft(s.player.id), connId);
+      const w = worldFor(s);
+      w.players.delete(s.player.id);
+      broadcastToMap(s.currentMap, ServerMessages.playerLeft(s.player.id), connId);
       audit.write({ player_id: s.player.id, action: 'disconnect', inputs: {}, result: 'left_world' });
     } else {
       audit.write({ player_id: connId, action: 'disconnect', inputs: {}, result: 'disconnected' });
@@ -177,7 +192,15 @@ function processSessionQueue(s: Session, now: number) {
         const name = `Guest_${player_id.slice(-4)}`;
 
         s.guestToken = guest_token;
-        s.player = { id: player_id, name, x: world.map.spawn.x, y: world.map.spawn.y, state: 'authenticated' };
+        s.currentMap = 'Rookguard';
+        s.tutorial = { move: false, chat: false, tem: false, gate: false, complete: false };
+        s.player = {
+          id: player_id,
+          name,
+          x: worlds.Rookguard.map.spawn.x,
+          y: worlds.Rookguard.map.spawn.y,
+          state: 'authenticated',
+        };
 
         audit.write({
           player_id,
@@ -194,19 +217,31 @@ function processSessionQueue(s: Session, now: number) {
         if (!requireAuth(s)) break;
         if (s.inWorld) break;
 
+        if (s.currentMap === 'Azura' && !s.tutorial.complete) {
+          send(s.ws, ServerMessages.error('not_in_world', 'Complete Rookguard training first'));
+          audit.write({
+            player_id: s.player!.id,
+            action: 'enter_world',
+            inputs: { map: 'Azura' },
+            result: 'blocked_tutorial_incomplete',
+          });
+          break;
+        }
+
         s.inWorld = true;
         s.player!.state = 'in_world';
 
-        world.players.set(s.player!.id, s.player!);
+        const w = worldFor(s);
+        w.players.set(s.player!.id, s.player!);
 
-        const nearby = Array.from(world.players.values())
+        const nearby = Array.from(w.players.values())
           .filter((p) => p.id !== s.player!.id)
           .map(toPublicPlayer);
 
         audit.write({ player_id: s.player!.id, action: 'enter_world', inputs: {}, result: 'ok' });
 
         send(s.ws, ServerMessages.worldState(toPublicPlayer(s.player!), nearby));
-        broadcast(ServerMessages.playerJoined(toPublicPlayer(s.player!)), s.connId);
+        broadcastToMap(s.currentMap, ServerMessages.playerJoined(toPublicPlayer(s.player!)), s.connId);
         break;
       }
 
@@ -215,6 +250,15 @@ function processSessionQueue(s: Session, now: number) {
         const out = handleTemResponse(s.anti.state, msg.response);
         if (out.outcome === 'passed') {
           audit.write({ player_id: s.player!.id, action: 'tem_challenge_passed', inputs: {}, result: 'passed' });
+          if (s.currentMap === 'Rookguard' && !s.tutorial.tem) {
+            s.tutorial.tem = true;
+            audit.write({
+              player_id: s.player!.id,
+              action: 'tutorial_step_complete',
+              inputs: { step: 'tem' },
+              result: 'ok',
+            });
+          }
         } else if (out.outcome === 'failed') {
           applyThrottle(s.anti.state, now);
           audit.write({
@@ -240,6 +284,15 @@ function processSessionQueue(s: Session, now: number) {
               inputs: { via: 'chat' },
               result: 'passed',
             });
+            if (s.currentMap === 'Rookguard' && !s.tutorial.tem) {
+              s.tutorial.tem = true;
+              audit.write({
+                player_id: s.player!.id,
+                action: 'tutorial_step_complete',
+                inputs: { step: 'tem', via: 'chat' },
+                result: 'ok',
+              });
+            }
             break;
           }
           if (out.outcome === 'failed') {
@@ -290,13 +343,29 @@ function processSessionQueue(s: Session, now: number) {
           break;
         }
 
+        if (s.currentMap === 'Rookguard' && !s.tutorial.chat && msg.message.trim().length > 0) {
+          s.tutorial.chat = true;
+          audit.write({
+            player_id: s.player!.id,
+            action: 'tutorial_step_complete',
+            inputs: { step: 'chat' },
+            result: 'ok',
+          });
+        }
+
         audit.write({ player_id: s.player!.id, action: 'chat', inputs: { message: msg.message }, result: 'ok' });
-        broadcast(ServerMessages.chatBroadcast(s.player!.id, s.player!.name, msg.message));
+        broadcastToMap(s.currentMap, ServerMessages.chatBroadcast(s.player!.id, s.player!.name, msg.message));
         break;
       }
 
       case 'move_intent': {
         if (!requireWorld(s)) break;
+
+        // If Tem is active (including tutorial demo), movement is blocked until response.
+        if (s.anti.state.temChallengeActive) {
+          send(s.ws, ServerMessages.moveResult(false, s.player!.x, s.player!.y, 'rate_limited'));
+          break;
+        }
 
         const act = onMoveIntent(s.anti, now);
         if (act.action === 'request_tem') {
@@ -329,8 +398,9 @@ function processSessionQueue(s: Session, now: number) {
           }
         }
 
-        const before = { x: s.player!.x, y: s.player!.y };
-        const res = tryMove(world.map, s.player!, msg.direction);
+        const before = { x: s.player!.x, y: s.player!.y, map: s.currentMap };
+        const w = worldFor(s);
+        const res = tryMove(w.map, s.player!, msg.direction);
         s.lastMoveAppliedAt = now;
 
         audit.write({
@@ -339,15 +409,88 @@ function processSessionQueue(s: Session, now: number) {
           inputs: { direction: msg.direction, from: before },
           result: res.ok ? 'ok' : 'rejected',
         });
+
+        let finalX = res.x;
+        let finalY = res.y;
+        let transferred = false;
+
+        if (res.ok) {
+          const tile = w.map.tiles[indexFor(w.map, { x: res.x, y: res.y })] ?? TileCode.Wall;
+
+          if (s.currentMap === 'Rookguard') {
+            if (tile === TileCode.TutorialMove && !s.tutorial.move) {
+              s.tutorial.move = true;
+              audit.write({
+                player_id: s.player!.id,
+                action: 'tutorial_step_complete',
+                inputs: { step: 'move' },
+                result: 'ok',
+              });
+            }
+
+            if (tile === TileCode.TutorialTem && !s.tutorial.tem) {
+              const out = issueTemChallenge(s.anti.state, now);
+              if (out.outcome === 'issued') {
+                send(s.ws, { type: 'tem_challenge', ...out.challenge });
+                audit.write({
+                  player_id: s.player!.id,
+                  action: 'tem_challenge_issued',
+                  inputs: { trigger: 'tutorial_tem_demo' },
+                  result: 'challenge_sent',
+                });
+              }
+            }
+
+            if (tile === TileCode.GateToAzura && !s.tutorial.complete) {
+              if (s.tutorial.move && s.tutorial.chat && s.tutorial.tem) {
+                s.tutorial.gate = true;
+                s.tutorial.complete = true;
+                audit.write({
+                  player_id: s.player!.id,
+                  action: 'gate_unlock',
+                  inputs: {},
+                  result: 'ok',
+                });
+                audit.write({
+                  player_id: s.player!.id,
+                  action: 'tutorial_completed',
+                  inputs: {},
+                  result: 'ok',
+                });
+
+                // Transfer to Azura spawn immediately.
+                worlds.Rookguard.players.delete(s.player!.id);
+                broadcastToMap('Rookguard', ServerMessages.playerLeft(s.player!.id), s.connId);
+
+                s.currentMap = 'Azura';
+                s.player!.x = worlds.Azura.map.spawn.x;
+                s.player!.y = worlds.Azura.map.spawn.y;
+                worlds.Azura.players.set(s.player!.id, s.player!);
+
+                const nearbyAzura = Array.from(worlds.Azura.players.values())
+                  .filter((p) => p.id !== s.player!.id)
+                  .map(toPublicPlayer);
+
+                send(s.ws, ServerMessages.worldState(toPublicPlayer(s.player!), nearbyAzura));
+                broadcastToMap('Azura', ServerMessages.playerJoined(toPublicPlayer(s.player!)), s.connId);
+
+                finalX = s.player!.x;
+                finalY = s.player!.y;
+                transferred = true;
+              }
+            }
+          }
+        }
+
         audit.write({
           player_id: s.player!.id,
           action: 'move_result',
-          inputs: { to: { x: res.x, y: res.y }, ok: res.ok, reason: res.reason },
+          inputs: { to: { x: finalX, y: finalY, map: s.currentMap }, ok: res.ok, reason: res.reason },
           result: res.ok ? 'ok' : 'rejected',
         });
 
-        send(s.ws, ServerMessages.moveResult(res.ok, res.x, res.y, res.reason));
-        if (res.ok) broadcast(ServerMessages.playerMoved(s.player!.id, res.x, res.y), s.connId);
+        send(s.ws, ServerMessages.moveResult(res.ok, finalX, finalY, res.reason));
+        if (res.ok && !transferred) broadcastToMap(s.currentMap, ServerMessages.playerMoved(s.player!.id, finalX, finalY), s.connId);
         break;
       }
     }
