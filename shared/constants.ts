@@ -13,3 +13,14 @@ export const CADENCE_MEAN_TOLERANCE_MS = parseInt(process.env.CADENCE_MEAN_TOLER
 export const CADENCE_COOLDOWN_MS = parseInt(process.env.CADENCE_COOLDOWN_MS ?? '60000', 10);
 export const CADENCE_IDLE_RESET_MS = 5000;
 
+const parseEnvInt = (value: string | undefined, fallback: number, min: number): number => {
+  if (!value) return fallback;
+  const parsed = parseInt(value, 10);
+  if (Number.isFinite(parsed) && parsed >= min) return parsed;
+  return fallback;
+};
+
+export const DEATH_RESPAWN_DELAY_MS = parseEnvInt(process.env.DEATH_RESPAWN_DELAY_MS, 15_000, 0);
+export const DEATH_REPUTATION_PENALTY = parseEnvInt(process.env.DEATH_REPUTATION_PENALTY, 1, 0);
+export const DEATH_TEST_ENABLED = process.env.ALLOW_TEST_DEATH === '1';
+

@@ -53,12 +53,17 @@ export const WALKABLE_TILES = new Set<number>([
 // Players
 // ============================================================================
 
+export type PlayerStatus = 'alive' | 'dead';
+
 export interface Player {
   id: string;
   name: string;
   x: number;
   y: number;
   state: PlayerState;
+  status: PlayerStatus;
+  dead_until_ms?: number | null;
+  reputation?: number;
 }
 
 export type PlayerState = 'connected' | 'authenticated' | 'in_world';
@@ -78,6 +83,8 @@ export interface PlayerPublic {
   name: string;
   x: number;
   y: number;
+  status: PlayerStatus;
+  reputation?: number;
 }
 
 // ============================================================================
@@ -157,3 +164,9 @@ export interface AuditReceipt {
 export const TEM_CHALLENGE_RESPONSE = 'AZURA';
 export const THROTTLE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 export const SIGNAL_DECAY_MS = 60 * 1000; // 60 seconds
+
+// ============================================================================
+// Death
+// ============================================================================
+
+export type DeathCause = 'test' | 'player' | 'npc' | 'environment' | 'unknown';
