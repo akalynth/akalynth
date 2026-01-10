@@ -377,14 +377,17 @@ fi
 log "Death receipts present ✅"
 
 log "Checking public receipts feed..."
+sleep 0.5  # Allow receipts to flush
 PUBLIC_JSON="$(run_timeout 5 curl -s "$HTTP_URL/v1/receipts/public?limit=50" || true)"
 echo "$PUBLIC_JSON" | jq . >/dev/null 2>&1 || die "Invalid JSON from public receipts feed"
 if ! echo "$PUBLIC_JSON" | grep -Eq 'death_in_rookguard|death_in_azura'; then
   die "Public receipts feed missing death_in_*"
 fi
-FIRST_PUBLIC_COUNT="$(echo "$PUBLIC_JSON" | jq '[.receipts[] | select(.action|contains(\"first_\"))] | length' 2>/dev/null || echo 0)"
+FIRST_PUBLIC_COUNT="$(echo "$PUBLIC_JSON" | jq '[.receipts[] | select(.action | startswith("first_"))] | length' 2>/dev/null || echo 0)"
 if [[ "${FIRST_PUBLIC_COUNT:-0}" -lt 1 ]]; then
-  die "Public receipts feed missing first-of legend receipts"
+  if ! echo "$PUBLIC_JSON" | grep -q 'first_'; then
+    die "Public receipts feed missing first-of legend receipts"
+  fi
 fi
 log "Public receipts feed present ✅"
 

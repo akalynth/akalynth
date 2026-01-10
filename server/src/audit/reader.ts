@@ -10,10 +10,15 @@ export function createReceiptsReader(auditDir: string) {
 
   return {
     query(params: ReceiptsQueryParams): ReceiptsResponse {
-      return baseQuery(params, () => true);
+      return baseQuery(params, () => true, false);
     },
 
-    queryPublic(params: PublicReceiptsQueryParams, nowMs: number, delayMs: number, allowActions: Set<string>): PublicReceiptsResponse {
+    queryPublic(
+      params: PublicReceiptsQueryParams,
+      nowMs: number,
+      delayMs: number,
+      allowActions: Set<string>
+    ): PublicReceiptsResponse {
       const windowStart = nowMs - delayMs;
       const predicate = (r: Receipt) => {
         if (!allowActions.has(r.action)) return false;
@@ -21,13 +26,14 @@ export function createReceiptsReader(auditDir: string) {
         if (Number.isNaN(ts)) return false;
         return ts <= windowStart;
       };
-      return baseQuery(params, predicate);
+      return baseQuery(params, predicate, true);
     },
   };
 
   function baseQuery(
     params: ReceiptsQueryParams | PublicReceiptsQueryParams,
-    predicate: (r: Receipt) => boolean
+    predicate: (r: Receipt) => boolean,
+    sortDesc: boolean
   ): ReceiptsResponse {
     const limit = Math.min(params.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
     const offset = params.offset ?? 0;
@@ -67,8 +73,12 @@ export function createReceiptsReader(auditDir: string) {
       receipts = receipts.filter((r) => new Date(r.timestamp).getTime() <= untilTime);
     }
 
-      const total = receipts.length;
-      const sliced = receipts.slice(offset, offset + limit);
+    if (sortDesc) {
+      receipts.sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp));
+    }
+
+    const total = receipts.length;
+    const sliced = receipts.slice(offset, offset + limit);
       const has_more = offset + sliced.length < total;
 
     return { receipts: sliced, total, has_more };
