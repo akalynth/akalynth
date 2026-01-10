@@ -50,6 +50,14 @@ Intent → Detector → Decision → Enforcement → Audit
 - `tem.ts` - Issues Tem challenges to flagged players
 - All decisions logged to JSONL
 
+### Heat (Behavior Enforcement v0)
+
+- Server-side heat score per player; deterministic decay over time (configurable via env).
+- Signals include perfect cadence, chat spam, runestone cooldown spam, and repeated legend probing.
+- Thresholds: Tem challenge at 30, movement throttle at 60 (default values).
+- Heat receipts (`heat_changed`, `heat_tem_escalation`, `heat_penalty_applied`) are private only and never public.
+- In-memory state only; process restart resets heat.
+
 ### Audit Logger (`server/src/audit/logger.ts`)
 
 - Writes JSONL receipts for every action
