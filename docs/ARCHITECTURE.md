@@ -94,3 +94,12 @@ Reconsider Colyseus (or similar) only when:
 - Engineering time shifts from gameplay/anti-cheat to maintaining sync plumbing
 
 Until then, the bespoke WebSocket loop remains the single source of truth for movement, chat, Tem enforcement, and tutorial gating.
+
+### Death & Respawn (MVP)
+
+- Server-authoritative, receipt-driven: `death`, `death_penalty_applied`, `respawn` are emitted with map/position and timing.
+- Penalty is time + position only. Respawn delay defaults to 15s and is overrideable via `DEATH_RESPAWN_DELAY_MS` (tests set ~300ms).
+- Dead players cannot move; Tem/anti-cheat state is **not** cleared by death.
+- Status surfaces via control plane: `/v1/world/:map/state` includes caller `status` + `dead_until_ms` + TTL; WS `world_state` carries status.
+- Crash/restart: player state is in-memory; reconnects within the same process honor `dead_until_ms` (timer re-armed). Process restarts reset world/session state today.
+- Debug death trigger is gated by `DEBUG=1` + `ALLOW_TEST_DEATH=1` and should not be exposed in production configs.
