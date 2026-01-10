@@ -56,6 +56,13 @@ Intent → Detector → Decision → Enforcement → Audit
 - Fields: timestamp, player_id, action, inputs, result, hash
 - Used for appeals and analysis
 
+### Public Receipts Feed (`/v1/receipts/public`)
+
+- Delayed and redacted to preserve controlled asymmetry; canonical truth remains in `/v1/receipts`
+- Defaults to strict redaction; `PUBLIC_RECEIPTS_MODE=raw` is dev-only
+- Coordinates are bucketed (default `PUBLIC_RECEIPTS_BUCKET_SIZE=8`) and actors are anonymized (`PUBLIC_RECEIPTS_ACTOR_MODE=anon|daily_hash`)
+- Daily hashes use `PUBLIC_RECEIPTS_HASH_SALT` (defaults to `akalynth-public-receipts`)
+
 ## Data Flow
 
 ```

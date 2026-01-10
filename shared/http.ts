@@ -107,7 +107,19 @@ export interface ReceiptsResponse {
   has_more: boolean;
 }
 
-// Public receipts (delayed, filtered)
+// Public receipts (delayed, filtered, redacted by default)
+export type PublicReceiptsMode = 'strict' | 'raw';
+export type PublicReceiptsActorMode = 'anon' | 'daily_hash';
+
+export interface PublicReceipt {
+  timestamp: string;
+  evidence_hash: string;
+  action: string;
+  inputs: Record<string, unknown>;
+  result: string | null;
+  actor: string;
+}
+
 export interface PublicReceiptsQueryParams {
   action?: string;
   since?: string;
@@ -116,8 +128,16 @@ export interface PublicReceiptsQueryParams {
   offset?: number;
 }
 
-export interface PublicReceiptsResponse {
+export interface PublicReceiptsStrictResponse {
+  receipts: PublicReceipt[];
+  total: number;
+  has_more: boolean;
+}
+
+export interface PublicReceiptsRawResponse {
   receipts: Receipt[];
   total: number;
   has_more: boolean;
 }
+
+export type PublicReceiptsResponse = PublicReceiptsStrictResponse | PublicReceiptsRawResponse;
