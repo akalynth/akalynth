@@ -1,6 +1,8 @@
 // shared/http.ts
 // HTTP Control Plane contract (API-first). Keep stable.
 
+import type { PlayerPublic } from './types.js';
+
 export type MapName = 'Rookguard' | 'Azura';
 
 export interface HealthResponse {
@@ -40,6 +42,14 @@ export interface SessionMeResponse {
 
 export interface HttpErrorResponse {
   error: string;
+}
+
+export interface WorldPlayersResponse {
+  players: PlayerPublic[];
+}
+
+export interface WorldPlayersQuery {
+  limit?: number;
 }
 
 // ============================================================================

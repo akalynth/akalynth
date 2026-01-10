@@ -144,6 +144,18 @@ const httpServer = http.createServer((req, res) => {
         ttl_ms_remaining,
       };
     },
+    getWorldPlayers: (map: MapName, query) => {
+      const w = worlds[map];
+      if (!w) return { error: 'unknown_map', status: 404 };
+
+      let players = Array.from(w.players.values()).map(toPublicPlayer);
+      if (query.limit) {
+        const cap = Math.max(1, Math.min(query.limit, 500));
+        players = players.slice(0, cap);
+      }
+
+      return { players };
+    },
   });
 
   if (!handled) {

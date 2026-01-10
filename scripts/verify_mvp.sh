@@ -86,6 +86,11 @@ curl -sf "$HTTP_URL/v1/maps" | grep -q 'Rookguard' \
 curl -sf "$HTTP_URL/v1/maps/Azura" | grep -q '"name":"Azura"' \
   || die "HTTP /v1/maps/Azura failed"
 
+WORLD_PLAYERS_JSON="$(run_timeout 5 curl -s "$HTTP_URL/v1/world/Rookguard/players" || true)"
+echo "$WORLD_PLAYERS_JSON" | jq . >/dev/null 2>&1 || die "Invalid JSON from /v1/world/Rookguard/players: $WORLD_PLAYERS_JSON"
+[[ "$(echo "$WORLD_PLAYERS_JSON" | jq -r 'has("players")')" == "true" ]] \
+  || die "/v1/world/Rookguard/players missing players field: $WORLD_PLAYERS_JSON"
+
 log "HTTP checks passed"
 
 # Mint guest session via HTTP

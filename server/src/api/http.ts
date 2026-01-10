@@ -10,13 +10,16 @@ import type {
   MapDetailResponse,
   GuestSessionResponse,
   SessionMeResponse,
+  WorldPlayersResponse,
   Receipt,
   ReceiptsQueryParams,
   ReceiptsResponse,
 } from '../../../shared/http.js';
+import type { WorldPlayersQuery } from '../../../shared/http.js';
 
 type GuestSessionMintResult = GuestSessionResponse | { error: string; status?: number };
 type SessionMeResult = SessionMeResponse | { error: string; status: number };
+type WorldPlayersResult = WorldPlayersResponse | { error: string; status: number };
 
 export interface ApiDeps {
   getVersion: () => string;
@@ -25,6 +28,7 @@ export interface ApiDeps {
   getMap: (name: MapName) => MapDetailResponse | null;
   mintGuestSession?: () => GuestSessionMintResult;
   getSessionMe?: (guest_token: string) => SessionMeResult;
+  getWorldPlayers?: (map: MapName, query: WorldPlayersQuery) => WorldPlayersResult;
   queryReceipts: (params: ReceiptsQueryParams) => ReceiptsResponse;
 }
 
@@ -53,6 +57,10 @@ function isGuestSessionError(x: GuestSessionMintResult): x is { error: string; s
 }
 
 function isSessionMeError(x: SessionMeResult): x is { error: string; status: number } {
+  return typeof (x as { error?: unknown }).error === 'string';
+}
+
+function isWorldPlayersError(x: WorldPlayersResult): x is { error: string; status: number } {
   return typeof (x as { error?: unknown }).error === 'string';
 }
 
@@ -143,6 +151,32 @@ export function handleHttp(
       json(res, sess.status, { error: sess.error });
     } else {
       json(res, 200, sess);
+    }
+    return true;
+  }
+
+  const worldPlayersMatch = path.match(/^\/v1\/world\/([^/]+)\/players$/);
+  if (method === 'GET' && worldPlayersMatch) {
+    if (!deps.getWorldPlayers) return (json(res, 501, { error: 'not_implemented' }), true);
+
+    const map = worldPlayersMatch[1];
+    if (!isMapName(map)) {
+      json(res, 404, { error: 'unknown_map' });
+      return true;
+    }
+
+    const q: WorldPlayersQuery = {};
+    const limitStr = url.searchParams.get('limit');
+    if (limitStr) {
+      const limit = parseInt(limitStr, 10);
+      if (!isNaN(limit) && limit > 0) q.limit = limit;
+    }
+
+    const result = deps.getWorldPlayers(map, q);
+    if (isWorldPlayersError(result)) {
+      json(res, result.status, { error: result.error });
+    } else {
+      json(res, 200, result);
     }
     return true;
   }
