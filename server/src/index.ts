@@ -10,7 +10,6 @@ import { DEATH_TEST_ENABLED, DEATH_RESPAWN_DELAY_MS, LAST_DAMAGE_WINDOW_MS, TICK
 import type {
   MapName,
   PublicReceiptsActorMode,
-  PublicReceiptsMode,
   SessionMeResponse,
   WorldStateResult,
 } from '../../shared/http.js';
@@ -32,10 +31,12 @@ const DEFAULT_GUEST_SESSION_CLEANUP_MS = 60 * 1000;
 const MAX_GUEST_SESSIONS = 10_000;
 const DEBUG_MODE = process.env.DEBUG === '1';
 const PUBLIC_RECEIPTS_DELAY_MS = parseEnvMs(process.env.PUBLIC_RECEIPTS_DELAY_MS, 15 * 60 * 1000, 0);
-const PUBLIC_RECEIPTS_MODE = parsePublicReceiptsMode(process.env.PUBLIC_RECEIPTS_MODE);
+const PUBLIC_RECEIPTS_DELAY_PROFILE = parsePublicReceiptsDelayProfile(process.env.PUBLIC_RECEIPTS_DELAY_PROFILE);
 const PUBLIC_RECEIPTS_BUCKET_SIZE = parseEnvInt(process.env.PUBLIC_RECEIPTS_BUCKET_SIZE, 8, 1);
 const PUBLIC_RECEIPTS_ACTOR_MODE = parsePublicReceiptsActorMode(process.env.PUBLIC_RECEIPTS_ACTOR_MODE);
 const PUBLIC_RECEIPTS_HASH_SALT = process.env.PUBLIC_RECEIPTS_HASH_SALT || 'akalynth-public-receipts';
+const PUBLIC_RECEIPTS_JITTER_MS = parseEnvIntClamped(process.env.PUBLIC_RECEIPTS_JITTER_MS, 120_000, 0, 900_000);
+const PUBLIC_RECEIPTS_JITTER_SALT = process.env.PUBLIC_RECEIPTS_JITTER_SALT || PUBLIC_RECEIPTS_HASH_SALT;
 
 function parseEnvMs(envValue: string | undefined, fallback: number, min: number): number {
   if (!envValue) return fallback;
@@ -51,12 +52,19 @@ function parseEnvInt(envValue: string | undefined, fallback: number, min: number
   return fallback;
 }
 
-function parsePublicReceiptsMode(envValue: string | undefined): PublicReceiptsMode {
-  return envValue === 'raw' ? 'raw' : 'strict';
+function parseEnvIntClamped(envValue: string | undefined, fallback: number, min: number, max: number): number {
+  const parsed = parseEnvInt(envValue, fallback, min);
+  return Math.min(parsed, max);
 }
 
 function parsePublicReceiptsActorMode(envValue: string | undefined): PublicReceiptsActorMode {
   return envValue === 'daily_hash' ? 'daily_hash' : 'anon';
+}
+
+type PublicReceiptsDelayProfile = 'default' | 'tibia';
+
+function parsePublicReceiptsDelayProfile(envValue: string | undefined): PublicReceiptsDelayProfile {
+  return envValue === 'tibia' ? 'tibia' : 'default';
 }
 
 const GUEST_SESSION_TTL_MS = parseEnvMs(process.env.GUEST_SESSION_TTL_MS, DEFAULT_GUEST_SESSION_TTL_MS, 1000);
@@ -88,6 +96,27 @@ const sessions = new Map<string, Session>();
 const audit = createAuditLogger();
 const receiptsReader = createReceiptsReader('audit');
 const legendFirsts = new Set<string>();
+const PUBLIC_RECEIPTS_ALLOW = new Set<string>([
+  'death_in_rookguard',
+  'death_in_azura',
+  'first_death_in_azura',
+  'first_unknown_cause_death',
+  'first_death_after_gate_unlock',
+]);
+const PUBLIC_RECEIPTS_ACTION_DELAYS_TIBIA: Record<string, number> = {
+  death_in_rookguard: 10 * 60 * 1000,
+  death_in_azura: 15 * 60 * 1000,
+  first_death_in_azura: 30 * 60 * 1000,
+  first_unknown_cause_death: 45 * 60 * 1000,
+  first_death_after_gate_unlock: 60 * 60 * 1000,
+};
+
+function publicReceiptDelayForAction(action: string): number {
+  if (PUBLIC_RECEIPTS_DELAY_PROFILE === 'tibia') {
+    return PUBLIC_RECEIPTS_ACTION_DELAYS_TIBIA[action] ?? PUBLIC_RECEIPTS_DELAY_MS;
+  }
+  return PUBLIC_RECEIPTS_DELAY_MS;
+}
 
 type GuestSession = {
   player_id: string;
@@ -164,17 +193,14 @@ const httpServer = http.createServer((req, res) => {
     },
     queryReceipts: (params) => receiptsReader.query(params),
     queryPublicReceipts: (params) => {
-      const allow = new Set<string>([
-        'death_in_rookguard',
-        'death_in_azura',
-        'first_death_in_azura',
-        'first_unknown_cause_death',
-        'first_death_after_gate_unlock',
-      ]);
       const now = Date.now();
-      const raw = receiptsReader.queryPublic(params, now, PUBLIC_RECEIPTS_DELAY_MS, allow);
-      if (PUBLIC_RECEIPTS_MODE === 'raw') return raw;
+      const raw = receiptsReader.queryPublic(params, now, PUBLIC_RECEIPTS_ALLOW, {
+        delayForAction: publicReceiptDelayForAction,
+        jitterMaxMs: PUBLIC_RECEIPTS_JITTER_MS,
+        jitterSalt: PUBLIC_RECEIPTS_JITTER_SALT,
+      });
       return {
+        mode: 'strict',
         receipts: raw.receipts.map((receipt) =>
           toPublicReceipt(receipt, {
             actorMode: PUBLIC_RECEIPTS_ACTOR_MODE,
@@ -185,6 +211,15 @@ const httpServer = http.createServer((req, res) => {
         total: raw.total,
         has_more: raw.has_more,
       };
+    },
+    queryPublicReceiptsRaw: (params) => {
+      if (!DEBUG_MODE) return { error: 'forbidden', status: 403 };
+      const now = Date.now();
+      return receiptsReader.queryPublic(params, now, PUBLIC_RECEIPTS_ALLOW, {
+        delayForAction: publicReceiptDelayForAction,
+        jitterMaxMs: PUBLIC_RECEIPTS_JITTER_MS,
+        jitterSalt: PUBLIC_RECEIPTS_JITTER_SALT,
+      });
     },
     mintGuestSession: () => {
       const now = Date.now();

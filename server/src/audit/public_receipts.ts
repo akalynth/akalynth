@@ -12,6 +12,12 @@ function sha256Hex(data: string): string {
   return crypto.createHash('sha256').update(data).digest('hex');
 }
 
+function hashPrefixToUint32(hex: string): number {
+  const prefix = hex.slice(0, 8);
+  const parsed = Number.parseInt(prefix, 16);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 function dayKeyFor(timestamp: string): string {
   const ts = Date.parse(timestamp);
   if (Number.isNaN(ts)) return 'unknown-day';
@@ -22,19 +28,26 @@ function bucketCoord(value: number, size: number): number {
   return Math.floor(value / size) * size;
 }
 
-function redactPosition(value: unknown, bucketSize: number): unknown {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+function redactValue(value: unknown, bucketSize: number, parentKey?: string): unknown {
+  if (Array.isArray(value)) {
+    return value.map((entry) => redactValue(entry, bucketSize));
+  }
+  if (!value || typeof value !== 'object') return value;
 
-  const position = value as Record<string, unknown>;
-  const redacted: Record<string, unknown> = { ...position };
+  const obj = value as Record<string, unknown>;
+  const redacted: Record<string, unknown> = {};
 
-  const rawX = typeof position.x === 'number' ? position.x : null;
-  const rawY = typeof position.y === 'number' ? position.y : null;
+  for (const [key, entry] of Object.entries(obj)) {
+    if (key === 'player_id') continue;
+    redacted[key] = redactValue(entry, bucketSize, key);
+  }
 
-  if ('x' in redacted) delete redacted.x;
-  if ('y' in redacted) delete redacted.y;
+  const rawX = typeof obj.x === 'number' ? obj.x : null;
+  const rawY = typeof obj.y === 'number' ? obj.y : null;
 
-  if (rawX !== null && rawY !== null) {
+  if (parentKey !== 'approx' && rawX !== null && rawY !== null) {
+    if ('x' in redacted) delete redacted.x;
+    if ('y' in redacted) delete redacted.y;
     redacted.approx = {
       x: bucketCoord(rawX, bucketSize),
       y: bucketCoord(rawY, bucketSize),
@@ -45,17 +58,30 @@ function redactPosition(value: unknown, bucketSize: number): unknown {
 }
 
 function redactInputs(inputs: Record<string, unknown>, bucketSize: number): Record<string, unknown> {
-  const redacted: Record<string, unknown> = { ...inputs };
+  const redacted = redactValue(inputs, bucketSize);
+  if (!redacted || typeof redacted !== 'object' || Array.isArray(redacted)) return {};
+  return redacted as Record<string, unknown>;
+}
 
-  if ('position' in redacted) {
-    redacted.position = redactPosition(redacted.position, bucketSize);
-  }
+export function jitterMsForReceipt(receipt: Receipt, jitterMaxMs: number, salt: string): number {
+  if (jitterMaxMs <= 0) return 0;
+  const basis = typeof receipt.evidence_hash === 'string' && receipt.evidence_hash
+    ? receipt.evidence_hash
+    : receipt.timestamp;
+  const digest = sha256Hex(`${basis}:${salt}`);
+  return hashPrefixToUint32(digest) % (jitterMaxMs + 1);
+}
 
-  if ('spawn' in redacted) {
-    redacted.spawn = redactPosition(redacted.spawn, bucketSize);
-  }
-
-  return redacted;
+export function visibleAtMs(
+  receipt: Receipt,
+  baselineDelayMs: number,
+  jitterMaxMs: number,
+  salt: string
+): number | null {
+  const ts = Date.parse(receipt.timestamp);
+  if (Number.isNaN(ts)) return null;
+  const jitter = jitterMsForReceipt(receipt, jitterMaxMs, salt);
+  return ts + baselineDelayMs + jitter;
 }
 
 export function toPublicReceipt(receipt: Receipt, opts: PublicReceiptOptions): PublicReceipt {

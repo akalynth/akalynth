@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { PublicReceiptsQueryParams, Receipt, ReceiptsQueryParams, ReceiptsResponse } from '../../../shared/http.js';
+import { visibleAtMs } from './public_receipts.js';
 
 const DEFAULT_LIMIT = 100;
 const MAX_LIMIT = 1000;
@@ -16,15 +17,19 @@ export function createReceiptsReader(auditDir: string) {
     queryPublic(
       params: PublicReceiptsQueryParams,
       nowMs: number,
-      delayMs: number,
-      allowActions: Set<string>
+      allowActions: Set<string>,
+      visibility: {
+        delayForAction: (action: string) => number;
+        jitterMaxMs: number;
+        jitterSalt: string;
+      }
     ): ReceiptsResponse {
-      const windowStart = nowMs - delayMs;
       const predicate = (r: Receipt) => {
         if (!allowActions.has(r.action)) return false;
-        const ts = Date.parse(r.timestamp);
-        if (Number.isNaN(ts)) return false;
-        return ts <= windowStart;
+        const baselineDelay = visibility.delayForAction(r.action);
+        const visibleAt = visibleAtMs(r, baselineDelay, visibility.jitterMaxMs, visibility.jitterSalt);
+        if (visibleAt === null) return false;
+        return visibleAt <= nowMs;
       };
       return baseQuery(params, predicate, true);
     },
@@ -38,24 +43,24 @@ export function createReceiptsReader(auditDir: string) {
     const limit = Math.min(params.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
     const offset = params.offset ?? 0;
 
-      if (!fs.existsSync(file)) {
+    if (!fs.existsSync(file)) {
       return { receipts: [], total: 0, has_more: false };
+    }
+
+    const content = fs.readFileSync(file, 'utf-8');
+    const lines = content.trim().split('\n').filter(Boolean);
+
+    let receipts: Receipt[] = [];
+    for (const line of lines) {
+      try {
+        const receipt = JSON.parse(line) as Receipt;
+        receipts.push(receipt);
+      } catch {
+        // skip malformed lines
       }
+    }
 
-      const content = fs.readFileSync(file, 'utf-8');
-      const lines = content.trim().split('\n').filter(Boolean);
-
-      let receipts: Receipt[] = [];
-      for (const line of lines) {
-        try {
-          const receipt = JSON.parse(line) as Receipt;
-          receipts.push(receipt);
-        } catch {
-          // skip malformed lines
-        }
-      }
-
-      // Apply filters
+    // Apply filters
     receipts = receipts.filter(predicate);
 
     if ('player_id' in params && params.player_id) {
@@ -68,7 +73,7 @@ export function createReceiptsReader(auditDir: string) {
       const sinceTime = new Date(params.since).getTime();
       receipts = receipts.filter((r) => new Date(r.timestamp).getTime() >= sinceTime);
     }
-    if (params.until) {
+    if ('until' in params && params.until) {
       const untilTime = new Date(params.until).getTime();
       receipts = receipts.filter((r) => new Date(r.timestamp).getTime() <= untilTime);
     }
@@ -79,7 +84,7 @@ export function createReceiptsReader(auditDir: string) {
 
     const total = receipts.length;
     const sliced = receipts.slice(offset, offset + limit);
-      const has_more = offset + sliced.length < total;
+    const has_more = offset + sliced.length < total;
 
     return { receipts: sliced, total, has_more };
   }
