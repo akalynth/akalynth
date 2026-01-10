@@ -1,27 +1,42 @@
-import { DEATH_REPUTATION_PENALTY, DEATH_RESPAWN_DELAY_MS } from '../../../shared/constants.js';
+import { DEATH_REPUTATION_PENALTY } from '../../../shared/constants.js';
 import type { MapName } from '../../../shared/http.js';
-import type { DeathCause } from '../../../shared/types.js';
+import type { DeathCause, PlayerStatus, Position } from '../../../shared/types.js';
 import type { AuditLogger } from '../audit/logger.js';
 
-export interface HandleDeathOptions {
+export interface ApplyDeathOptions {
   now: number;
   player_id: string;
   map: MapName;
-  x: number;
-  y: number;
+  position: Position;
   cause: DeathCause;
   killer_id?: string | null;
-  spawn: { x: number; y: number };
+  respawn_delay_ms: number;
+  current_status: PlayerStatus;
+  current_dead_until_ms: number | null | undefined;
   audit: AuditLogger;
-  applyRespawn: (spawn: { x: number; y: number }) => void;
-  setDeadUntil: (ms: number) => void;
+  setDead: (dead_until_ms: number) => void;
   adjustReputation: (delta: number) => void;
 }
 
-export interface DeathHandlingResult {
-  respawn_in_ms: number;
+export interface ApplyDeathResult {
+  changed: boolean;
   dead_until_ms: number;
-  timer: NodeJS.Timeout;
+  respawn_in_ms: number;
+}
+
+export interface ApplyRespawnOptions {
+  now: number;
+  player_id: string;
+  map: MapName;
+  spawn: Position;
+  current_status: PlayerStatus;
+  current_dead_until_ms: number | null | undefined;
+  audit: AuditLogger;
+  setAlive: (spawn: Position) => void;
+}
+
+export interface ApplyRespawnResult {
+  changed: boolean;
 }
 
 function deathAliasForMap(map: MapName): string {
@@ -29,22 +44,36 @@ function deathAliasForMap(map: MapName): string {
   return `death_in_${lower}`;
 }
 
-export function handleDeath(opts: HandleDeathOptions): DeathHandlingResult {
-  const respawn_in_ms = DEATH_RESPAWN_DELAY_MS;
-  const dead_until_ms = opts.now + respawn_in_ms;
-  const alias = deathAliasForMap(opts.map);
+export function applyDeath(opts: ApplyDeathOptions): ApplyDeathResult {
+  const alreadyDead =
+    opts.current_status === 'dead' && opts.current_dead_until_ms !== null && opts.current_dead_until_ms !== undefined;
+
+  if (alreadyDead && opts.current_dead_until_ms! > opts.now) {
+    return {
+      changed: false,
+      dead_until_ms: opts.current_dead_until_ms!,
+      respawn_in_ms: opts.current_dead_until_ms! - opts.now,
+    };
+  }
+
+  const dead_until_ms = opts.now + opts.respawn_delay_ms;
   const reputation_delta = -DEATH_REPUTATION_PENALTY;
+  const alias = deathAliasForMap(opts.map);
+
+  opts.setDead(dead_until_ms);
 
   opts.audit.write({
     player_id: opts.player_id,
     action: 'death',
     inputs: {
       map: opts.map,
-      position: { x: opts.x, y: opts.y },
+      position: opts.position,
       cause: opts.cause,
       killer_id: opts.killer_id ?? null,
+      respawn_delay_ms: opts.respawn_delay_ms,
+      dead_until_ms,
     },
-    result: 'dead',
+    result: 'ok',
   });
 
   opts.audit.write({
@@ -58,51 +87,43 @@ export function handleDeath(opts: HandleDeathOptions): DeathHandlingResult {
     result: 'ok',
   });
 
-  opts.setDeadUntil(dead_until_ms);
-
   if (reputation_delta !== 0) {
     opts.adjustReputation(reputation_delta);
-  }
-
-  opts.audit.write({
-    player_id: opts.player_id,
-    action: 'death_penalty_applied',
-    inputs: {
-      map: opts.map,
-      dead_until_ms,
-      respawn_in_ms,
-      reputation_delta,
-      cause: opts.cause,
-      killer_id: opts.killer_id ?? null,
-    },
-    result: 'applied',
-  });
-
-  opts.audit.write({
-    player_id: opts.player_id,
-    action: 'respawn_started',
-    inputs: {
-      map: opts.map,
-      respawn_at_ms: dead_until_ms,
-      respawn_in_ms,
-    },
-    result: 'scheduled',
-  });
-
-  const timer = setTimeout(() => {
-    opts.applyRespawn(opts.spawn);
-
     opts.audit.write({
       player_id: opts.player_id,
-      action: 'respawn_completed',
+      action: 'death_penalty_applied',
       inputs: {
         map: opts.map,
-        spawn: opts.spawn,
+        dead_until_ms,
+        respawn_delay_ms: opts.respawn_delay_ms,
+        reputation_delta,
         cause: opts.cause,
+        killer_id: opts.killer_id ?? null,
       },
-      result: 'ok',
+      result: 'applied',
     });
-  }, respawn_in_ms);
+  }
 
-  return { respawn_in_ms, dead_until_ms, timer };
+  return { changed: true, dead_until_ms, respawn_in_ms: opts.respawn_delay_ms };
+}
+
+export function applyRespawn(opts: ApplyRespawnOptions): ApplyRespawnResult {
+  if (opts.current_status !== 'dead') return { changed: false };
+  if (opts.current_dead_until_ms === null || opts.current_dead_until_ms === undefined) return { changed: false };
+  if (opts.now < opts.current_dead_until_ms) return { changed: false };
+
+  opts.setAlive(opts.spawn);
+
+  opts.audit.write({
+    player_id: opts.player_id,
+    action: 'respawn',
+    inputs: {
+      map: opts.map,
+      spawn: opts.spawn,
+      dead_until_ms: opts.current_dead_until_ms,
+    },
+    result: 'ok',
+  });
+
+  return { changed: true };
 }

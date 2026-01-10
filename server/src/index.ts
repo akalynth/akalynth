@@ -6,7 +6,7 @@ import type { ClientMessage, ServerMessage } from '../../shared/protocol.js';
 import { ServerMessages, parseClientMessage } from '../../shared/protocol.js';
 import type { Player, TutorialProgress } from '../../shared/types.js';
 import { TileCode } from '../../shared/types.js';
-import { DEATH_TEST_ENABLED, TICK_MS } from '../../shared/constants.js';
+import { DEATH_TEST_ENABLED, DEATH_RESPAWN_DELAY_MS, TICK_MS } from '../../shared/constants.js';
 import type { MapName, SessionMeResponse, WorldStateResult } from '../../shared/http.js';
 import { handleHttp } from './api/http.js';
 
@@ -16,13 +16,14 @@ import { createAntiCheatRuntime, onChat, onMoveApplied, onMoveIntent } from './a
 import { applyThrottle, checkTemTimeout, handleTemResponse, issueTemChallenge, isThrottled } from './anticheat/tem.js';
 import { loadSharedMap, createWorldState, toPublicPlayer } from './world/state.js';
 import { indexFor, tryMove } from './world/movement.js';
-import { handleDeath } from './world/death.js';
+import { applyDeath, applyRespawn } from './world/death.js';
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const VERSION = '0.1.0';
 const DEFAULT_GUEST_SESSION_TTL_MS = 10 * 60 * 1000;
 const DEFAULT_GUEST_SESSION_CLEANUP_MS = 60 * 1000;
 const MAX_GUEST_SESSIONS = 10_000;
+const DEBUG_MODE = process.env.DEBUG === '1';
 
 function parseEnvMs(envValue: string | undefined, fallback: number, min: number): number {
   if (!envValue) return fallback;
@@ -153,7 +154,7 @@ const httpServer = http.createServer((req, res) => {
       const w = worlds[map];
       if (!w) return { error: 'unknown_map', status: 404 };
 
-      let players = Array.from(w.players.values()).map(toPublicPlayer);
+      let players = Array.from(w.players.values()).map((p) => toPublicPlayer(p));
       if (query.limit) {
         const cap = Math.max(1, Math.min(query.limit, 500));
         players = players.slice(0, cap);
@@ -168,6 +169,23 @@ const httpServer = http.createServer((req, res) => {
       const now = Date.now();
       const me = guest_token ? resolveSessionMe(guest_token, 'expired_on_world_state') : null;
       if (me && 'error' in me) return me;
+
+      let me_status: Player['status'] | undefined;
+      let me_dead_until_ms: number | null | undefined;
+      let me_dead_ttl_ms: number | null | undefined;
+
+      if (me && me.ok) {
+        const player = w.players.get(me.player_id);
+        if (player) {
+          me_status = player.status;
+          me_dead_until_ms = player.dead_until_ms ?? null;
+          if (player.status === 'dead' && player.dead_until_ms) {
+            me_dead_ttl_ms = Math.max(0, player.dead_until_ms - now);
+          } else {
+            me_dead_ttl_ms = null;
+          }
+        }
+      }
 
       const base = {
         ok: true as const,
@@ -184,7 +202,15 @@ const httpServer = http.createServer((req, res) => {
       };
 
       if (me && me.ok) {
-        return { ...base, me };
+        return {
+          ...base,
+          me: {
+            ...me,
+            status: me_status,
+            dead_until_ms: me_dead_until_ms,
+            dead_ttl_ms: me_dead_ttl_ms,
+          },
+        };
       }
       return base;
     },
@@ -215,6 +241,57 @@ function broadcastToMap(map: 'Rookguard' | 'Azura', message: ServerMessage, excl
     if (s.currentMap !== map) continue;
     if (s.ws.readyState === WebSocket.OPEN) s.ws.send(data);
   }
+}
+
+function applyRespawnNow(s: Session, now: number) {
+  if (!s.player) return;
+  const w = worldFor(s);
+  const spawn = w.map.spawn;
+  const result = applyRespawn({
+    now,
+    player_id: s.player.id,
+    map: s.currentMap,
+    spawn,
+    current_status: s.player.status,
+    current_dead_until_ms: s.player.dead_until_ms ?? null,
+    audit,
+    setAlive: (pos) => {
+      s.player!.status = 'alive';
+      s.player!.dead_until_ms = null;
+      s.player!.x = pos.x;
+      s.player!.y = pos.y;
+    },
+  });
+
+  if (!result.changed) return;
+
+  w.players.set(s.player.id, s.player);
+  const nearby = Array.from(w.players.values())
+    .filter((p) => p.id !== s.player!.id)
+    .map((p) => toPublicPlayer(p));
+  send(s.ws, ServerMessages.worldState(toPublicPlayer(s.player!, true), nearby));
+  s.respawnTimer = null;
+}
+
+function scheduleRespawnIfNeeded(s: Session, now: number) {
+  if (!s.player) return;
+  if (s.player.status !== 'dead') return;
+  if (s.player.dead_until_ms === null || s.player.dead_until_ms === undefined) return;
+
+  const remaining = s.player.dead_until_ms - now;
+  if (remaining <= 0) {
+    applyRespawnNow(s, now);
+    return;
+  }
+
+  if (s.respawnTimer) {
+    clearTimeout(s.respawnTimer);
+    s.respawnTimer = null;
+  }
+
+  s.respawnTimer = setTimeout(() => {
+    applyRespawnNow(s, Date.now());
+  }, remaining);
 }
 
 function kick(s: Session, reason: string) {
@@ -323,6 +400,14 @@ wss.on('connection', (ws) => {
 });
 
 function processSessionQueue(s: Session, now: number) {
+  if (s.player && s.player.status === 'dead') {
+    if (s.player.dead_until_ms !== null && s.player.dead_until_ms !== undefined && now >= s.player.dead_until_ms) {
+      applyRespawnNow(s, now);
+    } else if (!s.respawnTimer) {
+      scheduleRespawnIfNeeded(s, now);
+    }
+  }
+
   // Tem timeout enforcement
   const timeoutOutcome = checkTemTimeout(s.anti.state, now);
   if (timeoutOutcome.outcome === 'failed') {
@@ -451,11 +536,11 @@ function processSessionQueue(s: Session, now: number) {
 
         const nearby = Array.from(w.players.values())
           .filter((p) => p.id !== s.player!.id)
-          .map(toPublicPlayer);
+          .map((p) => toPublicPlayer(p));
 
         audit.write({ player_id: s.player!.id, action: 'enter_world', inputs: {}, result: 'ok' });
 
-        send(s.ws, ServerMessages.worldState(toPublicPlayer(s.player!), nearby));
+        send(s.ws, ServerMessages.worldState(toPublicPlayer(s.player!, true), nearby));
         broadcastToMap(s.currentMap, ServerMessages.playerJoined(toPublicPlayer(s.player!)), s.connId);
         break;
       }
@@ -574,7 +659,7 @@ function processSessionQueue(s: Session, now: number) {
       }
 
       case 'kill_self': {
-        if (!DEATH_TEST_ENABLED) {
+        if (!DEATH_TEST_ENABLED || !DEBUG_MODE) {
           send(s.ws, ServerMessages.error('invalid_message', 'Test death disabled'));
           audit.write({
             player_id: s.player?.id ?? s.connId,
@@ -592,11 +677,6 @@ function processSessionQueue(s: Session, now: number) {
           break;
         }
 
-        if (s.respawnTimer) {
-          clearTimeout(s.respawnTimer);
-          s.respawnTimer = null;
-        }
-
         const w = worldFor(s);
         audit.write({
           player_id: s.player!.id,
@@ -605,34 +685,26 @@ function processSessionQueue(s: Session, now: number) {
           result: 'requested',
         });
 
-        const { respawn_in_ms, timer } = handleDeath({
+        if (s.respawnTimer) {
+          clearTimeout(s.respawnTimer);
+          s.respawnTimer = null;
+        }
+
+        const deathResult = applyDeath({
           now: msgNow,
           player_id: s.player!.id,
           map: s.currentMap,
-          x: s.player!.x,
-          y: s.player!.y,
+          position: { x: s.player!.x, y: s.player!.y },
           cause: 'test',
           killer_id: null,
-          spawn: w.map.spawn,
+          respawn_delay_ms: DEATH_RESPAWN_DELAY_MS,
+          current_status: s.player!.status,
+          current_dead_until_ms: s.player!.dead_until_ms,
           audit,
-          applyRespawn: (spawn) => {
-            if (!sessions.has(s.connId) || !s.player) return;
-            const currentWorld = worldFor(s);
-            s.player.status = 'alive';
-            s.player.dead_until_ms = null;
-            s.player.x = spawn.x;
-            s.player.y = spawn.y;
-            currentWorld.players.set(s.player.id, s.player);
-            const nearby = Array.from(currentWorld.players.values())
-              .filter((p) => p.id !== s.player!.id)
-              .map(toPublicPlayer);
-            send(s.ws, ServerMessages.worldState(toPublicPlayer(s.player!), nearby));
-            s.respawnTimer = null;
-          },
-          setDeadUntil: (ms) => {
+          setDead: (dead_until_ms) => {
             if (!s.player) return;
             s.player.status = 'dead';
-            s.player.dead_until_ms = ms;
+            s.player.dead_until_ms = dead_until_ms;
           },
           adjustReputation: (delta) => {
             if (!s.player) return;
@@ -640,9 +712,17 @@ function processSessionQueue(s: Session, now: number) {
           },
         });
 
-        s.respawnTimer = timer;
+        scheduleRespawnIfNeeded(s, msgNow);
 
-        send(s.ws, ServerMessages.deathNotice(respawn_in_ms, s.currentMap, w.map.spawn, 'test'));
+        send(
+          s.ws,
+          ServerMessages.deathNotice(
+            deathResult.respawn_in_ms,
+            s.currentMap,
+            w.map.spawn,
+            deathResult.changed ? 'test' : 'already_dead'
+          )
+        );
         break;
       }
 
@@ -796,9 +876,9 @@ function processSessionQueue(s: Session, now: number) {
 
                 const nearbyAzura = Array.from(worlds.Azura.players.values())
                   .filter((p) => p.id !== s.player!.id)
-                  .map(toPublicPlayer);
+                  .map((p) => toPublicPlayer(p));
 
-                send(s.ws, ServerMessages.worldState(toPublicPlayer(s.player!), nearbyAzura));
+                send(s.ws, ServerMessages.worldState(toPublicPlayer(s.player!, true), nearbyAzura));
                 broadcastToMap('Azura', ServerMessages.playerJoined(toPublicPlayer(s.player!)), s.connId);
 
                 finalX = s.player!.x;

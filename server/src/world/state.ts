@@ -17,13 +17,14 @@ export function createWorldState(map: MapData): WorldState {
   return { map, players: new Map() };
 }
 
-export function toPublicPlayer(p: Player): PlayerPublic {
+export function toPublicPlayer(p: Player, includeDeadUntil = false): PlayerPublic {
   return {
     id: p.id,
     name: p.name,
     x: p.x,
     y: p.y,
     status: p.status ?? 'alive',
+    dead_until_ms: includeDeadUntil ? p.dead_until_ms : undefined,
     reputation: p.reputation,
   };
 }
