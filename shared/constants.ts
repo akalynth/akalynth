@@ -25,3 +25,9 @@ export const DEATH_REPUTATION_PENALTY = parseEnvInt(process.env.DEATH_REPUTATION
 export const DEATH_TEST_ENABLED = process.env.ALLOW_TEST_DEATH === '1';
 export const LAST_DAMAGE_WINDOW_MS = parseEnvInt(process.env.LAST_DAMAGE_WINDOW_MS, 5_000, 0);
 
+// Heat (behavior enforcement)
+export const HEAT_DECAY_PER_MIN = parseEnvInt(process.env.HEAT_DECAY_PER_MIN, 6, 0);
+export const HEAT_TEM_THRESHOLD = parseEnvInt(process.env.HEAT_TEM_THRESHOLD, 30, 0);
+export const HEAT_PENALTY_THRESHOLD = parseEnvInt(process.env.HEAT_PENALTY_THRESHOLD, 60, 0);
+export const HEAT_TEM_COOLDOWN_MS = parseEnvInt(process.env.HEAT_TEM_COOLDOWN_MS, 60_000, 0);
+export const HEAT_PENALTY_DURATION_MS = parseEnvInt(process.env.HEAT_PENALTY_DURATION_MS, 60_000, 0);

@@ -168,6 +168,9 @@ export const LEGEND_SIGHTED_ACTION = 'legend_sighted';
 export const LEGEND_ATTEMPTED_ACTION = 'legend_attempted';
 export const LEGEND_REFUSED_ACTION = 'legend_refused';
 export const FIRST_ATTEMPT_STONE_ACTION = 'first_attempt_stone_cannot_obtain';
+export const HEAT_CHANGED_ACTION = 'heat_changed';
+export const HEAT_TEM_ESCALATION_ACTION = 'heat_tem_escalation';
+export const HEAT_PENALTY_APPLIED_ACTION = 'heat_penalty_applied';
 
 export type DeathReceiptAction = 'death' | 'respawn' | 'death_penalty_applied';
 
