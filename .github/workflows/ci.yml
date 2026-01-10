@@ -25,6 +25,11 @@ jobs:
           cache: "npm"
           cache-dependency-path: server/package-lock.json
 
+      - name: Verify protocol docs are in sync
+        run: |
+          chmod +x scripts/verify_protocol_sync.sh
+          ./scripts/verify_protocol_sync.sh
+
       - name: Install dependencies
         run: cd server && npm ci
 
