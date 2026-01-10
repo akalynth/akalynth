@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { AntiCheatState } from '../../../shared/types.js';
-import { TEM_CHALLENGE_TIMEOUT_MS, TEM_CHALLENGE_RESPONSE, THROTTLE_DURATION_MS } from '../../../shared/types.js';
+import { TEM_CHALLENGE_RESPONSE, THROTTLE_DURATION_MS } from '../../../shared/types.js';
+import { TEM_TIMEOUT_SECONDS } from '../../../shared/constants.js';
 
 export interface TemChallenge {
   challenge_id: string;
@@ -20,14 +21,14 @@ export function issueTemChallenge(state: AntiCheatState, now: number): TemOutcom
   const challenge_id = `tc_${randomUUID()}`;
   state.temChallengeActive = true;
   state.temChallengeId = challenge_id;
-  state.temChallengeExpires = now + TEM_CHALLENGE_TIMEOUT_MS;
+  state.temChallengeExpires = now + TEM_TIMEOUT_SECONDS * 1000;
 
   return {
     outcome: 'issued',
     challenge: {
       challenge_id,
-      message: 'Hi! 👋 type AZURA in chat within 15 seconds',
-      timeout_seconds: Math.floor(TEM_CHALLENGE_TIMEOUT_MS / 1000),
+      message: `Hi! 👋 type AZURA in chat within ${TEM_TIMEOUT_SECONDS} seconds`,
+      timeout_seconds: TEM_TIMEOUT_SECONDS,
     },
   };
 }

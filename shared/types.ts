@@ -123,13 +123,6 @@ export interface AuditReceipt {
   evidence_hash?: string;
 }
 
-// ============================================================================
-// Constants
-// ============================================================================
-
-export const GAME_TICK_MS = 100; // 10 ticks per second
-export const MIN_MOVE_INTERVAL_MS = 100; // Max 10 moves per second
-export const TEM_CHALLENGE_TIMEOUT_MS = 15000; // 15 seconds
 export const TEM_CHALLENGE_RESPONSE = 'AZURA';
 export const THROTTLE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 export const SIGNAL_DECAY_MS = 60 * 1000; // 60 seconds

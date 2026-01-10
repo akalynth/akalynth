@@ -1,9 +1,9 @@
 import type { AntiCheatState, Signal, SignalType } from '../../../shared/types.js';
 import {
-  MIN_MOVE_INTERVAL_MS,
   SIGNAL_DECAY_MS,
   THROTTLE_DURATION_MS,
 } from '../../../shared/types.js';
+import { MIN_MOVE_INTERVAL_MS } from '../../../shared/constants.js';
 
 export interface AntiCheatRuntime {
   state: AntiCheatState;

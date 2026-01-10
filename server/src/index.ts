@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import type { ClientMessage, ServerMessage } from '../../shared/protocol.js';
 import { ServerMessages, parseClientMessage } from '../../shared/protocol.js';
 import type { Player } from '../../shared/types.js';
-import { GAME_TICK_MS } from '../../shared/types.js';
+import { TICK_MS } from '../../shared/constants.js';
 
 import { createAuditLogger } from './audit/logger.js';
 import { createAntiCheatRuntime, onChat, onMoveIntent } from './anticheat/detector.js';
@@ -357,6 +357,6 @@ function processSessionQueue(s: Session, now: number) {
 setInterval(() => {
   const now = Date.now();
   for (const s of sessions.values()) processSessionQueue(s, now);
-}, GAME_TICK_MS);
+}, TICK_MS);
 
 console.log(`Akalynth server listening on ws://0.0.0.0:${PORT}`);
