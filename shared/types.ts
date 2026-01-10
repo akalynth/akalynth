@@ -162,6 +162,9 @@ export interface AuditReceipt {
   evidence_hash?: string;
 }
 
+export const LEDGER_HESITATION_ACTION = 'ledger_hesitation';
+export const RUMOR_SEEDED_ACTION = 'rumor_seeded';
+
 export type DeathReceiptAction = 'death' | 'respawn' | 'death_penalty_applied';
 
 export const TEM_CHALLENGE_RESPONSE = 'AZURA';

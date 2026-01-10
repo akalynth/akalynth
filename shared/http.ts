@@ -132,3 +132,23 @@ export interface PublicReceiptsResponse {
   total: number;
   has_more: boolean;
 }
+
+// ============================================================================
+// Rumors API (public)
+// ============================================================================
+
+export interface PublicRumor {
+  rumor_id: string;
+  text: string;
+  map: MapName;
+  actor: string;
+  timestamp: string;
+}
+
+export type PublicRumorsQueryParams = PublicReceiptsQueryParams;
+
+export interface PublicRumorsResponse {
+  rumors: PublicRumor[];
+  total: number;
+  has_more: boolean;
+}
