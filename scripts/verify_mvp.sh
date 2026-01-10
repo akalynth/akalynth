@@ -57,7 +57,7 @@ BASE_LINES="$(wc -l < "$RECEIPTS" | tr -d ' ')"
 log "Receipts baseline lines: $BASE_LINES"
 
 log "Starting server (DEBUG=1 ALLOW_TEST_DEATH=1 DEATH_RESPAWN_DELAY_MS=$DEATH_RESPAWN_DELAY_MS_OVERRIDE npm run dev)…"
-DEBUG=1 ALLOW_TEST_DEATH=1 DEATH_RESPAWN_DELAY_MS="$DEATH_RESPAWN_DELAY_MS_OVERRIDE" npm run dev >/tmp/akalynth_verify_server.log 2>&1 &
+DEBUG=1 ALLOW_TEST_DEATH=1 DEATH_RESPAWN_DELAY_MS="$DEATH_RESPAWN_DELAY_MS_OVERRIDE" PUBLIC_RECEIPTS_DELAY_MS=0 npm run dev >/tmp/akalynth_verify_server.log 2>&1 &
 SERVER_PID=$!
 sleep 1
 
@@ -375,6 +375,18 @@ if ! run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=respawn&player_id=$DEAT
   die "Receipts API missing respawn for player_id=$DEATH_PLAYER_ID"
 fi
 log "Death receipts present ✅"
+
+log "Checking public receipts feed..."
+PUBLIC_JSON="$(run_timeout 5 curl -s "$HTTP_URL/v1/receipts/public?limit=50" || true)"
+echo "$PUBLIC_JSON" | jq . >/dev/null 2>&1 || die "Invalid JSON from public receipts feed"
+if ! echo "$PUBLIC_JSON" | grep -Eq 'death_in_rookguard|death_in_azura'; then
+  die "Public receipts feed missing death_in_*"
+fi
+FIRST_PUBLIC_COUNT="$(echo "$PUBLIC_JSON" | jq '[.receipts[] | select(.action|contains(\"first_\"))] | length' 2>/dev/null || echo 0)"
+if [[ "${FIRST_PUBLIC_COUNT:-0}" -lt 1 ]]; then
+  die "Public receipts feed missing first-of legend receipts"
+fi
+log "Public receipts feed present ✅"
 
 log "✅ VERIFY PASS"
 log "Last receipts:"
