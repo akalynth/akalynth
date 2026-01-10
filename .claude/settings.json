@@ -3,13 +3,17 @@
     "PreToolUse": [
       {
         "matcher": "Bash",
-        "command": "./scripts/precommit-hook.sh --hook=pretooluse"
+        "command": "./scripts/refuse_windows.sh"
       }
     ],
     "PostToolUse": [
       {
-        "matcher": "Edit|Write",
-        "command": "if [[ \"${CLAUDE_FILE_PATH:-}\" == *.ts || \"${CLAUDE_FILE_PATH:-}\" == *.tsx ]]; then npx --yes prettier --write \"${CLAUDE_FILE_PATH}\" >/dev/null 2>&1 || true; fi"
+        "matcher": "Edit",
+        "command": "./scripts/format_ts.sh"
+      },
+      {
+        "matcher": "Write",
+        "command": "./scripts/format_ts.sh"
       }
     ]
   }
