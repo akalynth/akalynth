@@ -41,6 +41,9 @@ Connection accepted.
 #### `login` (client → server)
 
 Login with guest token (auto-generated if not provided).
+Guest tokens are single-use and expire after a short TTL (default 10 minutes,
+configurable via `GUEST_SESSION_TTL_MS`). Expired tokens return
+`error: "not_authenticated"`.
 
 ```json
 {

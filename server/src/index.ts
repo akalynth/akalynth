@@ -19,6 +19,23 @@ import { indexFor, tryMove } from './world/movement.js';
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const VERSION = '0.1.0';
+const DEFAULT_GUEST_SESSION_TTL_MS = 10 * 60 * 1000;
+const DEFAULT_GUEST_SESSION_CLEANUP_MS = 60 * 1000;
+const MAX_GUEST_SESSIONS = 10_000;
+
+function parseEnvMs(envValue: string | undefined, fallback: number, min: number): number {
+  if (!envValue) return fallback;
+  const parsed = parseInt(envValue, 10);
+  if (Number.isFinite(parsed) && parsed >= min) return parsed;
+  return fallback;
+}
+
+const GUEST_SESSION_TTL_MS = parseEnvMs(process.env.GUEST_SESSION_TTL_MS, DEFAULT_GUEST_SESSION_TTL_MS, 1000);
+const GUEST_SESSION_CLEANUP_MS = parseEnvMs(
+  process.env.GUEST_SESSION_CLEANUP_MS,
+  DEFAULT_GUEST_SESSION_CLEANUP_MS,
+  100
+);
 
 type Queued = { msg: ClientMessage; receivedAt: number };
 
@@ -40,13 +57,21 @@ const sessions = new Map<string, Session>();
 const audit = createAuditLogger();
 const receiptsReader = createReceiptsReader('audit');
 
-type GuestSession = { player_id: string; name: string; minted_at: number };
+type GuestSession = { player_id: string; name: string; minted_at_ms: number; expires_at_ms: number };
 const guestSessions = new Map<string, GuestSession>(); // key = guest_token
 
 const worlds = {
   Rookguard: createWorldState(loadSharedMap('rookguard.json')),
   Azura: createWorldState(loadSharedMap('azura.json')),
 } as const;
+
+function pruneExpiredGuestSessions(now: number) {
+  for (const [token, sess] of guestSessions) {
+    if (sess.expires_at_ms <= now) {
+      guestSessions.delete(token);
+    }
+  }
+}
 
 // HTTP control plane
 const httpServer = http.createServer((req, res) => {
@@ -72,10 +97,18 @@ const httpServer = http.createServer((req, res) => {
     },
     queryReceipts: (params) => receiptsReader.query(params),
     mintGuestSession: () => {
+      const now = Date.now();
+      pruneExpiredGuestSessions(now);
+
+      if (guestSessions.size >= MAX_GUEST_SESSIONS) {
+        return { error: 'guest_session_capacity', status: 429 };
+      }
+
       const player_id = `p_${randomUUID()}`;
       const guest_token = `gt_${randomUUID()}`;
       const name = `Guest_${player_id.slice(-4)}`;
-      guestSessions.set(guest_token, { player_id, name, minted_at: Date.now() });
+      const expires_at_ms = now + GUEST_SESSION_TTL_MS;
+      guestSessions.set(guest_token, { player_id, name, minted_at_ms: now, expires_at_ms });
       audit.write({
         player_id,
         action: 'session_guest_minted',
@@ -247,6 +280,7 @@ function processSessionQueue(s: Session, now: number) {
 
         // HTTP-first: token provided
         if (msg.guest_token) {
+          const nowMs = Date.now();
           const minted = guestSessions.get(msg.guest_token);
 
           if (!minted) {
@@ -256,6 +290,18 @@ function processSessionQueue(s: Session, now: number) {
               action: 'login',
               inputs: { guest_token_provided: true },
               result: 'invalid_token',
+            });
+            break;
+          }
+
+          if (minted.expires_at_ms <= nowMs) {
+            guestSessions.delete(msg.guest_token);
+            send(s.ws, ServerMessages.error('not_authenticated', 'Guest token expired'));
+            audit.write({
+              player_id: minted.player_id,
+              action: 'session_guest_expired',
+              inputs: { reason: 'expired_on_login' },
+              result: 'not_authenticated',
             });
             break;
           }
@@ -591,6 +637,8 @@ setInterval(() => {
   const now = Date.now();
   for (const s of sessions.values()) processSessionQueue(s, now);
 }, TICK_MS);
+
+setInterval(() => pruneExpiredGuestSessions(Date.now()), GUEST_SESSION_CLEANUP_MS);
 
 httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`HTTP+WS listening on :${PORT}`);

@@ -14,12 +14,14 @@ import type {
   ReceiptsResponse,
 } from '../../../shared/http.js';
 
+type GuestSessionMintResult = GuestSessionResponse | { error: string; status?: number };
+
 export interface ApiDeps {
   getVersion: () => string;
   getTickMs: () => number;
   listMaps: () => Array<{ name: MapName; width: number; height: number }>;
   getMap: (name: MapName) => MapDetailResponse | null;
-  mintGuestSession?: () => GuestSessionResponse;
+  mintGuestSession?: () => GuestSessionMintResult;
   queryReceipts: (params: ReceiptsQueryParams) => ReceiptsResponse;
 }
 
@@ -41,6 +43,10 @@ function methodNotAllowed(res: ServerResponse) {
 
 function isMapName(x: string): x is MapName {
   return x === 'Rookguard' || x === 'Azura';
+}
+
+function isGuestSessionError(x: GuestSessionMintResult): x is { error: string; status?: number } {
+  return typeof (x as { error?: unknown }).error === 'string';
 }
 
 export function handleHttp(
@@ -95,7 +101,12 @@ export function handleHttp(
       return (json(res, 501, { error: 'not_implemented' }), true);
 
     const sess = deps.mintGuestSession();
-    json(res, 200, sess);
+    if (isGuestSessionError(sess)) {
+      const status = sess.status ?? 500;
+      json(res, status, { error: sess.error });
+    } else {
+      json(res, 200, sess);
+    }
     return true;
   }
 
