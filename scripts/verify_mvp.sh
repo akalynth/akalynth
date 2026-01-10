@@ -183,6 +183,15 @@ for action in runestone_cast runestone_result; do
   wait_for_receipt "$action" "$RUNE_PLAYER_ID" '(.receipts | length) > 0' >/dev/null
 done
 wait_for_receipt "runestone_denied" "$RUNE_PLAYER_ID" '[.receipts[] | select(.inputs.reason=="cooldown")] | length > 0' >/dev/null
+log "Heat flow..."
+read -r HEAT_PLAYER_ID HEAT_GUEST_TOKEN <<<"$(mint_guest)"
+HEAT_JSON="$(run_ws_scenario heat "$HEAT_GUEST_TOKEN")"
+assert_ws_ok "heat" "$HEAT_JSON"
+wait_for_receipt "heat_changed" "$HEAT_PLAYER_ID" '(.receipts | length) > 0' >/dev/null
+if ! try_receipt "heat_tem_escalation" "$HEAT_PLAYER_ID" '(.receipts | length) > 0' 6; then
+  try_receipt "tem_challenge_issued" "$HEAT_PLAYER_ID" \
+    '[.receipts[] | select(.inputs.trigger=="heat")] | length > 0' 6 || die "Heat escalation receipt missing"
+fi
 log "Trinity of Shadow flow (forced face)..."
 cleanup
 sleep 1
