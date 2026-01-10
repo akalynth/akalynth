@@ -7,6 +7,9 @@ import { ServerMessages, parseClientMessage } from '../../shared/protocol.js';
 import type { Player, TutorialProgress } from '../../shared/types.js';
 import {
   FIRST_ATTEMPT_STONE_ACTION,
+  HEAT_CHANGED_ACTION,
+  HEAT_PENALTY_APPLIED_ACTION,
+  HEAT_TEM_ESCALATION_ACTION,
   LEDGER_HESITATION_ACTION,
   LEGEND_ATTEMPTED_ACTION,
   LEGEND_REFUSED_ACTION,
@@ -14,7 +17,17 @@ import {
   RUMOR_SEEDED_ACTION,
 } from '../../shared/types.js';
 import { TileCode } from '../../shared/types.js';
-import { DEATH_TEST_ENABLED, DEATH_RESPAWN_DELAY_MS, LAST_DAMAGE_WINDOW_MS, TICK_MS } from '../../shared/constants.js';
+import {
+  DEATH_TEST_ENABLED,
+  DEATH_RESPAWN_DELAY_MS,
+  HEAT_DECAY_PER_MIN,
+  HEAT_PENALTY_DURATION_MS,
+  HEAT_PENALTY_THRESHOLD,
+  HEAT_TEM_COOLDOWN_MS,
+  HEAT_TEM_THRESHOLD,
+  LAST_DAMAGE_WINDOW_MS,
+  TICK_MS,
+} from '../../shared/constants.js';
 import type {
   MapName,
   PublicReceiptsActorMode,
@@ -33,6 +46,15 @@ import { applyThrottle, checkTemTimeout, handleTemResponse, issueTemChallenge, i
 import { loadSharedMap, createWorldState, toPublicPlayer } from './world/state.js';
 import { indexFor, tryMove } from './world/movement.js';
 import { applyDeath, applyRespawn } from './world/death.js';
+import {
+  addHeat,
+  createHeatState,
+  isPenaltyActive,
+  shouldApplyPenalty,
+  shouldTemEscalate,
+  startPenalty,
+} from './world/heat.js';
+import type { HeatState } from './world/heat.js';
 import {
   findRunestoneTable,
   isNearRunestoneTable,
@@ -112,6 +134,7 @@ type Session = {
   currentMap: 'Rookguard' | 'Azura';
   tutorial: TutorialProgress;
   anti: ReturnType<typeof createAntiCheatRuntime>;
+  heat: HeatState;
   lastMoveAppliedAt: number | null;
   lastChatAcceptedAt: number | null;
   respawnTimer: NodeJS.Timeout | null;
@@ -121,6 +144,8 @@ type Session = {
   // Runestone state
   lastRunestoneCastAtMs: number | null;
   lastRunestoneFaces: Element[];
+  runestoneCooldownWindowStartMs: number | null;
+  runestoneCooldownCount: number;
 };
 
 const sessions = new Map<string, Session>();
@@ -157,6 +182,7 @@ const LEGEND_STONE_ID = 'stone_cannot_obtain';
 const LEGEND_STONE_MAP: MapName = 'Rookguard';
 const LEGEND_STONE_LANDMARK = 'legend_stone';
 const LEGEND_STONE_HESITATION_MS = 500;
+const RUNESTONE_COOLDOWN_HEAT_WINDOW_MS = 10_000;
 const RUMOR_STONE_REFUSES_ID = 'stone_refuses';
 const RUMOR_STONE_REFUSES_TEXT = 'Somewhere in Rookguard, the world refuses to finish what you start.';
 const RUMOR_STONE_REFUSES_MAP: MapName = 'Rookguard';
@@ -244,6 +270,66 @@ function seedStoneRumorIfNeeded(playerId: string) {
     },
     result: 'ok',
   });
+}
+
+function applyHeatChange(
+  s: Session,
+  now: number,
+  delta: number,
+  reason: string,
+  extra?: { window_ms?: number }
+) {
+  if (!s.player || delta === 0) return;
+  const out = addHeat(s.heat, now, delta, reason, HEAT_DECAY_PER_MIN);
+  s.heat = out.state;
+  const inputs: Record<string, unknown> = {
+    prev_score: out.prevScore,
+    new_score: out.newScore,
+    delta,
+    reason,
+    decay_applied: out.decayApplied,
+  };
+  if (extra?.window_ms) inputs.window_ms = extra.window_ms;
+  audit.write({
+    player_id: s.player.id,
+    action: HEAT_CHANGED_ACTION,
+    inputs,
+    result: 'ok',
+  });
+  maybeEscalateHeat(s, now, reason);
+}
+
+function maybeEscalateHeat(s: Session, now: number, reason: string) {
+  if (!s.player) return;
+  if (!s.anti.state.temChallengeActive && shouldTemEscalate(s.heat, now, HEAT_TEM_THRESHOLD, HEAT_TEM_COOLDOWN_MS)) {
+    const out = issueTemChallenge(s.anti.state, now);
+    if (out.outcome === 'issued') {
+      send(s.ws, { type: 'tem_challenge', ...out.challenge });
+      audit.write({
+        player_id: s.player.id,
+        action: 'tem_challenge_issued',
+        inputs: { trigger: 'heat', score: s.heat.score, reason },
+        result: 'challenge_sent',
+      });
+      audit.write({
+        player_id: s.player.id,
+        action: HEAT_TEM_ESCALATION_ACTION,
+        inputs: { score: s.heat.score, reason, cooldown_ms: HEAT_TEM_COOLDOWN_MS },
+        result: 'requested',
+      });
+      s.heat.last_tem_trigger_ms = now;
+    }
+  }
+
+  if (shouldApplyPenalty(s.heat, now, HEAT_PENALTY_THRESHOLD)) {
+    s.heat = startPenalty(s.heat, now, HEAT_PENALTY_DURATION_MS);
+    audit.write({
+      player_id: s.player.id,
+      action: HEAT_PENALTY_APPLIED_ACTION,
+      inputs: { score: s.heat.score, penalty_type: 'move_throttle', duration_ms: HEAT_PENALTY_DURATION_MS },
+      result: 'applied',
+    });
+  }
 }
 
 type LandmarkBox = { x: number; y: number; width: number; height: number };
@@ -624,6 +710,7 @@ wss.on('connection', (ws) => {
     currentMap: 'Rookguard',
     tutorial: { move: false, chat: false, tem: false, gate: false, complete: false },
     anti: createAntiCheatRuntime(now),
+    heat: createHeatState(now),
     lastMoveAppliedAt: null,
     lastChatAcceptedAt: null,
     respawnTimer: null,
@@ -631,6 +718,8 @@ wss.on('connection', (ws) => {
     ledgerHesitationDeathTs: null,
     lastRunestoneCastAtMs: null,
     lastRunestoneFaces: [],
+    runestoneCooldownWindowStartMs: null,
+    runestoneCooldownCount: 0,
   };
 
   sessions.set(connId, s);
@@ -926,6 +1015,9 @@ function processSessionQueue(s: Session, now: number) {
 
         s.lastChatAcceptedAt = msgNow;
         const act = onChat(s.anti, msgNow);
+        if (act.action !== 'none' && act.signal.type === 'chat_spam') {
+          applyHeatChange(s, msgNow, 10, 'chat_spam');
+        }
         if (act.action === 'throttle') {
           applyThrottle(s.anti.state, msgNow);
           audit.write({
@@ -1122,6 +1214,23 @@ function processSessionQueue(s: Session, now: number) {
           }
         }
 
+        if (isPenaltyActive(s.heat, msgNow)) {
+          audit.write({
+            player_id: s.player!.id,
+            action: 'move_intent',
+            inputs: { direction: msg.direction, from: before },
+            result: 'rejected',
+          });
+          audit.write({
+            player_id: s.player!.id,
+            action: 'move_result',
+            inputs: { to: { x: before.x, y: before.y, map: s.currentMap }, ok: false, reason: 'rate_limited' },
+            result: 'rejected',
+          });
+          send(s.ws, ServerMessages.moveResult(false, before.x, before.y, 'rate_limited'));
+          break;
+        }
+
         // If Tem is active (including tutorial demo), movement is blocked until response.
         if (s.anti.state.temChallengeActive) {
           send(s.ws, ServerMessages.moveResult(false, s.player!.x, s.player!.y, 'rate_limited'));
@@ -1182,6 +1291,7 @@ function processSessionQueue(s: Session, now: number) {
                 result: 'challenge_sent',
               });
             }
+            applyHeatChange(s, msgNow, 25, 'perfect_cadence');
           }
         }
 
@@ -1231,6 +1341,10 @@ function processSessionQueue(s: Session, now: number) {
               },
               result: 'attempted',
             });
+
+            if (attempt_n > 1) {
+              applyHeatChange(s, msgNow, 5, 'legend_probe');
+            }
 
             const spawn = w.map.spawn;
             audit.write({
@@ -1416,6 +1530,20 @@ function processSessionQueue(s: Session, now: number) {
             inputs: { table_id: msg.table_id, reason: 'cooldown' },
             result: 'denied',
           });
+          if (
+            s.runestoneCooldownWindowStartMs === null ||
+            msgNow - s.runestoneCooldownWindowStartMs > RUNESTONE_COOLDOWN_HEAT_WINDOW_MS
+          ) {
+            s.runestoneCooldownWindowStartMs = msgNow;
+            s.runestoneCooldownCount = 1;
+          } else {
+            s.runestoneCooldownCount += 1;
+            if (s.runestoneCooldownCount > 1) {
+              applyHeatChange(s, msgNow, 5, 'runestone_cooldown_spam', {
+                window_ms: RUNESTONE_COOLDOWN_HEAT_WINDOW_MS,
+              });
+            }
+          }
           break;
         }
 
