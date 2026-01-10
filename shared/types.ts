@@ -120,6 +120,7 @@ export type SignalType =
   | 'pathing_anomaly'
   | 'action_cadence'
   | 'repeated_timing'
+  | 'perfect_cadence'
   | 'chat_spam';
 
 export interface Signal {

@@ -5,18 +5,20 @@ import {
 } from '../../../shared/types.js';
 import {
   MIN_MOVE_INTERVAL_MS,
+  CADENCE_WINDOW_N,
+  CADENCE_MIN_SAMPLES,
+  CADENCE_STDDEV_MAX_MS,
+  CADENCE_MEAN_TARGET_MS,
+  CADENCE_MEAN_TOLERANCE_MS,
+  CADENCE_COOLDOWN_MS,
+  CADENCE_IDLE_RESET_MS,
 } from '../../../shared/constants.js';
-
-const CADENCE_WINDOW_N = 12;
-const CADENCE_MEAN_MIN_MS = 80;
-const CADENCE_MEAN_MAX_MS = 400;
-const CADENCE_STDDEV_MAX_MS = 10;
-const CADENCE_IDLE_RESET_MS = 5_000;
 
 export interface AntiCheatRuntime {
   state: AntiCheatState;
   lastMoveAt: number | null;
   lastMoveAppliedAt: number | null;
+  lastCadenceTriggerAt: number | null;
   moveIntervalsMs: number[];
   cadenceIntervalsMs: number[];
   chatTimestamps: number[];
@@ -42,6 +44,7 @@ export function createAntiCheatRuntime(now: number): AntiCheatRuntime {
     },
     lastMoveAt: null,
     lastMoveAppliedAt: null,
+    lastCadenceTriggerAt: null,
     moveIntervalsMs: [],
     cadenceIntervalsMs: [],
     chatTimestamps: [],
@@ -61,16 +64,20 @@ function addSignal(rt: AntiCheatRuntime, type: SignalType, now: number, details:
   return signal;
 }
 
-function cadenceStats(intervals: number[]): { mean: number; std: number; min: number; max: number } | null {
-  if (intervals.length < CADENCE_WINDOW_N) return null;
+function cadenceStats(intervals: number[]): { mean: number; std: number; min: number; max: number; n: number } | null {
+  if (intervals.length < CADENCE_MIN_SAMPLES) return null;
   const window = intervals.slice(-CADENCE_WINDOW_N);
-  const mean = window.reduce((a, b) => a + b, 0) / window.length;
-  const variance = window.reduce((a, x) => a + (x - mean) ** 2, 0) / window.length;
+  const n = window.length;
+  const mean = window.reduce((a, b) => a + b, 0) / n;
+  const variance = window.reduce((a, x) => a + (x - mean) ** 2, 0) / n;
   const std = Math.sqrt(variance);
-  if (mean >= CADENCE_MEAN_MIN_MS && mean <= CADENCE_MEAN_MAX_MS && std <= CADENCE_STDDEV_MAX_MS) {
+
+  // Perfect cadence: mean near tick target with very low variance
+  const meanInRange = Math.abs(mean - CADENCE_MEAN_TARGET_MS) <= CADENCE_MEAN_TOLERANCE_MS;
+  if (meanInRange && std <= CADENCE_STDDEV_MAX_MS) {
     const min = Math.min(...window);
     const max = Math.max(...window);
-    return { mean, std, min, max };
+    return { mean, std, min, max, n };
   }
   return null;
 }
@@ -101,6 +108,7 @@ export function onMoveIntent(rt: AntiCheatRuntime, now: number): DetectorAction 
 export function onMoveApplied(rt: AntiCheatRuntime, now: number): DetectorAction {
   decaySignals(rt, now);
 
+  // Reset cadence window after idle period
   if (rt.lastMoveAppliedAt !== null && now - rt.lastMoveAppliedAt > CADENCE_IDLE_RESET_MS) {
     rt.cadenceIntervalsMs = [];
   }
@@ -112,17 +120,27 @@ export function onMoveApplied(rt: AntiCheatRuntime, now: number): DetectorAction
 
     const stats = cadenceStats(rt.cadenceIntervalsMs);
     if (stats && !rt.state.temChallengeActive) {
-      const signal = addSignal(rt, 'repeated_timing', now, {
-        mean_ms: Number(stats.mean.toFixed(2)),
-        std_ms: Number(stats.std.toFixed(2)),
-        min_ms: stats.min,
-        max_ms: stats.max,
-        n: CADENCE_WINDOW_N,
-        intervals_ms: rt.cadenceIntervalsMs.slice(-CADENCE_WINDOW_N),
-      });
-      rt.cadenceIntervalsMs = [];
-      rt.lastMoveAppliedAt = now;
-      return { action: 'request_tem', signal };
+      // Check cooldown to prevent spam challenges
+      const sinceLastTrigger = rt.lastCadenceTriggerAt !== null
+        ? now - rt.lastCadenceTriggerAt
+        : Infinity;
+
+      if (sinceLastTrigger >= CADENCE_COOLDOWN_MS) {
+        rt.lastCadenceTriggerAt = now;
+        const signal = addSignal(rt, 'perfect_cadence', now, {
+          signal: 'perfect_cadence',
+          mean_ms: Number(stats.mean.toFixed(2)),
+          std_ms: Number(stats.std.toFixed(2)),
+          min_ms: stats.min,
+          max_ms: stats.max,
+          n: stats.n,
+          cooldown_ms: CADENCE_COOLDOWN_MS,
+          since_last_ms: sinceLastTrigger === Infinity ? null : sinceLastTrigger,
+        });
+        rt.cadenceIntervalsMs = [];
+        rt.lastMoveAppliedAt = now;
+        return { action: 'request_tem', signal };
+      }
     }
   }
 
