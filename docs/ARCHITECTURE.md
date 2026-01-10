@@ -30,9 +30,9 @@ The client is never trusted. It sends *intent*, and the server decides truth.
 
 ### World State (`server/src/world/state.ts`)
 
-- Holds all player positions
-- Holds map data (loaded from `shared/maps/azura.json`)
-- Single source of truth
+- Loads the active map definitions (`shared/maps/rookguard.json`, `shared/maps/azura.json`)
+- Keeps per-map player sets so broadcasts stay local to each zone
+- Serialises public player info with `toPublicPlayer`
 
 ### Movement Validator (`server/src/world/movement.ts`)
 
@@ -79,3 +79,18 @@ Client                          Server
 2. **Cheats can't speed hack** - Server enforces tick rate
 3. **Cheats can't see hidden data** - Server only sends what's visible
 4. **All actions are auditable** - JSONL receipts for everything
+
+## Networking Choice (MVP)
+
+- **Lock**: custom WebSocket server (current `server/src/index.ts`)
+- Reason: we need explicit control over `intent queue → tick → validate → apply → audit receipts`
+- Simplicity: single 32×32 + 64×64 worlds do not need matchmaking, rooms, or delta-sync frameworks
+
+### Post-MVP Review (When to revisit Colyseus)
+
+Reconsider Colyseus (or similar) only when:
+- Multiple rooms/shards or replayable instances are required
+- We carry >1 city per process with >100 CCUs and need built-in state-diff/matchmaking
+- Engineering time shifts from gameplay/anti-cheat to maintaining sync plumbing
+
+Until then, the bespoke WebSocket loop remains the single source of truth for movement, chat, Tem enforcement, and tutorial gating.

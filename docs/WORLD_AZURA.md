@@ -1,6 +1,6 @@
 # World: Azura
 
-Azura is the starting city for all players.
+Azura is the **first major city** after players complete the Rookguard onboarding zone. All guests must clear the tutorial checklist in Rookguard before the server transfers them here.
 
 ## Map Specifications
 
@@ -40,17 +40,6 @@ Azura is the starting city for all players.
 
 - **Coordinates**: (32, 32)
 - **Description**: Center of the city, where new players appear
-
-## Rookguard Training (MVP)
-
-Spawn zone is **Rookguard**: a safe area for onboarding.
-
-Players must complete 2 micro-lessons:
-
-1. Movement tutorial (N/S/E/W)
-2. Tem introduction (“Hi! type AZURA…”)
-
-No combat yet. This is diegetic anti-bot onboarding: humans pass naturally.
 
 ### Guild Hall (Placeholder)
 

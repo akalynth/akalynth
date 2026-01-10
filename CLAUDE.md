@@ -26,6 +26,7 @@ Playable Azura (64x64) online-only with:
 - **NO Windows support.** Do not add Windows steps, `.bat`, `PowerShell`, or "works on Windows too".
 - Target platforms: **Linux server + Android client**. (Web optional later.)
 - **Server authoritative**: the client is never trusted for movement, combat, loot, or economy.
+- **Networking lock (MVP)**: stay on the custom WebSocket server. Revisit Colyseus/other frameworks only post-MVP when we truly need multi-room/matchmaking plumbing.
 - Keep everything **one-command runnable** per component.
 - In scripts, **hard-fail if `uname` isn't Linux**.
 
