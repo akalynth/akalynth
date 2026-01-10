@@ -195,7 +195,7 @@ export const ServerMessages = {
   temChallenge: (challenge_id: string, timeout_seconds: number): TemChallengeMessage => ({
     type: 'tem_challenge',
     challenge_id,
-    message: `Hi! Type ${timeout_seconds > 10 ? 'AZURA' : 'AZURA'} in chat within ${timeout_seconds} seconds.`,
+    message: `Hi! Type AZURA in chat within ${timeout_seconds} seconds.`,
     timeout_seconds,
   }),
 

@@ -148,6 +148,33 @@ Another player moved.
 }
 ```
 
+#### `player_joined` (server → client, broadcast)
+
+Another player entered the world.
+
+```json
+{
+  "type": "player_joined",
+  "player": {
+    "id": "p_def456",
+    "x": 32,
+    "y": 32,
+    "name": "Guest_5678"
+  }
+}
+```
+
+#### `player_left` (server → client, broadcast)
+
+A player left the world.
+
+```json
+{
+  "type": "player_left",
+  "player_id": "p_def456"
+}
+```
+
 ---
 
 ### Chat
@@ -195,9 +222,14 @@ Tem anti-bot challenge.
 
 #### `tem_response` (client → server)
 
-Response to Tem challenge (sent via normal chat).
+Response to Tem challenge.
 
-The server detects if the chat message matches the expected response.
+```json
+{
+  "type": "tem_response",
+  "response": "AZURA"
+}
+```
 
 ---
 
