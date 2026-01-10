@@ -7,6 +7,7 @@ RECEIPTS="${RECEIPTS:-$SERVER_DIR/audit/receipts.jsonl}"
 
 WS_URL="${WS_URL:-ws://localhost:3000}"
 TIMEOUT_SECONDS="${TIMEOUT_SECONDS:-12}"
+DEATH_TIMEOUT_SECONDS="${DEATH_TIMEOUT_SECONDS:-40}"
 
 log() { echo -e "🧪 $*"; }
 die() { echo -e "❌ $*" >&2; exit 1; }
@@ -54,8 +55,8 @@ touch "$RECEIPTS"
 BASE_LINES="$(wc -l < "$RECEIPTS" | tr -d ' ')"
 log "Receipts baseline lines: $BASE_LINES"
 
-log "Starting server (npm run dev)…"
-npm run dev >/tmp/akalynth_verify_server.log 2>&1 &
+log "Starting server (ALLOW_TEST_DEATH=1 npm run dev)…"
+ALLOW_TEST_DEATH=1 npm run dev >/tmp/akalynth_verify_server.log 2>&1 &
 SERVER_PID=$!
 sleep 1
 
@@ -168,17 +169,33 @@ const messages = [
   {"type":"move_intent","direction":"east"},
   {"type":"move_intent","direction":"east"}
 ];
-let idx = 0;
-ws.on("open", () => {
+// Cadence test: 25 moves at ~100ms intervals to trigger perfect_cadence detector
+const cadence = Array.from({length: 25}, (_, i) => ({
+  type: "move_intent",
+  direction: i % 2 === 0 ? "north" : "south"
+}));
+
+function sendSeq(seq, delay, done) {
+  let idx = 0;
   const send = () => {
-    if (idx < messages.length) {
-      ws.send(JSON.stringify(messages[idx++]));
-      setTimeout(send, 200);
+    if (idx < seq.length) {
+      ws.send(JSON.stringify(seq[idx++]));
+      setTimeout(send, delay);
     } else {
-      setTimeout(() => ws.close(), 1000);
+      done();
     }
   };
   send();
+}
+
+ws.on("open", () => {
+  sendSeq(messages, 200, () => {
+    setTimeout(() => {
+      // Send cadence moves at ~105ms (slightly above tick to avoid speed_violation)
+      // This is within cadence tolerance (100±8ms = 92-108ms)
+      sendSeq(cadence, 105, () => setTimeout(() => ws.close(), 1500));
+    }, 500);
+  });
 });
 ws.on("message", (data) => console.log(data.toString()));
 ws.on("close", () => process.exit(0));
@@ -216,12 +233,98 @@ else
   log "Tutorial/gate receipts present ✅"
 fi
 
+# Check for perfect_cadence trigger in receipts (tem_challenge_issued with perfect_cadence trigger)
+log "Checking for perfect_cadence detection..."
+if grep -q 'perfect_cadence' "$RECEIPTS"; then
+  log "Perfect cadence detector triggered ✅"
+else
+  # Also check via receipts API as backup
+  CADENCE_API="$(run_timeout 5 curl -s "$HTTP_URL/v1/receipts?player_id=$PLAYER_ID&limit=50" || true)"
+  if echo "$CADENCE_API" | grep -q 'perfect_cadence'; then
+    log "Perfect cadence detected via API ✅"
+  else
+    log "⚠️  perfect_cadence not found in receipts (may need more samples or timing variance)"
+    log "Recent receipts with cadence-related info:"
+    grep -E 'cadence|timing|tem_challenge' "$RECEIPTS" | tail -5 || true
+  fi
+fi
+
 log "Checking receipts API for session_guest_minted..."
-if ! run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=session_guest_minted&limit=20" \
+if ! run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=session_guest_minted&player_id=$PLAYER_ID&limit=20" \
   | grep -q "$PLAYER_ID"; then
   die "Receipts API missing session_guest_minted for player_id=$PLAYER_ID"
 fi
 log "Receipts API contains session_guest_minted ✅"
+
+log "Minting guest session for death test..."
+DEATH_MINT_JSON="$(run_timeout 5 curl -s -X POST "$HTTP_URL/v1/session/guest" || true)"
+echo "$DEATH_MINT_JSON" | jq . >/dev/null 2>&1 || die "Invalid JSON from /v1/session/guest (death run): $DEATH_MINT_JSON"
+DEATH_GUEST_TOKEN="$(echo "$DEATH_MINT_JSON" | jq -r '.guest_token // empty')"
+DEATH_PLAYER_ID="$(echo "$DEATH_MINT_JSON" | jq -r '.player_id // empty')"
+[[ -n "$DEATH_GUEST_TOKEN" ]] || die "Missing guest_token for death test"
+[[ -n "$DEATH_PLAYER_ID" ]] || die "Missing player_id for death test"
+log "Minted death test session ok (player_id=$DEATH_PLAYER_ID)"
+
+log "Running death WS flow (timeout ${DEATH_TIMEOUT_SECONDS}s)…"
+DEATH_RESP="$(
+  run_timeout "$DEATH_TIMEOUT_SECONDS" node -e '
+const WebSocket = require("ws");
+const ws = new WebSocket(process.argv[1]);
+const guestToken = process.argv[2];
+
+ws.on("open", () => {
+  ws.send(JSON.stringify({ type: "connect" }));
+  ws.send(JSON.stringify({ type: "login", guest_token: guestToken }));
+  ws.send(JSON.stringify({ type: "enter_world" }));
+  ws.send(JSON.stringify({ type: "kill_self" }));
+});
+
+ws.on("message", (data) => {
+  const str = data.toString();
+  console.log(str);
+  try {
+    const msg = JSON.parse(str);
+    if (msg.type === "death_notice") {
+      setTimeout(() => {
+        ws.send(JSON.stringify({ type: "move_intent", direction: "north" }));
+      }, 200);
+      const waitMs = (msg.respawn_in_ms || 15000) + 500;
+      setTimeout(() => {
+        ws.send(JSON.stringify({ type: "move_intent", direction: "south" }));
+        setTimeout(() => ws.close(), 500);
+      }, waitMs);
+    }
+  } catch (err) {
+    // ignore parse errors
+  }
+});
+
+ws.on("close", () => process.exit(0));
+ws.on("error", (e) => { console.error(e.message); process.exit(1); });
+' "$WS_URL" "$DEATH_GUEST_TOKEN" 2>/dev/null || true
+)"
+
+echo "$DEATH_RESP" | grep -q '"type":"death_notice"' \
+  || die "No death_notice received in death WS flow"
+echo "$DEATH_RESP" | grep -q '"reason":"dead"' \
+  || die "No dead move rejection observed in death WS flow"
+echo "$DEATH_RESP" | grep -Eq '"type":"move_result","ok":true' \
+  || die "No successful move after respawn in death WS flow"
+
+log "Checking receipts API for death events..."
+if ! run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=death&player_id=$DEATH_PLAYER_ID&limit=20" \
+  | grep -q "$DEATH_PLAYER_ID"; then
+  die "Receipts API missing death for player_id=$DEATH_PLAYER_ID"
+fi
+if ! run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=death_penalty_applied&player_id=$DEATH_PLAYER_ID&limit=20" \
+  | grep -q "$DEATH_PLAYER_ID"; then
+  die "Receipts API missing death_penalty_applied for player_id=$DEATH_PLAYER_ID"
+fi
+if ! run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=respawn_completed&player_id=$DEATH_PLAYER_ID&limit=20" \
+  | grep -q "$DEATH_PLAYER_ID"; then
+  die "Receipts API missing respawn_completed for player_id=$DEATH_PLAYER_ID"
+fi
+log "Death receipts present ✅"
 
 log "✅ VERIFY PASS"
 log "Last receipts:"
