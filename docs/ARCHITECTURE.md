@@ -67,6 +67,46 @@ Intent → Detector → Decision → Enforcement → Audit
 - For deterministic testing: `PUBLIC_RECEIPTS_DELAY_PROFILE=default`, `PUBLIC_RECEIPTS_DELAY_MS=0`, `PUBLIC_RECEIPTS_JITTER_MS=0`
 - Debug-only raw feed exists at `/v1/receipts/public_raw` (requires `DEBUG=1`, otherwise 403)
 
+### Legend Objects (Stone That Cannot Be Obtained)
+
+- A hidden landmark in Rookguard triggers `legend_sighted`, `legend_attempted`, and `legend_refused` receipts.
+- The server displaces the player back to spawn; no item is granted and no UI message is sent.
+- The first attempt emits `first_attempt_stone_cannot_obtain` and seeds the follow-up rumor.
+- Public feeds expose only redacted, delayed `legend_refused` / first-of receipts; private receipts remain canonical.
+
+### Runestone Ritual System (`server/src/world/runestone.ts`)
+
+A social gambling/ritual artifact inspired by Tibia's dice system, but with Akalynth's twist: the Ledger is authoritative and Tem gates access.
+
+**Core mechanics:**
+- Runestone tables are world landmarks (not inventory items yet)
+- Player must be within 1 tile of table to cast
+- Server rolls outcome using `crypto.randomInt` (6 faces: fire, water, earth, air, light, shadow)
+- Results broadcast to players within 8 tiles
+- 2-second cooldown between casts per player
+
+**Protocol:**
+- Client sends `runestone_cast` with `table_id` and optional `guess`
+- Server responds with `runestone_result` (broadcast) or `runestone_denied` (to caster only)
+- Denial reasons: `cooldown`, `not_near_table`, `not_authorized`, `rate_limited`
+
+**Receipts:**
+- `runestone_cast` - Player attempted cast (inputs: table_id, map, position, guess)
+- `runestone_result` - Server rolled outcome (inputs: table_id, map, position, face)
+- `runestone_denied` - Cast rejected (inputs: table_id, reason)
+- `trinity_of_shadow` - Legend: 3 consecutive shadow rolls by same player (once per player per process)
+
+**Access control:**
+- Currently DEBUG-gated (`DEBUG=1` required)
+- Future: Tem grants/revokes capability tokens
+
+**Public myth surface:**
+- Only `trinity_of_shadow` appears in `/v1/receipts/public` (redacted, delayed)
+- Regular casts remain private; myth is public
+
+**Testing:**
+- Set `RUNESTONE_TEST_FORCE_FACE=shadow` (requires `DEBUG=1`) to force specific outcome
+
 ## Data Flow
 
 ```
