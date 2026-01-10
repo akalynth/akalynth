@@ -18,6 +18,13 @@ export function createWorldState(map: MapData): WorldState {
 }
 
 export function toPublicPlayer(p: Player): PlayerPublic {
-  return { id: p.id, name: p.name, x: p.x, y: p.y };
+  return {
+    id: p.id,
+    name: p.name,
+    x: p.x,
+    y: p.y,
+    status: p.status ?? 'alive',
+    reputation: p.reputation,
+  };
 }
 

@@ -6,7 +6,7 @@ import type { ClientMessage, ServerMessage } from '../../shared/protocol.js';
 import { ServerMessages, parseClientMessage } from '../../shared/protocol.js';
 import type { Player, TutorialProgress } from '../../shared/types.js';
 import { TileCode } from '../../shared/types.js';
-import { TICK_MS } from '../../shared/constants.js';
+import { DEATH_TEST_ENABLED, TICK_MS } from '../../shared/constants.js';
 import type { MapName, SessionMeResponse, WorldStateResult } from '../../shared/http.js';
 import { handleHttp } from './api/http.js';
 
@@ -16,6 +16,7 @@ import { createAntiCheatRuntime, onChat, onMoveApplied, onMoveIntent } from './a
 import { applyThrottle, checkTemTimeout, handleTemResponse, issueTemChallenge, isThrottled } from './anticheat/tem.js';
 import { loadSharedMap, createWorldState, toPublicPlayer } from './world/state.js';
 import { indexFor, tryMove } from './world/movement.js';
+import { handleDeath } from './world/death.js';
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const VERSION = '0.1.0';
@@ -51,6 +52,7 @@ type Session = {
   anti: ReturnType<typeof createAntiCheatRuntime>;
   lastMoveAppliedAt: number | null;
   lastChatAcceptedAt: number | null;
+  respawnTimer: NodeJS.Timeout | null;
 };
 
 const sessions = new Map<string, Session>();
@@ -262,6 +264,7 @@ wss.on('connection', (ws) => {
     anti: createAntiCheatRuntime(now),
     lastMoveAppliedAt: null,
     lastChatAcceptedAt: null,
+    respawnTimer: null,
   };
 
   sessions.set(connId, s);
@@ -294,6 +297,10 @@ wss.on('connection', (ws) => {
   });
 
   ws.on('close', () => {
+    if (s.respawnTimer) {
+      clearTimeout(s.respawnTimer);
+      s.respawnTimer = null;
+    }
     sessions.delete(connId);
     if (s.player && s.inWorld) {
       const w = worldFor(s);
@@ -412,6 +419,9 @@ function processSessionQueue(s: Session, now: number) {
           x: worlds.Rookguard.map.spawn.x,
           y: worlds.Rookguard.map.spawn.y,
           state: 'authenticated',
+          status: 'alive',
+          dead_until_ms: null,
+          reputation: 0,
         };
 
         send(s.ws, ServerMessages.loginAck(player_id, guest_token, name));
@@ -563,8 +573,98 @@ function processSessionQueue(s: Session, now: number) {
         break;
       }
 
+      case 'kill_self': {
+        if (!DEATH_TEST_ENABLED) {
+          send(s.ws, ServerMessages.error('invalid_message', 'Test death disabled'));
+          audit.write({
+            player_id: s.player?.id ?? s.connId,
+            action: 'invalid_message',
+            inputs: { type: 'kill_self' },
+            result: 'test_death_disabled',
+          });
+          break;
+        }
+
+        if (!requireWorld(s)) break;
+
+        if (s.player!.status === 'dead') {
+          send(s.ws, ServerMessages.error('rate_limited', 'Player already dead'));
+          break;
+        }
+
+        if (s.respawnTimer) {
+          clearTimeout(s.respawnTimer);
+          s.respawnTimer = null;
+        }
+
+        const w = worldFor(s);
+        audit.write({
+          player_id: s.player!.id,
+          action: 'kill_self',
+          inputs: { map: s.currentMap },
+          result: 'requested',
+        });
+
+        const { respawn_in_ms, timer } = handleDeath({
+          now: msgNow,
+          player_id: s.player!.id,
+          map: s.currentMap,
+          x: s.player!.x,
+          y: s.player!.y,
+          cause: 'test',
+          killer_id: null,
+          spawn: w.map.spawn,
+          audit,
+          applyRespawn: (spawn) => {
+            if (!sessions.has(s.connId) || !s.player) return;
+            const currentWorld = worldFor(s);
+            s.player.status = 'alive';
+            s.player.dead_until_ms = null;
+            s.player.x = spawn.x;
+            s.player.y = spawn.y;
+            currentWorld.players.set(s.player.id, s.player);
+            const nearby = Array.from(currentWorld.players.values())
+              .filter((p) => p.id !== s.player!.id)
+              .map(toPublicPlayer);
+            send(s.ws, ServerMessages.worldState(toPublicPlayer(s.player!), nearby));
+            s.respawnTimer = null;
+          },
+          setDeadUntil: (ms) => {
+            if (!s.player) return;
+            s.player.status = 'dead';
+            s.player.dead_until_ms = ms;
+          },
+          adjustReputation: (delta) => {
+            if (!s.player) return;
+            s.player.reputation = (s.player.reputation ?? 0) + delta;
+          },
+        });
+
+        s.respawnTimer = timer;
+
+        send(s.ws, ServerMessages.deathNotice(respawn_in_ms, s.currentMap, w.map.spawn, 'test'));
+        break;
+      }
+
       case 'move_intent': {
         if (!requireWorld(s)) break;
+
+        if (s.player!.status === 'dead') {
+          audit.write({
+            player_id: s.player!.id,
+            action: 'move_intent',
+            inputs: { direction: msg.direction, from: { x: s.player!.x, y: s.player!.y, map: s.currentMap } },
+            result: 'rejected',
+          });
+          audit.write({
+            player_id: s.player!.id,
+            action: 'move_result',
+            inputs: { to: { x: s.player!.x, y: s.player!.y, map: s.currentMap }, ok: false, reason: 'dead' },
+            result: 'rejected',
+          });
+          send(s.ws, ServerMessages.moveResult(false, s.player!.x, s.player!.y, 'dead'));
+          break;
+        }
 
         // If Tem is active (including tutorial demo), movement is blocked until response.
         if (s.anti.state.temChallengeActive) {
