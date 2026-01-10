@@ -611,6 +611,12 @@ function processSessionQueue(s: Session, now: number) {
         if (res.ok) {
           const cadenceAct = onMoveApplied(s.anti, now);
           if (cadenceAct.action === 'request_tem') {
+            audit.write({
+              player_id: s.player!.id,
+              action: 'cadence_suspected',
+              inputs: cadenceAct.signal.details,
+              result: 'suspected',
+            });
             const out = issueTemChallenge(s.anti.state, now);
             if (out.outcome === 'issued') {
               send(s.ws, { type: 'tem_challenge', ...out.challenge });

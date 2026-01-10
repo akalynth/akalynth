@@ -3,7 +3,14 @@ import {
   SIGNAL_DECAY_MS,
   THROTTLE_DURATION_MS,
 } from '../../../shared/types.js';
-import { MIN_MOVE_INTERVAL_MS } from '../../../shared/constants.js';
+import {
+  CADENCE_IDLE_RESET_MS,
+  CADENCE_MEAN_MAX_MS,
+  CADENCE_MEAN_MIN_MS,
+  CADENCE_STDDEV_MAX_MS,
+  CADENCE_WINDOW_N,
+  MIN_MOVE_INTERVAL_MS,
+} from '../../../shared/constants.js';
 
 export interface AntiCheatRuntime {
   state: AntiCheatState;
@@ -53,14 +60,16 @@ function addSignal(rt: AntiCheatRuntime, type: SignalType, now: number, details:
   return signal;
 }
 
-function cadenceStats(intervals: number[]): { mean: number; std: number } | null {
-  if (intervals.length < 12) return null;
-  const window = intervals.slice(-12);
+function cadenceStats(intervals: number[]): { mean: number; std: number; min: number; max: number } | null {
+  if (intervals.length < CADENCE_WINDOW_N) return null;
+  const window = intervals.slice(-CADENCE_WINDOW_N);
   const mean = window.reduce((a, b) => a + b, 0) / window.length;
   const variance = window.reduce((a, x) => a + (x - mean) ** 2, 0) / window.length;
   const std = Math.sqrt(variance);
-  if (mean >= 80 && mean <= 400 && std <= 6) {
-    return { mean, std };
+  if (mean >= CADENCE_MEAN_MIN_MS && mean <= CADENCE_MEAN_MAX_MS && std <= CADENCE_STDDEV_MAX_MS) {
+    const min = Math.min(...window);
+    const max = Math.max(...window);
+    return { mean, std, min, max };
   }
   return null;
 }
@@ -91,7 +100,7 @@ export function onMoveIntent(rt: AntiCheatRuntime, now: number): DetectorAction 
 export function onMoveApplied(rt: AntiCheatRuntime, now: number): DetectorAction {
   decaySignals(rt, now);
 
-  if (rt.lastMoveAppliedAt !== null && now - rt.lastMoveAppliedAt > 5_000) {
+  if (rt.lastMoveAppliedAt !== null && now - rt.lastMoveAppliedAt > CADENCE_IDLE_RESET_MS) {
     rt.cadenceIntervalsMs = [];
   }
 
@@ -103,10 +112,12 @@ export function onMoveApplied(rt: AntiCheatRuntime, now: number): DetectorAction
     const stats = cadenceStats(rt.cadenceIntervalsMs);
     if (stats && !rt.state.temChallengeActive) {
       const signal = addSignal(rt, 'repeated_timing', now, {
-        mean_ms: stats.mean,
-        std_ms: stats.std,
-        n: 12,
-        intervals_ms: rt.cadenceIntervalsMs.slice(-12),
+        mean_ms: Number(stats.mean.toFixed(2)),
+        std_ms: Number(stats.std.toFixed(2)),
+        min_ms: stats.min,
+        max_ms: stats.max,
+        n: CADENCE_WINDOW_N,
+        intervals_ms: rt.cadenceIntervalsMs.slice(-CADENCE_WINDOW_N),
       });
       rt.cadenceIntervalsMs = [];
       rt.lastMoveAppliedAt = now;
