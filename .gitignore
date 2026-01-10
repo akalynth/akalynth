@@ -16,5 +16,8 @@ tmp/
 # Audit receipts (local dev only)
 server/audit/
 
+# Draft/proposal folders
+__*/
+
 # OS files
 .DS_Store
