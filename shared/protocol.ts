@@ -1,7 +1,8 @@
 // Akalynth Protocol Messages
 // All messages sent over WebSocket
 
-import type { Direction, PlayerPublic } from './types';
+import type { Direction, Element, PlayerPublic, RunestoneDenialReason } from './types';
+import { ELEMENTS } from './types';
 import type { MapName } from './http';
 
 // ============================================================================
@@ -48,6 +49,12 @@ export interface KillSelfMessage extends BaseMessage {
   type: 'kill_self';
 }
 
+export interface RunestoneCastMessage extends BaseMessage {
+  type: 'runestone_cast';
+  table_id: string;
+  guess: Element | null;
+}
+
 export type ClientMessage =
   | ConnectMessage
   | LoginMessage
@@ -55,7 +62,8 @@ export type ClientMessage =
   | MoveIntentMessage
   | ChatMessage
   | TemResponseMessage
-  | KillSelfMessage;
+  | KillSelfMessage
+  | RunestoneCastMessage;
 
 // ============================================================================
 // Server → Client Messages
@@ -140,6 +148,19 @@ export type ErrorCode =
   | 'rate_limited'
   | 'kicked';
 
+export interface RunestoneResultMessage extends BaseMessage {
+  type: 'runestone_result';
+  table_id: string;
+  caster: { id: string; name: string };
+  face: Element;
+  whisper: string;
+}
+
+export interface RunestoneDeniedMessage extends BaseMessage {
+  type: 'runestone_denied';
+  reason: RunestoneDenialReason;
+}
+
 export type ServerMessage =
   | WelcomeMessage
   | LoginAckMessage
@@ -151,7 +172,9 @@ export type ServerMessage =
   | ChatBroadcastMessage
   | TemChallengeMessage
   | ErrorMessage
-  | DeathNoticeMessage;
+  | DeathNoticeMessage
+  | RunestoneResultMessage
+  | RunestoneDeniedMessage;
 
 // ============================================================================
 // Message Factories
@@ -234,6 +257,24 @@ export const ServerMessages = {
     code,
     message,
   }),
+
+  runestoneResult: (
+    table_id: string,
+    caster: { id: string; name: string },
+    face: Element,
+    whisper: string
+  ): RunestoneResultMessage => ({
+    type: 'runestone_result',
+    table_id,
+    caster,
+    face,
+    whisper,
+  }),
+
+  runestoneDenied: (reason: RunestoneDenialReason): RunestoneDeniedMessage => ({
+    type: 'runestone_denied',
+    reason,
+  }),
 };
 
 // ============================================================================
@@ -277,6 +318,14 @@ export function parseClientMessage(data: unknown): ClientMessage | null {
 
     case 'kill_self':
       return { type: 'kill_self' };
+
+    case 'runestone_cast': {
+      if (typeof msg.table_id !== 'string') return null;
+      const guess = typeof msg.guess === 'string' && ELEMENTS.includes(msg.guess as Element)
+        ? (msg.guess as Element)
+        : null;
+      return { type: 'runestone_cast', table_id: msg.table_id, guess };
+    }
 
     default:
       return null;

@@ -164,6 +164,10 @@ export interface AuditReceipt {
 
 export const LEDGER_HESITATION_ACTION = 'ledger_hesitation';
 export const RUMOR_SEEDED_ACTION = 'rumor_seeded';
+export const LEGEND_SIGHTED_ACTION = 'legend_sighted';
+export const LEGEND_ATTEMPTED_ACTION = 'legend_attempted';
+export const LEGEND_REFUSED_ACTION = 'legend_refused';
+export const FIRST_ATTEMPT_STONE_ACTION = 'first_attempt_stone_cannot_obtain';
 
 export type DeathReceiptAction = 'death' | 'respawn' | 'death_penalty_applied';
 
@@ -176,3 +180,19 @@ export const SIGNAL_DECAY_MS = 60 * 1000; // 60 seconds
 // ============================================================================
 
 export type DeathCause = 'test' | 'player' | 'npc' | 'environment' | 'unknown';
+
+// ============================================================================
+// Runestone
+// ============================================================================
+
+export type Element = 'fire' | 'water' | 'earth' | 'air' | 'light' | 'shadow';
+
+export const ELEMENTS: Element[] = ['fire', 'water', 'earth', 'air', 'light', 'shadow'];
+
+export type RunestoneDenialReason = 'cooldown' | 'not_near_table' | 'not_authorized' | 'rate_limited';
+
+// Runestone receipt actions
+export const RUNESTONE_CAST_ACTION = 'runestone_cast';
+export const RUNESTONE_RESULT_ACTION = 'runestone_result';
+export const RUNESTONE_DENIED_ACTION = 'runestone_denied';
+export const TRINITY_OF_SHADOW_ACTION = 'trinity_of_shadow';
