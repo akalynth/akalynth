@@ -487,6 +487,7 @@ const messages = [
   ...moves
 ];
 let lastMove = null;
+let temResponded = false;
 
 function sendSeq(seq, delay, done) {
   let idx = 0;
@@ -502,7 +503,7 @@ function sendSeq(seq, delay, done) {
 }
 
 ws.on("open", () => {
-  sendSeq(messages, 150, () => {
+  sendSeq(messages, 250, () => {
     setTimeout(() => {
       if (lastMove) {
         console.log(`STONE_LAST_MOVE:${JSON.stringify(lastMove)}`);
@@ -521,6 +522,10 @@ ws.on("message", (data) => {
     const msg = JSON.parse(str);
     if (msg.type === "move_result") {
       lastMove = msg;
+    }
+    if (msg.type === "tem_challenge" && !temResponded) {
+      temResponded = true;
+      ws.send(JSON.stringify({ type: "chat", message: "AZURA" }));
     }
   } catch (_) {
     // ignore parse errors
@@ -753,6 +758,13 @@ kill "$SERVER_PID" 2>/dev/null || true
 sleep 1
 kill -9 "$SERVER_PID" 2>/dev/null || true
 sleep 1
+if command -v lsof >/dev/null 2>&1; then
+  for pid in $(lsof -tiTCP:3000 -sTCP:LISTEN 2>/dev/null || true); do
+    kill "$pid" 2>/dev/null || true
+    sleep 0.5
+    kill -9 "$pid" 2>/dev/null || true
+  done
+fi
 
 log "Starting server with RUNESTONE_TEST_FORCE_FACE=shadow..."
 DEBUG=1 \
@@ -768,7 +780,7 @@ sleep 1
 
 log "Waiting for server to accept WebSocket (trinity test)…"
 READY=0
-for _ in {1..12}; do
+for _ in {1..20}; do
   if run_timeout 2 bash -lc "printf '{\"type\":\"connect\"}\n' | npx --yes wscat -c '$WS_URL' >/dev/null 2>&1"; then
     READY=1
     break
@@ -776,6 +788,7 @@ for _ in {1..12}; do
   sleep 0.5
 done
 [[ "$READY" -eq 1 ]] || die "Server not ready for trinity test. Check /tmp/akalynth_verify_server_trinity.log"
+sleep 1  # Extra stabilization
 
 TRINITY_MINT_JSON="$(run_timeout 5 curl -s -X POST "$HTTP_URL/v1/session/guest" || true)"
 TRINITY_GUEST_TOKEN="$(echo "$TRINITY_MINT_JSON" | jq -r '.guest_token // empty')"
@@ -784,7 +797,7 @@ TRINITY_PLAYER_ID="$(echo "$TRINITY_MINT_JSON" | jq -r '.player_id // empty')"
 [[ -n "$TRINITY_PLAYER_ID" ]] || die "Missing player_id for trinity test"
 log "Minted trinity test session ok (player_id=$TRINITY_PLAYER_ID)"
 
-TRINITY_TIMEOUT_SECONDS=20
+TRINITY_TIMEOUT_SECONDS=25
 log "Running trinity WS flow (timeout ${TRINITY_TIMEOUT_SECONDS}s)…"
 TRINITY_RESP="$(
   run_timeout "$TRINITY_TIMEOUT_SECONDS" node -e '
@@ -823,16 +836,16 @@ function sendSeq(seq, delay, done) {
 
 ws.on("open", () => {
   sendSeq(messages, 150, () => {
-    // Cast 3 times with 2100ms spacing to satisfy cooldown
+    // Cast 3 times with extra spacing to satisfy cooldown reliably
     setTimeout(() => {
       ws.send(JSON.stringify({ type: "runestone_cast", table_id: "rookguard_runestone_table_01" }));
       setTimeout(() => {
         ws.send(JSON.stringify({ type: "runestone_cast", table_id: "rookguard_runestone_table_01" }));
         setTimeout(() => {
           ws.send(JSON.stringify({ type: "runestone_cast", table_id: "rookguard_runestone_table_01" }));
-          setTimeout(() => ws.close(), 500);
-        }, 2100);
-      }, 2100);
+          setTimeout(() => ws.close(), 1000);
+        }, 2300);
+      }, 2300);
     }, 300);
   });
 });
