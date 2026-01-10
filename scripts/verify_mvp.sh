@@ -141,6 +141,10 @@ echo "$WORLD_STATE_RG" | jq . >/dev/null 2>&1 || die "Invalid JSON from /v1/worl
   || die "/v1/world/Rookguard/state tick_ms mismatch: $WORLD_STATE_RG"
 PC_RG="$(echo "$WORLD_STATE_RG" | jq -r '.player_count // -1')"
 [[ "$PC_RG" -ge 0 ]] || die "/v1/world/Rookguard/state player_count invalid: $WORLD_STATE_RG"
+ROOK_SPAWN_X="$(echo "$WORLD_STATE_RG" | jq -r '.map.spawn.x // empty')"
+ROOK_SPAWN_Y="$(echo "$WORLD_STATE_RG" | jq -r '.map.spawn.y // empty')"
+[[ -n "$ROOK_SPAWN_X" && -n "$ROOK_SPAWN_Y" ]] \
+  || die "/v1/world/Rookguard/state missing spawn: $WORLD_STATE_RG"
 
 WORLD_STATE_AZ="$(run_timeout 5 curl -s "$HTTP_URL/v1/world/Azura/state" || true)"
 echo "$WORLD_STATE_AZ" | jq . >/dev/null 2>&1 || die "Invalid JSON from /v1/world/Azura/state: $WORLD_STATE_AZ"
@@ -299,6 +303,7 @@ const gateSequence = [
 let enteredAzura = false;
 let stage = "init";
 let stateMap = "Rookguard";
+let temResponded = false;
 
 function fetchState(label) {
   try {
@@ -354,6 +359,12 @@ ws.on("message", (data) => {
       setTimeout(() => {
         ws.send(JSON.stringify({ type: "kill_self" }));
       }, 300);
+    }
+    if (msg.type === "tem_challenge" && !temResponded) {
+      temResponded = true;
+      setTimeout(() => {
+        ws.send(JSON.stringify({ type: "chat", message: "AZURA" }));
+      }, 100);
     }
     if (msg.type === "death_notice") {
       fetchState("STATE_DEAD");
@@ -444,6 +455,111 @@ if [[ "${LEDGER_HESITATION_COUNT:-0}" -ne 1 ]]; then
   die "Expected one ledger_hesitation receipt for player_id=$DEATH_PLAYER_ID"
 fi
 
+log "Minting guest session for stone legend test..."
+STONE_MINT_JSON="$(run_timeout 5 curl -s -X POST "$HTTP_URL/v1/session/guest" || true)"
+echo "$STONE_MINT_JSON" | jq . >/dev/null 2>&1 || die "Invalid JSON from /v1/session/guest (stone run): $STONE_MINT_JSON"
+STONE_GUEST_TOKEN="$(echo "$STONE_MINT_JSON" | jq -r '.guest_token // empty')"
+STONE_PLAYER_ID="$(echo "$STONE_MINT_JSON" | jq -r '.player_id // empty')"
+[[ -n "$STONE_GUEST_TOKEN" ]] || die "Missing guest_token for stone test"
+[[ -n "$STONE_PLAYER_ID" ]] || die "Missing player_id for stone test"
+log "Minted stone test session ok (player_id=$STONE_PLAYER_ID)"
+
+log "Running stone legend WS flow (timeout ${TIMEOUT_SECONDS}s)…"
+STONE_RESP="$(
+  run_timeout "$TIMEOUT_SECONDS" node -e '
+const WebSocket = require("ws");
+const ws = new WebSocket(process.argv[1]);
+const guestToken = process.argv[2];
+const moves = [
+  { type: "move_intent", direction: "east" },
+  { type: "move_intent", direction: "east" },
+  { type: "move_intent", direction: "east" },
+  { type: "move_intent", direction: "east" },
+  { type: "move_intent", direction: "south" },
+  { type: "move_intent", direction: "south" },
+  { type: "move_intent", direction: "south" },
+  { type: "move_intent", direction: "south" }
+];
+const messages = [
+  { type: "connect" },
+  { type: "login", guest_token: guestToken },
+  { type: "enter_world" },
+  ...moves
+];
+let lastMove = null;
+
+function sendSeq(seq, delay, done) {
+  let idx = 0;
+  const send = () => {
+    if (idx < seq.length) {
+      ws.send(JSON.stringify(seq[idx++]));
+      setTimeout(send, delay);
+    } else if (done) {
+      done();
+    }
+  };
+  send();
+}
+
+ws.on("open", () => {
+  sendSeq(messages, 150, () => {
+    setTimeout(() => {
+      if (lastMove) {
+        console.log(`STONE_LAST_MOVE:${JSON.stringify(lastMove)}`);
+      } else {
+        console.log("STONE_LAST_MOVE:null");
+      }
+      ws.close();
+    }, 800);
+  });
+});
+
+ws.on("message", (data) => {
+  const str = data.toString();
+  console.log(str);
+  try {
+    const msg = JSON.parse(str);
+    if (msg.type === "move_result") {
+      lastMove = msg;
+    }
+  } catch (_) {
+    // ignore parse errors
+  }
+});
+
+ws.on("close", () => process.exit(0));
+ws.on("error", (e) => { console.error(e.message); process.exit(1); });
+' "$WS_URL" "$STONE_GUEST_TOKEN" 2>/dev/null || true
+)"
+
+STONE_LAST_MOVE_JSON="$(echo "$STONE_RESP" | grep '^STONE_LAST_MOVE:' | tail -n1 | sed 's/^STONE_LAST_MOVE://')"
+echo "$STONE_LAST_MOVE_JSON" | jq . >/dev/null 2>&1 || die "Missing stone move_result JSON"
+echo "$STONE_LAST_MOVE_JSON" | jq -e '.ok == true' >/dev/null 2>&1 \
+  || die "Stone move_result did not succeed"
+STONE_LAST_X="$(echo "$STONE_LAST_MOVE_JSON" | jq -r '.x')"
+STONE_LAST_Y="$(echo "$STONE_LAST_MOVE_JSON" | jq -r '.y')"
+if [[ "$STONE_LAST_X" != "$ROOK_SPAWN_X" || "$STONE_LAST_Y" != "$ROOK_SPAWN_Y" ]]; then
+  die "Stone attempt did not displace to spawn (got $STONE_LAST_X,$STONE_LAST_Y expected $ROOK_SPAWN_X,$ROOK_SPAWN_Y)"
+fi
+
+log "Checking receipts API for stone legend..."
+if ! run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=legend_attempted&player_id=$STONE_PLAYER_ID&limit=20" \
+  | grep -q "$STONE_PLAYER_ID"; then
+  die "Receipts API missing legend_attempted for player_id=$STONE_PLAYER_ID"
+fi
+
+LEGEND_REFUSED_JSON="$(run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=legend_refused&player_id=$STONE_PLAYER_ID&limit=20" || true)"
+echo "$LEGEND_REFUSED_JSON" | jq . >/dev/null 2>&1 || die "Invalid legend_refused JSON: $LEGEND_REFUSED_JSON"
+LEGEND_REFUSED_COUNT="$(echo "$LEGEND_REFUSED_JSON" | jq '[.receipts[] | select(.inputs.reason=="cannot_obtain" and .inputs.outcome=="displace")] | length' 2>/dev/null || echo 0)"
+if [[ "${LEGEND_REFUSED_COUNT:-0}" -lt 1 ]]; then
+  die "Receipts API missing legend_refused with cannot_obtain/displace for player_id=$STONE_PLAYER_ID"
+fi
+LEGEND_REFUSED_TO_X="$(echo "$LEGEND_REFUSED_JSON" | jq -r '.receipts[] | select(.inputs.reason=="cannot_obtain") | .inputs.to.x' | head -n1)"
+LEGEND_REFUSED_TO_Y="$(echo "$LEGEND_REFUSED_JSON" | jq -r '.receipts[] | select(.inputs.reason=="cannot_obtain") | .inputs.to.y' | head -n1)"
+if [[ "$LEGEND_REFUSED_TO_X" != "$ROOK_SPAWN_X" || "$LEGEND_REFUSED_TO_Y" != "$ROOK_SPAWN_Y" ]]; then
+  die "legend_refused did not target spawn (got $LEGEND_REFUSED_TO_X,$LEGEND_REFUSED_TO_Y expected $ROOK_SPAWN_X,$ROOK_SPAWN_Y)"
+fi
+
 log "Checking public receipts feed..."
 sleep 0.5  # Allow receipts to flush
 PUBLIC_JSON="$(run_timeout 5 curl -s "$HTTP_URL/v1/receipts/public?limit=50" || true)"
@@ -472,6 +588,9 @@ if [[ "${FIRST_PUBLIC_COUNT:-0}" -lt 1 ]]; then
     die "Public receipts feed missing first-of legend receipts"
   fi
 fi
+if ! echo "$PUBLIC_JSON" | grep -Eq 'legend_refused|first_attempt_stone_cannot_obtain'; then
+  die "Public receipts feed missing stone legend receipts"
+fi
 log "Public receipts feed present ✅"
 
 log "Checking public rumors feed..."
@@ -480,8 +599,11 @@ echo "$RUMOR_JSON" | jq . >/dev/null 2>&1 || die "Invalid JSON from public rumor
 [[ "$(echo "$RUMOR_JSON" | jq -r 'has("rumors") and (.rumors | type == "array")')" == "true" ]] \
   || die "Public rumors feed missing rumors array: $RUMOR_JSON"
 RUMOR_TEXT="$(echo "$RUMOR_JSON" | jq -r '.rumors[] | select(.rumor_id=="nothing_finishes") | .text' | head -n1)"
-[[ "$RUMOR_TEXT" == "There’s a place in Rookguard where nothing finishes." ]] \
+[[ "$RUMOR_TEXT" == "There's a place in Rookguard where nothing finishes." ]] \
   || die "Public rumors feed missing exact rumor text"
+STONE_RUMOR_TEXT="$(echo "$RUMOR_JSON" | jq -r '.rumors[] | select(.rumor_id=="stone_refuses") | .text' | head -n1)"
+[[ "$STONE_RUMOR_TEXT" == "Somewhere in Rookguard, the world refuses to finish what you start." ]] \
+  || die "Public rumors feed missing stone_refuses rumor text"
 if echo "$RUMOR_JSON" | grep -q '"player_id"'; then
   die "Public rumors feed leaked player_id"
 fi
@@ -494,6 +616,266 @@ if [[ "${RUMOR_ACTOR_COUNT:-0}" -lt 1 ]]; then
   die "Public rumors feed missing actor field"
 fi
 log "Public rumors feed present ✅"
+
+# ============================================================================
+# Runestone v0 tests
+# ============================================================================
+
+log "Minting guest session for runestone test..."
+RUNE_MINT_JSON="$(run_timeout 5 curl -s -X POST "$HTTP_URL/v1/session/guest" || true)"
+echo "$RUNE_MINT_JSON" | jq . >/dev/null 2>&1 || die "Invalid JSON from /v1/session/guest (runestone run): $RUNE_MINT_JSON"
+RUNE_GUEST_TOKEN="$(echo "$RUNE_MINT_JSON" | jq -r '.guest_token // empty')"
+RUNE_PLAYER_ID="$(echo "$RUNE_MINT_JSON" | jq -r '.player_id // empty')"
+[[ -n "$RUNE_GUEST_TOKEN" ]] || die "Missing guest_token for runestone test"
+[[ -n "$RUNE_PLAYER_ID" ]] || die "Missing player_id for runestone test"
+log "Minted runestone test session ok (player_id=$RUNE_PLAYER_ID)"
+
+log "Running runestone WS flow (timeout ${TIMEOUT_SECONDS}s)…"
+RUNE_RESP="$(
+  run_timeout "$TIMEOUT_SECONDS" node -e '
+const WebSocket = require("ws");
+const ws = new WebSocket(process.argv[1]);
+const guestToken = process.argv[2];
+
+// Move from spawn (2,2) to runestone table (4,4): east 2, south 2
+const moveToTable = [
+  { type: "move_intent", direction: "east" },
+  { type: "move_intent", direction: "east" },
+  { type: "move_intent", direction: "south" },
+  { type: "move_intent", direction: "south" }
+];
+
+const messages = [
+  { type: "connect" },
+  { type: "login", guest_token: guestToken },
+  { type: "enter_world" },
+  ...moveToTable
+];
+
+let gotResult = false;
+let gotDenied = false;
+
+function sendSeq(seq, delay, done) {
+  let idx = 0;
+  const send = () => {
+    if (idx < seq.length) {
+      ws.send(JSON.stringify(seq[idx++]));
+      setTimeout(send, delay);
+    } else if (done) {
+      done();
+    }
+  };
+  send();
+}
+
+ws.on("open", () => {
+  sendSeq(messages, 150, () => {
+    // Now at table position, cast runestone
+    setTimeout(() => {
+      ws.send(JSON.stringify({ type: "runestone_cast", table_id: "rookguard_runestone_table_01" }));
+      // Immediately try again to test cooldown
+      setTimeout(() => {
+        ws.send(JSON.stringify({ type: "runestone_cast", table_id: "rookguard_runestone_table_01" }));
+        setTimeout(() => ws.close(), 500);
+      }, 100);
+    }, 300);
+  });
+});
+
+ws.on("message", (data) => {
+  const str = data.toString();
+  console.log(str);
+  try {
+    const msg = JSON.parse(str);
+    if (msg.type === "runestone_result") {
+      gotResult = true;
+      console.log("RUNE_RESULT:" + JSON.stringify(msg));
+    }
+    if (msg.type === "runestone_denied") {
+      gotDenied = true;
+      console.log("RUNE_DENIED:" + JSON.stringify(msg));
+    }
+  } catch (_) {}
+});
+
+ws.on("close", () => {
+  console.log("RUNE_GOT_RESULT:" + gotResult);
+  console.log("RUNE_GOT_DENIED:" + gotDenied);
+  process.exit(0);
+});
+ws.on("error", (e) => { console.error(e.message); process.exit(1); });
+' "$WS_URL" "$RUNE_GUEST_TOKEN" 2>/dev/null || true
+)"
+
+echo "$RUNE_RESP" | grep -q '"type":"runestone_result"' \
+  || die "No runestone_result received"
+echo "$RUNE_RESP" | grep -q '"type":"runestone_denied"' \
+  || die "No runestone_denied received (cooldown test failed)"
+
+RUNE_RESULT_JSON="$(echo "$RUNE_RESP" | grep '^RUNE_RESULT:' | head -n1 | sed 's/^RUNE_RESULT://')"
+echo "$RUNE_RESULT_JSON" | jq . >/dev/null 2>&1 || die "Invalid runestone_result JSON"
+[[ "$(echo "$RUNE_RESULT_JSON" | jq -r '.table_id // empty')" == "rookguard_runestone_table_01" ]] \
+  || die "runestone_result wrong table_id"
+[[ "$(echo "$RUNE_RESULT_JSON" | jq -r '.caster.id // empty')" == "$RUNE_PLAYER_ID" ]] \
+  || die "runestone_result wrong caster.id"
+RUNE_FACE="$(echo "$RUNE_RESULT_JSON" | jq -r '.face // empty')"
+[[ "$RUNE_FACE" =~ ^(fire|water|earth|air|light|shadow)$ ]] \
+  || die "runestone_result invalid face: $RUNE_FACE"
+echo "$RUNE_RESULT_JSON" | grep -q "The stone exhales:" \
+  || die "runestone_result missing whisper"
+
+RUNE_DENIED_JSON="$(echo "$RUNE_RESP" | grep '^RUNE_DENIED:' | head -n1 | sed 's/^RUNE_DENIED://')"
+echo "$RUNE_DENIED_JSON" | jq . >/dev/null 2>&1 || die "Invalid runestone_denied JSON"
+[[ "$(echo "$RUNE_DENIED_JSON" | jq -r '.reason // empty')" == "cooldown" ]] \
+  || die "runestone_denied reason not cooldown"
+
+log "Checking receipts API for runestone events..."
+if ! run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=runestone_cast&player_id=$RUNE_PLAYER_ID&limit=20" \
+  | grep -q "$RUNE_PLAYER_ID"; then
+  die "Receipts API missing runestone_cast for player_id=$RUNE_PLAYER_ID"
+fi
+if ! run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=runestone_result&player_id=$RUNE_PLAYER_ID&limit=20" \
+  | grep -q "$RUNE_PLAYER_ID"; then
+  die "Receipts API missing runestone_result for player_id=$RUNE_PLAYER_ID"
+fi
+if ! run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=runestone_denied&player_id=$RUNE_PLAYER_ID&limit=20" \
+  | grep -q "cooldown"; then
+  die "Receipts API missing runestone_denied with cooldown for player_id=$RUNE_PLAYER_ID"
+fi
+log "Runestone basic receipts present ✅"
+
+# Trinity of Shadow test (forced face)
+log "Running Trinity of Shadow test (forced face)..."
+
+# Restart server with RUNESTONE_TEST_FORCE_FACE=shadow
+log "Stopping server for trinity test restart..."
+kill "$SERVER_PID" 2>/dev/null || true
+sleep 1
+kill -9 "$SERVER_PID" 2>/dev/null || true
+sleep 1
+
+log "Starting server with RUNESTONE_TEST_FORCE_FACE=shadow..."
+DEBUG=1 \
+ALLOW_TEST_DEATH=1 \
+DEATH_RESPAWN_DELAY_MS="$DEATH_RESPAWN_DELAY_MS_OVERRIDE" \
+PUBLIC_RECEIPTS_DELAY_MS=0 \
+PUBLIC_RECEIPTS_DELAY_PROFILE=default \
+PUBLIC_RECEIPTS_JITTER_MS=0 \
+RUNESTONE_TEST_FORCE_FACE=shadow \
+npm run dev >/tmp/akalynth_verify_server_trinity.log 2>&1 &
+SERVER_PID=$!
+sleep 1
+
+log "Waiting for server to accept WebSocket (trinity test)…"
+READY=0
+for _ in {1..12}; do
+  if run_timeout 2 bash -lc "printf '{\"type\":\"connect\"}\n' | npx --yes wscat -c '$WS_URL' >/dev/null 2>&1"; then
+    READY=1
+    break
+  fi
+  sleep 0.5
+done
+[[ "$READY" -eq 1 ]] || die "Server not ready for trinity test. Check /tmp/akalynth_verify_server_trinity.log"
+
+TRINITY_MINT_JSON="$(run_timeout 5 curl -s -X POST "$HTTP_URL/v1/session/guest" || true)"
+TRINITY_GUEST_TOKEN="$(echo "$TRINITY_MINT_JSON" | jq -r '.guest_token // empty')"
+TRINITY_PLAYER_ID="$(echo "$TRINITY_MINT_JSON" | jq -r '.player_id // empty')"
+[[ -n "$TRINITY_GUEST_TOKEN" ]] || die "Missing guest_token for trinity test"
+[[ -n "$TRINITY_PLAYER_ID" ]] || die "Missing player_id for trinity test"
+log "Minted trinity test session ok (player_id=$TRINITY_PLAYER_ID)"
+
+TRINITY_TIMEOUT_SECONDS=20
+log "Running trinity WS flow (timeout ${TRINITY_TIMEOUT_SECONDS}s)…"
+TRINITY_RESP="$(
+  run_timeout "$TRINITY_TIMEOUT_SECONDS" node -e '
+const WebSocket = require("ws");
+const ws = new WebSocket(process.argv[1]);
+const guestToken = process.argv[2];
+
+const moveToTable = [
+  { type: "move_intent", direction: "east" },
+  { type: "move_intent", direction: "east" },
+  { type: "move_intent", direction: "south" },
+  { type: "move_intent", direction: "south" }
+];
+
+const messages = [
+  { type: "connect" },
+  { type: "login", guest_token: guestToken },
+  { type: "enter_world" },
+  ...moveToTable
+];
+
+let shadowCount = 0;
+
+function sendSeq(seq, delay, done) {
+  let idx = 0;
+  const send = () => {
+    if (idx < seq.length) {
+      ws.send(JSON.stringify(seq[idx++]));
+      setTimeout(send, delay);
+    } else if (done) {
+      done();
+    }
+  };
+  send();
+}
+
+ws.on("open", () => {
+  sendSeq(messages, 150, () => {
+    // Cast 3 times with 2100ms spacing to satisfy cooldown
+    setTimeout(() => {
+      ws.send(JSON.stringify({ type: "runestone_cast", table_id: "rookguard_runestone_table_01" }));
+      setTimeout(() => {
+        ws.send(JSON.stringify({ type: "runestone_cast", table_id: "rookguard_runestone_table_01" }));
+        setTimeout(() => {
+          ws.send(JSON.stringify({ type: "runestone_cast", table_id: "rookguard_runestone_table_01" }));
+          setTimeout(() => ws.close(), 500);
+        }, 2100);
+      }, 2100);
+    }, 300);
+  });
+});
+
+ws.on("message", (data) => {
+  const str = data.toString();
+  console.log(str);
+  try {
+    const msg = JSON.parse(str);
+    if (msg.type === "runestone_result" && msg.face === "shadow") {
+      shadowCount++;
+      console.log("TRINITY_SHADOW_COUNT:" + shadowCount);
+    }
+  } catch (_) {}
+});
+
+ws.on("close", () => process.exit(0));
+ws.on("error", (e) => { console.error(e.message); process.exit(1); });
+' "$WS_URL" "$TRINITY_GUEST_TOKEN" 2>/dev/null || true
+)"
+
+TRINITY_SHADOW_COUNT="$(echo "$TRINITY_RESP" | grep '^TRINITY_SHADOW_COUNT:' | tail -n1 | sed 's/^TRINITY_SHADOW_COUNT://')"
+[[ "${TRINITY_SHADOW_COUNT:-0}" -ge 3 ]] \
+  || die "Trinity test did not get 3 shadow results (got ${TRINITY_SHADOW_COUNT:-0})"
+
+log "Checking receipts API for trinity_of_shadow..."
+sleep 0.5  # Allow receipts to flush
+if ! run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=trinity_of_shadow&player_id=$TRINITY_PLAYER_ID&limit=20" \
+  | grep -q "$TRINITY_PLAYER_ID"; then
+  die "Receipts API missing trinity_of_shadow for player_id=$TRINITY_PLAYER_ID"
+fi
+log "Trinity of Shadow receipt present ✅"
+
+log "Checking public receipts for trinity_of_shadow..."
+PUBLIC_TRINITY_JSON="$(run_timeout 5 curl -s "$HTTP_URL/v1/receipts/public?limit=50" || true)"
+echo "$PUBLIC_TRINITY_JSON" | jq . >/dev/null 2>&1 || die "Invalid JSON from public receipts (trinity check)"
+if ! echo "$PUBLIC_TRINITY_JSON" | grep -q 'trinity_of_shadow'; then
+  die "Public receipts feed missing trinity_of_shadow"
+fi
+if echo "$PUBLIC_TRINITY_JSON" | grep 'trinity_of_shadow' | grep -q '"player_id"'; then
+  die "Public receipts leaked player_id for trinity_of_shadow"
+fi
+log "Trinity of Shadow in public feed ✅"
 
 log "✅ VERIFY PASS"
 log "Last receipts:"
