@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "command": "./scripts/precommit-hook.sh --hook=pretooluse"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "command": "if [[ \"${CLAUDE_FILE_PATH:-}\" == *.ts || \"${CLAUDE_FILE_PATH:-}\" == *.tsx ]]; then npx --yes prettier --write \"${CLAUDE_FILE_PATH}\" >/dev/null 2>&1 || true; fi"
+      }
+    ]
+  }
+}
