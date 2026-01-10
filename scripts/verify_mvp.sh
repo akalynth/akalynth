@@ -361,6 +361,15 @@ if ! run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=death&player_id=$DEATH_
   | grep -q "$DEATH_PLAYER_ID"; then
   die "Receipts API missing death for player_id=$DEATH_PLAYER_ID"
 fi
+LAST_DAMAGE_OK="$(run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=last_damage_attribution&player_id=$DEATH_PLAYER_ID&limit=20" \
+  | jq '[.receipts[] | select(.inputs.source_type=="status" and .inputs.source_id=="test")] | length' 2>/dev/null || echo 0)"
+if [[ "${LAST_DAMAGE_OK:-0}" -lt 1 ]]; then
+  die "Receipts API missing last_damage_attribution with status/test for player_id=$DEATH_PLAYER_ID"
+fi
+if ! run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=death_in_rookguard&player_id=$DEATH_PLAYER_ID&limit=20" \
+  | grep -q "$DEATH_PLAYER_ID"; then
+  die "Receipts API missing death_in_rookguard for player_id=$DEATH_PLAYER_ID"
+fi
 if ! run_timeout 5 curl -s "$HTTP_URL/v1/receipts?action=respawn&player_id=$DEATH_PLAYER_ID&limit=20" \
   | grep -q "$DEATH_PLAYER_ID"; then
   die "Receipts API missing respawn for player_id=$DEATH_PLAYER_ID"
