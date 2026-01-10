@@ -57,7 +57,12 @@ BASE_LINES="$(wc -l < "$RECEIPTS" | tr -d ' ')"
 log "Receipts baseline lines: $BASE_LINES"
 
 log "Starting server (DEBUG=1 ALLOW_TEST_DEATH=1 DEATH_RESPAWN_DELAY_MS=$DEATH_RESPAWN_DELAY_MS_OVERRIDE npm run dev)…"
-DEBUG=1 ALLOW_TEST_DEATH=1 DEATH_RESPAWN_DELAY_MS="$DEATH_RESPAWN_DELAY_MS_OVERRIDE" PUBLIC_RECEIPTS_DELAY_MS=0 npm run dev >/tmp/akalynth_verify_server.log 2>&1 &
+DEBUG=1 \
+ALLOW_TEST_DEATH=1 \
+DEATH_RESPAWN_DELAY_MS="$DEATH_RESPAWN_DELAY_MS_OVERRIDE" \
+PUBLIC_RECEIPTS_DELAY_MS=0 \
+PUBLIC_RECEIPTS_MODE=strict \
+npm run dev >/tmp/akalynth_verify_server.log 2>&1 &
 SERVER_PID=$!
 sleep 1
 
@@ -380,6 +385,23 @@ log "Checking public receipts feed..."
 sleep 0.5  # Allow receipts to flush
 PUBLIC_JSON="$(run_timeout 5 curl -s "$HTTP_URL/v1/receipts/public?limit=50" || true)"
 echo "$PUBLIC_JSON" | jq . >/dev/null 2>&1 || die "Invalid JSON from public receipts feed"
+[[ "$(echo "$PUBLIC_JSON" | jq -r 'has("receipts") and (.receipts | type == "array")')" == "true" ]] \
+  || die "Public receipts feed missing receipts array: $PUBLIC_JSON"
+if echo "$PUBLIC_JSON" | grep -q '"player_id"'; then
+  die "Public receipts feed leaked player_id in strict mode"
+fi
+POS_RAW_COUNT="$(echo "$PUBLIC_JSON" | jq '[.receipts[] | select(.inputs.position? and (.inputs.position | type=="object") and ((.inputs.position.x? != null) or (.inputs.position.y? != null) or (.inputs.position.approx? | not)))] | length' 2>/dev/null || echo 0)"
+if [[ "${POS_RAW_COUNT:-0}" -gt 0 ]]; then
+  die "Public receipts feed leaked raw position coordinates"
+fi
+SPAWN_RAW_COUNT="$(echo "$PUBLIC_JSON" | jq '[.receipts[] | select(.inputs.spawn? and (.inputs.spawn | type=="object") and ((.inputs.spawn.x? != null) or (.inputs.spawn.y? != null) or (.inputs.spawn.approx? | not)))] | length' 2>/dev/null || echo 0)"
+if [[ "${SPAWN_RAW_COUNT:-0}" -gt 0 ]]; then
+  die "Public receipts feed leaked raw spawn coordinates"
+fi
+ACTOR_COUNT="$(echo "$PUBLIC_JSON" | jq '[.receipts[] | select(.actor? and (.actor | type=="string") and (.actor | length > 0))] | length' 2>/dev/null || echo 0)"
+if [[ "${ACTOR_COUNT:-0}" -lt 1 ]]; then
+  die "Public receipts feed missing actor field in strict mode"
+fi
 if ! echo "$PUBLIC_JSON" | grep -Eq 'death_in_rookguard|death_in_azura'; then
   die "Public receipts feed missing death_in_*"
 fi
