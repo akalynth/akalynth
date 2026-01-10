@@ -1,0 +1,15 @@
+{
+  "name": "stone",
+  "auto_tem": true,
+  "duration_ms": 4000,
+  "events": [
+    { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 250 },
+    { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 250 },
+    { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 250 },
+    { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 250 },
+    { "send": { "type": "move_intent", "direction": "south" }, "delay_ms": 250 },
+    { "send": { "type": "move_intent", "direction": "south" }, "delay_ms": 250 },
+    { "send": { "type": "move_intent", "direction": "south" }, "delay_ms": 250 },
+    { "send": { "type": "move_intent", "direction": "south" }, "delay_ms": 250 }
+  ]
+}
