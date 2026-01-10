@@ -1,7 +1,7 @@
 // shared/http.ts
 // HTTP Control Plane contract (API-first). Keep stable.
 
-import type { PlayerPublic } from './types.js';
+import type { PlayerPublic, PlayerStatus } from './types.js';
 
 export type MapName = 'Rookguard' | 'Azura';
 
@@ -71,6 +71,9 @@ export interface WorldStateResponse {
     minted_at_ms: number;
     expires_at_ms: number;
     ttl_ms_remaining: number;
+    status?: PlayerStatus;
+    dead_until_ms?: number | null;
+    dead_ttl_ms?: number | null;
   };
 }
 

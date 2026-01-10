@@ -84,6 +84,7 @@ export interface PlayerPublic {
   x: number;
   y: number;
   status: PlayerStatus;
+  dead_until_ms?: number | null;
   reputation?: number;
 }
 
@@ -160,6 +161,8 @@ export interface AuditReceipt {
   result: string;
   evidence_hash?: string;
 }
+
+export type DeathReceiptAction = 'death' | 'respawn' | 'death_penalty_applied';
 
 export const TEM_CHALLENGE_RESPONSE = 'AZURA';
 export const THROTTLE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
