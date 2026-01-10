@@ -102,6 +102,8 @@ mkdir -p "$(dirname "$RECEIPTS")"
 touch "$RECEIPTS"
 DEBUG=1 \
 ALLOW_TEST_DEATH=1 \
+REQUIRE_TLS=1 \
+ALLOW_INSECURE_LOCAL=1 \
 DEATH_RESPAWN_DELAY_MS="$DEATH_RESPAWN_DELAY_MS_OVERRIDE" \
 PUBLIC_RECEIPTS_DELAY_MS=0 \
 PUBLIC_RECEIPTS_DELAY_PROFILE=default \
@@ -110,6 +112,42 @@ PORT="$PORT" \
 npm run dev >/tmp/akalynth_verify_server.log 2>&1 &
 SERVER_PID=$!
 wait_for_health
+TLS_HTTP_CODE="$(curl -s -o /dev/null -w "%{http_code}" -H "x-forwarded-proto: http" "$HTTP_URL/v1/maps")"
+[[ "$TLS_HTTP_CODE" == "403" ]] || die "TLS gate did not reject forwarded http (got $TLS_HTTP_CODE)"
+if ! HTTP_URL="$HTTP_URL" node <<'NODE'
+const http = require('http');
+const url = new URL(process.env.HTTP_URL);
+const options = {
+  host: url.hostname,
+  port: url.port,
+  path: '/',
+  headers: {
+    Connection: 'Upgrade',
+    Upgrade: 'websocket',
+    'Sec-WebSocket-Version': '13',
+    'Sec-WebSocket-Key': 'dGhlIHNhbXBsZSBub25jZQ==',
+    'x-forwarded-proto': 'http',
+  },
+};
+const req = http.request(options);
+const timer = setTimeout(() => process.exit(1), 800);
+req.on('upgrade', () => {
+  clearTimeout(timer);
+  process.exit(1);
+});
+req.on('response', (res) => {
+  clearTimeout(timer);
+  process.exit(res.statusCode === 403 ? 0 : 1);
+});
+req.on('error', () => {
+  clearTimeout(timer);
+  process.exit(0);
+});
+req.end();
+NODE
+then
+  die "TLS gate did not reject WS upgrade with x-forwarded-proto:http"
+fi
 curl -sf "$HTTP_URL/v1/maps" | grep -q 'Rookguard' || die "HTTP /v1/maps missing Rookguard"
 curl -sf "$HTTP_URL/v1/maps/Azura" | grep -q '"name":"Azura"' || die "HTTP /v1/maps/Azura failed"
 WORLD_STATE_RG="$(poll_json "Invalid JSON from /v1/world/Rookguard/state" \
@@ -200,6 +238,8 @@ PORT="$TRINITY_PORT"; HTTP_URL="http://localhost:$PORT"; WS_URL="ws://localhost:
 port_in_use && die "PORT=$PORT already in use for trinity server."
 DEBUG=1 \
 ALLOW_TEST_DEATH=1 \
+REQUIRE_TLS=1 \
+ALLOW_INSECURE_LOCAL=1 \
 DEATH_RESPAWN_DELAY_MS="$DEATH_RESPAWN_DELAY_MS_OVERRIDE" \
 PUBLIC_RECEIPTS_DELAY_MS=0 \
 PUBLIC_RECEIPTS_DELAY_PROFILE=default \
