@@ -1,4 +1,6 @@
 import http from 'node:http';
+import type { IncomingMessage, ServerResponse } from 'node:http';
+import type { Duplex } from 'node:stream';
 import { WebSocketServer, WebSocket } from 'ws';
 import { createHash, randomUUID } from 'node:crypto';
 
@@ -79,6 +81,8 @@ const DEFAULT_GUEST_SESSION_TTL_MS = 10 * 60 * 1000;
 const DEFAULT_GUEST_SESSION_CLEANUP_MS = 60 * 1000;
 const MAX_GUEST_SESSIONS = 10_000;
 const DEBUG_MODE = process.env.DEBUG === '1';
+const REQUIRE_TLS = parseBoolEnv(process.env.REQUIRE_TLS, true);
+const ALLOW_INSECURE_LOCAL = parseBoolEnv(process.env.ALLOW_INSECURE_LOCAL, false);
 const PUBLIC_RECEIPTS_DELAY_MS = parseEnvMs(process.env.PUBLIC_RECEIPTS_DELAY_MS, 15 * 60 * 1000, 0);
 const PUBLIC_RECEIPTS_DELAY_PROFILE = parsePublicReceiptsDelayProfile(process.env.PUBLIC_RECEIPTS_DELAY_PROFILE);
 const PUBLIC_RECEIPTS_BUCKET_SIZE = parseEnvInt(process.env.PUBLIC_RECEIPTS_BUCKET_SIZE, 8, 1);
@@ -98,6 +102,14 @@ function parseEnvInt(envValue: string | undefined, fallback: number, min: number
   if (!envValue) return fallback;
   const parsed = parseInt(envValue, 10);
   if (Number.isFinite(parsed) && parsed >= min) return parsed;
+  return fallback;
+}
+
+function parseBoolEnv(envValue: string | undefined, fallback: boolean): boolean {
+  if (envValue === undefined) return fallback;
+  const normalized = envValue.trim().toLowerCase();
+  if (normalized === '1' || normalized === 'true' || normalized === 'yes') return true;
+  if (normalized === '0' || normalized === 'false' || normalized === 'no') return false;
   return fallback;
 }
 
@@ -124,6 +136,77 @@ const GUEST_SESSION_CLEANUP_MS = parseEnvMs(
 );
 
 type Queued = { msg: ClientMessage; receivedAt: number };
+
+function isLoopbackAddress(value: string | null | undefined): boolean {
+  if (!value) return false;
+  if (value === '127.0.0.1' || value === '::1' || value === '::ffff:127.0.0.1') return true;
+  return false;
+}
+
+function forwardedHeaderValue(value: string | string[] | undefined): string | null {
+  if (!value) return null;
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (!raw) return null;
+  const first = raw.split(',')[0]?.trim();
+  return first || null;
+}
+
+function forwardedProto(req: IncomingMessage): string | null {
+  const value = forwardedHeaderValue(req.headers['x-forwarded-proto']);
+  return value ? value.toLowerCase() : null;
+}
+
+function forwardedFor(req: IncomingMessage): string | null {
+  return forwardedHeaderValue(req.headers['x-forwarded-for']);
+}
+
+function resolveClientIp(req: IncomingMessage): string | null {
+  const remote = req.socket.remoteAddress ?? null;
+  if (remote && isLoopbackAddress(remote)) {
+    const forwarded = forwardedFor(req);
+    if (forwarded) return forwarded;
+  }
+  return remote;
+}
+
+function tlsGate(req: IncomingMessage): { ok: boolean; reason?: string } {
+  if (!REQUIRE_TLS) return { ok: true };
+
+  const proto = forwardedProto(req);
+  if (proto) {
+    return proto === 'https' ? { ok: true } : { ok: false, reason: 'tls_required' };
+  }
+
+  const socket = req.socket as { encrypted?: boolean };
+  if (socket.encrypted) return { ok: true };
+
+  if (ALLOW_INSECURE_LOCAL) {
+    const clientIp = resolveClientIp(req);
+    if (isLoopbackAddress(clientIp)) return { ok: true };
+  }
+
+  return { ok: false, reason: 'tls_required' };
+}
+
+function rejectInsecureHttp(res: ServerResponse) {
+  res.statusCode = 403;
+  res.setHeader('content-type', 'application/json; charset=utf-8');
+  res.end(JSON.stringify({ error: 'tls_required' }));
+}
+
+function rejectInsecureUpgrade(socket: Duplex) {
+  try {
+    const body = 'TLS required';
+    socket.write(
+      `HTTP/1.1 403 Forbidden\r\nConnection: close\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: ${Buffer.byteLength(
+        body
+      )}\r\n\r\n${body}`
+    );
+  } catch {
+    // ignore
+  }
+  socket.destroy();
+}
 
 type Session = {
   connId: string;
@@ -443,6 +526,11 @@ function resolveSessionMe(guest_token: string, expiredReason: string): SessionMe
 
 // HTTP control plane
 const httpServer = http.createServer((req, res) => {
+  const gate = tlsGate(req);
+  if (!gate.ok) {
+    rejectInsecureHttp(res);
+    return;
+  }
   const handled = handleHttp(req, res, {
     getVersion: () => VERSION,
     getTickMs: () => TICK_MS,
@@ -604,7 +692,18 @@ const httpServer = http.createServer((req, res) => {
 });
 
 // WebSocket data plane (attached to same port)
-const wss = new WebSocketServer({ server: httpServer });
+const wss = new WebSocketServer({ noServer: true });
+
+httpServer.on('upgrade', (req, socket, head) => {
+  const gate = tlsGate(req);
+  if (!gate.ok) {
+    rejectInsecureUpgrade(socket);
+    return;
+  }
+  wss.handleUpgrade(req, socket, head, (ws) => {
+    wss.emit('connection', ws, req);
+  });
+});
 
 function worldFor(s: Session) {
   return worlds[s.currentMap];
