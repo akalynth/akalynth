@@ -6,6 +6,13 @@
 
 The client is never trusted. It sends *intent*, and the server decides truth.
 
+## Encrypted-by-Default Transport
+
+- `REQUIRE_TLS=1` is the default posture: plaintext HTTP and WS upgrades are rejected.
+- Behind a proxy, set `x-forwarded-proto: https` for secure traffic.
+- Dev escape hatch: `ALLOW_INSECURE_LOCAL=1` permits plaintext only from loopback clients.
+- Recommended deployment: bind the server to loopback and terminate TLS at a reverse proxy.
+
 ## Server Loop
 
 ```
