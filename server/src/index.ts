@@ -1,15 +1,18 @@
 import http from 'node:http';
 import { WebSocketServer, WebSocket } from 'ws';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 
 import type { ClientMessage, ServerMessage } from '../../shared/protocol.js';
 import { ServerMessages, parseClientMessage } from '../../shared/protocol.js';
 import type { Player, TutorialProgress } from '../../shared/types.js';
+import { LEDGER_HESITATION_ACTION, RUMOR_SEEDED_ACTION } from '../../shared/types.js';
 import { TileCode } from '../../shared/types.js';
 import { DEATH_TEST_ENABLED, DEATH_RESPAWN_DELAY_MS, LAST_DAMAGE_WINDOW_MS, TICK_MS } from '../../shared/constants.js';
 import type {
   MapName,
   PublicReceiptsActorMode,
+  PublicRumor,
+  Receipt,
   SessionMeResponse,
   WorldStateResult,
 } from '../../shared/http.js';
@@ -17,7 +20,7 @@ import { handleHttp } from './api/http.js';
 
 import { createAuditLogger } from './audit/logger.js';
 import { createReceiptsReader } from './audit/reader.js';
-import { toPublicReceipt } from './audit/public_receipts.js';
+import { publicActorForReceipt, toPublicReceipt } from './audit/public_receipts.js';
 import { createAntiCheatRuntime, onChat, onMoveApplied, onMoveIntent } from './anticheat/detector.js';
 import { applyThrottle, checkTemTimeout, handleTemResponse, issueTemChallenge, isThrottled } from './anticheat/tem.js';
 import { loadSharedMap, createWorldState, toPublicPlayer } from './world/state.js';
@@ -89,6 +92,8 @@ type Session = {
   lastMoveAppliedAt: number | null;
   lastChatAcceptedAt: number | null;
   respawnTimer: NodeJS.Timeout | null;
+  ledgerHesitationArmed: boolean;
+  ledgerHesitationDeathTs: string | null;
   lastDamage?: { at_ms: number; source_type: 'player' | 'tile' | 'status' | 'unknown'; source_id: string | null };
 };
 
@@ -102,7 +107,19 @@ const PUBLIC_RECEIPTS_ALLOW = new Set<string>([
   'first_death_in_azura',
   'first_unknown_cause_death',
   'first_death_after_gate_unlock',
+  RUMOR_SEEDED_ACTION,
 ]);
+const PUBLIC_RUMORS_ALLOW = new Set<string>([RUMOR_SEEDED_ACTION]);
+type LedgerHesitationState = {
+  death_ts: string;
+  map: MapName;
+  applied: boolean;
+};
+const ledgerHesitationByPlayer = new Map<string, LedgerHesitationState>();
+const RUMOR_NOTHING_FINISHES_ID = 'nothing_finishes';
+const RUMOR_NOTHING_FINISHES_TEXT = 'There’s a place in Rookguard where nothing finishes.';
+const RUMOR_NOTHING_FINISHES_MAP: MapName = 'Rookguard';
+let rumorSeeded = false;
 const PUBLIC_RECEIPTS_ACTION_DELAYS_TIBIA: Record<string, number> = {
   death_in_rookguard: 10 * 60 * 1000,
   death_in_azura: 15 * 60 * 1000,
@@ -116,6 +133,74 @@ function publicReceiptDelayForAction(action: string): number {
     return PUBLIC_RECEIPTS_ACTION_DELAYS_TIBIA[action] ?? PUBLIC_RECEIPTS_DELAY_MS;
   }
   return PUBLIC_RECEIPTS_DELAY_MS;
+}
+
+function ledgerHesitationDelayMs(playerId: string, deathTs: string): number {
+  const hex = createHash('sha256').update(`${playerId}:${deathTs}`).digest('hex');
+  const prefix = hex.slice(0, 8);
+  const parsed = parseInt(prefix, 16);
+  if (!Number.isFinite(parsed)) return 300;
+  return (parsed % 400) + 300;
+}
+
+function recordLedgerDeath(playerId: string, map: MapName, deathTs: string) {
+  if (map === 'Rookguard') return;
+  ledgerHesitationByPlayer.set(playerId, { death_ts: deathTs, map, applied: false });
+}
+
+function armLedgerHesitationIfNeeded(s: Session) {
+  if (!s.player) return;
+  if (s.currentMap !== 'Azura') return;
+  const state = ledgerHesitationByPlayer.get(s.player.id);
+  if (!state || state.applied) return;
+  s.ledgerHesitationDeathTs = state.death_ts;
+  s.ledgerHesitationArmed = true;
+}
+
+function applyLedgerHesitationIfArmed(s: Session): LedgerHesitationState | null {
+  if (!s.player) return null;
+  if (!s.ledgerHesitationArmed || !s.ledgerHesitationDeathTs) return null;
+  const state = ledgerHesitationByPlayer.get(s.player.id);
+  if (!state || state.applied || state.death_ts !== s.ledgerHesitationDeathTs) {
+    s.ledgerHesitationArmed = false;
+    s.ledgerHesitationDeathTs = null;
+    return null;
+  }
+  state.applied = true;
+  s.ledgerHesitationArmed = false;
+  s.ledgerHesitationDeathTs = null;
+  return state;
+}
+
+function seedRumorIfNeeded(playerId: string) {
+  if (rumorSeeded) return;
+  rumorSeeded = true;
+  audit.write({
+    player_id: playerId,
+    action: RUMOR_SEEDED_ACTION,
+    inputs: {
+      rumor_id: RUMOR_NOTHING_FINISHES_ID,
+      text: RUMOR_NOTHING_FINISHES_TEXT,
+      map: RUMOR_NOTHING_FINISHES_MAP,
+    },
+    result: 'ok',
+  });
+}
+
+function toPublicRumor(receipt: Receipt): PublicRumor | null {
+  const inputs = receipt.inputs as Record<string, unknown>;
+  const rumor_id = typeof inputs.rumor_id === 'string' ? inputs.rumor_id : null;
+  const text = typeof inputs.text === 'string' ? inputs.text : null;
+  const map = inputs.map;
+  if (!rumor_id || !text) return null;
+  if (map !== 'Rookguard' && map !== 'Azura') return null;
+  return {
+    rumor_id,
+    text,
+    map,
+    actor: publicActorForReceipt(receipt, PUBLIC_RECEIPTS_ACTOR_MODE, PUBLIC_RECEIPTS_HASH_SALT),
+    timestamp: receipt.timestamp,
+  };
 }
 
 type GuestSession = {
@@ -220,6 +305,22 @@ const httpServer = http.createServer((req, res) => {
         jitterMaxMs: PUBLIC_RECEIPTS_JITTER_MS,
         jitterSalt: PUBLIC_RECEIPTS_JITTER_SALT,
       });
+    },
+    queryPublicRumors: (params) => {
+      const now = Date.now();
+      const raw = receiptsReader.queryPublic(params, now, PUBLIC_RUMORS_ALLOW, {
+        delayForAction: publicReceiptDelayForAction,
+        jitterMaxMs: PUBLIC_RECEIPTS_JITTER_MS,
+        jitterSalt: PUBLIC_RECEIPTS_JITTER_SALT,
+      });
+      const rumors = raw.receipts
+        .map((receipt) => toPublicRumor(receipt))
+        .filter((rumor): rumor is PublicRumor => Boolean(rumor));
+      return {
+        rumors,
+        total: raw.total,
+        has_more: raw.has_more,
+      };
     },
     mintGuestSession: () => {
       const now = Date.now();
@@ -358,6 +459,8 @@ function applyRespawnNow(s: Session, now: number) {
 
   if (!result.changed) return;
 
+  armLedgerHesitationIfNeeded(s);
+
   w.players.set(s.player.id, s.player);
   const nearby = Array.from(w.players.values())
     .filter((p) => p.id !== s.player!.id)
@@ -435,6 +538,8 @@ wss.on('connection', (ws) => {
     lastMoveAppliedAt: null,
     lastChatAcceptedAt: null,
     respawnTimer: null,
+    ledgerHesitationArmed: false,
+    ledgerHesitationDeathTs: null,
   };
 
   sessions.set(connId, s);
@@ -602,6 +707,8 @@ function processSessionQueue(s: Session, now: number) {
         s.guestToken = guest_token;
         s.currentMap = 'Rookguard';
         s.tutorial = { move: false, chat: false, tem: false, gate: false, complete: false };
+        s.ledgerHesitationArmed = false;
+        s.ledgerHesitationDeathTs = null;
         s.player = {
           id: player_id,
           name,
@@ -634,6 +741,7 @@ function processSessionQueue(s: Session, now: number) {
 
         s.inWorld = true;
         s.player!.state = 'in_world';
+        seedRumorIfNeeded(s.player!.id);
 
         const w = worldFor(s);
         w.players.set(s.player!.id, s.player!);
@@ -853,6 +961,13 @@ function processSessionQueue(s: Session, now: number) {
           },
         });
 
+        if (deathResult.changed) {
+          const deathTs = new Date().toISOString();
+          recordLedgerDeath(s.player!.id, s.currentMap, deathTs);
+          s.ledgerHesitationArmed = false;
+          s.ledgerHesitationDeathTs = null;
+        }
+
         scheduleRespawnIfNeeded(s, msgNow);
 
         send(
@@ -885,6 +1000,35 @@ function processSessionQueue(s: Session, now: number) {
           });
           send(s.ws, ServerMessages.moveResult(false, s.player!.x, s.player!.y, 'dead'));
           break;
+        }
+
+        const before = { x: s.player!.x, y: s.player!.y, map: s.currentMap };
+
+        if (s.currentMap === 'Azura') {
+          const hesitation = applyLedgerHesitationIfArmed(s);
+          if (hesitation) {
+            const delayMs = ledgerHesitationDelayMs(s.player!.id, hesitation.death_ts);
+            audit.write({
+              player_id: s.player!.id,
+              action: LEDGER_HESITATION_ACTION,
+              inputs: { map: 'Azura', death_ts: hesitation.death_ts, delay_ms: delayMs, type: 'movement_block' },
+              result: 'applied',
+            });
+            audit.write({
+              player_id: s.player!.id,
+              action: 'move_intent',
+              inputs: { direction: msg.direction, from: before },
+              result: 'rejected',
+            });
+            audit.write({
+              player_id: s.player!.id,
+              action: 'move_result',
+              inputs: { to: { x: before.x, y: before.y, map: s.currentMap }, ok: false, reason: 'tile_blocked' },
+              result: 'rejected',
+            });
+            send(s.ws, ServerMessages.moveResult(false, before.x, before.y, 'tile_blocked'));
+            break;
+          }
         }
 
         // If Tem is active (including tutorial demo), movement is blocked until response.
@@ -924,7 +1068,6 @@ function processSessionQueue(s: Session, now: number) {
           }
         }
 
-        const before = { x: s.player!.x, y: s.player!.y, map: s.currentMap };
         const w = worldFor(s);
         const res = tryMove(w.map, s.player!, msg.direction);
         s.lastMoveAppliedAt = msgNow;
@@ -1014,6 +1157,7 @@ function processSessionQueue(s: Session, now: number) {
                 s.player!.x = worlds.Azura.map.spawn.x;
                 s.player!.y = worlds.Azura.map.spawn.y;
                 worlds.Azura.players.set(s.player!.id, s.player!);
+                armLedgerHesitationIfNeeded(s);
 
                 const nearbyAzura = Array.from(worlds.Azura.players.values())
                   .filter((p) => p.id !== s.player!.id)

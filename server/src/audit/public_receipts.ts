@@ -84,11 +84,19 @@ export function visibleAtMs(
   return ts + baselineDelayMs + jitter;
 }
 
+export function publicActorForReceipt(
+  receipt: Receipt,
+  actorMode: PublicReceiptsActorMode,
+  hashSalt: string
+): string {
+  if (actorMode === 'daily_hash') {
+    return sha256Hex(`${receipt.player_id}${hashSalt}:${dayKeyFor(receipt.timestamp)}`).slice(0, 8);
+  }
+  return 'anon';
+}
+
 export function toPublicReceipt(receipt: Receipt, opts: PublicReceiptOptions): PublicReceipt {
-  const actor =
-    opts.actorMode === 'daily_hash'
-      ? sha256Hex(`${receipt.player_id}${opts.hashSalt}:${dayKeyFor(receipt.timestamp)}`).slice(0, 8)
-      : 'anon';
+  const actor = publicActorForReceipt(receipt, opts.actorMode, opts.hashSalt);
 
   return {
     timestamp: receipt.timestamp,

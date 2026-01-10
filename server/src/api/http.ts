@@ -16,6 +16,8 @@ import type {
   ReceiptsResponse,
   PublicReceiptsQueryParams,
   PublicReceiptsResponse,
+  PublicRumorsQueryParams,
+  PublicRumorsResponse,
   WorldPlayersQuery,
 } from '../../../shared/http.js';
 
@@ -36,6 +38,7 @@ export interface ApiDeps {
   queryReceipts: (params: ReceiptsQueryParams) => ReceiptsResponse;
   queryPublicReceipts?: (params: PublicReceiptsQueryParams) => PublicReceiptsResponse;
   queryPublicReceiptsRaw?: (params: PublicReceiptsQueryParams) => PublicReceiptsRawResult;
+  queryPublicRumors?: (params: PublicRumorsQueryParams) => PublicRumorsResponse;
 }
 
 function json(res: ServerResponse, status: number, body: unknown) {
@@ -312,6 +315,30 @@ export function handleHttp(
     } else {
       json(res, 200, result);
     }
+    return true;
+  }
+
+  if (method === 'GET' && path === '/v1/rumors/public') {
+    if (!deps.queryPublicRumors) return false;
+    const params: PublicRumorsQueryParams = {};
+
+    const since = url.searchParams.get('since');
+    if (since) params.since = since;
+
+    const limitStr = url.searchParams.get('limit');
+    if (limitStr) {
+      const limit = parseInt(limitStr, 10);
+      if (!isNaN(limit) && limit > 0) params.limit = Math.min(limit, 200);
+    }
+
+    const offsetStr = url.searchParams.get('offset');
+    if (offsetStr) {
+      const offset = parseInt(offsetStr, 10);
+      if (!isNaN(offset) && offset >= 0) params.offset = Math.min(offset, 10_000);
+    }
+
+    const result = deps.queryPublicRumors(params);
+    json(res, 200, result);
     return true;
   }
 
