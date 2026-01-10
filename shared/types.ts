@@ -129,7 +129,8 @@ export type SignalType =
   | 'action_cadence'
   | 'repeated_timing'
   | 'perfect_cadence'
-  | 'chat_spam';
+  | 'chat_spam'
+  | 'action_spam';
 
 export interface Signal {
   type: SignalType;
@@ -164,6 +165,7 @@ export interface AuditReceipt {
 
 export const LEDGER_HESITATION_ACTION = 'ledger_hesitation';
 export const RUMOR_SEEDED_ACTION = 'rumor_seeded';
+export const LEDGER_MARKED_ACTION = 'ledger_marked';
 export const LEGEND_SIGHTED_ACTION = 'legend_sighted';
 export const LEGEND_ATTEMPTED_ACTION = 'legend_attempted';
 export const LEGEND_REFUSED_ACTION = 'legend_refused';

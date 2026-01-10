@@ -56,6 +56,7 @@ Intent → Detector → Decision → Enforcement → Audit
 - Signals include perfect cadence, chat spam, runestone cooldown spam, and repeated legend probing.
 - Thresholds: Tem challenge at 30, movement throttle at 60 (default values).
 - Heat receipts (`heat_changed`, `heat_tem_escalation`, `heat_penalty_applied`) are private only and never public.
+- When a penalty is applied, the Ledger marks the actor (`ledger_marked`, mark=`watched`) as a private historical signal (no UI, no public feed).
 - In-memory state only; process restart resets heat.
 
 ### Audit Logger (`server/src/audit/logger.ts`)

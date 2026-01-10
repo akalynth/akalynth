@@ -8,6 +8,7 @@ import type { Player, TutorialProgress } from '../../shared/types.js';
 import {
   FIRST_ATTEMPT_STONE_ACTION,
   HEAT_CHANGED_ACTION,
+  LEDGER_MARKED_ACTION,
   HEAT_PENALTY_APPLIED_ACTION,
   HEAT_TEM_ESCALATION_ACTION,
   LEDGER_HESITATION_ACTION,
@@ -328,6 +329,17 @@ function maybeEscalateHeat(s: Session, now: number, reason: string) {
       action: HEAT_PENALTY_APPLIED_ACTION,
       inputs: { score: s.heat.score, penalty_type: 'move_throttle', duration_ms: HEAT_PENALTY_DURATION_MS },
       result: 'applied',
+    });
+    audit.write({
+      player_id: s.player.id,
+      action: LEDGER_MARKED_ACTION,
+      inputs: {
+        mark: 'watched',
+        duration_ms: HEAT_PENALTY_DURATION_MS,
+        cause: 'heat_penalty',
+        reason,
+      },
+      result: 'ok',
     });
   }
 }
