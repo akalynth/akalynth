@@ -61,7 +61,8 @@ DEBUG=1 \
 ALLOW_TEST_DEATH=1 \
 DEATH_RESPAWN_DELAY_MS="$DEATH_RESPAWN_DELAY_MS_OVERRIDE" \
 PUBLIC_RECEIPTS_DELAY_MS=0 \
-PUBLIC_RECEIPTS_MODE=strict \
+PUBLIC_RECEIPTS_DELAY_PROFILE=default \
+PUBLIC_RECEIPTS_JITTER_MS=0 \
 npm run dev >/tmp/akalynth_verify_server.log 2>&1 &
 SERVER_PID=$!
 sleep 1
@@ -387,16 +388,14 @@ PUBLIC_JSON="$(run_timeout 5 curl -s "$HTTP_URL/v1/receipts/public?limit=50" || 
 echo "$PUBLIC_JSON" | jq . >/dev/null 2>&1 || die "Invalid JSON from public receipts feed"
 [[ "$(echo "$PUBLIC_JSON" | jq -r 'has("receipts") and (.receipts | type == "array")')" == "true" ]] \
   || die "Public receipts feed missing receipts array: $PUBLIC_JSON"
+[[ "$(echo "$PUBLIC_JSON" | jq -r '.mode // empty')" == "strict" ]] \
+  || die "Public receipts feed missing mode=strict"
 if echo "$PUBLIC_JSON" | grep -q '"player_id"'; then
   die "Public receipts feed leaked player_id in strict mode"
 fi
-POS_RAW_COUNT="$(echo "$PUBLIC_JSON" | jq '[.receipts[] | select(.inputs.position? and (.inputs.position | type=="object") and ((.inputs.position.x? != null) or (.inputs.position.y? != null) or (.inputs.position.approx? | not)))] | length' 2>/dev/null || echo 0)"
-if [[ "${POS_RAW_COUNT:-0}" -gt 0 ]]; then
-  die "Public receipts feed leaked raw position coordinates"
-fi
-SPAWN_RAW_COUNT="$(echo "$PUBLIC_JSON" | jq '[.receipts[] | select(.inputs.spawn? and (.inputs.spawn | type=="object") and ((.inputs.spawn.x? != null) or (.inputs.spawn.y? != null) or (.inputs.spawn.approx? | not)))] | length' 2>/dev/null || echo 0)"
-if [[ "${SPAWN_RAW_COUNT:-0}" -gt 0 ]]; then
-  die "Public receipts feed leaked raw spawn coordinates"
+RAW_COORD_COUNT="$(echo "$PUBLIC_JSON" | jq '[.receipts[].inputs | paths(scalars) as $p | select(($p[-1]=="x" or $p[-1]=="y") and ($p[-2] != "approx") and (getpath($p) | type=="number"))] | length' 2>/dev/null || echo 0)"
+if [[ "${RAW_COORD_COUNT:-0}" -gt 0 ]]; then
+  die "Public receipts feed leaked raw coordinates outside approx buckets"
 fi
 ACTOR_COUNT="$(echo "$PUBLIC_JSON" | jq '[.receipts[] | select(.actor? and (.actor | type=="string") and (.actor | length > 0))] | length' 2>/dev/null || echo 0)"
 if [[ "${ACTOR_COUNT:-0}" -lt 1 ]]; then
