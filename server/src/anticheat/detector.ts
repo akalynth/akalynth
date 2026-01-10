@@ -8,7 +8,9 @@ import { MIN_MOVE_INTERVAL_MS } from '../../../shared/constants.js';
 export interface AntiCheatRuntime {
   state: AntiCheatState;
   lastMoveAt: number | null;
+  lastMoveAppliedAt: number | null;
   moveIntervalsMs: number[];
+  cadenceIntervalsMs: number[];
   chatTimestamps: number[];
 }
 
@@ -31,7 +33,9 @@ export function createAntiCheatRuntime(now: number): AntiCheatRuntime {
       kickCount: 0,
     },
     lastMoveAt: null,
+    lastMoveAppliedAt: null,
     moveIntervalsMs: [],
+    cadenceIntervalsMs: [],
     chatTimestamps: [],
   };
 }
@@ -40,6 +44,7 @@ export function decaySignals(rt: AntiCheatRuntime, now: number): void {
   rt.state.signals = rt.state.signals.filter((s) => now - s.timestamp <= SIGNAL_DECAY_MS);
   rt.chatTimestamps = rt.chatTimestamps.filter((t) => now - t <= 10_000);
   rt.moveIntervalsMs = rt.moveIntervalsMs.slice(-32);
+  rt.cadenceIntervalsMs = rt.cadenceIntervalsMs.slice(-32);
 }
 
 function addSignal(rt: AntiCheatRuntime, type: SignalType, now: number, details: Record<string, unknown>): Signal {
@@ -48,13 +53,16 @@ function addSignal(rt: AntiCheatRuntime, type: SignalType, now: number, details:
   return signal;
 }
 
-function lowVariance(intervals: number[]): boolean {
-  if (intervals.length < 12) return false;
-  const xs = intervals.slice(-12);
-  const mean = xs.reduce((a, b) => a + b, 0) / xs.length;
-  const var_ = xs.reduce((a, x) => a + (x - mean) ** 2, 0) / xs.length;
-  const std = Math.sqrt(var_);
-  return std < 2; // "perfect timing" signature (ms)
+function cadenceStats(intervals: number[]): { mean: number; std: number } | null {
+  if (intervals.length < 12) return null;
+  const window = intervals.slice(-12);
+  const mean = window.reduce((a, b) => a + b, 0) / window.length;
+  const variance = window.reduce((a, x) => a + (x - mean) ** 2, 0) / window.length;
+  const std = Math.sqrt(variance);
+  if (mean >= 80 && mean <= 400 && std <= 6) {
+    return { mean, std };
+  }
+  return null;
 }
 
 export function onMoveIntent(rt: AntiCheatRuntime, now: number): DetectorAction {
@@ -74,15 +82,39 @@ export function onMoveIntent(rt: AntiCheatRuntime, now: number): DetectorAction 
       if (rt.state.temChallengeActive) return { action: 'none' };
       return { action: 'request_tem', signal };
     }
+  }
 
-    if (lowVariance(rt.moveIntervalsMs)) {
-      const signal = addSignal(rt, 'repeated_timing', now, { intervals_ms: rt.moveIntervalsMs.slice(-12) });
-      if (rt.state.temChallengeActive) return { action: 'none' };
+  rt.lastMoveAt = now;
+  return { action: 'none' };
+}
+
+export function onMoveApplied(rt: AntiCheatRuntime, now: number): DetectorAction {
+  decaySignals(rt, now);
+
+  if (rt.lastMoveAppliedAt !== null && now - rt.lastMoveAppliedAt > 5_000) {
+    rt.cadenceIntervalsMs = [];
+  }
+
+  if (rt.lastMoveAppliedAt !== null) {
+    const rawDt = now - rt.lastMoveAppliedAt;
+    const dt = Math.max(0, Math.min(rawDt, 2_000));
+    rt.cadenceIntervalsMs.push(dt);
+
+    const stats = cadenceStats(rt.cadenceIntervalsMs);
+    if (stats && !rt.state.temChallengeActive) {
+      const signal = addSignal(rt, 'repeated_timing', now, {
+        mean_ms: stats.mean,
+        std_ms: stats.std,
+        n: 12,
+        intervals_ms: rt.cadenceIntervalsMs.slice(-12),
+      });
+      rt.cadenceIntervalsMs = [];
+      rt.lastMoveAppliedAt = now;
       return { action: 'request_tem', signal };
     }
   }
 
-  rt.lastMoveAt = now;
+  rt.lastMoveAppliedAt = now;
   return { action: 'none' };
 }
 

@@ -12,7 +12,7 @@ import { handleHttp } from './api/http.js';
 
 import { createAuditLogger } from './audit/logger.js';
 import { createReceiptsReader } from './audit/reader.js';
-import { createAntiCheatRuntime, onChat, onMoveIntent } from './anticheat/detector.js';
+import { createAntiCheatRuntime, onChat, onMoveApplied, onMoveIntent } from './anticheat/detector.js';
 import { applyThrottle, checkTemTimeout, handleTemResponse, issueTemChallenge, isThrottled } from './anticheat/tem.js';
 import { loadSharedMap, createWorldState, toPublicPlayer } from './world/state.js';
 import { indexFor, tryMove } from './world/movement.js';
@@ -607,6 +607,22 @@ function processSessionQueue(s: Session, now: number) {
         const w = worldFor(s);
         const res = tryMove(w.map, s.player!, msg.direction);
         s.lastMoveAppliedAt = now;
+
+        if (res.ok) {
+          const cadenceAct = onMoveApplied(s.anti, now);
+          if (cadenceAct.action === 'request_tem') {
+            const out = issueTemChallenge(s.anti.state, now);
+            if (out.outcome === 'issued') {
+              send(s.ws, { type: 'tem_challenge', ...out.challenge });
+              audit.write({
+                player_id: s.player!.id,
+                action: 'tem_challenge_issued',
+                inputs: { trigger: cadenceAct.signal.type, details: cadenceAct.signal.details },
+                result: 'challenge_sent',
+              });
+            }
+          }
+        }
 
         audit.write({
           player_id: s.player!.id,
