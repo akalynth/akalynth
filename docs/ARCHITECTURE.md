@@ -58,10 +58,14 @@ Intent → Detector → Decision → Enforcement → Audit
 
 ### Public Receipts Feed (`/v1/receipts/public`)
 
-- Delayed and redacted to preserve controlled asymmetry; canonical truth remains in `/v1/receipts`
-- Defaults to strict redaction; `PUBLIC_RECEIPTS_MODE=raw` is dev-only
+- Always delayed and redacted to preserve controlled asymmetry; canonical truth remains in `/v1/receipts`
+- Response shape is stable (`mode: "strict"` with redacted `PublicReceipt[]`)
 - Coordinates are bucketed (default `PUBLIC_RECEIPTS_BUCKET_SIZE=8`) and actors are anonymized (`PUBLIC_RECEIPTS_ACTOR_MODE=anon|daily_hash`)
 - Daily hashes use `PUBLIC_RECEIPTS_HASH_SALT` (defaults to `akalynth-public-receipts`)
+- Visibility is action-specific with deterministic jitter derived from `evidence_hash` + `PUBLIC_RECEIPTS_JITTER_SALT`
+- Delay profile defaults to `default` (uses `PUBLIC_RECEIPTS_DELAY_MS`); `tibia` profile defines per-action baselines
+- For deterministic testing: `PUBLIC_RECEIPTS_DELAY_PROFILE=default`, `PUBLIC_RECEIPTS_DELAY_MS=0`, `PUBLIC_RECEIPTS_JITTER_MS=0`
+- Debug-only raw feed exists at `/v1/receipts/public_raw` (requires `DEBUG=1`, otherwise 403)
 
 ## Data Flow
 
