@@ -107,8 +107,7 @@ export interface ReceiptsResponse {
   has_more: boolean;
 }
 
-// Public receipts (delayed, filtered, redacted by default)
-export type PublicReceiptsMode = 'strict' | 'raw';
+// Public receipts (delayed, filtered, redacted by default; action-specific visibility)
 export type PublicReceiptsActorMode = 'anon' | 'daily_hash';
 
 export interface PublicReceipt {
@@ -123,21 +122,13 @@ export interface PublicReceipt {
 export interface PublicReceiptsQueryParams {
   action?: string;
   since?: string;
-  until?: string;
   limit?: number;
   offset?: number;
 }
 
-export interface PublicReceiptsStrictResponse {
+export interface PublicReceiptsResponse {
+  mode: 'strict';
   receipts: PublicReceipt[];
   total: number;
   has_more: boolean;
 }
-
-export interface PublicReceiptsRawResponse {
-  receipts: Receipt[];
-  total: number;
-  has_more: boolean;
-}
-
-export type PublicReceiptsResponse = PublicReceiptsStrictResponse | PublicReceiptsRawResponse;
