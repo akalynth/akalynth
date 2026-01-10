@@ -67,13 +67,47 @@ import {
   RUNESTONE_COOLDOWN_MS,
   RUNESTONE_BROADCAST_RADIUS,
 } from './world/runestone.js';
+import {
+  type WitnessConfig,
+  type WitnessTriggerKind,
+  type WitnessResponse,
+  type QuorumResolution,
+  createWitnessRequest,
+  selectWitnesses,
+  getWitnessRequest,
+  isWitnessRequestExpired,
+  isWitnessInRequest,
+  hasWitnessResponded,
+  getWitnessPromptText,
+  cleanupExpiredRequests,
+  isTargetOnCooldown,
+  recordWitnessResponse,
+  tryResolveQuorum,
+  getUnresolvedExpiredRequests,
+} from './world/witness.js';
 import type { Element } from '../../shared/types.js';
 import {
   RUNESTONE_CAST_ACTION,
   RUNESTONE_RESULT_ACTION,
   RUNESTONE_DENIED_ACTION,
   TRINITY_OF_SHADOW_ACTION,
+  WITNESS_REQUESTED_ACTION,
+  WITNESS_RESPONSE_ACTION,
+  WITNESS_QUORUM_RESOLVED_ACTION,
+  SOVEREIGN_DECLARED_ACTION,
+  SOVEREIGN_PRESENCE_ACTION,
+  SOVEREIGN_MARKED_ACTION,
+  CAPABILITY_GRANTED_ACTION,
 } from '../../shared/types.js';
+import { applyBadgeDerivedCaps, hasCap } from './world/caps.js';
+import {
+  spawnEcho,
+  despawnEcho,
+  getEchoForMap,
+  hasActiveEcho,
+  echoToPublicPlayer,
+} from './world/echo.js';
+import { CAP_ECHO_SPAWN } from '../../shared/types.js';
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const VERSION = '0.1.0';
@@ -83,6 +117,9 @@ const MAX_GUEST_SESSIONS = 10_000;
 const DEBUG_MODE = process.env.DEBUG === '1';
 const REQUIRE_TLS = parseBoolEnv(process.env.REQUIRE_TLS, true);
 const ALLOW_INSECURE_LOCAL = parseBoolEnv(process.env.ALLOW_INSECURE_LOCAL, false);
+const TRUST_PROXY = parseBoolEnv(process.env.TRUST_PROXY, false);
+const TRUST_PROXY_LOOPBACK_ONLY = parseBoolEnv(process.env.TRUST_PROXY_LOOPBACK_ONLY, true);
+const TRUST_PROXY_ALLOWLIST = process.env.TRUST_PROXY_ALLOWLIST ?? '';
 const PUBLIC_RECEIPTS_DELAY_MS = parseEnvMs(process.env.PUBLIC_RECEIPTS_DELAY_MS, 15 * 60 * 1000, 0);
 const PUBLIC_RECEIPTS_DELAY_PROFILE = parsePublicReceiptsDelayProfile(process.env.PUBLIC_RECEIPTS_DELAY_PROFILE);
 const PUBLIC_RECEIPTS_BUCKET_SIZE = parseEnvInt(process.env.PUBLIC_RECEIPTS_BUCKET_SIZE, 8, 1);
@@ -90,6 +127,35 @@ const PUBLIC_RECEIPTS_ACTOR_MODE = parsePublicReceiptsActorMode(process.env.PUBL
 const PUBLIC_RECEIPTS_HASH_SALT = process.env.PUBLIC_RECEIPTS_HASH_SALT || 'akalynth-public-receipts';
 const PUBLIC_RECEIPTS_JITTER_MS = parseEnvIntClamped(process.env.PUBLIC_RECEIPTS_JITTER_MS, 120_000, 0, 900_000);
 const PUBLIC_RECEIPTS_JITTER_SALT = process.env.PUBLIC_RECEIPTS_JITTER_SALT || PUBLIC_RECEIPTS_HASH_SALT;
+const WITNESS_ENABLED = parseBoolEnv(process.env.WITNESS_ENABLED, DEBUG_MODE);
+const WITNESS_RADIUS_TILES = parseEnvInt(process.env.WITNESS_RADIUS_TILES, 8, 1);
+const WITNESS_COUNT = Math.max(1, Math.min(parseEnvInt(process.env.WITNESS_COUNT, 2, 1), 3));
+const WITNESS_TTL_MS = parseEnvMs(process.env.WITNESS_TTL_MS, 12_000, 1000);
+const WITNESS_COOLDOWN_MS = parseEnvMs(process.env.WITNESS_COOLDOWN_MS, 60_000, 1000);
+
+const WITNESS_CONFIG: WitnessConfig = {
+  enabled: WITNESS_ENABLED,
+  radiusTiles: WITNESS_RADIUS_TILES,
+  maxWitnesses: WITNESS_COUNT,
+  requestTtlMs: WITNESS_TTL_MS,
+  witnessCooldownMs: WITNESS_COOLDOWN_MS,
+  targetCooldownMs: WITNESS_COOLDOWN_MS,
+  heatNudgeEnabled: false,
+  heatNudgeDelta: 0,
+  idSalt: '',
+};
+
+// Sovereign presence (cosmetic only, no gameplay privileges)
+const SOVEREIGN_ENABLED = parseBoolEnv(process.env.SOVEREIGN_ENABLED, DEBUG_MODE);
+const SOVEREIGN_NAME = process.env.SOVEREIGN_NAME ?? 'Sovereign';
+const SOVEREIGN_TITLE = process.env.SOVEREIGN_TITLE ?? 'Sovereign';
+const SOVEREIGN_MARK = process.env.SOVEREIGN_MARK ?? 'visible_marked';
+const SOVEREIGN_FORCE_NEXT_GUEST = parseBoolEnv(process.env.SOVEREIGN_FORCE_NEXT_GUEST, false);
+const SOVEREIGN_ALLOW_NAME_MATCH = parseBoolEnv(process.env.SOVEREIGN_ALLOW_NAME_MATCH, false);
+
+// Capability Binding v0 (enforcement gates)
+const CAPS_ENABLED = parseBoolEnv(process.env.CAPS_ENABLED, false);
+const CAPS_DEBUG_GRANT_SOVEREIGN = parseBoolEnv(process.env.CAPS_DEBUG_GRANT_SOVEREIGN, false) && DEBUG_MODE;
 
 function parseEnvMs(envValue: string | undefined, fallback: number, min: number): number {
   if (!envValue) return fallback;
@@ -139,9 +205,22 @@ type Queued = { msg: ClientMessage; receivedAt: number };
 
 function isLoopbackAddress(value: string | null | undefined): boolean {
   if (!value) return false;
-  if (value === '127.0.0.1' || value === '::1' || value === '::ffff:127.0.0.1') return true;
+  if (value === '::1') return true;
+  if (value.startsWith('127.')) return true;
+  if (value.startsWith('::ffff:127.')) return true;
   return false;
 }
+
+function parseAllowlist(value: string): Set<string> {
+  return new Set(
+    value
+      .split(',')
+      .map((part) => part.trim())
+      .filter(Boolean)
+  );
+}
+
+const TRUST_PROXY_ALLOWLIST_SET = parseAllowlist(TRUST_PROXY_ALLOWLIST);
 
 function forwardedHeaderValue(value: string | string[] | undefined): string | null {
   if (!value) return null;
@@ -160,11 +239,22 @@ function forwardedFor(req: IncomingMessage): string | null {
   return forwardedHeaderValue(req.headers['x-forwarded-for']);
 }
 
+function isTrustedProxy(req: IncomingMessage): boolean {
+  if (!TRUST_PROXY) return false;
+  const remote = req.socket.remoteAddress ?? null;
+  if (TRUST_PROXY_LOOPBACK_ONLY) {
+    return isLoopbackAddress(remote);
+  }
+  if (TRUST_PROXY_ALLOWLIST_SET.size > 0) {
+    return remote ? TRUST_PROXY_ALLOWLIST_SET.has(remote) : false;
+  }
+  return false;
+}
+
 function resolveClientIp(req: IncomingMessage): string | null {
   const remote = req.socket.remoteAddress ?? null;
-  if (remote && isLoopbackAddress(remote)) {
-    const forwarded = forwardedFor(req);
-    if (forwarded) return forwarded;
+  if (isTrustedProxy(req)) {
+    return forwardedFor(req) ?? remote;
   }
   return remote;
 }
@@ -172,13 +262,14 @@ function resolveClientIp(req: IncomingMessage): string | null {
 function tlsGate(req: IncomingMessage): { ok: boolean; reason?: string } {
   if (!REQUIRE_TLS) return { ok: true };
 
-  const proto = forwardedProto(req);
-  if (proto) {
-    return proto === 'https' ? { ok: true } : { ok: false, reason: 'tls_required' };
-  }
-
   const socket = req.socket as { encrypted?: boolean };
   if (socket.encrypted) return { ok: true };
+
+  if (isTrustedProxy(req)) {
+    const proto = forwardedProto(req);
+    if (proto === 'https') return { ok: true };
+    return { ok: false, reason: 'tls_required' };
+  }
 
   if (ALLOW_INSECURE_LOCAL) {
     const clientIp = resolveClientIp(req);
@@ -191,6 +282,7 @@ function tlsGate(req: IncomingMessage): { ok: boolean; reason?: string } {
 function rejectInsecureHttp(res: ServerResponse) {
   res.statusCode = 403;
   res.setHeader('content-type', 'application/json; charset=utf-8');
+  res.setHeader('cache-control', 'no-store');
   res.end(JSON.stringify({ error: 'tls_required' }));
 }
 
@@ -206,6 +298,115 @@ function rejectInsecureUpgrade(socket: Duplex) {
     // ignore
   }
   socket.destroy();
+}
+
+function redactedActorForPlayerId(playerId: string, timestamp: string): string {
+  return publicActorForReceipt(
+    {
+      timestamp,
+      player_id: playerId,
+      action: '',
+      inputs: {},
+      result: '',
+      evidence_hash: '',
+    },
+    PUBLIC_RECEIPTS_ACTOR_MODE,
+    PUBLIC_RECEIPTS_HASH_SALT
+  );
+}
+
+function maybeRequestWitnesses(
+  targetPlayerId: string,
+  target: Player,
+  triggerKind: WitnessTriggerKind,
+  map: MapName,
+  now: number
+): void {
+  if (!WITNESS_CONFIG.enabled) return;
+
+  if (isTargetOnCooldown(targetPlayerId, now)) return;
+
+  const candidates = selectWitnesses(
+    target,
+    map,
+    Array.from(sessions.values()).map((s) => ({
+      connId: s.connId,
+      player: s.player,
+      inWorld: s.inWorld,
+      currentMap: s.currentMap,
+    })),
+    WITNESS_CONFIG,
+    now
+  );
+
+  if (candidates.length === 0) return;
+
+  const witnessIds = candidates.map((c) => c.playerId);
+  const timestamp = new Date(now).toISOString();
+  const targetActorRedacted = redactedActorForPlayerId(targetPlayerId, timestamp);
+  const requestId = randomUUID();
+
+  const request = createWitnessRequest(
+    requestId,
+    targetPlayerId,
+    targetActorRedacted,
+    triggerKind,
+    map,
+    witnessIds,
+    WITNESS_CONFIG,
+    now
+  );
+
+  const promptText = getWitnessPromptText(triggerKind);
+
+  audit.write({
+    player_id: targetPlayerId,
+    action: WITNESS_REQUESTED_ACTION,
+    inputs: {
+      kind: triggerKind,
+      map,
+      target_actor: targetActorRedacted,
+      witness_count: witnessIds.length,
+      request_id: requestId,
+      ttl_ms: WITNESS_CONFIG.requestTtlMs,
+    },
+    result: 'ok',
+  });
+
+  for (const candidate of candidates) {
+    const session = sessions.get(candidate.sessionId);
+    if (!session || !session.player) continue;
+
+    send(
+      session.ws,
+      ServerMessages.temWitnessRequest(requestId, timestamp, map, targetActorRedacted, promptText, 'heat_penalty')
+    );
+  }
+}
+
+function emitQuorumResolutionReceipt(
+  request: { id: string; targetPlayerId: string; targetActorRedacted: string; triggerKind: WitnessTriggerKind; map: 'Rookguard' | 'Azura'; expiresAtMs: number; createdAtMs: number },
+  resolution: QuorumResolution
+): void {
+  audit.write({
+    player_id: request.targetPlayerId,
+    action: WITNESS_QUORUM_RESOLVED_ACTION,
+    inputs: {
+      request_id: request.id,
+      kind: request.triggerKind,
+      target_actor: request.targetActorRedacted,
+      map: request.map,
+      outcome: resolution.outcome,
+      response_count: resolution.response_count,
+      expected_count: resolution.expected_count,
+      confirm_count: resolution.counts.confirm,
+      deny_count: resolution.counts.deny,
+      uncertain_count: resolution.counts.uncertain,
+      triggered_by: resolution.triggered_by,
+      ttl_ms: request.expiresAtMs - request.createdAtMs,
+    },
+    result: resolution.outcome,
+  });
 }
 
 type Session = {
@@ -238,6 +439,11 @@ const receiptsReader = createReceiptsReader('audit');
 const legendFirsts = new Set<string>();
 const legendSightedByPlayer = new Set<string>();
 const legendAttemptCountByPlayer = new Map<string, number>();
+
+// Sovereign presence tracking
+let activeSovereignSessionId: string | null = null;
+let activeSovereignPlayerId: string | null = null;
+
 const PUBLIC_RECEIPTS_ALLOW = new Set<string>([
   'death_in_rookguard',
   'death_in_azura',
@@ -424,6 +630,10 @@ function maybeEscalateHeat(s: Session, now: number, reason: string) {
       },
       result: 'ok',
     });
+
+    if (s.inWorld && s.currentMap) {
+      maybeRequestWitnesses(s.player.id, s.player, 'heat_penalty', s.currentMap, now);
+    }
   }
 }
 
@@ -607,7 +817,13 @@ const httpServer = http.createServer((req, res) => {
 
       const player_id = `p_${randomUUID()}`;
       const guest_token = `gt_${randomUUID()}`;
-      const name = `Guest_${player_id.slice(-4)}`;
+      let name = `Guest_${player_id.slice(-4)}`;
+
+      // Debug-only: force next guest to be Sovereign
+      if (SOVEREIGN_ENABLED && SOVEREIGN_FORCE_NEXT_GUEST && DEBUG_MODE) {
+        name = SOVEREIGN_NAME;
+      }
+
       const expires_at_ms = now + GUEST_SESSION_TTL_MS;
       guestSessions.set(guest_token, { player_id, name, minted_at_ms: now, expires_at_ms, consumed: false });
       audit.write({
@@ -751,6 +967,13 @@ function applyRespawnNow(s: Session, now: number) {
   const nearby = Array.from(w.players.values())
     .filter((p) => p.id !== s.player!.id)
     .map((p) => toPublicPlayer(p));
+
+  // Include Echo if on this map
+  const respawnEcho = getEchoForMap(s.currentMap);
+  if (respawnEcho) {
+    nearby.push(echoToPublicPlayer(respawnEcho));
+  }
+
   send(s.ws, ServerMessages.worldState(toPublicPlayer(s.player!, true), nearby));
   s.respawnTimer = null;
 }
@@ -868,6 +1091,32 @@ wss.on('connection', (ws) => {
       s.respawnTimer = null;
     }
     sessions.delete(connId);
+
+    // Sovereign cleanup
+    if (SOVEREIGN_ENABLED && activeSovereignSessionId === s.connId && s.player) {
+      audit.write({
+        player_id: s.player.id,
+        action: SOVEREIGN_PRESENCE_ACTION,
+        inputs: {
+          map: s.currentMap,
+          position: { x: s.player.x, y: s.player.y },
+        },
+        result: 'left',
+      });
+
+      // Sovereign Echo spawn (cap-gated)
+      if (CAPS_ENABLED && s.inWorld && hasCap(s.player, CAP_ECHO_SPAWN)) {
+        spawnEcho(s.player.id, s.player.name, s.currentMap, s.player.x, s.player.y, audit);
+        const echo = getEchoForMap(s.currentMap);
+        if (echo) {
+          broadcastToMap(s.currentMap, ServerMessages.playerJoined(echoToPublicPlayer(echo)), s.connId);
+        }
+      }
+
+      activeSovereignSessionId = null;
+      activeSovereignPlayerId = null;
+    }
+
     if (s.player && s.inWorld) {
       const w = worldFor(s);
       w.players.delete(s.player.id);
@@ -1009,7 +1258,46 @@ function processSessionQueue(s: Session, now: number) {
           status: 'alive',
           dead_until_ms: null,
           reputation: 0,
+          caps: [],
         };
+
+        // Sovereign presence detection (security-gated)
+        const isSovereignByName =
+          SOVEREIGN_ENABLED &&
+          (DEBUG_MODE || SOVEREIGN_ALLOW_NAME_MATCH) &&
+          s.player.name === SOVEREIGN_NAME;
+
+        if (isSovereignByName) {
+          if (activeSovereignSessionId && activeSovereignSessionId !== s.connId) {
+            // Reject duplicate sovereign
+            send(s.ws, ServerMessages.loginAck(player_id, guest_token, name, false, 'sovereign_already_active'));
+            audit.write({
+              player_id,
+              action: SOVEREIGN_DECLARED_ACTION,
+              inputs: { name: SOVEREIGN_NAME },
+              result: 'rejected',
+            });
+            s.player = null;
+            s.guestToken = null;
+            break;
+          }
+          // Echo despawn on new sovereign session (cause='replaced' - new session replaces old echo)
+          if (CAPS_ENABLED && hasActiveEcho()) {
+            const echoInfo = despawnEcho(audit, 'replaced');
+            if (echoInfo) {
+              broadcastToMap(echoInfo.map, ServerMessages.playerLeft(echoInfo.echo_id));
+            }
+          }
+
+          activeSovereignSessionId = s.connId;
+          activeSovereignPlayerId = player_id;
+          audit.write({
+            player_id,
+            action: SOVEREIGN_DECLARED_ACTION,
+            inputs: { name: SOVEREIGN_NAME },
+            result: 'ok',
+          });
+        }
 
         send(s.ws, ServerMessages.loginAck(player_id, guest_token, name));
         break;
@@ -1034,12 +1322,50 @@ function processSessionQueue(s: Session, now: number) {
         s.player!.state = 'in_world';
         seedRumorIfNeeded(s.player!.id);
 
+        // Apply sovereign presence marking (cosmetic only)
+        if (SOVEREIGN_ENABLED && activeSovereignPlayerId === s.player!.id) {
+          s.player!.title = SOVEREIGN_TITLE;
+          s.player!.badges = ['sovereign'];
+          s.player!.mark = SOVEREIGN_MARK;
+          audit.write({
+            player_id: s.player!.id,
+            action: SOVEREIGN_MARKED_ACTION,
+            inputs: {
+              title: SOVEREIGN_TITLE,
+              badges: ['sovereign'],
+              mark: SOVEREIGN_MARK,
+              map: s.currentMap,
+            },
+            result: 'ok',
+          });
+          audit.write({
+            player_id: s.player!.id,
+            action: SOVEREIGN_PRESENCE_ACTION,
+            inputs: {
+              map: s.currentMap,
+              position: { x: s.player!.x, y: s.player!.y },
+            },
+            result: 'entered',
+          });
+        }
+
+        // Apply badge-derived capabilities (only when explicitly enabled)
+        if (CAPS_ENABLED && CAPS_DEBUG_GRANT_SOVEREIGN && s.player!.badges?.includes('sovereign')) {
+          applyBadgeDerivedCaps(s.player!, audit);
+        }
+
         const w = worldFor(s);
         w.players.set(s.player!.id, s.player!);
 
         const nearby = Array.from(w.players.values())
           .filter((p) => p.id !== s.player!.id)
           .map((p) => toPublicPlayer(p));
+
+        // Include Echo if on this map
+        const echo = getEchoForMap(s.currentMap);
+        if (echo) {
+          nearby.push(echoToPublicPlayer(echo));
+        }
 
         audit.write({ player_id: s.player!.id, action: 'enter_world', inputs: {}, result: 'ok' });
 
@@ -1556,6 +1882,12 @@ function processSessionQueue(s: Session, now: number) {
                   .filter((p) => p.id !== s.player!.id)
                   .map((p) => toPublicPlayer(p));
 
+                // Include Echo if on Azura
+                const azuraEcho = getEchoForMap('Azura');
+                if (azuraEcho) {
+                  nearbyAzura.push(echoToPublicPlayer(azuraEcho));
+                }
+
                 send(s.ws, ServerMessages.worldState(toPublicPlayer(s.player!, true), nearbyAzura));
                 broadcastToMap('Azura', ServerMessages.playerJoined(toPublicPlayer(s.player!)), s.connId);
 
@@ -1734,12 +2066,129 @@ function processSessionQueue(s: Session, now: number) {
 
         break;
       }
+
+      case 'tem_witness_response': {
+        if (!requireAuth(s)) break;
+        if (!s.player) break;
+
+        const request = getWitnessRequest(msg.request_id);
+        if (!request) {
+          audit.write({
+            player_id: s.player.id,
+            action: WITNESS_RESPONSE_ACTION,
+            inputs: { request_id: msg.request_id, error: 'request_not_found' },
+            result: 'rejected',
+          });
+          break;
+        }
+
+        if (isWitnessRequestExpired(request, msgNow)) {
+          audit.write({
+            player_id: s.player.id,
+            action: WITNESS_RESPONSE_ACTION,
+            inputs: { request_id: msg.request_id, error: 'request_expired' },
+            result: 'rejected',
+          });
+          break;
+        }
+
+        if (!isWitnessInRequest(request, s.player.id)) {
+          audit.write({
+            player_id: s.player.id,
+            action: WITNESS_RESPONSE_ACTION,
+            inputs: { request_id: msg.request_id, error: 'not_witness' },
+            result: 'rejected',
+          });
+          break;
+        }
+
+        if (hasWitnessResponded(request, s.player.id)) {
+          audit.write({
+            player_id: s.player.id,
+            action: WITNESS_RESPONSE_ACTION,
+            inputs: { request_id: msg.request_id, error: 'duplicate_response' },
+            result: 'rejected',
+          });
+          break;
+        }
+
+        if (!s.inWorld) {
+          audit.write({
+            player_id: s.player.id,
+            action: WITNESS_RESPONSE_ACTION,
+            inputs: { request_id: msg.request_id, error: 'not_in_world' },
+            result: 'rejected',
+          });
+          break;
+        }
+
+        if (s.currentMap !== request.map) {
+          // Silent rejection: no receipt for map mismatch (per spec)
+          break;
+        }
+
+        const timestamp = new Date(msgNow).toISOString();
+        const witnessActorRedacted = redactedActorForPlayerId(s.player.id, timestamp);
+        
+        // Round request creation time down to nearest minute in UTC
+        const timestampBucketMs = Math.floor(request.createdAtMs / 60_000) * 60_000;
+        const timestampBucket = new Date(timestampBucketMs).toISOString();
+
+        const evidencePayload = {
+          request_id: msg.request_id,
+          kind: request.triggerKind,
+          target_actor: request.targetActorRedacted,
+          response: msg.response,
+          witness_actor: witnessActorRedacted,
+          map: request.map,
+          timestamp_bucket: timestampBucket,
+        };
+        const evidenceHash = createHash('sha256').update(JSON.stringify(evidencePayload), 'utf8').digest('hex');
+
+        audit.write({
+          player_id: s.player.id,
+          action: WITNESS_RESPONSE_ACTION,
+          inputs: {
+            request_id: msg.request_id,
+            kind: request.triggerKind,
+            target_actor: request.targetActorRedacted,
+            response: msg.response,
+            witness_actor: witnessActorRedacted,
+            evidence_hash: `sha256:${evidenceHash}`,
+            map: request.map,
+          },
+          result: 'ok',
+        });
+
+        // Record response for quorum aggregation
+        const response = msg.response as WitnessResponse;
+        const recordResult = recordWitnessResponse(request, s.player.id, response);
+
+        // Try eager resolution if all witnesses have responded
+        if (recordResult.allResponded) {
+          const resolution = tryResolveQuorum(request, 'all_responded', msgNow);
+          if (resolution) {
+            emitQuorumResolutionReceipt(request, resolution);
+          }
+        }
+
+        break;
+      }
     }
   }
 }
 
 setInterval(() => {
   const now = Date.now();
+  // Resolve expired unresolved witness requests before cleanup
+  const expired = getUnresolvedExpiredRequests(now);
+  for (const request of expired) {
+    const resolution = tryResolveQuorum(request, 'ttl_expired', now);
+    if (resolution) {
+      emitQuorumResolutionReceipt(request, resolution);
+    }
+  }
+  cleanupExpiredRequests(now);
   for (const s of sessions.values()) processSessionQueue(s, now);
 }, TICK_MS);
 

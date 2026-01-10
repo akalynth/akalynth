@@ -64,6 +64,12 @@ export interface Player {
   status: PlayerStatus;
   dead_until_ms?: number | null;
   reputation?: number;
+  // Sovereign presence (cosmetic only)
+  title?: string | null;
+  badges?: string[];
+  mark?: string | null;
+  // Capabilities (enforcement gates, server-only)
+  caps?: string[];
 }
 
 export type PlayerState = 'connected' | 'authenticated' | 'in_world';
@@ -86,6 +92,10 @@ export interface PlayerPublic {
   status: PlayerStatus;
   dead_until_ms?: number | null;
   reputation?: number;
+  // Sovereign presence (cosmetic only)
+  title?: string | null;
+  badges?: string[];
+  mark?: string | null;
 }
 
 // ============================================================================
@@ -173,6 +183,30 @@ export const FIRST_ATTEMPT_STONE_ACTION = 'first_attempt_stone_cannot_obtain';
 export const HEAT_CHANGED_ACTION = 'heat_changed';
 export const HEAT_TEM_ESCALATION_ACTION = 'heat_tem_escalation';
 export const HEAT_PENALTY_APPLIED_ACTION = 'heat_penalty_applied';
+export const WITNESS_REQUESTED_ACTION = 'witness_requested';
+export const WITNESS_RESPONSE_ACTION = 'witness_response';
+export const WITNESS_QUORUM_ACTION = 'witness_quorum';
+export const WITNESS_QUORUM_RESOLVED_ACTION = 'witness_quorum_resolved';
+
+// Sovereign presence (cosmetic only)
+export const SOVEREIGN_DECLARED_ACTION = 'sovereign_declared';
+export const SOVEREIGN_PRESENCE_ACTION = 'sovereign_presence';
+export const SOVEREIGN_MARKED_ACTION = 'sovereign_marked';
+export const SOVEREIGN_ECHO_SPAWNED_ACTION = 'sovereign_echo_spawned';
+export const SOVEREIGN_ECHO_DESPAWNED_ACTION = 'sovereign_echo_despawned';
+
+// ============================================================================
+// Capabilities (enforcement gates, server-only)
+// ============================================================================
+
+export const CAP_HOUSE_BUY = 'house:buy';
+export const CAP_ECHO_SPAWN = 'echo:spawn';
+export const CAP_MAP_ACCESS_PREFIX = 'map:access:';
+
+// Capability receipt actions (private-only, never in PUBLIC_RECEIPTS_ALLOW)
+export const CAPABILITY_GRANTED_ACTION = 'capability_granted';
+export const CAPABILITY_REVOKED_ACTION = 'capability_revoked';
+export const CAPABILITY_GATED_ACTION = 'capability_gated';
 
 export type DeathReceiptAction = 'death' | 'respawn' | 'death_penalty_applied';
 
