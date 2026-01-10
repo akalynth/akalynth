@@ -117,6 +117,33 @@ const httpServer = http.createServer((req, res) => {
       });
       return { player_id, guest_token, name };
     },
+    getSessionMe: (guest_token: string) => {
+      const now = Date.now();
+      const minted = guestSessions.get(guest_token);
+      if (!minted) return { error: 'not_authenticated', status: 401 };
+
+      if (minted.expires_at_ms <= now) {
+        guestSessions.delete(guest_token);
+        audit.write({
+          player_id: minted.player_id,
+          action: 'session_guest_expired',
+          inputs: { reason: 'expired_on_me' },
+          result: 'not_authenticated',
+        });
+        return { error: 'token_expired', status: 401 };
+      }
+
+      const ttl_ms_remaining = Math.max(0, minted.expires_at_ms - now);
+      return {
+        ok: true as const,
+        player_id: minted.player_id,
+        guest_token,
+        name: minted.name,
+        minted_at_ms: minted.minted_at_ms,
+        expires_at_ms: minted.expires_at_ms,
+        ttl_ms_remaining,
+      };
+    },
   });
 
   if (!handled) {

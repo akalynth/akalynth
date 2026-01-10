@@ -101,6 +101,22 @@ PLAYER_ID="$(echo "$MINT_JSON" | jq -r '.player_id // empty')"
 
 log "Minted session ok (player_id=$PLAYER_ID)"
 
+log "Checking session via HTTP /v1/session/me..."
+SESSION_ME_JSON="$(run_timeout 5 curl -s -H "Authorization: Bearer $GUEST_TOKEN" "$HTTP_URL/v1/session/me" || true)"
+echo "$SESSION_ME_JSON" | jq . >/dev/null 2>&1 || die "Invalid JSON from /v1/session/me: $SESSION_ME_JSON"
+
+[[ "$(echo "$SESSION_ME_JSON" | jq -r '.ok // empty')" == "true" ]] \
+  || die "/v1/session/me missing ok=true: $SESSION_ME_JSON"
+[[ "$(echo "$SESSION_ME_JSON" | jq -r '.player_id // empty')" == "$PLAYER_ID" ]] \
+  || die "/v1/session/me player_id mismatch: $SESSION_ME_JSON"
+[[ "$(echo "$SESSION_ME_JSON" | jq -r '.guest_token // empty')" == "$GUEST_TOKEN" ]] \
+  || die "/v1/session/me guest_token mismatch: $SESSION_ME_JSON"
+TTL_MS="$(echo "$SESSION_ME_JSON" | jq -r '.ttl_ms_remaining // -1')"
+[[ "$TTL_MS" -gt 0 ]] || die "/v1/session/me ttl_ms_remaining not > 0: $SESSION_ME_JSON"
+
+HTTP_ME_STATUS="$(run_timeout 5 curl -s -o /dev/null -w "%{http_code}" "$HTTP_URL/v1/session/me")"
+[[ "$HTTP_ME_STATUS" == "401" ]] || die "/v1/session/me without auth should be 401, got $HTTP_ME_STATUS"
+
 log "Running scripted WS flow (timeout ${TIMEOUT_SECONDS}s)…"
 RESP="$(
   run_timeout "$TIMEOUT_SECONDS" node -e '

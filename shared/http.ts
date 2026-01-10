@@ -28,6 +28,20 @@ export interface GuestSessionResponse {
   name: string;
 }
 
+export interface SessionMeResponse {
+  ok: true;
+  player_id: string;
+  guest_token: string;
+  name: string;
+  minted_at_ms: number;
+  expires_at_ms: number;
+  ttl_ms_remaining: number;
+}
+
+export interface HttpErrorResponse {
+  error: string;
+}
+
 // ============================================================================
 // Receipts API
 // ============================================================================

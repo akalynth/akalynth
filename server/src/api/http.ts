@@ -9,12 +9,14 @@ import type {
   MapsListResponse,
   MapDetailResponse,
   GuestSessionResponse,
+  SessionMeResponse,
   Receipt,
   ReceiptsQueryParams,
   ReceiptsResponse,
 } from '../../../shared/http.js';
 
 type GuestSessionMintResult = GuestSessionResponse | { error: string; status?: number };
+type SessionMeResult = SessionMeResponse | { error: string; status: number };
 
 export interface ApiDeps {
   getVersion: () => string;
@@ -22,6 +24,7 @@ export interface ApiDeps {
   listMaps: () => Array<{ name: MapName; width: number; height: number }>;
   getMap: (name: MapName) => MapDetailResponse | null;
   mintGuestSession?: () => GuestSessionMintResult;
+  getSessionMe?: (guest_token: string) => SessionMeResult;
   queryReceipts: (params: ReceiptsQueryParams) => ReceiptsResponse;
 }
 
@@ -46,6 +49,10 @@ function isMapName(x: string): x is MapName {
 }
 
 function isGuestSessionError(x: GuestSessionMintResult): x is { error: string; status?: number } {
+  return typeof (x as { error?: unknown }).error === 'string';
+}
+
+function isSessionMeError(x: SessionMeResult): x is { error: string; status: number } {
   return typeof (x as { error?: unknown }).error === 'string';
 }
 
@@ -104,6 +111,36 @@ export function handleHttp(
     if (isGuestSessionError(sess)) {
       const status = sess.status ?? 500;
       json(res, status, { error: sess.error });
+    } else {
+      json(res, 200, sess);
+    }
+    return true;
+  }
+
+  if (method === 'GET' && path === '/v1/session/me') {
+    if (!deps.getSessionMe) return (json(res, 501, { error: 'not_implemented' }), true);
+
+    const authHeader = req.headers['authorization'] ?? '';
+    if (!authHeader) {
+      json(res, 401, { error: 'missing_token' });
+      return true;
+    }
+
+    const mAuth = /^Bearer\s+(.+)$/i.exec(authHeader);
+    if (!mAuth) {
+      json(res, 401, { error: 'invalid_auth' });
+      return true;
+    }
+
+    const token = mAuth[1].trim();
+    if (!token) {
+      json(res, 401, { error: 'invalid_auth' });
+      return true;
+    }
+
+    const sess = deps.getSessionMe(token);
+    if (isSessionMeError(sess)) {
+      json(res, sess.status, { error: sess.error });
     } else {
       json(res, 200, sess);
     }
