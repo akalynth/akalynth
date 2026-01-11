@@ -5,6 +5,7 @@
     "ghcr.io/devcontainers/features/node:1": { "version": "20" },
     "ghcr.io/devcontainers/features/java:1": { "version": "17" }
   },
+  "forwardPorts": [3000, 5173, 4173],
   "customizations": {
     "vscode": {
       "extensions": [
@@ -15,9 +16,5 @@
     }
   },
   "remoteUser": "vscode",
-  "postCreateCommand": "bash .devcontainer/postCreateCommand.sh",
-  "mounts": [
-    "source=akalynth-gradle-cache,target=/home/vscode/.gradle,type=volume",
-    "source=akalynth-android-sdk,target=/opt/android-sdk,type=volume"
-  ]
+  "postCreateCommand": "bash .devcontainer/postCreateCommand.sh"
 }

@@ -72,12 +72,12 @@ git checkout -b fix/my-feature
 
 # 4. Restore & migrate your changes
 git stash pop
-git mv server/* apps/server/     # If you were in server/
-git mv shared/* packages/shared/  # If you were in shared/
+git mv server apps/server      # Move directory (not contents)
+git mv shared packages/shared  # Move directory (not contents)
 
 # 5. Update imports
 # Change: import { X } from '../../shared/types'
-# To:     import { X } from '@akalynth/shared/types'
+# To:     import { X } from '@shared/types'
 
 # 6. Test
 cd apps/server && npm run build
@@ -88,7 +88,7 @@ cd ../debug-client && npm run dev
 
 1. Accept incoming changes (new structure)
 2. Manually move your changes to correct directories
-3. Run `npm run verify:all` to confirm
+3. Run `scripts/verify_mvp.sh` to confirm
 
 ## Enforcement
 
@@ -101,9 +101,9 @@ CI runs `.github/workflows/spine-lock.yml`:
 - Pass only if apps/, packages/ structure intact
 ```
 
-### Local hook
+### Local hook (optional)
 
-Install: `scripts/precommit-hook.sh`
+You can add a pre-commit check using `scripts/precommit-hook.sh`:
 
 - Warns if committing to forbidden paths
 - Non-blocking (CI is final gate)
@@ -113,7 +113,7 @@ Install: `scripts/precommit-hook.sh`
 1. **Scalability**: Clear separation between apps, libraries, tools
 2. **Onboarding**: Standard monorepo conventions
 3. **Build**: Independent versioning and deployment
-4. **Tooling**: Works with Nx, Turborepo, pnpm workspaces
+4. **Tooling**: Compatible with Nx, Turborepo, pnpm workspaces (not yet configured)
 
 ## History
 
