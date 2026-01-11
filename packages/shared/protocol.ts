@@ -1,0 +1,1180 @@
+// Akalynth Protocol Messages
+// All messages sent over WebSocket
+
+import type { Direction, Element, PlayerPublic, RunestoneDenialReason, SovereignVocation } from './types';
+import { ELEMENTS, SOVEREIGN_VOCATIONS } from './types';
+import type { MapName } from './http';
+
+// ============================================================================
+// Base Message
+// ============================================================================
+
+export interface BaseMessage {
+  type: string;
+}
+
+// ============================================================================
+// Client → Server Messages
+// ============================================================================
+
+export interface ConnectMessage extends BaseMessage {
+  type: 'connect';
+}
+
+export interface LoginMessage extends BaseMessage {
+  type: 'login';
+  guest_token: string | null;
+}
+
+export interface EnterWorldMessage extends BaseMessage {
+  type: 'enter_world';
+}
+
+export interface MoveIntentMessage extends BaseMessage {
+  type: 'move_intent';
+  direction: Direction;
+}
+
+export interface ChatMessage extends BaseMessage {
+  type: 'chat';
+  message: string;
+}
+
+export interface TemResponseMessage extends BaseMessage {
+  type: 'tem_response';
+  response: string;
+}
+
+export interface KillSelfMessage extends BaseMessage {
+  type: 'kill_self';
+}
+
+export interface RunestoneCastMessage extends BaseMessage {
+  type: 'runestone_cast';
+  table_id: string;
+  guess: Element | null;
+}
+
+export type WitnessResponse = 'confirm' | 'deny' | 'uncertain';
+
+export interface TemWitnessResponseMessage extends BaseMessage {
+  type: 'tem_witness_response';
+  request_id: string;
+  response: WitnessResponse;
+}
+
+// Phase 2: Item messages
+export interface DropItemMessage extends BaseMessage {
+  type: 'drop_item';
+  item_id: string;
+}
+
+export interface PickupItemMessage extends BaseMessage {
+  type: 'pickup_item';
+  item_id: string;
+}
+
+// Phase 3: Combat messages
+export interface AttackIntentMessage extends BaseMessage {
+  type: 'attack_intent';
+  target_id: string;
+}
+
+// Dev-only: Legendary minting (gated by env flag)
+export interface MintLegendaryMessage extends BaseMessage {
+  type: 'mint_legendary';
+  item_type?: string; // default 'mark_token'
+  tier?: number;      // default 1 (1-5)
+}
+
+// Phase 3.2: Protected slots
+export interface SetProtectedSlotMessage extends BaseMessage {
+  type: 'set_protected_slot';
+  item_id: string; // must exist in player's inventory
+}
+
+// Phase 4: Chronicle
+export interface GetChronicleMessage extends BaseMessage {
+  type: 'get_chronicle';
+  player_id?: string; // if omitted, returns own chronicle
+  limit?: number;     // default 50, max 200
+  before?: string;    // pagination cursor (ISO8601 timestamp)
+}
+
+// Phase 4.4: Chronicle Evidence
+export interface GetEvidenceMessage extends BaseMessage {
+  type: 'get_evidence';
+  chronicle_event_id?: number; // preferred (stable)
+  receipt_hash?: string;       // alternate (direct)
+  kind?: string;               // optional sanity guard
+}
+
+// Phase 5: Pressure Metrics
+export interface GetPressureMetricsMessage extends BaseMessage {
+  type: 'get_pressure_metrics';
+  since?: string;  // ISO8601, default now - 7 days
+  until?: string;  // ISO8601, default now
+}
+
+// ============================================================================
+// Sovereign Vocations (Identity Layer v0)
+// ============================================================================
+
+// Client → Server: Declare vocation
+export interface DeclareVocationMessage extends BaseMessage {
+  type: 'declare_vocation';
+  vocation: SovereignVocation;
+}
+
+// Client → Server: Inspect player (profile view)
+export interface InspectPlayerMessage extends BaseMessage {
+  type: 'inspect_player';
+  target_player_id: string;
+}
+
+// Admin: Grant/revoke sovereign prefix (DEBUG_MODE && SOVEREIGN_PREFIX_DEBUG only)
+export interface GrantSovereignPrefixMessage extends BaseMessage {
+  type: 'grant_sovereign_prefix';
+  target_player_id: string;
+  grant: boolean;  // true = grant, false = revoke
+}
+
+// ============================================================================
+// Treasury Kernel v0 (Gold)
+// ============================================================================
+
+// Client → Server: Inspect own wallet
+export interface InspectWalletMessage extends BaseMessage {
+  type: 'inspect_wallet';
+}
+
+// Client → Server: Pay tithe (sink)
+export interface PayTitheMessage extends BaseMessage {
+  type: 'pay_tithe';
+  amount: number;
+}
+
+// Admin: Grant gold (DEBUG_MODE only)
+export interface GrantGoldMessage extends BaseMessage {
+  type: 'grant_gold';
+  target_player_id: string;
+  amount: number;
+}
+
+// ============================================================================
+// Work Contract Faucet v0
+// ============================================================================
+
+// Client → Server: Start work contract
+export interface StartWorkContractMessage extends BaseMessage {
+  type: 'start_work_contract';
+  contract_type: 'temple_sweep';
+}
+
+// Client → Server: Work tick (presence proof)
+export interface WorkTickMessage extends BaseMessage {
+  type: 'work_tick';
+  contract_id: string;
+}
+
+// ============================================================================
+// NPC Recognition v0
+// ============================================================================
+
+// Client → Server: Talk to NPC
+export interface TalkToNpcMessage extends BaseMessage {
+  type: 'talk_to_npc';
+  npc_id: string;
+}
+
+export type ClientMessage =
+  | ConnectMessage
+  | LoginMessage
+  | EnterWorldMessage
+  | MoveIntentMessage
+  | ChatMessage
+  | TemResponseMessage
+  | KillSelfMessage
+  | RunestoneCastMessage
+  | TemWitnessResponseMessage
+  | DropItemMessage
+  | PickupItemMessage
+  | AttackIntentMessage
+  | MintLegendaryMessage
+  | SetProtectedSlotMessage
+  | GetChronicleMessage
+  | GetEvidenceMessage
+  | GetPressureMetricsMessage
+  | DeclareVocationMessage
+  | InspectPlayerMessage
+  | GrantSovereignPrefixMessage
+  | InspectWalletMessage
+  | PayTitheMessage
+  | GrantGoldMessage
+  | StartWorkContractMessage
+  | WorkTickMessage
+  | TalkToNpcMessage;
+
+// ============================================================================
+// Server → Client Messages
+// ============================================================================
+
+export interface WelcomeMessage extends BaseMessage {
+  type: 'welcome';
+  version: string;
+}
+
+export interface LoginAckMessage extends BaseMessage {
+  type: 'login_ack';
+  ok?: boolean;
+  player_id: string;
+  guest_token: string;
+  name: string;
+  reason?: string;
+}
+
+export interface WorldStateMessage extends BaseMessage {
+  type: 'world_state';
+  map: MapName;
+  player: PlayerPublic;
+  nearby_players: PlayerPublic[];
+}
+
+export interface MoveResultMessage extends BaseMessage {
+  type: 'move_result';
+  ok: boolean;
+  x: number;
+  y: number;
+  reason: string | null;
+  map?: MapName;
+}
+
+export interface PlayerMovedMessage extends BaseMessage {
+  type: 'player_moved';
+  player_id: string;
+  x: number;
+  y: number;
+}
+
+export interface PlayerJoinedMessage extends BaseMessage {
+  type: 'player_joined';
+  player: PlayerPublic;
+}
+
+export interface PlayerLeftMessage extends BaseMessage {
+  type: 'player_left';
+  player_id: string;
+}
+
+export interface ChatBroadcastMessage extends BaseMessage {
+  type: 'chat_broadcast';
+  player_id: string;
+  name: string;
+  message: string;
+}
+
+export interface TemChallengeMessage extends BaseMessage {
+  type: 'tem_challenge';
+  challenge_id: string;
+  message: string;
+  timeout_seconds: number;
+}
+
+export interface ErrorMessage extends BaseMessage {
+  type: 'error';
+  code: ErrorCode;
+  message: string;
+}
+
+export interface DeathNoticeMessage extends BaseMessage {
+  type: 'death_notice';
+  ok: true;
+  respawn_in_ms: number;
+  map: MapName;
+  spawn: { x: number; y: number };
+  reason: string;
+}
+
+export type ErrorCode =
+  | 'invalid_message'
+  | 'not_authenticated'
+  | 'not_in_world'
+  | 'rate_limited'
+  | 'kicked'
+  | 'insufficient_gold';
+
+export interface RunestoneResultMessage extends BaseMessage {
+  type: 'runestone_result';
+  table_id: string;
+  caster: { id: string; name: string };
+  face: Element;
+  whisper: string;
+}
+
+export interface RunestoneDeniedMessage extends BaseMessage {
+  type: 'runestone_denied';
+  reason: RunestoneDenialReason;
+}
+
+export interface TemWitnessRequestMessage extends BaseMessage {
+  type: 'tem_witness_request';
+  request_id: string;
+  timestamp: string;
+  map: MapName;
+  target_actor: string;
+  prompt: string;
+  kind: 'heat_penalty';
+}
+
+// Phase 2: Item response messages
+export interface ItemInfo {
+  item_id: string;
+  item_type: string;
+  slot?: string | null; // Phase 3.2: 'protected' or null
+}
+
+export interface DropItemResultMessage extends BaseMessage {
+  type: 'drop_item_result';
+  ok: boolean;
+  item_id: string;
+  reason: string | null;
+}
+
+export interface PickupItemResultMessage extends BaseMessage {
+  type: 'pickup_item_result';
+  ok: boolean;
+  item_id: string;
+  reason: string | null;
+}
+
+export interface InventorySnapshotMessage extends BaseMessage {
+  type: 'inventory_snapshot';
+  items: ItemInfo[];
+}
+
+export interface WorldItemAddedMessage extends BaseMessage {
+  type: 'world_item_added';
+  item_id: string;
+  item_type: string;
+  x: number;
+  y: number;
+}
+
+export interface WorldItemRemovedMessage extends BaseMessage {
+  type: 'world_item_removed';
+  item_id: string;
+}
+
+// Phase 3: Combat response messages
+export interface CombatResolvedMessage extends BaseMessage {
+  type: 'combat_resolved';
+  attacker_id: string;
+  defender_id: string;
+  outcome: 'kill';
+  map: MapName;
+  x: number;
+  y: number;
+}
+
+export type CombatRejectionReason =
+  | 'cooldown'
+  | 'not_adjacent'
+  | 'pvp_disabled'
+  | 'attacker_dead'
+  | 'defender_dead'
+  | 'different_maps'
+  | 'attacker_not_found'
+  | 'defender_not_found';
+
+export interface CombatRejectedMessage extends BaseMessage {
+  type: 'combat_rejected';
+  reason: CombatRejectionReason;
+}
+
+// Phase 3.2: Protected slots
+export interface ProtectedSlotSetMessage extends BaseMessage {
+  type: 'protected_slot_set';
+  player_id: string;
+  item_id: string;           // now protected
+  prev_item_id: string | null;
+}
+
+// Phase 4: Chronicle
+// Phase 4.4 E2: Added evidence_ref for death/item_lost/legendary_lost linkage
+export interface EvidenceRef {
+  chronicle_event_id: number;
+  receipt_hash: string;
+}
+
+export interface ChronicleEvent {
+  kind: string;
+  timestamp: string;         // ISO8601
+  zone: string | null;
+  x: number | null;
+  y: number | null;
+  details: Record<string, unknown>;
+  evidence_ref?: EvidenceRef | null;  // Phase 4.4 E2: present for death/item_lost/legendary_lost
+}
+
+export interface ChronicleSnapshotMessage extends BaseMessage {
+  type: 'chronicle_snapshot';
+  player_id: string;
+  events: ChronicleEvent[];
+  has_more: boolean;         // true if more events exist before oldest in this batch
+}
+
+// Phase 4.4: Chronicle Evidence
+export type EvidenceStatus = 'ok' | 'not_found' | 'not_applicable' | 'insufficient_data';
+
+export interface DropExplanationWire {
+  policy: {
+    base_drop_ratio: number;
+    min_drop: number;
+    max_drop: number | null;
+    rep_bias: number;
+    stack_bias: number;
+    protected_slots: number;
+    decay_minutes: number;
+  };
+  ratio_breakdown: {
+    base_drop_ratio: number;
+    reputation: number;
+    neg_rep: number;
+    inventory_size: number;
+    stack_excess: number;
+    rep_contribution: number;
+    stack_contribution: number;
+    final_ratio: number;
+    K_raw: number;
+    K_bounded: number;
+    K_final: number;
+  };
+  player_protected_ids: string[];
+  policy_protected_ids: string[];
+  candidates: Array<{
+    item_id: string;
+    item_type: string;
+    base_weight: number;
+    legendary: boolean;
+    legendary_tier: number | null;
+    heat: number;
+    legendary_multiplier: number | null;
+    final_weight: number;
+    deterministic_u: number;
+    selection_key: number;
+    rank: number;
+    dropped: boolean;
+    exclusion_reason: 'none' | 'player_protected' | 'policy_protected' | 'below_cutoff';
+  }>;
+  dropped_item_ids: string[];
+  kept_item_ids: string[];
+  seed_hash: string;
+}
+
+export interface EvidenceSnapshotMessage extends BaseMessage {
+  type: 'evidence_snapshot';
+  status: EvidenceStatus;
+  player_id: string;
+
+  // Echo back anchor
+  chronicle_event_id?: number;
+  receipt_hash?: string;
+  source_action?: string;
+  kind?: string;
+
+  // Present when status === 'ok'
+  evidence?: {
+    receipt_hashes: {
+      anchor: string;
+      combat_resolved?: string;
+      death?: string;
+    };
+    drop_explanation?: DropExplanationWire;
+  };
+
+  // If not ok, machine-readable error
+  error_code?: string;
+}
+
+// Phase 5: Pressure Metrics
+export type PressureMetricsStatus = 'ok' | 'not_ready';
+
+export interface PressureMetricsContributors {
+  lost_event_ids: number[];
+  death_event_ids: number[];
+  evidence_receipt_hashes: string[];
+}
+
+export interface PressureMetrics {
+  items_lost_total: number;
+  items_lost_by_type: Record<string, number>;
+  legendaries_lost_total: number;
+
+  exposure_item_minutes: number;
+  legendary_exposure_minutes: number;
+
+  heat_now: number;
+  hottest_item_id?: string;
+  hottest_item_heat?: number;
+
+  deaths_total: number;
+  deaths_with_protection: number;
+
+  average_drop_ratio?: number;
+  worst_death?: {
+    receipt_hash: string;
+    drop_ratio: number;
+  };
+
+  contributors: PressureMetricsContributors;
+}
+
+export interface PressureMetricsSnapshotMessage extends BaseMessage {
+  type: 'pressure_metrics_snapshot';
+  player_id: string;
+  since: string;
+  until: string;
+  metrics?: PressureMetrics;
+  status: PressureMetricsStatus;
+  error_code?: 'schema_too_old' | 'no_chronicle';
+}
+
+// Sovereign Vocations: Player inspect response
+export interface PlayerInspectMessage extends BaseMessage {
+  type: 'player_inspect';
+  player_id: string;  // The inspected player
+  name: string;
+  vocation: SovereignVocation | null;
+  display_vocation: string | null;  // "Sovereign Warden" if prefix, else "Warden"
+  badges: string[];
+  mark: string | null;  // Computed at inspect time, not stored
+  error?: 'not_found';
+}
+
+// Treasury Kernel v0: Wallet snapshot (self-only)
+export interface WalletSnapshotMessage extends BaseMessage {
+  type: 'wallet_snapshot';
+  gold: number;
+}
+
+// Treasury Kernel v0: Tithe result
+export interface TitheResultMessage extends BaseMessage {
+  type: 'tithe_result';
+  success: boolean;
+  new_balance?: number;
+  error?: 'invalid_amount' | 'insufficient_gold';
+}
+
+// Work Contract Faucet v0: Contract started
+export interface WorkContractStartedMessage extends BaseMessage {
+  type: 'work_contract_started';
+  contract_id: string;
+  contract_type: 'temple_sweep';
+  payout_gold: number;
+  cooldown_seconds: number;
+  min_duration_ms: number;
+}
+
+// Work Contract Faucet v0: Progress update
+export interface WorkProgressMessage extends BaseMessage {
+  type: 'work_progress';
+  contract_id: string;
+  ticks_observed: number;
+  ticks_required: number;
+  remaining_ms: number;
+}
+
+// Work Contract Faucet v0: Contract result
+export type WorkContractError =
+  | 'on_cooldown'
+  | 'already_active'
+  | 'invalid_contract'
+  | 'insufficient_presence';
+
+export interface WorkContractResultMessage extends BaseMessage {
+  type: 'work_contract_result';
+  contract_id: string;
+  success: boolean;
+  credited_gold?: number;
+  error?: WorkContractError;
+}
+
+// NPC Recognition v0: Server responses
+export type NpcRecognitionTier = 'stranger' | 'seen' | 'recognized';
+
+export interface NpcDialogueMessage extends BaseMessage {
+  type: 'npc_dialogue';
+  npc_id: string;
+  place_id: string;
+  tier: NpcRecognitionTier;
+  line: string;
+}
+
+export type NpcDialogueError = 'not_found' | 'not_in_place';
+
+export interface NpcDialogueErrorMessage extends BaseMessage {
+  type: 'npc_dialogue_error';
+  npc_id: string;
+  error: NpcDialogueError;
+}
+
+export type ServerMessage =
+  | WelcomeMessage
+  | LoginAckMessage
+  | WorldStateMessage
+  | MoveResultMessage
+  | PlayerMovedMessage
+  | PlayerJoinedMessage
+  | PlayerLeftMessage
+  | ChatBroadcastMessage
+  | TemChallengeMessage
+  | ErrorMessage
+  | DeathNoticeMessage
+  | RunestoneResultMessage
+  | RunestoneDeniedMessage
+  | TemWitnessRequestMessage
+  | DropItemResultMessage
+  | PickupItemResultMessage
+  | InventorySnapshotMessage
+  | WorldItemAddedMessage
+  | WorldItemRemovedMessage
+  | CombatResolvedMessage
+  | CombatRejectedMessage
+  | ProtectedSlotSetMessage
+  | ChronicleSnapshotMessage
+  | EvidenceSnapshotMessage
+  | PressureMetricsSnapshotMessage
+  | PlayerInspectMessage
+  | WalletSnapshotMessage
+  | TitheResultMessage
+  | WorkContractStartedMessage
+  | WorkProgressMessage
+  | WorkContractResultMessage
+  | NpcDialogueMessage
+  | NpcDialogueErrorMessage;
+
+// ============================================================================
+// Message Factories
+// ============================================================================
+
+export const ServerMessages = {
+  welcome: (version: string): WelcomeMessage => ({
+    type: 'welcome',
+    version,
+  }),
+
+  loginAck: (
+    player_id: string,
+    guest_token: string,
+    name: string,
+    ok: boolean = true,
+    reason?: string
+  ): LoginAckMessage => ({
+    type: 'login_ack',
+    ok,
+    player_id,
+    guest_token,
+    name,
+    reason,
+  }),
+
+  worldState: (map: MapName, player: PlayerPublic, nearby_players: PlayerPublic[]): WorldStateMessage => ({
+    type: 'world_state',
+    map,
+    player,
+    nearby_players,
+  }),
+
+  moveResult: (ok: boolean, x: number, y: number, reason: string | null = null, map?: MapName): MoveResultMessage => ({
+    type: 'move_result',
+    ok,
+    x,
+    y,
+    reason,
+    map,
+  }),
+
+  playerMoved: (player_id: string, x: number, y: number): PlayerMovedMessage => ({
+    type: 'player_moved',
+    player_id,
+    x,
+    y,
+  }),
+
+  playerJoined: (player: PlayerPublic): PlayerJoinedMessage => ({
+    type: 'player_joined',
+    player,
+  }),
+
+  playerLeft: (player_id: string): PlayerLeftMessage => ({
+    type: 'player_left',
+    player_id,
+  }),
+
+  chatBroadcast: (player_id: string, name: string, message: string): ChatBroadcastMessage => ({
+    type: 'chat_broadcast',
+    player_id,
+    name,
+    message,
+  }),
+
+  temChallenge: (challenge_id: string, timeout_seconds: number): TemChallengeMessage => ({
+    type: 'tem_challenge',
+    challenge_id,
+    message: `Hi! Type AZURA in chat within ${timeout_seconds} seconds.`,
+    timeout_seconds,
+  }),
+
+  deathNotice: (
+    respawn_in_ms: number,
+    map: MapName,
+    spawn: { x: number; y: number },
+    reason: string
+  ): DeathNoticeMessage => ({
+    type: 'death_notice',
+    ok: true,
+    respawn_in_ms,
+    map,
+    spawn,
+    reason,
+  }),
+
+  error: (code: ErrorCode, message: string): ErrorMessage => ({
+    type: 'error',
+    code,
+    message,
+  }),
+
+  runestoneResult: (
+    table_id: string,
+    caster: { id: string; name: string },
+    face: Element,
+    whisper: string
+  ): RunestoneResultMessage => ({
+    type: 'runestone_result',
+    table_id,
+    caster,
+    face,
+    whisper,
+  }),
+
+  runestoneDenied: (reason: RunestoneDenialReason): RunestoneDeniedMessage => ({
+    type: 'runestone_denied',
+    reason,
+  }),
+
+  temWitnessRequest: (
+    request_id: string,
+    timestamp: string,
+    map: MapName,
+    target_actor: string,
+    prompt: string,
+    kind: 'heat_penalty'
+  ): TemWitnessRequestMessage => ({
+    type: 'tem_witness_request',
+    request_id,
+    timestamp,
+    map,
+    target_actor,
+    prompt,
+    kind,
+  }),
+
+  // Phase 2: Item messages
+  dropItemResult: (ok: boolean, item_id: string, reason: string | null = null): DropItemResultMessage => ({
+    type: 'drop_item_result',
+    ok,
+    item_id,
+    reason,
+  }),
+
+  pickupItemResult: (ok: boolean, item_id: string, reason: string | null = null): PickupItemResultMessage => ({
+    type: 'pickup_item_result',
+    ok,
+    item_id,
+    reason,
+  }),
+
+  inventorySnapshot: (items: ItemInfo[]): InventorySnapshotMessage => ({
+    type: 'inventory_snapshot',
+    items,
+  }),
+
+  worldItemAdded: (item_id: string, item_type: string, x: number, y: number): WorldItemAddedMessage => ({
+    type: 'world_item_added',
+    item_id,
+    item_type,
+    x,
+    y,
+  }),
+
+  worldItemRemoved: (item_id: string): WorldItemRemovedMessage => ({
+    type: 'world_item_removed',
+    item_id,
+  }),
+
+  // Phase 3: Combat messages
+  combatResolved: (
+    attacker_id: string,
+    defender_id: string,
+    outcome: 'kill',
+    map: MapName,
+    x: number,
+    y: number
+  ): CombatResolvedMessage => ({
+    type: 'combat_resolved',
+    attacker_id,
+    defender_id,
+    outcome,
+    map,
+    x,
+    y,
+  }),
+
+  combatRejected: (reason: CombatRejectionReason): CombatRejectedMessage => ({
+    type: 'combat_rejected',
+    reason,
+  }),
+
+  // Phase 3.2: Protected slots
+  protectedSlotSet: (
+    player_id: string,
+    item_id: string,
+    prev_item_id: string | null
+  ): ProtectedSlotSetMessage => ({
+    type: 'protected_slot_set',
+    player_id,
+    item_id,
+    prev_item_id,
+  }),
+
+  // Phase 4: Chronicle
+  chronicleSnapshot: (
+    player_id: string,
+    events: ChronicleEvent[],
+    has_more: boolean
+  ): ChronicleSnapshotMessage => ({
+    type: 'chronicle_snapshot',
+    player_id,
+    events,
+    has_more,
+  }),
+
+  // Phase 4.4: Chronicle Evidence
+  evidenceSnapshot: (
+    status: EvidenceStatus,
+    player_id: string,
+    opts: {
+      chronicle_event_id?: number;
+      receipt_hash?: string;
+      source_action?: string;
+      kind?: string;
+      evidence?: EvidenceSnapshotMessage['evidence'];
+      error_code?: string;
+    }
+  ): EvidenceSnapshotMessage => ({
+    type: 'evidence_snapshot',
+    status,
+    player_id,
+    ...opts,
+  }),
+
+  // Phase 5: Pressure Metrics
+  pressureMetricsSnapshot: (
+    player_id: string,
+    since: string,
+    until: string,
+    status: PressureMetricsStatus,
+    metrics?: PressureMetrics,
+    error_code?: 'schema_too_old' | 'no_chronicle'
+  ): PressureMetricsSnapshotMessage => ({
+    type: 'pressure_metrics_snapshot',
+    player_id,
+    since,
+    until,
+    status,
+    metrics,
+    error_code,
+  }),
+
+  // Sovereign Vocations: Player inspect response
+  playerInspect: (
+    player_id: string,
+    name: string,
+    vocation: SovereignVocation | null,
+    display_vocation: string | null,
+    badges: string[],
+    mark: string | null,
+    error?: 'not_found'
+  ): PlayerInspectMessage => ({
+    type: 'player_inspect',
+    player_id,
+    name,
+    vocation,
+    display_vocation,
+    badges,
+    mark,
+    error,
+  }),
+
+  // Treasury Kernel v0
+  walletSnapshot: (gold: number): WalletSnapshotMessage => ({
+    type: 'wallet_snapshot',
+    gold,
+  }),
+
+  titheResult: (
+    success: boolean,
+    new_balance?: number,
+    error?: 'invalid_amount' | 'insufficient_gold'
+  ): TitheResultMessage => ({
+    type: 'tithe_result',
+    success,
+    new_balance,
+    error,
+  }),
+
+  // Work Contract Faucet v0
+  workContractStarted: (
+    contract_id: string,
+    contract_type: 'temple_sweep',
+    payout_gold: number,
+    cooldown_seconds: number,
+    min_duration_ms: number
+  ): WorkContractStartedMessage => ({
+    type: 'work_contract_started',
+    contract_id,
+    contract_type,
+    payout_gold,
+    cooldown_seconds,
+    min_duration_ms,
+  }),
+
+  workProgress: (
+    contract_id: string,
+    ticks_observed: number,
+    ticks_required: number,
+    remaining_ms: number
+  ): WorkProgressMessage => ({
+    type: 'work_progress',
+    contract_id,
+    ticks_observed,
+    ticks_required,
+    remaining_ms,
+  }),
+
+  workContractResult: (
+    contract_id: string,
+    success: boolean,
+    credited_gold?: number,
+    error?: WorkContractError
+  ): WorkContractResultMessage => ({
+    type: 'work_contract_result',
+    contract_id,
+    success,
+    credited_gold,
+    error,
+  }),
+
+  // NPC Recognition v0
+  npcDialogue: (
+    npc_id: string,
+    place_id: string,
+    tier: NpcRecognitionTier,
+    line: string
+  ): NpcDialogueMessage => ({
+    type: 'npc_dialogue',
+    npc_id,
+    place_id,
+    tier,
+    line,
+  }),
+
+  npcDialogueError: (
+    npc_id: string,
+    error: NpcDialogueError
+  ): NpcDialogueErrorMessage => ({
+    type: 'npc_dialogue_error',
+    npc_id,
+    error,
+  }),
+};
+
+// ============================================================================
+// Type Guards
+// ============================================================================
+
+export function isValidDirection(d: unknown): d is Direction {
+  return d === 'north' || d === 'south' || d === 'east' || d === 'west';
+}
+
+export function parseClientMessage(data: unknown): ClientMessage | null {
+  if (typeof data !== 'object' || data === null) return null;
+
+  const msg = data as Record<string, unknown>;
+  if (typeof msg.type !== 'string') return null;
+
+  switch (msg.type) {
+    case 'connect':
+      return { type: 'connect' };
+
+    case 'login':
+      return {
+        type: 'login',
+        guest_token: typeof msg.guest_token === 'string' ? msg.guest_token : null,
+      };
+
+    case 'enter_world':
+      return { type: 'enter_world' };
+
+    case 'move_intent':
+      if (!isValidDirection(msg.direction)) return null;
+      return { type: 'move_intent', direction: msg.direction };
+
+    case 'chat':
+      if (typeof msg.message !== 'string') return null;
+      return { type: 'chat', message: msg.message };
+
+    case 'tem_response':
+      if (typeof msg.response !== 'string') return null;
+      return { type: 'tem_response', response: msg.response };
+
+    case 'kill_self':
+      return { type: 'kill_self' };
+
+    case 'runestone_cast': {
+      if (typeof msg.table_id !== 'string') return null;
+      const guess = typeof msg.guess === 'string' && ELEMENTS.includes(msg.guess as Element)
+        ? (msg.guess as Element)
+        : null;
+      return { type: 'runestone_cast', table_id: msg.table_id, guess };
+    }
+
+    case 'tem_witness_response': {
+      const request_id = typeof msg.request_id === 'string' ? msg.request_id : null;
+      const response = msg.response;
+      if (!request_id) return null;
+      if (response !== 'confirm' && response !== 'deny' && response !== 'uncertain') return null;
+      return {
+        type: 'tem_witness_response',
+        request_id,
+        response,
+      };
+    }
+
+    // Phase 2: Item messages
+    case 'drop_item': {
+      if (typeof msg.item_id !== 'string') return null;
+      return { type: 'drop_item', item_id: msg.item_id };
+    }
+
+    case 'pickup_item': {
+      if (typeof msg.item_id !== 'string') return null;
+      return { type: 'pickup_item', item_id: msg.item_id };
+    }
+
+    // Phase 3: Combat messages
+    case 'attack_intent': {
+      const target =
+        typeof msg.target_id === 'string'
+          ? msg.target_id
+          : typeof msg.target_player_id === 'string'
+            ? msg.target_player_id
+            : null;
+      if (!target) return null;
+      return { type: 'attack_intent', target_id: target };
+    }
+
+    // Dev-only: Legendary minting
+    case 'mint_legendary': {
+      const item_type = typeof msg.item_type === 'string' ? msg.item_type : undefined;
+      const tier = typeof msg.tier === 'number' && msg.tier >= 1 && msg.tier <= 5 ? msg.tier : undefined;
+      return { type: 'mint_legendary', item_type, tier };
+    }
+
+    // Phase 3.2: Protected slots
+    case 'set_protected_slot': {
+      if (typeof msg.item_id !== 'string') return null;
+      return { type: 'set_protected_slot', item_id: msg.item_id };
+    }
+
+    // Phase 4: Chronicle
+    case 'get_chronicle': {
+      const player_id = typeof msg.player_id === 'string' ? msg.player_id : undefined;
+      const limit = typeof msg.limit === 'number' ? msg.limit : undefined;
+      const before = typeof msg.before === 'string' ? msg.before : undefined;
+      return { type: 'get_chronicle', player_id, limit, before };
+    }
+
+    // Phase 4.4: Chronicle Evidence
+    case 'get_evidence': {
+      const chronicle_event_id = typeof msg.chronicle_event_id === 'number' ? msg.chronicle_event_id : undefined;
+      const receipt_hash = typeof msg.receipt_hash === 'string' ? msg.receipt_hash : undefined;
+      const kind = typeof msg.kind === 'string' ? msg.kind : undefined;
+      // Require at least one anchor
+      if (!chronicle_event_id && !receipt_hash) return null;
+      return { type: 'get_evidence', chronicle_event_id, receipt_hash, kind };
+    }
+
+    // Phase 5: Pressure Metrics
+    case 'get_pressure_metrics': {
+      const since = typeof msg.since === 'string' ? msg.since : undefined;
+      const until = typeof msg.until === 'string' ? msg.until : undefined;
+      return { type: 'get_pressure_metrics', since, until };
+    }
+
+    // Sovereign Vocations
+    case 'declare_vocation': {
+      const vocation = msg.vocation;
+      if (typeof vocation !== 'string') return null;
+      if (!SOVEREIGN_VOCATIONS.includes(vocation as SovereignVocation)) return null;
+      return { type: 'declare_vocation', vocation: vocation as SovereignVocation };
+    }
+
+    case 'inspect_player': {
+      if (typeof msg.target_player_id !== 'string') return null;
+      return { type: 'inspect_player', target_player_id: msg.target_player_id };
+    }
+
+    case 'grant_sovereign_prefix': {
+      if (typeof msg.target_player_id !== 'string') return null;
+      if (typeof msg.grant !== 'boolean') return null;
+      return { type: 'grant_sovereign_prefix', target_player_id: msg.target_player_id, grant: msg.grant };
+    }
+
+    // Treasury Kernel v0
+    case 'inspect_wallet':
+      return { type: 'inspect_wallet' };
+
+    case 'pay_tithe': {
+      if (typeof msg.amount !== 'number') return null;
+      return { type: 'pay_tithe', amount: msg.amount };
+    }
+
+    case 'grant_gold': {
+      if (typeof msg.target_player_id !== 'string') return null;
+      if (typeof msg.amount !== 'number') return null;
+      return { type: 'grant_gold', target_player_id: msg.target_player_id, amount: msg.amount };
+    }
+
+    // Work Contract Faucet v0
+    case 'start_work_contract': {
+      if (msg.contract_type !== 'temple_sweep') return null;
+      return { type: 'start_work_contract', contract_type: msg.contract_type };
+    }
+
+    case 'work_tick': {
+      if (typeof msg.contract_id !== 'string') return null;
+      return { type: 'work_tick', contract_id: msg.contract_id };
+    }
+
+    // NPC Recognition v0
+    case 'talk_to_npc': {
+      if (typeof msg.npc_id !== 'string') return null;
+      return { type: 'talk_to_npc', npc_id: msg.npc_id };
+    }
+
+    default:
+      return null;
+  }
+}

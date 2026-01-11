@@ -1,0 +1,31 @@
+{
+  "name": "baseline",
+  "auto_tem": true,
+  "duration_ms": 5000,
+  "events": [
+    { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 200 },
+    { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 200 },
+    { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 200 },
+    { "send": { "type": "chat", "message": "hi" }, "delay_ms": 200 },
+    { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 200 },
+    { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 200 },
+    { "send": { "type": "chat", "message": "AZURA" }, "delay_ms": 200 },
+    { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 200 },
+    { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 200 },
+    { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 200 },
+    {
+      "repeat": 25,
+      "pattern": [
+        { "type": "move_intent", "direction": "north" },
+        { "type": "move_intent", "direction": "south" }
+      ],
+      "delay_ms": 105
+    }
+  ],
+  "expect": [
+    { "type": "welcome" },
+    { "type": "login_ack" },
+    { "type": "world_state" },
+    { "type": "move_result" }
+  ]
+}

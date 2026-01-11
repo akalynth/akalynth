@@ -1,5 +1,9 @@
 # Akalynth (Linux + Android only)
 
+## Structure Note
+
+Legacy folders (if any remain) are deprecated; use `apps/` + `packages/` for new work.
+
 A Tibia-world-feel MMO with a **server-authoritative** architecture and **anti-bot-first** enforcement (Tem).
 
 **Platform policy**: Linux server + Android client only. **Windows is intentionally unsupported.**
@@ -8,7 +12,7 @@ A Tibia-world-feel MMO with a **server-authoritative** architecture and **anti-b
 
 ```bash
 sudo ./scripts/bootstrap_linux.sh
-cd server
+cd apps/server
 npm install
 npm run dev
 ```

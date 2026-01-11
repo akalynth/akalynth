@@ -31,16 +31,16 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-          cache-dependency-path: server/package-lock.json
+          cache-dependency-path: apps/server/package-lock.json
 
       - name: Verify protocol docs are in sync
         run: ./scripts/verify_protocol_sync.sh
 
       - name: Install dependencies
-        run: cd server && npm ci
+        run: cd apps/server && npm ci
 
       - name: TypeScript build
-        run: cd server && npm run build
+        run: cd apps/server && npm run build
 
       - name: Run MVP verification
         run: ./scripts/verify_mvp.sh

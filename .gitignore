@@ -4,6 +4,8 @@
 # Build output
 **/dist/
 server/dist/
+**/build/
+**/.vite/
 
 # Logs
 *.log
@@ -14,7 +16,13 @@ tmp/
 **/.tmp/
 
 # Audit receipts (local dev only)
-server/audit/
+apps/server/audit/
+
+# Persistence data (SQLite, replay markers)
+apps/server/data/
+
+# Draft/proposal folders
+__*/
 
 # OS files
 .DS_Store

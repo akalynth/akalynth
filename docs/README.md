@@ -17,7 +17,7 @@ This installs: `ca-certificates curl git build-essential nodejs npm`
 ### 2. Run the Server
 
 ```bash
-cd server
+cd apps/server
 npm install
 npm run dev
 ```
@@ -43,9 +43,9 @@ Send a test message:
 
 ```
 akalynth/
-  server/          # Authoritative MMO server (TypeScript)
-  client/          # Android client (Godot) - coming soon
-  shared/          # Shared schemas/types
+  apps/server/     # Authoritative MMO server (TypeScript)
+  apps/debug-client/  # Debug web client (Vite)
+  packages/shared/ # Shared schemas/types
   docs/            # Specifications
   scripts/         # Bootstrap & dev scripts (Linux)
   ops/             # Deploy notes, systemd units

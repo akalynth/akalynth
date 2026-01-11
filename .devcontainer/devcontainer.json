@@ -1,0 +1,23 @@
+{
+  "name": "akalynth",
+  "build": { "dockerfile": "Dockerfile" },
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "20" },
+    "ghcr.io/devcontainers/features/java:1": { "version": "17" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-typescript-next"
+      ]
+    }
+  },
+  "remoteUser": "vscode",
+  "postCreateCommand": "bash .devcontainer/postCreateCommand.sh",
+  "mounts": [
+    "source=akalynth-gradle-cache,target=/home/vscode/.gradle,type=volume",
+    "source=akalynth-android-sdk,target=/opt/android-sdk,type=volume"
+  ]
+}

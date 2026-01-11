@@ -49,23 +49,23 @@ while IFS= read -r file; do
   [[ -z "$file" ]] && continue
 
   case "$file" in
-    shared/protocol.ts)
+    packages/shared/protocol.ts)
       PROTOCOL_CHANGED=1
       DOCS_ONLY=0
       ;;
-    shared/http.ts)
+    packages/shared/http.ts)
       HTTP_CHANGED=1
       DOCS_ONLY=0
       ;;
-    server/src/api/*)
+    apps/server/src/api/*)
       API_CHANGED=1
       DOCS_ONLY=0
       ;;
-    server/src/*)
+    apps/server/src/*)
       SERVER_SRC_CHANGED=1
       DOCS_ONLY=0
       ;;
-    shared/*)
+    packages/shared/*)
       SHARED_CHANGED=1
       DOCS_ONLY=0
       ;;
@@ -89,7 +89,7 @@ ERRORS=0
 
 # Invariant A: Protocol changes require docs sync
 if [[ "$PROTOCOL_CHANGED" -eq 1 ]]; then
-  log "Invariant A: shared/protocol.ts changed"
+  log "Invariant A: packages/shared/protocol.ts changed"
   if [[ ! -f "$ROOT_DIR/scripts/verify_protocol_sync.sh" ]]; then
     fail "Missing scripts/verify_protocol_sync.sh"
     ERRORS=$((ERRORS + 1))
@@ -100,7 +100,7 @@ fi
 
 # Invariant B: HTTP/API changes require verify_mvp.sh
 if [[ "$HTTP_CHANGED" -eq 1 ]] || [[ "$API_CHANGED" -eq 1 ]]; then
-  log "Invariant B: HTTP API surface changed (shared/http.ts or server/src/api/**)"
+  log "Invariant B: HTTP API surface changed (packages/shared/http.ts or apps/server/src/api/**)"
   if [[ ! -f "$ROOT_DIR/scripts/verify_mvp.sh" ]]; then
     fail "Missing scripts/verify_mvp.sh"
     ERRORS=$((ERRORS + 1))
@@ -111,7 +111,7 @@ fi
 
 # Invariant C: Server src changes require verify_mvp.sh
 if [[ "$SERVER_SRC_CHANGED" -eq 1 ]]; then
-  log "Invariant C: server/src/** changed"
+  log "Invariant C: apps/server/src/** changed"
   if [[ ! -f "$ROOT_DIR/scripts/verify_mvp.sh" ]]; then
     fail "Missing scripts/verify_mvp.sh"
     ERRORS=$((ERRORS + 1))

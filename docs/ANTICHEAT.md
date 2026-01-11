@@ -167,3 +167,16 @@ interface AntiCheatState {
 - All receipts are stored
 - Player can request review
 - Moderator can view full signal history and evidence
+
+## DEBUG-Gated Features
+
+Certain features require `DEBUG=1` environment variable:
+
+| Feature | Env Var | Purpose |
+|---------|---------|---------|
+| Test death trigger | `DEBUG=1` + `ALLOW_TEST_DEATH=1` | `kill_self` command for testing |
+| Runestone casting | `DEBUG=1` | Access to runestone tables |
+| Forced runestone face | `DEBUG=1` + `RUNESTONE_TEST_FORCE_FACE=<element>` | Deterministic rolls for testing |
+| Public receipts raw | `DEBUG=1` | `/v1/receipts/public_raw` endpoint |
+
+In production, Tem will gate runestone access via capability tokens (not yet implemented).

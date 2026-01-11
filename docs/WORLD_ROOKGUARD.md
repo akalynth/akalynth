@@ -29,7 +29,7 @@ All tutorial tiles are walkable so the authoritative server can detect them as p
 3. **Tem Demo** – stepping on `TutorialTem` issues the friendly Tem challenge (“Hi! 👋 type AZURA…”). Passing it marks the Tem step.  
 4. **Gate Unlock** – once the previous steps are true, stepping on `GateToAzura` flips `tutorial_complete = true`, emits receipts, and the server transfers the player to Azura’s spawn.
 
-Every event is logged to `server/audit/receipts.jsonl` (`tutorial_step_complete`, `tem_challenge_issued`, `tutorial_completed`, `gate_unlock`, etc.).
+Every event is logged to `apps/server/audit/receipts.jsonl` (`tutorial_step_complete`, `tem_challenge_issued`, `tutorial_completed`, `gate_unlock`, etc.).
 
 ## Layout (not to scale)
 
@@ -44,5 +44,4 @@ Single-tile corridor surrounded by walls to keep focus on onboarding.
 
 ## Map Data
 
-`shared/maps/rookguard.json` holds the complete 32×32 tile array plus landmarks for each tutorial marker and the gate. This file is loaded by the authoritative server just like `azura.json`.
-
+`packages/shared/maps/rookguard.json` holds the complete 32×32 tile array plus landmarks for each tutorial marker and the gate. This file is loaded by the authoritative server just like `azura.json`.

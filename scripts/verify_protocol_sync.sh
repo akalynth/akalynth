@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CODE="$ROOT_DIR/shared/protocol.ts"
+CODE="$ROOT_DIR/packages/shared/protocol.ts"
 DOC="$ROOT_DIR/docs/PROTOCOL.md"
 
 die(){ echo "❌ $*" >&2; exit 1; }
@@ -37,7 +37,7 @@ if [[ -n "$missing_in_docs" ]]; then
 fi
 
 if [[ -n "$extra_in_docs" ]]; then
-  echo "❌ Present in docs/PROTOCOL.md but not in shared/protocol.ts:"
+  echo "❌ Present in docs/PROTOCOL.md but not in packages/shared/protocol.ts:"
   echo "$extra_in_docs"
   errors=1
 fi
@@ -46,4 +46,4 @@ if [[ $errors -eq 1 ]]; then
   exit 1
 fi
 
-echo "✅ Protocol docs match shared/protocol.ts"
+echo "✅ Protocol docs match packages/shared/protocol.ts"
