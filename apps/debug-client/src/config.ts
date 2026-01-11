@@ -3,7 +3,12 @@ import type { MapName } from '@shared/http';
 const SERVER_PORT = 3000;
 
 function isLocalHost(hostname: string) {
-  return hostname === 'localhost' || hostname === '127.0.0.1';
+  return (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '0.0.0.0' ||
+    hostname === '::1'
+  );
 }
 
 // Translates: <codespace>-5173.app.github.dev -> <codespace>-3000.app.github.dev
@@ -29,7 +34,7 @@ const DEFAULT_HTTP = (() => {
   }
 
   // Codespaces/Gitpod: rewrite host suffix to server port
-  const remoteHost = translateRemoteDevHost(url.host, SERVER_PORT);
+  const remoteHost = translateRemoteDevHost(url.hostname, SERVER_PORT);
   if (remoteHost) return `${url.protocol}//${remoteHost}`;
 
   // Otherwise: same-origin (production behind proxy)
@@ -46,7 +51,7 @@ const DEFAULT_WS = (() => {
   }
 
   // Codespaces/Gitpod: rewrite host suffix to server port
-  const remoteHost = translateRemoteDevHost(url.host, SERVER_PORT);
+  const remoteHost = translateRemoteDevHost(url.hostname, SERVER_PORT);
   if (remoteHost) return `${wsProto}//${remoteHost}`;
 
   // Otherwise: same-origin

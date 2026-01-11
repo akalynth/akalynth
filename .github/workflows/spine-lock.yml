@@ -14,7 +14,8 @@ jobs:
       
       - name: Check for forbidden directories
         run: |
-          FORBIDDEN_DIRS=("server" "shared" "client")
+          # Include case variants for strictness
+          FORBIDDEN_DIRS=("server" "Server" "SERVER" "shared" "Shared" "SHARED" "client" "Client" "CLIENT")
           VIOLATIONS=()
           
           for dir in "${FORBIDDEN_DIRS[@]}"; do
@@ -34,7 +35,7 @@ jobs:
             echo "These paths have been migrated:"
             echo "  server/  → apps/server/"
             echo "  shared/  → packages/shared/"
-            echo "  client/  → apps/*-client/"
+            echo "  client/  → apps/debug-client/ (or other apps/* clients)"
             echo ""
             echo "See docs/SPINE_V1.md for migration guide"
             exit 1
