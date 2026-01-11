@@ -1,4 +1,4 @@
-Read shared/protocol.ts and ensure docs/PROTOCOL.md matches it.
+Read packages/shared/protocol.ts and ensure docs/PROTOCOL.md matches it.
 
 - List all message types
 - Include request/response JSON examples

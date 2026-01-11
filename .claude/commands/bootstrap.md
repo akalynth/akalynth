@@ -8,7 +8,7 @@ Run the Linux bootstrap and verify core toolchain.
 !sudo ./scripts/bootstrap_linux.sh
 
 2) Install server deps:
-!cd server && npm install
+!cd apps/server && npm install
 
 3) Print versions:
 !node -v

@@ -1,0 +1,177 @@
+{
+  "type": "evidence_snapshot",
+  "status": "ok",
+  "player_id": "fixture-player-001",
+  "chronicle_event_id": 1,
+  "receipt_hash": "blake3:60dcce8681fe749c055efd4d5bfd295e63aa6556a7613dc05f6b314aba998c03",
+  "source_action": "death",
+  "kind": "death",
+  "evidence": {
+    "receipt_hashes": {
+      "anchor": "blake3:60dcce8681fe749c055efd4d5bfd295e63aa6556a7613dc05f6b314aba998c03",
+      "combat_resolved": "blake3:0a624eeed6f61db66c6f9991a99792edf5ba28ba1eca721bd3706613e46ad5ad",
+      "death": "blake3:60dcce8681fe749c055efd4d5bfd295e63aa6556a7613dc05f6b314aba998c03"
+    },
+    "drop_explanation": {
+      "policy": {
+        "base_drop_ratio": 0.6,
+        "min_drop": 1,
+        "max_drop": null,
+        "rep_bias": 0.15,
+        "stack_bias": 0.1,
+        "protected_slots": 0,
+        "decay_minutes": 20
+      },
+      "ratio_breakdown": {
+        "base_drop_ratio": 0.6,
+        "reputation": -50,
+        "neg_rep": 50,
+        "inventory_size": 8,
+        "stack_excess": 5,
+        "rep_contribution": 0.14999319001053563,
+        "stack_contribution": 0.071349520313981,
+        "final_ratio": 0.8213427103245167,
+        "K_raw": 7,
+        "K_bounded": 7,
+        "K_final": 7
+      },
+      "player_protected_ids": [],
+      "policy_protected_ids": [],
+      "candidates": [
+        {
+          "item_id": "0d4d0ce88f21ac08bc39b1d64fa3fc7b",
+          "item_type": "legendary_amulet",
+          "base_weight": 1,
+          "legendary": false,
+          "legendary_tier": null,
+          "heat": 50,
+          "legendary_multiplier": null,
+          "final_weight": 1,
+          "deterministic_u": 0.9570982404884645,
+          "selection_key": 0.9570982404884645,
+          "rank": 1,
+          "dropped": true,
+          "exclusion_reason": "none"
+        },
+        {
+          "item_id": "8593ed9d466edf5de3939aa9a616fa00",
+          "item_type": "potion",
+          "base_weight": 1,
+          "legendary": false,
+          "legendary_tier": null,
+          "heat": 0,
+          "legendary_multiplier": null,
+          "final_weight": 1,
+          "deterministic_u": 0.9114834037403304,
+          "selection_key": 0.9114834037403304,
+          "rank": 2,
+          "dropped": true,
+          "exclusion_reason": "none"
+        },
+        {
+          "item_id": "197bbb9b0d6eba7216ae2dd8c18b6afa",
+          "item_type": "cloak",
+          "base_weight": 1,
+          "legendary": false,
+          "legendary_tier": null,
+          "heat": 0,
+          "legendary_multiplier": null,
+          "final_weight": 1,
+          "deterministic_u": 0.8632040565980608,
+          "selection_key": 0.8632040565980608,
+          "rank": 3,
+          "dropped": true,
+          "exclusion_reason": "none"
+        },
+        {
+          "item_id": "8a798de0674f566baf1a4f427ea929f3",
+          "item_type": "boots",
+          "base_weight": 1,
+          "legendary": false,
+          "legendary_tier": null,
+          "heat": 0,
+          "legendary_multiplier": null,
+          "final_weight": 1,
+          "deterministic_u": 0.6216301232626732,
+          "selection_key": 0.6216301232626732,
+          "rank": 4,
+          "dropped": true,
+          "exclusion_reason": "none"
+        },
+        {
+          "item_id": "10c61e1f3b6ffde0ac27bc7443bdc842",
+          "item_type": "legendary_ring",
+          "base_weight": 1,
+          "legendary": false,
+          "legendary_tier": null,
+          "heat": 50,
+          "legendary_multiplier": null,
+          "final_weight": 1,
+          "deterministic_u": 0.5524285329860702,
+          "selection_key": 0.5524285329860702,
+          "rank": 5,
+          "dropped": true,
+          "exclusion_reason": "none"
+        },
+        {
+          "item_id": "8e9cf205ab2820fde721aaddf8db385e",
+          "item_type": "helmet",
+          "base_weight": 1,
+          "legendary": false,
+          "legendary_tier": null,
+          "heat": 0,
+          "legendary_multiplier": null,
+          "final_weight": 1,
+          "deterministic_u": 0.5406837113063512,
+          "selection_key": 0.5406837113063512,
+          "rank": 6,
+          "dropped": true,
+          "exclusion_reason": "none"
+        },
+        {
+          "item_id": "5674891fbfad411f3de2572311888870",
+          "item_type": "sword",
+          "base_weight": 1,
+          "legendary": false,
+          "legendary_tier": null,
+          "heat": 0,
+          "legendary_multiplier": null,
+          "final_weight": 1,
+          "deterministic_u": 0.09644470482516213,
+          "selection_key": 0.09644470482516213,
+          "rank": 7,
+          "dropped": true,
+          "exclusion_reason": "none"
+        },
+        {
+          "item_id": "07502231dc7d721dfa7f578ba7bc9c0d",
+          "item_type": "shield",
+          "base_weight": 1,
+          "legendary": false,
+          "legendary_tier": null,
+          "heat": 0,
+          "legendary_multiplier": null,
+          "final_weight": 1,
+          "deterministic_u": 0.023296052595436587,
+          "selection_key": 0.023296052595436587,
+          "rank": 8,
+          "dropped": false,
+          "exclusion_reason": "below_cutoff"
+        }
+      ],
+      "dropped_item_ids": [
+        "0d4d0ce88f21ac08bc39b1d64fa3fc7b",
+        "8593ed9d466edf5de3939aa9a616fa00",
+        "197bbb9b0d6eba7216ae2dd8c18b6afa",
+        "8a798de0674f566baf1a4f427ea929f3",
+        "10c61e1f3b6ffde0ac27bc7443bdc842",
+        "8e9cf205ab2820fde721aaddf8db385e",
+        "5674891fbfad411f3de2572311888870"
+      ],
+      "kept_item_ids": [
+        "07502231dc7d721dfa7f578ba7bc9c0d"
+      ],
+      "seed_hash": "blake3:0a624eeed6f61db66c6f9991a99792edf5ba28ba1eca721bd3706613e46ad5ad"
+    }
+  }
+}

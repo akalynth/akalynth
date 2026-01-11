@@ -1,0 +1,11 @@
+{
+  "generated_at": "2026-01-11T03:52:39.111Z",
+  "player_id": "fixture-player-001",
+  "death_receipt_hash": "blake3:60dcce8681fe749c055efd4d5bfd295e63aa6556a7613dc05f6b314aba998c03",
+  "combat_receipt_hash": "blake3:0a624eeed6f61db66c6f9991a99792edf5ba28ba1eca721bd3706613e46ad5ad",
+  "items_created": 8,
+  "items_dropped": 7,
+  "items_kept": 1,
+  "chronicle_events": 8,
+  "seed_hash": "blake3:0a624eeed6f61db66c6f9991a99792edf5ba28ba1eca721bd3706613e46ad5ad"
+}

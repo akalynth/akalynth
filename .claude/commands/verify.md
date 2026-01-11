@@ -1,7 +1,7 @@
 Run the repo verification checklist (MVP).
 
 1) Server boots:
-!cd server && npm run dev
+!cd apps/server && npm run dev
 
 2) WebSocket connect (in another terminal if needed):
 Use wscat and send:

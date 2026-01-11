@@ -33,25 +33,25 @@ The client is never trusted. It sends *intent*, and the server decides truth.
 
 ## Components
 
-### WebSocket Server (`server/src/index.ts`)
+### WebSocket Server (`apps/server/src/index.ts`)
 
 - Accepts client connections
 - Routes messages to handlers
 - Maintains session state per connection
 
-### World State (`server/src/world/state.ts`)
+### World State (`apps/server/src/world/state.ts`)
 
-- Loads the active map definitions (`shared/maps/rookguard.json`, `shared/maps/azura.json`)
+- Loads the active map definitions (`packages/shared/maps/rookguard.json`, `packages/shared/maps/azura.json`)
 - Keeps per-map player sets so broadcasts stay local to each zone
 - Serialises public player info with `toPublicPlayer`
 
-### Movement Validator (`server/src/world/movement.ts`)
+### Movement Validator (`apps/server/src/world/movement.ts`)
 
 - Validates move intents
 - Checks: walkable tile, within speed limit, valid direction
 - Rejects impossible moves
 
-### Anti-Cheat Pipeline (`server/src/anticheat/`)
+### Anti-Cheat Pipeline (`apps/server/src/anticheat/`)
 
 ```
 Intent → Detector → Decision → Enforcement → Audit
@@ -144,7 +144,7 @@ Intent → Detector → Decision → Enforcement → Audit
   - `sovereign_echo_despawned` - inputs: echo_id, map, x, y, cause='replaced'|'restart'
 - **MVP**: In-memory state only; process restart clears Echo.
 
-### Audit Logger (`server/src/audit/logger.ts`)
+### Audit Logger (`apps/server/src/audit/logger.ts`)
 
 - Writes JSONL receipts for every action
 - Fields: timestamp, player_id, action, inputs, result, hash
@@ -168,7 +168,7 @@ Intent → Detector → Decision → Enforcement → Audit
 - The first attempt emits `first_attempt_stone_cannot_obtain` and seeds the follow-up rumor.
 - Public feeds expose only redacted, delayed `legend_refused` / first-of receipts; private receipts remain canonical.
 
-### Runestone Ritual System (`server/src/world/runestone.ts`)
+### Runestone Ritual System (`apps/server/src/world/runestone.ts`)
 
 A social gambling/ritual artifact inspired by Tibia's dice system, but with Akalynth's twist: the Ledger is authoritative; Tem gating is planned (DEBUG-only today).
 
@@ -232,7 +232,7 @@ Client                          Server
 
 ## Networking Choice (MVP)
 
-- **Lock**: custom WebSocket server (current `server/src/index.ts`)
+- **Lock**: custom WebSocket server (current `apps/server/src/index.ts`)
 - Reason: we need explicit control over `intent queue → tick → validate → apply → audit receipts`
 - Simplicity: single 32×32 + 64×64 worlds do not need matchmaking, rooms, or delta-sync frameworks
 

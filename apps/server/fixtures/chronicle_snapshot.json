@@ -1,0 +1,128 @@
+{
+  "type": "chronicle_snapshot",
+  "player_id": "fixture-player-001",
+  "events": [
+    {
+      "kind": "item_lost",
+      "timestamp": "2026-01-11T03:52:39.109Z",
+      "zone": "Rookguard",
+      "x": 10,
+      "y": 15,
+      "details": {
+        "reason": "death",
+        "item_type": "sword"
+      },
+      "evidence_ref": {
+        "chronicle_event_id": 1,
+        "receipt_hash": "blake3:60dcce8681fe749c055efd4d5bfd295e63aa6556a7613dc05f6b314aba998c03"
+      }
+    },
+    {
+      "kind": "item_lost",
+      "timestamp": "2026-01-11T03:52:39.109Z",
+      "zone": "Rookguard",
+      "x": 10,
+      "y": 15,
+      "details": {
+        "reason": "death",
+        "item_type": "helmet"
+      },
+      "evidence_ref": {
+        "chronicle_event_id": 1,
+        "receipt_hash": "blake3:60dcce8681fe749c055efd4d5bfd295e63aa6556a7613dc05f6b314aba998c03"
+      }
+    },
+    {
+      "kind": "legendary_lost",
+      "timestamp": "2026-01-11T03:52:39.109Z",
+      "zone": "Rookguard",
+      "x": 10,
+      "y": 15,
+      "details": {
+        "reason": "death",
+        "item_type": "legendary_ring"
+      },
+      "evidence_ref": {
+        "chronicle_event_id": 1,
+        "receipt_hash": "blake3:60dcce8681fe749c055efd4d5bfd295e63aa6556a7613dc05f6b314aba998c03"
+      }
+    },
+    {
+      "kind": "item_lost",
+      "timestamp": "2026-01-11T03:52:39.109Z",
+      "zone": "Rookguard",
+      "x": 10,
+      "y": 15,
+      "details": {
+        "reason": "death",
+        "item_type": "boots"
+      },
+      "evidence_ref": {
+        "chronicle_event_id": 1,
+        "receipt_hash": "blake3:60dcce8681fe749c055efd4d5bfd295e63aa6556a7613dc05f6b314aba998c03"
+      }
+    },
+    {
+      "kind": "item_lost",
+      "timestamp": "2026-01-11T03:52:39.109Z",
+      "zone": "Rookguard",
+      "x": 10,
+      "y": 15,
+      "details": {
+        "reason": "death",
+        "item_type": "cloak"
+      },
+      "evidence_ref": {
+        "chronicle_event_id": 1,
+        "receipt_hash": "blake3:60dcce8681fe749c055efd4d5bfd295e63aa6556a7613dc05f6b314aba998c03"
+      }
+    },
+    {
+      "kind": "item_lost",
+      "timestamp": "2026-01-11T03:52:39.109Z",
+      "zone": "Rookguard",
+      "x": 10,
+      "y": 15,
+      "details": {
+        "reason": "death",
+        "item_type": "potion"
+      },
+      "evidence_ref": {
+        "chronicle_event_id": 1,
+        "receipt_hash": "blake3:60dcce8681fe749c055efd4d5bfd295e63aa6556a7613dc05f6b314aba998c03"
+      }
+    },
+    {
+      "kind": "legendary_lost",
+      "timestamp": "2026-01-11T03:52:39.109Z",
+      "zone": "Rookguard",
+      "x": 10,
+      "y": 15,
+      "details": {
+        "reason": "death",
+        "item_type": "legendary_amulet"
+      },
+      "evidence_ref": {
+        "chronicle_event_id": 1,
+        "receipt_hash": "blake3:60dcce8681fe749c055efd4d5bfd295e63aa6556a7613dc05f6b314aba998c03"
+      }
+    },
+    {
+      "kind": "death",
+      "timestamp": "2026-01-11T03:52:39.109Z",
+      "zone": "Rookguard",
+      "x": 10,
+      "y": 15,
+      "details": {
+        "cause": "combat",
+        "attacker_id": "mob-skeleton-001"
+      },
+      "evidence_ref": {
+        "chronicle_event_id": 1,
+        "receipt_hash": "blake3:60dcce8681fe749c055efd4d5bfd295e63aa6556a7613dc05f6b314aba998c03"
+      }
+    }
+  ],
+  "cursor": null,
+  "has_more": false
+}

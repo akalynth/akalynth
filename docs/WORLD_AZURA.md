@@ -75,7 +75,7 @@ Azura is the **first major city** after players complete the Rookguard onboardin
 
 ## Map Data Format
 
-The map is stored in `shared/maps/azura.json`:
+The map is stored in `packages/shared/maps/azura.json`:
 
 ```json
 {
