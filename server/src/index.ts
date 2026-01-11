@@ -43,6 +43,7 @@ import { handleHttp } from './api/http.js';
 
 import { createAuditLogger } from './audit/logger.js';
 import { createReceiptsReader } from './audit/reader.js';
+import { createPersistenceLayer } from './persist/index.js';
 import { publicActorForReceipt, toPublicReceipt } from './audit/public_receipts.js';
 import { createAntiCheatRuntime, onChat, onMoveApplied, onMoveIntent } from './anticheat/detector.js';
 import { applyThrottle, checkTemTimeout, handleTemResponse, issueTemChallenge, isThrottled } from './anticheat/tem.js';
@@ -434,7 +435,24 @@ type Session = {
 };
 
 const sessions = new Map<string, Session>();
-const audit = createAuditLogger();
+
+// Persistence layer (SQLite + JSONL replay)
+const persist = createPersistenceLayer({
+  dbPath: process.env.PERSIST_DB_PATH ?? './data/akalynth.db',
+  markerPath: './data/replay_marker.json',
+  receiptsPath: 'audit/receipts.jsonl',
+  replayMode: process.env.PERSIST_REPLAY_MODE === 'lenient' ? 'lenient' : 'strict',
+});
+
+// Run replay on startup (load state from receipts)
+const replayResult = persist.startup();
+console.log(`[persist] Startup complete: ${replayResult.receipts_processed} receipts replayed`);
+console.log(`[persist] State: ${replayResult.players_loaded} players, ${replayResult.deaths_loaded} deaths`);
+
+// Audit logger with persistence hook
+const audit = createAuditLogger({
+  onWrite: (receipt, offsetAfterLine) => persist.materialize(receipt, offsetAfterLine),
+});
 const receiptsReader = createReceiptsReader('audit');
 const legendFirsts = new Set<string>();
 const legendSightedByPlayer = new Set<string>();

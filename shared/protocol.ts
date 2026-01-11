@@ -55,6 +55,14 @@ export interface RunestoneCastMessage extends BaseMessage {
   guess: Element | null;
 }
 
+export type WitnessResponse = 'confirm' | 'deny' | 'uncertain';
+
+export interface TemWitnessResponseMessage extends BaseMessage {
+  type: 'tem_witness_response';
+  request_id: string;
+  response: WitnessResponse;
+}
+
 export type ClientMessage =
   | ConnectMessage
   | LoginMessage
@@ -63,7 +71,8 @@ export type ClientMessage =
   | ChatMessage
   | TemResponseMessage
   | KillSelfMessage
-  | RunestoneCastMessage;
+  | RunestoneCastMessage
+  | TemWitnessResponseMessage;
 
 // ============================================================================
 // Server → Client Messages
@@ -76,9 +85,11 @@ export interface WelcomeMessage extends BaseMessage {
 
 export interface LoginAckMessage extends BaseMessage {
   type: 'login_ack';
+  ok?: boolean;
   player_id: string;
   guest_token: string;
   name: string;
+  reason?: string;
 }
 
 export interface WorldStateMessage extends BaseMessage {
@@ -161,6 +172,16 @@ export interface RunestoneDeniedMessage extends BaseMessage {
   reason: RunestoneDenialReason;
 }
 
+export interface TemWitnessRequestMessage extends BaseMessage {
+  type: 'tem_witness_request';
+  request_id: string;
+  timestamp: string;
+  map: MapName;
+  target_actor: string;
+  prompt: string;
+  kind: 'heat_penalty';
+}
+
 export type ServerMessage =
   | WelcomeMessage
   | LoginAckMessage
@@ -174,7 +195,8 @@ export type ServerMessage =
   | ErrorMessage
   | DeathNoticeMessage
   | RunestoneResultMessage
-  | RunestoneDeniedMessage;
+  | RunestoneDeniedMessage
+  | TemWitnessRequestMessage;
 
 // ============================================================================
 // Message Factories
@@ -186,11 +208,19 @@ export const ServerMessages = {
     version,
   }),
 
-  loginAck: (player_id: string, guest_token: string, name: string): LoginAckMessage => ({
+  loginAck: (
+    player_id: string,
+    guest_token: string,
+    name: string,
+    ok: boolean = true,
+    reason?: string
+  ): LoginAckMessage => ({
     type: 'login_ack',
+    ok,
     player_id,
     guest_token,
     name,
+    reason,
   }),
 
   worldState: (player: PlayerPublic, nearby_players: PlayerPublic[]): WorldStateMessage => ({
@@ -275,6 +305,23 @@ export const ServerMessages = {
     type: 'runestone_denied',
     reason,
   }),
+
+  temWitnessRequest: (
+    request_id: string,
+    timestamp: string,
+    map: MapName,
+    target_actor: string,
+    prompt: string,
+    kind: 'heat_penalty'
+  ): TemWitnessRequestMessage => ({
+    type: 'tem_witness_request',
+    request_id,
+    timestamp,
+    map,
+    target_actor,
+    prompt,
+    kind,
+  }),
 };
 
 // ============================================================================
@@ -325,6 +372,18 @@ export function parseClientMessage(data: unknown): ClientMessage | null {
         ? (msg.guess as Element)
         : null;
       return { type: 'runestone_cast', table_id: msg.table_id, guess };
+    }
+
+    case 'tem_witness_response': {
+      const request_id = typeof msg.request_id === 'string' ? msg.request_id : null;
+      const response = msg.response;
+      if (!request_id) return null;
+      if (response !== 'confirm' && response !== 'deny' && response !== 'uncertain') return null;
+      return {
+        type: 'tem_witness_response',
+        request_id,
+        response,
+      };
     }
 
     default:

@@ -46,6 +46,7 @@ function deepMatch(target, pattern) {
 function replacePlaceholders(value, replacements) {
   if (typeof value === 'string') {
     if (value === '$GUEST_TOKEN') return replacements.guestToken;
+    if (value === '$REQUEST_ID' && replacements.requestId) return replacements.requestId;
     return value;
   }
   if (Array.isArray(value)) return value.map((entry) => replacePlaceholders(entry, replacements));
@@ -93,6 +94,7 @@ async function run() {
   const failures = [];
   const firedHooks = new Array(hooks.length).fill(false);
   let temAnswered = false;
+  let lastWitnessRequestId = null;
 
   const ws = new WebSocket(args.wsUrl);
 
@@ -121,6 +123,10 @@ async function run() {
       scheduleSend({ type: 'chat', message: 'AZURA' }, 100);
     }
 
+    if (parsed.type === 'tem_witness_request' && parsed.request_id) {
+      lastWitnessRequestId = parsed.request_id;
+    }
+
     hooks.forEach((hook, index) => {
       if (firedHooks[index]) return;
       if (!deepMatch(parsed, hook.when)) return;
@@ -136,7 +142,9 @@ async function run() {
           delayMs = base + add;
         }
       }
-      scheduleSend(hook.send, delayMs);
+      const hookReplacements = { ...replacements, requestId: lastWitnessRequestId };
+      const hookMsg = replacePlaceholders(hook.send, hookReplacements);
+      scheduleSend(hookMsg, delayMs);
     });
   });
 

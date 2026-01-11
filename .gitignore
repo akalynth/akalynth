@@ -16,6 +16,9 @@ tmp/
 # Audit receipts (local dev only)
 server/audit/
 
+# Persistence data (SQLite, replay markers)
+server/data/
+
 # Draft/proposal folders
 __*/
 

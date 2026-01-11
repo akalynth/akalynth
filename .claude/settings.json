@@ -1,4 +1,44 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(node:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git branch:*)",
+      "Bash(git checkout:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git fetch:*)",
+      "Bash(./scripts/*)",
+      "Bash(bash scripts/*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(wc:*)",
+      "Bash(wscat:*)",
+      "Read",
+      "Edit",
+      "Write",
+      "Glob",
+      "Grep",
+      "WebFetch",
+      "WebSearch"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(sudo rm:*)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Edit(.env)",
+      "Edit(.env.*)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
