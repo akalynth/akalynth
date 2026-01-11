@@ -1,9 +1,26 @@
 import type { MapName } from '@shared/http';
 
-const DEFAULT_HTTP = window.location.origin.replace(/^ws/, 'http');
+const DEFAULT_HTTP = (() => {
+  const url = new URL(window.location.href);
+  const isLocal = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+
+  // Local dev: server separate on :3000
+  if (isLocal) return `${url.protocol}//${url.hostname}:3000`;
+
+  // Otherwise: same-origin
+  return window.location.origin;
+})();
+
 const DEFAULT_WS = (() => {
-  if (window.location.protocol === 'https:') return `wss://${window.location.host}`;
-  return `ws://${window.location.host}`;
+  const url = new URL(window.location.href);
+  const isLocal = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+  const wsProto = url.protocol === 'https:' ? 'wss:' : 'ws:';
+
+  // Local dev: ws server on :3000
+  if (isLocal) return `${wsProto}//${url.hostname}:3000`;
+
+  // Otherwise: same-origin
+  return `${wsProto}//${url.host}`;
 })();
 
 export interface ClientConfig {

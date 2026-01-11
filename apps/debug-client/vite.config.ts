@@ -14,8 +14,11 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    host: true,        // Expose to 0.0.0.0 for Codespaces
+    strictPort: true,  // Fail if port taken
   },
   preview: {
     port: 4173,
+    host: true,
   },
 });
