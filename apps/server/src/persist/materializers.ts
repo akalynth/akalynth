@@ -51,6 +51,12 @@ const HANDLERS: Record<string, Handler> = {
   [RECEIPT_ACTIONS.LEGENDARY_HEAT_CHANGED]: handleLegendaryHeatChanged,
   // Phase 3.2: Protected slots
   [RECEIPT_ACTIONS.INVENTORY_SLOT_CHANGED]: handleInventorySlotChanged,
+  // Phase 3.5: Player heat
+  [RECEIPT_ACTIONS.PLAYER_HEAT_CHANGED]: handlePlayerHeatChanged,
+  [RECEIPT_ACTIONS.HEAT_PENALTY_APPLIED]: handleHeatPenaltyApplied,
+  [RECEIPT_ACTIONS.HEAT_TEM_ESCALATION]: handleHeatTemEscalation,
+  // Origin Act: Player's first meaningful action
+  [RECEIPT_ACTIONS.ORIGIN_ACT_SEALED]: handleOriginActSealed,
 };
 
 // ============================================================================
@@ -105,10 +111,14 @@ function handlePlayerCreated(
   const name = (receipt.inputs?.name as string) ?? `Guest_${playerId.slice(-4)}`;
   const timestamp = receipt.timestamp;
 
-  // INSERT OR IGNORE (idempotent via UNIQUE created_receipt)
+  // UPSERT to refresh stub rows when receipts arrive out of order
   const stmt = db.prepare(`
-    INSERT OR IGNORE INTO players (player_id, name, created_at, created_receipt, deleted_at)
+    INSERT INTO players (player_id, name, created_at, created_receipt, deleted_at)
     VALUES (?, ?, ?, ?, NULL)
+    ON CONFLICT(player_id) DO UPDATE SET
+      name = excluded.name,
+      created_at = excluded.created_at,
+      deleted_at = NULL
   `);
   stmt.run(playerId, name, timestamp, receiptHash);
 }
@@ -332,6 +342,20 @@ function handleItemAddedToInventory(
     WHERE object_id = ? AND status = 'active'
   `).run(receiptHash, itemId);
 
+  // Safety net: ensure player exists (handles receipt reordering edge cases)
+  // This creates a stub row if player_created receipt hasn't been processed yet
+  db.prepare(`
+    INSERT OR IGNORE INTO players (player_id, name, created_at, created_receipt, deleted_at)
+    VALUES (?, ?, ?, ?, NULL)
+  `).run(receipt.player_id, `Guest_${receipt.player_id.slice(-4)}`, receipt.timestamp, receiptHash);
+
+  // Safety net: ensure item exists (handles receipt reordering edge cases)
+  // This creates a stub row if item_minted receipt hasn't been processed yet
+  db.prepare(`
+    INSERT OR IGNORE INTO items (item_id, item_type, created_at, genesis_receipt, meta_json)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(itemId, 'unknown', receipt.timestamp, receiptHash, '{}');
+
   // Upsert into inventory
   db.prepare(`
     INSERT INTO inventory_items (item_id, owner_player_id, slot, updated_at, last_receipt)
@@ -509,6 +533,156 @@ function handleInventorySlotChanged(
       WHERE owner_player_id = ? AND item_id = ?
     `).run(receiptHash, receipt.timestamp, playerId, itemId);
   }
+}
+
+// ============================================================================
+// Player Heat Handlers (Phase 3.5)
+// ============================================================================
+
+/**
+ * Handle heat_changed: Project absolute player heat value.
+ * Uses new_score directly (not delta), so replay converges to same state.
+ * Timestamp guard ensures older receipts don't overwrite newer state.
+ */
+function handlePlayerHeatChanged(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const inputs = receipt.inputs ?? {};
+  const playerId = receipt.player_id;
+  const newScore = inputs.new_score as number;
+
+  // Guard: reject non-number, NaN, Infinity
+  if (typeof newScore !== 'number' || !Number.isFinite(newScore)) return;
+
+  // Clamp to sane bounds (0..1000)
+  const HEAT_MAX = 1000;
+  const clampedScore = Math.max(0, Math.min(HEAT_MAX, newScore));
+
+  // UPSERT with timestamp guard - older receipts won't overwrite newer state
+  // Uses > (not >=) so same-timestamp receipts don't cause non-determinism
+  db.prepare(`
+    INSERT INTO player_heat (player_id, heat, updated_at, last_receipt)
+    VALUES (?, ?, ?, ?)
+    ON CONFLICT(player_id) DO UPDATE SET
+      heat = excluded.heat,
+      updated_at = excluded.updated_at,
+      last_receipt = excluded.last_receipt
+    WHERE excluded.updated_at > player_heat.updated_at
+  `).run(playerId, clampedScore, receipt.timestamp, receiptHash);
+}
+
+/**
+ * Handle heat_penalty_applied: Project penalty window.
+ * Computes penalty_until_ms from receipt timestamp + duration_ms.
+ * Timestamp guard ensures older receipts don't overwrite newer state.
+ */
+function handleHeatPenaltyApplied(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const inputs = receipt.inputs ?? {};
+  const playerId = receipt.player_id;
+
+  const durationMs = Number((inputs as Record<string, unknown>).duration_ms);
+  if (!Number.isFinite(durationMs) || durationMs <= 0) return;
+
+  const tsMs = Date.parse(receipt.timestamp);
+  if (!Number.isFinite(tsMs)) return;
+
+  const penaltyUntilMs = tsMs + durationMs;
+
+  // Uses > (not >=) so same-timestamp receipts don't cause non-determinism
+  db.prepare(`
+    INSERT INTO player_heat (player_id, heat, penalty_until_ms, updated_at, last_receipt)
+    VALUES (?, 0, ?, ?, ?)
+    ON CONFLICT(player_id) DO UPDATE SET
+      penalty_until_ms = excluded.penalty_until_ms,
+      updated_at = excluded.updated_at,
+      last_receipt = excluded.last_receipt
+    WHERE excluded.updated_at > player_heat.updated_at
+  `).run(playerId, penaltyUntilMs, receipt.timestamp, receiptHash);
+}
+
+/**
+ * Handle heat_tem_escalation: Project TEM trigger timestamp.
+ * Stores last_tem_ms for cooldown window computation on login restore.
+ * Timestamp guard ensures older receipts don't overwrite newer state.
+ */
+function handleHeatTemEscalation(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const playerId = receipt.player_id;
+
+  const tsMs = Date.parse(receipt.timestamp);
+  if (!Number.isFinite(tsMs)) return;
+
+  // Uses > (not >=) so same-timestamp receipts don't cause non-determinism
+  db.prepare(`
+    INSERT INTO player_heat (player_id, heat, last_tem_ms, updated_at, last_receipt)
+    VALUES (?, 0, ?, ?, ?)
+    ON CONFLICT(player_id) DO UPDATE SET
+      last_tem_ms = excluded.last_tem_ms,
+      updated_at = excluded.updated_at,
+      last_receipt = excluded.last_receipt
+    WHERE excluded.updated_at > player_heat.updated_at
+  `).run(playerId, tsMs, receipt.timestamp, receiptHash);
+}
+
+// ============================================================================
+// Origin Act Handler
+// ============================================================================
+
+/**
+ * Handle origin_act_sealed: Seal the player's origin act (first meaningful action).
+ *
+ * CRITICAL: Timestamp-ordered, earliest-timestamp wins.
+ * - If no origin exists: set it
+ * - If this origin is earlier than existing: overwrite (shouldn't happen in practice)
+ * - If this origin is later than existing: skip
+ *
+ * This makes replay truly order-independent and deterministic.
+ */
+function handleOriginActSealed(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const playerId = receipt.player_id;
+  const inputs = receipt.inputs ?? {};
+  const triggerAction = inputs.trigger_action as string;
+  const timestamp = receipt.timestamp;
+
+  if (!triggerAction) return;
+
+  // Earliest-timestamp wins (deterministic regardless of replay order)
+  // The condition: origin_receipt_id IS NULL OR origin_sealed_at > timestamp
+  // means we only update if no origin exists OR this one is earlier
+  db.prepare(`
+    UPDATE players
+    SET origin_receipt_id = ?, origin_action = ?, origin_sealed_at = ?
+    WHERE player_id = ?
+      AND (origin_receipt_id IS NULL OR origin_sealed_at > ?)
+  `).run(receiptHash, triggerAction, timestamp, playerId, timestamp);
+
+  // Chronicle event for forensic record (idempotent via dedup)
+  insertChronicleEvent(
+    db,
+    playerId,
+    'origin_sealed',
+    timestamp,
+    'origin_act_sealed',
+    receiptHash,
+    null,
+    null,
+    null,
+    null,
+    { trigger_action: triggerAction }
+  );
 }
 
 // ============================================================================

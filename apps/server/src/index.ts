@@ -126,6 +126,7 @@ import { computePressureMetrics } from './metrics/pressure.js';
 import type { ItemForDrop } from './world/drop-policy.js';
 import { getIdentity } from './world/identity.js';
 import { getGoldBalance, canAfford, withTreasuryLock, debitForAction } from './world/treasury.js';
+import { maybeSealOriginFromReceipt } from './world/origin.js';
 import {
   startContract,
   recordTick,
@@ -533,9 +534,20 @@ if (protectedSlotRows.length > 0) {
   console.log(`[persist] Loaded ${protectedSlotRows.length} protected slot entries`);
 }
 
-// Audit logger with persistence hook
+// Audit logger with persistence hook + origin sealing
 const audit = createAuditLogger({
-  onWrite: (receipt, offsetAfterLine) => persist.materialize(receipt, offsetAfterLine),
+  onWrite: (receipt, offsetAfterLine) => {
+    // Compute receipt hash once for both operations
+    const receiptHash = computeReceiptHash(receipt);
+
+    // Materialize to SQLite
+    persist.materialize(receipt, offsetAfterLine);
+
+    // Origin sealing hook - checks if this action seals the player's origin
+    // Only origin-worthy actions (combat_resolved, tem_witness_response, drop_item)
+    // can trigger sealing. Materializer enforces timestamp-ordered idempotency.
+    maybeSealOriginFromReceipt(audit, persist, receipt, receiptHash);
+  },
 });
 const receiptsReader = createReceiptsReader('audit');
 const legendFirsts = new Set<string>();
@@ -1251,7 +1263,7 @@ const httpServer = http.createServer((req, res) => {
       audit.write({
         player_id,
         action: 'session_guest_minted',
-        inputs: {},
+        inputs: { source: 'http_mint', name },
         result: 'ok',
       });
       return { player_id, guest_token, name };
@@ -1683,8 +1695,8 @@ function processSessionQueue(s: Session, now: number) {
 
           audit.write({
             player_id,
-            action: 'login',
-            inputs: { source: 'ws_mint' },
+            action: 'session_guest_minted',
+            inputs: { source: 'ws_mint', name },
             result: 'ok',
           });
         }
@@ -1705,6 +1717,25 @@ function processSessionQueue(s: Session, now: number) {
           reputation: 0,
           caps: [],
         };
+
+        // Restore heat from persistence (Phase 3.5: closes heat reset exploit)
+        const savedHeat = persist.getPlayerHeat(player_id);
+        if (savedHeat) {
+          const now = Date.now();
+
+          // Restore score
+          s.heat.score = savedHeat.heat;
+
+          // Restore penalty window if still active
+          if (savedHeat.penalty_until_ms !== null && savedHeat.penalty_until_ms > now) {
+            s.heat.penalty_until_ms = savedHeat.penalty_until_ms;
+          }
+
+          // Restore TEM cooldown anchor
+          if (savedHeat.last_tem_ms !== null) {
+            s.heat.last_tem_trigger_ms = savedHeat.last_tem_ms;
+          }
+        }
 
         // Sovereign presence detection (security-gated)
         const isSovereignByName =

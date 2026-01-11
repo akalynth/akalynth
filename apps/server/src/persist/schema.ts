@@ -7,7 +7,7 @@ import type Database from 'better-sqlite3';
 // Schema Version
 // ============================================================================
 
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 8;
 
 // ============================================================================
 // DDL Statements
@@ -142,6 +142,20 @@ CREATE INDEX IF NOT EXISTS idx_chronicle_receipt ON chronicle_events(receipt_has
 CREATE UNIQUE INDEX IF NOT EXISTS idx_chronicle_dedup ON chronicle_events(player_id, receipt_hash, kind, entity_id);
 `;
 
+// Phase 3.5: Player heat projection (current heat per player)
+// NO FK constraint - avoids replay ordering issues when heat receipts arrive before player_created
+const DDL_PLAYER_HEAT = `
+CREATE TABLE IF NOT EXISTS player_heat (
+  player_id        TEXT PRIMARY KEY,
+  heat             INTEGER NOT NULL DEFAULT 0,
+  penalty_until_ms INTEGER,
+  last_tem_ms      INTEGER,
+  updated_at       TEXT NOT NULL,
+  last_receipt     TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_player_heat_score ON player_heat(heat DESC);
+`;
+
 // ============================================================================
 // Schema Initialization
 // ============================================================================
@@ -217,6 +231,12 @@ function runMigration(db: Database.Database, version: number): void {
       break;
     case 6:
       migrateToV6(db);
+      break;
+    case 7:
+      migrateToV7(db);
+      break;
+    case 8:
+      migrateToV8(db);
       break;
     default:
       throw new Error(`Unknown schema version: ${version}`);
@@ -303,6 +323,39 @@ function migrateToV6(db: Database.Database): void {
   insertMeta.run('schema_version', '6');
 }
 
+function migrateToV7(db: Database.Database): void {
+  // Phase 3.5: Add player heat projection table
+  db.exec(DDL_PLAYER_HEAT);
+
+  // Update schema version
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', '7');
+}
+
+function migrateToV8(db: Database.Database): void {
+  // Origin Act: Add origin columns to players table
+  // These track the player's first meaningful action (sealed permanently)
+  const columns = db.prepare(`PRAGMA table_info(players)`).all() as Array<{ name: string }>;
+
+  if (!columns.some((c) => c.name === 'origin_receipt_id')) {
+    db.exec(`ALTER TABLE players ADD COLUMN origin_receipt_id TEXT DEFAULT NULL;`);
+  }
+  if (!columns.some((c) => c.name === 'origin_action')) {
+    db.exec(`ALTER TABLE players ADD COLUMN origin_action TEXT DEFAULT NULL;`);
+  }
+  if (!columns.some((c) => c.name === 'origin_sealed_at')) {
+    db.exec(`ALTER TABLE players ADD COLUMN origin_sealed_at TEXT DEFAULT NULL;`);
+  }
+
+  // Update schema version
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', '8');
+}
+
 // ============================================================================
 // Schema Utilities
 // ============================================================================
@@ -322,7 +375,7 @@ export function resetSchema(db: Database.Database): void {
 export function getTableCounts(
   db: Database.Database
 ): Record<string, number> {
-  const tables = ['players', 'reputation_events', 'deaths', 'world_objects', 'items', 'inventory_items', 'legendary_heat', 'chronicle_events'];
+  const tables = ['players', 'reputation_events', 'deaths', 'world_objects', 'items', 'inventory_items', 'legendary_heat', 'chronicle_events', 'player_heat'];
   const counts: Record<string, number> = {};
 
   for (const table of tables) {

@@ -10,6 +10,7 @@ import type {
   ItemRow,
   InventoryItemRow,
   LegendaryHeatRow,
+  PlayerHeatRow,
   ChronicleEventRow,
 } from './types.js';
 
@@ -47,6 +48,53 @@ export function getPlayerCount(db: Database.Database): number {
   `);
   const row = stmt.get() as { count: number };
   return row.count;
+}
+
+// ============================================================================
+// Origin Act Queries
+// ============================================================================
+
+/**
+ * Check if a player's origin act has been sealed.
+ * Used to gate origin sealing (only one origin per player).
+ */
+export function hasOriginActSealed(
+  db: Database.Database,
+  playerId: string
+): boolean {
+  const stmt = db.prepare(`
+    SELECT origin_receipt_id FROM players WHERE player_id = ?
+  `);
+  const row = stmt.get(playerId) as { origin_receipt_id: string | null } | undefined;
+  return !!row?.origin_receipt_id;
+}
+
+/**
+ * Get a player's origin act details (null if not sealed).
+ * Returns the triggering action, not 'origin_act_sealed'.
+ */
+export function getOriginAct(
+  db: Database.Database,
+  playerId: string
+): { receipt_id: string; action: string; sealed_at: string } | null {
+  const stmt = db.prepare(`
+    SELECT origin_receipt_id, origin_action, origin_sealed_at
+    FROM players
+    WHERE player_id = ? AND origin_receipt_id IS NOT NULL
+  `);
+  const row = stmt.get(playerId) as {
+    origin_receipt_id: string;
+    origin_action: string;
+    origin_sealed_at: string;
+  } | undefined;
+
+  if (!row) return null;
+
+  return {
+    receipt_id: row.origin_receipt_id,
+    action: row.origin_action,
+    sealed_at: row.origin_sealed_at,
+  };
 }
 
 // ============================================================================
@@ -283,6 +331,26 @@ export function getLegendaryHeat(db: Database.Database, itemId: string): number 
   const stmt = db.prepare(`SELECT heat FROM legendary_heat WHERE item_id = ?`);
   const row = stmt.get(itemId) as { heat: number } | undefined;
   return row?.heat ?? 0;
+}
+
+// ============================================================================
+// Player Heat Queries (Phase 3.5)
+// ============================================================================
+
+/**
+ * Get player heat record (null if not tracked).
+ * Returns full row for login restoration.
+ */
+export function getPlayerHeat(
+  db: Database.Database,
+  playerId: string
+): PlayerHeatRow | null {
+  const stmt = db.prepare(`
+    SELECT player_id, heat, penalty_until_ms, last_tem_ms, updated_at, last_receipt
+    FROM player_heat
+    WHERE player_id = ?
+  `);
+  return (stmt.get(playerId) as PlayerHeatRow) ?? null;
 }
 
 // ============================================================================
