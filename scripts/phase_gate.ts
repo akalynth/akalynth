@@ -3,7 +3,6 @@
  * phase_gate.ts - Civil Guarantees PreToolUse Hook
  *
  * Enforces write discipline before Edit/Write operations land.
- * Runs as a Claude Code PreToolUse hook.
  *
  * Exit codes:
  *   0 - Allow operation
