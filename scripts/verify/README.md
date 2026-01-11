@@ -4,6 +4,7 @@
 
 `scripts/verify/ws_harness.mjs` drives deterministic WebSocket scenarios for MVP verification.
 The scenarios live in `scripts/verify/scenarios` and are consumed by `scripts/verify_mvp.sh`.
+`verify_mvp.sh` auto-detects the server at `apps/server/` (or a legacy `server/` symlink).
 
 ## Run verify
 
@@ -14,7 +15,11 @@ PORT=3101 ./scripts/verify_mvp.sh
 ## Run a single scenario manually
 
 ```bash
-PORT=3101 npm --prefix server run dev
+# Preferred (monorepo)
+PORT=3101 npm --prefix apps/server run dev
+
+# Legacy (if you created server -> apps/server symlink)
+# PORT=3101 npm --prefix server run dev
 ```
 
 In a second shell:

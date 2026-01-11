@@ -2,8 +2,27 @@
 set -euo pipefail
 set -o monitor
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SERVER_DIR="$ROOT_DIR/server"
-RECEIPTS="${RECEIPTS:-$SERVER_DIR/audit/receipts.jsonl}"
+if command -v git >/dev/null 2>&1; then
+  ROOT_FROM_GIT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+  if [[ -n "${ROOT_FROM_GIT:-}" ]]; then
+    ROOT_DIR="$ROOT_FROM_GIT"
+  fi
+fi
+
+if [[ -d "$ROOT_DIR/server" ]]; then
+  SERVER_DIR="$ROOT_DIR/server"
+elif [[ -d "$ROOT_DIR/apps/server" ]]; then
+  SERVER_DIR="$ROOT_DIR/apps/server"
+else
+  echo "❌ Missing server directory (expected server/ or apps/server/)" >&2
+  exit 1
+fi
+
+DEFAULT_RECEIPTS="$SERVER_DIR/audit/receipts.jsonl"
+if [[ ! -f "$DEFAULT_RECEIPTS" && -f "$ROOT_DIR/audit/receipts.jsonl" ]]; then
+  DEFAULT_RECEIPTS="$ROOT_DIR/audit/receipts.jsonl"
+fi
+RECEIPTS="${RECEIPTS:-$DEFAULT_RECEIPTS}"
 SCENARIOS_DIR="$ROOT_DIR/scripts/verify/scenarios"
 HARNESS="$ROOT_DIR/scripts/verify/ws_harness.mjs"
 PORT="${PORT:-3100}"
