@@ -8,17 +8,23 @@ class ReconnectPolicy(
     private val maxDelayMs: Long = 30000L,
     private val jitterFactor: Double = 0.3
 ) {
-    private var attempt = 0
+    private var _attempt = 0
+    private var _lastDelay = 0L
+
+    val attempt: Int get() = _attempt
+    val lastDelay: Long get() = _lastDelay
 
     fun nextDelay(): Long {
-        val exponentialDelay = baseDelayMs * (1 shl min(attempt, 10))
+        val exponentialDelay = baseDelayMs * (1 shl min(_attempt, 10))
         val cappedDelay = min(exponentialDelay, maxDelayMs)
         val jitter = (Random.nextDouble() - 0.5) * 2 * jitterFactor * cappedDelay
-        attempt++
-        return (cappedDelay + jitter).toLong().coerceAtLeast(baseDelayMs)
+        _attempt++
+        _lastDelay = (cappedDelay + jitter).toLong().coerceAtLeast(baseDelayMs)
+        return _lastDelay
     }
 
     fun reset() {
-        attempt = 0
+        _attempt = 0
+        _lastDelay = 0L
     }
 }

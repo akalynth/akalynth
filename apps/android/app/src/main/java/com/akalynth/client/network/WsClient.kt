@@ -40,6 +40,15 @@ class WsClient(
     private var reconnectJob: Job? = null
     private var autoReconnect = true
 
+    // Diagnostics
+    private var _lastCloseCode: Int? = null
+    private var _lastCloseReason: String? = null
+
+    val lastCloseCode: Int? get() = _lastCloseCode
+    val lastCloseReason: String? get() = _lastCloseReason
+    val reconnectAttempts: Int get() = reconnectPolicy.attempt
+    val nextBackoffMs: Long get() = reconnectPolicy.lastDelay
+
     fun connect() {
         if (_connectionState.value == ConnectionState.Connecting) return
 
@@ -50,6 +59,8 @@ class WsClient(
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 reconnectPolicy.reset()
+                _lastCloseCode = null
+                _lastCloseReason = null
                 _connectionState.value = ConnectionState.Connected
                 scope.launch { _events.send(WsEvent.Connected) }
             }
@@ -64,6 +75,8 @@ class WsClient(
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+                _lastCloseCode = code
+                _lastCloseReason = reason.ifEmpty { null }
                 _connectionState.value = ConnectionState.Disconnected(reason)
                 scope.launch { _events.send(WsEvent.Disconnected(code, reason)) }
                 if (autoReconnect) {

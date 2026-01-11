@@ -42,7 +42,8 @@ data class UiState(
     val errorMessage: String? = null,
     val chatOpen: Boolean = false,
     val debugLog: List<DebugLogEntry> = emptyList(),
-    val showDebugDrawer: Boolean = false
+    val showDebugDrawer: Boolean = false,
+    val connectionDiagnostics: ConnectionDiagnostics = ConnectionDiagnostics()
 )
 
 data class DebugLogEntry(
@@ -62,4 +63,11 @@ data class WitnessRequestData(
     val requestId: String,
     val prompt: String,
     val expiresAt: Long
+)
+
+data class ConnectionDiagnostics(
+    val lastCloseCode: Int? = null,
+    val lastCloseReason: String? = null,
+    val reconnectAttempts: Int = 0,
+    val nextBackoffMs: Long = 0L
 )

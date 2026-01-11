@@ -125,7 +125,18 @@ class GameStore(
     private fun observeConnectionState() {
         scope.launch {
             wsClient.connectionState.collect { connState ->
-                _state.update { it.copy(connection = connState) }
+                val diag = ConnectionDiagnostics(
+                    lastCloseCode = wsClient.lastCloseCode,
+                    lastCloseReason = wsClient.lastCloseReason,
+                    reconnectAttempts = wsClient.reconnectAttempts,
+                    nextBackoffMs = wsClient.nextBackoffMs
+                )
+                _state.update {
+                    it.copy(
+                        connection = connState,
+                        ui = it.ui.copy(connectionDiagnostics = diag)
+                    )
+                }
             }
         }
     }

@@ -23,8 +23,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.akalynth.client.game.ConnectionDiagnostics
 import com.akalynth.client.game.DebugLogEntry
 import com.akalynth.client.game.GameState
+import com.akalynth.client.network.ConnectionState
 import com.akalynth.client.protocol.PlayerPublic
 import java.text.SimpleDateFormat
 import java.util.*
@@ -112,6 +114,12 @@ fun DebugDrawer(
         state.world.me?.let { me ->
             PlayerInfoRow(me, state.session.playerId, state.session.serverUrl)
         }
+
+        // Connection diagnostics row (always show when not connected OK)
+        ConnectionDiagnosticsRow(
+            connection = state.connection,
+            diagnostics = state.ui.connectionDiagnostics
+        )
 
         HorizontalDivider(color = Color.Gray.copy(alpha = 0.3f))
 
@@ -202,6 +210,69 @@ private fun InfoChip(label: String, value: String) {
             color = Color.White,
             fontFamily = FontFamily.Monospace
         )
+    }
+}
+
+@Composable
+private fun ConnectionDiagnosticsRow(
+    connection: ConnectionState,
+    diagnostics: ConnectionDiagnostics
+) {
+    // Only show when there's something interesting to show
+    val showRow = diagnostics.lastCloseCode != null ||
+            diagnostics.reconnectAttempts > 0 ||
+            connection is ConnectionState.Error ||
+            connection is ConnectionState.Disconnected
+
+    if (!showRow) return
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        // Last close info
+        if (diagnostics.lastCloseCode != null) {
+            InfoChip(
+                label = "Close",
+                value = "${diagnostics.lastCloseCode}" +
+                        (diagnostics.lastCloseReason?.let { " $it" } ?: "")
+            )
+        }
+
+        // Reconnect attempts
+        if (diagnostics.reconnectAttempts > 0) {
+            InfoChip(
+                label = "Retry",
+                value = "#${diagnostics.reconnectAttempts}"
+            )
+        }
+
+        // Next backoff
+        if (diagnostics.nextBackoffMs > 0) {
+            InfoChip(
+                label = "Backoff",
+                value = "${diagnostics.nextBackoffMs / 1000.0}s"
+            )
+        }
+
+        // Connection error message
+        when (connection) {
+            is ConnectionState.Error -> {
+                InfoChip(
+                    label = "Error",
+                    value = connection.message.take(15)
+                )
+            }
+            is ConnectionState.Disconnected -> {
+                InfoChip(
+                    label = "DC",
+                    value = connection.reason.ifEmpty { "closed" }.take(15)
+                )
+            }
+            else -> {}
+        }
     }
 }
 
