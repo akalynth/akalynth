@@ -1,0 +1,22 @@
+[package]
+name = "chronicle"
+version = "0.1.0"
+edition = "2021"
+description = "Append-only witness kernel for Akalynth game events"
+license = "MIT"
+repository = "https://github.com/VaultSovereign/akalynth"
+
+[[bin]]
+name = "chronicle_append"
+path = "src/bin/chronicle_append.rs"
+
+[dependencies]
+blake3 = "1.5"
+ed25519-dalek = { version = "2.1", features = ["rand_core"] }
+rand = "0.8"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+
+[dev-dependencies]
+tempfile = "3.10"
