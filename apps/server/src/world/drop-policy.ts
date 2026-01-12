@@ -4,8 +4,8 @@
 // Determinism: Selection is seeded by death receipt hash (BLAKE3 hex)
 // Replay-safe: Same receipts → same drop selection
 
-import { blake3 } from '@noble/hashes/blake3';
 import type { MapName } from '../../../../packages/shared/http.js';
+import { rngDrawU32Legacy, rngU32ToUnitFloat } from './rng.js';
 
 // ============================================================================
 // Types
@@ -168,17 +168,9 @@ function getItemWeight(item: ItemForDrop, heatLookup?: Map<string, number>): num
  * Deterministic float in (0,1], derived from seed + index.
  * Uses BLAKE3 as PRF: hash(seed + ":" + index) → u32 → (0,1].
  */
-function deterministicRandom(seed: string, index: number): number {
-  const input = `${seed}:${index}`;
-  const h = blake3(new TextEncoder().encode(input));
-
-  // Read first 4 bytes as unsigned u32 (big-endian)
-  const u32 =
-    ((h[0] << 24) | (h[1] << 16) | (h[2] << 8) | h[3]) >>> 0;
-
-  // Map to (0,1]. Avoid 0 exactly.
-  const u = u32 / 0xffffffff;
-  return u === 0 ? 1 / 0xffffffff : u;
+function deterministicRandom(seed: string, index: number): { u: number; u32: number } {
+  const u32 = rngDrawU32Legacy(seed, index);
+  return { u: rngU32ToUnitFloat(u32), u32 };
 }
 
 // ============================================================================
@@ -248,7 +240,8 @@ export function selectItemsToDrop(
   items: ItemForDrop[],
   K: number,
   seed: string,
-  policy: DropPolicy
+  policy: DropPolicy,
+  rngOut?: number[]
 ): string[] {
   if (K <= 0 || items.length === 0) return [];
 
@@ -282,7 +275,8 @@ export function selectItemsToDrop(
   for (let i = 0; i < candidates.length; i++) {
     const item = candidates[i];
     const w = getItemWeight(item);
-    const u = deterministicRandom(seed, i);
+    const { u, u32 } = deterministicRandom(seed, i);
+    if (rngOut) rngOut.push(u32);
     const key = Math.pow(u, 1 / w);
     keyed.push({ item_id: item.item_id, key });
   }
@@ -314,7 +308,8 @@ export function computeDeathDrops(
   items: ItemForDrop[],
   map: MapName,
   reputation: number,
-  deathReceiptHash: string
+  deathReceiptHash: string,
+  rngOut?: number[]
 ): DropSelectionResult {
   const policy = DROP_POLICY[map];
   const inventorySize = items.length;
@@ -333,7 +328,8 @@ export function computeDeathDrops(
     items,
     dropCount,
     deathReceiptHash,
-    policy
+    policy,
+    rngOut
   );
 
   const droppedSet = new Set(droppedItemIds);
@@ -491,7 +487,7 @@ export function explainDeathDrops(
     let u = 0;
     let key = 0;
     if (isCandidate) {
-      u = deterministicRandom(deathReceiptHash, candidateIdx);
+      u = deterministicRandom(deathReceiptHash, candidateIdx).u;
       key = Math.pow(u, 1 / finalWeight);
     }
 

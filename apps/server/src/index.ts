@@ -65,6 +65,7 @@ import { getNpcDef, resolveDialogueTier, buildNpcDialogue } from './world/npcs.j
 import { applyDeath, applyRespawn } from './world/death.js';
 import { handleAttackIntent, type CombatContext, type WorldItem as CombatWorldItem } from './world/combat.js';
 import { getLegendaryHeat, setLegendaryHeat } from './world/drop-policy.js';
+import { rngCommitV1, rngRevealHex32 } from './world/rng.js';
 import {
   addHeat,
   createHeatState,
@@ -476,6 +477,9 @@ type Session = {
   runestoneCooldownCount: number;
   // Session start time for chronicle disconnect events
   connectedAtMs: number;
+  // Seal 3.1: RNG commit→reveal state
+  rngRevealByDomain: Record<string, string>;
+  rngCommitByDomain: Record<string, string>;
 };
 
 const sessions = new Map<string, Session>();
@@ -510,7 +514,7 @@ const { rulebookRoot } = verifyRulebookOrExit();
 // ============================================================================
 // Seal 2: Chronicle witness helper — binds all events to law
 // ============================================================================
-type ChronicleEventType = 'spawn' | 'move' | 'chat' | 'death' | 'disconnect';
+type ChronicleEventType = 'spawn' | 'move' | 'chat' | 'death' | 'disconnect' | 'rng_commit' | 'rng_reveal';
 
 // Per-actor chain state (tamper-evident within a server run)
 const lastEventHashByActor = new Map<string, string>();
@@ -592,11 +596,26 @@ function rebuildChronicleHeadsFromLog(logPath: string): void {
   // Set global head to last verified position
   lastGlobalHash = expectedPrevGlobal;
 
+  const hasCorruption = bad > 0 || globalBad > 0;
+  if (hasCorruption) {
+    console.error(`[chronicle] Corruption detected: bad=${bad} globalBad=${globalBad}`);
+    if (process.env.CHRONICLE_STRICT === '1') {
+      console.error('[chronicle] FATAL: strict mode enabled, refusing to start');
+    } else {
+      console.warn('[chronicle] WARNING: continuing in non-strict mode');
+    }
+  }
+
   const globalStatus = expectedPrevGlobal === 'genesis' ? 'genesis' : expectedPrevGlobal.slice(0, 20) + '...';
   console.log(`[chronicle] Rebuilt: actors=${lastEventHashByActor.size} global=${globalStatus} lines=${lines.length} ok=${ok} bad=${bad} globalBad=${globalBad}`);
+
+  if (hasCorruption && process.env.CHRONICLE_STRICT === '1') {
+    process.exit(1);
+  }
 }
 
 // Rebuild chain heads on boot (only when chronicle is enabled)
+// Seal 2.4: If chronicle integrity fails and CHRONICLE_STRICT=1, the server MUST NOT start.
 if (process.env.ENABLE_CHRONICLE === '1') {
   const chronicleLogPath = process.env.CHRONICLE_LOG_PATH ?? 'chronicle.log';
   rebuildChronicleHeadsFromLog(chronicleLogPath);
@@ -1699,6 +1718,8 @@ wss.on('connection', (ws) => {
     runestoneCooldownWindowStartMs: null,
     runestoneCooldownCount: 0,
     connectedAtMs: now,
+    rngRevealByDomain: {},
+    rngCommitByDomain: {},
   };
 
   sessions.set(connId, s);
@@ -1777,6 +1798,19 @@ wss.on('connection', (ws) => {
       w.players.delete(s.player.id);
       broadcastToMap(s.currentMap, ServerMessages.playerLeft(s.player.id), connId);
       audit.write({ player_id: s.player.id, action: 'disconnect', inputs: {}, result: 'left_world' });
+
+      // Seal 3.1: Emit rng_reveal before disconnect if session has v1 commits
+      for (const [domain, reveal] of Object.entries(s.rngRevealByDomain)) {
+        const commit = s.rngCommitByDomain[domain];
+        if (commit) {
+          chronicleEvent('rng_reveal', `did:akalynth:${s.player.id}`, s.player.caps ?? [], {
+            rng_domain: domain,
+            rng_commit: commit,
+            rng_reveal: reveal,
+            reveal_reason: 'disconnect',
+          });
+        }
+      }
 
       // Chronicle witness: disconnect event (Seal 2)
       const disconnectNow = Date.now();
@@ -2070,6 +2104,22 @@ function processSessionQueue(s: Session, now: number) {
           x: s.player!.x,
           y: s.player!.y,
         });
+
+        // Seal 3.1: Emit rng_commit for death_drop:v1 domain
+        {
+          const domain = 'death_drop:v1';
+          const actorDid = `did:akalynth:${s.player!.id}`;
+          const reveal = rngRevealHex32();
+          const commit = rngCommitV1(domain, actorDid, reveal);
+          s.rngRevealByDomain[domain] = reveal;
+          s.rngCommitByDomain[domain] = commit;
+          chronicleEvent('rng_commit', actorDid, s.player!.caps ?? [], {
+            rng_domain: domain,
+            rng_commit: commit,
+            commit_scope: 'session',
+            commit_seq: 1,
+          });
+        }
 
         // Initial presence tracking for spawn position
         onPlayerMoved(s.player!.id, s.currentMap, s.player!.x, s.player!.y, Date.now(), (r) => audit.write(r));
@@ -3084,6 +3134,14 @@ function processSessionQueue(s: Session, now: number) {
           },
           computeReceiptHash,
           getProtectedItemId: (playerId: string) => protectedByPlayerId.get(playerId),
+          getRngCommitV1: (playerId: string) => {
+            for (const sess of sessions.values()) {
+              if (sess.player?.id === playerId) {
+                return sess.rngCommitByDomain['death_drop:v1'];
+              }
+            }
+            return undefined;
+          },
         };
 
         const result = handleAttackIntent(ctx);
@@ -3119,6 +3177,9 @@ function processSessionQueue(s: Session, now: number) {
             y: result.defenderPos.y,
             cause: 'killed_by_player',
             killer_id: attackerId,
+            ...(result.dropSeedHash ? { drop_seed_hash: result.dropSeedHash } : {}),
+            ...(result.droppedItemIds ? { dropped_item_ids: result.droppedItemIds } : {}),
+            ...(result.dropRng ? result.dropRng : {}),
           });
 
           // Broadcast world_item_added for each dropped item

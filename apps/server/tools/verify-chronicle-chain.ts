@@ -19,6 +19,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import stringify from 'fast-json-stable-stringify';
 import { blake3 } from '@noble/hashes/blake3';
+import { rngCommit, rngDrawU32Legacy, rngCommitV1 } from '../src/world/rng.js';
 
 type ChronicleEntry = {
   v: number;
@@ -122,6 +123,22 @@ function getEmbeddedString(payload: Record<string, unknown>, key: string): strin
   return typeof v === 'string' ? v : null;
 }
 
+function getEmbeddedNumber(payload: Record<string, unknown>, key: string): number | null {
+  const v = payload[key];
+  return typeof v === 'number' ? v : null;
+}
+
+function getEmbeddedNumberArray(payload: Record<string, unknown>, key: string): number[] | null {
+  const v = payload[key];
+  if (!Array.isArray(v)) return null;
+  const out: number[] = [];
+  for (const item of v) {
+    if (typeof item !== 'number') return null;
+    out.push(item);
+  }
+  return out;
+}
+
 function readJsonlLines(filePath: string): string[] {
   const raw = fs.readFileSync(filePath, 'utf8');
   // tolerate trailing newline
@@ -160,7 +177,8 @@ function isChronicleEntry(obj: unknown): obj is ChronicleEntry {
 }
 
 function main() {
-  const argPath = process.argv[2];
+  // Find file path argument (skip flags starting with --)
+  const argPath = process.argv.slice(2).find((arg) => !arg.startsWith('--'));
   const filePath = argPath
     ? path.resolve(process.cwd(), argPath)
     : path.resolve(process.cwd(), 'chronicle.log');
@@ -183,6 +201,19 @@ function main() {
   // Global chain state (Seal 2.3)
   let lastGlobalHash = 'genesis';
   let globalChainVerified = 0;
+
+  // Seal 3.1: RNG commit→reveal state (triple-keyed by actor::domain::commit)
+  const strictRng = process.argv.includes('--strict-rng');
+
+  function rngKey(actor: string, domain: string, commit: string): string {
+    return `${actor}::${domain}::${commit}`;
+  }
+
+  const commitSeen = new Map<string, true>(); // key: actor::domain::commit (existence only)
+  const revealByKey = new Map<string, string>(); // key: actor::domain::commit -> reveal
+
+  type PendingOut = { lineNo: number; out: number[]; domain: string; commit: string };
+  const pendingOutByKey = new Map<string, PendingOut[]>(); // key: actor::domain::commit -> pending
 
   let okCount = 0;
   let capsSkipped = 0;
@@ -280,6 +311,186 @@ function main() {
     okCount++;
 
     // =========================================================================
+    // Seal 3 (v0): RNG proof verification when present
+    // =========================================================================
+    const rngCommitEmbedded = getEmbeddedString(entry.payload, 'rng_commit');
+    const rngReveal = getEmbeddedString(entry.payload, 'rng_reveal');
+    const rngDomain = getEmbeddedString(entry.payload, 'rng_domain');
+    const rngDraws = getEmbeddedNumber(entry.payload, 'rng_draws');
+    const rngOut = getEmbeddedNumberArray(entry.payload, 'rng_out');
+
+    if (rngCommitEmbedded && rngReveal) {
+      const expectedCommit = rngCommit(rngReveal);
+      if (expectedCommit !== rngCommitEmbedded) {
+        console.error(`[FATAL] rng_commit mismatch at line ${lineNo}`);
+        console.error(`  actor: ${entry.actor}`);
+        console.error(`  event_type: ${entry.event_type}`);
+        console.error(`  expected: ${expectedCommit}`);
+        console.error(`  got:      ${rngCommitEmbedded}`);
+        process.exit(1);
+      }
+    }
+
+    if (rngOut) {
+      if (!rngDomain) {
+        console.error(`[FATAL] rng_domain missing at line ${lineNo}`);
+        console.error(`  actor: ${entry.actor}`);
+        console.error(`  event_type: ${entry.event_type}`);
+        process.exit(1);
+      }
+      if (rngDomain !== 'death_drop:v0') {
+        console.error(`[FATAL] rng_domain unsupported at line ${lineNo}`);
+        console.error(`  actor: ${entry.actor}`);
+        console.error(`  event_type: ${entry.event_type}`);
+        console.error(`  expected: death_drop:v0`);
+        console.error(`  got:      ${rngDomain}`);
+        process.exit(1);
+      }
+
+      if (rngDraws !== null && rngDraws !== rngOut.length) {
+        console.error(`[FATAL] rng_draws mismatch at line ${lineNo}`);
+        console.error(`  actor: ${entry.actor}`);
+        console.error(`  event_type: ${entry.event_type}`);
+        console.error(`  expected: ${rngOut.length}`);
+        console.error(`  got:      ${rngDraws}`);
+        process.exit(1);
+      }
+
+      if (!rngReveal) {
+        console.error(`[FATAL] rng_reveal missing at line ${lineNo}`);
+        console.error(`  actor: ${entry.actor}`);
+        console.error(`  event_type: ${entry.event_type}`);
+        process.exit(1);
+      }
+      for (let i = 0; i < rngOut.length; i++) {
+        const expected = rngDrawU32Legacy(rngReveal, i);
+        if (rngOut[i] !== expected) {
+          console.error(`[FATAL] rng_out mismatch at line ${lineNo}`);
+          console.error(`  actor: ${entry.actor}`);
+          console.error(`  event_type: ${entry.event_type}`);
+          console.error(`  index: ${i}`);
+          console.error(`  expected: ${expected}`);
+          console.error(`  got:      ${rngOut[i]}`);
+          process.exit(1);
+        }
+      }
+    }
+
+    // =========================================================================
+    // Seal 3.1: RNG commit→reveal verification (v1)
+    // =========================================================================
+    if (entry.event_type === 'rng_commit') {
+      const domain = getEmbeddedString(entry.payload, 'rng_domain');
+      const commit = getEmbeddedString(entry.payload, 'rng_commit');
+      if (!domain) {
+        console.error(`[FATAL] rng_domain missing in rng_commit at line ${lineNo}`);
+        process.exit(1);
+      }
+      if (!commit) {
+        console.error(`[FATAL] rng_commit missing in rng_commit event at line ${lineNo}`);
+        process.exit(1);
+      }
+      const key = rngKey(entry.actor, domain, commit);
+      commitSeen.set(key, true);
+    }
+
+    if (entry.event_type === 'rng_reveal') {
+      const domain = getEmbeddedString(entry.payload, 'rng_domain');
+      const commit = getEmbeddedString(entry.payload, 'rng_commit');
+      const reveal = getEmbeddedString(entry.payload, 'rng_reveal');
+      if (!domain || !commit || !reveal) {
+        console.error(`[FATAL] Missing field in rng_reveal at line ${lineNo}`);
+        console.error(`  domain: ${domain}, commit: ${commit}, reveal: ${reveal}`);
+        process.exit(1);
+      }
+
+      const key = rngKey(entry.actor, domain, commit);
+
+      if (!commitSeen.get(key)) {
+        console.error(`[FATAL] rng_reveal references unknown commit at line ${lineNo}`);
+        console.error(`  actor: ${entry.actor}`);
+        console.error(`  domain: ${domain}`);
+        console.error(`  commit: ${commit}`);
+        process.exit(1);
+      }
+
+      // Recompute commitment and verify binding
+      const expectedCommit = rngCommitV1(domain, entry.actor, reveal);
+      if (expectedCommit !== commit) {
+        console.error(`[FATAL] rng_commit verification failed at line ${lineNo}`);
+        console.error(`  actor: ${entry.actor}`);
+        console.error(`  domain: ${domain}`);
+        console.error(`  expected: ${expectedCommit}`);
+        console.error(`  got:      ${commit}`);
+        process.exit(1);
+      }
+
+      revealByKey.set(key, reveal);
+
+      // Resolve pending outputs for this exact (actor, domain, commit)
+      const pending = pendingOutByKey.get(key) || [];
+      for (const p of pending) {
+        for (let i = 0; i < p.out.length; i++) {
+          const expected = rngDrawU32Legacy(reveal, i);
+          if (p.out[i] !== expected) {
+            console.error(`[FATAL] Deferred rng_out verification failed at original line ${p.lineNo}`);
+            console.error(`  actor: ${entry.actor}`);
+            console.error(`  domain: ${domain}`);
+            console.error(`  commit: ${commit}`);
+            console.error(`  index: ${i}`);
+            console.error(`  expected: ${expected}`);
+            console.error(`  got:      ${p.out[i]}`);
+            process.exit(1);
+          }
+        }
+      }
+      pendingOutByKey.delete(key);
+    }
+
+    // Handle death_drop:v1 (commit without reveal - deferred verification)
+    if (rngOut && rngDomain === 'death_drop:v1') {
+      if (!rngCommitEmbedded) {
+        console.error(`[FATAL] death_drop:v1 missing rng_commit at line ${lineNo}`);
+        console.error(`  actor: ${entry.actor}`);
+        console.error(`  event_type: ${entry.event_type}`);
+        process.exit(1);
+      }
+
+      const key = rngKey(entry.actor, rngDomain, rngCommitEmbedded);
+
+      if (!commitSeen.get(key)) {
+        console.error(`[FATAL] death_drop:v1 references unknown commit at line ${lineNo}`);
+        console.error(`  actor: ${entry.actor}`);
+        console.error(`  domain: ${rngDomain}`);
+        console.error(`  commit: ${rngCommitEmbedded}`);
+        process.exit(1);
+      }
+
+      const reveal = revealByKey.get(key);
+      if (reveal) {
+        // Reveal already available, verify immediately
+        for (let i = 0; i < rngOut.length; i++) {
+          const expected = rngDrawU32Legacy(reveal, i);
+          if (rngOut[i] !== expected) {
+            console.error(`[FATAL] rng_out mismatch (v1) at line ${lineNo}`);
+            console.error(`  actor: ${entry.actor}`);
+            console.error(`  domain: ${rngDomain}`);
+            console.error(`  commit: ${rngCommitEmbedded}`);
+            console.error(`  index: ${i}`);
+            console.error(`  expected: ${expected}`);
+            console.error(`  got:      ${rngOut[i]}`);
+            process.exit(1);
+          }
+        }
+      } else {
+        // Defer verification until reveal
+        const arr = pendingOutByKey.get(key) ?? [];
+        arr.push({ lineNo, out: rngOut, domain: rngDomain, commit: rngCommitEmbedded });
+        pendingOutByKey.set(key, arr);
+      }
+    }
+
+    // =========================================================================
     // Seal 2.3: Global chain verification (whole-file tamper evidence)
     // =========================================================================
     const embeddedPrevGlobal = getEmbeddedString(entry.payload, 'prev_global_hash');
@@ -328,6 +539,32 @@ function main() {
   }
   if (capsSkipped > 0) {
     console.log(`[info] caps_hash verification skipped for ${capsSkipped} entries (caps array not in entry)`);
+  }
+
+  // Seal 3.1: Report any unresolved pending verifications
+  const pendingCount = Array.from(pendingOutByKey.values()).reduce((sum, arr) => sum + arr.length, 0);
+  if (pendingCount > 0) {
+    const msg = `${pendingCount} pending RNG verifications remain unresolved`;
+    if (strictRng) {
+      console.error(`[FATAL] ${msg}`);
+    } else {
+      console.warn(`[WARN] ${msg} (run with --strict-rng to fail)`);
+    }
+
+    // Print up to 10 pending keys for debugging
+    let shown = 0;
+    for (const [k, arr] of pendingOutByKey.entries()) {
+      for (const p of arr) {
+        console.warn(`  pending: ${k} (line ${p.lineNo})`);
+        if (++shown >= 10) break;
+      }
+      if (shown >= 10) break;
+    }
+
+    if (strictRng) process.exit(1);
+  }
+  if (commitSeen.size > 0) {
+    console.log(`[ok] Seal 3.1: ${revealByKey.size}/${commitSeen.size} RNG commits resolved`);
   }
 }
 
