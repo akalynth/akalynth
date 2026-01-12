@@ -1,0 +1,13 @@
+{
+  "tick_ms": 100,
+  "max_move_speed": 6,
+  "max_chat_rate": 4,
+  "maps": {
+    "rookguard": { "width": 32, "height": 32, "description": "Training zone" },
+    "azura": { "width": 64, "height": 64, "description": "City zone" }
+  },
+  "spawn": {
+    "rookguard": { "x": 16, "y": 16 },
+    "azura": { "x": 32, "y": 32 }
+  }
+}

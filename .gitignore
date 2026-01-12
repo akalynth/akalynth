@@ -33,3 +33,10 @@ __*/
 # Chronicle local files (dev only)
 chronicle.log
 chronicle.key
+
+# Rulebook compiled outputs (generated, except .gitkeep)
+rulebook/compiled/operator.key
+rulebook/compiled/RULEBOOK.manifest.json
+rulebook/compiled/RULEBOOK_ROOT.txt
+rulebook/compiled/GENESIS.json
+rulebook/compiled/GENESIS.sig

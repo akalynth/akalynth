@@ -1,0 +1,17 @@
+; core.akl - Akalynth DSL Placeholder
+;
+; This file defines the foundational rules of the Akalynth world.
+; The DSL parser is not yet implemented; this serves as a placeholder
+; to anchor the rulebook hash and demonstrate structure.
+;
+; Future: This will specify movement rules, combat formulas, item behaviors,
+; and other game mechanics in a declarative, auditable format.
+
+; Rule: Server is authoritative
+; Client sends intent only, never coordinates or truth claims.
+
+; Rule: Every action emits a receipt
+; All player actions are logged to an append-only audit trail.
+
+; Rule: Movement is validated
+; Speed limits, walkable tiles, and direction checks are enforced server-side.
