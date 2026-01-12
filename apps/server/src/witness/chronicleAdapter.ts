@@ -55,11 +55,26 @@ export interface ChronicleAppendOptions {
 
 /**
  * Get the default path to chronicle_append binary
+ * Checks both workspace build and local crate build locations
  */
 function defaultBinPath(): string {
   // apps/server/src/witness -> repo root
   const repoRoot = resolve(import.meta.dirname, '../../../..');
-  return resolve(repoRoot, 'crates/chronicle/target/release/chronicle_append');
+
+  const candidates = [
+    // Built from repo root: cargo build --release -p chronicle --bin chronicle_append
+    resolve(repoRoot, 'target/release/chronicle_append'),
+
+    // Built inside crate: cd crates/chronicle && cargo build --release
+    resolve(repoRoot, 'crates/chronicle/target/release/chronicle_append'),
+  ];
+
+  for (const p of candidates) {
+    if (existsSync(p)) return p;
+  }
+
+  // Fall back to the first (so error message is predictable)
+  return candidates[0];
 }
 
 /**
