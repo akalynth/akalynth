@@ -13,6 +13,7 @@
     "verify:heat": "tsx tools/verify-heat.ts",
     "verify:protected": "tsx tools/verify-protected.ts",
     "verify:chronicle": "tsx tools/verify-chronicle.ts",
+    "verify:chronicle-chain": "tsx tools/verify-chronicle-chain.ts",
     "chronicle:adapter:smoke": "tsx tools/chronicle-adapter-smoke.ts",
     "rulebook:genesis": "tsx tools/genesis-rulebook.ts",
     "install-hooks": "bash scripts/install-hooks.sh"

@@ -1,4 +1,7 @@
+import fs from 'node:fs';
 import http from 'node:http';
+import { blake3 } from '@noble/hashes/blake3';
+import stringify from 'fast-json-stable-stringify';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Duplex } from 'node:stream';
 import { WebSocketServer, WebSocket } from 'ws';
@@ -471,6 +474,8 @@ type Session = {
   lastRunestoneFaces: Element[];
   runestoneCooldownWindowStartMs: number | null;
   runestoneCooldownCount: number;
+  // Session start time for chronicle disconnect events
+  connectedAtMs: number;
 };
 
 const sessions = new Map<string, Session>();
@@ -505,23 +510,131 @@ const { rulebookRoot } = verifyRulebookOrExit();
 // ============================================================================
 // Seal 2: Chronicle witness helper — binds all events to law
 // ============================================================================
-type ChronicleEventType = 'spawn' | 'move' | 'chat' | 'death';
+type ChronicleEventType = 'spawn' | 'move' | 'chat' | 'death' | 'disconnect';
+
+// Per-actor chain state (tamper-evident within a server run)
+const lastEventHashByActor = new Map<string, string>();
+
+// ============================================================================
+// Seal 2.2: Restart continuity — rebuild chain heads from chronicle.log on boot
+// ============================================================================
+function rebuildChronicleHeadsFromLog(logPath: string): void {
+  if (!fs.existsSync(logPath)) {
+    console.log(`[chronicle] No log file at ${logPath}, starting with empty chain heads`);
+    return;
+  }
+
+  const content = fs.readFileSync(logPath, 'utf8');
+  const lines = content.split('\n').filter((l: string) => l.trim().length > 0);
+
+  let ok = 0;
+  let bad = 0;
+
+  // Chronicle format: <prev_hash>|<event_hash>|<signature>|<json_payload>
+  for (const line of lines) {
+    try {
+      const parts = line.split('|');
+      if (parts.length < 4) {
+        bad++;
+        continue;
+      }
+
+      // JSON payload is the 4th field (index 3)
+      const jsonPart = parts.slice(3).join('|'); // In case JSON contains |
+      const e = JSON.parse(jsonPart) as { actor?: string; payload?: { event_hash?: string } };
+      const actor = typeof e?.actor === 'string' ? e.actor : null;
+      const eventHash = typeof e?.payload?.event_hash === 'string' ? e.payload.event_hash : null;
+
+      if (actor && eventHash) {
+        lastEventHashByActor.set(actor, eventHash);
+        ok++;
+      } else {
+        bad++;
+      }
+    } catch {
+      bad++;
+    }
+  }
+
+  console.log(`[chronicle] Rebuilt chain heads: actors=${lastEventHashByActor.size} lines=${lines.length} ok=${ok} bad=${bad}`);
+}
+
+// Rebuild chain heads on boot (only when chronicle is enabled)
+if (process.env.ENABLE_CHRONICLE === '1') {
+  const chronicleLogPath = process.env.CHRONICLE_LOG_PATH ?? 'chronicle.log';
+  rebuildChronicleHeadsFromLog(chronicleLogPath);
+}
+
+function blake3HexBytes(bytes: Uint8Array): string {
+  return Buffer.from(blake3(bytes)).toString('hex');
+}
+
+function blake3HexUtf8(s: string): string {
+  return blake3HexBytes(Buffer.from(s, 'utf8'));
+}
+
+function stableJson(obj: unknown): string {
+  // Deterministic for nested objects + arrays (via fast-json-stable-stringify)
+  return stringify(obj);
+}
+
+function stripPayloadHashFields(p: Record<string, unknown>): Record<string, unknown> {
+  const copy = { ...p };
+  delete (copy as Record<string, unknown>).payload_hash;
+  delete (copy as Record<string, unknown>).prev_event_hash;
+  delete (copy as Record<string, unknown>).event_hash;
+  return copy;
+}
 
 function chronicleEvent(
   event_type: ChronicleEventType,
   actorDid: string,
-  payload: object,
+  caps: string[],
+  payload: Record<string, unknown>,
   rng: object | null = null
 ) {
+  const caps_hash = `blake3:${blake3HexUtf8(stableJson(caps ?? []))}`;
+
+  // Strip hash fields, then canonicalize (also drops undefined via JSON round-trip)
+  const semanticPayload = stripPayloadHashFields(payload);
+  const payloadCanonical = JSON.parse(stableJson(semanticPayload)) as Record<string, unknown>;
+  const payload_hash = `blake3:${blake3HexUtf8(stableJson(payloadCanonical))}`;
+
+  const prev_event_hash = lastEventHashByActor.get(actorDid) ?? 'genesis';
+  const tick = Date.now();
+
+  const event_hash_preimage = {
+    v: 1,
+    world_id: 'akalynth-mainnet',
+    rulebook_root: rulebookRoot,
+    event_type,
+    actor: actorDid,
+    tick,
+    caps_hash,
+    payload_hash,
+    prev_event_hash,
+  };
+
+  const domainSep = 'akalynth:chronicle:event:v1\0';
+  const event_hash = `blake3:${blake3HexUtf8(domainSep + stableJson(event_hash_preimage))}`;
+
+  lastEventHashByActor.set(actorDid, event_hash);
+
   chronicleAppend({
     v: 1,
     world_id: 'akalynth-mainnet',
     rulebook_root: rulebookRoot,
-    tick: Date.now(),
+    tick,
     event_type,
     actor: actorDid,
-    caps_hash: 'blake3:stub',
-    payload,
+    caps_hash,
+    caps: caps ?? [],
+    payload: {
+      ...payloadCanonical,
+      payload_hash,
+      prev_event_hash,
+      event_hash,
+    },
     rng,
   });
 }
@@ -1520,6 +1633,7 @@ wss.on('connection', (ws) => {
     lastRunestoneFaces: [],
     runestoneCooldownWindowStartMs: null,
     runestoneCooldownCount: 0,
+    connectedAtMs: now,
   };
 
   sessions.set(connId, s);
@@ -1598,6 +1712,17 @@ wss.on('connection', (ws) => {
       w.players.delete(s.player.id);
       broadcastToMap(s.currentMap, ServerMessages.playerLeft(s.player.id), connId);
       audit.write({ player_id: s.player.id, action: 'disconnect', inputs: {}, result: 'left_world' });
+
+      // Chronicle witness: disconnect event (Seal 2)
+      const disconnectNow = Date.now();
+      chronicleEvent('disconnect', `did:akalynth:${s.player.id}`, s.player.caps ?? [], {
+        player_id: s.player.id,
+        map: s.currentMap,
+        x: s.player.x,
+        y: s.player.y,
+        in_world: s.inWorld,
+        session_duration_ms: disconnectNow - s.connectedAtMs,
+      });
     } else {
       audit.write({ player_id: connId, action: 'disconnect', inputs: {}, result: 'disconnected' });
     }
@@ -1711,6 +1836,14 @@ function processSessionQueue(s: Session, now: number) {
           player_id = s.player?.id ?? `p_${randomUUID()}`;
           guest_token = `gt_${randomUUID()}`;
           name = `Guest_${player_id.slice(-4)}`;
+
+          // Emit session_guest_minted first (creates player row in DB)
+          audit.write({
+            player_id,
+            action: 'session_guest_minted',
+            inputs: { source: 'ws_mint' },
+            result: 'ok',
+          });
 
           audit.write({
             player_id,
@@ -1866,7 +1999,7 @@ function processSessionQueue(s: Session, now: number) {
         broadcastToMap(s.currentMap, ServerMessages.playerJoined(toPublicPlayer(s.player!)), s.connId);
 
         // Chronicle witness: spawn event (Seal 2)
-        chronicleEvent('spawn', `did:akalynth:${s.player!.id}`, {
+        chronicleEvent('spawn', `did:akalynth:${s.player!.id}`, s.player!.caps ?? [], {
           player_id: s.player!.id,
           map: s.currentMap,
           x: s.player!.x,
@@ -2039,7 +2172,7 @@ function processSessionQueue(s: Session, now: number) {
 
         // Chronicle witness: chat event (Seal 2, privacy-safe hash)
         const chatHash = createHash('sha256').update(msg.message, 'utf8').digest('hex');
-        chronicleEvent('chat', `did:akalynth:${s.player!.id}`, {
+        chronicleEvent('chat', `did:akalynth:${s.player!.id}`, s.player!.caps ?? [], {
           player_id: s.player!.id,
           map: s.currentMap,
           message_len: msg.message.length,
@@ -2146,7 +2279,7 @@ function processSessionQueue(s: Session, now: number) {
           s.ledgerHesitationDeathTs = null;
 
           // Chronicle witness: death event (Seal 2, test death)
-          chronicleEvent('death', `did:akalynth:${s.player!.id}`, {
+          chronicleEvent('death', `did:akalynth:${s.player!.id}`, s.player!.caps ?? [], {
             player_id: s.player!.id,
             map: s.currentMap,
             x: s.player!.x,
@@ -2485,7 +2618,7 @@ function processSessionQueue(s: Session, now: number) {
           onPlayerMoved(s.player!.id, s.currentMap, finalX, finalY, msgNow, (r) => audit.write(r));
 
           // Chronicle witness: move event (Seal 2)
-          chronicleEvent('move', `did:akalynth:${s.player!.id}`, {
+          chronicleEvent('move', `did:akalynth:${s.player!.id}`, s.player!.caps ?? [], {
             player_id: s.player!.id,
             map: s.currentMap,
             from: { x: before.x, y: before.y },
@@ -2914,7 +3047,7 @@ function processSessionQueue(s: Session, now: number) {
           );
 
           // Chronicle witness: death event (Seal 2, PvP kill)
-          chronicleEvent('death', `did:akalynth:${targetId}`, {
+          chronicleEvent('death', `did:akalynth:${targetId}`, defenderSession?.player?.caps ?? [], {
             player_id: targetId,
             map: result.map,
             x: result.defenderPos.x,
