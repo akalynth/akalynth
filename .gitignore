@@ -26,3 +26,10 @@ __*/
 
 # OS files
 .DS_Store
+
+# Rust build artifacts
+**/target/
+
+# Chronicle local files (dev only)
+chronicle.log
+chronicle.key
