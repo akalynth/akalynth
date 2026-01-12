@@ -1,12 +1,14 @@
 #!/usr/bin/env tsx
 /**
- * verify-chronicle-chain.ts — Offline chronicle JSONL chain verifier
+ * verify-chronicle-chain.ts — Offline chronicle chain verifier
  *
  * Validates:
  * - caps_hash matches caps array
  * - payload_hash matches payload (after stripping hash fields)
  * - event_hash matches domain-separated preimage
  * - prev_event_hash chain integrity per actor
+ * - prev_global_hash chain integrity (Seal 2.3: whole-file tamper evidence)
+ * - global_event_hash matches domain-separated preimage (Seal 2.3)
  *
  * Usage:
  *   npm run chronicle:verify-chain
@@ -32,6 +34,7 @@ type ChronicleEntry = {
 };
 
 const DOMAIN_EVENT = 'akalynth:chronicle:event:v1\0';
+const DOMAIN_GLOBAL = 'akalynth:chronicle:global:v1\0';
 
 function blake3HexBytes(bytes: Uint8Array): string {
   return Buffer.from(blake3(bytes)).toString('hex');
@@ -55,9 +58,13 @@ function asStringArray(value: unknown): string[] {
 function stripPayloadHashFields(payload: Record<string, unknown>): Record<string, unknown> {
   // Payload hash was computed BEFORE embedding these.
   const copy: Record<string, unknown> = { ...payload };
+  // Per-actor chain fields
   delete copy.payload_hash;
   delete copy.prev_event_hash;
   delete copy.event_hash;
+  // Global chain fields (Seal 2.3)
+  delete copy.prev_global_hash;
+  delete copy.global_event_hash;
   return copy;
 }
 
@@ -83,6 +90,31 @@ function computeEventHash(entry: ChronicleEntry, prevEventHash: string, payloadH
     prev_event_hash: prevEventHash,
   };
   return `blake3:${blake3HexUtf8(DOMAIN_EVENT + stableJson(preimage))}`;
+}
+
+/**
+ * Compute global_event_hash (Seal 2.3: whole-file tamper evidence)
+ * The global chain commits to the per-actor event_hash, linking both chains.
+ */
+function computeGlobalEventHash(
+  entry: ChronicleEntry,
+  payloadHash: string,
+  eventHash: string,
+  prevGlobalHash: string,
+): string {
+  const preimage = {
+    v: entry.v,
+    world_id: entry.world_id,
+    rulebook_root: entry.rulebook_root,
+    event_type: entry.event_type,
+    actor: entry.actor,
+    tick: entry.tick,
+    caps_hash: entry.caps_hash,
+    payload_hash: payloadHash,
+    event_hash: eventHash, // Commits global chain to per-actor chain
+    prev_global_hash: prevGlobalHash,
+  };
+  return `blake3:${blake3HexUtf8(DOMAIN_GLOBAL + stableJson(preimage))}`;
 }
 
 function getEmbeddedString(payload: Record<string, unknown>, key: string): string | null {
@@ -147,6 +179,10 @@ function main() {
 
   // Per-actor last hash map reconstructed while reading file in order
   const lastByActor = new Map<string, string>();
+
+  // Global chain state (Seal 2.3)
+  let lastGlobalHash = 'genesis';
+  let globalChainVerified = 0;
 
   let okCount = 0;
   let capsSkipped = 0;
@@ -242,10 +278,54 @@ function main() {
     // Update per-actor chain state
     lastByActor.set(entry.actor, computedEventHash);
     okCount++;
+
+    // =========================================================================
+    // Seal 2.3: Global chain verification (whole-file tamper evidence)
+    // =========================================================================
+    const embeddedPrevGlobal = getEmbeddedString(entry.payload, 'prev_global_hash');
+    const embeddedGlobalHash = getEmbeddedString(entry.payload, 'global_event_hash');
+
+    // Global chain fields present - verify them
+    if (embeddedPrevGlobal !== null && embeddedGlobalHash !== null) {
+      // Verify prev_global_hash links to previous event
+      if (embeddedPrevGlobal !== lastGlobalHash) {
+        console.error(`[FATAL] Global chain broken at line ${lineNo}`);
+        console.error(`  actor: ${entry.actor}`);
+        console.error(`  event_type: ${entry.event_type}`);
+        console.error(`  expected prev_global_hash: ${lastGlobalHash}`);
+        console.error(`  got prev_global_hash:      ${embeddedPrevGlobal}`);
+        process.exit(1);
+      }
+
+      // Recompute and verify global_event_hash
+      const computedGlobalHash = computeGlobalEventHash(
+        entry,
+        computedPayloadHash,
+        computedEventHash,
+        embeddedPrevGlobal,
+      );
+      if (computedGlobalHash !== embeddedGlobalHash) {
+        console.error(`[FATAL] global_event_hash mismatch at line ${lineNo}`);
+        console.error(`  actor: ${entry.actor}`);
+        console.error(`  event_type: ${entry.event_type}`);
+        console.error(`  expected: ${computedGlobalHash}`);
+        console.error(`  got:      ${embeddedGlobalHash}`);
+        process.exit(1);
+      }
+
+      // Advance global chain head
+      lastGlobalHash = embeddedGlobalHash;
+      globalChainVerified++;
+    }
   }
 
-  console.log(`[ok] Verified ${okCount}/${lines.length} chronicle events.`);
+  console.log(`[ok] Verified ${okCount}/${lines.length} chronicle events (per-actor chain).`);
   console.log(`[ok] Actors seen: ${lastByActor.size}`);
+  if (globalChainVerified > 0) {
+    console.log(`[ok] Global chain verified: ${globalChainVerified} events, head=${lastGlobalHash.slice(0, 20)}...`);
+  } else {
+    console.log(`[info] Global chain: no Seal 2.3 fields found (pre-2.3 log)`);
+  }
   if (capsSkipped > 0) {
     console.log(`[info] caps_hash verification skipped for ${capsSkipped} entries (caps array not in entry)`);
   }

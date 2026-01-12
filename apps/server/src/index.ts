@@ -515,8 +515,11 @@ type ChronicleEventType = 'spawn' | 'move' | 'chat' | 'death' | 'disconnect';
 // Per-actor chain state (tamper-evident within a server run)
 const lastEventHashByActor = new Map<string, string>();
 
+// Global chain state (Seal 2.3: whole-file tamper evidence)
+let lastGlobalHash: string = 'genesis';
+
 // ============================================================================
-// Seal 2.2: Restart continuity — rebuild chain heads from chronicle.log on boot
+// Seal 2.2/2.3: Restart continuity — rebuild chain heads from chronicle.log on boot
 // ============================================================================
 function rebuildChronicleHeadsFromLog(logPath: string): void {
   if (!fs.existsSync(logPath)) {
@@ -529,6 +532,10 @@ function rebuildChronicleHeadsFromLog(logPath: string): void {
 
   let ok = 0;
   let bad = 0;
+  let globalBad = 0;
+
+  // Seal 2.3: Walk global chain in strict order
+  let expectedPrevGlobal = 'genesis';
 
   // Chronicle format: <prev_hash>|<event_hash>|<signature>|<json_payload>
   for (const line of lines) {
@@ -541,7 +548,16 @@ function rebuildChronicleHeadsFromLog(logPath: string): void {
 
       // JSON payload is the 4th field (index 3)
       const jsonPart = parts.slice(3).join('|'); // In case JSON contains |
-      const e = JSON.parse(jsonPart) as { actor?: string; payload?: { event_hash?: string } };
+      const e = JSON.parse(jsonPart) as {
+        actor?: string;
+        payload?: {
+          event_hash?: string;
+          prev_global_hash?: string;
+          global_event_hash?: string;
+        };
+      };
+
+      // Per-actor chain rebuild
       const actor = typeof e?.actor === 'string' ? e.actor : null;
       const eventHash = typeof e?.payload?.event_hash === 'string' ? e.payload.event_hash : null;
 
@@ -551,12 +567,33 @@ function rebuildChronicleHeadsFromLog(logPath: string): void {
       } else {
         bad++;
       }
+
+      // Seal 2.3: Global chain rebuild (strict walk)
+      const prevGlobal = e?.payload?.prev_global_hash;
+      const globalHash = e?.payload?.global_event_hash;
+
+      if (typeof prevGlobal === 'string' && typeof globalHash === 'string') {
+        if (prevGlobal !== expectedPrevGlobal) {
+          // Global chain break detected
+          globalBad++;
+          // In lenient mode, don't advance head - in strict mode we'd exit
+          // Continue scanning to count all breaks
+        } else {
+          // Chain valid at this point, advance head
+          expectedPrevGlobal = globalHash;
+        }
+      }
+      // If global fields missing (pre-2.3 events), skip global check
     } catch {
       bad++;
     }
   }
 
-  console.log(`[chronicle] Rebuilt chain heads: actors=${lastEventHashByActor.size} lines=${lines.length} ok=${ok} bad=${bad}`);
+  // Set global head to last verified position
+  lastGlobalHash = expectedPrevGlobal;
+
+  const globalStatus = expectedPrevGlobal === 'genesis' ? 'genesis' : expectedPrevGlobal.slice(0, 20) + '...';
+  console.log(`[chronicle] Rebuilt: actors=${lastEventHashByActor.size} global=${globalStatus} lines=${lines.length} ok=${ok} bad=${bad} globalBad=${globalBad}`);
 }
 
 // Rebuild chain heads on boot (only when chronicle is enabled)
@@ -580,9 +617,13 @@ function stableJson(obj: unknown): string {
 
 function stripPayloadHashFields(p: Record<string, unknown>): Record<string, unknown> {
   const copy = { ...p };
+  // Per-actor chain fields
   delete (copy as Record<string, unknown>).payload_hash;
   delete (copy as Record<string, unknown>).prev_event_hash;
   delete (copy as Record<string, unknown>).event_hash;
+  // Global chain fields (Seal 2.3)
+  delete (copy as Record<string, unknown>).prev_global_hash;
+  delete (copy as Record<string, unknown>).global_event_hash;
   return copy;
 }
 
@@ -603,6 +644,7 @@ function chronicleEvent(
   const prev_event_hash = lastEventHashByActor.get(actorDid) ?? 'genesis';
   const tick = Date.now();
 
+  // Per-actor chain (Seal 2.1)
   const event_hash_preimage = {
     v: 1,
     world_id: 'akalynth-mainnet',
@@ -615,10 +657,31 @@ function chronicleEvent(
     prev_event_hash,
   };
 
-  const domainSep = 'akalynth:chronicle:event:v1\0';
-  const event_hash = `blake3:${blake3HexUtf8(domainSep + stableJson(event_hash_preimage))}`;
+  const DOMAIN_EVENT = 'akalynth:chronicle:event:v1\0';
+  const event_hash = `blake3:${blake3HexUtf8(DOMAIN_EVENT + stableJson(event_hash_preimage))}`;
 
   lastEventHashByActor.set(actorDid, event_hash);
+
+  // Global chain (Seal 2.3)
+  const prev_global_hash = lastGlobalHash;
+
+  const global_preimage = {
+    v: 1,
+    world_id: 'akalynth-mainnet',
+    rulebook_root: rulebookRoot,
+    event_type,
+    actor: actorDid,
+    tick,
+    caps_hash,
+    payload_hash,
+    event_hash, // Commits global chain to per-actor chain
+    prev_global_hash,
+  };
+
+  const DOMAIN_GLOBAL = 'akalynth:chronicle:global:v1\0';
+  const global_event_hash = `blake3:${blake3HexUtf8(DOMAIN_GLOBAL + stableJson(global_preimage))}`;
+
+  lastGlobalHash = global_event_hash;
 
   chronicleAppend({
     v: 1,
@@ -634,6 +697,8 @@ function chronicleEvent(
       payload_hash,
       prev_event_hash,
       event_hash,
+      prev_global_hash,    // Seal 2.3
+      global_event_hash,   // Seal 2.3
     },
     rng,
   });
