@@ -201,6 +201,13 @@ const SOVEREIGN_ALLOW_NAME_MATCH = parseBoolEnv(process.env.SOVEREIGN_ALLOW_NAME
 const CAPS_ENABLED = parseBoolEnv(process.env.CAPS_ENABLED, false);
 const CAPS_DEBUG_GRANT_SOVEREIGN = parseBoolEnv(process.env.CAPS_DEBUG_GRANT_SOVEREIGN, false) && DEBUG_MODE;
 
+// Plan B: Per-IP Rate Limiting (Anti-Bot Hardening)
+const IP_RATE_LIMIT_ENABLED = parseBoolEnv(process.env.IP_RATE_LIMIT_ENABLED, true);
+const IP_CONNECTION_LIMIT = parseEnvInt(process.env.IP_CONNECTION_LIMIT, 5, 1);
+const IP_CONNECTION_WINDOW_MS = parseEnvMs(process.env.IP_CONNECTION_WINDOW_MS, 10 * 60 * 1000, 1000);
+const IP_MOVE_RATE_LIMIT = parseEnvInt(process.env.IP_MOVE_RATE_LIMIT, 5, 1); // moves per second
+const IP_CHAT_RATE_LIMIT = parseEnvInt(process.env.IP_CHAT_RATE_LIMIT, 1, 1); // chats per second
+
 function parseEnvMs(envValue: string | undefined, fallback: number, min: number): number {
   if (!envValue) return fallback;
   const parsed = parseInt(envValue, 10);
@@ -359,6 +366,99 @@ function redactedActorForPlayerId(playerId: string, timestamp: string): string {
   );
 }
 
+// ============================================================================
+// Plan B: IP Rate Limiting Functions (Anti-Bot Hardening)
+// ============================================================================
+
+/**
+ * Hash IP address for privacy (receipts contain hash, not raw IP)
+ */
+function hashIp(ip: string): string {
+  const hash = createHash('sha256').update(ip + PUBLIC_RECEIPTS_HASH_SALT).digest('hex');
+  return hash.slice(0, 16); // 64-bit hex
+}
+
+/**
+ * Check if IP has exceeded connection limit.
+ * Returns { allowed: true } or { allowed: false, reason: string }
+ */
+function checkIpConnectionLimit(ip: string, now: number): { allowed: boolean; reason?: string } {
+  if (!IP_RATE_LIMIT_ENABLED) return { allowed: true };
+  if (!ip) return { allowed: true }; // Allow if IP unknown (shouldn't happen)
+
+  const record = ipConnections.get(ip);
+
+  // No record yet - allow and create
+  if (!record) {
+    ipConnections.set(ip, { count: 1, windowStart: now });
+    return { allowed: true };
+  }
+
+  // Check if window has expired
+  if (now - record.windowStart > IP_CONNECTION_WINDOW_MS) {
+    // Reset window
+    ipConnections.set(ip, { count: 1, windowStart: now });
+    return { allowed: true };
+  }
+
+  // Within window - check limit
+  if (record.count >= IP_CONNECTION_LIMIT) {
+    return { allowed: false, reason: 'ip_connection_limit_exceeded' };
+  }
+
+  // Increment and allow
+  record.count++;
+  return { allowed: true };
+}
+
+/**
+ * Decrement IP connection count when session closes
+ */
+function releaseIpConnection(ip: string | null): void {
+  if (!ip || !IP_RATE_LIMIT_ENABLED) return;
+  const record = ipConnections.get(ip);
+  if (record && record.count > 0) {
+    record.count--;
+  }
+}
+
+/**
+ * Check if IP has exceeded action rate limit (moves or chats).
+ * Uses sliding window: keeps last N timestamps, rejects if N within 1 second.
+ */
+function checkIpActionLimit(
+  ip: string,
+  action: 'move' | 'chat',
+  now: number
+): { allowed: boolean; reason?: string } {
+  if (!IP_RATE_LIMIT_ENABLED) return { allowed: true };
+  if (!ip) return { allowed: true };
+
+  const limit = action === 'move' ? IP_MOVE_RATE_LIMIT : IP_CHAT_RATE_LIMIT;
+  const bucket = ipActionBuckets.get(ip) ?? { moves: [], chats: [] };
+
+  if (!ipActionBuckets.has(ip)) {
+    ipActionBuckets.set(ip, bucket);
+  }
+
+  const timestamps = action === 'move' ? bucket.moves : bucket.chats;
+
+  // Remove timestamps older than 1 second
+  const cutoff = now - 1000;
+  while (timestamps.length > 0 && timestamps[0] < cutoff) {
+    timestamps.shift();
+  }
+
+  // Check if at limit
+  if (timestamps.length >= limit) {
+    return { allowed: false, reason: `ip_${action}_rate_exceeded` };
+  }
+
+  // Add timestamp and allow
+  timestamps.push(now);
+  return { allowed: true };
+}
+
 function maybeRequestWitnesses(
   targetPlayerId: string,
   target: Player,
@@ -480,9 +580,31 @@ type Session = {
   // Seal 3.1: RNG commit→reveal state
   rngRevealByDomain: Record<string, string>;
   rngCommitByDomain: Record<string, string>;
+  // Plan B: Client IP for rate limiting
+  clientIp: string | null;
 };
 
 const sessions = new Map<string, Session>();
+
+// ============================================================================
+// Plan B: IP Rate Limiting State (Anti-Bot Hardening)
+// ============================================================================
+
+interface IpConnectionRecord {
+  count: number;
+  windowStart: number;
+}
+
+interface IpActionBucket {
+  moves: number[]; // timestamps
+  chats: number[]; // timestamps
+}
+
+// Track connection attempts per IP
+const ipConnections = new Map<string, IpConnectionRecord>();
+
+// Track action rates per IP (for multi-session abuse detection)
+const ipActionBuckets = new Map<string, IpActionBucket>();
 
 // ============================================================================
 // Item System State (Phase 2) - Declared early for function access
@@ -510,6 +632,37 @@ const lastAttackAt = new Map<string, number>();
 // Seal 1: Law Before Life — verify rulebook before any stateful init
 // ============================================================================
 const { rulebookRoot } = verifyRulebookOrExit();
+
+// ============================================================================
+// Plan B: PUBLIC_RECEIPTS_DELAY Safety Check (Anti-Bot Hardening)
+// ============================================================================
+if (!DEBUG_MODE && PUBLIC_RECEIPTS_DELAY_MS < 300000) {
+  console.warn('');
+  console.warn('╔══════════════════════════════════════════════════════════════╗');
+  console.warn('║  WARNING: Public receipts delay is dangerously low           ║');
+  console.warn('╠══════════════════════════════════════════════════════════════╣');
+  console.warn(`║  Current delay: ${PUBLIC_RECEIPTS_DELAY_MS}ms (${Math.floor(PUBLIC_RECEIPTS_DELAY_MS / 1000)}s)`);
+  console.warn('║  Recommended minimum: 300000ms (5 minutes)                   ║');
+  console.warn('║                                                              ║');
+  console.warn('║  This exposes real-time player actions to public feed.      ║');
+  console.warn('║  Set PUBLIC_RECEIPTS_DELAY_MS=300000 or higher.             ║');
+  console.warn('╚══════════════════════════════════════════════════════════════╝');
+  console.warn('');
+}
+
+if (!DEBUG_MODE && PUBLIC_RECEIPTS_DELAY_MS === 0) {
+  console.error('');
+  console.error('╔══════════════════════════════════════════════════════════════╗');
+  console.error('║  FATAL: Public receipts delay cannot be zero in production   ║');
+  console.error('╠══════════════════════════════════════════════════════════════╣');
+  console.error('║  PUBLIC_RECEIPTS_DELAY_MS=0 leaks real-time intel.          ║');
+  console.error('║                                                              ║');
+  console.error('║  Set DEBUG=1 to bypass this check, or set a proper delay.   ║');
+  console.error('║  Recommended: PUBLIC_RECEIPTS_DELAY_MS=900000 (15 minutes)  ║');
+  console.error('╚══════════════════════════════════════════════════════════════╝');
+  console.error('');
+  process.exit(1);
+}
 
 // ============================================================================
 // Seal 2: Chronicle witness helper — binds all events to law
@@ -1566,7 +1719,43 @@ httpServer.on('upgrade', (req, socket, head) => {
     rejectInsecureUpgrade(socket);
     return;
   }
+
+  // Plan B: Per-IP connection rate limiting
+  const clientIp = resolveClientIp(req);
+  if (clientIp) {
+    const ipCheck = checkIpConnectionLimit(clientIp, Date.now());
+    if (!ipCheck.allowed) {
+      // Emit rate_limit_exceeded receipt
+      audit.write({
+        player_id: 'system',
+        action: 'rate_limit_exceeded',
+        inputs: {
+          ip_hash: hashIp(clientIp),
+          scope: 'connect',
+          limit: IP_CONNECTION_LIMIT,
+          window_ms: IP_CONNECTION_WINDOW_MS,
+        },
+        result: 'rejected',
+      });
+
+      // Reject connection
+      try {
+        const body = 'Connection limit exceeded';
+        socket.write(
+          `HTTP/1.1 429 Too Many Requests\r\nConnection: close\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: ${Buffer.byteLength(
+            body
+          )}\r\n\r\n${body}`
+        );
+      } catch {
+        // ignore
+      }
+      socket.destroy();
+      return;
+    }
+  }
+
   wss.handleUpgrade(req, socket, head, (ws) => {
+    // Pass req through so we can access it in connection handler
     wss.emit('connection', ws, req);
   });
 });
@@ -1694,9 +1883,11 @@ function requireWorld(s: Session): boolean {
   return true;
 }
 
-wss.on('connection', (ws) => {
+wss.on('connection', (ws, req: IncomingMessage) => {
   const connId = randomUUID();
   const now = Date.now();
+  const clientIp = resolveClientIp(req);
+
   const s: Session = {
     connId,
     ws,
@@ -1720,6 +1911,7 @@ wss.on('connection', (ws) => {
     connectedAtMs: now,
     rngRevealByDomain: {},
     rngCommitByDomain: {},
+    clientIp,
   };
 
   sessions.set(connId, s);
@@ -1825,6 +2017,9 @@ wss.on('connection', (ws) => {
     } else {
       audit.write({ player_id: connId, action: 'disconnect', inputs: {}, result: 'disconnected' });
     }
+
+    // Plan B: Release IP connection count
+    releaseIpConnection(s.clientIp);
   });
 
   ws.on('error', (err) => {
