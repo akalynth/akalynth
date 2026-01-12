@@ -321,7 +321,7 @@ function main(): void {
   const dedupCollisions = db.prepare(`
     SELECT player_id, receipt_hash, kind, entity_id, COUNT(*) AS c
     FROM chronicle_events
-    GROUP BY player_id, receipt_hash, kind, entity_id
+    GROUP BY player_id, receipt_hash, kind, COALESCE(entity_id, '')
     HAVING c > 1
   `).all() as Array<{ player_id: string; receipt_hash: string; kind: string; entity_id: string | null; c: number }>;
 

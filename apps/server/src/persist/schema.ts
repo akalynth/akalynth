@@ -7,7 +7,7 @@ import type Database from 'better-sqlite3';
 // Schema Version
 // ============================================================================
 
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;
 
 // ============================================================================
 // DDL Statements
@@ -139,7 +139,9 @@ CREATE INDEX IF NOT EXISTS idx_chronicle_player_ts ON chronicle_events(player_id
 CREATE INDEX IF NOT EXISTS idx_chronicle_kind ON chronicle_events(kind);
 CREATE INDEX IF NOT EXISTS idx_chronicle_player_kind_ts ON chronicle_events(player_id, kind, timestamp DESC, id DESC);
 CREATE INDEX IF NOT EXISTS idx_chronicle_receipt ON chronicle_events(receipt_hash);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_chronicle_dedup ON chronicle_events(player_id, receipt_hash, kind, entity_id);
+-- Partial unique indexes for dedup (NULL-safe): one for entity_id present, one for absent
+CREATE UNIQUE INDEX IF NOT EXISTS idx_chronicle_dedup_entity ON chronicle_events(player_id, receipt_hash, kind, entity_id) WHERE entity_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_chronicle_dedup_no_entity ON chronicle_events(player_id, receipt_hash, kind) WHERE entity_id IS NULL;
 `;
 
 // ============================================================================
@@ -217,6 +219,9 @@ function runMigration(db: Database.Database, version: number): void {
       break;
     case 6:
       migrateToV6(db);
+      break;
+    case 7:
+      migrateToV7(db);
       break;
     default:
       throw new Error(`Unknown schema version: ${version}`);
@@ -301,6 +306,44 @@ function migrateToV6(db: Database.Database): void {
     'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
   );
   insertMeta.run('schema_version', '6');
+}
+
+function migrateToV7(db: Database.Database): void {
+  // Fix chronicle dedup index: NULL values in entity_id bypass UNIQUE constraint.
+  // Replace single index with partial unique indexes for NULL-safe dedup.
+  
+  // Step 1: Delete duplicate rows (keep lowest id per unique tuple)
+  db.exec(`
+    DELETE FROM chronicle_events
+    WHERE id NOT IN (
+      SELECT MIN(id)
+      FROM chronicle_events
+      GROUP BY player_id, receipt_hash, kind, COALESCE(entity_id, '')
+    );
+  `);
+
+  // Step 2: Drop old broken index
+  db.exec(`DROP INDEX IF EXISTS idx_chronicle_dedup;`);
+
+  // Step 3: Create partial unique indexes
+  // When entity_id is present
+  db.exec(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_chronicle_dedup_entity
+    ON chronicle_events(player_id, receipt_hash, kind, entity_id)
+    WHERE entity_id IS NOT NULL;
+  `);
+  // When entity_id is absent
+  db.exec(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_chronicle_dedup_no_entity
+    ON chronicle_events(player_id, receipt_hash, kind)
+    WHERE entity_id IS NULL;
+  `);
+
+  // Update schema version
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', '7');
 }
 
 // ============================================================================
