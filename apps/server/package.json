@@ -13,6 +13,7 @@
     "verify:heat": "tsx tools/verify-heat.ts",
     "verify:protected": "tsx tools/verify-protected.ts",
     "verify:chronicle": "tsx tools/verify-chronicle.ts",
+    "chronicle:demo": "tsx tools/chronicle-demo.ts",
     "install-hooks": "bash scripts/install-hooks.sh"
   },
   "dependencies": {
