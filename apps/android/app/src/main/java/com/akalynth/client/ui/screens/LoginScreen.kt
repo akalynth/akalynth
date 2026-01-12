@@ -87,12 +87,48 @@ fun LoginScreen(
                     }
                 }
 
+                // Preset URL chips
                 Text(
-                    text = "Emulator: ws://10.0.2.2:3000\nLAN: ws://YOUR_IP:3000",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
+                    text = "Quick presets:",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Emulator preset
+                    FilterChip(
+                        selected = state.session.serverUrl == "ws://10.0.2.2:3000",
+                        onClick = {
+                            serverUrlInput = "ws://10.0.2.2:3000"
+                            onEvent(GameEvent.SetServerUrl("ws://10.0.2.2:3000"))
+                        },
+                        label = { Text("Emulator", style = MaterialTheme.typography.labelSmall) }
+                    )
+
+                    // localhost (for physical device via USB port forward)
+                    FilterChip(
+                        selected = state.session.serverUrl == "ws://localhost:3000",
+                        onClick = {
+                            serverUrlInput = "ws://localhost:3000"
+                            onEvent(GameEvent.SetServerUrl("ws://localhost:3000"))
+                        },
+                        label = { Text("USB", style = MaterialTheme.typography.labelSmall) }
+                    )
+
+                    // Production (placeholder)
+                    FilterChip(
+                        selected = state.session.serverUrl.contains("akalynth.com"),
+                        onClick = {
+                            serverUrlInput = "wss://api.akalynth.com"
+                            onEvent(GameEvent.SetServerUrl("wss://api.akalynth.com"))
+                        },
+                        label = { Text("Prod", style = MaterialTheme.typography.labelSmall) }
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
