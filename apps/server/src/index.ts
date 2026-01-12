@@ -134,6 +134,7 @@ import {
   getActiveContract,
 } from './world/work_contracts.js';
 import { chronicleAppend } from './witness/chronicleAdapter.js';
+import { verifyRulebookOrExit } from './rulebook/verifyRulebook.js';
 import {
   VOCATION_DECLARED_ACTION,
   SOVEREIGN_PREFIX_GRANTED_ACTION,
@@ -495,6 +496,11 @@ const starterKitMinted = new Set<string>();
 
 // Combat cooldown tracking (Phase 3)
 const lastAttackAt = new Map<string, number>();
+
+// ============================================================================
+// Seal 1: Law Before Life — verify rulebook before any stateful init
+// ============================================================================
+const { rulebookRoot } = verifyRulebookOrExit();
 
 // Persistence layer (SQLite + JSONL replay)
 const persist = createPersistenceLayer({
@@ -1839,7 +1845,7 @@ function processSessionQueue(s: Session, now: number) {
         chronicleAppend({
           v: 1,
           world_id: 'akalynth-mainnet',
-          rulebook_root: 'blake3:genesisdeadbeef', // placeholder until Seal 1
+          rulebook_root: rulebookRoot,
           tick: Date.now(),
           event_type: 'spawn',
           actor: `did:akalynth:${s.player!.id}`,
