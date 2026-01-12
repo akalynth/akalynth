@@ -133,6 +133,7 @@ import {
   failContract,
   getActiveContract,
 } from './world/work_contracts.js';
+import { chronicleAppend } from './witness/chronicleAdapter.js';
 import {
   VOCATION_DECLARED_ACTION,
   SOVEREIGN_PREFIX_GRANTED_ACTION,
@@ -1833,6 +1834,24 @@ function processSessionQueue(s: Session, now: number) {
         send(s.ws, ServerMessages.inventorySnapshot(itemInfos));
 
         broadcastToMap(s.currentMap, ServerMessages.playerJoined(toPublicPlayer(s.player!)), s.connId);
+
+        // Chronicle witness: spawn event (Seal 2, feature-flagged)
+        chronicleAppend({
+          v: 1,
+          world_id: 'akalynth-mainnet',
+          rulebook_root: 'blake3:genesisdeadbeef', // placeholder until Seal 1
+          tick: Date.now(),
+          event_type: 'spawn',
+          actor: `did:akalynth:${s.player!.id}`,
+          caps_hash: 'blake3:stub',
+          payload: {
+            player_id: s.player!.id,
+            map: s.currentMap,
+            x: s.player!.x,
+            y: s.player!.y,
+          },
+          rng: null,
+        });
 
         // Initial presence tracking for spawn position
         onPlayerMoved(s.player!.id, s.currentMap, s.player!.x, s.player!.y, Date.now(), (r) => audit.write(r));
