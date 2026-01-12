@@ -1,0 +1,19 @@
+{
+  "name": "@akalynth/client",
+  "version": "0.1.0",
+  "description": "Web/mobile friendly client for Akalynth MMO",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": ["mmo", "game-client", "akalynth"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "vite": "^5.0.8"
+  }
+}
