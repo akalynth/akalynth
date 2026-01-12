@@ -502,6 +502,30 @@ const lastAttackAt = new Map<string, number>();
 // ============================================================================
 const { rulebookRoot } = verifyRulebookOrExit();
 
+// ============================================================================
+// Seal 2: Chronicle witness helper — binds all events to law
+// ============================================================================
+type ChronicleEventType = 'spawn' | 'move' | 'chat' | 'death';
+
+function chronicleEvent(
+  event_type: ChronicleEventType,
+  actorDid: string,
+  payload: object,
+  rng: object | null = null
+) {
+  chronicleAppend({
+    v: 1,
+    world_id: 'akalynth-mainnet',
+    rulebook_root: rulebookRoot,
+    tick: Date.now(),
+    event_type,
+    actor: actorDid,
+    caps_hash: 'blake3:stub',
+    payload,
+    rng,
+  });
+}
+
 // Persistence layer (SQLite + JSONL replay)
 const persist = createPersistenceLayer({
   dbPath: process.env.PERSIST_DB_PATH ?? './data/akalynth.db',
@@ -1841,22 +1865,12 @@ function processSessionQueue(s: Session, now: number) {
 
         broadcastToMap(s.currentMap, ServerMessages.playerJoined(toPublicPlayer(s.player!)), s.connId);
 
-        // Chronicle witness: spawn event (Seal 2, feature-flagged)
-        chronicleAppend({
-          v: 1,
-          world_id: 'akalynth-mainnet',
-          rulebook_root: rulebookRoot,
-          tick: Date.now(),
-          event_type: 'spawn',
-          actor: `did:akalynth:${s.player!.id}`,
-          caps_hash: 'blake3:stub',
-          payload: {
-            player_id: s.player!.id,
-            map: s.currentMap,
-            x: s.player!.x,
-            y: s.player!.y,
-          },
-          rng: null,
+        // Chronicle witness: spawn event (Seal 2)
+        chronicleEvent('spawn', `did:akalynth:${s.player!.id}`, {
+          player_id: s.player!.id,
+          map: s.currentMap,
+          x: s.player!.x,
+          y: s.player!.y,
         });
 
         // Initial presence tracking for spawn position
@@ -2022,6 +2036,15 @@ function processSessionQueue(s: Session, now: number) {
 
         audit.write({ player_id: s.player!.id, action: 'chat', inputs: { message: msg.message }, result: 'ok' });
         broadcastToMap(s.currentMap, ServerMessages.chatBroadcast(s.player!.id, s.player!.name, msg.message));
+
+        // Chronicle witness: chat event (Seal 2, privacy-safe hash)
+        const chatHash = createHash('sha256').update(msg.message, 'utf8').digest('hex');
+        chronicleEvent('chat', `did:akalynth:${s.player!.id}`, {
+          player_id: s.player!.id,
+          map: s.currentMap,
+          message_len: msg.message.length,
+          message_hash: `sha256:${chatHash}`,
+        });
         break;
       }
 
@@ -2121,6 +2144,16 @@ function processSessionQueue(s: Session, now: number) {
           recordLedgerDeath(s.player!.id, s.currentMap, deathTs);
           s.ledgerHesitationArmed = false;
           s.ledgerHesitationDeathTs = null;
+
+          // Chronicle witness: death event (Seal 2, test death)
+          chronicleEvent('death', `did:akalynth:${s.player!.id}`, {
+            player_id: s.player!.id,
+            map: s.currentMap,
+            x: s.player!.x,
+            y: s.player!.y,
+            cause: 'test',
+            killer_id: null,
+          });
         }
 
         scheduleRespawnIfNeeded(s, msgNow);
@@ -2450,6 +2483,16 @@ function processSessionQueue(s: Session, now: number) {
         // Track presence after successful movement
         if (res.ok) {
           onPlayerMoved(s.player!.id, s.currentMap, finalX, finalY, msgNow, (r) => audit.write(r));
+
+          // Chronicle witness: move event (Seal 2)
+          chronicleEvent('move', `did:akalynth:${s.player!.id}`, {
+            player_id: s.player!.id,
+            map: s.currentMap,
+            from: { x: before.x, y: before.y },
+            to: { x: finalX, y: finalY },
+            dir: msg.direction,
+            transferred,
+          });
         }
         break;
       }
@@ -2869,6 +2912,16 @@ function processSessionQueue(s: Session, now: number) {
               result.defenderPos.y
             )
           );
+
+          // Chronicle witness: death event (Seal 2, PvP kill)
+          chronicleEvent('death', `did:akalynth:${targetId}`, {
+            player_id: targetId,
+            map: result.map,
+            x: result.defenderPos.x,
+            y: result.defenderPos.y,
+            cause: 'killed_by_player',
+            killer_id: attackerId,
+          });
 
           // Broadcast world_item_added for each dropped item
           for (const itemId of result.droppedItemIds) {
