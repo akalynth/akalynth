@@ -582,6 +582,8 @@ type Session = {
   rngCommitByDomain: Record<string, string>;
   // Plan B: Client IP for rate limiting
   clientIp: string | null;
+  // Plan B: Attack spam tracking (for heat escalation)
+  attackFailures: number[]; // timestamps of failed attacks
 };
 
 const sessions = new Map<string, Session>();
@@ -1912,6 +1914,7 @@ wss.on('connection', (ws, req: IncomingMessage) => {
     rngRevealByDomain: {},
     rngCommitByDomain: {},
     clientIp,
+    attackFailures: [],
   };
 
   sessions.set(connId, s);
@@ -2350,6 +2353,25 @@ function processSessionQueue(s: Session, now: number) {
       case 'chat': {
         if (!requireWorld(s)) break;
 
+        // Plan B: Per-IP chat rate limiting (cross-session abuse detection)
+        if (s.clientIp) {
+          const ipCheck = checkIpActionLimit(s.clientIp, 'chat', msgNow);
+          if (!ipCheck.allowed) {
+            audit.write({
+              player_id: s.player!.id,
+              action: 'rate_limit_exceeded',
+              inputs: {
+                ip_hash: hashIp(s.clientIp),
+                scope: 'chat',
+                limit: IP_CHAT_RATE_LIMIT,
+              },
+              result: 'rejected',
+            });
+            send(s.ws, ServerMessages.error('rate_limited', 'Chat rate limit exceeded'));
+            break;
+          }
+        }
+
         // Tem challenge response via chat, per docs
         if (s.anti.state.temChallengeActive) {
           const out = handleTemResponse(s.anti.state, msg.message);
@@ -2615,6 +2637,25 @@ function processSessionQueue(s: Session, now: number) {
 
       case 'move_intent': {
         if (!requireWorld(s)) break;
+
+        // Plan B: Per-IP move rate limiting (cross-session abuse detection)
+        if (s.clientIp) {
+          const ipCheck = checkIpActionLimit(s.clientIp, 'move', msgNow);
+          if (!ipCheck.allowed) {
+            audit.write({
+              player_id: s.player!.id,
+              action: 'rate_limit_exceeded',
+              inputs: {
+                ip_hash: hashIp(s.clientIp),
+                scope: 'move',
+                limit: IP_MOVE_RATE_LIMIT,
+              },
+              result: 'rejected',
+            });
+            send(s.ws, ServerMessages.moveResult(false, s.player!.x, s.player!.y, 'rate_limited'));
+            break;
+          }
+        }
 
         if (s.player!.status === 'dead') {
           audit.write({
@@ -3340,6 +3381,30 @@ function processSessionQueue(s: Session, now: number) {
         };
 
         const result = handleAttackIntent(ctx);
+
+        // Plan B: Attack spam detection (heat escalation on repeated failures)
+        if (!result.success) {
+          const now = Date.now();
+          const failures = s.attackFailures;
+
+          // Remove timestamps older than 30 seconds
+          const cutoff = now - 30_000;
+          while (failures.length > 0 && failures[0] < cutoff) {
+            failures.shift();
+          }
+
+          // Add current failure
+          failures.push(now);
+
+          // Check if threshold exceeded (5 failures in 30s)
+          if (failures.length >= 5) {
+            // Escalate heat
+            applyHeatChange(s, now, 15, 'attack_spam', { window_ms: 30_000 });
+
+            // Clear window to avoid repeated escalations
+            s.attackFailures = [];
+          }
+        }
 
         if (result.success && result.map && result.defenderPos && result.droppedItemIds) {
           // Find defender session for sending messages
