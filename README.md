@@ -1,83 +1,33 @@
-# 🎮 Akalynth
+# Akalynth (Linux + Android only)
 
-> A social-first, low-grind MMO prototype focused on fun and player interaction
+## Structure Note
 
-## Vision
+Legacy folders (if any remain) are deprecated; use `apps/` + `packages/` for new work.
 
-Akalynth is an **online-first MMO** designed to be **fun, social, and free from grinding**. Set in a city-based world starting with **Azura**, the game prioritizes meaningful player interactions over repetitive tasks.
+A Tibia-world-feel MMO with a **server-authoritative** architecture and **anti-bot-first** enforcement (Tem).
 
-**Core Principles:**
-- **Social-first**: Built for player interaction and collaboration
-- **Low grind**: Respect players' time with engaging, not repetitive, gameplay
-- **Server-authoritative**: All game logic runs on the server for fairness
-- **Anti-cheat ready**: Architecture designed to prevent cheating from day one
-- **Simple and shippable**: Clean, maintainable code that can evolve
+**Platform policy**: Linux server + Android client only. **Windows is intentionally unsupported.**
 
-## Architecture
-
-This is a **mono-repo** containing:
-
-- **`/server`** - Authoritative game server with WebSocket communication
-  - Event-driven architecture
-  - Anti-cheat hooks and validation
-  - City management (Azura)
-  
-- **`/client`** - Web and mobile-friendly game client
-  - Real-time WebSocket connection
-  - Lightweight vanilla TypeScript
-  
-- **`/docs`** - Practical documentation
-  - Architecture overview
-  - Development guides
-  - Roadmap
-
-## Quick Start
-
-**Prerequisites**: Node.js 18+
+## Quickstart (Server)
 
 ```bash
-# 1. Start the server
-cd server
+sudo ./scripts/bootstrap_linux.sh
+cd apps/server
 npm install
 npm run dev
-
-# 2. Start the client (in another terminal)
-cd client
-npm install
-npm run dev
-
-# 3. Open http://localhost:5173 in your browser
 ```
 
-## Current Status
+Test with:
 
-**Phase 1: Foundation** ✅
-- Clean mono-repo structure
-- Server scaffolding with WebSocket support
-- Client scaffolding with connection UI
-- Basic event system
-- City concept (Azura)
-- Documentation
+```bash
+wscat -c ws://localhost:3000
+```
 
-**Next: Phase 2 - Core Gameplay**
-- Player movement
-- Real-time chat
-- Presence system
+## Docs (single source of truth)
 
-## Technology
+Start here: `docs/README.md`
 
-- **Server**: Node.js + TypeScript + WebSocket
-- **Client**: Vite + TypeScript + WebSocket API
-- **World**: City-based (starting with Azura)
-
-## Development
-
-See [/docs](./docs/README.md) for detailed documentation including:
-- Architecture deep-dive
-- Anti-cheat strategy
-- Development workflow
-- Contributing guidelines
-
-## License
-
-ISC
+- `docs/ARCHITECTURE.md`
+- `docs/PROTOCOL.md`
+- `docs/ANTICHEAT.md`
+- `docs/WORLD_AZURA.md`

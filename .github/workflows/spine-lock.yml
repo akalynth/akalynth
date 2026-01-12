@@ -1,0 +1,69 @@
+name: Spine Lock
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  enforce-structure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check for forbidden directories
+        run: |
+          # Include case variants for strictness
+          FORBIDDEN_DIRS=("server" "Server" "SERVER" "shared" "Shared" "SHARED" "client" "Client" "CLIENT")
+          VIOLATIONS=()
+          
+          for dir in "${FORBIDDEN_DIRS[@]}"; do
+            if [ -d "$dir" ]; then
+              VIOLATIONS+=("$dir/")
+            fi
+          done
+          
+          if [ ${#VIOLATIONS[@]} -gt 0 ]; then
+            echo "❌ SPINE LOCK VIOLATION"
+            echo ""
+            echo "Forbidden top-level directories detected:"
+            for v in "${VIOLATIONS[@]}"; do
+              echo "  - $v"
+            done
+            echo ""
+            echo "These paths have been migrated:"
+            echo "  server/  → apps/server/"
+            echo "  shared/  → packages/shared/"
+            echo "  client/  → apps/debug-client/ (or other apps/* clients)"
+            echo ""
+            echo "See docs/SPINE_V1.md for migration guide"
+            exit 1
+          fi
+          
+          echo "✓ Spine lock passed: no forbidden directories"
+      
+      - name: Verify required structure
+        run: |
+          REQUIRED_DIRS=("apps" "packages" "docs" "scripts")
+          MISSING=()
+          
+          for dir in "${REQUIRED_DIRS[@]}"; do
+            if [ ! -d "$dir" ]; then
+              MISSING+=("$dir/")
+            fi
+          done
+          
+          if [ ${#MISSING[@]} -gt 0 ]; then
+            echo "❌ SPINE LOCK VIOLATION"
+            echo ""
+            echo "Required monorepo directories missing:"
+            for m in "${MISSING[@]}"; do
+              echo "  - $m"
+            done
+            echo ""
+            echo "See docs/SPINE_V1.md for structure requirements"
+            exit 1
+          fi
+          
+          echo "✓ Required directories present"

@@ -1,0 +1,80 @@
+# Evidence UI Fixtures (Phase 6 Contract)
+
+Golden snapshots for Phase 6: The Witness Interface.
+
+> "A player can point to a loss and say: I understand why this happened — and I can prove it."
+
+---
+
+## Contract Rules
+
+1. **UI must display verbatim** — no recomputation, no re-sorting, no summarization
+2. **Cache key is `receipt_hashes.anchor`** — ledger-stable, survives DB rebuilds
+3. **`candidates[]` is already rank-sorted** — render in received order
+4. **`chronicle_event_id` is projection-local** — never use as cache key
+
+---
+
+## Files
+
+| File | Purpose |
+|------|---------|
+| `chronicle_snapshot.json` | Chronicle events with `evidence_ref` linkage |
+| `evidence_snapshot.json` | Full evidence payload (drop_explanation, receipt_hashes) |
+| `test_receipts.jsonl` | Portable receipts for replay/rebuild verification |
+| `summary.json` | Metadata for CI assertions |
+
+---
+
+## UI Assertions (E4-F Determinism Test)
+
+Load `chronicle_snapshot.json`, click evidence on the death event, then assert:
+
+```typescript
+// 1. Dropped items exact match
+expect(evidence.drop_explanation.dropped_item_ids).toEqual(summary.dropped_item_ids);
+
+// 2. Seed hash exact match
+expect(evidence.drop_explanation.seed_hash).toBe(summary.seed_hash);
+
+// 3. First 5 candidates match (rank, item_id, dropped)
+const first5 = evidence.drop_explanation.candidates.slice(0, 5);
+expect(first5.map(c => ({ rank: c.rank, item_id: c.item_id, dropped: c.dropped })))
+  .toMatchSnapshot('first-5-candidates');
+
+// 4. Receipt hash stability (ledger anchor)
+expect(evidence.receipt_hashes.anchor).toBe(summary.death_receipt_hash);
+```
+
+---
+
+## Rebuild Portability Check
+
+Run from server directory:
+
+```bash
+npx tsx scripts/verify-portability.ts
+```
+
+Verifies:
+- `receipt_hash` unchanged after DB wipe + replay
+- `seed_hash` unchanged
+- `dropped_item_ids` / `kept_item_ids` exact match
+- `chronicle_event_id` may differ (projection-local, expected)
+
+---
+
+## Regenerating Fixtures
+
+```bash
+npx tsx scripts/generate-evidence-fixtures.ts
+```
+
+Creates fresh fixtures with new timestamps. Receipt hashes will change (timestamps are inputs), but the contract structure remains stable.
+
+---
+
+## Spec Reference
+
+- Wire format: `server/docs/EVIDENCE_UI_SPEC.md`
+- Phase 6 charter: `server/docs/PHASE6_WITNESS_INTERFACE.md`

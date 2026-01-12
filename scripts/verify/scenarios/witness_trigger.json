@@ -1,0 +1,21 @@
+{
+  "name": "witness_trigger",
+  "auto_tem": true,
+  "duration_ms": 8000,
+  "events": [
+    { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 300 },
+    { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 300 },
+    { "send": { "type": "move_intent", "direction": "south" }, "delay_ms": 300 },
+    { "send": { "type": "move_intent", "direction": "south" }, "delay_ms": 300 },
+    { "send": { "type": "runestone_cast", "table_id": "rookguard_runestone_table_01" }, "delay_ms": 500 },
+    { "send": { "type": "runestone_cast", "table_id": "rookguard_runestone_table_01" }, "delay_ms": 200 },
+    { "send": { "type": "runestone_cast", "table_id": "rookguard_runestone_table_01" }, "delay_ms": 200 },
+    { "send": { "type": "runestone_cast", "table_id": "rookguard_runestone_table_01" }, "delay_ms": 200 },
+    { "send": { "type": "runestone_cast", "table_id": "rookguard_runestone_table_01" }, "delay_ms": 200 },
+    { "send": { "type": "runestone_cast", "table_id": "rookguard_runestone_table_01" }, "delay_ms": 200 },
+    { "send": { "type": "runestone_cast", "table_id": "rookguard_runestone_table_01" }, "delay_ms": 200 },
+    { "send": { "type": "runestone_cast", "table_id": "rookguard_runestone_table_01" }, "delay_ms": 200 },
+    { "send": { "type": "runestone_cast", "table_id": "rookguard_runestone_table_01" }, "delay_ms": 200 }
+  ],
+  "expect": []
+}

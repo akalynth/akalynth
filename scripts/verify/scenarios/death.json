@@ -1,0 +1,42 @@
+{
+  "name": "death",
+  "auto_tem": true,
+  "duration_ms": 15000,
+  "events": [
+    { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 200 },
+    { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 200 },
+    { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 200 },
+    { "send": { "type": "chat", "message": "hi" }, "delay_ms": 200 },
+    { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 200 },
+    { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 200 },
+    { "send": { "type": "chat", "message": "AZURA" }, "delay_ms": 200 },
+    { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 200 },
+    { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 200 },
+    { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 200 }
+  ],
+  "hooks": [
+    {
+      "when": { "type": "world_state", "player": { "x": 32, "y": 32 } },
+      "send": { "type": "kill_self" },
+      "delay_ms": 300
+    },
+    {
+      "when": { "type": "death_notice" },
+      "send": { "type": "move_intent", "direction": "north" },
+      "delay_ms": 20
+    },
+    {
+      "when": { "type": "death_notice" },
+      "send": { "type": "move_intent", "direction": "south" },
+      "after_ms": { "field": "respawn_in_ms", "add": 500 }
+    },
+    {
+      "when": { "type": "death_notice" },
+      "send": { "type": "move_intent", "direction": "south" },
+      "after_ms": { "field": "respawn_in_ms", "add": 700 }
+    }
+  ],
+  "expect": [
+    { "type": "death_notice" }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "heat",
+  "auto_tem": true,
+  "duration_ms": 6000,
+  "events": [
+    { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 150 },
+    { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 150 },
+    { "send": { "type": "move_intent", "direction": "south" }, "delay_ms": 150 },
+    { "send": { "type": "move_intent", "direction": "south" }, "delay_ms": 150 },
+    { "send": { "type": "runestone_cast", "table_id": "rookguard_runestone_table_01" }, "delay_ms": 200 },
+    {
+      "repeat": 8,
+      "pattern": [{ "type": "runestone_cast", "table_id": "rookguard_runestone_table_01" }],
+      "delay_ms": 120
+    }
+  ],
+  "expect": [
+    { "type": "runestone_denied", "fields": { "reason": "cooldown" } }
+  ]
+}
