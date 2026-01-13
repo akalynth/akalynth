@@ -1,5 +1,6 @@
 import type { Direction, MapData, PlayerPublic, PlayerStatus } from '@shared/types';
 import type { MapName } from '@shared/http';
+import type { ChronicleEvent } from '@shared/protocol';
 
 export type InputDirection =
   | Direction
@@ -57,6 +58,25 @@ export interface FloatingText {
   ttlMs: number;
 }
 
+export interface ToastNotice {
+  id: string;
+  title: string;
+  detail?: string;
+  at: number;
+  expiresAt: number;
+}
+
+export interface LostItemCount {
+  kind: string;
+  qty: number;
+}
+
+export interface DeathRecap {
+  deathEvent: ChronicleEvent;
+  lost: LostItemCount[];
+  selectedBy?: 'group' | 'time' | 'latest';
+}
+
 export interface GameClientState {
   world: WorldSnapshot;
   conn: ConnectionState;
@@ -64,6 +84,18 @@ export interface GameClientState {
   cooldowns: ActionCooldown;
   ui: UiStage;
   chat: ChatMessageEntry[];
+  toast: ToastNotice | null;
+  recapOpen: boolean;
+  deathRecap: DeathRecap | null;
+  recapRequestedAt: number | null;
+  recapPreferredGroupId: number | null;
+  chronicleOpen: boolean;
+  chronicle: {
+    events: ChronicleEvent[];
+    hasMore: boolean;
+    loading: boolean;
+    before: string | null;
+  } | null;
   combat: {
     targetId: string | null;
     fx: FloatingText[];
@@ -76,6 +108,18 @@ export interface GameClientApi {
   stopMoves: () => void;
   sendAttack: () => void;
   sendChat: (message: string) => void;
+  requestChronicle: (limit?: number, openRecap?: boolean) => void;
+  openChronicle: () => void;
+  closeChronicle: () => void;
+  loadMoreChronicle: () => void;
+  openRecapFromChronicle: (anchor: {
+    timestamp: string;
+    chronicle_event_id?: number | null;
+    zone?: string | null;
+    x?: number | null;
+    y?: number | null;
+  }) => void;
+  closeRecap: () => void;
   setTarget: (playerId: string | null) => void;
   setStage: (stage: UiStage['stage']) => void;
   toggleMap: (map: MapName) => void;

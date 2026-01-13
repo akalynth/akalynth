@@ -5,6 +5,8 @@ import type {
   MoveIntentMessage,
   AttackIntentMessage,
   ChatMessage,
+  GetChronicleMessage,
+  ChronicleEvent,
 } from '@shared/protocol';
 import type { MapName } from '@shared/http';
 import {
@@ -23,6 +25,9 @@ import type {
   FloatingText,
   InputDirection,
   MoveIntent,
+  ToastNotice,
+  DeathRecap,
+  LostItemCount,
 } from '../types';
 import { loadConfig } from '../config';
 
@@ -30,6 +35,7 @@ const MOVE_REPEAT_MS = 130;
 const MOVE_TOKENS_PER_SEC_MAX = 10;
 const ATTACK_COOLDOWN_MS = 1200;
 const MAX_CHAT = 50;
+const DEFAULT_RESPAWN_MS = 15_000;
 
 function wsUrl(base: string): string {
   if (base.startsWith('ws://') || base.startsWith('wss://')) return base;
@@ -48,6 +54,13 @@ function initialState(mapName: MapName): GameClientState {
     cooldowns: { attackEndsAt: 0 } as ActionCooldown,
     ui: { stage: 0 },
     chat: [],
+    toast: null,
+    recapOpen: false,
+    deathRecap: null,
+    recapRequestedAt: null,
+    recapPreferredGroupId: null,
+    chronicleOpen: false,
+    chronicle: null,
     combat: { targetId: null, fx: [] },
   };
 }
@@ -79,6 +92,102 @@ function selectAttackTarget(snapshot: GameClientState): PlayerPublic | null {
     }
   }
   return best;
+}
+
+function parseTimestampMs(value: unknown): number {
+  if (typeof value !== 'string') return 0;
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function findOldestTimestamp(events: ChronicleEvent[]): string | null {
+  let oldest: ChronicleEvent | null = null;
+  let oldestMs = Number.POSITIVE_INFINITY;
+  for (const event of events) {
+    const ms = parseTimestampMs(event.timestamp);
+    if (!ms) continue;
+    if (ms < oldestMs) {
+      oldestMs = ms;
+      oldest = event;
+    }
+  }
+  return oldest?.timestamp ?? null;
+}
+
+function getEventGroupId(event: ChronicleEvent): number | null {
+  const ref = event.evidence_ref;
+  return typeof ref?.chronicle_event_id === 'number' ? ref.chronicle_event_id : null;
+}
+
+function buildDeathRecap(
+  events: ChronicleEvent[],
+  targetMs?: number | null,
+  preferredGroupId?: number | null
+): DeathRecap | null {
+  const deathEvents = events.filter((event) => event.kind === 'death');
+  if (deathEvents.length === 0) return null;
+
+  let deathEvent: ChronicleEvent | null = null;
+  let selectedBy: 'group' | 'time' | 'latest' | null = null;
+  if (preferredGroupId != null) {
+    const inGroup = deathEvents.filter((event) => getEventGroupId(event) === preferredGroupId);
+    if (inGroup.length > 0) {
+      deathEvent = inGroup
+        .slice()
+        .sort((a, b) => parseTimestampMs(b.timestamp) - parseTimestampMs(a.timestamp))[0];
+      if (deathEvent) selectedBy = 'group';
+    }
+  }
+
+  if (!deathEvent && targetMs && targetMs > 0) {
+    const windowStart = targetMs - 5000;
+    let bestScore = Number.POSITIVE_INFINITY;
+    for (const event of deathEvents) {
+      const ts = parseTimestampMs(event.timestamp);
+      if (!ts) continue;
+      if (ts < windowStart) continue;
+      const score = Math.abs(ts - targetMs);
+      if (score < bestScore) {
+        bestScore = score;
+        deathEvent = event;
+        selectedBy = 'time';
+      }
+    }
+  }
+
+  if (!deathEvent) {
+    deathEvent = deathEvents
+      .slice()
+      .sort((a, b) => parseTimestampMs(b.timestamp) - parseTimestampMs(a.timestamp))[0];
+    if (deathEvent) selectedBy = 'latest';
+  }
+  if (!deathEvent) return null;
+
+  const groupId = preferredGroupId ?? getEventGroupId(deathEvent);
+  const counts = new Map<string, number>();
+
+  for (const event of events) {
+    if (event.kind !== 'item_lost') continue;
+    const details = event.details as Record<string, unknown> | undefined;
+    if (details?.reason !== 'death') continue;
+
+    const matchesGroup = groupId !== null
+      ? getEventGroupId(event) === groupId
+      : event.timestamp === deathEvent.timestamp &&
+        event.zone === deathEvent.zone &&
+        event.x === deathEvent.x &&
+        event.y === deathEvent.y;
+    if (!matchesGroup) continue;
+
+    const itemType = typeof details.item_type === 'string' ? details.item_type : 'item';
+    counts.set(itemType, (counts.get(itemType) ?? 0) + 1);
+  }
+
+  const lost: LostItemCount[] = Array.from(counts.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([kind, qty]) => ({ kind, qty }));
+
+  return { deathEvent, lost, selectedBy: selectedBy ?? 'latest' };
 }
 
 export function useGameClient(mapName: MapName): [GameClientState, GameClientApi] {
@@ -144,6 +253,13 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
         conn: { phase: 'awaiting_world_state' },
         world: { map: getMap(map), me: null, others: new Map() },
         chat: [],
+        toast: null,
+        recapOpen: false,
+        deathRecap: null,
+        recapRequestedAt: null,
+        recapPreferredGroupId: null,
+        chronicleOpen: false,
+        chronicle: null,
         combat: { targetId: null, fx: [] },
       };
     },
@@ -191,6 +307,35 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
       });
     }
     return next;
+  };
+
+  const formatLostItems = (items: unknown): string => {
+    if (items === undefined) return 'Lost: (unknown)';
+    if (!Array.isArray(items)) return 'Lost: (unknown)';
+    if (items.length === 0) return 'Lost: none';
+
+    const parts: string[] = [];
+    for (const entry of items) {
+      if (!entry || typeof entry !== 'object') continue;
+      const record = entry as Record<string, unknown>;
+
+      const kind =
+        typeof record.kind === 'string' && record.kind.trim() ? record.kind : 'item';
+
+      const qtyRaw = typeof record.qty === 'number' ? record.qty : 1;
+      const qty = qtyRaw > 1 ? Math.floor(qtyRaw) : 1;
+
+      const rarity =
+        typeof record.rarity === 'string' && record.rarity.trim() ? record.rarity : '';
+
+      let label = kind;
+      if (rarity) label += ` (${rarity})`;
+      if (qty > 1) label += ` x${qty}`;
+      parts.push(label);
+    }
+
+    if (parts.length === 0) return 'Lost: (unknown)';
+    return `Lost: ${parts.join(', ')}`;
   };
 
   const refillTokens = () => {
@@ -339,6 +484,103 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     },
     [send]
   );
+
+  const sendChronicleRequest = useCallback(
+    (limit = 50, before?: string | null) => {
+      const payload: GetChronicleMessage = { type: 'get_chronicle', limit };
+      if (before) payload.before = before;
+      console.log(`[debug-client] request get_chronicle limit=${limit}${before ? ` before=${before}` : ''}`);
+      send(payload);
+    },
+    [send]
+  );
+
+  const requestChronicle = useCallback(
+    (limit = 10, openRecap = false) => {
+      if (openRecap) {
+        setState((s) => ({
+          ...s,
+          recapOpen: true,
+          deathRecap: null,
+          recapRequestedAt: Date.now(),
+          recapPreferredGroupId: null,
+          toast: null,
+        }));
+      }
+      sendChronicleRequest(limit);
+    },
+    [sendChronicleRequest]
+  );
+
+  const openRecapFromChronicle = useCallback(
+    (anchor: {
+      timestamp: string;
+      chronicle_event_id?: number | null;
+      zone?: string | null;
+      x?: number | null;
+      y?: number | null;
+    }) => {
+      const targetMs = Date.parse(anchor.timestamp);
+      const ms = Number.isFinite(targetMs) ? targetMs : Date.now();
+
+      const snapshot = stateRef.current;
+      const local = snapshot.chronicle?.events ?? [];
+      const localRecap = local.length > 0
+        ? buildDeathRecap(local, ms, anchor.chronicle_event_id ?? null)
+        : null;
+
+      setState((s) => ({
+        ...s,
+        recapOpen: true,
+        recapRequestedAt: ms,
+        recapPreferredGroupId: anchor.chronicle_event_id ?? null,
+        toast: null,
+        deathRecap: localRecap,
+      }));
+
+      if (!localRecap) sendChronicleRequest(50);
+    },
+    [sendChronicleRequest]
+  );
+
+  const openChronicle = useCallback(() => {
+    setState((s) => ({
+      ...s,
+      chronicleOpen: true,
+      chronicle: {
+        events: [],
+        hasMore: false,
+        loading: true,
+        before: null,
+      },
+    }));
+    sendChronicleRequest(50);
+  }, [sendChronicleRequest]);
+
+  const closeChronicle = useCallback(() => {
+    setState((s) => ({ ...s, chronicleOpen: false, chronicle: null }));
+  }, []);
+
+  const loadMoreChronicle = useCallback(() => {
+    const snapshot = stateRef.current;
+    if (!snapshot.chronicleOpen || !snapshot.chronicle) return;
+    if (snapshot.chronicle.loading || !snapshot.chronicle.hasMore || !snapshot.chronicle.before) return;
+    setState((s) => ({
+      ...s,
+      chronicle: s.chronicle ? { ...s.chronicle, loading: true } : s.chronicle,
+    }));
+    sendChronicleRequest(50, snapshot.chronicle.before);
+  }, [sendChronicleRequest]);
+
+  const closeRecap = useCallback(() => {
+    setState((s) => ({
+      ...s,
+      recapOpen: false,
+      deathRecap: null,
+      recapRequestedAt: null,
+      recapPreferredGroupId: null,
+    }));
+  }, []);
 
   const setTarget = useCallback((playerId: string | null) => {
     setState((s) => {
@@ -494,6 +736,43 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
               return { ...next, conn, cooldowns: { ...next.cooldowns, attackEndsAt: cooldownEndsAt } };
             }
 
+            case 'chronicle_snapshot': {
+              const events = Array.isArray(data.events) ? data.events as ChronicleEvent[] : [];
+              const hasMore = typeof data.has_more === 'boolean' ? data.has_more : false;
+              console.log(`[debug-client] chronicle_snapshot events=${events.length} has_more=${hasMore}`);
+              if (!s.recapOpen && !s.chronicleOpen) return { ...s, conn };
+
+              let nextChronicle = s.chronicle;
+              if (s.chronicleOpen) {
+                const prevEvents = s.chronicle?.events ?? [];
+                const shouldAppend = !!s.chronicle?.before && prevEvents.length > 0 && s.chronicle.loading;
+                const merged = shouldAppend ? [...prevEvents, ...events] : events;
+                nextChronicle = {
+                  events: merged,
+                  hasMore,
+                  loading: false,
+                  before: findOldestTimestamp(merged) ?? s.chronicle?.before ?? null,
+                };
+              }
+
+              let recap = s.deathRecap;
+              if (s.recapOpen) {
+                recap = buildDeathRecap(events, s.recapRequestedAt, s.recapPreferredGroupId);
+                if (import.meta.env?.DEV && recap?.deathEvent) {
+                  console.log(
+                    `[debug-client] recap selected ts=${recap.deathEvent.timestamp} gid=${getEventGroupId(recap.deathEvent)} lost=${recap.lost.length} picked=${recap.selectedBy ?? 'unknown'}`
+                  );
+                }
+              }
+
+              return {
+                ...s,
+                conn,
+                ...(s.chronicleOpen ? { chronicle: nextChronicle } : {}),
+                ...(s.recapOpen ? { deathRecap: recap } : {}),
+              };
+            }
+
             case 'death_notice': {
               const nextMap = data.map as MapName | undefined;
               if (nextMap && nextMap !== s.world.map.name) {
@@ -501,8 +780,23 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
                 return { ...base, conn: { ...base.conn, lastServerAt: now } };
               }
               if (!s.world.me) return { ...s, conn };
-              const me = { ...s.world.me, status: 'dead', dead_until_ms: Date.now() + data.respawn_in_ms };
-              return { ...s, conn, world: { ...s.world, me } };
+              const respawnMs =
+                typeof data.respawn_in_ms === 'number' &&
+                Number.isFinite(data.respawn_in_ms) &&
+                data.respawn_in_ms >= 0
+                  ? data.respawn_in_ms
+                  : DEFAULT_RESPAWN_MS;
+              const me = { ...s.world.me, status: 'dead', dead_until_ms: Date.now() + respawnMs };
+              const hasLostItems = Object.prototype.hasOwnProperty.call(data, 'lost_items');
+              const detail = hasLostItems ? formatLostItems((data as { lost_items?: unknown }).lost_items) : undefined;
+              const toast: ToastNotice = {
+                id: `death-${now}`,
+                title: 'You died',
+                ...(detail ? { detail } : {}),
+                at: now,
+                expiresAt: now + 5000,
+              };
+              return { ...s, conn, world: { ...s.world, me }, toast };
             }
             default:
               return { ...s, conn };
@@ -608,6 +902,12 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     stopMoves,
     sendAttack,
     sendChat,
+    requestChronicle,
+    openChronicle,
+    closeChronicle,
+    loadMoreChronicle,
+    openRecapFromChronicle,
+    closeRecap,
     setTarget,
     setStage,
     toggleMap,
