@@ -579,6 +579,19 @@ export function getModerationReportByCaseId(
 }
 
 /**
+ * Get a single moderation report by receipt_hash (canonical lookup).
+ */
+export function getModerationReportByReceiptHash(
+  db: Database.Database,
+  receiptHash: string
+): ModerationReportRow | null {
+  const stmt = db.prepare(`
+    SELECT * FROM moderation_reports WHERE receipt_hash = ?
+  `);
+  return (stmt.get(receiptHash) as ModerationReportRow) ?? null;
+}
+
+/**
  * Get reports for a specific target player.
  */
 export function getModerationReportsForTarget(

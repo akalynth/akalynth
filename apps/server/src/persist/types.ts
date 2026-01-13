@@ -271,6 +271,7 @@ export interface PersistenceLayer {
   // Read queries - Moderation (v1)
   getModerationReports(status?: 'open' | 'resolved' | 'all', limit?: number): ModerationReportRow[];
   getModerationReportByCaseId(case_id: string): ModerationReportRow | null;
+  getModerationReportByReceiptHash(receipt_hash: string): ModerationReportRow | null;
 
   // Meta queries (for debugging/recovery)
   getMeta(key: string): string | null;

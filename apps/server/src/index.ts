@@ -3546,6 +3546,7 @@ function processSessionQueue(s: Session, now: number) {
           audit: (receipt) => audit.write(receipt),
           getModerationReports: (status, limit) => persist.getModerationReports(status, limit),
           getModerationReportByCaseId: (caseId) => persist.getModerationReportByCaseId(caseId),
+          getModerationReportByReceiptHash: (rh) => persist.getModerationReportByReceiptHash(rh),
           send: (m) => send(s.ws, m as ServerMessage),
         };
 
@@ -3564,6 +3565,7 @@ function processSessionQueue(s: Session, now: number) {
           audit: (receipt) => audit.write(receipt),
           getModerationReports: (status, limit) => persist.getModerationReports(status, limit),
           getModerationReportByCaseId: (caseId) => persist.getModerationReportByCaseId(caseId),
+          getModerationReportByReceiptHash: (rh) => persist.getModerationReportByReceiptHash(rh),
           send: (m) => send(s.ws, m as ServerMessage),
         };
 

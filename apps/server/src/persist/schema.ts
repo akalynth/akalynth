@@ -7,7 +7,7 @@ import type Database from 'better-sqlite3';
 // Schema Version
 // ============================================================================
 
-export const SCHEMA_VERSION = 7;
+export const SCHEMA_VERSION = 8;
 
 // ============================================================================
 // DDL Statements
@@ -243,6 +243,9 @@ function runMigration(db: Database.Database, version: number): void {
     case 7:
       migrateToV7(db);
       break;
+    case 8:
+      migrateToV8(db);
+      break;
     default:
       throw new Error(`Unknown schema version: ${version}`);
   }
@@ -329,6 +332,15 @@ function migrateToV6(db: Database.Database): void {
 }
 
 function migrateToV7(db: Database.Database): void {
+  // v7: Chronicle dedup index fix (already applied in earlier commit)
+  // No-op if running fresh migration chain
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', '7');
+}
+
+function migrateToV8(db: Database.Database): void {
   // Moderation v1: Add moderation_reports table
   db.exec(DDL_MODERATION_REPORTS);
 
@@ -336,7 +348,7 @@ function migrateToV7(db: Database.Database): void {
   const insertMeta = db.prepare(
     'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
   );
-  insertMeta.run('schema_version', '7');
+  insertMeta.run('schema_version', '8');
 }
 
 // ============================================================================

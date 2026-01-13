@@ -34,6 +34,7 @@ export interface ModerationContext {
     limit?: number
   ) => ModerationReportRow[];
   getModerationReportByCaseId: (caseId: string) => ModerationReportRow | null;
+  getModerationReportByReceiptHash: (receiptHash: string) => ModerationReportRow | null;
   // Send message
   send: (msg: unknown) => void;
 }
@@ -45,6 +46,7 @@ export interface ModerationContext {
 function rowToWire(row: ModerationReportRow): ModerationReport {
   return {
     case_id: row.case_id,
+    receipt_hash: row.receipt_hash,
     reporter_id: row.reporter_id,
     target_id: row.target_id,
     reported_at: row.reported_at,
@@ -53,6 +55,7 @@ function rowToWire(row: ModerationReportRow): ModerationReport {
     resolved_at: row.resolved_at ?? undefined,
     resolution: row.resolution as ModerationResolution | undefined,
     reason: row.reason ?? undefined,
+    resolution_receipt_hash: row.resolution_receipt_hash ?? undefined,
   };
 }
 
@@ -87,44 +90,54 @@ export function handleGetModReports(
 
 /**
  * Handle mod_resolve: Resolve a moderation report (DEBUG only).
+ * Accepts either receipt_hash (preferred) or case_id (legacy) as lookup key.
  */
 export function handleModResolve(
   ctx: ModerationContext,
   msg: ModResolveMessage
 ): void {
+  const lookupKey = msg.receipt_hash ?? msg.case_id ?? '';
+
   // Gate behind DEBUG mode
   if (!ctx.isDebugMode) {
-    ctx.send(ServerMessages.modResolveResult(msg.case_id, false, 'not_authorized'));
+    ctx.send(ServerMessages.modResolveResult(lookupKey, false, 'not_authorized'));
     return;
   }
 
   // Validate resolution type
   const validResolutions: ModerationResolution[] = ['no_action', 'warning', 'temp_mute'];
   if (!validResolutions.includes(msg.resolution)) {
-    ctx.send(ServerMessages.modResolveResult(msg.case_id, false, 'invalid_resolution'));
+    ctx.send(ServerMessages.modResolveResult(lookupKey, false, 'invalid_resolution'));
     return;
   }
 
-  // Check if report exists
-  const report = ctx.getModerationReportByCaseId(msg.case_id);
+  // Lookup report: prefer receipt_hash (canonical), fall back to case_id
+  let report: ModerationReportRow | null = null;
+  if (msg.receipt_hash) {
+    report = ctx.getModerationReportByReceiptHash(msg.receipt_hash);
+  } else if (msg.case_id) {
+    report = ctx.getModerationReportByCaseId(msg.case_id);
+  }
+
   if (!report) {
-    ctx.send(ServerMessages.modResolveResult(msg.case_id, false, 'not_found'));
+    ctx.send(ServerMessages.modResolveResult(lookupKey, false, 'not_found'));
     return;
   }
 
   // Check if already resolved
   if (report.status === 'resolved') {
-    ctx.send(ServerMessages.modResolveResult(msg.case_id, false, 'already_resolved'));
+    ctx.send(ServerMessages.modResolveResult(lookupKey, false, 'already_resolved'));
     return;
   }
 
   // Emit moderation_resolved receipt
-  // This will be materialized by the persistence layer
+  // Include source_receipt_hash for evidence chain
   ctx.audit({
     player_id: ctx.playerId,
     action: MODERATION_RESOLVED_ACTION,
     inputs: {
-      case_id: msg.case_id,
+      case_id: report.case_id,
+      source_receipt_hash: report.receipt_hash,
       target_id: report.target_id,
       reporter_id: report.reporter_id,
       resolution: msg.resolution,
@@ -133,6 +146,6 @@ export function handleModResolve(
     result: 'ok',
   });
 
-  // Send success result
-  ctx.send(ServerMessages.modResolveResult(msg.case_id, true));
+  // Send success result (use case_id for backwards compatibility)
+  ctx.send(ServerMessages.modResolveResult(report.case_id, true));
 }

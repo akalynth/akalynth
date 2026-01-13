@@ -212,9 +212,11 @@ export interface GetModReportsMessage extends BaseMessage {
 }
 
 // Client → Server: Resolve a moderation report (DEBUG only)
+// Accept either receipt_hash (preferred) or case_id (legacy) as lookup key
 export interface ModResolveMessage extends BaseMessage {
   type: 'mod_resolve';
-  case_id: string;
+  case_id?: string;          // Legacy lookup key
+  receipt_hash?: string;     // Canonical lookup key (preferred)
   resolution: ModerationResolution;
   reason?: string;
 }
@@ -680,6 +682,7 @@ export interface SkillResultMessage extends BaseMessage {
 // Report shape for snapshots
 export interface ModerationReport {
   case_id: string;
+  receipt_hash: string;     // Canonical identifier (player_reported receipt)
   reporter_id: string;
   target_id: string;
   reported_at: string;      // ISO8601
@@ -688,6 +691,7 @@ export interface ModerationReport {
   resolved_at?: string;     // ISO8601
   resolution?: ModerationResolution;
   reason?: string;
+  resolution_receipt_hash?: string;  // moderation_resolved receipt (if resolved)
 }
 
 // Server → Client: List of moderation reports
@@ -1321,13 +1325,16 @@ export function parseClientMessage(data: unknown): ClientMessage | null {
     }
 
     case 'mod_resolve': {
-      if (typeof msg.case_id !== 'string') return null;
+      const case_id = typeof msg.case_id === 'string' ? msg.case_id : undefined;
+      const receipt_hash = typeof msg.receipt_hash === 'string' ? msg.receipt_hash : undefined;
+      // Require at least one lookup key
+      if (!case_id && !receipt_hash) return null;
       const resolution = msg.resolution;
       if (resolution !== 'no_action' && resolution !== 'warning' && resolution !== 'temp_mute') {
         return null;
       }
       const reason = typeof msg.reason === 'string' ? msg.reason : undefined;
-      return { type: 'mod_resolve', case_id: msg.case_id, resolution, reason };
+      return { type: 'mod_resolve', case_id, receipt_hash, resolution, reason };
     }
 
     default:

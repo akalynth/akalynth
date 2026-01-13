@@ -185,6 +185,10 @@ export function createPersistenceLayer(
       return queries.getModerationReportByCaseId(db, caseId);
     },
 
+    getModerationReportByReceiptHash(receiptHash: string): ModerationReportRow | null {
+      return queries.getModerationReportByReceiptHash(db, receiptHash);
+    },
+
     // Meta queries
     getMeta(key: string): string | null {
       return queries.getMeta(db, key);
