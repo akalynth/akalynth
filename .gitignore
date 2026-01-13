@@ -40,3 +40,7 @@ rulebook/compiled/RULEBOOK.manifest.json
 rulebook/compiled/RULEBOOK_ROOT.txt
 rulebook/compiled/GENESIS.json
 rulebook/compiled/GENESIS.sig
+
+# Spine Lock forbidden legacy roots
+/server/
+/client/
