@@ -187,6 +187,17 @@ export interface TalkToNpcMessage extends BaseMessage {
   npc_id: string;
 }
 
+// ============================================================================
+// Skills v0 (Utility/Admin)
+// ============================================================================
+
+// Client → Server: Use a skill
+export interface UseSkillMessage extends BaseMessage {
+  type: 'use_skill';
+  skill_id: string;
+  target_id?: string;
+}
+
 export type ClientMessage =
   | ConnectMessage
   | LoginMessage
@@ -213,7 +224,8 @@ export type ClientMessage =
   | GrantGoldMessage
   | StartWorkContractMessage
   | WorkTickMessage
-  | TalkToNpcMessage;
+  | TalkToNpcMessage
+  | UseSkillMessage;
 
 // ============================================================================
 // Server → Client Messages
@@ -618,6 +630,26 @@ export interface NpcDialogueErrorMessage extends BaseMessage {
   error: NpcDialogueError;
 }
 
+// ============================================================================
+// Skills v0 (Utility/Admin) - Server Responses
+// ============================================================================
+
+export type SkillRejectionReason =
+  | 'cooldown'
+  | 'invalid_skill'
+  | 'invalid_target'
+  | 'target_not_found'
+  | 'debug_only';
+
+export interface SkillResultMessage extends BaseMessage {
+  type: 'skill_result';
+  skill_id: string;
+  success: boolean;
+  reason?: SkillRejectionReason;
+  cooldown_until_ms?: number;
+  payload?: Record<string, unknown>;
+}
+
 export type ServerMessage =
   | WelcomeMessage
   | LoginAckMessage
@@ -651,7 +683,8 @@ export type ServerMessage =
   | WorkProgressMessage
   | WorkContractResultMessage
   | NpcDialogueMessage
-  | NpcDialogueErrorMessage;
+  | NpcDialogueErrorMessage
+  | SkillResultMessage;
 
 // ============================================================================
 // Message Factories
@@ -998,6 +1031,22 @@ export const ServerMessages = {
     npc_id,
     error,
   }),
+
+  // Skills v0
+  skillResult: (
+    skill_id: string,
+    success: boolean,
+    opts?: {
+      reason?: SkillRejectionReason;
+      cooldown_until_ms?: number;
+      payload?: Record<string, unknown>;
+    }
+  ): SkillResultMessage => ({
+    type: 'skill_result',
+    skill_id,
+    success,
+    ...opts,
+  }),
 };
 
 // ============================================================================
@@ -1172,6 +1221,13 @@ export function parseClientMessage(data: unknown): ClientMessage | null {
     case 'talk_to_npc': {
       if (typeof msg.npc_id !== 'string') return null;
       return { type: 'talk_to_npc', npc_id: msg.npc_id };
+    }
+
+    // Skills v0
+    case 'use_skill': {
+      if (typeof msg.skill_id !== 'string') return null;
+      const target_id = typeof msg.target_id === 'string' ? msg.target_id : undefined;
+      return { type: 'use_skill', skill_id: msg.skill_id, target_id };
     }
 
     default:
