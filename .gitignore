@@ -40,3 +40,9 @@ rulebook/compiled/RULEBOOK.manifest.json
 rulebook/compiled/RULEBOOK_ROOT.txt
 rulebook/compiled/GENESIS.json
 rulebook/compiled/GENESIS.sig
+
+# Core dumps / crash artifacts
+apps/server/core.*
+
+# Local IDE/agent state
+.continue/
