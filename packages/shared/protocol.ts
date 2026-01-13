@@ -198,6 +198,27 @@ export interface UseSkillMessage extends BaseMessage {
   target_id?: string;
 }
 
+// ============================================================================
+// Moderation v1 (Admin-Only)
+// ============================================================================
+
+export type ModerationResolution = 'no_action' | 'warning' | 'temp_mute';
+
+// Client → Server: List moderation reports (DEBUG only)
+export interface GetModReportsMessage extends BaseMessage {
+  type: 'get_mod_reports';
+  status?: 'open' | 'resolved' | 'all';
+  limit?: number;
+}
+
+// Client → Server: Resolve a moderation report (DEBUG only)
+export interface ModResolveMessage extends BaseMessage {
+  type: 'mod_resolve';
+  case_id: string;
+  resolution: ModerationResolution;
+  reason?: string;
+}
+
 export type ClientMessage =
   | ConnectMessage
   | LoginMessage
@@ -225,7 +246,9 @@ export type ClientMessage =
   | StartWorkContractMessage
   | WorkTickMessage
   | TalkToNpcMessage
-  | UseSkillMessage;
+  | UseSkillMessage
+  | GetModReportsMessage
+  | ModResolveMessage;
 
 // ============================================================================
 // Server → Client Messages
@@ -650,6 +673,40 @@ export interface SkillResultMessage extends BaseMessage {
   payload?: Record<string, unknown>;
 }
 
+// ============================================================================
+// Moderation v1 (Admin-Only) - Server Responses
+// ============================================================================
+
+// Report shape for snapshots
+export interface ModerationReport {
+  case_id: string;
+  reporter_id: string;
+  target_id: string;
+  reported_at: string;      // ISO8601
+  status: 'open' | 'resolved';
+  resolved_by?: string;
+  resolved_at?: string;     // ISO8601
+  resolution?: ModerationResolution;
+  reason?: string;
+}
+
+// Server → Client: List of moderation reports
+export interface ModReportsSnapshotMessage extends BaseMessage {
+  type: 'mod_reports_snapshot';
+  reports: ModerationReport[];
+  has_more: boolean;
+}
+
+export type ModResolveError = 'not_found' | 'already_resolved' | 'invalid_resolution' | 'not_authorized';
+
+// Server → Client: Resolution result
+export interface ModResolveResultMessage extends BaseMessage {
+  type: 'mod_resolve_result';
+  success: boolean;
+  case_id: string;
+  error?: ModResolveError;
+}
+
 export type ServerMessage =
   | WelcomeMessage
   | LoginAckMessage
@@ -684,7 +741,9 @@ export type ServerMessage =
   | WorkContractResultMessage
   | NpcDialogueMessage
   | NpcDialogueErrorMessage
-  | SkillResultMessage;
+  | SkillResultMessage
+  | ModReportsSnapshotMessage
+  | ModResolveResultMessage;
 
 // ============================================================================
 // Message Factories
@@ -1047,6 +1106,27 @@ export const ServerMessages = {
     success,
     ...opts,
   }),
+
+  // Moderation v1
+  modReportsSnapshot: (
+    reports: ModerationReport[],
+    has_more: boolean
+  ): ModReportsSnapshotMessage => ({
+    type: 'mod_reports_snapshot',
+    reports,
+    has_more,
+  }),
+
+  modResolveResult: (
+    case_id: string,
+    success: boolean,
+    error?: ModResolveError
+  ): ModResolveResultMessage => ({
+    type: 'mod_resolve_result',
+    success,
+    case_id,
+    error,
+  }),
 };
 
 // ============================================================================
@@ -1228,6 +1308,26 @@ export function parseClientMessage(data: unknown): ClientMessage | null {
       if (typeof msg.skill_id !== 'string') return null;
       const target_id = typeof msg.target_id === 'string' ? msg.target_id : undefined;
       return { type: 'use_skill', skill_id: msg.skill_id, target_id };
+    }
+
+    // Moderation v1
+    case 'get_mod_reports': {
+      const status = msg.status;
+      if (status !== undefined && status !== 'open' && status !== 'resolved' && status !== 'all') {
+        return null;
+      }
+      const limit = typeof msg.limit === 'number' ? msg.limit : undefined;
+      return { type: 'get_mod_reports', status, limit };
+    }
+
+    case 'mod_resolve': {
+      if (typeof msg.case_id !== 'string') return null;
+      const resolution = msg.resolution;
+      if (resolution !== 'no_action' && resolution !== 'warning' && resolution !== 'temp_mute') {
+        return null;
+      }
+      const reason = typeof msg.reason === 'string' ? msg.reason : undefined;
+      return { type: 'mod_resolve', case_id: msg.case_id, resolution, reason };
     }
 
     default:

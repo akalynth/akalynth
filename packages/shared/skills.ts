@@ -83,3 +83,6 @@ export const SKILL_USE_INTENT_ACTION = 'skill_use_intent';
 export const SKILL_RESOLVED_ACTION = 'skill_resolved';
 export const SKILL_REJECTED_ACTION = 'skill_rejected';
 export const PLAYER_REPORTED_ACTION = 'player_reported';
+
+// Moderation v1: Resolution receipt action
+export const MODERATION_RESOLVED_ACTION = 'moderation_resolved';
