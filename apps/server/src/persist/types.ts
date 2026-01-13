@@ -268,6 +268,10 @@ export interface PersistenceLayer {
   getDeathByReceiptHash(receipt_hash: string): DeathRow | null;
   getDeathBeforeTimestamp(player_id: string, before_or_at: string): DeathRow | null;
 
+  // Read queries - Moderation (v1)
+  getModerationReports(status?: 'open' | 'resolved' | 'all', limit?: number): ModerationReportRow[];
+  getModerationReportByCaseId(case_id: string): ModerationReportRow | null;
+
   // Meta queries (for debugging/recovery)
   getMeta(key: string): string | null;
   getSchemaVersion(): number;

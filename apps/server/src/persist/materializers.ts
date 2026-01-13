@@ -32,6 +32,10 @@ export function generateItemId(receiptHash: string): string {
 
 type Handler = (db: Database.Database, receipt: AuditReceipt, receiptHash: string) => void;
 
+// Moderation action constants (imported separately to avoid circular deps)
+const MODERATION_PLAYER_REPORTED = 'player_reported';
+const MODERATION_RESOLVED = 'moderation_resolved';
+
 const HANDLERS: Record<string, Handler> = {
   // Phase 1: Core
   [RECEIPT_ACTIONS.PLAYER_CREATED]: handlePlayerCreated,
@@ -51,6 +55,9 @@ const HANDLERS: Record<string, Handler> = {
   [RECEIPT_ACTIONS.LEGENDARY_HEAT_CHANGED]: handleLegendaryHeatChanged,
   // Phase 3.2: Protected slots
   [RECEIPT_ACTIONS.INVENTORY_SLOT_CHANGED]: handleInventorySlotChanged,
+  // Moderation v1
+  [MODERATION_PLAYER_REPORTED]: handlePlayerReported,
+  [MODERATION_RESOLVED]: handleModerationResolved,
 };
 
 // ============================================================================
@@ -509,6 +516,66 @@ function handleInventorySlotChanged(
       WHERE owner_player_id = ? AND item_id = ?
     `).run(receiptHash, receipt.timestamp, playerId, itemId);
   }
+}
+
+// ============================================================================
+// Moderation Handlers (v1)
+// ============================================================================
+
+/**
+ * Handle player_reported: Create open moderation report.
+ * Idempotent via UNIQUE receipt_hash constraint.
+ */
+function handlePlayerReported(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const inputs = receipt.inputs ?? {};
+  const caseId = inputs.case_id as string;
+  const reporterId = inputs.reporter_id as string;
+  const targetId = inputs.target_id as string;
+  const timestamp = inputs.timestamp as string ?? receipt.timestamp;
+
+  if (!caseId || !reporterId || !targetId) return;
+
+  // INSERT OR IGNORE (idempotent via UNIQUE receipt_hash)
+  db.prepare(`
+    INSERT OR IGNORE INTO moderation_reports
+    (case_id, reporter_id, target_id, reported_at, receipt_hash, status)
+    VALUES (?, ?, ?, ?, ?, 'open')
+  `).run(caseId, reporterId, targetId, timestamp, receiptHash);
+}
+
+/**
+ * Handle moderation_resolved: Update report with resolution.
+ * Only updates if status is 'open' (prevents re-resolution on replay).
+ */
+function handleModerationResolved(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const inputs = receipt.inputs ?? {};
+  const caseId = inputs.case_id as string;
+  const resolution = inputs.resolution as string;
+  const reason = (inputs.reason as string) ?? null;
+  const resolvedBy = receipt.player_id;
+  const resolvedAt = receipt.timestamp;
+
+  if (!caseId || !resolution) return;
+
+  // Only update if status is still 'open' (idempotent)
+  db.prepare(`
+    UPDATE moderation_reports
+    SET status = 'resolved',
+        resolved_by = ?,
+        resolved_at = ?,
+        resolution = ?,
+        reason = ?,
+        resolution_receipt_hash = ?
+    WHERE case_id = ? AND status = 'open'
+  `).run(resolvedBy, resolvedAt, resolution, reason, receiptHash, caseId);
 }
 
 // ============================================================================
