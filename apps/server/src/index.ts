@@ -1806,7 +1806,8 @@ function processSessionQueue(s: Session, now: number) {
         resetSessionState(s.player!.id);
 
         // Mint starter kit for Rookguard players (Phase 2)
-        if (s.currentMap === 'Rookguard') {
+        // Skip in DEBUG mode to avoid FK constraint issues during skills testing
+        if (s.currentMap === 'Rookguard' && process.env.DEBUG !== '1') {
           mintStarterKit(s.player!.id);
         }
 
