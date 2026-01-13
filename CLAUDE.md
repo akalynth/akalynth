@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
@@ -20,11 +20,26 @@ npm run dev          # tsx watch mode
 npm run build        # tsc compile
 npm start            # run compiled dist/index.js
 
+# Debug client (React/Vite)
+cd apps/debug-client && npm install && npm run dev
+
+# Verification commands (run from apps/server/)
+npm run verify              # Full guarantee verification
+npm run verify:verbose      # Verbose output
+npm run verify:quick        # Skip build step
+npm run verify:heat         # Heat system verification
+npm run verify:protected    # Protected slots verification
+npm run verify:chronicle    # Chronicle verification
+npm run verify:chronicle-chain  # Chronicle chain verification
+
 # Manual WebSocket test
 wscat -c ws://localhost:3000
 
 # Full MVP verification (runs all scenarios)
 ./scripts/verify_mvp.sh
+
+# Protocol sync check
+./scripts/verify_protocol_sync.sh
 ```
 
 ## Architecture
@@ -55,6 +70,17 @@ wscat -c ws://localhost:3000
 - `protocol.ts` - All WebSocket message types (client→server and server→client)
 - `types.ts` - Domain types (Player, MapData, TileCode, Signal, etc.)
 - `http.ts` - HTTP API types (MapName, etc.)
+- `maps/` - Map definitions (rookguard.json, azura.json)
+
+### Apps
+- `apps/server/` - Authoritative MMO server (TypeScript, WebSocket)
+- `apps/debug-client/` - Debug web client (React/Vite)
+- `apps/android/` - Android client (placeholder)
+
+### Rulebook (`rulebook/`)
+- DSL-based game rules and invariants
+- `compiled/` - Compiled rulebook output
+- `invariants/` - Game invariant definitions
 
 ### Data Flow
 ```
@@ -122,3 +148,18 @@ Key flags for development/testing:
 4. login → enter_world → move_intent works
 5. JSONL receipts written
 6. Tem challenge triggers on suspicious movement
+
+## Claude Code Slash Commands
+Available via `.claude/commands/`:
+- `/verify` - Run MVP verification checklist
+- `/atomic` - Enforce atomic commit discipline
+- `/protocol` - Check protocol.ts matches PROTOCOL.md
+- `/bootstrap` - Run Linux bootstrap script
+- `/anticheat` - Add new anti-cheat signal
+
+## CI Pipeline
+GitHub Actions (`.github/workflows/ci.yml`) runs:
+1. API-first invariant guard
+2. Protocol docs sync verification
+3. TypeScript build
+4. MVP verification suite
