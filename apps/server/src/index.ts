@@ -1712,6 +1712,14 @@ function processSessionQueue(s: Session, now: number) {
           guest_token = `gt_${randomUUID()}`;
           name = `Guest_${player_id.slice(-4)}`;
 
+          // Write player creation receipt first (materializes player in DB)
+          audit.write({
+            player_id,
+            action: 'session_guest_minted',
+            inputs: { name },
+            result: 'ok',
+          });
+
           audit.write({
             player_id,
             action: 'login',
