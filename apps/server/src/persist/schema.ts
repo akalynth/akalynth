@@ -158,10 +158,25 @@ export function initSchema(db: Database.Database): void {
   // Check current schema version
   const currentVersion = getSchemaVersion(db);
 
+  if (currentVersion > SCHEMA_VERSION) {
+    throw new Error(
+      `Schema version too new: db=${currentVersion} code=${SCHEMA_VERSION}. ` +
+        'Upgrade server or rebuild DB.'
+    );
+  }
+
   if (currentVersion < SCHEMA_VERSION) {
     // Run migrations
     migrateSchema(db, currentVersion, SCHEMA_VERSION);
   }
+
+  // Patch A: Force version alignment after all migrations
+  // Ensures _meta.schema_version always equals SCHEMA_VERSION, even if
+  // structural changes were applied earlier (e.g., indexes created in V5 DDL).
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', String(SCHEMA_VERSION));
 }
 
 function getSchemaVersion(db: Database.Database): number {

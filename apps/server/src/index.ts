@@ -7,7 +7,7 @@ import type { Duplex } from 'node:stream';
 import { WebSocketServer, WebSocket } from 'ws';
 import { createHash, randomUUID } from 'node:crypto';
 
-import type { ClientMessage, ServerMessage } from '../../../packages/shared/protocol.js';
+import type { ClientMessage, LostItemSummary, ServerMessage } from '../../../packages/shared/protocol.js';
 import { ServerMessages, parseClientMessage } from '../../../packages/shared/protocol.js';
 import type { Player, TutorialProgress } from '../../../packages/shared/types.js';
 import {
@@ -47,7 +47,7 @@ import { handleHttp } from './api/http.js';
 import { createAuditLogger } from './audit/logger.js';
 import { createReceiptsReader } from './audit/reader.js';
 import { createPersistenceLayer, computeReceiptHash, generateItemId } from './persist/index.js';
-import type { InventoryItemRow, WorldObjectRow } from './persist/index.js';
+import type { InventoryItemRow, PersistenceLayer, WorldObjectRow } from './persist/index.js';
 import { publicActorForReceipt, toPublicReceipt } from './audit/public_receipts.js';
 import { createAntiCheatRuntime, onChat, onMoveApplied, onMoveIntent } from './anticheat/detector.js';
 import { applyThrottle, checkTemTimeout, handleTemResponse, issueTemChallenge, isThrottled } from './anticheat/tem.js';
@@ -831,6 +831,63 @@ function ledgerHesitationDelayMs(playerId: string, deathTs: string): number {
   const parsed = parseInt(prefix, 16);
   if (!Number.isFinite(parsed)) return 300;
   return (parsed % 400) + 300;
+}
+
+function summarizeLostItems(itemIds: string[], persist: PersistenceLayer): LostItemSummary[] {
+  if (itemIds.length === 0) return [];
+  const MAX_SUMMARY_ITEMS = 64;
+  const cappedItemIds = itemIds.length > MAX_SUMMARY_ITEMS ? itemIds.slice(0, MAX_SUMMARY_ITEMS) : itemIds;
+  const truncatedCount = itemIds.length - cappedItemIds.length;
+  const summary = new Map<string, { kind: string; rarity?: string; qty: number }>();
+
+  for (const itemId of cappedItemIds) {
+    const item = persist.getItem(itemId);
+    const kind = item?.item_type ?? 'item';
+    let rarity: string | undefined;
+
+    if (item?.meta_json) {
+      try {
+        const meta = JSON.parse(item.meta_json) as Record<string, unknown>;
+        if (meta.legendary === true) {
+          rarity = 'legendary';
+        }
+      } catch {
+        // Ignore malformed meta_json.
+      }
+    }
+
+    const key = `${kind}::${rarity ?? ''}`;
+    const existing = summary.get(key);
+    if (existing) {
+      existing.qty += 1;
+    } else {
+      summary.set(key, { kind, rarity, qty: 1 });
+    }
+  }
+
+  if (truncatedCount > 0) {
+    const key = 'item::';
+    const existing = summary.get(key);
+    if (existing) {
+      existing.qty += truncatedCount;
+    } else {
+      summary.set(key, { kind: 'item', qty: truncatedCount });
+    }
+  }
+
+  return Array.from(summary.values())
+    .sort((a, b) => {
+      const kindCmp = a.kind.localeCompare(b.kind);
+      if (kindCmp !== 0) return kindCmp;
+      const rarityCmp = (a.rarity ?? '').localeCompare(b.rarity ?? '');
+      if (rarityCmp !== 0) return rarityCmp;
+      return b.qty - a.qty;
+    })
+    .map(({ kind, rarity, qty }) => ({
+      kind,
+      ...(rarity ? { rarity } : {}),
+      ...(qty > 1 ? { qty } : {}),
+    }));
 }
 
 function recordLedgerDeath(playerId: string, map: MapName, deathTs: string) {
@@ -3199,13 +3256,15 @@ function processSessionQueue(s: Session, now: number) {
           // Send death notice to defender
           if (defenderSession) {
             const worldState = worlds[result.map];
+            const lostItems = summarizeLostItems(result.droppedItemIds, persist);
             send(
               defenderSession.ws,
               ServerMessages.deathNotice(
                 DEATH_RESPAWN_DELAY_MS,
                 result.map,
                 { x: worldState.map.spawn.x, y: worldState.map.spawn.y },
-                'Killed by another player'
+                'Killed by another player',
+                { lost_items: lostItems }
               )
             );
 
