@@ -98,6 +98,7 @@ import {
   tryResolveQuorum,
   getUnresolvedExpiredRequests,
 } from './world/witness.js';
+import { handleUseSkill, type SkillContext } from './skills/index.js';
 import type { Element } from '../../../packages/shared/types.js';
 import {
   RUNESTONE_CAST_ACTION,
@@ -471,6 +472,8 @@ type Session = {
   lastRunestoneFaces: Element[];
   runestoneCooldownWindowStartMs: number | null;
   runestoneCooldownCount: number;
+  // Skills v0
+  skillCooldowns: Map<string, number>;
 };
 
 const sessions = new Map<string, Session>();
@@ -1520,6 +1523,7 @@ wss.on('connection', (ws) => {
     lastRunestoneFaces: [],
     runestoneCooldownWindowStartMs: null,
     runestoneCooldownCount: 0,
+    skillCooldowns: new Map(),
   };
 
   sessions.set(connId, s);
@@ -1802,7 +1806,8 @@ function processSessionQueue(s: Session, now: number) {
         resetSessionState(s.player!.id);
 
         // Mint starter kit for Rookguard players (Phase 2)
-        if (s.currentMap === 'Rookguard') {
+        // Skip in DEBUG mode to avoid FK constraint issues during skills testing
+        if (s.currentMap === 'Rookguard' && process.env.DEBUG !== '1') {
           mintStarterKit(s.player!.id);
         }
 
@@ -3503,6 +3508,28 @@ function processSessionQueue(s: Session, now: number) {
         const line = buildNpcDialogue(npc, tier);
 
         send(s.ws, ServerMessages.npcDialogue(msg.npc_id, npc.place_id, tier, line));
+        break;
+      }
+
+      // Skills v0
+      case 'use_skill': {
+        if (!requireAuth(s)) break;
+        if (!s.player) break;
+
+        const skillCtx: SkillContext = {
+          playerId: s.player.id,
+          playerName: s.player.name,
+          ws: s.ws,
+          antiState: s.anti.state,
+          skillCooldowns: s.skillCooldowns,
+          audit: (receipt) => audit.write(receipt),
+          findPlayerOnline: findPlayerByIdOnline,
+          issueTem: issueTemChallenge,
+          getChronicle: (pid, limit) => persist.getChronicleForPlayer(pid, limit),
+          send: (m) => send(s.ws, m as ServerMessage),
+        };
+
+        handleUseSkill(skillCtx, msg);
         break;
       }
     }
