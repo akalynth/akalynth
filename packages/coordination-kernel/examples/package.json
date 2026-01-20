@@ -1,0 +1,24 @@
+{
+  "name": "@akalynth/coordination-kernel-examples",
+  "version": "0.1.0",
+  "description": "Examples demonstrating coordination kernel in compliance domains",
+  "type": "module",
+  "scripts": {
+    "darp-demo": "tsx compliance.ts",
+    "darp-verify": "tsx darp-verify.ts"
+  },
+  "bin": {
+    "darp-verify": "./darp-verify.ts"
+  },
+  "dependencies": {
+    "@akalynth/coordination-kernel": "file:../",
+    "tsx": "^4.0.0"
+  },
+  "keywords": [
+    "compliance",
+    "darp",
+    "coordination",
+    "post-bureaucratic",
+    "audit"
+  ]
+}

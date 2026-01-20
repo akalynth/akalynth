@@ -1,0 +1,37 @@
+{
+  "name": "@akalynth/coordination-kernel",
+  "version": "0.1.0",
+  "description": "Domain-agnostic coordination primitives extracted from Akalynth",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "dev": "tsc --watch"
+  },
+  "keywords": [
+    "coordination",
+    "receipts",
+    "capabilities",
+    "compliance",
+    "audit",
+    "post-bureaucratic"
+  ],
+  "dependencies": {
+    "fast-json-stable-stringify": "^2.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "jest": "^29.0.0",
+    "@types/jest": "^29.0.0"
+  },
+  "files": [
+    "dist/**/*",
+    "examples/**/*"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "type": "module"
+}
