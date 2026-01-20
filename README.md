@@ -43,7 +43,7 @@ npm install
 4) Runtime/API edits: `./scripts/verify_mvp.sh`
 
 5) Focused persistence/receipt checks (from apps/server):
-- `npm run smoke:replay:out-of-order`
+- `npm run verify:receipt-hygiene`
 - `npx tsx ../../scripts/heat_out_of_order_smoke.ts`
 - `npx tsx ../../scripts/heat_pr2_out_of_order_smoke.ts`
 
