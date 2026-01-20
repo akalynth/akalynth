@@ -55,6 +55,7 @@ akalynth/
 
 ## Documentation
 
+- [V1 Scope Fence](./V1_SCOPE.md) - What v1 includes and explicitly defers
 - [Architecture](./ARCHITECTURE.md) - Server loop, world state, anti-cheat pipeline
 - [Protocol](./PROTOCOL.md) - Message types and examples
 - [Anti-Cheat](./ANTICHEAT.md) - Detection signals, Tem challenge, enforcement

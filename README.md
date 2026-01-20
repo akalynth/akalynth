@@ -51,6 +51,7 @@ npm install
 
 Start here: `docs/README.md`
 
+- `docs/V1_SCOPE.md`
 - `docs/ARCHITECTURE.md`
 - `docs/PROTOCOL.md`
 - `docs/ANTICHEAT.md`
