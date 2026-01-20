@@ -2,12 +2,13 @@
 
 > **Status:** Reference
 
-This package implements an AI tool execution governance surface that is constrained by proof-native invariants.
+This package implements an AI tool execution governance surface intended to align with proof-native invariants.
 
-Canonical invariants live in:
+Canonical invariants for v1 live in:
 
-- `packages/GOVERNANCE_INVARIANTS.md`
-- `packages/coordination-kernel/CONSTITUTIONAL_API_FREEZE.md`
+- `docs/GOVERNANCE_INVARIANTS.md`
+
+Note: `packages/coordination-kernel/CONSTITUTIONAL_API_FREEZE.md` is a non-binding draft and not v1 law.
 
 ## Principles → Code Surface
 

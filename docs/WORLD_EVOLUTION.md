@@ -1,7 +1,7 @@
 # World Evolution — Record Change, Don’t Overwrite Truth
 
-> **Status:** Doctrine (constitutional surface).  
-> **Change control:** Changes require an explicit amendment.  
+> **Status:** Doctrine (future-facing; non-binding for v1).  
+> **Change control:** Amendments apply only once this doctrine is activated.  
 > **Governs:** epoching, replay semantics, “no overwrite truth,” founder-absence constraints.  
 > **Scope:** Anything that can affect outcomes must be versioned and provable.
 
@@ -29,7 +29,7 @@ What must never change:
 - Auditability
 - Non-reversibility of real events
 
-These are constitutional.
+These are intended constitutional targets (not yet activated for v1).
 
 What must change:
 
@@ -207,28 +207,22 @@ That’s not just a game. That’s a civilization artifact.
 
 ---
 
-## 🚢 Ship Decision: CONFIRMED
+## 🚧 v1 Scope Note (Non-binding)
 
 What “ship it” means for this project:
 
 It does not mean “feature complete.”  
 It means: The laws are live. The world can safely begin.
 
-You already crossed the real threshold.
+This document is future-facing. It should not be used to justify a v1 tag on its own.
 
 ---
 
 ## Final Launch Cut (Minimal, Correct, Durable)
 
-### 1. Freeze the constitutions (now)
+### 1. Freeze the constitutions (future step)
 
-- Governance Constitution ✅
-- Monetization Constitution ✅
-- Receipt schemas ✅
-- Verifiers wired into CI ✅
-
-Action: Tag the repo: `v1.0-world-law`  
-No edits without amendment from here on.
+When v1 scope is finalized, ensure constitutions and verifiers are aligned before tagging.
 
 ---
 

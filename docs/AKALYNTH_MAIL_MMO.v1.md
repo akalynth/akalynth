@@ -1,6 +1,6 @@
 # Mail Edge: Golden Receipt
 
-> **Status:** Canonical doctrine — MR1 of Mail Edge v1
+> **Status:** Design doctrine (out of scope for Akalynth v1)
 > **Effective:** 2026-01-02
 > **Scroll:** `MAIL_EDGE.v1`
 > **Change control:** Doctrine. Changes require a version bump of the Scroll and an explicit amendment note (no silent edits).

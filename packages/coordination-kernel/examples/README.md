@@ -1,5 +1,7 @@
 # DARP Compliance Demo
 
+> **Status:** Demo-only. This is a fictional scenario and is not part of Akalynth v1 enforcement.
+
 **Digital Asset Reporting Protocol** - Demonstration of post-bureaucratic compliance using the coordination kernel.
 
 ## The Demonstration

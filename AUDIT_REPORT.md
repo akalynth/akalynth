@@ -1,5 +1,7 @@
 # Akalynth Repo Audit Report — v0 Client Spine + Protocol Parity
 
+> **Status:** Historical snapshot (non-authoritative for v1).
+
 Date (UTC): 2026-01-11T12:24:47Z
 
 ## Phase A — Baseline Inventory

@@ -2,6 +2,8 @@
 
 > Make the ledger legible to the human who lives inside it.
 
+**Status (v1):** Deferred. This document is a future UI contract and is not implemented in v1.
+
 ---
 
 ## Charter
@@ -113,9 +115,9 @@ When that sentence is true, Phase 6 is complete.
 
 ---
 
-## Fixtures (Ready)
+## Fixtures (Planned)
 
-Located in `server/fixtures/`:
+Located in `apps/server/fixtures/` (not yet committed for v1):
 
 | File | Purpose |
 |------|---------|

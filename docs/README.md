@@ -48,7 +48,9 @@ akalynth/
   packages/shared/ # Shared schemas/types
   docs/            # Specifications
   scripts/         # Bootstrap & dev scripts (Linux)
-  ops/             # Deploy notes, systemd units
+  tools/           # Tooling and validators
+  infra/           # Deploy notes, CI/CD, infrastructure
+  data/            # Map/data sources
 ```
 
 ## Documentation

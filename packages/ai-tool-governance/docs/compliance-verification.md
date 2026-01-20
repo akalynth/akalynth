@@ -4,6 +4,8 @@
 
 Verification is intended to be run without trust in the operator: the receipt chain is the evidence surface.
 
+**v1 note:** This tooling is not part of the Akalynth v1 enforcement surface.
+
 CLI:
 
 - `packages/ai-tool-governance/bin/ai-gov-verify`

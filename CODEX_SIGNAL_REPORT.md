@@ -1,5 +1,7 @@
 # CODEX SIGNAL REPORT — "Where Are We?"
 
+> **Status:** Historical diagnostic snapshot (non-authoritative for v1).
+
 **Date**: 2026-01-12T20:06:00Z  
 **Repo**: VaultSovereign/akalynth  
 **Branch**: copilot/comfortable-partridge  

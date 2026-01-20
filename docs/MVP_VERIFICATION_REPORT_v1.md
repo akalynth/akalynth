@@ -1,7 +1,7 @@
 # MVP Verification Report v1
 
 **Project:** Akalynth Proof-Native MMO
-**Status:** VERIFIED (MVP)
+**Status:** Historical verification (MVP)
 **Date:** 2026-01-13
 
 ---
@@ -66,7 +66,7 @@ connect
 
 **Result:** PASS
 
-* Receipts written to: `apps/server/audit/receipts.jsonl`
+* Receipts written to: `audit/receipts.jsonl`
 * 13+ receipts verified
 * Append-only, ordered, human-readable
 
@@ -162,7 +162,7 @@ This constitutes a valid, defensible MVP suitable for further hardening, externa
 
 ## SEAL
 
-This report is cryptographically anchored to the following verification state:
+This report records a historical verification state (not a cryptographic anchor).
 
 | Field | Value |
 |-------|-------|
@@ -176,8 +176,8 @@ This report is cryptographically anchored to the following verification state:
 
 ```bash
 # Reproduce verification
-cd apps/server
 rm -f audit/receipts.jsonl data/akalynth.db*
+cd apps/server
 DEBUG=1 ALLOW_INSECURE_LOCAL=1 npm run dev &
 sleep 4
 
@@ -210,7 +210,7 @@ To verify this seal:
 3. Confirm `tem_challenge_issued` receipt exists
 4. Compare receipt hash (note: exact hash depends on timestamps/UUIDs)
 
-**Seal Status:** LOCKED
+**Seal Status:** HISTORICAL (not cryptographically enforced)
 
 ---
 

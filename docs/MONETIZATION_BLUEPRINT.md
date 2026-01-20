@@ -1,5 +1,7 @@
 # Monetization Blueprint — What Money May Purchase (and What It Never Can)
 
+> **Status:** Future design intent (non-binding for v1).
+
 > Alright. I’ll design this as a future-proof blueprint, not a commitment. Think of it as a sealed scroll you can open later.
 
 See also: `docs/MONETIZATION_CONSTITUTION.md` (formal policy language).

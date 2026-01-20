@@ -2,6 +2,8 @@
 
 Client handoff contract for Chronicle Evidence clickthrough UI.
 
+**Status (v1):** Deferred. This is a future UI contract and not implemented in v1.
+
 ---
 
 ## 1. Scope + Guarantees

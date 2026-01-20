@@ -29,7 +29,7 @@ All tutorial tiles are walkable so the authoritative server can detect them as p
 3. **Tem Demo** – stepping on `TutorialTem` issues the friendly Tem challenge (“Hi! 👋 type AZURA…”). Passing it marks the Tem step.  
 4. **Gate Unlock** – once the previous steps are true, stepping on `GateToAzura` flips `tutorial_complete = true`, emits receipts, and the server transfers the player to Azura’s spawn.
 
-Every event is logged to `apps/server/audit/receipts.jsonl` (`tutorial_step_complete`, `tem_challenge_issued`, `tutorial_completed`, `gate_unlock`, etc.).
+Every event is logged to `audit/receipts.jsonl` (`tutorial_step_complete`, `tem_challenge_issued`, `tutorial_completed`, `gate_unlock`, etc.).
 
 ## Layout (not to scale)
 

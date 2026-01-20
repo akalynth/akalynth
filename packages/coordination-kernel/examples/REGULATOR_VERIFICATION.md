@@ -1,5 +1,7 @@
 # How a Regulator Verifies DARP Compliance
 
+> **Status:** Demo-only. This is a fictional regulator workflow and not enforced in Akalynth v1.
+
 This document explains the mathematical verification process for DARP compliance reports. No trust or interpretation required.
 
 ## Verification Process
