@@ -37,6 +37,7 @@ interface Message {
 | `inspect_player` | Request player info |
 | `get_pressure_metrics` | Request pressure metrics |
 | `start_work_contract` | Start a work contract |
+| `work_tick` | Record a work contract tick |
 | `talk_to_npc` | Interact with NPC |
 | `use_skill` | Use a skill (utility/admin) |
 | `temple_sweep` | Temple sweep action |
@@ -78,7 +79,6 @@ interface Message {
 | `player_inspect` | Player info response |
 | `pressure_metrics_snapshot` | Pressure metrics response |
 | `work_contract_started` | Work contract started |
-| `work_tick` | Work contract tick |
 | `work_progress` | Work contract progress |
 | `work_contract_result` | Work contract completed |
 | `npc_dialogue` | NPC dialogue response |
@@ -861,7 +861,15 @@ Pressure metrics response.
 Start a work contract.
 
 ```json
-{"type": "start_work_contract", "kind": "mining"}
+{"type": "start_work_contract", "contract_type": "temple_sweep"}
+```
+
+#### `work_tick` (client → server)
+
+Record a work contract tick (presence proof).
+
+```json
+{"type": "work_tick", "contract_id": "wc_123"}
 ```
 
 #### `work_contract_started` (server → client)
@@ -869,15 +877,14 @@ Start a work contract.
 Work contract started confirmation.
 
 ```json
-{"type": "work_contract_started", "contract_id": "wc_123", "ok": true}
-```
-
-#### `work_tick` (server → client)
-
-Work contract tick (periodic update).
-
-```json
-{"type": "work_tick", "contract_id": "wc_123", "t": 1}
+{
+  "type": "work_contract_started",
+  "contract_id": "wc_123",
+  "contract_type": "temple_sweep",
+  "payout_gold": 50,
+  "cooldown_seconds": 120,
+  "min_duration_ms": 30000
+}
 ```
 
 #### `work_progress` (server → client)
@@ -885,7 +892,13 @@ Work contract tick (periodic update).
 Work contract progress update.
 
 ```json
-{"type": "work_progress", "contract_id": "wc_123", "progress": 0.5}
+{
+  "type": "work_progress",
+  "contract_id": "wc_123",
+  "ticks_observed": 4,
+  "ticks_required": 10,
+  "remaining_ms": 12000
+}
 ```
 
 #### `work_contract_result` (server → client)
@@ -893,7 +906,7 @@ Work contract progress update.
 Work contract completed.
 
 ```json
-{"type": "work_contract_result", "contract_id": "wc_123", "ok": true, "payout_gold": 50, "receipt_hash": "blake3:..."}
+{"type": "work_contract_result", "contract_id": "wc_123", "success": true, "credited_gold": 50}
 ```
 
 ---
@@ -905,7 +918,7 @@ Work contract completed.
 Interact with an NPC.
 
 ```json
-{"type": "talk_to_npc", "npc_id": "npc_merchant", "choice": null}
+{"type": "talk_to_npc", "npc_id": "npc_merchant"}
 ```
 
 #### `npc_dialogue` (server → client)
@@ -913,7 +926,7 @@ Interact with an NPC.
 NPC dialogue response.
 
 ```json
-{"type": "npc_dialogue", "npc_id": "npc_merchant", "text": "Welcome traveler!", "choices": ["Buy", "Sell", "Leave"]}
+{"type": "npc_dialogue", "npc_id": "npc_merchant", "place_id": "rookguard_square", "tier": "seen", "line": "Welcome traveler!"}
 ```
 
 #### `npc_dialogue_error` (server → client)
@@ -921,7 +934,7 @@ NPC dialogue response.
 NPC dialogue error.
 
 ```json
-{"type": "npc_dialogue_error", "npc_id": "npc_merchant", "code": "not_found", "message": "NPC not found"}
+{"type": "npc_dialogue_error", "npc_id": "npc_merchant", "error": "not_found"}
 ```
 
 ---

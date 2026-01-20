@@ -47,8 +47,6 @@ npm install
 - `npx tsx ../../scripts/heat_out_of_order_smoke.ts`
 - `npx tsx ../../scripts/heat_pr2_out_of_order_smoke.ts`
 
-Note: Some scripts/docs historically refer to `server/` at repo root. The source of truth is `apps/server/`. If you see path errors, update the command or add a temporary `server -> apps/server` symlink.
-
 ## Docs (single source of truth)
 
 Start here: `docs/README.md`

@@ -1,4 +1,4 @@
-# Monetization Constitution (Draft)
+# Monetization Constitution
 
 > **Status:** Doctrine (constitutional surface).  
 > **Change control:** Amendments only; see Article VII.  

@@ -1,12 +1,16 @@
-# CONSTITUTIONAL API FREEZE
+# CONSTITUTIONAL API FREEZE (DRAFT — NON-BINDING)
 
-> **Status:** Doctrine (constitutional surface).  
-> **Change control:** Amendments only (per GOVERNANCE_INVARIANTS.md).
+> **Status:** Draft (non-binding for v1).  
+> **Change control:** Not active; future design intent only.
 
-**Document Type**: Constitutional Law
-**Effective Date**: 2026-01-19
-**Version**: 1.0-FROZEN
-**Amendment Authority**: Requires constitutional process per GOVERNANCE_INVARIANTS.md
+**Document Type**: Future design intent (not law)
+**Effective Date**: Not effective (v1)
+**Version**: DRAFT
+**Amendment Authority**: N/A (not in force)
+
+## OUT OF SCOPE FOR v1
+
+This document describes intended primitives and guarantees that are **not yet enforced** in code or CI. It must not be treated as v1 law.
 
 ---
 

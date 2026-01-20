@@ -11,6 +11,8 @@
 
 The client NEVER tells the server "I am at position X,Y". This alone prevents 80% of cheats.
 
+**Status (v1)**: Detection signals, Tem challenges, and receipt logging are implemented. Enforcement actions like throttles, kicks, and bans are **planned** and must not be treated as active guarantees.
+
 ## Detection Signals
 
 ### 1. Speed Hacks / Impossible Movement
@@ -44,6 +46,8 @@ The client NEVER tells the server "I am at position X,Y". This alone prevents 80
 - **Example**: 10 messages in 5 seconds
 
 ## Enforcement Ladder
+
+**Note:** The ladder below describes intended policy. Only Tem challenge + receipt logging are guaranteed in v1.
 
 Escalation happens when signals persist or are severe.
 
@@ -169,9 +173,7 @@ interface AntiCheatState {
 
 ### Appeal Process
 
-- All receipts are stored
-- Player can request review
-- Moderator can view full signal history and evidence
+**Not implemented in v1.** Receipt logs exist for auditability, but there is no formal appeal workflow yet.
 
 ## DEBUG-Gated Features
 

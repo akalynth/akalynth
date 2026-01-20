@@ -29,7 +29,7 @@ These invariants MUST hold at all times. Violation of any invariant is a critica
 
 ## Chronicle
 
-9. **Hash chain integrity**: Each chronicle entry references the previous entry's hash.
-   Breaking the chain invalidates all subsequent entries.
+9. **Hash chain integrity** (planned): Each chronicle entry references the previous entry's hash.
+   Chain integrity verification is a future enforcement gate.
 
-10. **Signature validity**: All signed receipts can be verified against the operator's public key.
+10. **Signature validity** (planned): Signed receipts are intended to be verifiable against the operator's public key.

@@ -96,9 +96,9 @@ Any change that alters determinism, hashing, receipt ordering, or invariant scop
 
 ## Enforcement
 
-**Phase Gate**: `npm run verify`
+**Phase Gate** (from `apps/server`): `npm run verify`
 
-All commits are blocked by pre-commit hook unless guarantees pass.
+Commits are blocked only when hooks are installed (`npm run install-hooks`).
 
 ```bash
 # Install hooks (one-time)
@@ -116,11 +116,11 @@ npm run verify:verbose   # Show detailed output
 
 | Tool | Guarantees Covered |
 |------|-------------------|
-| `tools/verify-guarantees.ts` | G1-G15 (unified gate) |
-| `tools/verify-heat.ts` | G12 |
-| `tools/verify-protected.ts` | G13 |
-| `tools/verify-chronicle.ts` | G14 (C1-C8) |
-| `tools/why-drop.ts` | G10, G11, G15 |
+| `apps/server/tools/verify-guarantees.ts` | G1-G15 (unified gate) |
+| `apps/server/tools/verify-heat.ts` | G12 |
+| `apps/server/tools/verify-protected.ts` | G13 |
+| `apps/server/tools/verify-chronicle.ts` | G14 (C1-C8) |
+| `apps/server/tools/why-drop.ts` | G10, G11, G15 |
 | SQL invariants A-E | G7 |
 
 ---

@@ -2,6 +2,8 @@
 
 > The Ledger remembers. The Ledger enforces. The Ledger does not forgive.
 
+**Status (v1):** Deferred. This document describes a future system and is not implemented or enforced in v1.
+
 ---
 
 ## Critical Design Decisions (G1–G15 Preservation)

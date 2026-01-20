@@ -1,17 +1,17 @@
-# GOVERNANCE INVARIANTS
+# GOVERNANCE INVARIANTS (LEGACY DRAFT — NON-BINDING)
 
-> **Status:** Doctrine (constitutional surface).  
-> **Change control:** Amendments only (see ARTICLE VI).
+> **Status:** Legacy draft (non-binding for v1).  
+> **Change control:** Not active; superseded by docs/GOVERNANCE_INVARIANTS.md.
 
-**Constitutional Law - Version 1.0**
-**Effective Date**: 2026-01-19
-**Amendment Authority**: Requires supermajority consensus + cryptographic proof of compliance
+**Document State**: Historical draft (not in effect for v1)
+**Effective Date**: Not effective
+**Amendment Authority**: N/A (superseded by docs/GOVERNANCE_INVARIANTS.md)
 
 ---
 
 ## PREAMBLE
 
-This document establishes the immutable constitutional axioms governing all proof-native systems. These are not policies or guidelines—they are LAW. Violation constitutes system failure, not operational exception.
+This document is a historical draft and is **not** enforced in v1. It is retained for future design reference only.
 
 **Fundamental Principle**: Proof supersedes trust. Verification supersedes reputation. Automation supersedes human discretion.
 
@@ -28,7 +28,7 @@ Every receipt must contain: timestamp, actor identity, action specification, inp
 **§1.3 Chain Integrity**
 All receipts must form a tamper-evident chain where each receipt cryptographically commits to its predecessor.
 
-**VIOLATION PENALTY**: Immediate system halt. Recovery requires full chain reconstruction from genesis.
+**INTENDED CONSEQUENCE (future)**: Immediate system halt. Not enforced in v1.
 
 ---
 
@@ -43,7 +43,7 @@ No capability may be granted without an explicit termination condition.
 **§2.3 Refresh Protocol**
 Authority renewal requires fresh proof of authorization. Past authority does not justify future authority.
 
-**VIOLATION PENALTY**: Automatic capability revocation. No appeals process exists.
+**INTENDED CONSEQUENCE (future)**: Automatic capability revocation. Not enforced in v1.
 
 ---
 
@@ -58,7 +58,7 @@ High-impact decisions require segregated approval from independent authorities.
 **§3.3 Conflict of Interest Detection**
 Systems must cryptographically detect and prevent circular authorization patterns.
 
-**VIOLATION PENALTY**: Action nullification. Involved actors face automatic capability suspension.
+**INTENDED CONSEQUENCE (future)**: Action nullification. Not enforced in v1.
 
 ---
 
@@ -76,7 +76,7 @@ All emergency actions trigger mandatory post-facto review with automatic publica
 **§4.4 Emergency Capability Design**
 Emergency systems must be designed for accountability, not convenience.
 
-**VIOLATION PENALTY**: Complete emergency capability revocation for responsible systems.
+**INTENDED CONSEQUENCE (future)**: Emergency capability revocation. Not enforced in v1.
 
 ---
 
@@ -91,7 +91,7 @@ System compliance determinations are final. No human authority may overturn cryp
 **§5.3 Automated Enforcement**
 Violations trigger automatic remediation without human intervention.
 
-**VIOLATION PENALTY**: System ejection from constitutional framework. Re-admission requires complete audit.
+**INTENDED CONSEQUENCE (future)**: System ejection. Not enforced in v1.
 
 ---
 
@@ -147,6 +147,6 @@ This document is self-executing law. Implementation constitutes agreement. Parti
 
 ---
 
-**CONSTITUTIONAL HASH**: [To be computed upon finalization]
-**WITNESS SIGNATURES**: [To be collected from constitutional nodes]
-**EFFECTIVE IMMEDIATELY**
+**CONSTITUTIONAL HASH**: [Not applicable in v1]
+**WITNESS SIGNATURES**: [Not applicable in v1]
+**NOT IN EFFECT**
