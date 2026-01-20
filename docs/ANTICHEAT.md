@@ -116,8 +116,12 @@ Every anti-cheat action emits a JSONL receipt.
 
 ```json
 {
+  "sequence": 1,
   "timestamp": "2024-01-15T10:30:00.000Z",
-  "player_id": "p_abc123",
+  "prev_hash": "genesis",
+  "event_hash": "blake3:abc123...",
+  "signature": "ed25519:...",
+  "actor_id": "p_abc123",
   "action": "tem_challenge_issued",
   "inputs": {
     "trigger": "speed_violation",
@@ -125,7 +129,8 @@ Every anti-cheat action emits a JSONL receipt.
     "signal_window_ms": 2000
   },
   "result": "challenge_sent",
-  "evidence_hash": "sha256:abc123..."
+  "inputs_hash": "blake3:def456...",
+  "outputs_hash": "blake3:789abc..."
 }
 ```
 

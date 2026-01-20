@@ -1,5 +1,8 @@
 # GOVERNANCE INVARIANTS
 
+> **Status:** Doctrine (constitutional surface).  
+> **Change control:** Amendments only (see ARTICLE VI).
+
 **Constitutional Law - Version 1.0**
 **Effective Date**: 2026-01-19
 **Amendment Authority**: Requires supermajority consensus + cryptographic proof of compliance

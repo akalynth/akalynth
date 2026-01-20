@@ -147,7 +147,7 @@ Intent → Detector → Decision → Enforcement → Audit
 ### Audit Logger (`apps/server/src/audit/logger.ts`)
 
 - Writes JSONL receipts for every action
-- Fields: timestamp, player_id, action, inputs, result, hash
+- Fields: sequence, timestamp, prev_hash, event_hash, signature, actor_id, action, inputs, result, inputs_hash, outputs_hash
 - Used for appeals and analysis
 
 ### Public Receipts Feed (`/v1/receipts/public`)
@@ -156,7 +156,7 @@ Intent → Detector → Decision → Enforcement → Audit
 - Response shape is stable (`mode: "strict"` with redacted `PublicReceipt[]`)
 - Coordinates are bucketed (default `PUBLIC_RECEIPTS_BUCKET_SIZE=8`) and actors are anonymized (`PUBLIC_RECEIPTS_ACTOR_MODE=anon|daily_hash`)
 - Daily hashes use `PUBLIC_RECEIPTS_HASH_SALT` (defaults to `akalynth-public-receipts`)
-- Visibility is action-specific with deterministic jitter derived from `evidence_hash` + `PUBLIC_RECEIPTS_JITTER_SALT`
+- Visibility is action-specific with deterministic jitter derived from `event_hash` + `PUBLIC_RECEIPTS_JITTER_SALT`
 - Delay profile defaults to `default` (uses `PUBLIC_RECEIPTS_DELAY_MS`); `tibia` profile defines per-action baselines
 - For deterministic testing: `PUBLIC_RECEIPTS_DELAY_PROFILE=default`, `PUBLIC_RECEIPTS_DELAY_MS=0`, `PUBLIC_RECEIPTS_JITTER_MS=0`
 - Debug-only raw feed exists at `/v1/receipts/public_raw` (requires `DEBUG=1`, otherwise 403)
