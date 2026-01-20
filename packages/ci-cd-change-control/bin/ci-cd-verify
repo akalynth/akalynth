@@ -1,0 +1,81 @@
+#!/usr/bin/env node
+import { replayFromJsonlFile } from "../dist/replay.js";
+import { evaluateCompliance } from "../dist/compliance.js";
+
+const [,, cmd, jsonlPath] = process.argv;
+
+function usage() {
+  console.log(`Usage:
+  ci-cd-verify check-integrity <receipts.jsonl>
+  ci-cd-verify replay <receipts.jsonl>
+  ci-cd-verify compliance <receipts.jsonl>
+
+Exit codes:
+  0 = PASS
+  1 = FAIL
+  2 = error`);
+}
+
+if (!cmd || !jsonlPath) {
+  usage();
+  process.exit(2);
+}
+
+try {
+  const { receipts, replay } = await replayFromJsonlFile(jsonlPath);
+
+  if (cmd === "check-integrity") {
+    console.log(`✅ Chain valid: YES`);
+    console.log(`📊 Receipt count: ${receipts.length}`);
+    console.log(`🔗 First broken index: none`);
+    process.exit(0);
+  }
+
+  if (cmd === "replay") {
+    const c = replay.counts;
+    console.log(`📦 Deployments reconstructed: ${Object.keys(replay.deployments).length}`);
+    console.log(`📋 States:`);
+    console.log(`  - requested: ${c.requested ?? 0}`);
+    console.log(`  - approved: ${c.approved ?? 0}`);
+    console.log(`  - denied: ${c.denied ?? 0}`);
+    console.log(`  - deployed: ${c.deployed ?? 0}`);
+    console.log(`  - rolled_back: ${c.rolled_back ?? 0}`);
+    console.log(`  - failed: ${c.failed ?? 0}`);
+    console.log(`  - emergency: ${c.emergency ?? 0}`);
+    process.exit(0);
+  }
+
+  if (cmd === "compliance") {
+    const report = evaluateCompliance(replay, {
+      highRiskThreshold: 5,
+      emergencyIncidentDeadlineHours: 24,
+      emergencyRetroDeadlineHours: 72
+    });
+
+    if (report.ok) {
+      console.log(`✅ CHANGE CONTROL COMPLIANCE: PASS`);
+      console.log(`   Deployments: ${report.summary.total} total`);
+      console.log(`   Mathematical verification: PASS`);
+      process.exit(0);
+    } else {
+      console.log(`🚨 CHANGE CONTROL COMPLIANCE: FAIL`);
+      console.log(`   Deployments: ${report.summary.total} total`);
+      console.log(`   Failures: ${report.summary.failed}`);
+      console.log(``);
+      console.log(`🚨 Failures grouped by deployment_id:`);
+
+      for (const [id, issues] of Object.entries(report.failures)) {
+        console.log(`  - ${id}: ${issues.join("; ")}`);
+      }
+      process.exit(1);
+    }
+  }
+
+  usage();
+  process.exit(2);
+
+} catch (err) {
+  console.error(String(err?.message ?? err));
+  if (err?.verification) console.error(err.verification);
+  process.exit(2);
+}
