@@ -84,12 +84,17 @@ export type WorldStateResult = WorldStateResponse | { error: string; status: num
 // ============================================================================
 
 export interface Receipt {
+  sequence: number;
   timestamp: string;
-  evidence_hash: string;
-  player_id: string;
+  prev_hash: string;
+  event_hash: string;
+  signature: string;
+  actor_id: string;
   action: string;
   inputs: Record<string, unknown>;
   result: string;
+  inputs_hash: string;
+  outputs_hash: string;
 }
 
 export interface ReceiptsQueryParams {
@@ -111,12 +116,17 @@ export interface ReceiptsResponse {
 export type PublicReceiptsActorMode = 'anon' | 'daily_hash';
 
 export interface PublicReceipt {
+  sequence: number;
   timestamp: string;
-  evidence_hash: string;
+  prev_hash: string;
+  event_hash: string;
+  signature: string;
   action: string;
   inputs: Record<string, unknown>;
   result: string | null;
-  actor: string;
+  inputs_hash: string;
+  outputs_hash: string;
+  actor_id: string;
 }
 
 export interface PublicReceiptsQueryParams {
@@ -151,4 +161,24 @@ export interface PublicRumorsResponse {
   rumors: PublicRumor[];
   total: number;
   has_more: boolean;
+}
+
+// ============================================================================
+// Transparency API (public)
+// ============================================================================
+
+export interface TransparencyResponse {
+  version: string;
+  principles: string[];
+  documentation: {
+    monetization_constitution: string;
+    architecture: string;
+    anticheat: string;
+  };
+  public_receipts_endpoint: string;
+  verification: {
+    chain_integrity: string;
+    monetization_policy: string;
+    work_contracts: string;
+  };
 }

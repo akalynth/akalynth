@@ -184,12 +184,17 @@ export interface AntiCheatState {
 // ============================================================================
 
 export interface AuditReceipt {
+  sequence: number;
   timestamp: string;
-  player_id: string;
+  prev_hash: string;
+  event_hash: string;
+  signature: string;
+  actor_id: string;
   action: string;
   inputs: Record<string, unknown>;
   result: string;
-  evidence_hash?: string;
+  inputs_hash: string;
+  outputs_hash: string;
 }
 
 export const LEDGER_HESITATION_ACTION = 'ledger_hesitation';
@@ -320,6 +325,30 @@ export type WalletDebitReason =
   | `action_cost:${string}`;  // Costed action: action_cost:<action_type>
 
 // ============================================================================
+// Monetization (Support Credits) — Policy-Governed
+// ============================================================================
+
+export type MonetizationCategory =
+  | 'cosmetic'
+  | 'memory'
+  | 'convenience'
+  | 'world_support'
+  | 'service';
+
+// Receipt actions (private-only by default; never in PUBLIC_RECEIPTS_ALLOW)
+export const SUPPORT_CREDIT_GRANTED_ACTION = 'support_credit_granted';
+export const SUPPORT_CREDIT_SPENT_ACTION = 'support_credit_spent';
+export const SUPPORT_ENTITLEMENT_GRANTED_ACTION = 'support_entitlement_granted';
+export const SUPPORT_ENTITLEMENT_REVOKED_ACTION = 'support_entitlement_revoked';
+export const SUPPORT_REFUND_ISSUED_ACTION = 'support_refund_issued';
+
+export type SupportCreditReason =
+  | 'purchase'
+  | 'promo'
+  | 'correction'
+  | 'refund';
+
+// ============================================================================
 // Costed Actions v0 (Gold Pressure)
 // ============================================================================
 
@@ -338,6 +367,7 @@ export const ACTION_GOLD_COST: Record<string, number> = {
 
 // Receipt actions (ALL private in v0)
 export const WORK_CONTRACT_STARTED_ACTION = 'work_contract_started';
+export const WORK_CONTRACT_TICK_RECORDED_ACTION = 'work_contract_tick_recorded';
 export const WORK_CONTRACT_COMPLETED_ACTION = 'work_contract_completed';
 export const WORK_CONTRACT_FAILED_ACTION = 'work_contract_failed';
 

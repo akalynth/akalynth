@@ -1,9 +1,9 @@
 // Akalynth Protocol Messages
 // All messages sent over WebSocket
 
-import type { Direction, Element, PlayerPublic, RunestoneDenialReason, SovereignVocation } from './types';
-import { ELEMENTS, SOVEREIGN_VOCATIONS } from './types';
-import type { MapName } from './http';
+import type { Direction, Element, PlayerPublic, RunestoneDenialReason, SovereignVocation } from './types.js';
+import { ELEMENTS, SOVEREIGN_VOCATIONS } from './types.js';
+import type { MapName } from './http.js';
 
 // ============================================================================
 // Base Message
@@ -1335,10 +1335,14 @@ export function parseClientMessage(data: unknown): ClientMessage | null {
 
     // Moderation v1
     case 'get_mod_reports': {
-      const status = msg.status;
-      if (status !== undefined && status !== 'open' && status !== 'resolved' && status !== 'all') {
-        return null;
-      }
+      const rawStatus = msg.status;
+      const status =
+        rawStatus === undefined ? undefined :
+        rawStatus === 'open' ? 'open' :
+        rawStatus === 'resolved' ? 'resolved' :
+        rawStatus === 'all' ? 'all' :
+        null;
+      if (status === null) return null;
       const limit = typeof msg.limit === 'number' ? msg.limit : undefined;
       return { type: 'get_mod_reports', status, limit };
     }
