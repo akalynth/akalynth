@@ -43,8 +43,8 @@ interface Classification {
 
 // FORBIDDEN: Hard block - these paths should never be written by Claude
 const FORBIDDEN_PATTERNS: RegExp[] = [
-  /^server\/data\//,                    // SQLite DB files
-  /^server\/audit\/receipts\.jsonl$/,   // Append-only audit log
+  /^apps\/server\/data\//,                    // SQLite DB files
+  /^apps\/server\/audit\/receipts\.jsonl$/,   // Append-only audit log
   /\.env$/,                             // Environment files
   /\.env\./,                            // .env.local, .env.production, etc.
   /credentials/i,                       // Any credentials file
@@ -55,18 +55,18 @@ const FORBIDDEN_PATTERNS: RegExp[] = [
 
 // HIGH-RISK: Require verify:quick before allowing write
 const HIGH_RISK_PATTERNS: Array<{ pattern: RegExp; guarantee: string }> = [
-  { pattern: /^server\/src\/persist\//, guarantee: 'G4 Idempotence / G5 Rebuildable / G7 Exclusivity' },
+  { pattern: /^apps\/server\/src\/persist\//, guarantee: 'G4 Idempotence / G5 Rebuildable / G7 Exclusivity' },
   { pattern: /drop-policy\.ts$/, guarantee: 'G6 Drop Math / G8 Loot Priority' },
   { pattern: /combat\.ts$/, guarantee: 'G9 PvP Heat / G10 Combat Resolution' },
   { pattern: /death\.ts$/, guarantee: 'G11 Death Penalty' },
   { pattern: /heat\.ts$/, guarantee: 'G12 Legendary Heat' },
   { pattern: /witness\.ts$/, guarantee: 'G12 Legendary Heat (witness)' },
-  { pattern: /^shared\/protocol\.ts$/, guarantee: 'Protocol API Surface' },
-  { pattern: /^shared\/types\.ts$/, guarantee: 'Core Domain Types' },
+  { pattern: /^packages\/shared\/protocol\.ts$/, guarantee: 'Protocol API Surface' },
+  { pattern: /^packages\/shared\/types\.ts$/, guarantee: 'Core Domain Types' },
 ];
 
 // VERIFY_TOOL: Block destructive changes to verification infrastructure
-const VERIFY_TOOL_PATTERN = /^server\/tools\/verify-.*\.ts$/;
+const VERIFY_TOOL_PATTERN = /^apps\/server\/tools\/verify-.*\.ts$/;
 
 // ============================================================================
 // Verification Cache
@@ -149,7 +149,7 @@ function getFileSize(filePath: string, cwd: string): number {
 }
 
 function runVerifyQuick(cwd: string): { passed: boolean; output: string } {
-  const serverDir = path.join(cwd, 'server');
+  const serverDir = path.join(cwd, 'apps', 'server');
 
   const result = spawnSync('npm', ['run', 'verify:quick'], {
     cwd: serverDir,

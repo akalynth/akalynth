@@ -3,7 +3,7 @@ set -euo pipefail
 set -o monitor
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SERVER_DIR="$ROOT_DIR/apps/server"
-RECEIPTS="${RECEIPTS:-$SERVER_DIR/audit/receipts.jsonl}"
+RECEIPTS="${AKALYNTH_RECEIPT_CHAIN_PATH:-${RECEIPTS:-$SERVER_DIR/audit/receipts.jsonl}}"
 SCENARIOS_DIR="$ROOT_DIR/scripts/verify/scenarios"
 HARNESS="$ROOT_DIR/scripts/verify/ws_harness.mjs"
 PORT="${PORT:-3100}"
@@ -563,6 +563,10 @@ wait_for_receipt "trinity_of_shadow" "$TRINITY_PLAYER_ID" '(.receipts | length) 
 PUBLIC_TRINITY_JSON="$(poll_json "Public receipts invalid (trinity check)" "$HTTP_URL/v1/receipts/public?limit=50" 'has("receipts")')"
 echo "$PUBLIC_TRINITY_JSON" | grep -q 'trinity_of_shadow' || die "Public receipts feed missing trinity_of_shadow"
 echo "$PUBLIC_TRINITY_JSON" | grep 'trinity_of_shadow' | grep -q '"player_id"' && die "Public receipts leaked player_id for trinity_of_shadow"
+log "Monetization receipt verification..."
+AKALYNTH_RECEIPTS_PATH="$RECEIPTS" npm run verify:monetization >/dev/null
+log "Doctrine verification..."
+npm run verify:doctrine >/dev/null
 log "✅ VERIFY PASS"
 log "Last receipts:"
 tail -10 "$RECEIPTS" || true

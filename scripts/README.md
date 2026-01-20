@@ -44,4 +44,4 @@ Scripts should be idempotent and documented.
 
 ## Notes
 - Heat smoke tests delete temp data unless `SMOKE_KEEP_TMP=1` is set.
-- `verify_mvp.sh` auto-detects `apps/server/` or a legacy `server/` symlink; see `scripts/verify/README.md` for env knobs.
+- `verify_mvp.sh` targets `apps/server/`; see `scripts/verify/README.md` for env knobs.

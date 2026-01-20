@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const harnessDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(harnessDir, '..', '..');
-const serverPackage = path.join(repoRoot, 'server', 'package.json');
+const serverPackage = path.join(repoRoot, 'apps', 'server', 'package.json');
 const require = createRequire(serverPackage);
 const WebSocket = require('ws');
 
