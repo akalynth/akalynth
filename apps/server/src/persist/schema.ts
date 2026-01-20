@@ -7,7 +7,7 @@ import type Database from 'better-sqlite3';
 // Schema Version
 // ============================================================================
 
-export const SCHEMA_VERSION = 8;
+export const SCHEMA_VERSION = 9;
 
 // ============================================================================
 // DDL Statements
@@ -277,6 +277,9 @@ function runMigration(db: Database.Database, version: number): void {
     case 8:
       migrateToV8(db);
       break;
+    case 9:
+      migrateToV9(db);
+      break;
     default:
       throw new Error(`Unknown schema version: ${version}`);
   }
@@ -406,6 +409,17 @@ function migrateToV8(db: Database.Database): void {
     'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
   );
   insertMeta.run('schema_version', '8');
+}
+
+function migrateToV9(db: Database.Database): void {
+  // Phase 4.5: Add player_heat table
+  db.exec(DDL_PLAYER_HEAT);
+
+  // Update schema version
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', '9');
 }
 
 // ============================================================================

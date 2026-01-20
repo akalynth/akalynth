@@ -15,7 +15,14 @@ import { blake3 } from '@noble/hashes/blake3';
 function findRepoRoot(startDir: string): string | null {
   let cur = path.resolve(startDir);
   while (true) {
-    if (fs.existsSync(path.resolve(cur, 'rulebook'))) return cur;
+    const rulebook = path.resolve(cur, 'rulebook');
+    if (fs.existsSync(rulebook)) {
+      const hasSources =
+        fs.existsSync(path.resolve(rulebook, 'dsl')) &&
+        fs.existsSync(path.resolve(rulebook, 'params')) &&
+        fs.existsSync(path.resolve(rulebook, 'invariants'));
+      if (hasSources) return cur;
+    }
     const next = path.dirname(cur);
     if (next === cur) return null;
     cur = next;

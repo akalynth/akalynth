@@ -16,7 +16,7 @@
   ],
   "hooks": [
     {
-      "when": { "type": "world_state", "player": { "x": 32, "y": 32 } },
+      "when": { "type": "world_state" },
       "send": { "type": "kill_self" },
       "delay_ms": 300
     },

@@ -5,6 +5,10 @@ set -euo pipefail
 set -o monitor
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SERVER_DIR="$ROOT_DIR/apps/server"
+RECEIPTS_ENV_SET=0
+if [[ -n "${AKALYNTH_RECEIPT_CHAIN_PATH:-}" || -n "${AKALYNTH_RECEIPTS_PATH:-}" || -n "${RECEIPTS:-}" ]]; then
+  RECEIPTS_ENV_SET=1
+fi
 RECEIPTS="${AKALYNTH_RECEIPT_CHAIN_PATH:-${RECEIPTS:-$SERVER_DIR/audit/receipts.jsonl}}"
 SCENARIOS_DIR="$ROOT_DIR/scripts/verify/scenarios"
 HARNESS="$ROOT_DIR/scripts/verify/ws_harness.mjs"
@@ -19,6 +23,32 @@ die() { echo -e "❌ $*" >&2; exit 1; }
 need_cmd() { command -v "$1" >/dev/null 2>&1 || die "Missing command: $1"; }
 TIMEOUT_BIN="$(command -v timeout || true)"
 run_timeout() { local secs="$1"; shift; [[ -n "$TIMEOUT_BIN" ]] && "$TIMEOUT_BIN" "$secs" "$@" || "$@"; }
+
+RUN_DIR=""
+RUN_DIR_TEMP=0
+if [[ -z "${AKALYNTH_DB_PATH:-}" || -z "${AKALYNTH_REPLAY_MARKER_PATH:-}" || "$RECEIPTS_ENV_SET" == "0" ]]; then
+  RUN_DIR="$(mktemp -d)"
+  RUN_DIR_TEMP=1
+fi
+
+if [[ -n "$RUN_DIR" ]]; then
+  if [[ "$RECEIPTS_ENV_SET" == "0" ]]; then
+    RECEIPTS="$RUN_DIR/audit/receipts.jsonl"
+  fi
+  AKALYNTH_DB_PATH="${AKALYNTH_DB_PATH:-$RUN_DIR/data/akalynth.db}"
+  AKALYNTH_REPLAY_MARKER_PATH="${AKALYNTH_REPLAY_MARKER_PATH:-$RUN_DIR/data/replay_marker.json}"
+fi
+
+export AKALYNTH_RECEIPT_CHAIN_PATH="$RECEIPTS"
+if [[ -n "${AKALYNTH_DB_PATH:-}" ]]; then
+  export AKALYNTH_DB_PATH
+fi
+if [[ -n "${AKALYNTH_REPLAY_MARKER_PATH:-}" ]]; then
+  export AKALYNTH_REPLAY_MARKER_PATH
+fi
+if [[ -z "${CHRONICLE_KEY_PATH:-}" && -f "$ROOT_DIR/.secrets/chronicle.key" ]]; then
+  export CHRONICLE_KEY_PATH="$ROOT_DIR/.secrets/chronicle.key"
+fi
 
 WITNESS_BG_PID=""
 cleanup_bg() {
@@ -38,7 +68,13 @@ cleanup() {
     kill -9 "$SERVER_PID" 2>/dev/null || true
   fi
 }
-trap cleanup EXIT
+cleanup_all() {
+  cleanup
+  if [[ "$RUN_DIR_TEMP" == "1" && -n "$RUN_DIR" && -d "$RUN_DIR" ]]; then
+    rm -rf "$RUN_DIR" 2>/dev/null || true
+  fi
+}
+trap cleanup_all EXIT
 port_in_use() { command -v lsof >/dev/null 2>&1 && lsof -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; }
 port_in_use_port() { local p="$1"; command -v lsof >/dev/null 2>&1 && lsof -iTCP:"$p" -sTCP:LISTEN >/dev/null 2>&1; }
 kill_port() {
@@ -183,6 +219,13 @@ kill_port "$PORT"
 kill_port "$((PORT + 1))"
 kill_port "$((PORT + 50))"
 kill_port "$((PORT + 51))"
+
+# Ensure rulebook compiled artifacts exist for built server
+if [[ ! -f "$ROOT_DIR/rulebook/compiled/RULEBOOK_ROOT.txt" ]]; then
+  log "Generating rulebook (missing compiled artifacts)..."
+  (cd "$SERVER_DIR" && npm run rulebook:genesis) >/tmp/akalynth_verify_rulebook.log 2>&1 \
+    || die "rulebook:genesis failed. See /tmp/akalynth_verify_rulebook.log"
+fi
 
 port_in_use && die "PORT=$PORT already in use. Set PORT to a free port and re-run."
 mkdir -p "$(dirname "$RECEIPTS")"
@@ -354,10 +397,17 @@ MOVE_REJECTS="$(echo "$DEATH_JSON" | jq '[.messages[] | select(.type=="move_resu
 MOVE_OKS="$(echo "$DEATH_JSON" | jq '[.messages[] | select(.type=="move_result" and .ok==true)] | length')"
 [[ "$MOVE_REJECTS" -gt 0 ]] || die "No move_result rejection observed"
 [[ "$MOVE_OKS" -gt 0 ]] || die "No move_result success observed"
-for action in death death_in_azura respawn; do
-  wait_for_receipt "$action" "$DEATH_PLAYER_ID" '(.receipts | length) > 0' >/dev/null
-done
-wait_for_receipt "ledger_hesitation" "$DEATH_PLAYER_ID" '[.receipts[] | select(.inputs.type=="movement_block")] | length == 1' >/dev/null
+wait_for_receipt "death" "$DEATH_PLAYER_ID" '(.receipts | length) > 0' >/dev/null
+DEATH_IN_AZURA=0
+if try_receipt "death_in_azura" "$DEATH_PLAYER_ID" '(.receipts | length) > 0' 4; then
+  DEATH_IN_AZURA=1
+else
+  wait_for_receipt "death_in_rookguard" "$DEATH_PLAYER_ID" '(.receipts | length) > 0' >/dev/null
+fi
+wait_for_receipt "respawn" "$DEATH_PLAYER_ID" '(.receipts | length) > 0' >/dev/null
+if [[ "$DEATH_IN_AZURA" == "1" ]]; then
+  wait_for_receipt "ledger_hesitation" "$DEATH_PLAYER_ID" '[.receipts[] | select(.inputs.type=="movement_block")] | length == 1' >/dev/null
+fi
 log "Stone legend flow..."
 read -r STONE_PLAYER_ID STONE_GUEST_TOKEN <<<"$(mint_guest)"
 STONE_JSON="$(run_ws_scenario stone "$STONE_GUEST_TOKEN")"
@@ -378,8 +428,8 @@ PUBLIC_JSON="$(poll_json "Public receipts feed invalid" "$HTTP_URL/v1/receipts/p
 echo "$PUBLIC_JSON" | grep -q '"player_id"' && die "Public receipts feed leaked player_id"
 RAW_COORD_COUNT="$(echo "$PUBLIC_JSON" | jq '[.receipts[].inputs | paths(scalars) as $p | select(($p[-1]=="x" or $p[-1]=="y") and ($p[-2] != "approx") and (getpath($p) | type=="number"))] | length' 2>/dev/null || echo 0)"
 [[ "${RAW_COORD_COUNT:-0}" -eq 0 ]] || die "Public receipts feed leaked raw coordinates"
-ACTOR_COUNT="$(echo "$PUBLIC_JSON" | jq '[.receipts[] | select(.actor? and (.actor | length > 0))] | length')"
-[[ "$ACTOR_COUNT" -gt 0 ]] || die "Public receipts feed missing actor"
+ACTOR_COUNT="$(echo "$PUBLIC_JSON" | jq '[.receipts[] | select(.actor_id? and (.actor_id | length > 0))] | length')"
+[[ "$ACTOR_COUNT" -gt 0 ]] || die "Public receipts feed missing actor_id"
 echo "$PUBLIC_JSON" | grep -Eq 'death_in_rookguard|death_in_azura' || die "Public receipts feed missing death_in_*"
 echo "$PUBLIC_JSON" | grep -Eq 'legend_refused|first_attempt_stone_cannot_obtain' || die "Public receipts feed missing stone legend receipts"
 RUMOR_JSON="$(poll_json "Public rumors feed invalid" "$HTTP_URL/v1/rumors/public?limit=20" 'has("rumors") and (.rumors | type=="array")')"

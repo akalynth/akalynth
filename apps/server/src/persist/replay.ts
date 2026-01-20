@@ -83,6 +83,8 @@ export function replayReceipts(config: ReplayConfig): ReplayResult {
   const marker = readMarker(markerPath);
   const metaHash = getMeta(db, 'last_materialized_hash');
   const metaOffset = getMeta(db, 'last_materialized_offset');
+  const metaOffsetNumber = metaOffset ? Number(metaOffset) : 0;
+  const hasMetaHistory = Boolean(metaHash) || metaOffsetNumber > 0;
   const schemaVersion = getSchemaVersion(db);
 
   // Determine start offset
@@ -134,7 +136,7 @@ export function replayReceipts(config: ReplayConfig): ReplayResult {
       counts.players > 0 || counts.deaths > 0 || counts.reputation_events > 0 || counts.world_objects > 0;
 
     // Empty chain is only valid for genesis/fresh state; otherwise it's history erasure.
-    if (dbHasHistory || marker || metaHash || metaOffset) {
+    if (dbHasHistory || marker || hasMetaHistory) {
       throw new Error('[persist] empty receipts chain with existing state/marker/meta (refusing silent reset)');
     }
 
