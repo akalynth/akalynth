@@ -1,0 +1,322 @@
+#!/usr/bin/env node
+
+/**
+ * AI Governance Verification CLI
+ * Constitutional compliance verification for AI tool execution systems
+ */
+
+import { Command } from 'commander';
+import {
+  AIToolGovernanceVerifier,
+  IntegrityReport,
+  ComplianceReport,
+  ReplayReport,
+  VerificationConfig
+} from '../dist/verification/verifier.js';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
+
+const program = new Command();
+
+// Version from package.json
+const packageJson = JSON.parse(readFileSync(resolve(__dirname, '../package.json'), 'utf8'));
+
+program
+  .name('ai-gov-verify')
+  .description('Constitutional compliance verification for AI tool execution')
+  .version(packageJson.version);
+
+// Global options
+program
+  .option('-c, --config <file>', 'Configuration file path')
+  .option('-v, --verbose', 'Verbose output')
+  .option('--receipt-chain <file>', 'Path to receipt chain file (JSONL format)')
+  .option('--output <format>', 'Output format (json|table|summary)', 'table');
+
+// Check integrity command
+program
+  .command('check-integrity')
+  .description('Verify cryptographic integrity of AI governance receipt chain')
+  .option('--full', 'Perform full chain verification (slow but comprehensive)')
+  .option('--from <hash>', 'Start verification from specific receipt hash')
+  .option('--to <hash>', 'End verification at specific receipt hash')
+  .action(async (options) => {
+    try {
+      const verifier = await createVerifier(options);
+      const report = await verifier.checkIntegrity({
+        full_verification: options.full || false,
+        start_hash: options.from,
+        end_hash: options.to
+      });
+
+      outputReport(report, 'integrity', options.output);
+      process.exit(report.integrity_valid ? 0 : 1);
+
+    } catch (error) {
+      console.error('Integrity check failed:', error.message);
+      if (options.verbose) {
+        console.error(error.stack);
+      }
+      process.exit(1);
+    }
+  });
+
+// Compliance verification command
+program
+  .command('compliance')
+  .description('Verify constitutional compliance of AI governance system')
+  .option('--framework <name>', 'Specific compliance framework to check', 'constitutional')
+  .option('--violations-only', 'Show only compliance violations')
+  .option('--since <date>', 'Check compliance since specific date (ISO 8601)')
+  .option('--agent <id>', 'Check compliance for specific AI agent')
+  .action(async (options) => {
+    try {
+      const verifier = await createVerifier(options);
+      const report = await verifier.checkCompliance({
+        framework: options.framework,
+        violations_only: options.violationsOnly || false,
+        since_date: options.since,
+        agent_id: options.agent
+      });
+
+      outputReport(report, 'compliance', options.output);
+      process.exit(report.compliance_score >= 0.95 ? 0 : 1);
+
+    } catch (error) {
+      console.error('Compliance check failed:', error.message);
+      if (options.verbose) {
+        console.error(error.stack);
+      }
+      process.exit(1);
+    }
+  });
+
+// State replay command
+program
+  .command('replay')
+  .description('Replay AI governance state from receipt chain')
+  .option('--state-type <type>', 'Type of state to replay (budgets|approvals|overrides)', 'budgets')
+  .option('--at-time <timestamp>', 'Replay state at specific timestamp (ISO 8601)')
+  .option('--agent <id>', 'Replay state for specific AI agent')
+  .action(async (options) => {
+    try {
+      const verifier = await createVerifier(options);
+      const report = await verifier.replayState({
+        state_type: options.stateType,
+        at_timestamp: options.atTime,
+        agent_id: options.agent
+      });
+
+      outputReport(report, 'replay', options.output);
+      process.exit(0);
+
+    } catch (error) {
+      console.error('State replay failed:', error.message);
+      if (options.verbose) {
+        console.error(error.stack);
+      }
+      process.exit(1);
+    }
+  });
+
+// Emergency audit command
+program
+  .command('emergency-audit')
+  .description('Audit emergency overrides and post-facto reviews')
+  .option('--overdue-only', 'Show only overdue reviews')
+  .option('--unjustified-only', 'Show only unjustified overrides')
+  .option('--since <date>', 'Audit since specific date (ISO 8601)')
+  .action(async (options) => {
+    try {
+      const verifier = await createVerifier(options);
+      const report = await verifier.auditEmergencies({
+        overdue_only: options.overdueOnly || false,
+        unjustified_only: options.unjustifiedOnly || false,
+        since_date: options.since
+      });
+
+      outputReport(report, 'emergency_audit', options.output);
+      process.exit(report.violations_count > 0 ? 1 : 0);
+
+    } catch (error) {
+      console.error('Emergency audit failed:', error.message);
+      if (options.verbose) {
+        console.error(error.stack);
+      }
+      process.exit(1);
+    }
+  });
+
+// Constitutional status command
+program
+  .command('status')
+  .description('Show constitutional status of AI governance system')
+  .option('--detailed', 'Show detailed status including all metrics')
+  .action(async (options) => {
+    try {
+      const verifier = await createVerifier(options);
+      const status = await verifier.getConstitutionalStatus();
+
+      if (options.output === 'json') {
+        console.log(JSON.stringify(status, null, 2));
+      } else {
+        displayStatus(status, options.detailed);
+      }
+
+      process.exit(status.constitutional_compliant ? 0 : 1);
+
+    } catch (error) {
+      console.error('Status check failed:', error.message);
+      if (options.verbose) {
+        console.error(error.stack);
+      }
+      process.exit(1);
+    }
+  });
+
+// Version check command
+program
+  .command('version-check')
+  .description('Check constitutional version compatibility')
+  .option('--required <version>', 'Required constitutional version', '1.0.0')
+  .action(async (options) => {
+    try {
+      const verifier = await createVerifier(options);
+      const compatible = await verifier.checkVersionCompatibility(options.required);
+
+      if (compatible) {
+        console.log(`✅ Constitutional version ${options.required} compatible`);
+        process.exit(0);
+      } else {
+        console.log(`❌ Constitutional version ${options.required} incompatible`);
+        process.exit(1);
+      }
+
+    } catch (error) {
+      console.error('Version check failed:', error.message);
+      if (options.verbose) {
+        console.error(error.stack);
+      }
+      process.exit(1);
+    }
+  });
+
+// Helper functions
+
+async function createVerifier(options) {
+  const globalOpts = program.opts();
+
+  // Load configuration
+  let config = {};
+  if (globalOpts.config) {
+    config = JSON.parse(readFileSync(globalOpts.config, 'utf8'));
+  }
+
+  // Override with CLI options
+  if (globalOpts.receiptChain) {
+    config.receipt_chain_path = globalOpts.receiptChain;
+  }
+
+  config.verbose = globalOpts.verbose || false;
+
+  return new AIToolGovernanceVerifier(config);
+}
+
+function outputReport(report, type, format) {
+  switch (format) {
+    case 'json':
+      console.log(JSON.stringify(report, null, 2));
+      break;
+    case 'summary':
+      outputSummary(report, type);
+      break;
+    case 'table':
+    default:
+      outputTable(report, type);
+      break;
+  }
+}
+
+function outputSummary(report, type) {
+  console.log(`\n=== ${type.toUpperCase()} SUMMARY ===\n`);
+
+  switch (type) {
+    case 'integrity':
+      console.log(`Integrity Valid: ${report.integrity_valid ? '✅' : '❌'}`);
+      console.log(`Receipts Checked: ${report.receipts_checked}`);
+      if (!report.integrity_valid) {
+        console.log(`Violations Found: ${report.violations.length}`);
+      }
+      break;
+
+    case 'compliance':
+      console.log(`Compliance Score: ${(report.compliance_score * 100).toFixed(1)}%`);
+      console.log(`Status: ${report.compliance_score >= 0.95 ? '✅ Compliant' : '❌ Non-Compliant'}`);
+      console.log(`Violations: ${report.violations.length}`);
+      break;
+
+    case 'replay':
+      console.log(`State Type: ${report.state_type}`);
+      console.log(`Replay Success: ${report.success ? '✅' : '❌'}`);
+      console.log(`Final State Hash: ${report.final_state_hash}`);
+      break;
+  }
+}
+
+function outputTable(report, type) {
+  // Enhanced table output would require additional formatting library
+  // For now, use structured console output
+  outputSummary(report, type);
+
+  if (type === 'compliance' && report.violations.length > 0) {
+    console.log('\n=== VIOLATIONS ===\n');
+    for (const violation of report.violations) {
+      console.log(`❌ ${violation.type}: ${violation.description}`);
+      console.log(`   Severity: ${violation.severity}`);
+      console.log(`   Affected Receipts: ${violation.affected_receipts.length}`);
+      console.log('');
+    }
+  }
+}
+
+function displayStatus(status, detailed) {
+  console.log('\n=== CONSTITUTIONAL STATUS ===\n');
+
+  console.log(`Constitutional Compliant: ${status.constitutional_compliant ? '✅' : '❌'}`);
+  console.log(`Framework Version: ${status.framework_version}`);
+  console.log(`Last Updated: ${status.last_updated}`);
+
+  if (detailed) {
+    console.log(`\nActive Agents: ${status.active_agents}`);
+    console.log(`Active Overrides: ${status.active_overrides}`);
+    console.log(`Pending Reviews: ${status.pending_reviews}`);
+    console.log(`Chain Integrity: ${status.chain_integrity}`);
+  }
+
+  if (!status.constitutional_compliant) {
+    console.log(`\n❌ Constitutional Violations Detected`);
+    console.log(`Run 'ai-gov-verify compliance' for details`);
+  }
+}
+
+// Error handling
+process.on('uncaughtException', (error) => {
+  console.error('Unexpected error:', error.message);
+  if (program.opts().verbose) {
+    console.error(error.stack);
+  }
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled promise rejection:', reason);
+  process.exit(1);
+});
+
+// Parse CLI arguments
+program.parse(process.argv);
+
+// Show help if no command provided
+if (!process.argv.slice(2).length) {
+  program.outputHelp();
+}

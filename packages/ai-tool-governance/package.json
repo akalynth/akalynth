@@ -1,0 +1,51 @@
+{
+  "name": "@akalynth/ai-tool-governance",
+  "version": "1.0.0",
+  "description": "Constitutional governance adapter for AI tool execution",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "ai-gov-verify": "./bin/ai-gov-verify"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "dev": "tsc --watch",
+    "verify": "node bin/ai-gov-verify"
+  },
+  "keywords": [
+    "ai-governance",
+    "constitutional",
+    "proof-native",
+    "tool-execution",
+    "risk-assessment",
+    "emergency-response",
+    "post-bureaucratic"
+  ],
+  "dependencies": {
+    "@akalynth/coordination-kernel": "^0.1.0",
+    "fast-json-stable-stringify": "^2.1.0",
+    "commander": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "jest": "^29.0.0",
+    "@types/jest": "^29.0.0"
+  },
+  "files": [
+    "dist/**/*",
+    "bin/**/*",
+    "examples/**/*"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "type": "module",
+  "constitutional": {
+    "compliant": true,
+    "framework_version": "1.0.0",
+    "governance_type": "ai_tool_execution",
+    "emergency_capable": true
+  }
+}
