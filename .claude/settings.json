@@ -58,6 +58,15 @@
             "command": "npx tsx ./scripts/phase_gate.ts"
           }
         ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/warn_protocol_change.sh"
+          }
+        ]
       }
     ],
     "PostToolUse": [

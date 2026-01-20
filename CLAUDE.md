@@ -131,6 +131,21 @@ This project uses **custom agents** (domain specialists) for architecture-critic
   - Enforces: Receipt-first design, Civil Guarantees, deterministic evidence
   - Example: "Show players why item dropped on death"
 
+- **receipt-engineer** (`.claude/agents/receipt-engineer.md`)
+  - Use for: Receipt-first persistence, chain integrity, replay determinism
+  - Enforces: Canonical receipts, no state mutation without receipt emission, chain verification
+  - Example: "Add new receipt type for player trade"
+
+- **anticheat-engineer** (`.claude/agents/anticheat-engineer.md`)
+  - Use for: Heat signals, Tem challenges, enforcement ladder
+  - Enforces: Deterministic heat computation, evidence-based enforcement, receipt-backed signals
+  - Example: "Add new anti-cheat detection for speed hacking"
+
+- **combat-engineer** (`.claude/agents/combat-engineer.md`)
+  - Use for: Death penalties, drops, combat resolution
+  - Enforces: Deterministic outcomes, reproducible combat, receipt-driven drops
+  - Example: "Implement PvP death penalty scaling"
+
 ### When to Delegate
 
 ✅ **Use custom agents for:**
@@ -153,6 +168,10 @@ Available via `.claude/commands/`:
 - `@bootstrap` - Environment setup
 - `@protocol` - Validate protocol changes
 - `@verify` - Run MVP verification
+- `@receipt-verify` - Verify receipt chain integrity
+- `@drop-check` - Validate drop policy determinism
+- `@treasury-check` - Verify gold/item consistency
+- `@identity-check` - Verify caps/roles/segregation
 
 **Rule:** Delegate to custom agents early. Trust their constraints. They enforce architectural integrity you might miss.
 
@@ -170,6 +189,32 @@ Key flags for development/testing:
 | `SOVEREIGN_ENABLED=1` | Enable Sovereign identity system |
 | `CAPS_ENABLED=1` | Enable capability system |
 | `PUBLIC_RECEIPTS_DELAY_MS=0` | Disable delay for deterministic tests |
+| `AKALYNTH_PROTOCOL_ACK=YES` | Acknowledge protocol.ts edit (bypass warning hook) |
+| `AKALYNTH_RECEIPT_CHAIN_PATH` | Primary: absolute path to receipts.jsonl |
+| `AKALYNTH_RECEIPTS_PATH` | Legacy fallback (deprecated) |
+| `AKALYNTH_DB_PATH` | Absolute path to SQLite database |
+| `CHRONICLE_KEY_PATH` | Signing key path (required in production) |
+
+## Protocol Change Warning
+
+Editing `protocol.ts` triggers a warning hook that blocks changes unless explicitly acknowledged. This prevents accidental breaking changes to the API surface.
+
+To bypass the warning when intentional:
+```bash
+AKALYNTH_PROTOCOL_ACK=YES
+```
+
+The hook (`scripts/warn_protocol_change.sh`) exits with code 1 to block edits unless acknowledged.
+
+## Production Key Discipline
+
+In production mode (`NODE_ENV=production` or `AKALYNTH_ENV=production`):
+
+1. **`CHRONICLE_KEY_PATH` is required** - Server fails to start without it
+2. **Key file permissions must be 0600 or stricter** - No group/world readable
+3. **Hard fail early** - Server exits with code 2 on key errors
+
+Dev mode allows missing key only if no signing is required. Key loading is consolidated in `packages/coordination-kernel/src/receipt/key.ts`.
 
 ## Commit Discipline (Atomic)
 - One responsibility per commit
@@ -193,6 +238,10 @@ Available via `.claude/commands/`:
 - `/protocol` - Check protocol.ts matches PROTOCOL.md
 - `/bootstrap` - Run Linux bootstrap script
 - `/anticheat` - Add new anti-cheat signal
+- `/receipt-verify` - Verify receipt chain integrity
+- `/drop-check` - Validate drop policy determinism
+- `/treasury-check` - Verify gold/item consistency
+- `/identity-check` - Verify caps/roles/segregation
 
 ## CI Pipeline
 GitHub Actions (`.github/workflows/ci.yml`) runs:
