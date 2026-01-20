@@ -51,7 +51,7 @@ export function createAuditLogger(config: AuditLoggerConfig): AuditLogger {
   const receiptLogger = createReceiptLogger({
     receiptDir: dir,
     keyPath: config.keyPath,
-    onWrite: (receipt, offsetAfterLine) => {
+    onWrite: (receipt: AuditReceipt, offsetAfterLine: number) => {
       // Update in-memory projections (runs on every receipt)
       applyReceiptToIdentity(receipt);
       applyReceiptToTreasury(receipt);
