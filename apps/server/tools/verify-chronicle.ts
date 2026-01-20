@@ -25,6 +25,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import Database from 'better-sqlite3';
+import { resolveChainPaths } from '../../../packages/shared/paths.js';
 
 // Valid chronicle event kinds (must match ChronicleEventKind type)
 const VALID_KINDS = new Set([
@@ -87,12 +88,13 @@ function isValidISO8601(timestamp: string): boolean {
 }
 
 function main(): void {
-  const dbPath = process.env.AKALYNTH_DB_PATH ?? './data/akalynth.db';
-  const absDb = path.resolve(process.cwd(), dbPath);
+  // Canonical path resolution (single source of truth)
+  const repoRoot = path.resolve(process.cwd());
+  const paths = resolveChainPaths(repoRoot);
 
-  if (!fs.existsSync(absDb)) fail(`db not found: ${absDb}`);
+  if (!fs.existsSync(paths.dbPath)) fail(`db not found: ${paths.dbPath}`);
 
-  const db = new Database(absDb, { readonly: true });
+  const db = new Database(paths.dbPath, { readonly: true });
 
   // Get schema version
   const versionRow = db.prepare(`SELECT value FROM _meta WHERE key = 'schema_version'`).get() as { value: string } | undefined;

@@ -11,15 +11,19 @@
 
 import Database from 'better-sqlite3';
 import fs from 'fs';
+import path from 'path';
 import { computePressureMetrics } from '../src/metrics/pressure.js';
 import { getSchemaVersion, getChronicleEventById } from '../src/persist/queries.js';
+import { resolveChainPaths } from '../../../packages/shared/paths.js';
 
 // ============================================================================
 // Configuration
 // ============================================================================
 
-const DB_PATH = process.env.DB_PATH || 'data/akalynth.db';
-const RECEIPTS_PATH = process.env.RECEIPTS_PATH || 'audit/receipts.jsonl';
+// Canonical path resolution (single source of truth)
+const chainPaths = resolveChainPaths(path.resolve(process.cwd()));
+const DB_PATH = chainPaths.dbPath;
+const RECEIPTS_PATH = chainPaths.receiptsPath;
 const FIXTURES_PATH = 'fixtures';
 
 // ============================================================================

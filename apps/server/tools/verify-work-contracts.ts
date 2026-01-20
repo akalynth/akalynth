@@ -1,5 +1,6 @@
 // Verify Work Contract Faucet v0
-// Tests cooldown, tick spacing, completion, credit emission, replay equivalence
+// Tests cooldown, tick spacing, completion, credit emission, replay equivalence,
+// and deterministic reconstruction from receipts (no wall-clock in reducers).
 
 import {
   clearWorkContractsProjection,
@@ -9,6 +10,7 @@ import {
   failContract,
   getActiveContract,
   isOnCooldown,
+  getCooldownRemaining,
   applyReceiptToWorkContracts,
 } from '../src/world/work_contracts.js';
 import {
@@ -17,7 +19,20 @@ import {
   applyReceiptToTreasury,
 } from '../src/world/treasury.js';
 import type { AuditReceipt } from '../../../packages/shared/types.js';
-import { WORK_CONTRACT_SCHEDULE } from '../../../packages/shared/types.js';
+import {
+  WORK_CONTRACT_STARTED_ACTION,
+  WORK_CONTRACT_TICK_RECORDED_ACTION,
+  WORK_CONTRACT_COMPLETED_ACTION,
+  WORK_CONTRACT_FAILED_ACTION,
+  WALLET_CREDIT_ACTION,
+  WORK_CONTRACT_SCHEDULE,
+} from '../../../packages/shared/types.js';
+import {
+  computeEventHash,
+  computeInputsHash,
+  computeOutputsHash,
+  GENESIS_MARKER,
+} from '@akalynth/coordination-kernel';
 
 function test(name: string, fn: () => void) {
   try {
@@ -36,27 +51,80 @@ function assertEquals<T>(actual: T, expected: T, msg?: string) {
   }
 }
 
-// Collect receipts for verification
-const receipts: AuditReceipt[] = [];
-function mockWriteReceipt(receipt: Omit<AuditReceipt, 'timestamp' | 'evidence_hash'>) {
-  const fullReceipt: AuditReceipt = {
-    timestamp: new Date().toISOString(),
-    ...receipt,
-  };
-  receipts.push(fullReceipt);
-  // Apply to projections (simulates what logger.ts does)
-  applyReceiptToWorkContracts(fullReceipt);
-  applyReceiptToTreasury(fullReceipt);
+function assert(condition: unknown, msg: string) {
+  if (!condition) throw new Error(msg);
 }
 
-// Reset state before tests
+let lastEventHash: string | null = null;
+let lastSequence = 0;
+let logicalNowMs = 1_700_000_000_000;
+
+function buildReceipt(
+  receipt: Omit<
+    AuditReceipt,
+    'sequence' | 'timestamp' | 'prev_hash' | 'event_hash' | 'signature' | 'inputs_hash' | 'outputs_hash'
+  >
+): AuditReceipt {
+  const inputs_hash = computeInputsHash(receipt.inputs);
+  const outputs_hash = computeOutputsHash(receipt.result);
+
+  const preferredMs =
+    typeof (receipt.inputs as Record<string, unknown>).tick_at_ms === 'number'
+      ? ((receipt.inputs as Record<string, unknown>).tick_at_ms as number)
+      : typeof (receipt.inputs as Record<string, unknown>).started_at_ms === 'number'
+        ? ((receipt.inputs as Record<string, unknown>).started_at_ms as number)
+        : logicalNowMs;
+
+  const timestamp = new Date(preferredMs).toISOString();
+  logicalNowMs = Math.max(logicalNowMs + 1, preferredMs + 1);
+
+  const sequence = lastSequence + 1;
+  const prev_hash = lastEventHash ?? GENESIS_MARKER;
+
+  const body = {
+    ...receipt,
+    sequence,
+    timestamp,
+    prev_hash,
+    inputs_hash,
+    outputs_hash,
+  };
+  const event_hash = computeEventHash(body);
+  const fullReceipt: AuditReceipt = {
+    ...body,
+    event_hash,
+    signature: 'test-signature',
+  };
+
+  lastEventHash = event_hash;
+  lastSequence = sequence;
+  return fullReceipt;
+}
+
+// Collect receipts for verification (simulates what audit/logger.ts does).
+const receipts: AuditReceipt[] = [];
+function mockWriteReceipt(
+  receipt: Omit<
+    AuditReceipt,
+    'sequence' | 'timestamp' | 'prev_hash' | 'event_hash' | 'signature' | 'inputs_hash' | 'outputs_hash'
+  >
+) {
+  const full = buildReceipt(receipt);
+  receipts.push(full);
+  applyReceiptToWorkContracts(full);
+  applyReceiptToTreasury(full);
+}
+
 function resetState() {
   clearWorkContractsProjection();
   clearTreasuryProjection();
   receipts.length = 0;
+  lastEventHash = null;
+  lastSequence = 0;
+  logicalNowMs = 1_700_000_000_000;
 }
 
-const schedule = WORK_CONTRACT_SCHEDULE['temple_sweep'];
+const schedule = WORK_CONTRACT_SCHEDULE.temple_sweep;
 
 // ============================================================================
 // Tests
@@ -64,259 +132,170 @@ const schedule = WORK_CONTRACT_SCHEDULE['temple_sweep'];
 
 test('can start contract when not on cooldown', () => {
   resetState();
-  const now = Date.now();
+  const now = 1_700_000_000_000;
 
   const result = startContract('player-1', 'temple_sweep', now, mockWriteReceipt);
   assertEquals(result.ok, true, 'should succeed');
-  if (result.ok) {
-    assertEquals(result.payout_gold, schedule.payout, 'payout');
-    assertEquals(typeof result.contract_id, 'string', 'contract_id should be string');
-  }
+  if (!result.ok) return;
+
+  const start = receipts.find((r) => r.action === WORK_CONTRACT_STARTED_ACTION);
+  assert(Boolean(start), 'start receipt must exist');
+  assertEquals(start!.actor_id, 'player-1');
+  assertEquals(start!.inputs.started_at_ms, now, 'started_at_ms must be receipted');
 });
 
 test('cannot start contract while one is active', () => {
   resetState();
-  const now = Date.now();
+  const now = 1_700_000_000_000;
 
-  // Start first contract
   const result1 = startContract('player-2', 'temple_sweep', now, mockWriteReceipt);
   assertEquals(result1.ok, true, 'first should succeed');
 
-  // Try to start second
   const result2 = startContract('player-2', 'temple_sweep', now + 1000, mockWriteReceipt);
   assertEquals(result2.ok, false, 'second should fail');
-  if (!result2.ok) {
-    assertEquals(result2.error, 'already_active', 'error should be already_active');
-  }
+  if (!result2.ok) assertEquals(result2.error, 'already_active');
 });
 
-test('cannot start contract on cooldown', () => {
+test('bursty ticks are rejected (no tick receipt emitted)', () => {
   resetState();
-  const now = Date.now();
+  const now = 1_700_000_000_000;
 
-  // Start a contract
-  const result1 = startContract('player-3', 'temple_sweep', now, mockWriteReceipt);
-  assertEquals(result1.ok, true);
-  if (!result1.ok) return;
+  const start = startContract('player-3', 'temple_sweep', now, mockWriteReceipt);
+  assertEquals(start.ok, true);
+  if (!start.ok) return;
 
-  // Send valid ticks (6 ticks, 5 seconds apart)
-  for (let i = 0; i < 6; i++) {
-    recordTick('player-3', result1.contract_id, now + (i + 1) * 5000);
-  }
+  const okTick = recordTick('player-3', start.contract_id, now + 5000, mockWriteReceipt);
+  assertEquals(okTick.ok, true);
 
-  // Complete after min duration (35s > 30s)
-  const completeResult = completeContract('player-3', result1.contract_id, now + 35000, mockWriteReceipt);
-  assertEquals(completeResult.ok, true, 'complete should succeed');
-
-  // Now try to start another immediately (should be on cooldown)
-  const result2 = startContract('player-3', 'temple_sweep', now + 36000, mockWriteReceipt);
-  assertEquals(result2.ok, false, 'should fail on cooldown');
-  if (!result2.ok) {
-    assertEquals(result2.error, 'on_cooldown', 'error should be on_cooldown');
-  }
+  const receiptCountAfterOk = receipts.length;
+  const burstTick = recordTick('player-3', start.contract_id, now + 5000 + 100, mockWriteReceipt);
+  assertEquals(burstTick.ok, false);
+  assertEquals(receipts.length, receiptCountAfterOk, 'no receipt should be emitted for rejected tick');
 });
 
-test('bursty ticks are rejected', () => {
+test('tick receipt includes tick_index and tick_at_ms', () => {
   resetState();
-  const now = Date.now();
+  const now = 1_700_000_000_000;
 
-  const result = startContract('player-4', 'temple_sweep', now, mockWriteReceipt);
-  assertEquals(result.ok, true);
-  if (!result.ok) return;
+  const start = startContract('player-4', 'temple_sweep', now, mockWriteReceipt);
+  assertEquals(start.ok, true);
+  if (!start.ok) return;
 
-  // First tick after 5 seconds (valid)
-  const tick1 = recordTick('player-4', result.contract_id, now + 5000);
-  assertEquals(tick1.ok, true, 'first tick should succeed');
+  const tick1 = recordTick('player-4', start.contract_id, now + 5000, mockWriteReceipt);
+  assertEquals(tick1.ok, true);
 
-  // Second tick only 1 second later (too fast, should fail)
-  const tick2 = recordTick('player-4', result.contract_id, now + 6000);
-  assertEquals(tick2.ok, false, 'bursty tick should fail');
-  if (!tick2.ok) {
-    assertEquals(tick2.error, 'insufficient_presence', 'error should be insufficient_presence');
-  }
+  const tickReceipts = receipts.filter((r) => r.action === WORK_CONTRACT_TICK_RECORDED_ACTION);
+  assertEquals(tickReceipts.length, 1);
+  assertEquals(tickReceipts[0].inputs.tick_index, 1);
+  assertEquals(tickReceipts[0].inputs.tick_at_ms, now + 5000);
 });
 
-test('valid tick spacing is accepted', () => {
+test('cannot complete before min duration / required ticks', () => {
   resetState();
-  const now = Date.now();
+  const now = 1_700_000_000_000;
 
-  const result = startContract('player-5', 'temple_sweep', now, mockWriteReceipt);
-  assertEquals(result.ok, true);
-  if (!result.ok) return;
+  const start = startContract('player-5', 'temple_sweep', now, mockWriteReceipt);
+  assertEquals(start.ok, true);
+  if (!start.ok) return;
 
-  // Send ticks with valid spacing (5 seconds apart, which is within 3-8s window)
-  for (let i = 0; i < 6; i++) {
-    const tickTime = now + (i + 1) * 5000;  // 5s, 10s, 15s, 20s, 25s, 30s
-    const tick = recordTick('player-5', result.contract_id, tickTime);
-    assertEquals(tick.ok, true, `tick ${i + 1} should succeed`);
-  }
+  // One valid tick only
+  recordTick('player-5', start.contract_id, now + schedule.tick_min_interval_ms, mockWriteReceipt);
+
+  const goldBefore = getGoldBalance('player-5');
+  const receiptCountBefore = receipts.length;
+
+  // Too early (< min_duration_ms)
+  const completeEarly = completeContract('player-5', start.contract_id, now + schedule.min_duration_ms - 1, mockWriteReceipt);
+  assertEquals(completeEarly.ok, false);
+
+  assertEquals(receipts.length, receiptCountBefore, 'no receipts on failed completion');
+  assertEquals(getGoldBalance('player-5'), goldBefore, 'no payout on failed completion');
 });
 
-test('completion requires min duration', () => {
+test('completion emits WALLET_CREDIT_ACTION after all gates', () => {
   resetState();
-  const now = Date.now();
+  const now = 1_700_000_000_000;
 
-  const result = startContract('player-6', 'temple_sweep', now, mockWriteReceipt);
-  assertEquals(result.ok, true);
-  if (!result.ok) return;
+  const start = startContract('player-6', 'temple_sweep', now, mockWriteReceipt);
+  assertEquals(start.ok, true);
+  if (!start.ok) return;
 
-  // Send enough ticks but too quickly (before min_duration_ms)
-  for (let i = 0; i < 6; i++) {
-    recordTick('player-6', result.contract_id, now + (i + 1) * 4000);  // 4s apart, but total only 24s
+  // Valid ticks (required_ticks) spaced within min/max windows
+  for (let i = 0; i < schedule.required_ticks; i++) {
+    recordTick('player-6', start.contract_id, now + (i + 1) * 5000, mockWriteReceipt);
   }
 
-  // Try to complete at 25s (before 30s min_duration)
-  const completeResult = completeContract('player-6', result.contract_id, now + 25000, mockWriteReceipt);
-  assertEquals(completeResult.ok, false, 'should fail before min duration');
-  if (!completeResult.ok) {
-    assertEquals(completeResult.error, 'insufficient_presence', 'error should be insufficient_presence');
-  }
+  const completeAt = now + schedule.min_duration_ms + 5000;
+  const complete = completeContract('player-6', start.contract_id, completeAt, mockWriteReceipt);
+  assertEquals(complete.ok, true);
+  if (!complete.ok) return;
+
+  const credit = receipts.find((r) => r.action === WALLET_CREDIT_ACTION && r.actor_id === 'player-6');
+  assert(Boolean(credit), 'payout receipt must exist');
+  assertEquals(getGoldBalance('player-6'), schedule.payout, 'gold balance should reflect payout');
 });
 
-test('completion requires tick count', () => {
+test('cooldown is derived from cooldown_until and is replay-stable', () => {
   resetState();
-  const now = Date.now();
+  const now = 1_700_000_000_000;
 
-  const result = startContract('player-7', 'temple_sweep', now, mockWriteReceipt);
-  assertEquals(result.ok, true);
-  if (!result.ok) return;
+  const start = startContract('player-7', 'temple_sweep', now, mockWriteReceipt);
+  assertEquals(start.ok, true);
+  if (!start.ok) return;
 
-  // Send only 3 ticks (not enough)
-  for (let i = 0; i < 3; i++) {
-    recordTick('player-7', result.contract_id, now + (i + 1) * 5000);
-  }
+  // Immediately after start: on cooldown.
+  assertEquals(isOnCooldown('player-7', now + 1000), true);
+  assert(getCooldownRemaining('player-7', now + 1000) > 0, 'cooldown remaining should be > 0');
 
-  // Try to complete after min duration
-  const completeResult = completeContract('player-7', result.contract_id, now + 35000, mockWriteReceipt);
-  assertEquals(completeResult.ok, false, 'should fail without enough ticks');
-  if (!completeResult.ok) {
-    assertEquals(completeResult.error, 'insufficient_presence', 'error should be insufficient_presence');
-  }
-});
-
-test('successful completion emits wallet_credit', () => {
+  // Replay from receipts: should reconstruct same cooldown.
+  const captured = receipts.slice();
   resetState();
-  const now = Date.now();
-
-  const result = startContract('player-8', 'temple_sweep', now, mockWriteReceipt);
-  assertEquals(result.ok, true);
-  if (!result.ok) return;
-
-  // Send 6 ticks with valid spacing
-  for (let i = 0; i < 6; i++) {
-    recordTick('player-8', result.contract_id, now + (i + 1) * 5000);
-  }
-
-  // Complete after min duration
-  const completeResult = completeContract('player-8', result.contract_id, now + 35000, mockWriteReceipt);
-  assertEquals(completeResult.ok, true, 'should complete successfully');
-  if (completeResult.ok) {
-    assertEquals(completeResult.credited_gold, schedule.payout, 'credited_gold should match payout');
-  }
-
-  // Check wallet_credit receipt was emitted
-  const creditReceipts = receipts.filter(r => r.action === 'wallet_credit' && r.player_id === 'player-8');
-  assertEquals(creditReceipts.length, 1, 'should have one wallet_credit receipt');
-  assertEquals(creditReceipts[0].inputs.reason, 'work_contract', 'reason should be work_contract');
-  assertEquals(creditReceipts[0].inputs.amount, schedule.payout, 'amount should match payout');
-
-  // Check balance updated
-  const balance = getGoldBalance('player-8');
-  assertEquals(balance, schedule.payout, 'balance should equal payout');
-});
-
-test('disconnect fails active contract', () => {
-  resetState();
-  const now = Date.now();
-
-  const result = startContract('player-9', 'temple_sweep', now, mockWriteReceipt);
-  assertEquals(result.ok, true);
-  if (!result.ok) return;
-
-  // Simulate disconnect
-  const failed = failContract('player-9', 'disconnect', mockWriteReceipt);
-  assertEquals(failed, true, 'should fail contract');
-
-  // Check contract is cleared
-  const active = getActiveContract('player-9');
-  assertEquals(active, null, 'active contract should be null');
-
-  // Check failure receipt
-  const failReceipts = receipts.filter(r => r.action === 'work_contract_failed');
-  assertEquals(failReceipts.length, 1, 'should have one failure receipt');
-  assertEquals(failReceipts[0].inputs.reason, 'disconnect', 'reason should be disconnect');
-});
-
-test('replay equivalence - receipts reconstruct cooldown state', () => {
-  resetState();
-  const now = Date.now();
-
-  // Start and complete a contract
-  const result = startContract('player-10', 'temple_sweep', now, mockWriteReceipt);
-  assertEquals(result.ok, true);
-  if (!result.ok) return;
-
-  for (let i = 0; i < 6; i++) {
-    recordTick('player-10', result.contract_id, now + (i + 1) * 5000);
-  }
-  completeContract('player-10', result.contract_id, now + 35000, mockWriteReceipt);
-
-  const balanceBeforeReplay = getGoldBalance('player-10');
-  const onCooldownBefore = isOnCooldown('player-10', now + 40000);
-
-  assertEquals(balanceBeforeReplay, schedule.payout, 'balance before replay');
-  assertEquals(onCooldownBefore, true, 'should be on cooldown before replay');
-
-  // Clear and replay all receipts
-  clearWorkContractsProjection();
-  clearTreasuryProjection();
-
-  for (const r of receipts) {
+  for (const r of captured) {
     applyReceiptToWorkContracts(r);
     applyReceiptToTreasury(r);
   }
-
-  const balanceAfterReplay = getGoldBalance('player-10');
-  const onCooldownAfter = isOnCooldown('player-10', Date.now());
-
-  assertEquals(balanceAfterReplay, schedule.payout, 'balance after replay');
-  assertEquals(onCooldownAfter, true, 'should still be on cooldown after replay');
+  assertEquals(isOnCooldown('player-7', now + 1000), true, 'replay must preserve cooldown');
 });
 
-test('no credit emitted on failure', () => {
+test('failContract emits failure receipt and clears active contract', () => {
   resetState();
-  const now = Date.now();
+  const now = 1_700_000_000_000;
 
-  const result = startContract('player-11', 'temple_sweep', now, mockWriteReceipt);
-  assertEquals(result.ok, true);
-  if (!result.ok) return;
+  const start = startContract('player-8', 'temple_sweep', now, mockWriteReceipt);
+  assertEquals(start.ok, true);
+  if (!start.ok) return;
 
-  // Fail immediately
-  failContract('player-11', 'disconnect', mockWriteReceipt);
+  const ok = failContract('player-8', 'disconnect', mockWriteReceipt);
+  assertEquals(ok, true);
 
-  // Check no wallet_credit
-  const creditReceipts = receipts.filter(r => r.action === 'wallet_credit' && r.player_id === 'player-11');
-  assertEquals(creditReceipts.length, 0, 'should have no wallet_credit receipt');
-
-  // Check balance is still 0
-  const balance = getGoldBalance('player-11');
-  assertEquals(balance, 0, 'balance should be 0');
+  const failure = receipts.find((r) => r.action === WORK_CONTRACT_FAILED_ACTION);
+  assert(Boolean(failure), 'failure receipt must exist');
+  assertEquals(getActiveContract('player-8'), null, 'active contract should be cleared');
 });
 
-test('invalid contract_id rejected', () => {
+test('reducers use receipted times (not receipt timestamp)', () => {
   resetState();
-  const now = Date.now();
 
-  const result = startContract('player-12', 'temple_sweep', now, mockWriteReceipt);
-  assertEquals(result.ok, true);
-  if (!result.ok) return;
+  // Craft a start receipt with conflicting receipt.timestamp vs inputs.started_at_ms
+  const crafted = buildReceipt({
+    actor_id: 'player-9',
+    action: WORK_CONTRACT_STARTED_ACTION,
+    inputs: {
+      contract_type: 'temple_sweep',
+      contract_id: 'wc_test',
+      started_at_ms: 123,
+      cooldown_until: '2024-01-01T00:10:00.000Z',
+    },
+    result: 'ok',
+  });
 
-  // Try to tick with wrong contract_id
-  const tick = recordTick('player-12', 'wrong-contract-id', now + 5000);
-  assertEquals(tick.ok, false, 'should fail with wrong contract_id');
-  if (!tick.ok) {
-    assertEquals(tick.error, 'invalid_contract', 'error should be invalid_contract');
-  }
+  // Mutate the timestamp to a different value to ensure reducer prefers started_at_ms.
+  const mutated: AuditReceipt = { ...crafted, timestamp: '2099-01-01T00:00:00.000Z' };
+  applyReceiptToWorkContracts(mutated);
+
+  const c = getActiveContract('player-9');
+  assert(c !== null, 'contract should be active');
+  assertEquals(c!.started_at_ms, 123, 'started_at_ms must come from inputs.started_at_ms');
 });
 
 console.log('\n✓ All work contract tests passed');

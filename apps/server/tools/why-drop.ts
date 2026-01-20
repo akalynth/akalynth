@@ -25,6 +25,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import Database from 'better-sqlite3';
+import { resolveChainPaths } from '../../../packages/shared/paths.js';
 
 import { computeReceiptHash } from '../src/persist/hash.js';
 import {
@@ -39,11 +40,17 @@ import {
 type MapName = 'Rookguard' | 'Azura';
 
 interface AuditReceipt {
+  sequence: number;
   timestamp: string;
-  player_id: string;
+  prev_hash: string;
+  event_hash: string;
+  signature: string;
+  actor_id: string;
   action: string;
   inputs: Record<string, unknown>;
   result: string;
+  inputs_hash: string;
+  outputs_hash: string;
 }
 
 type CombatResolvedInputs = {
@@ -82,8 +89,14 @@ function getArg(name: string): string | null {
   return process.argv[idx + 1] ?? null;
 }
 
-const receiptsPath = path.resolve(process.cwd(), getArg('--receipts') ?? 'audit/receipts.jsonl');
-const dbPath = path.resolve(process.cwd(), getArg('--db') ?? 'data/akalynth.db');
+// Canonical path resolution (single source of truth), with CLI override support
+const chainPaths = resolveChainPaths(path.resolve(process.cwd()));
+const receiptsPath = getArg('--receipts')
+  ? path.resolve(process.cwd(), getArg('--receipts')!)
+  : chainPaths.receiptsPath;
+const dbPath = getArg('--db')
+  ? path.resolve(process.cwd(), getArg('--db')!)
+  : chainPaths.dbPath;
 const combatHashArg = getArg('--combat-hash');
 const victimArg = getArg('--victim');
 
@@ -168,9 +181,9 @@ function findCombatResolvedByHash(receipts: AuditReceipt[], hash: string): { idx
     const r = receipts[i];
     if (!isCombatResolved(r)) continue;
 
-    // Canon seed is computeReceiptHash({ player_id, action, inputs, result }) — no timestamp
+    // Canon seed is computeReceiptHash({ actor_id, action, inputs, result }) — no timestamp
     const base = {
-      player_id: r.player_id,
+      actor_id: r.actor_id,
       action: r.action,
       inputs: {
         target_player_id: r.inputs.target_player_id,
@@ -232,16 +245,16 @@ function replayUpTo(receipts: AuditReceipt[], stopExclusiveIdx: number): PreComb
     // Inventory projection
     if (isInvAdd(r)) {
       const itemId = itemIdFromInvReceipt(r);
-      if (itemId) inv(r.player_id).add(itemId);
+      if (itemId) inv(r.actor_id).add(itemId);
     } else if (isInvRemove(r)) {
       const itemId = itemIdFromInvReceipt(r);
-      if (itemId) inv(r.player_id).delete(itemId);
+      if (itemId) inv(r.actor_id).delete(itemId);
     }
 
     // Protected slot projection
     if (isSlotChanged(r)) {
       const inputs = r.inputs as InventorySlotChangedInputs;
-      const pid = r.player_id;
+      const pid = r.actor_id;
       if (inputs.slot === 'protected') {
         protectedByPlayerId.set(pid, inputs.item_id);
       } else {
@@ -259,7 +272,7 @@ function replayUpTo(receipts: AuditReceipt[], stopExclusiveIdx: number): PreComb
     if (isRepEvent(r)) {
       const inputs = r.inputs as unknown as ReputationEventInputs;
       const d = typeof inputs.delta === 'number' ? inputs.delta : 0;
-      repByPlayerId.set(r.player_id, rep(r.player_id) + d);
+      repByPlayerId.set(r.actor_id, rep(r.actor_id) + d);
     }
   }
 
@@ -369,13 +382,13 @@ function main() {
   const { idx, r } = anchor!;
   const inputs = r.inputs as CombatResolvedInputs;
 
-  const attackerId = r.player_id;
+  const attackerId = r.actor_id;
   const victimId = inputs.target_player_id;
   const map = inputs.map;
 
   // Compute the canonical seed hash (same as used by drop-policy)
   const combatResolvedBase = {
-    player_id: r.player_id,
+    actor_id: r.actor_id,
     action: r.action,
     inputs: {
       target_player_id: inputs.target_player_id,
@@ -442,9 +455,9 @@ function main() {
     const rr = receipts[j];
     // Stop at next combat event for this victim
     if (isCombatResolved(rr) && (rr.inputs as CombatResolvedInputs).target_player_id === victimId) break;
-    if (rr.action === 'death' && rr.player_id === victimId) break;
+    if (rr.action === 'death' && rr.actor_id === victimId) break;
 
-    if (rr.player_id === victimId && rr.action === 'item_removed_from_inventory') {
+    if (rr.actor_id === victimId && rr.action === 'item_removed_from_inventory') {
       const itemId = itemIdFromInvReceipt(rr);
       if (itemId) removedItemIds.push(itemId);
     }

@@ -24,6 +24,7 @@ import * as path from 'node:path';
 import { execSync, spawnSync } from 'node:child_process';
 import Database from 'better-sqlite3';
 import { SCHEMA_VERSION } from '../src/persist/schema';
+import { resolveChainPaths } from '../../../packages/shared/paths.js';
 
 // ============================================================================
 // Configuration
@@ -33,8 +34,10 @@ const args = process.argv.slice(2);
 const SKIP_BUILD = args.includes('--skip-build');
 const VERBOSE = args.includes('--verbose');
 
-const DB_PATH = process.env.AKALYNTH_DB_PATH ?? './data/akalynth.db';
-const RECEIPTS_PATH = process.env.AKALYNTH_RECEIPTS_PATH ?? './audit/receipts.jsonl';
+// Canonical path resolution (single source of truth)
+const chainPaths = resolveChainPaths(path.resolve(process.cwd()));
+const DB_PATH = chainPaths.dbPath;
+const RECEIPTS_PATH = chainPaths.receiptsPath;
 
 // ============================================================================
 // Logging

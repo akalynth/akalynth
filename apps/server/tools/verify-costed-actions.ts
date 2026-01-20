@@ -9,6 +9,12 @@ import {
 } from '../src/world/treasury.js';
 import type { AuditReceipt } from '../../../packages/shared/types.js';
 import {
+  computeEventHash,
+  computeInputsHash,
+  computeOutputsHash,
+  GENESIS_MARKER,
+} from '@akalynth/coordination-kernel';
+import {
   WALLET_CREDIT_ACTION,
   ACTION_GOLD_COST,
 } from '../../../packages/shared/types.js';
@@ -32,19 +38,59 @@ function assertEquals<T>(actual: T, expected: T, msg?: string) {
 
 // Collect receipts for verification
 const receipts: AuditReceipt[] = [];
-function mockWriteReceipt(receipt: Omit<AuditReceipt, 'timestamp' | 'evidence_hash'>) {
-  const fullReceipt: AuditReceipt = {
-    timestamp: new Date().toISOString(),
+let lastEventHash: string | null = null;
+let lastSequence = 0;
+
+function buildReceipt(
+  receipt: Omit<AuditReceipt, 'sequence' | 'timestamp' | 'prev_hash' | 'event_hash' | 'signature' | 'inputs_hash' | 'outputs_hash'>,
+  useChain: boolean
+): AuditReceipt {
+  const timestamp = new Date().toISOString();
+  const prev_hash = useChain ? (lastEventHash ?? GENESIS_MARKER) : GENESIS_MARKER;
+  const sequence = useChain ? lastSequence + 1 : 0;
+  const inputs_hash = computeInputsHash(receipt.inputs);
+  const outputs_hash = computeOutputsHash(receipt.result);
+  const body = {
     ...receipt,
+    sequence,
+    timestamp,
+    prev_hash,
+    inputs_hash,
+    outputs_hash,
   };
+  const event_hash = computeEventHash(body);
+  const fullReceipt: AuditReceipt = {
+    ...body,
+    event_hash,
+    signature: 'test-signature',
+  };
+
+  if (useChain) {
+    lastEventHash = event_hash;
+    lastSequence = sequence;
+  }
+
+  return fullReceipt;
+}
+
+function mockWriteReceipt(
+  receipt: Omit<AuditReceipt, 'sequence' | 'timestamp' | 'prev_hash' | 'event_hash' | 'signature' | 'inputs_hash' | 'outputs_hash'>
+) {
+  const fullReceipt = buildReceipt(receipt, true);
   receipts.push(fullReceipt);
   // Apply to treasury (simulates what logger.ts does)
   applyReceiptToTreasury(fullReceipt);
 }
 
+function resetReceipts() {
+  receipts.length = 0;
+  lastEventHash = null;
+  lastSequence = 0;
+}
+
 // Reset state before tests
 clearTreasuryProjection();
-receipts.length = 0;
+resetReceipts();
 
 test('inspect_player is in cost schedule', () => {
   const cost = ACTION_GOLD_COST['inspect_player'];
@@ -54,7 +100,7 @@ test('inspect_player is in cost schedule', () => {
 
 test('debitForAction rejects when balance is 0', () => {
   clearTreasuryProjection();
-  receipts.length = 0;
+  resetReceipts();
 
   const result = debitForAction('player-1', 'inspect_player', mockWriteReceipt);
   assertEquals(result.ok, false, 'should fail');
@@ -66,16 +112,15 @@ test('debitForAction rejects when balance is 0', () => {
 
 test('debitForAction succeeds when balance >= cost', () => {
   clearTreasuryProjection();
-  receipts.length = 0;
+  resetReceipts();
 
   // Credit 10 Gold
-  applyReceiptToTreasury({
-    timestamp: new Date().toISOString(),
-    player_id: 'player-2',
+  applyReceiptToTreasury(buildReceipt({
+    actor_id: 'player-2',
     action: WALLET_CREDIT_ACTION,
     inputs: { amount: 10, reason: 'debug_grant' },
     result: 'ok',
-  });
+  }, false));
 
   assertEquals(getGoldBalance('player-2'), 10, 'initial balance');
 
@@ -92,16 +137,15 @@ test('debitForAction succeeds when balance >= cost', () => {
 
 test('debitForAction rejects unknown action', () => {
   clearTreasuryProjection();
-  receipts.length = 0;
+  resetReceipts();
 
   // Credit some Gold
-  applyReceiptToTreasury({
-    timestamp: new Date().toISOString(),
-    player_id: 'player-3',
+  applyReceiptToTreasury(buildReceipt({
+    actor_id: 'player-3',
     action: WALLET_CREDIT_ACTION,
     inputs: { amount: 100, reason: 'debug_grant' },
     result: 'ok',
-  });
+  }, false));
 
   const result = debitForAction('player-3', 'unknown_action', mockWriteReceipt);
   assertEquals(result.ok, false, 'should fail');
@@ -114,16 +158,15 @@ test('debitForAction rejects unknown action', () => {
 
 test('multiple debits drain balance correctly', () => {
   clearTreasuryProjection();
-  receipts.length = 0;
+  resetReceipts();
 
   // Credit 5 Gold
-  applyReceiptToTreasury({
-    timestamp: new Date().toISOString(),
-    player_id: 'player-4',
+  applyReceiptToTreasury(buildReceipt({
+    actor_id: 'player-4',
     action: WALLET_CREDIT_ACTION,
     inputs: { amount: 5, reason: 'debug_grant' },
     result: 'ok',
-  });
+  }, false));
 
   // Perform 5 inspect_player actions (each costs 1)
   for (let i = 0; i < 5; i++) {
@@ -143,16 +186,15 @@ test('multiple debits drain balance correctly', () => {
 
 test('replay equivalence - receipts reconstruct same balance', () => {
   clearTreasuryProjection();
-  receipts.length = 0;
+  resetReceipts();
 
   // Simulate sequence: credit 10, spend 3 on inspects
-  applyReceiptToTreasury({
-    timestamp: '2024-01-01T00:00:00Z',
-    player_id: 'replay-test',
+  applyReceiptToTreasury(buildReceipt({
+    actor_id: 'replay-test',
     action: WALLET_CREDIT_ACTION,
     inputs: { amount: 10, reason: 'debug_grant' },
     result: 'ok',
-  });
+  }, false));
 
   debitForAction('replay-test', 'inspect_player', mockWriteReceipt);
   debitForAction('replay-test', 'inspect_player', mockWriteReceipt);
@@ -163,14 +205,13 @@ test('replay equivalence - receipts reconstruct same balance', () => {
 
   // Clear and replay all receipts
   const allReceipts = [
-    {
-      timestamp: '2024-01-01T00:00:00Z',
-      player_id: 'replay-test',
+    buildReceipt({
+      actor_id: 'replay-test',
       action: WALLET_CREDIT_ACTION,
       inputs: { amount: 10, reason: 'debug_grant' },
       result: 'ok',
-    },
-    ...receipts.filter(r => r.player_id === 'replay-test'),
+    }, false),
+    ...receipts.filter(r => r.actor_id === 'replay-test'),
   ];
 
   clearTreasuryProjection();
@@ -187,13 +228,12 @@ test('debit does not leak balance (only ok/error returned)', () => {
   receipts.length = 0;
 
   // Credit 100 Gold
-  applyReceiptToTreasury({
-    timestamp: new Date().toISOString(),
-    player_id: 'player-leak-test',
+  applyReceiptToTreasury(buildReceipt({
+    actor_id: 'player-leak-test',
     action: WALLET_CREDIT_ACTION,
     inputs: { amount: 100, reason: 'debug_grant' },
     result: 'ok',
-  });
+  }, false));
 
   const result = debitForAction('player-leak-test', 'inspect_player', mockWriteReceipt);
 

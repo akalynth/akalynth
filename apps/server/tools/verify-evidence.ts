@@ -16,14 +16,13 @@
  *   cd apps/server
  *   npx tsx tools/verify-evidence.ts
  *
- * Env overrides:
- *   AKALYNTH_DB_PATH=./data/akalynth.db
- *   AKALYNTH_RECEIPTS_PATH=./audit/receipts.jsonl
+ * Paths resolved via packages/shared/paths.ts (canonical resolver).
  */
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import Database from 'better-sqlite3';
+import { resolveChainPaths } from '../../../packages/shared/paths.js';
 
 import { computeReceiptHash } from '../src/persist/hash.js';
 import {
@@ -38,11 +37,17 @@ import {
 type MapName = 'Rookguard' | 'Azura';
 
 interface AuditReceipt {
+  sequence: number;
   timestamp: string;
-  player_id: string;
+  prev_hash: string;
+  event_hash: string;
+  signature: string;
+  actor_id: string;
   action: string;
   inputs: Record<string, unknown>;
   result: string;
+  inputs_hash: string;
+  outputs_hash: string;
 }
 
 interface CombatResolvedInputs {
@@ -193,7 +198,7 @@ function buildCombatReceiptIndex(receipts: AuditReceipt[]): Map<string, AuditRec
 
     // Compute canonical hash (same as why-drop.ts)
     const base = {
-      player_id: r.player_id,
+      actor_id: r.actor_id,
       action: r.action,
       inputs: {
         target_player_id: r.inputs.target_player_id,
@@ -244,7 +249,7 @@ function replayUpToReceipt(receipts: AuditReceipt[], targetHash: string): PreCom
     // Check if we've reached the target combat_resolved
     if (isCombatResolved(r)) {
       const base = {
-        player_id: r.player_id,
+        actor_id: r.actor_id,
         action: r.action,
         inputs: {
           target_player_id: r.inputs.target_player_id,
@@ -264,16 +269,16 @@ function replayUpToReceipt(receipts: AuditReceipt[], targetHash: string): PreCom
     // Inventory projection
     if (isInvAdd(r)) {
       const itemId = itemIdFromInvReceipt(r);
-      if (itemId) inv(r.player_id).add(itemId);
+      if (itemId) inv(r.actor_id).add(itemId);
     } else if (isInvRemove(r)) {
       const itemId = itemIdFromInvReceipt(r);
-      if (itemId) inv(r.player_id).delete(itemId);
+      if (itemId) inv(r.actor_id).delete(itemId);
     }
 
     // Protected slot projection
     if (isSlotChanged(r)) {
       const inputs = r.inputs as InventorySlotChangedInputs;
-      const pid = r.player_id;
+      const pid = r.actor_id;
       if (inputs.slot === 'protected') {
         protectedByPlayerId.set(pid, inputs.item_id);
       } else {
@@ -291,7 +296,7 @@ function replayUpToReceipt(receipts: AuditReceipt[], targetHash: string): PreCom
     if (isRepEvent(r)) {
       const inputs = r.inputs as unknown as ReputationEventInputs;
       const d = typeof inputs.delta === 'number' ? inputs.delta : 0;
-      repByPlayerId.set(r.player_id, rep(r.player_id) + d);
+      repByPlayerId.set(r.actor_id, rep(r.actor_id) + d);
     }
   }
 
@@ -326,14 +331,13 @@ function sameSet(a: string[], b: string[]): boolean {
 // ============================================================================
 
 function main(): void {
-  const dbPath = process.env.AKALYNTH_DB_PATH ?? './data/akalynth.db';
-  const receiptsPath = process.env.AKALYNTH_RECEIPTS_PATH ?? './audit/receipts.jsonl';
-  const absDb = path.resolve(process.cwd(), dbPath);
-  const absReceipts = path.resolve(process.cwd(), receiptsPath);
+  // Canonical path resolution (single source of truth)
+  const repoRoot = path.resolve(process.cwd());
+  const paths = resolveChainPaths(repoRoot);
 
-  if (!fs.existsSync(absDb)) fail(`db not found: ${absDb}`);
+  if (!fs.existsSync(paths.dbPath)) fail(`db not found: ${paths.dbPath}`);
 
-  const db = new Database(absDb, { readonly: true });
+  const db = new Database(paths.dbPath, { readonly: true });
 
   // Get schema version
   const versionRow = db.prepare(`SELECT value FROM _meta WHERE key = 'schema_version'`).get() as { value: string } | undefined;
@@ -475,9 +479,9 @@ function main(): void {
   // ==========================================================================
   // Load receipts
   let receipts: AuditReceipt[] = [];
-  if (fs.existsSync(absReceipts)) {
+  if (fs.existsSync(paths.receiptsPath)) {
     try {
-      receipts = parseJsonLines(absReceipts);
+      receipts = parseJsonLines(paths.receiptsPath);
     } catch (e) {
       warn(`Failed to parse receipts: ${(e as Error).message}`);
     }

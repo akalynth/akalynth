@@ -22,6 +22,12 @@ import {
   PRESENCE_LINGER_THRESHOLD_MS,
   PRESENCE_OBSERVE_THRESHOLD_MS,
 } from '../../../packages/shared/types.js';
+import {
+  computeEventHash,
+  computeInputsHash,
+  computeOutputsHash,
+  GENESIS_MARKER,
+} from '@akalynth/coordination-kernel';
 
 function test(name: string, fn: () => void) {
   try {
@@ -42,11 +48,45 @@ function assertEquals<T>(actual: T, expected: T, msg?: string) {
 
 // Collect receipts to verify no emissions from NPC dialogue
 const receipts: AuditReceipt[] = [];
-function mockWriteReceipt(receipt: Omit<AuditReceipt, 'timestamp' | 'evidence_hash'>) {
-  const fullReceipt: AuditReceipt = {
-    timestamp: new Date().toISOString(),
+let lastEventHash: string | null = null;
+let lastSequence = 0;
+
+function buildReceipt(
+  receipt: Omit<AuditReceipt, 'sequence' | 'timestamp' | 'prev_hash' | 'event_hash' | 'signature' | 'inputs_hash' | 'outputs_hash'>,
+  useChain: boolean
+): AuditReceipt {
+  const timestamp = new Date().toISOString();
+  const prev_hash = useChain ? (lastEventHash ?? GENESIS_MARKER) : GENESIS_MARKER;
+  const sequence = useChain ? lastSequence + 1 : 0;
+  const inputs_hash = computeInputsHash(receipt.inputs);
+  const outputs_hash = computeOutputsHash(receipt.result);
+  const body = {
     ...receipt,
+    sequence,
+    timestamp,
+    prev_hash,
+    inputs_hash,
+    outputs_hash,
   };
+  const event_hash = computeEventHash(body);
+  const fullReceipt: AuditReceipt = {
+    ...body,
+    event_hash,
+    signature: 'test-signature',
+  };
+
+  if (useChain) {
+    lastEventHash = event_hash;
+    lastSequence = sequence;
+  }
+
+  return fullReceipt;
+}
+
+function mockWriteReceipt(
+  receipt: Omit<AuditReceipt, 'sequence' | 'timestamp' | 'prev_hash' | 'event_hash' | 'signature' | 'inputs_hash' | 'outputs_hash'>
+) {
+  const fullReceipt = buildReceipt(receipt, true);
   receipts.push(fullReceipt);
   applyReceiptToPresence(fullReceipt);
 }
@@ -82,6 +122,8 @@ const azuraMap: MapData = {
 function resetState() {
   clearPresenceProjection();
   receipts.length = 0;
+  lastEventHash = null;
+  lastSequence = 0;
   registerMapPlaces(rookguardMap, 'Rookguard');
   registerMapPlaces(azuraMap, 'Azura');
 }

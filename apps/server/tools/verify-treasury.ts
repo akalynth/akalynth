@@ -13,6 +13,12 @@ import {
   WALLET_DEBIT_ACTION,
   MAX_GOLD_AMOUNT,
 } from '../../../packages/shared/types.js';
+import {
+  computeEventHash,
+  computeInputsHash,
+  computeOutputsHash,
+  GENESIS_MARKER,
+} from '@akalynth/coordination-kernel';
 
 function test(name: string, fn: () => void) {
   try {
@@ -31,8 +37,50 @@ function assertEquals<T>(actual: T, expected: T, msg?: string) {
   }
 }
 
+let lastEventHash: string | null = null;
+let lastSequence = 0;
+
+function buildReceipt(
+  receipt: Omit<AuditReceipt, 'sequence' | 'timestamp' | 'prev_hash' | 'event_hash' | 'signature' | 'inputs_hash' | 'outputs_hash'>,
+  options: { timestamp?: string; useChain?: boolean } = {}
+): AuditReceipt {
+  const timestamp = options.timestamp ?? new Date().toISOString();
+  const useChain = options.useChain ?? false;
+  const prev_hash = useChain ? (lastEventHash ?? GENESIS_MARKER) : GENESIS_MARKER;
+  const sequence = useChain ? lastSequence + 1 : 0;
+  const inputs_hash = computeInputsHash(receipt.inputs);
+  const outputs_hash = computeOutputsHash(receipt.result);
+  const body = {
+    ...receipt,
+    sequence,
+    timestamp,
+    prev_hash,
+    inputs_hash,
+    outputs_hash,
+  };
+  const event_hash = computeEventHash(body);
+  const fullReceipt: AuditReceipt = {
+    ...body,
+    event_hash,
+    signature: 'test-signature',
+  };
+
+  if (useChain) {
+    lastEventHash = event_hash;
+    lastSequence = sequence;
+  }
+
+  return fullReceipt;
+}
+
+function resetState() {
+  clearTreasuryProjection();
+  lastEventHash = null;
+  lastSequence = 0;
+}
+
 // Reset state before tests
-clearTreasuryProjection();
+resetState();
 
 test('empty balance returns 0', () => {
   const balance = getGoldBalance('unknown-player');
@@ -40,14 +88,13 @@ test('empty balance returns 0', () => {
 });
 
 test('wallet_credit adds to balance', () => {
-  clearTreasuryProjection();
-  const receipt: AuditReceipt = {
-    timestamp: new Date().toISOString(),
-    player_id: 'player-1',
+  resetState();
+  const receipt = buildReceipt({
+    actor_id: 'player-1',
     action: WALLET_CREDIT_ACTION,
     inputs: { amount: 100, reason: 'debug_grant' },
     result: 'ok',
-  };
+  });
   applyReceiptToTreasury(receipt);
 
   const balance = getGoldBalance('player-1');
@@ -55,40 +102,37 @@ test('wallet_credit adds to balance', () => {
 });
 
 test('wallet_debit subtracts from balance', () => {
-  clearTreasuryProjection();
+  resetState();
 
   // First credit
-  applyReceiptToTreasury({
-    timestamp: new Date().toISOString(),
-    player_id: 'player-2',
+  applyReceiptToTreasury(buildReceipt({
+    actor_id: 'player-2',
     action: WALLET_CREDIT_ACTION,
     inputs: { amount: 100, reason: 'debug_grant' },
     result: 'ok',
-  });
+  }));
 
   // Then debit
-  applyReceiptToTreasury({
-    timestamp: new Date().toISOString(),
-    player_id: 'player-2',
+  applyReceiptToTreasury(buildReceipt({
+    actor_id: 'player-2',
     action: WALLET_DEBIT_ACTION,
     inputs: { amount: 30, reason: 'temple_tithe' },
     result: 'ok',
-  });
+  }));
 
   const balance = getGoldBalance('player-2');
   assertEquals(balance, 70);
 });
 
 test('canAfford returns true when sufficient', () => {
-  clearTreasuryProjection();
+  resetState();
 
-  applyReceiptToTreasury({
-    timestamp: new Date().toISOString(),
-    player_id: 'player-3',
+  applyReceiptToTreasury(buildReceipt({
+    actor_id: 'player-3',
     action: WALLET_CREDIT_ACTION,
     inputs: { amount: 100, reason: 'debug_grant' },
     result: 'ok',
-  });
+  }));
 
   assertEquals(canAfford('player-3', 50), true);
   assertEquals(canAfford('player-3', 100), true);
@@ -96,15 +140,14 @@ test('canAfford returns true when sufficient', () => {
 });
 
 test('canAfford rejects invalid amounts', () => {
-  clearTreasuryProjection();
+  resetState();
 
-  applyReceiptToTreasury({
-    timestamp: new Date().toISOString(),
-    player_id: 'player-4',
+  applyReceiptToTreasury(buildReceipt({
+    actor_id: 'player-4',
     action: WALLET_CREDIT_ACTION,
     inputs: { amount: 100, reason: 'debug_grant' },
     result: 'ok',
-  });
+  }));
 
   assertEquals(canAfford('player-4', 0), false, 'zero');
   assertEquals(canAfford('player-4', -10), false, 'negative');
@@ -113,25 +156,23 @@ test('canAfford rejects invalid amounts', () => {
 });
 
 test('balance never goes negative - invalid debit skipped', () => {
-  clearTreasuryProjection();
+  resetState();
 
   // Credit 50
-  applyReceiptToTreasury({
-    timestamp: new Date().toISOString(),
-    player_id: 'player-5',
+  applyReceiptToTreasury(buildReceipt({
+    actor_id: 'player-5',
     action: WALLET_CREDIT_ACTION,
     inputs: { amount: 50, reason: 'debug_grant' },
     result: 'ok',
-  });
+  }));
 
   // Try to debit 100 (should be skipped with warning)
-  applyReceiptToTreasury({
-    timestamp: new Date().toISOString(),
-    player_id: 'player-5',
+  applyReceiptToTreasury(buildReceipt({
+    actor_id: 'player-5',
     action: WALLET_DEBIT_ACTION,
     inputs: { amount: 100, reason: 'temple_tithe' },
     result: 'ok',
-  });
+  }));
 
   // Balance should still be 50 (invalid debit skipped)
   const balance = getGoldBalance('player-5');
@@ -139,22 +180,22 @@ test('balance never goes negative - invalid debit skipped', () => {
 });
 
 test('replay equivalence - multiple players, credit/debit sequence', () => {
-  clearTreasuryProjection();
+  resetState();
 
   // Simulate receipts in order (as would happen during replay)
   const receipts: AuditReceipt[] = [
     // Player A gets 100
-    { timestamp: '2024-01-01T00:00:00Z', player_id: 'a', action: WALLET_CREDIT_ACTION, inputs: { amount: 100, reason: 'debug_grant' }, result: 'ok' },
+    buildReceipt({ actor_id: 'a', action: WALLET_CREDIT_ACTION, inputs: { amount: 100, reason: 'debug_grant' }, result: 'ok' }, { timestamp: '2024-01-01T00:00:00Z', useChain: true }),
     // Player B gets 50
-    { timestamp: '2024-01-01T00:01:00Z', player_id: 'b', action: WALLET_CREDIT_ACTION, inputs: { amount: 50, reason: 'work_contract' }, result: 'ok' },
+    buildReceipt({ actor_id: 'b', action: WALLET_CREDIT_ACTION, inputs: { amount: 50, reason: 'work_contract' }, result: 'ok' }, { timestamp: '2024-01-01T00:01:00Z', useChain: true }),
     // Player A spends 30
-    { timestamp: '2024-01-01T00:02:00Z', player_id: 'a', action: WALLET_DEBIT_ACTION, inputs: { amount: 30, reason: 'temple_tithe' }, result: 'ok' },
+    buildReceipt({ actor_id: 'a', action: WALLET_DEBIT_ACTION, inputs: { amount: 30, reason: 'temple_tithe' }, result: 'ok' }, { timestamp: '2024-01-01T00:02:00Z', useChain: true }),
     // Player B gets another 25
-    { timestamp: '2024-01-01T00:03:00Z', player_id: 'b', action: WALLET_CREDIT_ACTION, inputs: { amount: 25, reason: 'work_contract' }, result: 'ok' },
+    buildReceipt({ actor_id: 'b', action: WALLET_CREDIT_ACTION, inputs: { amount: 25, reason: 'work_contract' }, result: 'ok' }, { timestamp: '2024-01-01T00:03:00Z', useChain: true }),
     // Player A spends 20
-    { timestamp: '2024-01-01T00:04:00Z', player_id: 'a', action: WALLET_DEBIT_ACTION, inputs: { amount: 20, reason: 'temple_tithe' }, result: 'ok' },
+    buildReceipt({ actor_id: 'a', action: WALLET_DEBIT_ACTION, inputs: { amount: 20, reason: 'temple_tithe' }, result: 'ok' }, { timestamp: '2024-01-01T00:04:00Z', useChain: true }),
     // Player B spends 40
-    { timestamp: '2024-01-01T00:05:00Z', player_id: 'b', action: WALLET_DEBIT_ACTION, inputs: { amount: 40, reason: 'temple_tithe' }, result: 'ok' },
+    buildReceipt({ actor_id: 'b', action: WALLET_DEBIT_ACTION, inputs: { amount: 40, reason: 'temple_tithe' }, result: 'ok' }, { timestamp: '2024-01-01T00:05:00Z', useChain: true }),
   ];
 
   // Replay all receipts
@@ -173,95 +214,87 @@ test('replay equivalence - multiple players, credit/debit sequence', () => {
 });
 
 test('reducer ignores non-treasury receipts', () => {
-  clearTreasuryProjection();
+  resetState();
 
-  applyReceiptToTreasury({
-    timestamp: new Date().toISOString(),
-    player_id: 'player-x',
+  applyReceiptToTreasury(buildReceipt({
+    actor_id: 'player-x',
     action: 'move',
     inputs: { direction: 'north' },
     result: 'ok',
-  });
+  }));
 
-  applyReceiptToTreasury({
-    timestamp: new Date().toISOString(),
-    player_id: 'player-x',
+  applyReceiptToTreasury(buildReceipt({
+    actor_id: 'player-x',
     action: 'vocation_declared',
     inputs: { vocation: 'warden' },
     result: 'ok',
-  });
+  }));
 
   const balance = getGoldBalance('player-x');
   assertEquals(balance, 0);
 });
 
 test('reducer handles missing player_id gracefully', () => {
-  clearTreasuryProjection();
+  resetState();
 
   // This should not throw
-  applyReceiptToTreasury({
-    timestamp: new Date().toISOString(),
-    player_id: '',
+  applyReceiptToTreasury(buildReceipt({
+    actor_id: '',
     action: WALLET_CREDIT_ACTION,
     inputs: { amount: 100, reason: 'debug_grant' },
     result: 'ok',
-  });
+  }));
 
   // Empty string player should be ignored
   assertEquals(getGoldBalance(''), 0);
 });
 
 test('reducer validates amount bounds', () => {
-  clearTreasuryProjection();
+  resetState();
 
   // Invalid: zero
-  applyReceiptToTreasury({
-    timestamp: new Date().toISOString(),
-    player_id: 'player-bounds',
+  applyReceiptToTreasury(buildReceipt({
+    actor_id: 'player-bounds',
     action: WALLET_CREDIT_ACTION,
     inputs: { amount: 0, reason: 'debug_grant' },
     result: 'ok',
-  });
+  }));
   assertEquals(getGoldBalance('player-bounds'), 0, 'zero amount ignored');
 
   // Invalid: negative
-  applyReceiptToTreasury({
-    timestamp: new Date().toISOString(),
-    player_id: 'player-bounds',
+  applyReceiptToTreasury(buildReceipt({
+    actor_id: 'player-bounds',
     action: WALLET_CREDIT_ACTION,
     inputs: { amount: -50, reason: 'debug_grant' },
     result: 'ok',
-  });
+  }));
   assertEquals(getGoldBalance('player-bounds'), 0, 'negative amount ignored');
 
   // Invalid: float
-  applyReceiptToTreasury({
-    timestamp: new Date().toISOString(),
-    player_id: 'player-bounds',
+  applyReceiptToTreasury(buildReceipt({
+    actor_id: 'player-bounds',
     action: WALLET_CREDIT_ACTION,
     inputs: { amount: 10.5, reason: 'debug_grant' },
     result: 'ok',
-  });
+  }));
   assertEquals(getGoldBalance('player-bounds'), 0, 'float amount ignored');
 
   // Invalid: over max
-  applyReceiptToTreasury({
-    timestamp: new Date().toISOString(),
-    player_id: 'player-bounds',
+  applyReceiptToTreasury(buildReceipt({
+    actor_id: 'player-bounds',
     action: WALLET_CREDIT_ACTION,
     inputs: { amount: MAX_GOLD_AMOUNT + 1, reason: 'debug_grant' },
     result: 'ok',
-  });
+  }));
   assertEquals(getGoldBalance('player-bounds'), 0, 'over-max amount ignored');
 
   // Valid: exactly max
-  applyReceiptToTreasury({
-    timestamp: new Date().toISOString(),
-    player_id: 'player-bounds',
+  applyReceiptToTreasury(buildReceipt({
+    actor_id: 'player-bounds',
     action: WALLET_CREDIT_ACTION,
     inputs: { amount: MAX_GOLD_AMOUNT, reason: 'debug_grant' },
     result: 'ok',
-  });
+  }));
   assertEquals(getGoldBalance('player-bounds'), MAX_GOLD_AMOUNT, 'max amount accepted');
 });
 

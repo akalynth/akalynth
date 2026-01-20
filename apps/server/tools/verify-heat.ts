@@ -14,20 +14,23 @@
  *   cd apps/server
  *   npx tsx tools/verify-heat.ts
  *
- * Env overrides:
- *   AKALYNTH_DB_PATH=./data/akalynth.db
- *   AKALYNTH_RECEIPTS_PATH=./audit/receipts.jsonl
+ * Paths resolved via packages/shared/paths.ts (canonical resolver).
  */
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import Database from 'better-sqlite3';
+import { resolveChainPaths } from '../../../packages/shared/paths.js';
 
 type HeatReason = 'combat_kill' | 'combat_death' | 'decay' | string;
 
 interface LegendaryHeatChangedReceipt {
+  sequence: number;
   timestamp: string;
-  player_id: string;
+  prev_hash: string;
+  event_hash: string;
+  signature: string;
+  actor_id: string;
   action: 'legendary_heat_changed';
   inputs: {
     item_id: string;
@@ -37,7 +40,8 @@ interface LegendaryHeatChangedReceipt {
     context?: Record<string, unknown>;
   };
   result: string;
-  evidence_hash?: string;
+  inputs_hash: string;
+  outputs_hash: string;
 }
 
 interface DbHeatRow {
@@ -91,15 +95,13 @@ function readJsonLines(filePath: string): unknown[] {
 }
 
 function main(): void {
-  const dbPath = process.env.AKALYNTH_DB_PATH ?? './data/akalynth.db';
-  const receiptsPath = process.env.AKALYNTH_RECEIPTS_PATH ?? './audit/receipts.jsonl';
+  // Canonical path resolution (single source of truth)
+  const repoRoot = path.resolve(process.cwd());
+  const paths = resolveChainPaths(repoRoot);
 
-  const absDb = path.resolve(process.cwd(), dbPath);
-  const absReceipts = path.resolve(process.cwd(), receiptsPath);
+  if (!fs.existsSync(paths.dbPath)) fail(`db not found: ${paths.dbPath}`);
 
-  if (!fs.existsSync(absDb)) fail(`db not found: ${absDb}`);
-
-  const db = new Database(absDb, { readonly: true });
+  const db = new Database(paths.dbPath, { readonly: true });
 
   // Ensure table exists
   const tableExists = db
@@ -118,7 +120,7 @@ function main(): void {
   for (const r of dbRows) dbMap.set(r.item_id, r);
 
   // Read receipts and compute last new_heat per item, plus delta consistency checks
-  const all = readJsonLines(absReceipts);
+  const all = readJsonLines(paths.receiptsPath);
 
   const lastHeatByItem = new Map<string, { new_heat: number; lineNo: number; ts?: string }>();
   const prevHeatByItem = new Map<string, number>();
