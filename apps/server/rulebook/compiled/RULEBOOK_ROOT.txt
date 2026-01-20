@@ -1,0 +1,7 @@
+# Minimal Akalynth Rulebook
+# Auto-generated for development testing
+
+RULEBOOK_VERSION: 1.0.0
+SERVER_AUTHORITY: true
+ANTI_CHEAT_ENABLED: true
+DEBUG_MODE: true
