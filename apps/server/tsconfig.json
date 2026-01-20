@@ -11,9 +11,14 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@shared/*": ["../../packages/shared/*"]
+      "@shared/*": ["../../packages/shared/*"],
+      "@akalynth/coordination-kernel": ["../../packages/coordination-kernel/src/index.ts"]
     }
   },
-  "include": ["src/**/*.ts", "../../packages/shared/**/*.ts"],
+  "include": [
+    "src/**/*.ts",
+    "../../packages/shared/**/*.ts",
+    "../../packages/coordination-kernel/src/**/*.ts"
+  ],
   "exclude": ["node_modules", "../../dist"]
 }
