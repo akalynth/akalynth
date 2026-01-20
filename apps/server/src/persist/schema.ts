@@ -166,6 +166,20 @@ CREATE INDEX IF NOT EXISTS idx_mod_reports_status ON moderation_reports(status);
 CREATE INDEX IF NOT EXISTS idx_mod_reports_target ON moderation_reports(target_id);
 `;
 
+// Phase 3.5: Player heat projection (current heat per player)
+// NO FK constraint - avoids replay ordering issues when heat receipts arrive before player_created
+const DDL_PLAYER_HEAT = `
+CREATE TABLE IF NOT EXISTS player_heat (
+  player_id        TEXT PRIMARY KEY,
+  heat             INTEGER NOT NULL DEFAULT 0,
+  penalty_until_ms INTEGER,
+  last_tem_ms      INTEGER,
+  updated_at       TEXT NOT NULL,
+  last_receipt     TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_player_heat_score ON player_heat(heat DESC);
+`;
+
 // ============================================================================
 // Schema Initialization
 // ============================================================================

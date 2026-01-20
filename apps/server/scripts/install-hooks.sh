@@ -42,10 +42,12 @@ echo ""
 # Find server directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
-SERVER_DIR="$REPO_ROOT/server"
-
-if [ ! -d "$SERVER_DIR" ]; then
-  echo -e "${RED}ERROR: server directory not found${NC}"
+if [ -d "$REPO_ROOT/server" ]; then
+  SERVER_DIR="$REPO_ROOT/server"
+elif [ -d "$REPO_ROOT/apps/server" ]; then
+  SERVER_DIR="$REPO_ROOT/apps/server"
+else
+  echo -e "${RED}ERROR: server directory not found (expected server/ or apps/server/)${NC}"
   exit 1
 fi
 

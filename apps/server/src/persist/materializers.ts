@@ -112,10 +112,14 @@ function handlePlayerCreated(
   const name = (receipt.inputs?.name as string) ?? `Guest_${playerId.slice(-4)}`;
   const timestamp = receipt.timestamp;
 
-  // INSERT OR IGNORE (idempotent via UNIQUE created_receipt)
+  // UPSERT to refresh stub rows when receipts arrive out of order
   const stmt = db.prepare(`
-    INSERT OR IGNORE INTO players (player_id, name, created_at, created_receipt, deleted_at)
+    INSERT INTO players (player_id, name, created_at, created_receipt, deleted_at)
     VALUES (?, ?, ?, ?, NULL)
+    ON CONFLICT(player_id) DO UPDATE SET
+      name = excluded.name,
+      created_at = excluded.created_at,
+      deleted_at = NULL
   `);
   stmt.run(playerId, name, timestamp, receiptHash);
 }
@@ -338,6 +342,20 @@ function handleItemAddedToInventory(
     UPDATE world_objects SET status = 'picked_up', last_receipt = ?
     WHERE object_id = ? AND status = 'active'
   `).run(receiptHash, itemId);
+
+  // Safety net: ensure player exists (handles receipt reordering edge cases)
+  // This creates a stub row if player_created receipt hasn't been processed yet
+  db.prepare(`
+    INSERT OR IGNORE INTO players (player_id, name, created_at, created_receipt, deleted_at)
+    VALUES (?, ?, ?, ?, NULL)
+  `).run(receipt.player_id, `Guest_${receipt.player_id.slice(-4)}`, receipt.timestamp, receiptHash);
+
+  // Safety net: ensure item exists (handles receipt reordering edge cases)
+  // This creates a stub row if item_minted receipt hasn't been processed yet
+  db.prepare(`
+    INSERT OR IGNORE INTO items (item_id, item_type, created_at, genesis_receipt, meta_json)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(itemId, 'unknown', receipt.timestamp, receiptHash, '{}');
 
   // Upsert into inventory
   db.prepare(`

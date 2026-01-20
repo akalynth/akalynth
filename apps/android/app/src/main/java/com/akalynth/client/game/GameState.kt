@@ -1,0 +1,73 @@
+package com.akalynth.client.game
+
+import com.akalynth.client.network.ConnectionState
+import com.akalynth.client.protocol.MapName
+import com.akalynth.client.protocol.PlayerPublic
+
+data class GameState(
+    val connection: ConnectionState = ConnectionState.Idle,
+    val session: SessionState = SessionState(),
+    val world: WorldState = WorldState(),
+    val ui: UiState = UiState()
+) {
+    companion object {
+        val INITIAL = GameState()
+    }
+}
+
+data class SessionState(
+    val guestToken: String? = null,
+    val playerId: String? = null,
+    val playerName: String? = null,
+    val serverUrl: String = "ws://10.0.2.2:3000"
+)
+
+data class WorldState(
+    val currentMap: MapName = MapName.ROOKGUARD,
+    val me: PlayerPublic? = null,
+    val otherPlayers: Map<String, PlayerPublic> = emptyMap(),
+    val chatMessages: List<ChatEntry> = emptyList()
+)
+
+data class ChatEntry(
+    val id: String,
+    val from: String,
+    val message: String,
+    val timestamp: Long
+)
+
+data class UiState(
+    val temChallenge: TemChallengeData? = null,
+    val witnessRequest: WitnessRequestData? = null,
+    val errorMessage: String? = null,
+    val chatOpen: Boolean = false,
+    val debugLog: List<DebugLogEntry> = emptyList(),
+    val showDebugDrawer: Boolean = false,
+    val connectionDiagnostics: ConnectionDiagnostics = ConnectionDiagnostics()
+)
+
+data class DebugLogEntry(
+    val timestamp: Long,
+    val direction: String, // "→" for sent, "←" for received
+    val messageType: String,
+    val preview: String
+)
+
+data class TemChallengeData(
+    val challengeId: String,
+    val message: String,
+    val expiresAt: Long
+)
+
+data class WitnessRequestData(
+    val requestId: String,
+    val prompt: String,
+    val expiresAt: Long
+)
+
+data class ConnectionDiagnostics(
+    val lastCloseCode: Int? = null,
+    val lastCloseReason: String? = null,
+    val reconnectAttempts: Int = 0,
+    val nextBackoffMs: Long = 0L
+)

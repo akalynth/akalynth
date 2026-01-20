@@ -46,6 +46,10 @@ export interface PlayerRow {
   created_at: string; // ISO8601
   created_receipt: string; // receipt_hash that created this player
   deleted_at: string | null; // ISO8601 or null
+  // Origin Act: The player's first meaningful action (sealed permanently)
+  origin_receipt_id: string | null; // blake3:<hex> of origin_act_sealed receipt
+  origin_action: string | null; // The TRIGGER action (e.g., 'combat_resolved'), NOT 'origin_act_sealed'
+  origin_sealed_at: string | null; // ISO8601 timestamp
 }
 
 export interface ReputationEventRow {
@@ -117,6 +121,16 @@ export interface LegendaryHeatRow {
   last_receipt: string; // receipt_hash of last modification
 }
 
+// Phase 3.5: Player heat projection (anti-cheat heat score)
+export interface PlayerHeatRow {
+  player_id: string;
+  heat: number;
+  penalty_until_ms: number | null; // epoch ms or null
+  last_tem_ms: number | null; // epoch ms or null
+  updated_at: string; // ISO8601 (receipt timestamp for ordering)
+  last_receipt: string; // receipt_hash of last modification
+}
+
 // Phase 4: Chronicle event projection
 export type ChronicleEventKind =
   | 'player_created'
@@ -126,7 +140,8 @@ export type ChronicleEventKind =
   | 'item_lost'
   | 'reputation_change'
   | 'legendary_obtained'
-  | 'legendary_lost';
+  | 'legendary_lost'
+  | 'origin_sealed';
 
 // Phase 4.4 E2: Evidence reference for forensic linkage
 // Format: JSON { chronicle_event_id: number, receipt_hash: string }
@@ -203,11 +218,23 @@ export const RECEIPT_ACTIONS = {
 
   // Phase 3.2: Protected slots
   INVENTORY_SLOT_CHANGED: 'inventory_slot_changed',
+
+  // Phase 3.5: Player heat
+  PLAYER_HEAT_CHANGED: 'heat_changed',
+
+  // Phase 3.5: Player heat (PR2)
+  HEAT_PENALTY_APPLIED: 'heat_penalty_applied',
+  HEAT_TEM_ESCALATION: 'heat_tem_escalation',
+
+  // Origin Act: Player's first meaningful action
+  ORIGIN_ACT_SEALED: 'origin_act_sealed',
 } as const;
 
 // Alias mapping for existing receipt actions
 export const ACTION_ALIASES: Record<string, string> = {
   session_guest_minted: RECEIPT_ACTIONS.PLAYER_CREATED,
+  // Legacy: old WS mint receipts used 'login' - treat as player_created for replay
+  login: RECEIPT_ACTIONS.PLAYER_CREATED,
   death_penalty_applied: RECEIPT_ACTIONS.REPUTATION_EVENT,
   object_dropped: RECEIPT_ACTIONS.WORLD_OBJECT_SPAWNED,
   object_picked_up: RECEIPT_ACTIONS.WORLD_OBJECT_TRANSFERRED,
@@ -255,6 +282,9 @@ export interface PersistenceLayer {
   // Read queries - Legendary Heat (Phase 3)
   getLegendaryHeatRows(): LegendaryHeatRow[];
   getLegendaryHeat(item_id: string): number;
+
+  // Read queries - Player Heat (Phase 3.5)
+  getPlayerHeat(player_id: string): PlayerHeatRow | null;
 
   // Read queries - Protected Slots (Phase 3.2)
   getProtectedSlots(): Array<{ owner_player_id: string; item_id: string; updated_at: string }>;
