@@ -118,7 +118,7 @@ export class EmergencyExecutionPattern {
       review_outcome: outcome,
       findings,
       actions_taken,
-      timestamp: new Date().toISOString()
+      timestamp: this.normalizeTimestamp(override.timestamp, 'review')
     };
 
     // Emit receipt for review completion (Evidence Invariant)
@@ -139,17 +139,18 @@ export class EmergencyExecutionPattern {
    * Constitutional Principle: Temporal constraints on accountability
    */
   async checkOverdueReviews(): Promise<EmergencyOverride[]> {
-    const now = Date.now();
+    const chainNowMs = this.getChainNowMs();
     const overdue: EmergencyOverride[] = [];
 
     for (const [id, override] of this.pending_reviews) {
-      const override_time = new Date(override.timestamp).getTime();
+      const override_time = this.parseTimestamp(override.timestamp, 'override');
       const deadline = override_time + this.config.review_deadline_ms;
 
-      if (now > deadline) {
+      if (chainNowMs > deadline) {
         overdue.push(override);
         // Emit receipt for overdue review
-        await this.emitOverdueReviewReceipt(override);
+        const days_overdue = Math.floor((chainNowMs - deadline) / (24 * 60 * 60 * 1000));
+        await this.emitOverdueReviewReceipt(override, days_overdue);
       }
     }
 
@@ -233,7 +234,7 @@ export class EmergencyExecutionPattern {
       justification,
       overridden_by: agent.id,
       override_capability: this.config.required_emergency_capability,
-      timestamp: new Date().toISOString(),
+      timestamp: this.normalizeTimestamp(request.timestamp, 'override_request'),
       review_required: true
     };
   }
@@ -267,7 +268,7 @@ export class EmergencyExecutionPattern {
     let earliest_deadline: number | null = null;
 
     for (const override of this.pending_reviews.values()) {
-      const override_time = new Date(override.timestamp).getTime();
+      const override_time = this.parseTimestamp(override.timestamp, 'override');
       const deadline = override_time + this.config.review_deadline_ms;
 
       if (earliest_deadline === null || deadline < earliest_deadline) {
@@ -276,6 +277,43 @@ export class EmergencyExecutionPattern {
     }
 
     return earliest_deadline ? new Date(earliest_deadline).toISOString() : null;
+  }
+
+  private parseTimestamp(timestamp: string, context: string): number {
+    const parsed = Date.parse(timestamp);
+    if (Number.isNaN(parsed)) {
+      throw new AIGovernanceError(
+        `Invalid timestamp for ${context}`,
+        'EMERGENCY_DENIED',
+        { timestamp }
+      );
+    }
+    return parsed;
+  }
+
+  private normalizeTimestamp(timestamp: string, context: string): string {
+    const parsed = this.parseTimestamp(timestamp, context);
+    return new Date(parsed).toISOString();
+  }
+
+  private getChainNowMs(): number {
+    let latest: number | null = null;
+
+    for (const override of this.active_overrides.values()) {
+      const ts = this.parseTimestamp(override.timestamp, 'override');
+      if (latest === null || ts > latest) {
+        latest = ts;
+      }
+    }
+
+    for (const override of this.pending_reviews.values()) {
+      const ts = this.parseTimestamp(override.timestamp, 'override');
+      if (latest === null || ts > latest) {
+        latest = ts;
+      }
+    }
+
+    return latest ?? 0;
   }
 
   private generateOverrideId(): string {
@@ -347,7 +385,8 @@ export class EmergencyExecutionPattern {
   private async emitReviewScheduledReceipt(
     override: EmergencyOverride
   ): Promise<CoordinationReceipt> {
-    const review_deadline = new Date(Date.now() + this.config.review_deadline_ms).toISOString();
+    const override_time = this.parseTimestamp(override.timestamp, 'override');
+    const review_deadline = new Date(override_time + this.config.review_deadline_ms).toISOString();
 
     return await this.kernel.appendReceipt(
       'emergency_executor',
@@ -380,7 +419,8 @@ export class EmergencyExecutionPattern {
   }
 
   private async emitOverdueReviewReceipt(
-    override: EmergencyOverride
+    override: EmergencyOverride,
+    days_overdue: number
   ): Promise<CoordinationReceipt> {
     return await this.kernel.appendReceipt(
       'emergency_executor',
@@ -389,7 +429,7 @@ export class EmergencyExecutionPattern {
         override_id: override.id,
         overridden_by: override.overridden_by,
         override_timestamp: override.timestamp,
-        days_overdue: Math.floor((Date.now() - new Date(override.timestamp).getTime()) / (24 * 60 * 60 * 1000))
+        days_overdue
       },
       'constitutional_violation_overdue_review'
     );

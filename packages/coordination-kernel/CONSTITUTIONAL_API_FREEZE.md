@@ -1,5 +1,8 @@
 # CONSTITUTIONAL API FREEZE
 
+> **Status:** Doctrine (constitutional surface).  
+> **Change control:** Amendments only (per GOVERNANCE_INVARIANTS.md).
+
 **Document Type**: Constitutional Law
 **Effective Date**: 2026-01-19
 **Version**: 1.0-FROZEN
@@ -106,13 +109,17 @@ capability: {
 
 ```typescript
 interface CoordinationReceipt {
-  timestamp: string;        // ISO 8601, monotonic ordering
+  sequence: number;        // Monotonic per chain
+  timestamp: string;       // ISO 8601, monotonic ordering
+  prev_hash: string;       // Chain linkage (genesis = "genesis")
+  event_hash: string;      // Content hash for tamper detection
+  signature: string;       // Ed25519 signature of `${prev_hash}|${event_hash}`
   actor_id: string;        // Cryptographic identity
   action: string;          // Human-readable action identifier
   inputs: Record<string, unknown>;  // Action parameters
   result: string;          // Execution outcome
-  prev_hash: string | null; // Chain linkage (genesis = null)
-  evidence_hash: string;   // Content hash for tamper detection
+  inputs_hash: string;     // Hash of canonical inputs
+  outputs_hash: string;    // Hash of canonical outputs (result)
 }
 ```
 

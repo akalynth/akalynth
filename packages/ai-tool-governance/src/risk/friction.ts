@@ -22,11 +22,6 @@ export class ConstitutionalFrictionManager {
       this.budgets.set(agent_id, budget);
     }
 
-    // Check if budget needs reset (temporal invariant)
-    if (this.shouldResetBudget(budget)) {
-      budget = await this.resetBudget(agent_id, budget);
-    }
-
     return budget;
   }
 
@@ -35,7 +30,16 @@ export class ConstitutionalFrictionManager {
    * Constitutional Requirement: Actions must respect constraints
    */
   async consumeFriction(agent_id: string, cost: number): Promise<void> {
-    const budget = await this.getFrictionBudget(agent_id);
+    let budget = await this.getFrictionBudget(agent_id);
+
+    // Emit receipt for friction consumption (Evidence Invariant)
+    const receipt = await this.emitFrictionConsumedReceipt(agent_id, cost);
+    const receipt_time = this.parseTimestamp(receipt.timestamp, 'friction_consumed');
+
+    // Apply any resets based on the consumption receipt timestamp
+    if (this.shouldResetBudget(budget, receipt_time)) {
+      budget = await this.resetBudget(agent_id, budget, receipt_time);
+    }
 
     // Check if sufficient friction units available
     if (budget.available_units < cost) {
@@ -50,9 +54,6 @@ export class ConstitutionalFrictionManager {
     // Consume friction units
     budget.consumed_units += cost;
     budget.available_units -= cost;
-
-    // Emit receipt for friction consumption (Evidence Invariant)
-    await this.emitFrictionConsumedReceipt(agent_id, cost, budget);
 
     this.budgets.set(agent_id, budget);
   }
@@ -86,13 +87,13 @@ export class ConstitutionalFrictionManager {
    * Reset friction budget to default values
    * Constitutional Principle: Temporal reset based on predetermined schedule
    */
-  private async resetBudget(agent_id: string, current_budget: FrictionBudget): Promise<FrictionBudget> {
+  private async resetBudget(agent_id: string, current_budget: FrictionBudget, nowMs: number): Promise<FrictionBudget> {
     const new_budget: FrictionBudget = {
       agent_id,
       total_units: AI_GOVERNANCE_CONSTANTS.DEFAULT_FRICTION_BUDGET,
       consumed_units: 0,
       available_units: AI_GOVERNANCE_CONSTANTS.DEFAULT_FRICTION_BUDGET,
-      last_reset: new Date().toISOString(),
+      last_reset: new Date(nowMs).toISOString(),
       reset_interval_ms: AI_GOVERNANCE_CONSTANTS.FRICTION_RESET_INTERVAL_MS
     };
 
@@ -107,12 +108,13 @@ export class ConstitutionalFrictionManager {
    * Create default friction budget for new agent
    */
   private createDefaultBudget(agent_id: string): FrictionBudget {
+    const last_reset = new Date(0).toISOString();
     return {
       agent_id,
       total_units: AI_GOVERNANCE_CONSTANTS.DEFAULT_FRICTION_BUDGET,
       consumed_units: 0,
       available_units: AI_GOVERNANCE_CONSTANTS.DEFAULT_FRICTION_BUDGET,
-      last_reset: new Date().toISOString(),
+      last_reset,
       reset_interval_ms: AI_GOVERNANCE_CONSTANTS.FRICTION_RESET_INTERVAL_MS
     };
   }
@@ -121,28 +123,37 @@ export class ConstitutionalFrictionManager {
    * Check if budget should be reset based on time elapsed
    * Constitutional Principle: Automatic temporal enforcement
    */
-  private shouldResetBudget(budget: FrictionBudget): boolean {
-    const last_reset = new Date(budget.last_reset).getTime();
-    const now = Date.now();
-    const elapsed = now - last_reset;
+  private shouldResetBudget(budget: FrictionBudget, nowMs: number): boolean {
+    const last_reset = this.parseTimestamp(budget.last_reset, 'budget_last_reset');
+    const elapsed = nowMs - last_reset;
 
     return elapsed >= budget.reset_interval_ms;
+  }
+
+  private parseTimestamp(timestamp: string, context: string): number {
+    const parsed = Date.parse(timestamp);
+    if (Number.isNaN(parsed)) {
+      throw new AIGovernanceError(
+        `Invalid timestamp for ${context}`,
+        'FRICTION_EXHAUSTED',
+        { timestamp }
+      );
+    }
+    return parsed;
   }
 
   // Receipt emission methods (Evidence Invariant compliance)
 
   private async emitFrictionConsumedReceipt(
     agent_id: string,
-    cost: number,
-    budget: FrictionBudget
+    cost: number
   ): Promise<CoordinationReceipt> {
     return await this.kernel.appendReceipt(
       'friction_manager',
       'friction_consumed',
       {
         agent_id,
-        cost_units: cost,
-        remaining_units: budget.available_units
+        cost_units: cost
       },
       'friction_units_consumed'
     );

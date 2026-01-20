@@ -60,12 +60,13 @@ export class SegregationExecutionPattern {
     }
 
     // Create approval request
+    const request_time = this.parseTimestamp(request.timestamp, 'approval_request');
     const approval_request: ApprovalRequest = {
       id: this.generateApprovalId(),
       tool_request: request,
       risk_assessment: gate.risk_assessment,
       required_capability: this.config.required_approver_capability,
-      expires_at: new Date(Date.now() + this.config.approval_timeout_ms).toISOString(),
+      expires_at: new Date(request_time + this.config.approval_timeout_ms).toISOString(),
       status: 'pending'
     };
 
@@ -213,12 +214,12 @@ export class SegregationExecutionPattern {
    * Constitutional Principle: Temporal constraints are enforced
    */
   async cleanupExpiredApprovals(): Promise<void> {
-    const now = Date.now();
+    const chainNowMs = this.getChainNowMs();
     const expired_ids: string[] = [];
 
     for (const [id, approval] of this.pending_approvals) {
-      const expires_at = new Date(approval.expires_at).getTime();
-      if (now > expires_at) {
+      const expires_at = this.parseTimestamp(approval.expires_at, 'approval_expiration');
+      if (chainNowMs > expires_at) {
         approval.status = 'expired';
         expired_ids.push(id);
 
@@ -266,10 +267,10 @@ export class SegregationExecutionPattern {
   }
 
   private validateApprovalStillValid(approval: ApprovalRequest): void {
-    const now = Date.now();
-    const expires_at = new Date(approval.expires_at).getTime();
+    const chainNowMs = this.getChainNowMs();
+    const expires_at = this.parseTimestamp(approval.expires_at, 'approval_expiration');
 
-    if (now > expires_at) {
+    if (chainNowMs > expires_at) {
       throw new AIGovernanceError(
         'Approval request has expired',
         'APPROVAL_REQUIRED',
@@ -292,6 +293,29 @@ export class SegregationExecutionPattern {
 
   private generateApprovalId(): string {
     return `approval_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  private parseTimestamp(timestamp: string, context: string): number {
+    const parsed = Date.parse(timestamp);
+    if (Number.isNaN(parsed)) {
+      throw new AIGovernanceError(
+        `Invalid timestamp for ${context}`,
+        'APPROVAL_REQUIRED',
+        { timestamp }
+      );
+    }
+    return parsed;
+  }
+
+  private getChainNowMs(): number {
+    let latest: number | null = null;
+    for (const approval of this.pending_approvals.values()) {
+      const ts = this.parseTimestamp(approval.tool_request.timestamp, 'approval_request');
+      if (latest === null || ts > latest) {
+        latest = ts;
+      }
+    }
+    return latest ?? 0;
   }
 
   // Receipt emission methods (Evidence Invariant compliance)

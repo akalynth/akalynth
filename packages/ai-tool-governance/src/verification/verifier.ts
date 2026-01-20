@@ -8,8 +8,15 @@ import {
   PostFactoReview,
   FrictionBudget
 } from '../types.js';
-import { CoordinationReceipt, CoordinationKernel } from '@akalynth/coordination-kernel';
+import {
+  CoordinationReceipt,
+  verifyReceiptHashes,
+  verifyEventSignature,
+  createPublicKeyFromSeed,
+  GENESIS_MARKER,
+} from '@akalynth/coordination-kernel';
 import { readFileSync } from 'fs';
+import path from 'node:path';
 
 export interface VerificationConfig {
   receipt_chain_path?: string;
@@ -28,7 +35,7 @@ export interface IntegrityReport {
 
 export interface IntegrityViolation {
   receipt_hash: string;
-  violation_type: 'hash_mismatch' | 'chain_break' | 'timestamp_invalid' | 'signature_invalid';
+  violation_type: 'hash_mismatch' | 'chain_break' | 'timestamp_invalid' | 'signature_invalid' | 'sequence_invalid' | 'genesis_invalid';
   description: string;
 }
 
@@ -77,6 +84,7 @@ export interface ConstitutionalStatus {
 export class AIToolGovernanceVerifier {
   private receipts: CoordinationReceipt[] = [];
   private config: VerificationConfig;
+  private publicKey: ReturnType<typeof createPublicKeyFromSeed> | null = null;
 
   constructor(config: VerificationConfig = {}) {
     this.config = {
@@ -104,7 +112,6 @@ export class AIToolGovernanceVerifier {
     start_hash?: string;
     end_hash?: string;
   } = {}): Promise<IntegrityReport> {
-    const start_time = Date.now();
     const violations: IntegrityViolation[] = [];
 
     await this.initialize();
@@ -115,55 +122,91 @@ export class AIToolGovernanceVerifier {
     }
 
     let last_verified_hash = '';
+    let last_timestamp_ms: number | null = null;
+    const publicKey = this.getPublicKey();
 
     // Check each receipt's integrity
     for (let i = 0; i < receipts_to_check.length; i++) {
       const receipt = receipts_to_check[i];
       const prev_receipt = i > 0 ? receipts_to_check[i - 1] : null;
 
-      // Verify hash integrity
-      const hash_valid = await this.verifyReceiptHash(receipt);
-      if (!hash_valid) {
+      // Verify hash integrity (inputs/output/event)
+      const hashCheck = verifyReceiptHashes(receipt);
+      if (!hashCheck.ok) {
         violations.push({
-          receipt_hash: receipt.evidence_hash,
+          receipt_hash: receipt.event_hash,
           violation_type: 'hash_mismatch',
-          description: `Receipt hash verification failed`
+          description: `Receipt hash verification failed: ${hashCheck.reason ?? 'unknown'}`
         });
       }
 
-      // Verify chain linkage
-      if (prev_receipt && receipt.prev_hash !== prev_receipt.evidence_hash) {
+      // Verify signature
+      const signatureValid = verifyEventSignature(
+        receipt.prev_hash,
+        receipt.event_hash,
+        receipt.signature,
+        publicKey
+      );
+      if (!signatureValid) {
         violations.push({
-          receipt_hash: receipt.evidence_hash,
-          violation_type: 'chain_break',
-          description: `Chain break detected: expected ${prev_receipt.evidence_hash}, got ${receipt.prev_hash}`
+          receipt_hash: receipt.event_hash,
+          violation_type: 'signature_invalid',
+          description: 'Receipt signature verification failed'
+        });
+      }
+
+      // Verify chain linkage and genesis marker
+      if (prev_receipt) {
+        if (receipt.prev_hash !== prev_receipt.event_hash) {
+          violations.push({
+            receipt_hash: receipt.event_hash,
+            violation_type: 'chain_break',
+            description: `Chain break detected: expected ${prev_receipt.event_hash}, got ${receipt.prev_hash}`
+          });
+        }
+        if (receipt.sequence !== prev_receipt.sequence + 1) {
+          violations.push({
+            receipt_hash: receipt.event_hash,
+            violation_type: 'sequence_invalid',
+            description: `Sequence break detected: expected ${prev_receipt.sequence + 1}, got ${receipt.sequence}`
+          });
+        }
+      } else if (receipt.prev_hash !== GENESIS_MARKER) {
+        violations.push({
+          receipt_hash: receipt.event_hash,
+          violation_type: 'genesis_invalid',
+          description: `Genesis marker invalid: expected ${GENESIS_MARKER}, got ${receipt.prev_hash}`
         });
       }
 
       // Verify timestamp ordering
-      if (prev_receipt) {
-        const prev_time = new Date(prev_receipt.timestamp).getTime();
-        const curr_time = new Date(receipt.timestamp).getTime();
-        if (curr_time < prev_time) {
-          violations.push({
-            receipt_hash: receipt.evidence_hash,
-            violation_type: 'timestamp_invalid',
-            description: `Timestamp ordering violation: receipt is older than predecessor`
-          });
-        }
+      const curr_time = this.parseTimestamp(receipt.timestamp);
+      if (curr_time === null) {
+        violations.push({
+          receipt_hash: receipt.event_hash,
+          violation_type: 'timestamp_invalid',
+          description: 'Invalid receipt timestamp'
+        });
+      } else if (last_timestamp_ms !== null && curr_time < last_timestamp_ms) {
+        violations.push({
+          receipt_hash: receipt.event_hash,
+          violation_type: 'timestamp_invalid',
+          description: 'Timestamp ordering violation: receipt is older than predecessor'
+        });
+      }
+      if (curr_time !== null) {
+        last_timestamp_ms = curr_time;
       }
 
-      last_verified_hash = receipt.evidence_hash;
+      last_verified_hash = receipt.event_hash;
     }
-
-    const verification_time = Date.now() - start_time;
 
     return {
       integrity_valid: violations.length === 0,
       receipts_checked: receipts_to_check.length,
       violations,
       last_verified_hash,
-      verification_time_ms: verification_time
+      verification_time_ms: 0
     };
   }
 
@@ -183,10 +226,13 @@ export class AIToolGovernanceVerifier {
 
     // Filter by date if specified
     if (options.since_date) {
-      const since_time = new Date(options.since_date).getTime();
-      receipts_to_check = receipts_to_check.filter(r =>
-        new Date(r.timestamp).getTime() >= since_time
-      );
+      const since_time = this.parseTimestamp(options.since_date);
+      if (since_time !== null) {
+        receipts_to_check = receipts_to_check.filter(r => {
+          const ts = this.parseTimestamp(r.timestamp);
+          return ts !== null && ts >= since_time;
+        });
+      }
     }
 
     // Filter by agent if specified
@@ -212,15 +258,27 @@ export class AIToolGovernanceVerifier {
     // Check Finality Invariant
     await this.checkFinalityInvariant(receipts_to_check, violations);
 
+    const integrity = await this.checkIntegrity();
+    if (!integrity.integrity_valid) {
+      violations.push({
+        type: 'chain_broken',
+        severity: 'critical',
+        description: 'Receipt chain integrity verification failed',
+        affected_receipts: integrity.violations.map(v => v.receipt_hash),
+        remediation_required: ['Regenerate receipt chain with valid hashes and signatures']
+      });
+    }
+
     const compliance_score = this.calculateComplianceScore(violations, receipts_to_check.length);
+    const reportTimestampMs = this.latestTimestampMs(receipts_to_check);
 
     return {
-      timestamp: new Date().toISOString(),
+      timestamp: this.formatTimestamp(reportTimestampMs),
       total_actions: receipts_to_check.length,
       violations: options.violations_only ? violations : violations,
       compliance_score,
       recommendations: this.generateRecommendations(violations),
-      chain_integrity: violations.some(v => v.type === 'evidence_missing') ? 'broken' : 'valid'
+      chain_integrity: integrity.integrity_valid ? 'valid' : 'broken'
     };
   }
 
@@ -233,17 +291,19 @@ export class AIToolGovernanceVerifier {
     at_timestamp?: string;
     agent_id?: string;
   }): Promise<ReplayReport> {
-    const start_time = Date.now();
     await this.initialize();
 
     let receipts_to_replay = this.receipts;
 
     // Filter by timestamp if specified
     if (options.at_timestamp) {
-      const target_time = new Date(options.at_timestamp).getTime();
-      receipts_to_replay = receipts_to_replay.filter(r =>
-        new Date(r.timestamp).getTime() <= target_time
-      );
+      const target_time = this.parseTimestamp(options.at_timestamp);
+      if (target_time !== null) {
+        receipts_to_replay = receipts_to_replay.filter(r => {
+          const ts = this.parseTimestamp(r.timestamp);
+          return ts !== null && ts <= target_time;
+        });
+      }
     }
 
     // Filter by agent if specified
@@ -276,7 +336,6 @@ export class AIToolGovernanceVerifier {
       state_data = { error: error instanceof Error ? error.message : 'Unknown error' };
     }
 
-    const replay_time = Date.now() - start_time;
     const final_state_hash = this.calculateStateHash(state_data);
 
     return {
@@ -284,7 +343,7 @@ export class AIToolGovernanceVerifier {
       state_type: options.state_type,
       final_state_hash,
       receipts_processed: receipts_to_replay.length,
-      replay_time_ms: replay_time,
+      replay_time_ms: 0,
       state_data
     };
   }
@@ -302,6 +361,7 @@ export class AIToolGovernanceVerifier {
     const emergency_receipts = this.receipts.filter(r =>
       r.action.includes('emergency') || r.action.includes('override')
     );
+    const chainNowMs = this.latestTimestampMs(emergency_receipts) ?? 0;
 
     const violations: VerifierEmergencyViolation[] = [];
     let overrides_count = 0;
@@ -320,19 +380,18 @@ export class AIToolGovernanceVerifier {
         if (!review_receipt) {
           pending_reviews++;
 
-          // Check if overdue
-          const override_time = new Date(receipt.timestamp).getTime();
-          const deadline = override_time + (24 * 60 * 60 * 1000); // 24 hours
-          if (Date.now() > deadline) {
+          const override_time = this.parseTimestamp(receipt.timestamp);
+          const deadline = override_time !== null ? override_time + (24 * 60 * 60 * 1000) : null;
+          if (deadline !== null && chainNowMs > deadline) {
             overdue_reviews++;
-            violations.push({
-              override_id: receipt.inputs.override_id as string,
-              violation_type: 'overdue_review',
-              severity: 'major',
-              description: 'Emergency override review is overdue',
-              override_timestamp: receipt.timestamp
-            });
           }
+          violations.push({
+            override_id: receipt.inputs.override_id as string,
+            violation_type: 'overdue_review',
+            severity: 'major',
+            description: 'Emergency override missing mandatory post-facto review',
+            override_timestamp: receipt.timestamp
+          });
         } else {
           // Analyze review outcome
           if (review_receipt.result.includes('justified')) {
@@ -344,6 +403,14 @@ export class AIToolGovernanceVerifier {
               violation_type: 'unjustified_override',
               severity: 'critical',
               description: 'Emergency override deemed unjustified in review',
+              override_timestamp: receipt.timestamp
+            });
+          } else {
+            violations.push({
+              override_id: receipt.inputs.override_id as string,
+              violation_type: 'unjustified_override',
+              severity: 'major',
+              description: 'Emergency override review outcome is non-deterministic',
               override_timestamp: receipt.timestamp
             });
           }
@@ -373,16 +440,18 @@ export class AIToolGovernanceVerifier {
     const emergency_audit = await this.auditEmergencies();
 
     // Count active agents (unique actors in recent receipts)
-    const recent_time = Date.now() - (24 * 60 * 60 * 1000); // Last 24 hours
-    const recent_receipts = this.receipts.filter(r =>
-      new Date(r.timestamp).getTime() > recent_time
-    );
+    const chainNowMs = this.latestTimestampMs(this.receipts) ?? 0;
+    const recent_time = chainNowMs - (24 * 60 * 60 * 1000); // Last 24 hours (receipt-derived)
+    const recent_receipts = this.receipts.filter(r => {
+      const ts = this.parseTimestamp(r.timestamp);
+      return ts !== null && ts > recent_time;
+    });
     const active_agents = new Set(recent_receipts.map(r => r.actor_id)).size;
 
     return {
-      constitutional_compliant: compliance_report.compliance_score >= 0.95 && integrity_report.integrity_valid,
+      constitutional_compliant: compliance_report.violations.length === 0 && integrity_report.integrity_valid,
       framework_version: this.config.constitutional_version || '1.0.0',
-      last_updated: new Date().toISOString(),
+      last_updated: this.formatTimestamp(chainNowMs),
       active_agents,
       active_overrides: emergency_audit.total_overrides - emergency_audit.justified_overrides - emergency_audit.unjustified_overrides,
       pending_reviews: emergency_audit.pending_reviews,
@@ -404,7 +473,12 @@ export class AIToolGovernanceVerifier {
   private async loadReceiptChain(file_path: string): Promise<void> {
     try {
       const content = readFileSync(file_path, 'utf8');
-      const lines = content.trim().split('\n');
+      const trimmed = content.trim();
+      if (trimmed.length === 0) {
+        this.receipts = [];
+        return;
+      }
+      const lines = trimmed.split('\n').filter(line => line.trim().length > 0);
       this.receipts = lines.map(line => JSON.parse(line));
     } catch (error) {
       throw new Error(`Failed to load receipt chain: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -415,14 +489,14 @@ export class AIToolGovernanceVerifier {
     let filtered = receipts;
 
     if (start_hash) {
-      const start_index = receipts.findIndex(r => r.evidence_hash === start_hash);
+      const start_index = receipts.findIndex(r => r.event_hash === start_hash);
       if (start_index !== -1) {
         filtered = filtered.slice(start_index);
       }
     }
 
     if (end_hash) {
-      const end_index = filtered.findIndex(r => r.evidence_hash === end_hash);
+      const end_index = filtered.findIndex(r => r.event_hash === end_hash);
       if (end_index !== -1) {
         filtered = filtered.slice(0, end_index + 1);
       }
@@ -431,22 +505,27 @@ export class AIToolGovernanceVerifier {
     return filtered;
   }
 
-  private async verifyReceiptHash(receipt: CoordinationReceipt): Promise<boolean> {
-    // Simple hash verification - in production would use cryptographic hash
-    const { evidence_hash, ...receipt_without_hash } = receipt;
-    const calculated_hash = JSON.stringify(receipt_without_hash);
-    return calculated_hash.length > 0; // Simplified check
-  }
-
   private async checkEvidenceInvariant(receipts: CoordinationReceipt[], violations: ComplianceViolation[]): Promise<void> {
     for (const receipt of receipts) {
-      if (!receipt.evidence_hash) {
+      if (!receipt.event_hash || !receipt.signature || !receipt.inputs_hash || !receipt.outputs_hash) {
         violations.push({
           type: 'evidence_missing',
           severity: 'critical',
-          description: 'Receipt missing evidence hash',
-          affected_receipts: [receipt.timestamp],
-          remediation_required: ['Regenerate receipt with proper evidence hash']
+          description: 'Receipt missing required evidence fields',
+          affected_receipts: [receipt.event_hash || receipt.timestamp],
+          remediation_required: ['Regenerate receipt with proper event_hash, signature, inputs_hash, and outputs_hash']
+        });
+        continue;
+      }
+
+      const hashCheck = verifyReceiptHashes(receipt);
+      if (!hashCheck.ok) {
+        violations.push({
+          type: 'evidence_missing',
+          severity: 'critical',
+          description: `Receipt hash verification failed: ${hashCheck.reason ?? 'unknown'}`,
+          affected_receipts: [receipt.event_hash],
+          remediation_required: ['Regenerate receipt with correct hashes']
         });
       }
     }
@@ -472,7 +551,7 @@ export class AIToolGovernanceVerifier {
           type: 'segregation_violated',
           severity: 'critical',
           description: 'Self-approval detected',
-          affected_receipts: [approval.evidence_hash],
+          affected_receipts: [approval.event_hash],
           remediation_required: ['Revoke self-approved action', 'Implement segregation controls']
         });
       }
@@ -484,21 +563,33 @@ export class AIToolGovernanceVerifier {
     const overrides = receipts.filter(r => r.action.includes('emergency_override'));
     for (const override of overrides) {
       const override_id = override.inputs.override_id as string;
-      const has_review = receipts.some(r =>
+      const review = receipts.find(r =>
         r.action.includes('post_facto_review') &&
         r.inputs.override_id === override_id
       );
 
-      if (!has_review) {
-        const override_time = new Date(override.timestamp).getTime();
+      if (!review) {
+        violations.push({
+          type: 'emergency_abused',
+          severity: 'major',
+          description: 'Emergency override missing mandatory post-facto review',
+          affected_receipts: [override.event_hash],
+          remediation_required: ['Conduct mandatory emergency review']
+        });
+        continue;
+      }
+
+      const override_time = this.parseTimestamp(override.timestamp);
+      const review_time = this.parseTimestamp(review.timestamp);
+      if (override_time !== null && review_time !== null) {
         const deadline = override_time + (24 * 60 * 60 * 1000);
-        if (Date.now() > deadline) {
+        if (review_time > deadline) {
           violations.push({
             type: 'emergency_abused',
             severity: 'major',
-            description: 'Emergency override missing mandatory post-facto review',
-            affected_receipts: [override.evidence_hash],
-            remediation_required: ['Conduct overdue emergency review']
+            description: 'Emergency override review exceeded post-facto deadline',
+            affected_receipts: [override.event_hash, review.event_hash],
+            remediation_required: ['Treat override as unconstitutional']
           });
         }
       }
@@ -512,12 +603,7 @@ export class AIToolGovernanceVerifier {
 
   private calculateComplianceScore(violations: ComplianceViolation[], total_actions: number): number {
     if (total_actions === 0) return 1.0;
-
-    const severity_weights = { minor: 0.1, major: 0.5, critical: 1.0 };
-    const total_weight = violations.reduce((sum, v) => sum + severity_weights[v.severity], 0);
-    const max_weight = total_actions * 1.0; // Assume worst case (all critical)
-
-    return Math.max(0, 1 - (total_weight / max_weight));
+    return violations.length === 0 ? 1.0 : 0.0;
   }
 
   private generateRecommendations(violations: ComplianceViolation[]): string[] {
@@ -547,7 +633,8 @@ export class AIToolGovernanceVerifier {
       if (receipt.action === 'friction_consumed') {
         const agent_id = receipt.inputs.agent_id as string;
         if (!budgets[agent_id]) {
-          budgets[agent_id] = this.createDefaultBudget(agent_id);
+          const receipt_time = this.parseTimestamp(receipt.timestamp);
+          budgets[agent_id] = this.createDefaultBudget(agent_id, receipt_time);
         }
         budgets[agent_id].consumed_units += receipt.inputs.cost_units as number;
         budgets[agent_id].available_units = budgets[agent_id].total_units - budgets[agent_id].consumed_units;
@@ -567,15 +654,51 @@ export class AIToolGovernanceVerifier {
     return {};
   }
 
-  private createDefaultBudget(agent_id: string): FrictionBudget {
+  private createDefaultBudget(agent_id: string, timestampMs: number | null): FrictionBudget {
     return {
       agent_id,
       total_units: 100,
       consumed_units: 0,
       available_units: 100,
-      last_reset: new Date().toISOString(),
+      last_reset: this.formatTimestamp(timestampMs),
       reset_interval_ms: 24 * 60 * 60 * 1000
     };
+  }
+
+  private getPublicKey() {
+    if (this.publicKey) {
+      return this.publicKey;
+    }
+    const keyPath = path.resolve(process.env.CHRONICLE_KEY_PATH || 'chronicle.key');
+    const keyBytes = readFileSync(keyPath);
+    if (keyBytes.length !== 32) {
+      throw new Error(`Invalid signing key at ${keyPath}: expected 32 bytes, got ${keyBytes.length}`);
+    }
+    this.publicKey = createPublicKeyFromSeed(new Uint8Array(keyBytes));
+    return this.publicKey;
+  }
+
+  private parseTimestamp(timestamp: string): number | null {
+    if (typeof timestamp !== 'string') {
+      return null;
+    }
+    const parsed = Date.parse(timestamp);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+
+  private latestTimestampMs(receipts: CoordinationReceipt[]): number | null {
+    let latest: number | null = null;
+    for (const receipt of receipts) {
+      const ts = this.parseTimestamp(receipt.timestamp);
+      if (ts !== null && (latest === null || ts > latest)) {
+        latest = ts;
+      }
+    }
+    return latest;
+  }
+
+  private formatTimestamp(timestampMs: number | null): string {
+    return new Date(timestampMs ?? 0).toISOString();
   }
 
   private calculateStateHash(state: any): string {

@@ -13,12 +13,14 @@ import {
   applyActorFrictionConstraint,
   registerFrictionConstraint,
   creditFriction,
-  createDARPResolutionOrchestrator,
-  BoundedResolutionOrchestrator,
   type CoordinationReceipt,
   type Actor,
   type AuditWriter,
 } from '../src/index.js';
+import {
+  createDARPResolutionOrchestrator,
+  BoundedResolutionOrchestrator,
+} from '../src/nonconstitutional.js';
 
 // ============================================================================
 // DARP Regulation Definition

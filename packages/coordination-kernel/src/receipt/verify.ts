@@ -2,8 +2,15 @@
 // Cryptographic integrity verification and deterministic state reconstruction
 
 import fs from 'node:fs';
-import type { CoordinationReceipt, ReceiptChain, CoordinationError } from '../types.js';
-import { verifyReceiptHash, verifyChainLink, verifyGenesisReceipt } from './hasher.js';
+import path from 'node:path';
+import type { CoordinationReceipt, ReceiptChain } from '../types.js';
+import {
+  verifyChainLink,
+  verifyGenesisReceipt,
+  verifyReceiptHashes,
+  verifyEventSignature,
+} from './hasher.js';
+import { loadVerifyingKey, resolveKeyPath, isProductionMode } from './key.js';
 
 // ============================================================================
 // Chain Verification
@@ -21,9 +28,26 @@ export async function verifyChain(receipts: CoordinationReceipt[]): Promise<Rece
     };
   }
 
+  const publicKey = loadPublicKey();
+
   // Verify each receipt's hash
   for (const receipt of receipts) {
-    if (!verifyReceiptHash(receipt)) {
+    const hashCheck = verifyReceiptHashes(receipt);
+    if (!hashCheck.ok) {
+      return {
+        receipts,
+        integrity: 'broken',
+        last_hash: null,
+      };
+    }
+
+    const signatureValid = verifyEventSignature(
+      receipt.prev_hash,
+      receipt.event_hash,
+      receipt.signature,
+      publicKey
+    );
+    if (!signatureValid) {
       return {
         receipts,
         integrity: 'broken',
@@ -52,7 +76,7 @@ export async function verifyChain(receipts: CoordinationReceipt[]): Promise<Rece
     }
   }
 
-  const lastHash = receipts.length > 0 ? receipts[receipts.length - 1].evidence_hash : null;
+  const lastHash = receipts.length > 0 ? receipts[receipts.length - 1].event_hash : null;
 
   return {
     receipts,
@@ -109,7 +133,7 @@ export async function replay<T>(
       state = reducer(state, receipt);
     } catch (error) {
       throw new Error(
-        `Reducer failed at receipt ${receipt.evidence_hash}: ${
+        `Reducer failed at receipt ${receipt.event_hash}: ${
           error instanceof Error ? error.message : 'Unknown error'
         }`
       );
@@ -155,10 +179,11 @@ export function generateIntegrityReport(receipts: CoordinationReceipt[]): {
 
   // Check hash integrity
   for (let i = 0; i < receipts.length; i++) {
-    if (!verifyReceiptHash(receipts[i])) {
+    const hashCheck = verifyReceiptHashes(receipts[i]);
+    if (!hashCheck.ok) {
       report.hash_failures++;
       if (!report.first_error) {
-        report.first_error = `Hash failure at receipt ${i}: ${receipts[i].evidence_hash}`;
+        report.first_error = `Hash failure at receipt ${i}: ${receipts[i].event_hash}`;
       }
     }
   }
@@ -174,4 +199,13 @@ export function generateIntegrityReport(receipts: CoordinationReceipt[]): {
   }
 
   return report;
+}
+
+function loadPublicKey() {
+  // Production key discipline check
+  if (isProductionMode() && !process.env.CHRONICLE_KEY_PATH) {
+    throw new Error('CHRONICLE_KEY_PATH is required in production');
+  }
+  const keyPath = resolveKeyPath();
+  return loadVerifyingKey(keyPath);
 }

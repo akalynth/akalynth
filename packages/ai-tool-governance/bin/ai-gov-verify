@@ -57,7 +57,7 @@ program
       if (options.verbose) {
         console.error(error.stack);
       }
-      process.exit(1);
+      process.exit(2);
     }
   });
 
@@ -78,16 +78,17 @@ program
         since_date: options.since,
         agent_id: options.agent
       });
+      const compliant = report.violations.length === 0 && report.chain_integrity === 'valid';
 
       outputReport(report, 'compliance', options.output);
-      process.exit(report.compliance_score >= 0.95 ? 0 : 1);
+      process.exit(compliant ? 0 : 1);
 
     } catch (error) {
       console.error('Compliance check failed:', error.message);
       if (options.verbose) {
         console.error(error.stack);
       }
-      process.exit(1);
+      process.exit(2);
     }
   });
 
@@ -115,7 +116,7 @@ program
       if (options.verbose) {
         console.error(error.stack);
       }
-      process.exit(1);
+      process.exit(2);
     }
   });
 
@@ -143,7 +144,7 @@ program
       if (options.verbose) {
         console.error(error.stack);
       }
-      process.exit(1);
+      process.exit(2);
     }
   });
 
@@ -170,7 +171,7 @@ program
       if (options.verbose) {
         console.error(error.stack);
       }
-      process.exit(1);
+      process.exit(2);
     }
   });
 
@@ -197,7 +198,7 @@ program
       if (options.verbose) {
         console.error(error.stack);
       }
-      process.exit(1);
+      process.exit(2);
     }
   });
 
@@ -250,8 +251,9 @@ function outputSummary(report, type) {
       break;
 
     case 'compliance':
+      const compliant = report.violations.length === 0 && report.chain_integrity === 'valid';
       console.log(`Compliance Score: ${(report.compliance_score * 100).toFixed(1)}%`);
-      console.log(`Status: ${report.compliance_score >= 0.95 ? '✅ Compliant' : '❌ Non-Compliant'}`);
+      console.log(`Status: ${compliant ? '✅ Compliant' : '❌ Non-Compliant'}`);
       console.log(`Violations: ${report.violations.length}`);
       break;
 
@@ -305,12 +307,12 @@ process.on('uncaughtException', (error) => {
   if (program.opts().verbose) {
     console.error(error.stack);
   }
-  process.exit(1);
+  process.exit(2);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled promise rejection:', reason);
-  process.exit(1);
+  process.exit(2);
 });
 
 // Parse CLI arguments

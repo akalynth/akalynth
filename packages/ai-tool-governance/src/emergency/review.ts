@@ -154,11 +154,11 @@ export class ConstitutionalPostFactoReview {
         // Simplified - would need to reconstruct full override data
       }) as EmergencyOverride));
 
-    const now = Date.now();
+    const chainNowMs = this.computeChainNowMs();
     const overdue_count = Array.from(this.pending_reviews.values()).filter(override => {
       const override_time = new Date(override.timestamp).getTime();
       const deadline = override_time + AI_GOVERNANCE_CONSTANTS.EMERGENCY_REVIEW_DEADLINE_MS;
-      return now > deadline;
+      return chainNowMs > deadline;
     }).length;
 
     const completed_reviews = Array.from(this.completed_reviews.values());
@@ -181,7 +181,7 @@ export class ConstitutionalPostFactoReview {
       unjustified_overrides: unjustified_count,
       contested_overrides: contested_count,
       compliance_score,
-      compliance_status: compliance_score >= 0.95 ? 'compliant' : 'violation',
+      compliance_status: compliance_score === 1.0 ? 'compliant' : 'violation',
       recommendations: this.generateComplianceRecommendations(overdue_count, unjustified_count)
     };
   }
@@ -191,21 +191,21 @@ export class ConstitutionalPostFactoReview {
    */
   async detectReviewViolations(): Promise<ReviewViolation[]> {
     const violations: ReviewViolation[] = [];
-    const now = Date.now();
+    const chainNowMs = this.computeChainNowMs();
 
     // Check for overdue reviews
     for (const [id, override] of this.pending_reviews) {
       const override_time = new Date(override.timestamp).getTime();
       const deadline = override_time + AI_GOVERNANCE_CONSTANTS.EMERGENCY_REVIEW_DEADLINE_MS;
 
-      if (now > deadline) {
-        const days_overdue = Math.floor((now - deadline) / (24 * 60 * 60 * 1000));
+      if (chainNowMs > deadline) {
+        const days_overdue = Math.floor((chainNowMs - deadline) / (24 * 60 * 60 * 1000));
         violations.push({
           type: 'overdue_review',
           severity: days_overdue > 7 ? 'critical' : 'major',
           override_id: id,
           description: `Post-facto review overdue by ${days_overdue} days`,
-          detected_at: new Date().toISOString(),
+          detected_at: new Date(chainNowMs).toISOString(),
           days_overdue
         });
       }
@@ -215,7 +215,7 @@ export class ConstitutionalPostFactoReview {
     const recent_reviews = Array.from(this.completed_reviews.values())
       .filter(r => {
         const review_time = new Date(r.timestamp).getTime();
-        const last_30_days = now - (30 * 24 * 60 * 60 * 1000);
+        const last_30_days = chainNowMs - (30 * 24 * 60 * 60 * 1000);
         return review_time > last_30_days;
       });
 
@@ -365,17 +365,30 @@ export class ConstitutionalPostFactoReview {
     );
   }
 
+  private computeChainNowMs(): number {
+    let latest: number | null = null;
+    for (const override of this.pending_reviews.values()) {
+      const ts = Date.parse(override.timestamp);
+      if (!Number.isNaN(ts) && (latest === null || ts > latest)) {
+        latest = ts;
+      }
+    }
+    for (const review of this.completed_reviews.values()) {
+      const ts = Date.parse(review.timestamp);
+      if (!Number.isNaN(ts) && (latest === null || ts > latest)) {
+        latest = ts;
+      }
+    }
+    return latest ?? 0;
+  }
+
   private calculateReviewComplianceScore(
     total_reviews: number,
     overdue_count: number,
     unjustified_count: number
   ): number {
     if (total_reviews === 0) return 1.0;
-
-    const overdue_penalty = (overdue_count / total_reviews) * 0.5;
-    const unjustified_penalty = (unjustified_count / total_reviews) * 0.3;
-
-    return Math.max(0, 1.0 - overdue_penalty - unjustified_penalty);
+    return overdue_count === 0 && unjustified_count === 0 ? 1.0 : 0.0;
   }
 
   private generateComplianceRecommendations(overdue_count: number, unjustified_count: number): string[] {

@@ -116,8 +116,8 @@ async function checkIntegrity(receiptFile: string): Promise<void> {
         const lastReceipt = verification.receipts[verification.receipts.length - 1];
 
         console.log(`   Time span: ${firstReceipt.timestamp} → ${lastReceipt.timestamp}`);
-        console.log(`   Genesis hash: ${firstReceipt.evidence_hash.slice(0, 16)}...`);
-        console.log(`   Latest hash: ${lastReceipt.evidence_hash.slice(0, 16)}...`);
+        console.log(`   Genesis hash: ${firstReceipt.event_hash.slice(0, 16)}...`);
+        console.log(`   Latest hash: ${lastReceipt.event_hash.slice(0, 16)}...`);
       }
 
       console.log('\n🛡️  Cryptographic verification: PASSED');

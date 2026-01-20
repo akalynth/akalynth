@@ -6,13 +6,17 @@
 // ============================================================================
 
 export interface CoordinationReceipt {
+  sequence: number;
   timestamp: string;
+  prev_hash: string;           // genesis = "genesis", chain integrity
+  event_hash: string;          // blake3 hash of canonical receipt body
+  signature: string;           // Ed25519 signature of `${prev_hash}|${event_hash}`
   actor_id: string;
   action: string;
   inputs: Record<string, unknown>;
+  inputs_hash: string;         // blake3 hash of canonical inputs
   result: string;
-  prev_hash: string | null;     // genesis = null, chain integrity
-  evidence_hash: string;        // hash(stableStringify(without evidence_hash))
+  outputs_hash: string;        // blake3 hash of canonical outputs (result)
 }
 
 export interface ReceiptChain {
@@ -79,7 +83,7 @@ export interface FrictionBalance {
 // ============================================================================
 
 export interface CoordinationKernel {
-  // 1. Receipt Append (write + fsync + evidence_hash)
+  // 1. Receipt Append (write + fsync + event_hash + signature)
   appendReceipt(
     actor_id: string,
     action: string,
@@ -110,7 +114,12 @@ export interface CoordinationKernel {
 // ============================================================================
 
 export interface AuditWriter {
-  write(receipt: Omit<CoordinationReceipt, 'timestamp' | 'prev_hash' | 'evidence_hash'>): Promise<CoordinationReceipt>;
+  write(
+    receipt: Omit<
+      CoordinationReceipt,
+      'sequence' | 'timestamp' | 'prev_hash' | 'event_hash' | 'signature' | 'inputs_hash' | 'outputs_hash'
+    >
+  ): Promise<CoordinationReceipt>;
 }
 
 // ============================================================================

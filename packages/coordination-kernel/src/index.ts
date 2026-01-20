@@ -2,16 +2,21 @@
 //
 // "Who decides?" → "The receipts, the constraints, and the clock."
 
-export * from './types.js';
+export type {
+  CoordinationReceipt,
+  ReceiptChain,
+  Actor,
+  CapabilityGrant,
+  CoordinationKernel,
+  AuditWriter,
+} from './types.js';
+export { CoordinationError, LITMUS_TEST } from './types.js';
 
 // Receipt system (Days 3-5: COMPLETE)
 export * from './receipt/index.js';
 
 // Capability system (Days 6-7: COMPLETE)
 export * from './capability/index.js';
-
-// Bounded resolution system (Days 8-9: COMPLETE)
-export * from './resolution/index.js';
 
 // Version info
 export const COORDINATION_KERNEL_VERSION = '0.1.0';

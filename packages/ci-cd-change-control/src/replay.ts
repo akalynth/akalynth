@@ -2,6 +2,14 @@ import type { CoordinationReceipt } from "coordination-kernel";
 import { loadAndVerifyChain } from "coordination-kernel";
 import type { ReplayResult, DeploymentFacts, CICDAction, CICDReceiptInputs } from "./types.js";
 
+function parseTimestamp(value: unknown): number | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const parsed = Date.parse(value);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
 function ensureDeployment(map: Record<string, DeploymentFacts>, id: string, seed: Partial<DeploymentFacts>) {
   if (!map[id]) {
     map[id] = {
@@ -59,11 +67,16 @@ export async function replayFromJsonlFile(jsonlPath: string): Promise<{ receipts
     d.pipeline_run_id = inputs.pipeline_run_id ?? d.pipeline_run_id;
     d.artifact_digest = inputs.artifact_digest ?? d.artifact_digest;
 
-    const ts = typeof r.timestamp === "string" ? Date.parse(r.timestamp) : Date.now();
+    const ts = parseTimestamp(r.timestamp);
+    if (ts === null) {
+      d.errors.push(`invalid_timestamp:${action}`);
+    }
 
     if (action === "deploy_requested") {
       d.requester_id = r.actor_id;
-      d.requested_at = ts;
+      if (ts !== null) {
+        d.requested_at = ts;
+      }
       d.status = "requested";
     }
 
@@ -79,7 +92,9 @@ export async function replayFromJsonlFile(jsonlPath: string): Promise<{ receipts
 
     if (action === "deploy_approved") {
       d.approver_id = r.actor_id;
-      d.approved_at = ts;
+      if (ts !== null) {
+        d.approved_at = ts;
+      }
       d.status = "approved";
     }
 
@@ -89,12 +104,16 @@ export async function replayFromJsonlFile(jsonlPath: string): Promise<{ receipts
     }
 
     if (action === "deploy_completed") {
-      d.completed_at = ts;
+      if (ts !== null) {
+        d.completed_at = ts;
+      }
       d.status = "deployed";
     }
 
     if (action === "deploy_failed") {
-      d.completed_at = ts;
+      if (ts !== null) {
+        d.completed_at = ts;
+      }
       d.status = "failed";
     }
 
@@ -103,17 +122,40 @@ export async function replayFromJsonlFile(jsonlPath: string): Promise<{ receipts
     }
 
     if (action === "emergency_deploy") {
+      const firstEmergency = d.emergency !== true;
       d.emergency = true;
       d.status = "emergency";
-      d.requester_id = d.requester_id ?? r.actor_id;
+      if (firstEmergency) {
+        const requesterInput = (r.inputs as Record<string, unknown> | undefined)?.requester_id;
+        if (typeof requesterInput === "string" && requesterInput.length > 0) {
+          d.requester_id = requesterInput;
+        } else {
+          d.errors.push("emergency break-glass: missing requester_id");
+        }
+        if (ts !== null && d.requested_at === undefined) {
+          d.requested_at = ts;
+        }
+      }
     }
 
     if (action === "incident_linked") {
-      d.incident_linked_at = ts;
+      if (ts !== null) {
+        d.incident_linked_at = ts;
+      }
     }
 
     if (action === "retro_review_completed") {
-      d.retro_review_completed_at = ts;
+      const reviewerInput = (r.inputs as Record<string, unknown> | undefined)?.reviewer_id;
+      const reviewerId = typeof reviewerInput === "string" && reviewerInput.trim().length > 0
+        ? reviewerInput
+        : r.actor_id;
+      if (ts !== null && (d.retro_review_first_at === undefined || ts < d.retro_review_first_at)) {
+        d.retro_review_first_at = ts;
+        d.retro_review_reviewer_id = reviewerId;
+      }
+      if (d.requester_id && reviewerId && reviewerId !== d.requester_id) {
+        d.retro_review_any_independent = true;
+      }
     }
   }
 

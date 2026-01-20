@@ -2,7 +2,17 @@
 // Proves: "An AI system can be granted power without trust, reputation, or supervision — only law"
 
 import { ConstitutionalAIGovernance, ConstitutionalAIGovernanceFactory } from '../src/ai-governance.js';
-import { CoordinationKernel } from '@akalynth/coordination-kernel';
+import {
+  CoordinationKernel,
+  GENESIS_MARKER,
+  computeInputsHash,
+  computeOutputsHash,
+  computeEventHash,
+  signEvent,
+  createPrivateKeyFromSeed
+} from '@akalynth/coordination-kernel';
+import { readFileSync } from 'fs';
+import path from 'node:path';
 import { ToolExecutionRequest, AIAgent, ExecutionGate } from '../src/types.js';
 
 /**
@@ -330,25 +340,45 @@ class ConstitutionalProofDemo {
   }
 
   private createMockKernel(): CoordinationKernel {
+    const keyPath = path.resolve(process.env.CHRONICLE_KEY_PATH || 'chronicle.key');
+    const keyBytes = readFileSync(keyPath);
+    if (keyBytes.length !== 32) {
+      throw new Error(`Invalid signing key at ${keyPath}: expected 32 bytes, got ${keyBytes.length}`);
+    }
+    const signingKey = createPrivateKeyFromSeed(new Uint8Array(keyBytes));
+    let sequence = 0;
+    let lastHash = GENESIS_MARKER;
+
     // Mock implementation for demonstration
     return {
       appendReceipt: async (actor_id, action, inputs, result) => {
-        const receipt = {
-          timestamp: new Date().toISOString(),
+        sequence += 1;
+        const timestamp = new Date().toISOString();
+        const prev_hash = sequence === 1 ? GENESIS_MARKER : lastHash;
+        const inputs_hash = computeInputsHash(inputs);
+        const outputs_hash = computeOutputsHash(result);
+        const unsignedReceipt = {
+          sequence,
+          timestamp,
           actor_id,
           action,
           inputs,
           result,
-          prev_hash: null,
-          evidence_hash: `mock_hash_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+          prev_hash,
+          inputs_hash,
+          outputs_hash
         };
-        console.log(`     📝 Receipt: ${action} by ${actor_id} (${receipt.evidence_hash.substr(0, 12)}...)`);
+        const event_hash = computeEventHash(unsignedReceipt);
+        const signature = signEvent(prev_hash, event_hash, signingKey);
+        const receipt = { ...unsignedReceipt, event_hash, signature };
+        lastHash = event_hash;
+        console.log(`     📝 Receipt: ${action} by ${actor_id} (${receipt.event_hash.substr(0, 12)}...)`);
         return receipt;
       },
       verifyChain: async (receipts) => ({
         receipts,
         integrity: 'valid' as const,
-        last_hash: receipts.length > 0 ? receipts[receipts.length - 1].evidence_hash : null
+        last_hash: receipts.length > 0 ? receipts[receipts.length - 1].event_hash : null
       }),
       replay: async (receipts, reducer, initialState) => {
         return receipts.reduce(reducer, initialState);

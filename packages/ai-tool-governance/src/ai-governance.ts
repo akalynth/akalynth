@@ -260,19 +260,15 @@ export class ConstitutionalAIGovernance implements AIToolGovernance {
    * Constitutional Principle: Compliance is mechanically deterministic
    */
   async verifyCompliance(): Promise<boolean> {
-    try {
-      const report = await this.generateComplianceReport();
-      return report.compliance_score >= 0.95 && report.chain_integrity === 'valid';
-    } catch (error) {
-      return false;
-    }
+    const report = await this.generateComplianceReport();
+    return report.violations.length === 0 && report.chain_integrity === 'valid';
   }
 
   async generateComplianceReport(): Promise<ComplianceReport> {
     // This would integrate with the verification system
     // For now, return a simplified report
     return {
-      timestamp: new Date().toISOString(),
+      timestamp: new Date(0).toISOString(),
       total_actions: 0,
       violations: [],
       compliance_score: 1.0,
@@ -301,16 +297,7 @@ export class ConstitutionalAIGovernance implements AIToolGovernance {
     gate: ExecutionGate,
     agent: AIAgent
   ): Promise<ToolExecutionResult> {
-    // Check and consume friction budget
-    const can_afford = await this.friction_manager.canAfford(agent.id, gate.friction_cost);
-    if (!can_afford) {
-      throw new AIGovernanceError(
-        'Insufficient friction budget for action',
-        'FRICTION_EXHAUSTED',
-        { agent_id: agent.id, cost: gate.friction_cost }
-      );
-    }
-
+    // Consume friction budget (receipt-time enforcement)
     await this.friction_manager.consumeFriction(agent.id, gate.friction_cost);
 
     // Execute using direct pattern after friction consumption

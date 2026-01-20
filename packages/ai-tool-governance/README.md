@@ -2,6 +2,8 @@
 
 **Version 1.0.0** - Constitutional Framework for AI Tool Execution
 
+> **Status:** Doctrine (constitutional surface for this package). Changes require an explicit amendment.
+
 > "An AI system can be granted power without trust, reputation, or supervision — only law"
 
 ## 🏛️ Constitutional Proof
@@ -26,7 +28,7 @@ This package implements a **proof-native governance system** for AI tool executi
 ```typescript
 // All actions automatically generate evidence
 const result = await governance.executeTool(request, gate);
-// Receipt emitted: tool_execution_completed with evidence_hash
+// Receipt emitted: tool_execution_completed with event_hash
 ```
 
 ### 2. Temporal Invariant
@@ -217,7 +219,8 @@ const compliant = await governance.verifyCompliance();
 
 // Generate compliance report
 const report = await governance.generateComplianceReport();
-console.log(`Compliance Score: ${report.compliance_score * 100}%`);
+const compliant = report.violations.length === 0 && report.chain_integrity === 'valid';
+console.log(`Compliance: ${compliant ? 'PASS' : 'FAIL'}`);
 console.log(`Violations: ${report.violations.length}`);
 
 // Check emergency override statistics
@@ -399,17 +402,8 @@ await demo.runCompleteProof();
 ## 🧪 Testing
 
 ```bash
-# Run constitutional compliance tests
 npm test
-
-# Run governance pattern tests
-npm run test:patterns
-
-# Run emergency override tests
-npm run test:emergency
-
-# Run full constitutional proof
-npm run demo:constitutional-proof
+npm run verify
 ```
 
 ## 📚 Documentation
@@ -432,7 +426,7 @@ This package implements constitutional law for AI governance. Changes to constit
 
 ## 📄 License
 
-MIT License - See [LICENSE](./LICENSE) for details.
+See repo root [LICENSE](../../LICENSE).
 
 ## 🔗 Related Packages
 

@@ -140,30 +140,30 @@ export class ConstitutionalEmergencyOverride {
    * Get emergency override statistics for constitutional monitoring
    */
   async getOverrideStatistics(agent_id?: string): Promise<EmergencyStatistics> {
-    const now = Date.now();
-    const last_24h = now - (24 * 60 * 60 * 1000);
-    const last_7d = now - (7 * 24 * 60 * 60 * 1000);
-
     let overrides_to_check = Array.from(this.active_overrides.values());
 
     if (agent_id) {
       overrides_to_check = overrides_to_check.filter(o => o.overridden_by === agent_id);
     }
 
+    const chainNowMs = this.getChainNowMs(overrides_to_check);
+    const last_24h = chainNowMs - (24 * 60 * 60 * 1000);
+    const last_7d = chainNowMs - (7 * 24 * 60 * 60 * 1000);
+
     const overrides_24h = overrides_to_check.filter(o =>
-      new Date(o.timestamp).getTime() > last_24h
+      this.parseTimestamp(o.timestamp, 'override') > last_24h
     );
 
     const overrides_7d = overrides_to_check.filter(o =>
-      new Date(o.timestamp).getTime() > last_7d
+      this.parseTimestamp(o.timestamp, 'override') > last_7d
     );
 
     const pending_reviews = overrides_to_check.filter(o => o.review_required);
 
     const overdue_reviews = pending_reviews.filter(o => {
-      const override_time = new Date(o.timestamp).getTime();
+      const override_time = this.parseTimestamp(o.timestamp, 'override');
       const deadline = override_time + AI_GOVERNANCE_CONSTANTS.EMERGENCY_REVIEW_DEADLINE_MS;
-      return now > deadline;
+      return chainNowMs > deadline;
     });
 
     return {
@@ -182,7 +182,6 @@ export class ConstitutionalEmergencyOverride {
    */
   async detectEmergencyViolations(agent_id?: string): Promise<EmergencyViolation[]> {
     const violations: EmergencyViolation[] = [];
-    const now = Date.now();
 
     let overrides_to_check = Array.from(this.active_overrides.values());
 
@@ -190,29 +189,31 @@ export class ConstitutionalEmergencyOverride {
       overrides_to_check = overrides_to_check.filter(o => o.overridden_by === agent_id);
     }
 
+    const chainNowMs = this.getChainNowMs(overrides_to_check);
+
     // Check for overdue reviews
     for (const override of overrides_to_check) {
       if (override.review_required) {
-        const override_time = new Date(override.timestamp).getTime();
+        const override_time = this.parseTimestamp(override.timestamp, 'override');
         const deadline = override_time + AI_GOVERNANCE_CONSTANTS.EMERGENCY_REVIEW_DEADLINE_MS;
 
-        if (now > deadline) {
+        if (chainNowMs > deadline) {
           violations.push({
             type: 'overdue_review',
             severity: 'major',
             override_id: override.id,
             description: 'Emergency override review is overdue',
-            detected_at: new Date().toISOString(),
-            days_overdue: Math.floor((now - deadline) / (24 * 60 * 60 * 1000))
+            detected_at: new Date(chainNowMs).toISOString(),
+            days_overdue: Math.floor((chainNowMs - deadline) / (24 * 60 * 60 * 1000))
           });
         }
       }
     }
 
     // Check for excessive emergency usage
-    const last_24h = now - (24 * 60 * 60 * 1000);
+    const last_24h = chainNowMs - (24 * 60 * 60 * 1000);
     const recent_overrides = overrides_to_check.filter(o =>
-      new Date(o.timestamp).getTime() > last_24h
+      this.parseTimestamp(o.timestamp, 'override') > last_24h
     );
 
     if (recent_overrides.length > 5) { // Constitutional limit
@@ -221,7 +222,7 @@ export class ConstitutionalEmergencyOverride {
         severity: 'critical',
         override_id: 'multiple',
         description: `Excessive emergency usage: ${recent_overrides.length} overrides in 24h`,
-        detected_at: new Date().toISOString(),
+        detected_at: new Date(chainNowMs).toISOString(),
         usage_count: recent_overrides.length
       });
     }
@@ -304,13 +305,14 @@ export class ConstitutionalEmergencyOverride {
       justification: JSON.stringify(justification),
       overridden_by: agent.id,
       override_capability: AI_GOVERNANCE_CONSTANTS.EMERGENCY_OVERRIDE_CAPABILITY,
-      timestamp: new Date().toISOString(),
+      timestamp: this.normalizeTimestamp(request.timestamp, 'override_request'),
       review_required: true
     };
   }
 
   private async scheduleReviewReminder(override: EmergencyOverride): Promise<void> {
-    const review_deadline = new Date(Date.now() + AI_GOVERNANCE_CONSTANTS.EMERGENCY_REVIEW_DEADLINE_MS);
+    const override_time = this.parseTimestamp(override.timestamp, 'override');
+    const review_deadline = new Date(override_time + AI_GOVERNANCE_CONSTANTS.EMERGENCY_REVIEW_DEADLINE_MS);
 
     await this.kernel.appendReceipt(
       'emergency_override_manager',
@@ -328,7 +330,7 @@ export class ConstitutionalEmergencyOverride {
     if (pending_reviews.length === 0) return null;
 
     const deadlines = pending_reviews.map(override => {
-      const override_time = new Date(override.timestamp).getTime();
+      const override_time = this.parseTimestamp(override.timestamp, 'override');
       return override_time + AI_GOVERNANCE_CONSTANTS.EMERGENCY_REVIEW_DEADLINE_MS;
     });
 
@@ -338,6 +340,34 @@ export class ConstitutionalEmergencyOverride {
 
   private generateOverrideId(): string {
     return `emergency_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  private parseTimestamp(timestamp: string, context: string): number {
+    const parsed = Date.parse(timestamp);
+    if (Number.isNaN(parsed)) {
+      throw new AIGovernanceError(
+        `Invalid timestamp for ${context}`,
+        'EMERGENCY_DENIED',
+        { timestamp }
+      );
+    }
+    return parsed;
+  }
+
+  private normalizeTimestamp(timestamp: string, context: string): string {
+    const parsed = this.parseTimestamp(timestamp, context);
+    return new Date(parsed).toISOString();
+  }
+
+  private getChainNowMs(overrides: EmergencyOverride[]): number {
+    let latest: number | null = null;
+    for (const override of overrides) {
+      const ts = this.parseTimestamp(override.timestamp, 'override');
+      if (latest === null || ts > latest) {
+        latest = ts;
+      }
+    }
+    return latest ?? 0;
   }
 
   // Receipt emission methods
@@ -365,6 +395,9 @@ export class ConstitutionalEmergencyOverride {
     override: EmergencyOverride,
     justification: EmergencyJustification
   ): Promise<CoordinationReceipt> {
+    const override_time = this.parseTimestamp(override.timestamp, 'override');
+    const review_deadline = new Date(override_time + AI_GOVERNANCE_CONSTANTS.EMERGENCY_REVIEW_DEADLINE_MS).toISOString();
+
     return await this.kernel.appendReceipt(
       'emergency_override_manager',
       'emergency_override_initiated',
@@ -374,7 +407,7 @@ export class ConstitutionalEmergencyOverride {
         overridden_by: override.overridden_by,
         threat_level: justification.context.threat_level,
         impact_scope: justification.context.impact_scope,
-        review_deadline: new Date(Date.now() + AI_GOVERNANCE_CONSTANTS.EMERGENCY_REVIEW_DEADLINE_MS).toISOString()
+        review_deadline
       },
       'constitutional_emergency_override_started'
     );

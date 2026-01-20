@@ -2,6 +2,7 @@
 // Export all receipt-related functionality
 
 export * from './hasher.js';
+export * from './key.js';
 export * from './logger.js';
 export * from './verify.js';
 

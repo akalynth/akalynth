@@ -5,6 +5,16 @@
   "description": "Domain-agnostic coordination primitives extracted from Akalynth",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./nonconstitutional": {
+      "types": "./dist/nonconstitutional.d.ts",
+      "default": "./dist/nonconstitutional.js"
+    }
+  },
   "scripts": {
     "build": "tsc",
     "test": "jest",
@@ -19,6 +29,7 @@
     "post-bureaucratic"
   ],
   "dependencies": {
+    "@noble/hashes": "^1.3.3",
     "fast-json-stable-stringify": "^2.1.0"
   },
   "devDependencies": {

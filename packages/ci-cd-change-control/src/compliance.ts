@@ -39,6 +39,10 @@ export function evaluateCompliance(replay: ReplayResult, opts: ComplianceOpts): 
       f.push(...evaluateNormalPath(d, opts));
     }
 
+    if (d.errors.length) {
+      f.push(...d.errors);
+    }
+
     if (f.length) failures[deployment_id] = f;
     else okCount += 1;
   }
@@ -109,19 +113,29 @@ function evaluateEmergencyPath(d: any, opts: ComplianceOpts): string[] {
   }
 
   // Post-facto requirement: incident linking within 24h
-  const emergencyTime = d.requested_at ?? Date.now(); // Use current time as fallback
+  const emergencyTime = d.requested_at;
+  if (emergencyTime === undefined) {
+    violations.push("emergency break-glass: missing requested_at");
+  }
 
   if (!d.incident_linked_at) {
     violations.push("emergency break-glass: missing incident_linked");
-  } else if (hours(d.incident_linked_at - emergencyTime) > opts.emergencyIncidentDeadlineHours) {
+  } else if (emergencyTime !== undefined && hours(d.incident_linked_at - emergencyTime) > opts.emergencyIncidentDeadlineHours) {
     violations.push(`emergency break-glass: incident_linked late (${Math.round(hours(d.incident_linked_at - emergencyTime))}h > ${opts.emergencyIncidentDeadlineHours}h)`);
   }
 
   // Post-facto requirement: retro review within 72h
-  if (!d.retro_review_completed_at) {
+  if (!d.retro_review_first_at) {
     violations.push("emergency break-glass: missing retro_review_completed");
-  } else if (hours(d.retro_review_completed_at - emergencyTime) > opts.emergencyRetroDeadlineHours) {
-    violations.push(`emergency break-glass: retro_review_completed late (${Math.round(hours(d.retro_review_completed_at - emergencyTime))}h > ${opts.emergencyRetroDeadlineHours}h)`);
+  } else if (emergencyTime !== undefined && hours(d.retro_review_first_at - emergencyTime) > opts.emergencyRetroDeadlineHours) {
+    violations.push(`emergency break-glass: retro_review_completed late (${Math.round(hours(d.retro_review_first_at - emergencyTime))}h > ${opts.emergencyRetroDeadlineHours}h)`);
+  }
+
+  // Segregation: reviewer must be recorded and must not be the requester
+  if (d.requester_id && d.retro_review_first_at) {
+    if (!d.retro_review_any_independent) {
+      violations.push("emergency break-glass: retro_review reviewer==requester");
+    }
   }
 
   return violations;

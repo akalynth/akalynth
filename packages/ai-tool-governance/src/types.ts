@@ -159,7 +159,7 @@ export interface AIToolGovernance {
 // ============================================================================
 
 export interface ComplianceViolation {
-  type: 'evidence_missing' | 'temporal_expired' | 'segregation_violated' | 'emergency_abused';
+  type: 'evidence_missing' | 'temporal_expired' | 'segregation_violated' | 'emergency_abused' | 'chain_broken';
   severity: 'minor' | 'major' | 'critical';
   description: string;
   affected_receipts: string[];

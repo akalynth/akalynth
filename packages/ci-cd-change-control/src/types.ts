@@ -77,7 +77,10 @@ export interface DeploymentFacts {
 
   emergency?: boolean;
   incident_linked_at?: number;
-  retro_review_completed_at?: number;
+  retro_review_first_at?: number;
+  retro_review_any_independent?: boolean;
+  // Deterministic segregation check (replay-derived). Recorded for the first review.
+  retro_review_reviewer_id?: string;
 
   status: DeploymentStatus;
   errors: string[];

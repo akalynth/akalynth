@@ -12,10 +12,10 @@ npm run darp-verify check-integrity receipts.jsonl
 
 **What this does:**
 1. Loads all receipts from the JSONL file
-2. Computes SHA-256 hash for each receipt
-3. Verifies each `evidence_hash` matches computed hash
+2. Computes BLAKE3 event_hash for each receipt
+3. Verifies each `event_hash`, `signature`, `inputs_hash`, and `outputs_hash`
 4. Verifies `prev_hash` links form unbroken chain
-5. Confirms genesis receipt has `prev_hash: null`
+5. Confirms genesis receipt has `prev_hash: "genesis"`
 
 **Output interpretation:**
 - `VALID`: Chain is cryptographically sound
@@ -130,7 +130,11 @@ npm run darp-verify compliance receipts.jsonl
 Each receipt contains:
 ```json
 {
+  "sequence": 1,
   "timestamp": "2026-01-19T10:30:00.000Z",
+  "prev_hash": "genesis",
+  "event_hash": "blake3:def456...",
+  "signature": "ed25519:...",
   "actor_id": "trader_alice",
   "action": "darp_transaction_reported",
   "inputs": {
@@ -140,30 +144,30 @@ Each receipt contains:
     "friction_cost": 10
   },
   "result": "ok",
-  "prev_hash": "sha256:abc123...",
-  "evidence_hash": "sha256:def456..."
+  "inputs_hash": "blake3:111aaa...",
+  "outputs_hash": "blake3:222bbb..."
 }
 ```
 
 ### Hash Verification Process
 ```typescript
-// 1. Extract receipt without evidence_hash
-const evidence = stableStringify({
-  timestamp, actor_id, action, inputs, result, prev_hash
-});
+// 1. Compute inputs/outputs hashes
+const inputsHash = blake3(canonicalize(inputs));
+const outputsHash = blake3(canonicalize(result));
 
-// 2. Compute expected hash
-const expectedHash = `sha256:${sha256(evidence)}`;
+// 2. Compute expected event hash (exclude event_hash/signature)
+const body = { sequence, timestamp, prev_hash, actor_id, action, inputs, result, inputs_hash: inputsHash, outputs_hash: outputsHash };
+const expectedHash = blake3(canonicalize(body));
 
 // 3. Compare with stored hash
-const valid = receipt.evidence_hash === expectedHash;
+const valid = receipt.event_hash === expectedHash;
 ```
 
 ### Chain Verification Process
 ```typescript
 // Verify each receipt links to previous
 for (let i = 1; i < receipts.length; i++) {
-  const linkValid = receipts[i].prev_hash === receipts[i-1].evidence_hash;
+  const linkValid = receipts[i].prev_hash === receipts[i-1].event_hash;
   if (!linkValid) throw new Error(`Chain break at receipt ${i}`);
 }
 ```
