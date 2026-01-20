@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# MVP verification = smoke tests + basic invariants
+# This script does NOT certify constitutional compliance.
 set -euo pipefail
 set -o monitor
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

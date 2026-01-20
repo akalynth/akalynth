@@ -2,6 +2,7 @@
 # Akalynth Phase Gate — Install Git Hooks
 #
 # Installs pre-commit hook that enforces Civil Guarantees G1-G15.
+# Developer convenience only; not a constitutional enforcement mechanism.
 #
 # Usage:
 #   cd apps/server
@@ -14,7 +15,13 @@ SERVER_DIR="$(dirname "$SCRIPT_DIR")"
 REPO_ROOT="$(dirname "$SERVER_DIR")"
 HOOKS_DIR="$REPO_ROOT/.git/hooks"
 
+if [ ! -d "$REPO_ROOT/.git" ]; then
+  echo "[install-hooks] ERROR: .git directory not found. Run from a git checkout."
+  exit 1
+fi
+
 echo "[install-hooks] Installing Akalynth Phase Gate..."
+echo "[install-hooks] This modifies $HOOKS_DIR/pre-commit"
 
 # Ensure hooks directory exists
 mkdir -p "$HOOKS_DIR"
@@ -42,12 +49,10 @@ echo ""
 # Find server directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
-if [ -d "$REPO_ROOT/server" ]; then
-  SERVER_DIR="$REPO_ROOT/server"
-elif [ -d "$REPO_ROOT/apps/server" ]; then
+if [ -d "$REPO_ROOT/apps/server" ]; then
   SERVER_DIR="$REPO_ROOT/apps/server"
 else
-  echo -e "${RED}ERROR: server directory not found (expected server/ or apps/server/)${NC}"
+  echo -e "${RED}ERROR: server directory not found (expected apps/server/)${NC}"
   exit 1
 fi
 

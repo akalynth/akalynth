@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Devcontainer setup only — not part of v1 guarantees.
 set -euo pipefail
 
 echo "== Toolchain =="

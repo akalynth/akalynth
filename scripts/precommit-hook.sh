@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Advisory developer guard — NOT a security or law enforcement mechanism.
 set -euo pipefail
 
 HOOK_MODE="${1:-}"

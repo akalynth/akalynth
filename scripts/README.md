@@ -6,6 +6,20 @@ Scripts should be idempotent and documented.
 
 ## Quick index
 
+## Scope (v1)
+
+### V1-binding gates
+- `scripts/ci_invariant_guard.sh`
+- `scripts/verify_protocol_sync.sh`
+- `scripts/test-chain-discipline.sh`
+
+### Advisory / developer-only
+- `scripts/verify_mvp.sh` (smoke tests)
+- `scripts/precommit-hook.sh` (advisory)
+- `scripts/bootstrap_linux.sh` (dev-only)
+- `scripts/format_ts.sh` (formatting)
+- `scripts/refuse_windows.*` (policy guard)
+
 ### Root scripts
 - `scripts/bootstrap_linux.sh`: Linux-only bootstrap for system deps (apt installs node/npm/git/build tools). Run: `sudo ./scripts/bootstrap_linux.sh`
 - `scripts/ci_invariant_guard.sh`: CI guard enforcing API-first invariants (checks required verification scripts on runtime changes). Run: `./scripts/ci_invariant_guard.sh`
