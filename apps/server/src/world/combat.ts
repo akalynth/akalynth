@@ -13,6 +13,7 @@ import {
   setLegendaryHeat,
   type ItemForDrop,
 } from './drop-policy.js';
+import { rngCommit } from './rng.js';
 
 // ============================================================================
 // Constants
@@ -43,8 +44,18 @@ export interface AttackResult {
   success: boolean;
   reason?: string;
   droppedItemIds?: string[];
+  dropSeedHash?: string;
+  dropRng?: DropRngProof;
   defenderPos?: Position;
   map?: MapName;
+}
+
+export interface DropRngProof {
+  rng_commit: string;
+  rng_reveal?: string; // v0 only: included in same event; v1: omitted, revealed on disconnect
+  rng_domain: string;
+  rng_draws: number;
+  rng_out: number[];
 }
 
 export interface WorldItem {
@@ -72,6 +83,7 @@ export interface CombatContext {
   computeReceiptHash: (receipt: object) => string;
   emitFirstOf?: (playerId: string, info: unknown) => void;
   getProtectedItemId: (playerId: string) => string | undefined; // Phase 3.2
+  getRngCommitV1: (targetId: string) => string | undefined; // Seal 3.1
 }
 
 // ============================================================================
@@ -215,8 +227,27 @@ export function handleAttackIntent(ctx: CombatContext): AttackResult {
 
   // 3. Compute which items to drop using weighted policy
   const reputation = ctx.getReputation(targetId);
-  const dropResult = computeDeathDrops(inventoryItems, defenderMap, reputation, seedHash);
+  const rngOut: number[] = [];
+  const dropResult = computeDeathDrops(inventoryItems, defenderMap, reputation, seedHash, rngOut);
   const droppedItemIds = dropResult.droppedItemIds;
+
+  // Seal 3.1: Use session's v1 commit if available, else fallback to v0
+  const v1Commit = ctx.getRngCommitV1(targetId);
+  const dropRng: DropRngProof = v1Commit
+    ? {
+        rng_commit: v1Commit,
+        // rng_reveal omitted for v1 (revealed on disconnect)
+        rng_domain: 'death_drop:v1',
+        rng_draws: rngOut.length,
+        rng_out: rngOut,
+      }
+    : {
+        rng_commit: rngCommit(seedHash),
+        rng_reveal: seedHash,
+        rng_domain: 'death_drop:v0',
+        rng_draws: rngOut.length,
+        rng_out: rngOut,
+      };
 
   // 4. Snapshot legendary items for heat accrual (before any state changes)
   // We'll emit heat receipts AFTER item drops per ordering convention B
@@ -389,6 +420,8 @@ export function handleAttackIntent(ctx: CombatContext): AttackResult {
   return {
     success: true,
     droppedItemIds,
+    dropSeedHash: seedHash,
+    dropRng,
     defenderPos: { x: defender.x, y: defender.y },
     map: defenderMap,
   };

@@ -1,10 +1,13 @@
+import fs from 'node:fs';
 import http from 'node:http';
+import { blake3 } from '@noble/hashes/blake3';
+import stringify from 'fast-json-stable-stringify';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Duplex } from 'node:stream';
 import { WebSocketServer, WebSocket } from 'ws';
 import { createHash, randomUUID } from 'node:crypto';
 
-import type { ClientMessage, ServerMessage } from '../../../packages/shared/protocol.js';
+import type { ClientMessage, LostItemSummary, ServerMessage } from '../../../packages/shared/protocol.js';
 import { ServerMessages, parseClientMessage } from '../../../packages/shared/protocol.js';
 import type { Player, TutorialProgress } from '../../../packages/shared/types.js';
 import {
@@ -44,7 +47,7 @@ import { handleHttp } from './api/http.js';
 import { createAuditLogger } from './audit/logger.js';
 import { createReceiptsReader } from './audit/reader.js';
 import { createPersistenceLayer, computeReceiptHash, generateItemId } from './persist/index.js';
-import type { InventoryItemRow, WorldObjectRow } from './persist/index.js';
+import type { InventoryItemRow, PersistenceLayer, WorldObjectRow } from './persist/index.js';
 import { publicActorForReceipt, toPublicReceipt } from './audit/public_receipts.js';
 import { createAntiCheatRuntime, onChat, onMoveApplied, onMoveIntent } from './anticheat/detector.js';
 import { applyThrottle, checkTemTimeout, handleTemResponse, issueTemChallenge, isThrottled } from './anticheat/tem.js';
@@ -62,6 +65,7 @@ import { getNpcDef, resolveDialogueTier, buildNpcDialogue } from './world/npcs.j
 import { applyDeath, applyRespawn } from './world/death.js';
 import { handleAttackIntent, type CombatContext, type WorldItem as CombatWorldItem } from './world/combat.js';
 import { getLegendaryHeat, setLegendaryHeat } from './world/drop-policy.js';
+import { rngCommitV1, rngRevealHex32 } from './world/rng.js';
 import {
   addHeat,
   createHeatState,
@@ -473,8 +477,11 @@ type Session = {
   lastRunestoneFaces: Element[];
   runestoneCooldownWindowStartMs: number | null;
   runestoneCooldownCount: number;
-  // Skills v0
-  skillCooldowns: Map<string, number>;
+  // Session start time for chronicle disconnect events
+  connectedAtMs: number;
+  // Seal 3.1: RNG commit→reveal state
+  rngRevealByDomain: Record<string, string>;
+  rngCommitByDomain: Record<string, string>;
 };
 
 const sessions = new Map<string, Session>();
@@ -509,23 +516,211 @@ const { rulebookRoot } = verifyRulebookOrExit();
 // ============================================================================
 // Seal 2: Chronicle witness helper — binds all events to law
 // ============================================================================
-type ChronicleEventType = 'spawn' | 'move' | 'chat' | 'death';
+type ChronicleEventType = 'spawn' | 'move' | 'chat' | 'death' | 'disconnect' | 'rng_commit' | 'rng_reveal';
+
+// Per-actor chain state (tamper-evident within a server run)
+const lastEventHashByActor = new Map<string, string>();
+
+// Global chain state (Seal 2.3: whole-file tamper evidence)
+let lastGlobalHash: string = 'genesis';
+
+// ============================================================================
+// Seal 2.2/2.3: Restart continuity — rebuild chain heads from chronicle.log on boot
+// ============================================================================
+function rebuildChronicleHeadsFromLog(logPath: string): void {
+  if (!fs.existsSync(logPath)) {
+    console.log(`[chronicle] No log file at ${logPath}, starting with empty chain heads`);
+    return;
+  }
+
+  const content = fs.readFileSync(logPath, 'utf8');
+  const lines = content.split('\n').filter((l: string) => l.trim().length > 0);
+
+  let ok = 0;
+  let bad = 0;
+  let globalBad = 0;
+
+  // Seal 2.3: Walk global chain in strict order
+  let expectedPrevGlobal = 'genesis';
+
+  // Chronicle format: <prev_hash>|<event_hash>|<signature>|<json_payload>
+  for (const line of lines) {
+    try {
+      const parts = line.split('|');
+      if (parts.length < 4) {
+        bad++;
+        continue;
+      }
+
+      // JSON payload is the 4th field (index 3)
+      const jsonPart = parts.slice(3).join('|'); // In case JSON contains |
+      const e = JSON.parse(jsonPart) as {
+        actor?: string;
+        payload?: {
+          event_hash?: string;
+          prev_global_hash?: string;
+          global_event_hash?: string;
+        };
+      };
+
+      // Per-actor chain rebuild
+      const actor = typeof e?.actor === 'string' ? e.actor : null;
+      const eventHash = typeof e?.payload?.event_hash === 'string' ? e.payload.event_hash : null;
+
+      if (actor && eventHash) {
+        lastEventHashByActor.set(actor, eventHash);
+        ok++;
+      } else {
+        bad++;
+      }
+
+      // Seal 2.3: Global chain rebuild (strict walk)
+      const prevGlobal = e?.payload?.prev_global_hash;
+      const globalHash = e?.payload?.global_event_hash;
+
+      if (typeof prevGlobal === 'string' && typeof globalHash === 'string') {
+        if (prevGlobal !== expectedPrevGlobal) {
+          // Global chain break detected
+          globalBad++;
+          // In lenient mode, don't advance head - in strict mode we'd exit
+          // Continue scanning to count all breaks
+        } else {
+          // Chain valid at this point, advance head
+          expectedPrevGlobal = globalHash;
+        }
+      }
+      // If global fields missing (pre-2.3 events), skip global check
+    } catch {
+      bad++;
+    }
+  }
+
+  // Set global head to last verified position
+  lastGlobalHash = expectedPrevGlobal;
+
+  const hasCorruption = bad > 0 || globalBad > 0;
+  if (hasCorruption) {
+    console.error(`[chronicle] Corruption detected: bad=${bad} globalBad=${globalBad}`);
+    if (process.env.CHRONICLE_STRICT === '1') {
+      console.error('[chronicle] FATAL: strict mode enabled, refusing to start');
+    } else {
+      console.warn('[chronicle] WARNING: continuing in non-strict mode');
+    }
+  }
+
+  const globalStatus = expectedPrevGlobal === 'genesis' ? 'genesis' : expectedPrevGlobal.slice(0, 20) + '...';
+  console.log(`[chronicle] Rebuilt: actors=${lastEventHashByActor.size} global=${globalStatus} lines=${lines.length} ok=${ok} bad=${bad} globalBad=${globalBad}`);
+
+  if (hasCorruption && process.env.CHRONICLE_STRICT === '1') {
+    process.exit(1);
+  }
+}
+
+// Rebuild chain heads on boot (only when chronicle is enabled)
+// Seal 2.4: If chronicle integrity fails and CHRONICLE_STRICT=1, the server MUST NOT start.
+if (process.env.ENABLE_CHRONICLE === '1') {
+  const chronicleLogPath = process.env.CHRONICLE_LOG_PATH ?? 'chronicle.log';
+  rebuildChronicleHeadsFromLog(chronicleLogPath);
+}
+
+function blake3HexBytes(bytes: Uint8Array): string {
+  return Buffer.from(blake3(bytes)).toString('hex');
+}
+
+function blake3HexUtf8(s: string): string {
+  return blake3HexBytes(Buffer.from(s, 'utf8'));
+}
+
+function stableJson(obj: unknown): string {
+  // Deterministic for nested objects + arrays (via fast-json-stable-stringify)
+  return stringify(obj);
+}
+
+function stripPayloadHashFields(p: Record<string, unknown>): Record<string, unknown> {
+  const copy = { ...p };
+  // Per-actor chain fields
+  delete (copy as Record<string, unknown>).payload_hash;
+  delete (copy as Record<string, unknown>).prev_event_hash;
+  delete (copy as Record<string, unknown>).event_hash;
+  // Global chain fields (Seal 2.3)
+  delete (copy as Record<string, unknown>).prev_global_hash;
+  delete (copy as Record<string, unknown>).global_event_hash;
+  return copy;
+}
 
 function chronicleEvent(
   event_type: ChronicleEventType,
   actorDid: string,
-  payload: object,
+  caps: string[],
+  payload: Record<string, unknown>,
   rng: object | null = null
 ) {
+  const caps_hash = `blake3:${blake3HexUtf8(stableJson(caps ?? []))}`;
+
+  // Strip hash fields, then canonicalize (also drops undefined via JSON round-trip)
+  const semanticPayload = stripPayloadHashFields(payload);
+  const payloadCanonical = JSON.parse(stableJson(semanticPayload)) as Record<string, unknown>;
+  const payload_hash = `blake3:${blake3HexUtf8(stableJson(payloadCanonical))}`;
+
+  const prev_event_hash = lastEventHashByActor.get(actorDid) ?? 'genesis';
+  const tick = Date.now();
+
+  // Per-actor chain (Seal 2.1)
+  const event_hash_preimage = {
+    v: 1,
+    world_id: 'akalynth-mainnet',
+    rulebook_root: rulebookRoot,
+    event_type,
+    actor: actorDid,
+    tick,
+    caps_hash,
+    payload_hash,
+    prev_event_hash,
+  };
+
+  const DOMAIN_EVENT = 'akalynth:chronicle:event:v1\0';
+  const event_hash = `blake3:${blake3HexUtf8(DOMAIN_EVENT + stableJson(event_hash_preimage))}`;
+
+  lastEventHashByActor.set(actorDid, event_hash);
+
+  // Global chain (Seal 2.3)
+  const prev_global_hash = lastGlobalHash;
+
+  const global_preimage = {
+    v: 1,
+    world_id: 'akalynth-mainnet',
+    rulebook_root: rulebookRoot,
+    event_type,
+    actor: actorDid,
+    tick,
+    caps_hash,
+    payload_hash,
+    event_hash, // Commits global chain to per-actor chain
+    prev_global_hash,
+  };
+
+  const DOMAIN_GLOBAL = 'akalynth:chronicle:global:v1\0';
+  const global_event_hash = `blake3:${blake3HexUtf8(DOMAIN_GLOBAL + stableJson(global_preimage))}`;
+
+  lastGlobalHash = global_event_hash;
+
   chronicleAppend({
     v: 1,
     world_id: 'akalynth-mainnet',
     rulebook_root: rulebookRoot,
-    tick: Date.now(),
+    tick,
     event_type,
     actor: actorDid,
-    caps_hash: 'blake3:stub',
-    payload,
+    caps_hash,
+    caps: caps ?? [],
+    payload: {
+      ...payloadCanonical,
+      payload_hash,
+      prev_event_hash,
+      event_hash,
+      prev_global_hash,    // Seal 2.3
+      global_event_hash,   // Seal 2.3
+    },
     rng,
   });
 }
@@ -638,6 +833,63 @@ function ledgerHesitationDelayMs(playerId: string, deathTs: string): number {
   const parsed = parseInt(prefix, 16);
   if (!Number.isFinite(parsed)) return 300;
   return (parsed % 400) + 300;
+}
+
+function summarizeLostItems(itemIds: string[], persist: PersistenceLayer): LostItemSummary[] {
+  if (itemIds.length === 0) return [];
+  const MAX_SUMMARY_ITEMS = 64;
+  const cappedItemIds = itemIds.length > MAX_SUMMARY_ITEMS ? itemIds.slice(0, MAX_SUMMARY_ITEMS) : itemIds;
+  const truncatedCount = itemIds.length - cappedItemIds.length;
+  const summary = new Map<string, { kind: string; rarity?: string; qty: number }>();
+
+  for (const itemId of cappedItemIds) {
+    const item = persist.getItem(itemId);
+    const kind = item?.item_type ?? 'item';
+    let rarity: string | undefined;
+
+    if (item?.meta_json) {
+      try {
+        const meta = JSON.parse(item.meta_json) as Record<string, unknown>;
+        if (meta.legendary === true) {
+          rarity = 'legendary';
+        }
+      } catch {
+        // Ignore malformed meta_json.
+      }
+    }
+
+    const key = `${kind}::${rarity ?? ''}`;
+    const existing = summary.get(key);
+    if (existing) {
+      existing.qty += 1;
+    } else {
+      summary.set(key, { kind, rarity, qty: 1 });
+    }
+  }
+
+  if (truncatedCount > 0) {
+    const key = 'item::';
+    const existing = summary.get(key);
+    if (existing) {
+      existing.qty += truncatedCount;
+    } else {
+      summary.set(key, { kind: 'item', qty: truncatedCount });
+    }
+  }
+
+  return Array.from(summary.values())
+    .sort((a, b) => {
+      const kindCmp = a.kind.localeCompare(b.kind);
+      if (kindCmp !== 0) return kindCmp;
+      const rarityCmp = (a.rarity ?? '').localeCompare(b.rarity ?? '');
+      if (rarityCmp !== 0) return rarityCmp;
+      return b.qty - a.qty;
+    })
+    .map(({ kind, rarity, qty }) => ({
+      kind,
+      ...(rarity ? { rarity } : {}),
+      ...(qty > 1 ? { qty } : {}),
+    }));
 }
 
 function recordLedgerDeath(playerId: string, map: MapName, deathTs: string) {
@@ -1512,7 +1764,9 @@ wss.on('connection', (ws) => {
     lastRunestoneFaces: [],
     runestoneCooldownWindowStartMs: null,
     runestoneCooldownCount: 0,
-    skillCooldowns: new Map(),
+    connectedAtMs: now,
+    rngRevealByDomain: {},
+    rngCommitByDomain: {},
   };
 
   sessions.set(connId, s);
@@ -1591,6 +1845,30 @@ wss.on('connection', (ws) => {
       w.players.delete(s.player.id);
       broadcastToMap(s.currentMap, ServerMessages.playerLeft(s.player.id), connId);
       audit.write({ player_id: s.player.id, action: 'disconnect', inputs: {}, result: 'left_world' });
+
+      // Seal 3.1: Emit rng_reveal before disconnect if session has v1 commits
+      for (const [domain, reveal] of Object.entries(s.rngRevealByDomain)) {
+        const commit = s.rngCommitByDomain[domain];
+        if (commit) {
+          chronicleEvent('rng_reveal', `did:akalynth:${s.player.id}`, s.player.caps ?? [], {
+            rng_domain: domain,
+            rng_commit: commit,
+            rng_reveal: reveal,
+            reveal_reason: 'disconnect',
+          });
+        }
+      }
+
+      // Chronicle witness: disconnect event (Seal 2)
+      const disconnectNow = Date.now();
+      chronicleEvent('disconnect', `did:akalynth:${s.player.id}`, s.player.caps ?? [], {
+        player_id: s.player.id,
+        map: s.currentMap,
+        x: s.player.x,
+        y: s.player.y,
+        in_world: s.inWorld,
+        session_duration_ms: disconnectNow - s.connectedAtMs,
+      });
     } else {
       audit.write({ player_id: connId, action: 'disconnect', inputs: {}, result: 'disconnected' });
     }
@@ -1705,11 +1983,11 @@ function processSessionQueue(s: Session, now: number) {
           guest_token = `gt_${randomUUID()}`;
           name = `Guest_${player_id.slice(-4)}`;
 
-          // Write player creation receipt first (materializes player in DB)
+          // Emit session_guest_minted first (creates player row in DB)
           audit.write({
             player_id,
             action: 'session_guest_minted',
-            inputs: { name },
+            inputs: { source: 'ws_mint' },
             result: 'ok',
           });
 
@@ -1868,12 +2146,28 @@ function processSessionQueue(s: Session, now: number) {
         broadcastToMap(s.currentMap, ServerMessages.playerJoined(toPublicPlayer(s.player!)), s.connId);
 
         // Chronicle witness: spawn event (Seal 2)
-        chronicleEvent('spawn', `did:akalynth:${s.player!.id}`, {
+        chronicleEvent('spawn', `did:akalynth:${s.player!.id}`, s.player!.caps ?? [], {
           player_id: s.player!.id,
           map: s.currentMap,
           x: s.player!.x,
           y: s.player!.y,
         });
+
+        // Seal 3.1: Emit rng_commit for death_drop:v1 domain
+        {
+          const domain = 'death_drop:v1';
+          const actorDid = `did:akalynth:${s.player!.id}`;
+          const reveal = rngRevealHex32();
+          const commit = rngCommitV1(domain, actorDid, reveal);
+          s.rngRevealByDomain[domain] = reveal;
+          s.rngCommitByDomain[domain] = commit;
+          chronicleEvent('rng_commit', actorDid, s.player!.caps ?? [], {
+            rng_domain: domain,
+            rng_commit: commit,
+            commit_scope: 'session',
+            commit_seq: 1,
+          });
+        }
 
         // Initial presence tracking for spawn position
         onPlayerMoved(s.player!.id, s.currentMap, s.player!.x, s.player!.y, Date.now(), (r) => audit.write(r));
@@ -2041,7 +2335,7 @@ function processSessionQueue(s: Session, now: number) {
 
         // Chronicle witness: chat event (Seal 2, privacy-safe hash)
         const chatHash = createHash('sha256').update(msg.message, 'utf8').digest('hex');
-        chronicleEvent('chat', `did:akalynth:${s.player!.id}`, {
+        chronicleEvent('chat', `did:akalynth:${s.player!.id}`, s.player!.caps ?? [], {
           player_id: s.player!.id,
           map: s.currentMap,
           message_len: msg.message.length,
@@ -2148,7 +2442,7 @@ function processSessionQueue(s: Session, now: number) {
           s.ledgerHesitationDeathTs = null;
 
           // Chronicle witness: death event (Seal 2, test death)
-          chronicleEvent('death', `did:akalynth:${s.player!.id}`, {
+          chronicleEvent('death', `did:akalynth:${s.player!.id}`, s.player!.caps ?? [], {
             player_id: s.player!.id,
             map: s.currentMap,
             x: s.player!.x,
@@ -2487,7 +2781,7 @@ function processSessionQueue(s: Session, now: number) {
           onPlayerMoved(s.player!.id, s.currentMap, finalX, finalY, msgNow, (r) => audit.write(r));
 
           // Chronicle witness: move event (Seal 2)
-          chronicleEvent('move', `did:akalynth:${s.player!.id}`, {
+          chronicleEvent('move', `did:akalynth:${s.player!.id}`, s.player!.caps ?? [], {
             player_id: s.player!.id,
             map: s.currentMap,
             from: { x: before.x, y: before.y },
@@ -2888,6 +3182,14 @@ function processSessionQueue(s: Session, now: number) {
           },
           computeReceiptHash,
           getProtectedItemId: (playerId: string) => protectedByPlayerId.get(playerId),
+          getRngCommitV1: (playerId: string) => {
+            for (const sess of sessions.values()) {
+              if (sess.player?.id === playerId) {
+                return sess.rngCommitByDomain['death_drop:v1'];
+              }
+            }
+            return undefined;
+          },
         };
 
         const result = handleAttackIntent(ctx);
@@ -2916,13 +3218,16 @@ function processSessionQueue(s: Session, now: number) {
           );
 
           // Chronicle witness: death event (Seal 2, PvP kill)
-          chronicleEvent('death', `did:akalynth:${targetId}`, {
+          chronicleEvent('death', `did:akalynth:${targetId}`, defenderSession?.player?.caps ?? [], {
             player_id: targetId,
             map: result.map,
             x: result.defenderPos.x,
             y: result.defenderPos.y,
             cause: 'killed_by_player',
             killer_id: attackerId,
+            ...(result.dropSeedHash ? { drop_seed_hash: result.dropSeedHash } : {}),
+            ...(result.droppedItemIds ? { dropped_item_ids: result.droppedItemIds } : {}),
+            ...(result.dropRng ? result.dropRng : {}),
           });
 
           // Broadcast world_item_added for each dropped item
@@ -2942,13 +3247,15 @@ function processSessionQueue(s: Session, now: number) {
           // Send death notice to defender
           if (defenderSession) {
             const worldState = worlds[result.map];
+            const lostItems = summarizeLostItems(result.droppedItemIds, persist);
             send(
               defenderSession.ws,
               ServerMessages.deathNotice(
                 DEATH_RESPAWN_DELAY_MS,
                 result.map,
                 { x: worldState.map.spawn.x, y: worldState.map.spawn.y },
-                'Killed by another player'
+                'Killed by another player',
+                { lost_items: lostItems }
               )
             );
 

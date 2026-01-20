@@ -21,7 +21,7 @@ export interface AuditLoggerConfig {
 }
 
 export interface AuditLogger {
-  write(receipt: Omit<AuditReceipt, 'timestamp' | 'evidence_hash'>): AuditReceipt;
+  write(receipt: Omit<AuditReceipt, 'timestamp' | 'evidence_hash'> & { timestamp?: string }): void;
   close(): void;
 }
 
@@ -50,7 +50,8 @@ export function createAuditLogger(config: AuditLoggerConfig = {}): AuditLogger {
 
   return {
     write: (receipt) => {
-      const timestamp = new Date().toISOString();
+      // Use provided timestamp or generate new one
+      const timestamp = receipt.timestamp ?? new Date().toISOString();
 
       // Build full receipt with timestamp
       const fullReceipt: AuditReceipt = {

@@ -139,7 +139,9 @@ CREATE INDEX IF NOT EXISTS idx_chronicle_player_ts ON chronicle_events(player_id
 CREATE INDEX IF NOT EXISTS idx_chronicle_kind ON chronicle_events(kind);
 CREATE INDEX IF NOT EXISTS idx_chronicle_player_kind_ts ON chronicle_events(player_id, kind, timestamp DESC, id DESC);
 CREATE INDEX IF NOT EXISTS idx_chronicle_receipt ON chronicle_events(receipt_hash);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_chronicle_dedup ON chronicle_events(player_id, receipt_hash, kind, entity_id);
+-- Partial unique indexes for dedup (NULL-safe): one for entity_id present, one for absent
+CREATE UNIQUE INDEX IF NOT EXISTS idx_chronicle_dedup_entity ON chronicle_events(player_id, receipt_hash, kind, entity_id) WHERE entity_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_chronicle_dedup_no_entity ON chronicle_events(player_id, receipt_hash, kind) WHERE entity_id IS NULL;
 `;
 
 // Moderation v1: Report queue table
@@ -178,10 +180,25 @@ export function initSchema(db: Database.Database): void {
   // Check current schema version
   const currentVersion = getSchemaVersion(db);
 
+  if (currentVersion > SCHEMA_VERSION) {
+    throw new Error(
+      `Schema version too new: db=${currentVersion} code=${SCHEMA_VERSION}. ` +
+        'Upgrade server or rebuild DB.'
+    );
+  }
+
   if (currentVersion < SCHEMA_VERSION) {
     // Run migrations
     migrateSchema(db, currentVersion, SCHEMA_VERSION);
   }
+
+  // Patch A: Force version alignment after all migrations
+  // Ensures _meta.schema_version always equals SCHEMA_VERSION, even if
+  // structural changes were applied earlier (e.g., indexes created in V5 DDL).
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', String(SCHEMA_VERSION));
 }
 
 function getSchemaVersion(db: Database.Database): number {
@@ -332,17 +349,35 @@ function migrateToV6(db: Database.Database): void {
 }
 
 function migrateToV7(db: Database.Database): void {
-  // v7: Chronicle dedup index fix (already applied in earlier commit)
-  // No-op if running fresh migration chain
-  const insertMeta = db.prepare(
-    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
-  );
-  insertMeta.run('schema_version', '7');
-}
+  // Fix chronicle dedup index: NULL values in entity_id bypass UNIQUE constraint.
+  // Replace single index with partial unique indexes for NULL-safe dedup.
+  
+  // Step 1: Delete duplicate rows (keep lowest id per unique tuple)
+  db.exec(`
+    DELETE FROM chronicle_events
+    WHERE id NOT IN (
+      SELECT MIN(id)
+      FROM chronicle_events
+      GROUP BY player_id, receipt_hash, kind, COALESCE(entity_id, '')
+    );
+  `);
 
-function migrateToV8(db: Database.Database): void {
-  // Moderation v1: Add moderation_reports table
-  db.exec(DDL_MODERATION_REPORTS);
+  // Step 2: Drop old broken index
+  db.exec(`DROP INDEX IF EXISTS idx_chronicle_dedup;`);
+
+  // Step 3: Create partial unique indexes
+  // When entity_id is present
+  db.exec(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_chronicle_dedup_entity
+    ON chronicle_events(player_id, receipt_hash, kind, entity_id)
+    WHERE entity_id IS NOT NULL;
+  `);
+  // When entity_id is absent
+  db.exec(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_chronicle_dedup_no_entity
+    ON chronicle_events(player_id, receipt_hash, kind)
+    WHERE entity_id IS NULL;
+  `);
 
   // Update schema version
   const insertMeta = db.prepare(
