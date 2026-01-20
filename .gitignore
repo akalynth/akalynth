@@ -56,3 +56,10 @@ apps/server/core.*
 packages/shared/*.js
 tools/*.js
 apps/server/.tmp_chain.*/
+!tools/doc_audit.js
+
+# TypeScript incremental build info
+**/*.tsbuildinfo
+
+# Generated receipt chains (fixtures are produced by tools, not tracked)
+apps/server/fixtures/**/receipts.jsonl
