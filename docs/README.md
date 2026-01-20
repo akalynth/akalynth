@@ -57,6 +57,7 @@ akalynth/
 - [Protocol](./PROTOCOL.md) - Message types and examples
 - [Anti-Cheat](./ANTICHEAT.md) - Detection signals, Tem challenge, enforcement
 - [World: Azura](./WORLD_AZURA.md) - City layout, spawn zone, landmarks
+- [Copilot Delegation](./COPILOT_DELEGATION.md) - Custom agents, domain specialists, constraint enforcement
 
 ## MVP Features
 

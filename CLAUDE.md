@@ -102,6 +102,7 @@ Client                          Server
 - Architecture: `docs/ARCHITECTURE.md`
 - Anti-cheat: `docs/ANTICHEAT.md`
 - Worlds: `docs/WORLD_ROOKGUARD.md`, `docs/WORLD_AZURA.md`
+- Copilot Delegation: `docs/COPILOT_DELEGATION.md` (custom agents, constraint enforcement)
 
 ## MVP Scope (locked)
 - Authoritative grid movement
@@ -118,6 +119,42 @@ Not in MVP: combat, inventory, housing logic (placeholders only), NPC AI.
 - Every player action emits a JSONL receipt (audit trail).
 - Keep dependencies minimal. Avoid new frameworks unless required.
 - No Colyseus until post-MVP review.
+
+## Custom Agents (Delegation)
+
+This project uses **custom agents** (domain specialists) for architecture-critical work. See `docs/COPILOT_DELEGATION.md` for full details.
+
+### Available Agents
+
+- **chronicle-evidence-engineer** (`.claude/agents/chronicle-evidence-engineer.md`)
+  - Use for: Phase 4.4 forensic evidence features
+  - Enforces: Receipt-first design, Civil Guarantees, deterministic evidence
+  - Example: "Show players why item dropped on death"
+
+### When to Delegate
+
+✅ **Use custom agents for:**
+- Protocol changes (WebSocket messages)
+- Anti-cheat patterns (heat, Tem, detection)
+- Receipt schema additions
+- Evidence/audit features
+- Domain-specific refactoring
+
+❌ **Don't delegate for:**
+- Simple fixes (typos, formatting)
+- Documentation updates
+- Build/tooling configuration
+
+### Quick Commands
+
+Available via `.claude/commands/`:
+- `@anticheat` - Review anticheat logic
+- `@atomic` - Check commit discipline
+- `@bootstrap` - Environment setup
+- `@protocol` - Validate protocol changes
+- `@verify` - Run MVP verification
+
+**Rule:** Delegate to custom agents early. Trust their constraints. They enforce architectural integrity you might miss.
 
 ## Environment Variables
 
