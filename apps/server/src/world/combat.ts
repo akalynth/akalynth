@@ -213,7 +213,7 @@ export function handleAttackIntent(ctx: CombatContext): AttackResult {
   // We need the hash before computing drops, but dropped_item_ids is unknown yet.
   // Solution: compute seed from the receipt WITHOUT dropped_item_ids, then fill it in.
   const combatResolvedBase = {
-    player_id: attackerId,
+    actor_id: attackerId,
     action: 'combat_resolved',
     inputs: {
       target_player_id: targetId,
@@ -276,7 +276,7 @@ export function handleAttackIntent(ctx: CombatContext): AttackResult {
 
   // 5. Emit attack_intent receipt
   audit.write({
-    player_id: attackerId,
+    actor_id: attackerId,
     action: 'attack_intent',
     inputs: {
       target_player_id: targetId,
@@ -288,7 +288,7 @@ export function handleAttackIntent(ctx: CombatContext): AttackResult {
 
   // 6. Emit combat_resolved receipt (before applyDeath)
   audit.write({
-    player_id: attackerId,
+    actor_id: attackerId,
     action: 'combat_resolved',
     inputs: {
       target_player_id: targetId,
@@ -305,6 +305,7 @@ export function handleAttackIntent(ctx: CombatContext): AttackResult {
   // 7. Call applyDeath for defender
   ctx.applyDeathFn({
     now,
+    actor_id: targetId,
     player_id: targetId,
     map: defenderMap,
     position: { x: defender.x, y: defender.y },
@@ -329,7 +330,7 @@ export function handleAttackIntent(ctx: CombatContext): AttackResult {
   for (const itemId of droppedItemIds) {
     // Emit item_removed_from_inventory
     audit.write({
-      player_id: targetId,
+      actor_id: targetId,
       action: 'item_removed_from_inventory',
       inputs: { item_id: itemId, reason: 'death' },
       result: 'ok',
@@ -337,7 +338,7 @@ export function handleAttackIntent(ctx: CombatContext): AttackResult {
 
     // Emit item_dropped_to_world
     audit.write({
-      player_id: targetId,
+      actor_id: targetId,
       action: 'item_dropped_to_world',
       inputs: {
         item_id: itemId,
@@ -370,7 +371,7 @@ export function handleAttackIntent(ctx: CombatContext): AttackResult {
   for (const { itemId, currentHeat } of attackerLegendaries) {
     const newHeat = Math.max(0, currentHeat + 1);
     audit.write({
-      player_id: attackerId,
+      actor_id: attackerId,
       action: 'legendary_heat_changed',
       inputs: {
         item_id: itemId,
@@ -394,7 +395,7 @@ export function handleAttackIntent(ctx: CombatContext): AttackResult {
   for (const { itemId, currentHeat } of defenderLegendaries) {
     const newHeat = Math.max(0, currentHeat + 2);
     audit.write({
-      player_id: targetId,
+      actor_id: targetId,
       action: 'legendary_heat_changed',
       inputs: {
         item_id: itemId,

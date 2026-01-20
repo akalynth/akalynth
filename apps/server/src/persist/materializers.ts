@@ -108,7 +108,7 @@ function handlePlayerCreated(
   receiptHash: string
 ): void {
   // Extract player data from receipt
-  const playerId = receipt.player_id;
+  const playerId = receipt.actor_id;
   const name = (receipt.inputs?.name as string) ?? `Guest_${playerId.slice(-4)}`;
   const timestamp = receipt.timestamp;
 
@@ -129,7 +129,7 @@ function handlePlayerRenamed(
   receipt: AuditReceipt,
   _receiptHash: string
 ): void {
-  const playerId = receipt.player_id;
+  const playerId = receipt.actor_id;
   const newName = receipt.inputs?.new_name as string;
 
   if (!newName) return;
@@ -149,7 +149,7 @@ function handleDeath(
   receipt: AuditReceipt,
   receiptHash: string
 ): void {
-  const playerId = receipt.player_id;
+  const playerId = receipt.actor_id;
   const timestamp = receipt.timestamp;
   const inputs = receipt.inputs ?? {};
 
@@ -176,7 +176,7 @@ function handleReputationEvent(
   receipt: AuditReceipt,
   receiptHash: string
 ): void {
-  const playerId = receipt.player_id;
+  const playerId = receipt.actor_id;
   const timestamp = receipt.timestamp;
   const inputs = receipt.inputs ?? {};
 
@@ -214,7 +214,7 @@ function handleWorldObjectSpawned(
   const createdAt = receipt.timestamp;
   const decayAt = (inputs.decay_at as string) ?? null;
   const ownerHistory = JSON.stringify([
-    { player_id: receipt.player_id, action: 'dropped', timestamp: receipt.timestamp },
+    { player_id: receipt.actor_id, action: 'dropped', timestamp: receipt.timestamp },
   ]);
 
   // UPSERT (idempotent via PRIMARY KEY object_id)
@@ -241,7 +241,7 @@ function handleWorldObjectTransferred(
   const objectId = (inputs.object_id as string) ?? (inputs.item_id as string);
   if (!objectId) return;
 
-  const newOwner = (inputs.new_owner as string) ?? receipt.player_id;
+  const newOwner = (inputs.new_owner as string) ?? receipt.actor_id;
 
   // Get current owner history
   const existing = db
@@ -348,7 +348,7 @@ function handleItemAddedToInventory(
   db.prepare(`
     INSERT OR IGNORE INTO players (player_id, name, created_at, created_receipt, deleted_at)
     VALUES (?, ?, ?, ?, NULL)
-  `).run(receipt.player_id, `Guest_${receipt.player_id.slice(-4)}`, receipt.timestamp, receiptHash);
+  `).run(receipt.actor_id, `Guest_${receipt.actor_id.slice(-4)}`, receipt.timestamp, receiptHash);
 
   // Safety net: ensure item exists (handles receipt reordering edge cases)
   // This creates a stub row if item_minted receipt hasn't been processed yet
@@ -366,7 +366,7 @@ function handleItemAddedToInventory(
       slot = excluded.slot,
       updated_at = excluded.updated_at,
       last_receipt = excluded.last_receipt
-  `).run(itemId, receipt.player_id, slot, receipt.timestamp, receiptHash);
+  `).run(itemId, receipt.actor_id, slot, receipt.timestamp, receiptHash);
 }
 
 /**
@@ -415,7 +415,7 @@ function handleItemDroppedToWorld(
 
   // Build new owner history entry
   const newEntry = {
-    player_id: receipt.player_id,
+    player_id: receipt.actor_id,
     action: 'dropped',
     timestamp: receipt.timestamp,
   };
@@ -515,7 +515,7 @@ function handleInventorySlotChanged(
   const inputs = receipt.inputs ?? {};
   const itemId = inputs.item_id as string;
   const slot = inputs.slot as string | null;
-  const playerId = receipt.player_id;
+  const playerId = receipt.actor_id;
 
   if (!itemId || !playerId) return;
 
@@ -578,7 +578,7 @@ function handleModerationResolved(
   const caseId = inputs.case_id as string;
   const resolution = inputs.resolution as string;
   const reason = (inputs.reason as string) ?? null;
-  const resolvedBy = receipt.player_id;
+  const resolvedBy = receipt.actor_id;
   const resolvedAt = receipt.timestamp;
 
   if (!caseId || !resolution) return;
@@ -709,7 +709,7 @@ export function materializeChronicle(
   const action = ACTION_ALIASES[receipt.action] ?? receipt.action;
   const originalAction = receipt.action; // Store original for source_action
   const inputs = receipt.inputs ?? {};
-  const playerId = receipt.player_id;
+  const playerId = receipt.actor_id;
   const timestamp = receipt.timestamp;
 
   switch (action) {

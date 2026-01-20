@@ -28,7 +28,9 @@ interface CoPresenceKey {
   player_b: string;
 }
 
-type WriteReceiptFn = (receipt: Omit<AuditReceipt, 'timestamp' | 'evidence_hash'>) => void;
+type WriteReceiptFn = (
+  receipt: Omit<AuditReceipt, 'sequence' | 'timestamp' | 'prev_hash' | 'event_hash' | 'signature' | 'inputs_hash' | 'outputs_hash'>
+) => void;
 
 // ============================================================================
 // Place Definitions
@@ -229,7 +231,7 @@ export function onPlayerMoved(
     // Enter new place
     if (newPlace) {
       writeReceipt({
-        player_id: playerId,
+        actor_id: playerId,
         action: PRESENCE_ENTERED_ACTION,
         inputs: { place_id: newPlace },
         result: 'ok',
@@ -257,7 +259,7 @@ export function onPresenceTick(
   // Check linger threshold (once per place per session)
   if (elapsed >= PRESENCE_LINGER_THRESHOLD_MS && !state.lingered_this_session.has(state.current_place)) {
     writeReceipt({
-      player_id: playerId,
+      actor_id: playerId,
       action: PRESENCE_LINGERED_ACTION,
       inputs: {
         place_id: state.current_place,
@@ -302,13 +304,13 @@ function checkCoPresence(
   if (elapsed >= PRESENCE_OBSERVE_THRESHOLD_MS) {
     // Emit presence_observed for both players
     writeReceipt({
-      player_id: playerA,
+      actor_id: playerA,
       action: PRESENCE_OBSERVED_ACTION,
       inputs: { place_id: placeId, other_player_id: playerB },
       result: 'ok',
     });
     writeReceipt({
-      player_id: playerB,
+      actor_id: playerB,
       action: PRESENCE_OBSERVED_ACTION,
       inputs: { place_id: placeId, other_player_id: playerA },
       result: 'ok',
@@ -370,7 +372,7 @@ export function resetSessionState(playerId: string): void {
  * Idempotent: replay order determines truth.
  */
 export function applyReceiptToPresence(receipt: AuditReceipt): void {
-  const playerId = receipt.player_id;
+  const playerId = receipt.actor_id;
   if (!playerId) return;
 
   const state = getPresence(playerId);
@@ -380,7 +382,8 @@ export function applyReceiptToPresence(receipt: AuditReceipt): void {
       const placeId = receipt.inputs?.place_id as PlaceId | undefined;
       if (placeId) {
         state.current_place = placeId;
-        state.entered_at_ms = Date.now();  // Note: replay uses "now", not original time
+        const enteredAtMs = Date.parse(receipt.timestamp);
+        state.entered_at_ms = Number.isNaN(enteredAtMs) ? null : enteredAtMs;
       }
       break;
     }

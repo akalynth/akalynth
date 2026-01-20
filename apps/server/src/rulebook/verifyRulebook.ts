@@ -12,8 +12,20 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { blake3 } from '@noble/hashes/blake3';
 
-// Repo root from apps/server/src/rulebook/
-const repoRoot = path.resolve(import.meta.dirname, '../../../../');
+function findRepoRoot(startDir: string): string | null {
+  let cur = path.resolve(startDir);
+  while (true) {
+    if (fs.existsSync(path.resolve(cur, 'rulebook'))) return cur;
+    const next = path.dirname(cur);
+    if (next === cur) return null;
+    cur = next;
+  }
+}
+
+const repoRoot =
+  findRepoRoot(process.cwd()) ??
+  findRepoRoot(import.meta.dirname) ??
+  path.resolve(import.meta.dirname, '../../../../');
 const rulebookDir = path.resolve(repoRoot, 'rulebook');
 const compiledDir = path.resolve(rulebookDir, 'compiled');
 const compiledRootPath = path.resolve(compiledDir, 'RULEBOOK_ROOT.txt');

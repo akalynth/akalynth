@@ -56,7 +56,7 @@ export function clearIdentityProjection(): void {
  * NOTE: Does NOT rely on receipt.timestamp — replay order determines "last".
  */
 export function applyReceiptToIdentity(receipt: AuditReceipt): void {
-  const playerId = receipt.player_id;
+  const playerId = receipt.actor_id;
   if (!playerId) return;
 
   const current = getIdentity(playerId);

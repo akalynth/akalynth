@@ -19,6 +19,7 @@ import type {
   PublicRumorsQueryParams,
   PublicRumorsResponse,
   WorldPlayersQuery,
+  TransparencyResponse,
 } from '../../../../packages/shared/http.js';
 
 type GuestSessionMintResult = GuestSessionResponse | { error: string; status?: number };
@@ -39,6 +40,7 @@ export interface ApiDeps {
   queryPublicReceipts?: (params: PublicReceiptsQueryParams) => PublicReceiptsResponse;
   queryPublicReceiptsRaw?: (params: PublicReceiptsQueryParams) => PublicReceiptsRawResult;
   queryPublicRumors?: (params: PublicRumorsQueryParams) => PublicRumorsResponse;
+  getTransparency?: () => TransparencyResponse;
 }
 
 function json(res: ServerResponse, status: number, body: unknown) {
@@ -99,6 +101,36 @@ export function handleHttp(
       now_iso: new Date().toISOString(),
     };
     json(res, 200, body);
+    return true;
+  }
+
+  // Transparency (public proof of fairness)
+  if (method === 'GET' && path === '/v1/transparency') {
+    if (!deps.getTransparency) {
+      const defaultResponse: TransparencyResponse = {
+        version: deps.getVersion(),
+        principles: [
+          'Money cannot buy gameplay power',
+          'Every state change is receipted',
+          'Receipts are cryptographically signed and chain-linked',
+          'Enforcement is deterministic and replayable',
+        ],
+        documentation: {
+          monetization_constitution: '/docs/MONETIZATION_CONSTITUTION.md',
+          architecture: '/docs/ARCHITECTURE.md',
+          anticheat: '/docs/ANTICHEAT.md',
+        },
+        public_receipts_endpoint: '/v1/receipts/public',
+        verification: {
+          chain_integrity: 'npm run verify:lifecycle',
+          monetization_policy: 'npm run verify:monetization',
+          work_contracts: 'npm run verify:work-contracts',
+        },
+      };
+      json(res, 200, defaultResponse);
+      return true;
+    }
+    json(res, 200, deps.getTransparency());
     return true;
   }
 

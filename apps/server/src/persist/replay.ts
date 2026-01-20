@@ -74,8 +74,9 @@ export function replayReceipts(config: ReplayConfig): ReplayResult {
 
   // Check if receipts file exists
   if (!fs.existsSync(receiptsPath)) {
-    console.log('[persist] No receipts file found, starting fresh');
-    return result;
+    // Canonical history must not be silently absent.
+    // Bootstrap/genesis is an explicit server startup responsibility.
+    throw new Error(`[persist] receipts file missing: ${receiptsPath}`);
   }
 
   // Read marker and _meta to determine replay strategy
@@ -116,20 +117,34 @@ export function replayReceipts(config: ReplayConfig): ReplayResult {
   const stats = fs.fstatSync(fd);
   const fileSize = stats.size;
 
+  // If marker exists, receipts must not be truncated behind it.
+  if (marker && marker.offset > fileSize) {
+    fs.closeSync(fd);
+    throw new Error(
+      `[persist] receipts truncated: marker.offset=${marker.offset} > fileSize=${fileSize} (refusing silent history loss)`
+    );
+  }
+
   if (fileSize === 0) {
     // Empty receipts file
     fs.closeSync(fd);
-    console.log('[persist] No receipts to process');
-
-    // Get current counts
     const counts = getTableCounts(db);
+
+    const dbHasHistory =
+      counts.players > 0 || counts.deaths > 0 || counts.reputation_events > 0 || counts.world_objects > 0;
+
+    // Empty chain is only valid for genesis/fresh state; otherwise it's history erasure.
+    if (dbHasHistory || marker || metaHash || metaOffset) {
+      throw new Error('[persist] empty receipts chain with existing state/marker/meta (refusing silent reset)');
+    }
+
+    console.log('[persist] Empty receipts chain (genesis)');
     result.players_loaded = counts.players;
     result.reputation_events_loaded = counts.reputation_events;
     result.deaths_loaded = counts.deaths;
     result.objects_loaded = counts.world_objects;
-    result.last_offset = startOffset;
-    result.last_receipt_hash = marker?.hash ?? null;
-
+    result.last_offset = 0;
+    result.last_receipt_hash = null;
     return result;
   }
 

@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import http from 'node:http';
+import { execSync } from 'node:child_process';
 import { blake3 } from '@noble/hashes/blake3';
 import stringify from 'fast-json-stable-stringify';
 import type { IncomingMessage, ServerResponse } from 'node:http';
@@ -46,6 +47,13 @@ import { handleHttp } from './api/http.js';
 
 import { createAuditLogger } from './audit/logger.js';
 import { createReceiptsReader } from './audit/reader.js';
+import path from 'node:path';
+import {
+  resolveChainPaths,
+  logResolvedPaths,
+  isProductionMode,
+  validateKeyFile,
+} from '../../../packages/shared/paths.js';
 import { createPersistenceLayer, computeReceiptHash, generateItemId } from './persist/index.js';
 import type { InventoryItemRow, PersistenceLayer, WorldObjectRow } from './persist/index.js';
 import { publicActorForReceipt, toPublicReceipt } from './audit/public_receipts.js';
@@ -211,6 +219,11 @@ const IP_CONNECTION_WINDOW_MS = parseEnvMs(process.env.IP_CONNECTION_WINDOW_MS, 
 const IP_MOVE_RATE_LIMIT = parseEnvInt(process.env.IP_MOVE_RATE_LIMIT, 5, 1); // moves per second
 const IP_CHAT_RATE_LIMIT = parseEnvInt(process.env.IP_CHAT_RATE_LIMIT, 1, 1); // chats per second
 
+// Runtime Witness Loop: periodic heartbeat for observability
+const HEARTBEAT_INTERVAL_MS = parseEnvMs(process.env.AKALYNTH_HEARTBEAT_MS, 5 * 60 * 1000, 60_000); // default 5 min
+const LIFECYCLE_VERIFY_ON_BOOT = parseBoolEnv(process.env.AKALYNTH_LIFECYCLE_VERIFY, true);
+const BOOTSTRAP_MODE = parseBoolEnv(process.env.AKALYNTH_BOOTSTRAP, false);
+
 function parseEnvMs(envValue: string | undefined, fallback: number, min: number): number {
   if (!envValue) return fallback;
   const parsed = parseInt(envValue, 10);
@@ -357,16 +370,62 @@ function rejectInsecureUpgrade(socket: Duplex) {
 function redactedActorForPlayerId(playerId: string, timestamp: string): string {
   return publicActorForReceipt(
     {
+      sequence: 0,
       timestamp,
-      player_id: playerId,
+      prev_hash: 'genesis',
+      event_hash: '',
+      signature: '',
+      actor_id: playerId,
       action: '',
       inputs: {},
       result: '',
-      evidence_hash: '',
+      inputs_hash: '',
+      outputs_hash: '',
     },
     PUBLIC_RECEIPTS_ACTOR_MODE,
     PUBLIC_RECEIPTS_HASH_SALT
   );
+}
+
+/**
+ * Runtime Witness Loop: Lifecycle verification
+ * Runs verify:lifecycle tool and returns success/failure.
+ * In production, failure exits with code 2 (operator/environmental error).
+ */
+function verifyLifecycle(phase: 'boot' | 'shutdown'): boolean {
+  if (!LIFECYCLE_VERIFY_ON_BOOT) {
+    console.log(`[lifecycle] Verification disabled (AKALYNTH_LIFECYCLE_VERIFY=0)`);
+    return true;
+  }
+
+  try {
+    execSync('npm run verify:lifecycle', {
+      cwd: process.cwd(),
+      stdio: 'pipe',
+      timeout: 30_000, // 30s max
+    });
+    console.log(`[lifecycle] Verification passed (${phase})`);
+    return true;
+  } catch (error) {
+    const exitCode = (error as { status?: number }).status ?? 1;
+    console.error(`[lifecycle] Verification FAILED (${phase}), exit code: ${exitCode}`);
+
+    if (isProductionMode()) {
+      console.error('[lifecycle] FATAL: Lifecycle verification failed in production');
+      process.exit(2); // Environmental/operator error
+    }
+
+    return false;
+  }
+}
+
+/**
+ * Compute a stable fingerprint of the receipts path for heartbeat observability.
+ * Not cryptographically secure - just a stable identifier.
+ */
+function receiptsPathHash(receiptsPath: string): string {
+  const hash = createHash('sha256').update(receiptsPath).digest('hex');
+  return hash.slice(0, 16);
 }
 
 // ============================================================================
@@ -587,6 +646,7 @@ type Session = {
   clientIp: string | null;
   // Plan B: Attack spam tracking (for heat escalation)
   attackFailures: number[]; // timestamps of failed attacks
+  skillCooldowns: Map<string, number>;
 };
 
 const sessions = new Map<string, Session>();
@@ -881,12 +941,62 @@ function chronicleEvent(
   });
 }
 
+// Canonical path resolution (single source of truth)
+const repoRoot = path.resolve(process.cwd());
+const chainPaths = resolveChainPaths(repoRoot);
+logResolvedPaths(chainPaths);
+
+// Canonical history requirement: receipts file must exist unless bootstrap is explicit.
+// Missing receipts MUST NOT be treated as a clean start (silent erasure vector).
+if (!fs.existsSync(chainPaths.receiptsPath)) {
+  if (!BOOTSTRAP_MODE) {
+    console.error('[FATAL] receipts.jsonl missing (canonical history required)');
+    console.error(`        expected at: ${chainPaths.receiptsPath}`);
+    console.error('        set AKALYNTH_BOOTSTRAP=1 for explicit genesis/bootstrap only');
+    process.exit(2);
+  }
+
+  // Bootstrap is only valid on a truly fresh state (no DB/marker present).
+  if (fs.existsSync(chainPaths.dbPath) || fs.existsSync(chainPaths.markerPath)) {
+    console.error('[FATAL] bootstrap refused: DB and/or replay marker exists but receipts are missing');
+    console.error(`        receipts: ${chainPaths.receiptsPath}`);
+    console.error(`        db:       ${chainPaths.dbPath}`);
+    console.error(`        marker:   ${chainPaths.markerPath}`);
+    process.exit(2);
+  }
+
+  fs.mkdirSync(path.dirname(chainPaths.receiptsPath), { recursive: true });
+  fs.closeSync(fs.openSync(chainPaths.receiptsPath, 'a'));
+  console.log(`[bootstrap] Created empty receipts file: ${chainPaths.receiptsPath}`);
+}
+
+// Production key discipline: hard fail early
+if (isProductionMode()) {
+  if (!chainPaths.keyPath) {
+    console.error('[FATAL] CHRONICLE_KEY_PATH required in production');
+    process.exit(2);
+  }
+  try {
+    validateKeyFile(chainPaths.keyPath);
+  } catch (e) {
+    console.error(`[FATAL] ${(e as Error).message}`);
+    process.exit(2);
+  }
+}
+
 // Persistence layer (SQLite + JSONL replay)
 const persist = createPersistenceLayer({
-  dbPath: process.env.PERSIST_DB_PATH ?? './data/akalynth.db',
-  markerPath: './data/replay_marker.json',
-  receiptsPath: 'audit/receipts.jsonl',
-  replayMode: process.env.PERSIST_REPLAY_MODE === 'lenient' ? 'lenient' : 'strict',
+  dbPath: chainPaths.dbPath,
+  markerPath: chainPaths.markerPath,
+  receiptsPath: chainPaths.receiptsPath,
+  replayMode: (() => {
+    const requested = process.env.PERSIST_REPLAY_MODE === 'lenient' ? 'lenient' : 'strict';
+    if (isProductionMode() && requested === 'lenient') {
+      console.error('[FATAL] PERSIST_REPLAY_MODE=lenient is forbidden in production');
+      process.exit(2);
+    }
+    return requested;
+  })(),
 });
 
 // Run replay on startup (load state from receipts)
@@ -921,6 +1031,8 @@ if (protectedSlotRows.length > 0) {
 
 // Audit logger with persistence hook + origin sealing
 const audit = createAuditLogger({
+  receiptPath: chainPaths.receiptsPath,
+  keyPath: chainPaths.keyPath ?? undefined,
   onWrite: (receipt, offsetAfterLine) => {
     // Compute receipt hash once for both operations
     const receiptHash = computeReceiptHash(receipt);
@@ -934,7 +1046,74 @@ const audit = createAuditLogger({
     maybeSealOriginFromReceipt(audit, persist, receipt, receiptHash);
   },
 });
-const receiptsReader = createReceiptsReader('audit');
+const receiptsReader = createReceiptsReader(chainPaths.receiptsPath);
+const lifecycleInputs = {
+  receipts_path: chainPaths.receiptsPath,
+  pid: process.pid,
+};
+audit.write({
+  actor_id: 'server',
+  action: 'server_boot',
+  inputs: lifecycleInputs,
+  result: 'ok',
+});
+
+// Runtime Witness Loop: verify lifecycle after boot receipt
+verifyLifecycle('boot');
+
+// Runtime Witness Loop: Periodic heartbeat for observability
+const heartbeatPathHash = receiptsPathHash(chainPaths.receiptsPath);
+let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
+
+let shutdownEmitted = false;
+function emitShutdown(signal: string) {
+  if (shutdownEmitted) return;
+  shutdownEmitted = true;
+  // Stop heartbeat immediately
+  if (heartbeatInterval) {
+    clearInterval(heartbeatInterval);
+    heartbeatInterval = null;
+  }
+  try {
+    audit.write({
+      actor_id: 'server',
+      action: 'server_shutdown',
+      inputs: { ...lifecycleInputs, signal },
+      result: 'ok',
+    });
+    // Runtime Witness Loop: verify lifecycle after shutdown receipt
+    verifyLifecycle('shutdown');
+  } catch (error) {
+    console.error(`[audit] Failed to write server_shutdown receipt: ${String(error)}`);
+  } finally {
+    audit.close();
+    process.exit(0);
+  }
+}
+process.on('SIGINT', () => emitShutdown('SIGINT'));
+process.on('SIGTERM', () => emitShutdown('SIGTERM'));
+
+function emitHeartbeat() {
+  try {
+    audit.write({
+      actor_id: 'server',
+      action: 'server_heartbeat',
+      inputs: {
+        pid: process.pid,
+        version: VERSION,
+        receipts_path_hash: heartbeatPathHash,
+      },
+      result: 'ok',
+    });
+  } catch (error) {
+    console.error(`[heartbeat] Failed to emit: ${String(error)}`);
+  }
+}
+
+if (HEARTBEAT_INTERVAL_MS > 0) {
+  heartbeatInterval = setInterval(emitHeartbeat, HEARTBEAT_INTERVAL_MS);
+  console.log(`[heartbeat] Enabled with interval ${HEARTBEAT_INTERVAL_MS}ms`);
+}
 const legendFirsts = new Set<string>();
 const legendSightedByPlayer = new Set<string>();
 const legendAttemptCountByPlayer = new Map<string, number>();
@@ -1974,6 +2153,7 @@ wss.on('connection', (ws, req: IncomingMessage) => {
     rngCommitByDomain: {},
     clientIp,
     attackFailures: [],
+    skillCooldowns: new Map(),
   };
 
   sessions.set(connId, s);
@@ -2232,7 +2412,9 @@ function processSessionQueue(s: Session, now: number) {
           const now = Date.now();
 
           // Restore score
-          s.heat.score = savedHeat.heat;
+          const heatRaw = savedHeat.heat;
+          const heat = Number.isFinite(heatRaw) ? Math.max(0, heatRaw) : 0;
+          s.heat.score = heat;
 
           // Restore penalty window if still active
           if (savedHeat.penalty_until_ms !== null && savedHeat.penalty_until_ms > now) {
@@ -3586,7 +3768,7 @@ function processSessionQueue(s: Session, now: number) {
 
         // Derive item_id from receipt hash
         const receiptHash = computeReceiptHash({
-          player_id: playerId,
+          actor_id: playerId,
           action: 'item_minted',
           inputs: {
             item_type: itemType,
@@ -4053,7 +4235,8 @@ function processSessionQueue(s: Session, now: number) {
       case 'work_tick': {
         if (!requireAuth(s) || !s.player) break;
 
-        const tickResult = recordTick(s.player.id, msg.contract_id, Date.now());
+        const nowMs = Date.now();
+        const tickResult = recordTick(s.player.id, msg.contract_id, nowMs, (r) => audit.write(r));
 
         if (tickResult.ok) {
           send(s.ws, ServerMessages.workProgress(
@@ -4068,7 +4251,7 @@ function processSessionQueue(s: Session, now: number) {
             const completeResult = completeContract(
               s.player.id,
               msg.contract_id,
-              Date.now(),
+              nowMs,
               (r) => audit.write(r)
             );
             send(s.ws, ServerMessages.workContractResult(

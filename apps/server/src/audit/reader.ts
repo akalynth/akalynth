@@ -6,8 +6,8 @@ import { visibleAtMs } from './public_receipts.js';
 const DEFAULT_LIMIT = 100;
 const MAX_LIMIT = 1000;
 
-export function createReceiptsReader(auditDir: string) {
-  const file = path.join(auditDir, 'receipts.jsonl');
+export function createReceiptsReader(receiptsPath: string) {
+  const file = receiptsPath;
 
   return {
     query(params: ReceiptsQueryParams): ReceiptsResponse {
@@ -64,7 +64,7 @@ export function createReceiptsReader(auditDir: string) {
     receipts = receipts.filter(predicate);
 
     if ('player_id' in params && params.player_id) {
-      receipts = receipts.filter((r) => r.player_id === params.player_id);
+      receipts = receipts.filter((r) => r.actor_id === params.player_id);
     }
     if (params.action) {
       receipts = receipts.filter((r) => r.action === params.action);

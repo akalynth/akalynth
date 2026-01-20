@@ -25,14 +25,13 @@ export function canonicalize(obj: object): string {
  * Format: "blake3:<hex>"
  * Does NOT include trailing newline.
  *
- * Note: evidence_hash is excluded from the hash computation since it's
- * metadata added by the audit logger, not part of the semantic content.
- * This ensures hashes match between runtime (before evidence_hash is added)
- * and materialization (after evidence_hash is added).
+ * Note: event_hash and signature are excluded from the hash computation since they
+ * are derived metadata. This ensures hashes match between runtime (before event_hash
+ * is added) and materialization (after event_hash/signature are added).
  */
 export function computeReceiptHash(receipt: object): string {
-  // Strip evidence_hash before canonicalizing (it's metadata, not content)
-  const { evidence_hash: _, ...contentFields } = receipt as Record<string, unknown>;
+  // Strip event_hash/signature before canonicalizing (derived metadata)
+  const { event_hash: _, signature: __, ...contentFields } = receipt as Record<string, unknown>;
   const canonical = canonicalize(contentFields);
   const hashBytes = blake3(new TextEncoder().encode(canonical));
   const hex = Buffer.from(hashBytes).toString('hex');

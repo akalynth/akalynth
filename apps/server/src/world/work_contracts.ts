@@ -6,6 +6,7 @@ import { randomUUID } from 'node:crypto';
 import type { AuditReceipt, WorkContractType, WorkContractFailReason } from '../../../../packages/shared/types.js';
 import {
   WORK_CONTRACT_STARTED_ACTION,
+  WORK_CONTRACT_TICK_RECORDED_ACTION,
   WORK_CONTRACT_COMPLETED_ACTION,
   WORK_CONTRACT_FAILED_ACTION,
   WORK_CONTRACT_SCHEDULE,
@@ -22,10 +23,12 @@ export interface ActiveContract {
   contract_type: WorkContractType;
   player_id: string;
   started_at_ms: number;
-  ticks: number[];  // Server-side timestamps of received ticks
+  ticks: number[];  // Receipt-derived tick timestamps (ms since epoch)
 }
 
-type WriteReceiptFn = (receipt: Omit<AuditReceipt, 'timestamp' | 'evidence_hash'>) => void;
+type WriteReceiptFn = (
+  receipt: Omit<AuditReceipt, 'sequence' | 'timestamp' | 'prev_hash' | 'event_hash' | 'signature' | 'inputs_hash' | 'outputs_hash'>
+) => void;
 
 export type StartContractResult =
   | { ok: true; contract_id: string; payout_gold: number; cooldown_seconds: number; min_duration_ms: number }
@@ -43,7 +46,7 @@ export type CompleteResult =
 // In-Memory Projection (receipt-derived)
 // ============================================================================
 
-// Active contracts (ephemeral, cleared on completion/failure)
+// Active contracts (in-memory, cleared on completion/failure)
 const activeContractByPlayer = new Map<string, ActiveContract>();
 
 // Cooldown tracking: when player can next start a contract
@@ -114,11 +117,12 @@ export function startContract(
 
   // Emit receipt (reducer will update state)
   writeReceipt({
-    player_id: playerId,
+    actor_id: playerId,
     action: WORK_CONTRACT_STARTED_ACTION,
     inputs: {
       contract_type: contractType,
       contract_id: contractId,
+      started_at_ms: nowMs,
       cooldown_until: new Date(nowMs + schedule.cooldown_ms).toISOString(),
     },
     result: 'ok',
@@ -135,13 +139,14 @@ export function startContract(
 
 /**
  * Record a work tick (presence proof).
- * Does NOT emit a receipt — ticks are ephemeral.
+ * Emits a tick receipt — ticks are outcome-gating and must be auditable/replayable.
  * Returns tick count and whether contract is ready to complete.
  */
 export function recordTick(
   playerId: string,
   contractId: string,
-  nowMs: number
+  nowMs: number,
+  writeReceipt: WriteReceiptFn
 ): TickResult {
   const contract = activeContractByPlayer.get(playerId);
   if (!contract || contract.contract_id !== contractId) {
@@ -157,8 +162,20 @@ export function recordTick(
     return { ok: false, error: 'insufficient_presence' };
   }
 
-  // Record tick (server timestamp, client timestamp ignored)
-  contract.ticks.push(nowMs);
+  // Receipt the tick (accepted ticks only; reducer updates contract state)
+  // tick_index is 1-based and deterministic (derived from prior tick receipts).
+  const tick_index = contract.ticks.length + 1;
+  writeReceipt({
+    actor_id: playerId,
+    action: WORK_CONTRACT_TICK_RECORDED_ACTION,
+    inputs: {
+      contract_id: contractId,
+      contract_type: contract.contract_type,
+      tick_index,
+      tick_at_ms: nowMs,
+    },
+    result: 'ok',
+  });
 
   const elapsed = nowMs - contract.started_at_ms;
   const remaining = Math.max(0, schedule.min_duration_ms - elapsed);
@@ -222,7 +239,7 @@ export function completeContract(
 
   // Emit completion receipt
   writeReceipt({
-    player_id: playerId,
+    actor_id: playerId,
     action: WORK_CONTRACT_COMPLETED_ACTION,
     inputs: {
       contract_type: contract.contract_type,
@@ -234,7 +251,7 @@ export function completeContract(
 
   // Emit credit receipt (payout)
   writeReceipt({
-    player_id: playerId,
+    actor_id: playerId,
     action: WALLET_CREDIT_ACTION,
     inputs: {
       amount: schedule.payout,
@@ -264,7 +281,7 @@ export function failContract(
 
   // Emit failure receipt
   writeReceipt({
-    player_id: playerId,
+    actor_id: playerId,
     action: WORK_CONTRACT_FAILED_ACTION,
     inputs: {
       contract_type: contract.contract_type,
@@ -286,30 +303,60 @@ export function failContract(
  * Idempotent: replay order determines truth (no timestamp reliance).
  */
 export function applyReceiptToWorkContracts(receipt: AuditReceipt): void {
-  const playerId = receipt.player_id;
+  const playerId = receipt.actor_id;
   if (!playerId) return;
 
   switch (receipt.action) {
     case WORK_CONTRACT_STARTED_ACTION: {
       const contractType = receipt.inputs?.contract_type as WorkContractType | undefined;
       const contractId = receipt.inputs?.contract_id as string | undefined;
+      const cooldownUntilIso = receipt.inputs?.cooldown_until as string | undefined;
+      const startedAtMsRaw = receipt.inputs?.started_at_ms as number | undefined;
 
       if (!contractType || !contractId) break;
       if (!WORK_CONTRACT_TYPES.includes(contractType)) break;
 
-      const schedule = WORK_CONTRACT_SCHEDULE[contractType];
+      const startedAtMs =
+        typeof startedAtMsRaw === 'number' && Number.isFinite(startedAtMsRaw)
+          ? startedAtMsRaw
+          : Date.parse(receipt.timestamp);
+      if (Number.isNaN(startedAtMs)) break;
 
       // Set active contract
       activeContractByPlayer.set(playerId, {
         contract_id: contractId,
         contract_type: contractType,
         player_id: playerId,
-        started_at_ms: Date.now(),  // Note: On replay, this is "now" not original time
+        started_at_ms: startedAtMs,
         ticks: [],
       });
 
       // Set cooldown (even if contract fails, cooldown applies)
-      cooldownByPlayer.set(playerId, Date.now() + schedule.cooldown_ms);
+      // Deterministic: use cooldown_until from receipt inputs when present.
+      if (typeof cooldownUntilIso === 'string' && cooldownUntilIso.length > 0) {
+        const cooldownUntilMs = Date.parse(cooldownUntilIso);
+        if (!Number.isNaN(cooldownUntilMs)) {
+          cooldownByPlayer.set(playerId, cooldownUntilMs);
+        }
+      }
+      break;
+    }
+
+    case WORK_CONTRACT_TICK_RECORDED_ACTION: {
+      const contractId = receipt.inputs?.contract_id as string | undefined;
+      const tickAtMsRaw = receipt.inputs?.tick_at_ms as number | undefined;
+      if (!contractId) break;
+
+      const contract = activeContractByPlayer.get(playerId);
+      if (!contract || contract.contract_id !== contractId) break;
+
+      const tickAtMs =
+        typeof tickAtMsRaw === 'number' && Number.isFinite(tickAtMsRaw)
+          ? tickAtMsRaw
+          : Date.parse(receipt.timestamp);
+      if (Number.isNaN(tickAtMs)) break;
+
+      contract.ticks.push(tickAtMs);
       break;
     }
 

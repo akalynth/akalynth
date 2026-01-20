@@ -5,6 +5,7 @@ import type { AuditLogger } from '../audit/logger.js';
 
 export interface ApplyDeathOptions {
   now: number;
+  actor_id?: string;
   player_id: string;
   map: MapName;
   position: Position;

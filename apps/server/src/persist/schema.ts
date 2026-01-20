@@ -363,6 +363,14 @@ function migrateToV6(db: Database.Database): void {
 }
 
 function migrateToV7(db: Database.Database): void {
+  // Placeholder migration (no schema change)
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', '7');
+}
+
+function migrateToV8(db: Database.Database): void {
   // Fix chronicle dedup index: NULL values in entity_id bypass UNIQUE constraint.
   // Replace single index with partial unique indexes for NULL-safe dedup.
   

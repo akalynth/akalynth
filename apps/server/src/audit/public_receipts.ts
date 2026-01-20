@@ -65,8 +65,8 @@ function redactInputs(inputs: Record<string, unknown>, bucketSize: number): Reco
 
 export function jitterMsForReceipt(receipt: Receipt, jitterMaxMs: number, salt: string): number {
   if (jitterMaxMs <= 0) return 0;
-  const basis = typeof receipt.evidence_hash === 'string' && receipt.evidence_hash
-    ? receipt.evidence_hash
+  const basis = typeof receipt.event_hash === 'string' && receipt.event_hash
+    ? receipt.event_hash
     : receipt.timestamp;
   const digest = sha256Hex(`${basis}:${salt}`);
   return hashPrefixToUint32(digest) % (jitterMaxMs + 1);
@@ -90,20 +90,25 @@ export function publicActorForReceipt(
   hashSalt: string
 ): string {
   if (actorMode === 'daily_hash') {
-    return sha256Hex(`${receipt.player_id}${hashSalt}:${dayKeyFor(receipt.timestamp)}`).slice(0, 8);
+    return sha256Hex(`${receipt.actor_id}${hashSalt}:${dayKeyFor(receipt.timestamp)}`).slice(0, 8);
   }
   return 'anon';
 }
 
 export function toPublicReceipt(receipt: Receipt, opts: PublicReceiptOptions): PublicReceipt {
-  const actor = publicActorForReceipt(receipt, opts.actorMode, opts.hashSalt);
+  const actor_id = publicActorForReceipt(receipt, opts.actorMode, opts.hashSalt);
 
   return {
+    sequence: receipt.sequence,
     timestamp: receipt.timestamp,
-    evidence_hash: receipt.evidence_hash,
+    prev_hash: receipt.prev_hash,
+    event_hash: receipt.event_hash,
+    signature: receipt.signature,
     action: receipt.action,
     inputs: redactInputs(receipt.inputs, opts.bucketSize),
     result: receipt.result ?? null,
-    actor,
+    inputs_hash: receipt.inputs_hash,
+    outputs_hash: receipt.outputs_hash,
+    actor_id,
   };
 }

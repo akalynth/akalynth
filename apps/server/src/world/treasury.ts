@@ -112,7 +112,7 @@ export type DebitForActionResult =
 export function debitForAction(
   playerId: string,
   actionType: string,
-  writeReceipt: (receipt: Omit<AuditReceipt, 'timestamp' | 'evidence_hash'>) => void
+  writeReceipt: (receipt: Omit<AuditReceipt, 'sequence' | 'timestamp' | 'prev_hash' | 'event_hash' | 'signature' | 'inputs_hash' | 'outputs_hash'>) => void
 ): DebitForActionResult {
   // Look up cost from schedule
   const cost = ACTION_GOLD_COST[actionType];
@@ -132,7 +132,7 @@ export function debitForAction(
 
   // Write debit receipt (reducer updates balance via logger hook)
   writeReceipt({
-    player_id: playerId,
+    actor_id: playerId,
     action: WALLET_DEBIT_ACTION,
     inputs: { amount: cost, reason: `action_cost:${actionType}` as WalletDebitReason },
     result: 'ok',
@@ -150,7 +150,7 @@ export function debitForAction(
  * Idempotent: replay order determines truth (no timestamp reliance).
  */
 export function applyReceiptToTreasury(receipt: AuditReceipt): void {
-  const playerId = receipt.player_id;
+  const playerId = receipt.actor_id;
   if (!playerId) return;
 
   const current = getGoldBalance(playerId);

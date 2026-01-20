@@ -6,7 +6,7 @@ import { SOVEREIGN_ECHO_SPAWNED_ACTION, SOVEREIGN_ECHO_DESPAWNED_ACTION } from '
 import type { MapName } from '../../../../packages/shared/http.js';
 
 type AuditWriter = {
-  write: (r: { player_id: string; action: string; inputs: Record<string, unknown>; result: string }) => void;
+  write: (r: { actor_id: string; action: string; inputs: Record<string, unknown>; result: string }) => void;
 };
 
 export type EchoCause = 'disconnect' | 'replaced' | 'restart';
@@ -51,7 +51,7 @@ export function spawnEcho(
   };
 
   audit.write({
-    player_id: ownerPlayerId,
+    actor_id: ownerPlayerId,
     action: SOVEREIGN_ECHO_SPAWNED_ACTION,
     inputs: { echo_id, map, x, y, cause: 'disconnect' },
     result: 'ok',
@@ -73,7 +73,7 @@ export function despawnEcho(
   const result = { map: activeEcho.map, echo_id: activeEcho.echo_id };
 
   audit.write({
-    player_id: activeEcho.owner_player_id,
+    actor_id: activeEcho.owner_player_id,
     action: SOVEREIGN_ECHO_DESPAWNED_ACTION,
     inputs: { echo_id: activeEcho.echo_id, map: activeEcho.map, x: activeEcho.x, y: activeEcho.y, cause },
     result: 'ok',

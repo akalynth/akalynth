@@ -25,6 +25,7 @@ import type {
   ItemRow,
   InventoryItemRow,
   LegendaryHeatRow,
+  PlayerHeatRow,
   ChronicleEventRow,
   ModerationReportRow,
 } from './types.js';
@@ -147,6 +148,10 @@ export function createPersistenceLayer(
 
     getLegendaryHeat(itemId: string): number {
       return queries.getLegendaryHeat(db, itemId);
+    },
+
+    getPlayerHeat(playerId: string): PlayerHeatRow | null {
+      return queries.getPlayerHeat(db, playerId);
     },
 
     // Protected slot queries (Phase 3.2)

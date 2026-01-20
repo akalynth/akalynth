@@ -1,7 +1,5 @@
-import fs from 'node:fs';
 import path from 'node:path';
-import crypto from 'node:crypto';
-import stableStringify from 'fast-json-stable-stringify';
+import { createReceiptLogger } from '@akalynth/coordination-kernel';
 import type { AuditReceipt } from '../../../../packages/shared/types.js';
 import { applyReceiptToIdentity } from '../world/identity.js';
 import { applyReceiptToTreasury } from '../world/treasury.js';
@@ -18,89 +16,69 @@ export interface AuditLoggerConfig {
    * offsetAfterLine is the byte position after the written line.
    */
   onWrite?: (receipt: AuditReceipt, offsetAfterLine: number) => void;
+  /**
+   * Absolute path to receipts.jsonl.
+   * Use resolveChainPaths() from @akalynth/shared/paths for canonical resolution.
+   */
+  receiptPath: string;
+  /**
+   * Absolute path to Ed25519 signing key (optional in dev mode).
+   * Use resolveChainPaths() from @akalynth/shared/paths for canonical resolution.
+   */
+  keyPath?: string;
 }
+
+type AuditWriteInput = Omit<
+  AuditReceipt,
+  'sequence' | 'timestamp' | 'prev_hash' | 'event_hash' | 'signature' | 'inputs_hash' | 'outputs_hash' | 'actor_id'
+> & {
+  actor_id?: string;
+  player_id?: string;
+};
 
 export interface AuditLogger {
-  write(receipt: Omit<AuditReceipt, 'timestamp' | 'evidence_hash'> & { timestamp?: string }): void;
+  write(receipt: AuditWriteInput): AuditReceipt;
   close(): void;
-}
-
-// ============================================================================
-// Hash Utilities
-// ============================================================================
-
-function sha256Hex(data: string): string {
-  return crypto.createHash('sha256').update(data).digest('hex');
 }
 
 // ============================================================================
 // Logger Factory
 // ============================================================================
 
-export function createAuditLogger(config: AuditLoggerConfig = {}): AuditLogger {
-  const dir = path.resolve(process.cwd(), 'audit');
-  const file = path.join(dir, 'receipts.jsonl');
-  fs.mkdirSync(dir, { recursive: true });
+export function createAuditLogger(config: AuditLoggerConfig): AuditLogger {
+  // Caller must provide absolute paths (use resolveChainPaths from shared/paths)
+  const dir = path.dirname(config.receiptPath);
+  const receiptLogger = createReceiptLogger({
+    receiptDir: dir,
+    keyPath: config.keyPath,
+    onWrite: (receipt, offsetAfterLine) => {
+      // Update in-memory projections (runs on every receipt)
+      applyReceiptToIdentity(receipt);
+      applyReceiptToTreasury(receipt);
+      applyReceiptToWorkContracts(receipt);
+      applyReceiptToPresence(receipt);
 
-  // Open file descriptor for durable writes
-  const fd = fs.openSync(file, 'a');
-
-  // Track offset locally (don't fstat per write - race condition)
-  let currentOffset = fs.fstatSync(fd).size;
+      // Forward to external callback if provided
+      config.onWrite?.(receipt, offsetAfterLine);
+    }
+  });
 
   return {
     write: (receipt) => {
-      // Use provided timestamp or generate new one
-      const timestamp = receipt.timestamp ?? new Date().toISOString();
-
-      // Build full receipt with timestamp
-      const fullReceipt: AuditReceipt = {
-        timestamp,
-        player_id: receipt.player_id,
-        action: receipt.action,
-        inputs: receipt.inputs,
-        result: receipt.result,
-      };
-
-      // Compute evidence hash (sha256 for backwards compatibility)
-      const evidence = stableStringify({
-        timestamp,
-        player_id: receipt.player_id,
-        action: receipt.action,
-        inputs: receipt.inputs,
-        result: receipt.result,
-      });
-      const evidence_hash = `sha256:${sha256Hex(evidence)}`;
-
-      // Add evidence_hash to full receipt
-      fullReceipt.evidence_hash = evidence_hash;
-
-      // Canonical JSON line (sorted keys for determinism)
-      const line = stableStringify(fullReceipt) + '\n';
-
-      // 1. Append to JSONL
-      const bytesWritten = fs.writeSync(fd, line);
-      currentOffset += bytesWritten;
-
-      // 2. Ensure durable (fsync)
-      fs.fsyncSync(fd);
-
-      // 3. Update in-memory projections (runs on every receipt)
-      applyReceiptToIdentity(fullReceipt);
-      applyReceiptToTreasury(fullReceipt);
-      applyReceiptToWorkContracts(fullReceipt);
-      applyReceiptToPresence(fullReceipt);
-
-      // 4. ONLY THEN call onWrite with offset AFTER the line
-      // This ensures SQLite only sees receipts that are durable in JSONL
-      config.onWrite?.(fullReceipt, currentOffset);
-
-      // 5. Return the full receipt for callers that need the exact written receipt
-      return fullReceipt;
+      const actorId = receipt.actor_id ?? receipt.player_id;
+      if (!actorId) {
+        throw new Error('Audit receipt missing actor_id');
+      }
+      return receiptLogger.appendReceiptSync(
+        actorId,
+        receipt.action,
+        receipt.inputs,
+        receipt.result
+      ) as AuditReceipt;
     },
 
     close: () => {
-      fs.closeSync(fd);
+      receiptLogger.close();
     },
   };
 }

@@ -19,7 +19,7 @@ const BADGE_DERIVED_CAPS: Record<string, string[]> = {
 
 // Minimal audit interface to avoid circular dependency
 type AuditWriter = {
-  write: (r: { player_id: string; action: string; inputs: Record<string, unknown>; result: string }) => void;
+  write: (r: { actor_id: string; action: string; inputs: Record<string, unknown>; result: string }) => void;
 };
 
 /**
@@ -46,7 +46,7 @@ export function grantCap(
 
   player.caps.push(cap);
   audit.write({
-    player_id: player.id,
+    actor_id: player.id,
     action: CAPABILITY_GRANTED_ACTION,
     inputs: { cap, source, ...(badge ? { badge } : {}) },
     result: 'ok',
@@ -71,7 +71,7 @@ export function revokeCap(
 
   player.caps.splice(idx, 1);
   audit.write({
-    player_id: player.id,
+    actor_id: player.id,
     action: CAPABILITY_REVOKED_ACTION,
     inputs: { cap, source },
     result: 'ok',
@@ -117,7 +117,7 @@ export function checkCapGate(
   if (hasCap(player, requiredCap)) return { allowed: true };
 
   audit.write({
-    player_id: player.id,
+    actor_id: player.id,
     action: CAPABILITY_GATED_ACTION,
     inputs: { cap: requiredCap, action: attemptedAction, reason: 'missing_cap' },
     result: 'blocked',

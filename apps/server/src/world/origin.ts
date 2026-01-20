@@ -53,7 +53,13 @@ export function isOriginWorthy(action: string): boolean {
  * AuditLogger interface (minimal subset needed here).
  */
 interface AuditLoggerLike {
-  write: (receipt: Omit<AuditReceipt, 'timestamp' | 'evidence_hash'>) => void;
+  write: (receipt: {
+    actor_id?: string;
+    player_id?: string;
+    action: string;
+    inputs: Record<string, unknown>;
+    result: string;
+  }) => void;
 }
 
 /**
@@ -78,12 +84,12 @@ export function maybeSealOriginFromReceipt(
   if (!isOriginWorthy(receipt.action)) return;
 
   // Check if player already has an origin (idempotency check)
-  if (hasOriginActSealed(persist.db, receipt.player_id)) return;
+  if (hasOriginActSealed(persist.db, receipt.actor_id)) return;
 
   // Emit sealing receipt
   // The materializer will handle idempotency with timestamp ordering
   audit.write({
-    player_id: receipt.player_id,
+    player_id: receipt.actor_id,
     action: 'origin_act_sealed',
     inputs: {
       trigger_action: receipt.action,
