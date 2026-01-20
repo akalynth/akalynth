@@ -23,6 +23,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { execSync, spawnSync } from 'node:child_process';
 import Database from 'better-sqlite3';
+import { SCHEMA_VERSION } from '../src/persist/schema';
 
 // ============================================================================
 // Configuration
@@ -88,13 +89,12 @@ function checkBuild(): void {
 // Check: Database Exists
 // ============================================================================
 
-function checkDatabaseExists(): Database.Database {
+function checkDatabaseExists(): Database.Database | null {
   const absDb = path.resolve(process.cwd(), DB_PATH);
 
   if (!fs.existsSync(absDb)) {
     skip('DB_EXISTS', `database not found at ${absDb} (fresh install?)`);
-    // Return a marker that DB doesn't exist
-    throw new Error('NO_DB');
+    return null;
   }
 
   const db = new Database(absDb, { readonly: true });
@@ -277,7 +277,7 @@ function checkG4Idempotence(db: Database.Database): void {
     for (const idx of indexes) {
       if (idx.unique) {
         const cols = db.prepare(`PRAGMA index_info(${idx.name})`).all() as Array<{ name: string }>;
-        if (cols.some((c) => c.name === column)) {
+        if (cols.length > 0 && cols[0].name === column) {
           hasUnique = true;
           break;
         }
@@ -297,7 +297,14 @@ function checkG4Idempotence(db: Database.Database): void {
 // ============================================================================
 
 function checkG5Rebuildable(db: Database.Database): void {
-  log('Checking G5: Schema version present...');
+  log('Checking G5: Schema version alignment...');
+
+  const metaTable = db
+    .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='_meta'")
+    .get();
+  if (!metaTable) {
+    infra('_meta table missing (schema not initialized)');
+  }
 
   const row = db.prepare(`SELECT value FROM _meta WHERE key = 'schema_version'`).get() as
     | { value: string }
@@ -312,7 +319,12 @@ function checkG5Rebuildable(db: Database.Database): void {
     fail('G5_REBUILDABLE', `invalid schema_version: ${row.value}`);
   }
 
-  if (VERBOSE) log(`  Schema version: ${version}`);
+  // Strengthened: require exact match, not just >= 1
+  if (version !== SCHEMA_VERSION) {
+    fail('G5_REBUILDABLE', `schema_version drift: db=${version} code=${SCHEMA_VERSION}`);
+  }
+
+  if (VERBOSE) log(`  Schema version: ${version} (matches code)`);
   pass('G5_REBUILDABLE');
 }
 
@@ -357,16 +369,10 @@ function main(): void {
   checkReceiptsExist();
 
   // Phase 3: Database checks (if DB exists)
-  let db: Database.Database | null = null;
-  try {
-    db = checkDatabaseExists();
-  } catch (e) {
-    if ((e as Error).message === 'NO_DB') {
-      // No database - skip DB-dependent checks
-      log('Skipping database-dependent checks (no DB)');
-    } else {
-      throw e;
-    }
+  const db = checkDatabaseExists();
+  if (!db) {
+    // No database - skip DB-dependent checks
+    log('Skipping database-dependent checks (no DB)');
   }
 
   if (db) {

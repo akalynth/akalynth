@@ -26,8 +26,9 @@ import type {
   InventoryItemRow,
   LegendaryHeatRow,
   ChronicleEventRow,
+  ModerationReportRow,
 } from './types.js';
-export type { DeathRow } from './types.js';
+export type { DeathRow, ModerationReportRow } from './types.js';
 import { initSchema } from './schema.js';
 import { replayReceipts } from './replay.js';
 import { materialize as materializeReceipt } from './materializers.js';
@@ -173,6 +174,19 @@ export function createPersistenceLayer(
 
     getDeathBeforeTimestamp(playerId: string, beforeOrAt: string): DeathRow | null {
       return queries.getDeathBeforeTimestamp(db, playerId, beforeOrAt);
+    },
+
+    // Moderation queries (v1)
+    getModerationReports(status?: 'open' | 'resolved' | 'all', limit?: number): ModerationReportRow[] {
+      return queries.getModerationReports(db, status, limit);
+    },
+
+    getModerationReportByCaseId(caseId: string): ModerationReportRow | null {
+      return queries.getModerationReportByCaseId(db, caseId);
+    },
+
+    getModerationReportByReceiptHash(receiptHash: string): ModerationReportRow | null {
+      return queries.getModerationReportByReceiptHash(db, receiptHash);
     },
 
     // Meta queries

@@ -7,7 +7,7 @@ import type Database from 'better-sqlite3';
 // Schema Version
 // ============================================================================
 
-export const SCHEMA_VERSION = 7;
+export const SCHEMA_VERSION = 8;
 
 // ============================================================================
 // DDL Statements
@@ -144,6 +144,28 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_chronicle_dedup_entity ON chronicle_events
 CREATE UNIQUE INDEX IF NOT EXISTS idx_chronicle_dedup_no_entity ON chronicle_events(player_id, receipt_hash, kind) WHERE entity_id IS NULL;
 `;
 
+// Moderation v1: Report queue table
+const DDL_MODERATION_REPORTS = `
+CREATE TABLE IF NOT EXISTS moderation_reports (
+  id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+  case_id                 TEXT NOT NULL UNIQUE,
+  reporter_id             TEXT NOT NULL,
+  target_id               TEXT NOT NULL,
+  reported_at             TEXT NOT NULL,
+  receipt_hash            TEXT NOT NULL UNIQUE,
+
+  -- Resolution fields
+  status                  TEXT NOT NULL DEFAULT 'open',
+  resolved_by             TEXT DEFAULT NULL,
+  resolved_at             TEXT DEFAULT NULL,
+  resolution              TEXT DEFAULT NULL,
+  reason                  TEXT DEFAULT NULL,
+  resolution_receipt_hash TEXT DEFAULT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_mod_reports_status ON moderation_reports(status);
+CREATE INDEX IF NOT EXISTS idx_mod_reports_target ON moderation_reports(target_id);
+`;
+
 // ============================================================================
 // Schema Initialization
 // ============================================================================
@@ -237,6 +259,9 @@ function runMigration(db: Database.Database, version: number): void {
       break;
     case 7:
       migrateToV7(db);
+      break;
+    case 8:
+      migrateToV8(db);
       break;
     default:
       throw new Error(`Unknown schema version: ${version}`);
@@ -358,7 +383,7 @@ function migrateToV7(db: Database.Database): void {
   const insertMeta = db.prepare(
     'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
   );
-  insertMeta.run('schema_version', '7');
+  insertMeta.run('schema_version', '8');
 }
 
 // ============================================================================
@@ -380,7 +405,7 @@ export function resetSchema(db: Database.Database): void {
 export function getTableCounts(
   db: Database.Database
 ): Record<string, number> {
-  const tables = ['players', 'reputation_events', 'deaths', 'world_objects', 'items', 'inventory_items', 'legendary_heat', 'chronicle_events'];
+  const tables = ['players', 'reputation_events', 'deaths', 'world_objects', 'items', 'inventory_items', 'legendary_heat', 'chronicle_events', 'moderation_reports'];
   const counts: Record<string, number> = {};
 
   for (const table of tables) {

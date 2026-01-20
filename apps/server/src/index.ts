@@ -102,6 +102,8 @@ import {
   tryResolveQuorum,
   getUnresolvedExpiredRequests,
 } from './world/witness.js';
+import { handleUseSkill, type SkillContext } from './skills/index.js';
+import { handleGetModReports, handleModResolve, type ModerationContext } from './moderation/index.js';
 import type { Element } from '../../../packages/shared/types.js';
 import {
   RUNESTONE_CAST_ACTION,
@@ -1155,27 +1157,21 @@ function mintStarterKit(playerId: string): void {
     { item_type: 'mark_token', meta: {} },
   ];
 
-  const timestamp = new Date().toISOString();
-
   for (const itemDef of items) {
-    // 1. Build mint receipt (item_id is NOT included - derived from hash)
-    const mintReceipt = {
+    // 1. Write mint receipt and get the actual written receipt back
+    const writtenReceipt = audit.write({
       action: 'item_minted',
       player_id: playerId,
-      timestamp,
       inputs: {
         item_type: itemDef.item_type,
         meta: itemDef.meta,
         reason: 'onboarding',
       },
       result: 'ok',
-    };
+    });
 
-    // 2. Write mint receipt
-    audit.write(mintReceipt);
-
-    // 3. Compute hash locally and derive item_id (same logic as materializer)
-    const mintHash = computeReceiptHash(mintReceipt);
+    // 2. Compute hash from the ACTUAL written receipt (same logic as materializer)
+    const mintHash = computeReceiptHash(writtenReceipt);
     const itemId = generateItemId(mintHash);
 
     // 4. Write item_added_to_inventory receipt
@@ -1210,31 +1206,25 @@ function mintLegendaryItem(
   itemType: string = 'mark_token',
   tier: number = 1
 ): string {
-  const timestamp = new Date().toISOString();
-
   const meta = {
     legendary: true,
     legendary_tier: tier,
   };
 
-  // 1. Build mint receipt
-  const mintReceipt = {
+  // 1. Write mint receipt and get the actual written receipt back
+  const writtenReceipt = audit.write({
     action: 'item_minted',
     player_id: playerId,
-    timestamp,
     inputs: {
       item_type: itemType,
       meta,
       reason: 'legendary_mint',
     },
     result: 'ok',
-  };
+  });
 
-  // 2. Write mint receipt
-  audit.write(mintReceipt);
-
-  // 3. Compute hash locally and derive item_id
-  const mintHash = computeReceiptHash(mintReceipt);
+  // 2. Compute hash from the ACTUAL written receipt (same logic as materializer)
+  const mintHash = computeReceiptHash(writtenReceipt);
   const itemId = generateItemId(mintHash);
 
   // 4. Write item_added_to_inventory receipt
@@ -2091,7 +2081,8 @@ function processSessionQueue(s: Session, now: number) {
         resetSessionState(s.player!.id);
 
         // Mint starter kit for Rookguard players (Phase 2)
-        if (s.currentMap === 'Rookguard') {
+        // Skip in DEBUG mode to avoid FK constraint issues during skills testing
+        if (s.currentMap === 'Rookguard' && process.env.DEBUG !== '1') {
           mintStarterKit(s.player!.id);
         }
 
@@ -3821,6 +3812,67 @@ function processSessionQueue(s: Session, now: number) {
         const line = buildNpcDialogue(npc, tier);
 
         send(s.ws, ServerMessages.npcDialogue(msg.npc_id, npc.place_id, tier, line));
+        break;
+      }
+
+      // Skills v0
+      case 'use_skill': {
+        if (!requireAuth(s)) break;
+        if (!s.player) break;
+
+        const skillCtx: SkillContext = {
+          playerId: s.player.id,
+          playerName: s.player.name,
+          ws: s.ws,
+          antiState: s.anti.state,
+          skillCooldowns: s.skillCooldowns,
+          audit: (receipt) => audit.write(receipt),
+          findPlayerOnline: findPlayerByIdOnline,
+          issueTem: issueTemChallenge,
+          getChronicle: (pid, limit) => persist.getChronicleForPlayer(pid, limit),
+          send: (m) => send(s.ws, m as ServerMessage),
+        };
+
+        handleUseSkill(skillCtx, msg);
+        break;
+      }
+
+      // Moderation v1 (DEBUG only)
+      case 'get_mod_reports': {
+        if (!requireAuth(s)) break;
+        if (!s.player) break;
+
+        const modCtx: ModerationContext = {
+          playerId: s.player.id,
+          ws: s.ws,
+          isDebugMode: !!process.env.DEBUG,
+          audit: (receipt) => audit.write(receipt),
+          getModerationReports: (status, limit) => persist.getModerationReports(status, limit),
+          getModerationReportByCaseId: (caseId) => persist.getModerationReportByCaseId(caseId),
+          getModerationReportByReceiptHash: (rh) => persist.getModerationReportByReceiptHash(rh),
+          send: (m) => send(s.ws, m as ServerMessage),
+        };
+
+        handleGetModReports(modCtx, msg);
+        break;
+      }
+
+      case 'mod_resolve': {
+        if (!requireAuth(s)) break;
+        if (!s.player) break;
+
+        const modCtx: ModerationContext = {
+          playerId: s.player.id,
+          ws: s.ws,
+          isDebugMode: !!process.env.DEBUG,
+          audit: (receipt) => audit.write(receipt),
+          getModerationReports: (status, limit) => persist.getModerationReports(status, limit),
+          getModerationReportByCaseId: (caseId) => persist.getModerationReportByCaseId(caseId),
+          getModerationReportByReceiptHash: (rh) => persist.getModerationReportByReceiptHash(rh),
+          send: (m) => send(s.ws, m as ServerMessage),
+        };
+
+        handleModResolve(modCtx, msg);
         break;
       }
     }

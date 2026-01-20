@@ -187,6 +187,40 @@ export interface TalkToNpcMessage extends BaseMessage {
   npc_id: string;
 }
 
+// ============================================================================
+// Skills v0 (Utility/Admin)
+// ============================================================================
+
+// Client → Server: Use a skill
+export interface UseSkillMessage extends BaseMessage {
+  type: 'use_skill';
+  skill_id: string;
+  target_id?: string;
+}
+
+// ============================================================================
+// Moderation v1 (Admin-Only)
+// ============================================================================
+
+export type ModerationResolution = 'no_action' | 'warning' | 'temp_mute';
+
+// Client → Server: List moderation reports (DEBUG only)
+export interface GetModReportsMessage extends BaseMessage {
+  type: 'get_mod_reports';
+  status?: 'open' | 'resolved' | 'all';
+  limit?: number;
+}
+
+// Client → Server: Resolve a moderation report (DEBUG only)
+// Accept either receipt_hash (preferred) or case_id (legacy) as lookup key
+export interface ModResolveMessage extends BaseMessage {
+  type: 'mod_resolve';
+  case_id?: string;          // Legacy lookup key
+  receipt_hash?: string;     // Canonical lookup key (preferred)
+  resolution: ModerationResolution;
+  reason?: string;
+}
+
 export type ClientMessage =
   | ConnectMessage
   | LoginMessage
@@ -213,7 +247,10 @@ export type ClientMessage =
   | GrantGoldMessage
   | StartWorkContractMessage
   | WorkTickMessage
-  | TalkToNpcMessage;
+  | TalkToNpcMessage
+  | UseSkillMessage
+  | GetModReportsMessage
+  | ModResolveMessage;
 
 // ============================================================================
 // Server → Client Messages
@@ -286,7 +323,24 @@ export interface ErrorMessage extends BaseMessage {
   message: string;
 }
 
-export interface DeathNoticeMessage extends BaseMessage {
+// Optional v0 UI context (safe to omit for backward compatibility).
+export interface LostItemSummary {
+  kind: string;
+  qty?: number;
+  rarity?: string;
+}
+
+export interface DeathNoticeExtras {
+  chronicle_event_id?: number;
+  lost_items?: LostItemSummary[];
+  killer_name?: string;
+  zone?: string;
+  x?: number;
+  y?: number;
+  time?: string;
+}
+
+export interface DeathNoticeMessage extends BaseMessage, DeathNoticeExtras {
   type: 'death_notice';
   ok: true;
   respawn_in_ms: number;
@@ -618,6 +672,62 @@ export interface NpcDialogueErrorMessage extends BaseMessage {
   error: NpcDialogueError;
 }
 
+// ============================================================================
+// Skills v0 (Utility/Admin) - Server Responses
+// ============================================================================
+
+export type SkillRejectionReason =
+  | 'cooldown'
+  | 'invalid_skill'
+  | 'invalid_target'
+  | 'target_not_found'
+  | 'debug_only';
+
+export interface SkillResultMessage extends BaseMessage {
+  type: 'skill_result';
+  skill_id: string;
+  success: boolean;
+  reason?: SkillRejectionReason;
+  cooldown_until_ms?: number;
+  payload?: Record<string, unknown>;
+}
+
+// ============================================================================
+// Moderation v1 (Admin-Only) - Server Responses
+// ============================================================================
+
+// Report shape for snapshots
+export interface ModerationReport {
+  case_id: string;
+  receipt_hash: string;     // Canonical identifier (player_reported receipt)
+  reporter_id: string;
+  target_id: string;
+  reported_at: string;      // ISO8601
+  status: 'open' | 'resolved';
+  resolved_by?: string;
+  resolved_at?: string;     // ISO8601
+  resolution?: ModerationResolution;
+  reason?: string;
+  resolution_receipt_hash?: string;  // moderation_resolved receipt (if resolved)
+}
+
+// Server → Client: List of moderation reports
+export interface ModReportsSnapshotMessage extends BaseMessage {
+  type: 'mod_reports_snapshot';
+  reports: ModerationReport[];
+  has_more: boolean;
+}
+
+export type ModResolveError = 'not_found' | 'already_resolved' | 'invalid_resolution' | 'not_authorized';
+
+// Server → Client: Resolution result
+export interface ModResolveResultMessage extends BaseMessage {
+  type: 'mod_resolve_result';
+  success: boolean;
+  case_id: string;
+  error?: ModResolveError;
+}
+
 export type ServerMessage =
   | WelcomeMessage
   | LoginAckMessage
@@ -651,7 +761,10 @@ export type ServerMessage =
   | WorkProgressMessage
   | WorkContractResultMessage
   | NpcDialogueMessage
-  | NpcDialogueErrorMessage;
+  | NpcDialogueErrorMessage
+  | SkillResultMessage
+  | ModReportsSnapshotMessage
+  | ModResolveResultMessage;
 
 // ============================================================================
 // Message Factories
@@ -729,7 +842,8 @@ export const ServerMessages = {
     respawn_in_ms: number,
     map: MapName,
     spawn: { x: number; y: number },
-    reason: string
+    reason: string,
+    extras?: DeathNoticeExtras
   ): DeathNoticeMessage => ({
     type: 'death_notice',
     ok: true,
@@ -737,6 +851,7 @@ export const ServerMessages = {
     map,
     spawn,
     reason,
+    ...(extras ?? {}),
   }),
 
   error: (code: ErrorCode, message: string): ErrorMessage => ({
@@ -998,6 +1113,43 @@ export const ServerMessages = {
     npc_id,
     error,
   }),
+
+  // Skills v0
+  skillResult: (
+    skill_id: string,
+    success: boolean,
+    opts?: {
+      reason?: SkillRejectionReason;
+      cooldown_until_ms?: number;
+      payload?: Record<string, unknown>;
+    }
+  ): SkillResultMessage => ({
+    type: 'skill_result',
+    skill_id,
+    success,
+    ...opts,
+  }),
+
+  // Moderation v1
+  modReportsSnapshot: (
+    reports: ModerationReport[],
+    has_more: boolean
+  ): ModReportsSnapshotMessage => ({
+    type: 'mod_reports_snapshot',
+    reports,
+    has_more,
+  }),
+
+  modResolveResult: (
+    case_id: string,
+    success: boolean,
+    error?: ModResolveError
+  ): ModResolveResultMessage => ({
+    type: 'mod_resolve_result',
+    success,
+    case_id,
+    error,
+  }),
 };
 
 // ============================================================================
@@ -1172,6 +1324,36 @@ export function parseClientMessage(data: unknown): ClientMessage | null {
     case 'talk_to_npc': {
       if (typeof msg.npc_id !== 'string') return null;
       return { type: 'talk_to_npc', npc_id: msg.npc_id };
+    }
+
+    // Skills v0
+    case 'use_skill': {
+      if (typeof msg.skill_id !== 'string') return null;
+      const target_id = typeof msg.target_id === 'string' ? msg.target_id : undefined;
+      return { type: 'use_skill', skill_id: msg.skill_id, target_id };
+    }
+
+    // Moderation v1
+    case 'get_mod_reports': {
+      const status = msg.status;
+      if (status !== undefined && status !== 'open' && status !== 'resolved' && status !== 'all') {
+        return null;
+      }
+      const limit = typeof msg.limit === 'number' ? msg.limit : undefined;
+      return { type: 'get_mod_reports', status, limit };
+    }
+
+    case 'mod_resolve': {
+      const case_id = typeof msg.case_id === 'string' ? msg.case_id : undefined;
+      const receipt_hash = typeof msg.receipt_hash === 'string' ? msg.receipt_hash : undefined;
+      // Require at least one lookup key
+      if (!case_id && !receipt_hash) return null;
+      const resolution = msg.resolution;
+      if (resolution !== 'no_action' && resolution !== 'warning' && resolution !== 'temp_mute') {
+        return null;
+      }
+      const reason = typeof msg.reason === 'string' ? msg.reason : undefined;
+      return { type: 'mod_resolve', case_id, receipt_hash, resolution, reason };
     }
 
     default:
