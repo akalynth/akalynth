@@ -20,11 +20,13 @@ if [ ! -d "$REPO_ROOT/.git" ]; then
   exit 1
 fi
 
+if [ ! -d "$HOOKS_DIR" ]; then
+  echo "[install-hooks] ERROR: hooks directory not found at $HOOKS_DIR"
+  exit 1
+fi
+
 echo "[install-hooks] Installing Akalynth Phase Gate..."
 echo "[install-hooks] This modifies $HOOKS_DIR/pre-commit"
-
-# Ensure hooks directory exists
-mkdir -p "$HOOKS_DIR"
 
 # Create pre-commit hook
 cat > "$HOOKS_DIR/pre-commit" << 'EOF'
