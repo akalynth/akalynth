@@ -15,6 +15,7 @@
     "verify:chronicle": "tsx tools/verify-chronicle.ts",
     "verify:chronicle-chain": "tsx tools/verify-chronicle-chain.ts",
     "verify:rate-limits": "tsx tools/verify-rate-limits.ts",
+    "chronicle:demo": "tsx tools/chronicle-demo.ts",
     "chronicle:adapter:smoke": "tsx tools/chronicle-adapter-smoke.ts",
     "rulebook:genesis": "tsx tools/genesis-rulebook.ts",
     "install-hooks": "bash scripts/install-hooks.sh"

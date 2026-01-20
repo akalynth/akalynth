@@ -31,6 +31,16 @@ interface Message {
 | `set_protected_slot` | Protect an item from death drops |
 | `get_chronicle` | Request chronicle events |
 | `get_evidence` | Request evidence for chronicle event |
+| `declare_vocation` | Declare player vocation |
+| `pay_tithe` | Pay gold tithe |
+| `inspect_wallet` | Request wallet snapshot |
+| `inspect_player` | Request player info |
+| `get_pressure_metrics` | Request pressure metrics |
+| `start_work_contract` | Start a work contract |
+| `talk_to_npc` | Interact with NPC |
+| `temple_sweep` | Temple sweep action |
+| `grant_gold` | Dev-only: grant gold |
+| `grant_sovereign_prefix` | Dev-only: grant sovereign prefix |
 
 ## Server → Client Messages
 
@@ -60,6 +70,16 @@ interface Message {
 | `protected_slot_set` | Protected slot changed |
 | `chronicle_snapshot` | Chronicle events response |
 | `evidence_snapshot` | Evidence response |
+| `tithe_result` | Tithe payment result |
+| `wallet_snapshot` | Wallet state snapshot |
+| `player_inspect` | Player info response |
+| `pressure_metrics_snapshot` | Pressure metrics response |
+| `work_contract_started` | Work contract started |
+| `work_tick` | Work contract tick |
+| `work_progress` | Work contract progress |
+| `work_contract_result` | Work contract completed |
+| `npc_dialogue` | NPC dialogue response |
+| `npc_dialogue_error` | NPC dialogue error |
 
 ---
 
@@ -744,6 +764,174 @@ Status values:
 
 ---
 
+### Economy / Vocation
+
+#### `declare_vocation` (client → server)
+
+Declare player's vocation.
+
+```json
+{"type": "declare_vocation", "vocation": "merchant"}
+```
+
+#### `pay_tithe` (client → server)
+
+Pay gold tithe.
+
+```json
+{"type": "pay_tithe", "amount": 100}
+```
+
+#### `tithe_result` (server → client)
+
+Tithe payment result.
+
+```json
+{"type": "tithe_result", "ok": true, "amount": 100, "new_balance": 400, "receipt_hash": "blake3:..."}
+```
+
+---
+
+### Wallet / Inspection
+
+#### `inspect_wallet` (client → server)
+
+Request wallet snapshot for a player.
+
+```json
+{"type": "inspect_wallet", "player_id": "p_abc123"}
+```
+
+#### `wallet_snapshot` (server → client)
+
+Wallet state response.
+
+```json
+{"type": "wallet_snapshot", "player_id": "p_abc123", "gold": 500, "sovereign_prefix": false}
+```
+
+#### `inspect_player` (client → server)
+
+Request player info.
+
+```json
+{"type": "inspect_player", "player_id": "p_abc123"}
+```
+
+#### `player_inspect` (server → client)
+
+Player info response.
+
+```json
+{"type": "player_inspect", "player_id": "p_abc123", "name": "Alice", "status": "alive"}
+```
+
+---
+
+### Pressure
+
+#### `get_pressure_metrics` (client → server)
+
+Request pressure metrics for a player.
+
+```json
+{"type": "get_pressure_metrics", "player_id": "p_abc123"}
+```
+
+#### `pressure_metrics_snapshot` (server → client)
+
+Pressure metrics response.
+
+```json
+{"type": "pressure_metrics_snapshot", "player_id": "p_abc123", "metrics": {}}
+```
+
+---
+
+### Work Contracts
+
+#### `start_work_contract` (client → server)
+
+Start a work contract.
+
+```json
+{"type": "start_work_contract", "kind": "mining"}
+```
+
+#### `work_contract_started` (server → client)
+
+Work contract started confirmation.
+
+```json
+{"type": "work_contract_started", "contract_id": "wc_123", "ok": true}
+```
+
+#### `work_tick` (server → client)
+
+Work contract tick (periodic update).
+
+```json
+{"type": "work_tick", "contract_id": "wc_123", "t": 1}
+```
+
+#### `work_progress` (server → client)
+
+Work contract progress update.
+
+```json
+{"type": "work_progress", "contract_id": "wc_123", "progress": 0.5}
+```
+
+#### `work_contract_result` (server → client)
+
+Work contract completed.
+
+```json
+{"type": "work_contract_result", "contract_id": "wc_123", "ok": true, "payout_gold": 50, "receipt_hash": "blake3:..."}
+```
+
+---
+
+### NPC Dialogue
+
+#### `talk_to_npc` (client → server)
+
+Interact with an NPC.
+
+```json
+{"type": "talk_to_npc", "npc_id": "npc_merchant", "choice": null}
+```
+
+#### `npc_dialogue` (server → client)
+
+NPC dialogue response.
+
+```json
+{"type": "npc_dialogue", "npc_id": "npc_merchant", "text": "Welcome traveler!", "choices": ["Buy", "Sell", "Leave"]}
+```
+
+#### `npc_dialogue_error` (server → client)
+
+NPC dialogue error.
+
+```json
+{"type": "npc_dialogue_error", "npc_id": "npc_merchant", "code": "not_found", "message": "NPC not found"}
+```
+
+---
+
+### Temple
+
+#### `temple_sweep` (client → server)
+
+Temple sweep action.
+
+```json
+{"type": "temple_sweep"}
+```
+
+---
+
 ### Dev-Only Messages
 
 #### `mint_legendary` (client → server)
@@ -760,6 +948,22 @@ Dev-only: Mint a legendary item. Requires `DEBUG=1`.
 
 - `item_type` - Item type (default: "mark_token")
 - `tier` - Legendary tier 1-5 (default: 1)
+
+#### `grant_gold` (client → server)
+
+Dev-only: Grant gold to a player. Requires `DEBUG=1`.
+
+```json
+{"type": "grant_gold", "player_id": "p_abc123", "amount": 1000}
+```
+
+#### `grant_sovereign_prefix` (client → server)
+
+Dev-only: Grant sovereign prefix to a player. Requires `DEBUG=1`.
+
+```json
+{"type": "grant_sovereign_prefix", "player_id": "p_abc123", "enabled": true}
+```
 
 ---
 

@@ -151,6 +151,25 @@ export interface ChronicleEventRow {
   evidence_ref: string | null; // Phase 4.4 E2: JSON EvidenceRef or null
 }
 
+// Moderation v1: Report queue projection
+export type ModerationReportStatus = 'open' | 'resolved';
+export type ModerationResolution = 'no_action' | 'warning' | 'temp_mute';
+
+export interface ModerationReportRow {
+  id: number;
+  case_id: string;
+  reporter_id: string;
+  target_id: string;
+  reported_at: string; // ISO8601
+  receipt_hash: string;
+  status: ModerationReportStatus;
+  resolved_by: string | null;
+  resolved_at: string | null; // ISO8601
+  resolution: ModerationResolution | null;
+  reason: string | null;
+  resolution_receipt_hash: string | null;
+}
+
 // ============================================================================
 // Receipt Taxonomy (Phase 1 + Phase 2)
 // ============================================================================
@@ -248,6 +267,11 @@ export interface PersistenceLayer {
   getChronicleEventByReceiptHash(receipt_hash: string, player_id: string): ChronicleEventRow | null;
   getDeathByReceiptHash(receipt_hash: string): DeathRow | null;
   getDeathBeforeTimestamp(player_id: string, before_or_at: string): DeathRow | null;
+
+  // Read queries - Moderation (v1)
+  getModerationReports(status?: 'open' | 'resolved' | 'all', limit?: number): ModerationReportRow[];
+  getModerationReportByCaseId(case_id: string): ModerationReportRow | null;
+  getModerationReportByReceiptHash(receipt_hash: string): ModerationReportRow | null;
 
   // Meta queries (for debugging/recovery)
   getMeta(key: string): string | null;

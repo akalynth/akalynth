@@ -7,7 +7,7 @@ import type { Duplex } from 'node:stream';
 import { WebSocketServer, WebSocket } from 'ws';
 import { createHash, randomUUID } from 'node:crypto';
 
-import type { ClientMessage, ServerMessage } from '../../../packages/shared/protocol.js';
+import type { ClientMessage, LostItemSummary, ServerMessage } from '../../../packages/shared/protocol.js';
 import { ServerMessages, parseClientMessage } from '../../../packages/shared/protocol.js';
 import type { Player, TutorialProgress } from '../../../packages/shared/types.js';
 import {
@@ -47,7 +47,7 @@ import { handleHttp } from './api/http.js';
 import { createAuditLogger } from './audit/logger.js';
 import { createReceiptsReader } from './audit/reader.js';
 import { createPersistenceLayer, computeReceiptHash, generateItemId } from './persist/index.js';
-import type { InventoryItemRow, WorldObjectRow } from './persist/index.js';
+import type { InventoryItemRow, PersistenceLayer, WorldObjectRow } from './persist/index.js';
 import { publicActorForReceipt, toPublicReceipt } from './audit/public_receipts.js';
 import { createAntiCheatRuntime, onChat, onMoveApplied, onMoveIntent } from './anticheat/detector.js';
 import { applyThrottle, checkTemTimeout, handleTemResponse, issueTemChallenge, isThrottled } from './anticheat/tem.js';
@@ -102,6 +102,8 @@ import {
   tryResolveQuorum,
   getUnresolvedExpiredRequests,
 } from './world/witness.js';
+import { handleUseSkill, type SkillContext } from './skills/index.js';
+import { handleGetModReports, handleModResolve, type ModerationContext } from './moderation/index.js';
 import type { Element } from '../../../packages/shared/types.js';
 import {
   RUNESTONE_CAST_ACTION,
@@ -988,6 +990,63 @@ function ledgerHesitationDelayMs(playerId: string, deathTs: string): number {
   return (parsed % 400) + 300;
 }
 
+function summarizeLostItems(itemIds: string[], persist: PersistenceLayer): LostItemSummary[] {
+  if (itemIds.length === 0) return [];
+  const MAX_SUMMARY_ITEMS = 64;
+  const cappedItemIds = itemIds.length > MAX_SUMMARY_ITEMS ? itemIds.slice(0, MAX_SUMMARY_ITEMS) : itemIds;
+  const truncatedCount = itemIds.length - cappedItemIds.length;
+  const summary = new Map<string, { kind: string; rarity?: string; qty: number }>();
+
+  for (const itemId of cappedItemIds) {
+    const item = persist.getItem(itemId);
+    const kind = item?.item_type ?? 'item';
+    let rarity: string | undefined;
+
+    if (item?.meta_json) {
+      try {
+        const meta = JSON.parse(item.meta_json) as Record<string, unknown>;
+        if (meta.legendary === true) {
+          rarity = 'legendary';
+        }
+      } catch {
+        // Ignore malformed meta_json.
+      }
+    }
+
+    const key = `${kind}::${rarity ?? ''}`;
+    const existing = summary.get(key);
+    if (existing) {
+      existing.qty += 1;
+    } else {
+      summary.set(key, { kind, rarity, qty: 1 });
+    }
+  }
+
+  if (truncatedCount > 0) {
+    const key = 'item::';
+    const existing = summary.get(key);
+    if (existing) {
+      existing.qty += truncatedCount;
+    } else {
+      summary.set(key, { kind: 'item', qty: truncatedCount });
+    }
+  }
+
+  return Array.from(summary.values())
+    .sort((a, b) => {
+      const kindCmp = a.kind.localeCompare(b.kind);
+      if (kindCmp !== 0) return kindCmp;
+      const rarityCmp = (a.rarity ?? '').localeCompare(b.rarity ?? '');
+      if (rarityCmp !== 0) return rarityCmp;
+      return b.qty - a.qty;
+    })
+    .map(({ kind, rarity, qty }) => ({
+      kind,
+      ...(rarity ? { rarity } : {}),
+      ...(qty > 1 ? { qty } : {}),
+    }));
+}
+
 function recordLedgerDeath(playerId: string, map: MapName, deathTs: string) {
   if (map === 'Rookguard') return;
   ledgerHesitationByPlayer.set(playerId, { death_ts: deathTs, map, applied: false });
@@ -1253,27 +1312,21 @@ function mintStarterKit(playerId: string): void {
     { item_type: 'mark_token', meta: {} },
   ];
 
-  const timestamp = new Date().toISOString();
-
   for (const itemDef of items) {
-    // 1. Build mint receipt (item_id is NOT included - derived from hash)
-    const mintReceipt = {
+    // 1. Write mint receipt and get the actual written receipt back
+    const writtenReceipt = audit.write({
       action: 'item_minted',
       player_id: playerId,
-      timestamp,
       inputs: {
         item_type: itemDef.item_type,
         meta: itemDef.meta,
         reason: 'onboarding',
       },
       result: 'ok',
-    };
+    });
 
-    // 2. Write mint receipt
-    audit.write(mintReceipt);
-
-    // 3. Compute hash locally and derive item_id (same logic as materializer)
-    const mintHash = computeReceiptHash(mintReceipt);
+    // 2. Compute hash from the ACTUAL written receipt (same logic as materializer)
+    const mintHash = computeReceiptHash(writtenReceipt);
     const itemId = generateItemId(mintHash);
 
     // 4. Write item_added_to_inventory receipt
@@ -1308,31 +1361,25 @@ function mintLegendaryItem(
   itemType: string = 'mark_token',
   tier: number = 1
 ): string {
-  const timestamp = new Date().toISOString();
-
   const meta = {
     legendary: true,
     legendary_tier: tier,
   };
 
-  // 1. Build mint receipt
-  const mintReceipt = {
+  // 1. Write mint receipt and get the actual written receipt back
+  const writtenReceipt = audit.write({
     action: 'item_minted',
     player_id: playerId,
-    timestamp,
     inputs: {
       item_type: itemType,
       meta,
       reason: 'legendary_mint',
     },
     result: 'ok',
-  };
+  });
 
-  // 2. Write mint receipt
-  audit.write(mintReceipt);
-
-  // 3. Compute hash locally and derive item_id
-  const mintHash = computeReceiptHash(mintReceipt);
+  // 2. Compute hash from the ACTUAL written receipt (same logic as materializer)
+  const mintHash = computeReceiptHash(writtenReceipt);
   const itemId = generateItemId(mintHash);
 
   // 4. Write item_added_to_inventory receipt
@@ -2232,7 +2279,8 @@ function processSessionQueue(s: Session, now: number) {
         resetSessionState(s.player!.id);
 
         // Mint starter kit for Rookguard players (Phase 2)
-        if (s.currentMap === 'Rookguard') {
+        // Skip in DEBUG mode to avoid FK constraint issues during skills testing
+        if (s.currentMap === 'Rookguard' && process.env.DEBUG !== '1') {
           mintStarterKit(s.player!.id);
         }
 
@@ -3459,13 +3507,15 @@ function processSessionQueue(s: Session, now: number) {
           // Send death notice to defender
           if (defenderSession) {
             const worldState = worlds[result.map];
+            const lostItems = summarizeLostItems(result.droppedItemIds, persist);
             send(
               defenderSession.ws,
               ServerMessages.deathNotice(
                 DEATH_RESPAWN_DELAY_MS,
                 result.map,
                 { x: worldState.map.spawn.x, y: worldState.map.spawn.y },
-                'Killed by another player'
+                'Killed by another player',
+                { lost_items: lostItems }
               )
             );
 
@@ -4022,6 +4072,67 @@ function processSessionQueue(s: Session, now: number) {
         const line = buildNpcDialogue(npc, tier);
 
         send(s.ws, ServerMessages.npcDialogue(msg.npc_id, npc.place_id, tier, line));
+        break;
+      }
+
+      // Skills v0
+      case 'use_skill': {
+        if (!requireAuth(s)) break;
+        if (!s.player) break;
+
+        const skillCtx: SkillContext = {
+          playerId: s.player.id,
+          playerName: s.player.name,
+          ws: s.ws,
+          antiState: s.anti.state,
+          skillCooldowns: s.skillCooldowns,
+          audit: (receipt) => audit.write(receipt),
+          findPlayerOnline: findPlayerByIdOnline,
+          issueTem: issueTemChallenge,
+          getChronicle: (pid, limit) => persist.getChronicleForPlayer(pid, limit),
+          send: (m) => send(s.ws, m as ServerMessage),
+        };
+
+        handleUseSkill(skillCtx, msg);
+        break;
+      }
+
+      // Moderation v1 (DEBUG only)
+      case 'get_mod_reports': {
+        if (!requireAuth(s)) break;
+        if (!s.player) break;
+
+        const modCtx: ModerationContext = {
+          playerId: s.player.id,
+          ws: s.ws,
+          isDebugMode: !!process.env.DEBUG,
+          audit: (receipt) => audit.write(receipt),
+          getModerationReports: (status, limit) => persist.getModerationReports(status, limit),
+          getModerationReportByCaseId: (caseId) => persist.getModerationReportByCaseId(caseId),
+          getModerationReportByReceiptHash: (rh) => persist.getModerationReportByReceiptHash(rh),
+          send: (m) => send(s.ws, m as ServerMessage),
+        };
+
+        handleGetModReports(modCtx, msg);
+        break;
+      }
+
+      case 'mod_resolve': {
+        if (!requireAuth(s)) break;
+        if (!s.player) break;
+
+        const modCtx: ModerationContext = {
+          playerId: s.player.id,
+          ws: s.ws,
+          isDebugMode: !!process.env.DEBUG,
+          audit: (receipt) => audit.write(receipt),
+          getModerationReports: (status, limit) => persist.getModerationReports(status, limit),
+          getModerationReportByCaseId: (caseId) => persist.getModerationReportByCaseId(caseId),
+          getModerationReportByReceiptHash: (rh) => persist.getModerationReportByReceiptHash(rh),
+          send: (m) => send(s.ws, m as ServerMessage),
+        };
+
+        handleModResolve(modCtx, msg);
         break;
       }
     }

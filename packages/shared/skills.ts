@@ -1,0 +1,88 @@
+// Akalynth Skills v0 - Utility/Admin Skills
+// No HP, no combat, no buffs - just utility actions with receipts
+
+// ============================================================================
+// Skill Types
+// ============================================================================
+
+export type SkillId =
+  | 'skill_inspect'
+  | 'skill_ping_tem'
+  | 'skill_request_recap'
+  | 'skill_report';
+
+export type SkillTarget = 'self' | 'player' | 'none';
+
+export interface SkillDefinition {
+  id: SkillId;
+  name: string;
+  cooldown_ms: number;
+  target: SkillTarget;
+  gold_cost: number;
+  debug_only: boolean;
+}
+
+// ============================================================================
+// Skill Registry
+// ============================================================================
+
+export const SKILL_REGISTRY: Record<SkillId, SkillDefinition> = {
+  skill_inspect: {
+    id: 'skill_inspect',
+    name: 'Inspect',
+    cooldown_ms: 5_000,
+    target: 'player',
+    gold_cost: 0, // v0: no gold cost yet
+    debug_only: false,
+  },
+  skill_ping_tem: {
+    id: 'skill_ping_tem',
+    name: 'Ping Tem',
+    cooldown_ms: 60_000,
+    target: 'self',
+    gold_cost: 0,
+    debug_only: true,
+  },
+  skill_request_recap: {
+    id: 'skill_request_recap',
+    name: 'Request Recap',
+    cooldown_ms: 30_000,
+    target: 'self',
+    gold_cost: 0,
+    debug_only: false,
+  },
+  skill_report: {
+    id: 'skill_report',
+    name: 'Report Player',
+    cooldown_ms: 300_000, // 5 minutes
+    target: 'player',
+    gold_cost: 0,
+    debug_only: false,
+  },
+};
+
+export const SKILL_IDS = Object.keys(SKILL_REGISTRY) as SkillId[];
+
+// ============================================================================
+// Helpers
+// ============================================================================
+
+export function isValidSkillId(id: unknown): id is SkillId {
+  return typeof id === 'string' && SKILL_IDS.includes(id as SkillId);
+}
+
+export function getSkill(id: SkillId): SkillDefinition {
+  return SKILL_REGISTRY[id];
+}
+
+// ============================================================================
+// Receipt Actions
+// ============================================================================
+
+export const SKILL_USE_INTENT_ACTION = 'skill_use_intent';
+export const SKILL_RESOLVED_ACTION = 'skill_resolved';
+export const SKILL_REJECTED_ACTION = 'skill_rejected';
+export const PLAYER_REPORTED_ACTION = 'player_reported';
+
+// Moderation v1: Resolution receipt action
+export const MODERATION_RESOLVED_ACTION = 'moderation_resolved';

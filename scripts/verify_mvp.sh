@@ -2,7 +2,7 @@
 set -euo pipefail
 set -o monitor
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SERVER_DIR="$ROOT_DIR/server"
+SERVER_DIR="$ROOT_DIR/apps/server"
 RECEIPTS="${RECEIPTS:-$SERVER_DIR/audit/receipts.jsonl}"
 SCENARIOS_DIR="$ROOT_DIR/scripts/verify/scenarios"
 HARNESS="$ROOT_DIR/scripts/verify/ws_harness.mjs"
@@ -171,6 +171,8 @@ log "Akalynth MVP verify @ $WS_URL"
 for cmd in node npm bash curl jq; do need_cmd "$cmd"; done
 cd "$SERVER_DIR"
 npm install --silent
+log "Building server..."
+npm --silent run build
 [[ -f "$HARNESS" ]] || die "Missing harness: $HARNESS"
 
 # Clean up any lingering processes on test ports
@@ -201,9 +203,9 @@ REQUIRE_TLS=1 \
 TRUST_PROXY=0 \
 ALLOW_INSECURE_LOCAL=0 \
 PORT="$PORT" \
-npm run dev >/tmp/akalynth_verify_server_tls_spoof.log 2>&1 &
+npm run start >/tmp/akalynth_verify_server_tls_spoof.log 2>&1 &
 SERVER_PID=$!
-wait_for_http_code "$HTTP_URL/v1/health" "403"
+wait_for_http_code "$HTTP_URL/v1/health" "403" 20
 SPOOF_HTTP_CODE="$(curl -s -o /dev/null -w "%{http_code}" -H "x-forwarded-proto: https" "$HTTP_URL/v1/maps")"
 [[ "$SPOOF_HTTP_CODE" == "403" ]] || die "Spoofed x-forwarded-proto:https bypassed TLS gate (got $SPOOF_HTTP_CODE)"
 if HTTP_URL="$HTTP_URL" node <<'NODE'
@@ -253,9 +255,9 @@ TRUST_PROXY=1 \
 TRUST_PROXY_LOOPBACK_ONLY=1 \
 ALLOW_INSECURE_LOCAL=0 \
 PORT="$PORT" \
-npm run dev >/tmp/akalynth_verify_server_tls_trust.log 2>&1 &
+npm run start >/tmp/akalynth_verify_server_tls_trust.log 2>&1 &
 SERVER_PID=$!
-wait_for_http_code "$HTTP_URL/v1/health" "403"
+wait_for_http_code "$HTTP_URL/v1/health" "403" 20
 NOHDR_CODE="$(curl -s -o /dev/null -w "%{http_code}" "$HTTP_URL/v1/maps")"
 [[ "$NOHDR_CODE" == "403" ]] || die "TRUST_PROXY=1 should require x-forwarded-proto:https (got $NOHDR_CODE)"
 OK_CODE="$(curl -s -o /dev/null -w "%{http_code}" -H "x-forwarded-proto: https" "$HTTP_URL/v1/maps")"
@@ -320,7 +322,7 @@ SOVEREIGN_ALLOW_NAME_MATCH=1 \
 CAPS_ENABLED=1 \
 CAPS_DEBUG_GRANT_SOVEREIGN=1 \
 PORT="$PORT" \
-npm run dev >/tmp/akalynth_verify_server.log 2>&1 &
+npm run start >/tmp/akalynth_verify_server.log 2>&1 &
 SERVER_PID=$!
 wait_for_health
 curl -sf "$HTTP_URL/v1/maps" | grep -q 'Rookguard' || die "HTTP /v1/maps missing Rookguard"
@@ -422,7 +424,7 @@ TRUST_PROXY=0 \
 HEAT_PENALTY_THRESHOLD=30 \
 WITNESS_COUNT=1 \
 PORT="$PORT" \
-npm run dev >/tmp/akalynth_verify_server_witness.log 2>&1 &
+npm run start >/tmp/akalynth_verify_server_witness.log 2>&1 &
 SERVER_PID=$!
 wait_for_health
 
@@ -483,7 +485,7 @@ SOVEREIGN_ALLOW_NAME_MATCH=1 \
 CAPS_ENABLED=1 \
 CAPS_DEBUG_GRANT_SOVEREIGN=1 \
 PORT="$PORT" \
-npm run dev >/tmp/akalynth_verify_server.log 2>&1 &
+npm run start >/tmp/akalynth_verify_server.log 2>&1 &
 SERVER_PID=$!
 wait_for_health
 log "Sovereign presence flow..."
@@ -549,7 +551,7 @@ PUBLIC_RECEIPTS_DELAY_PROFILE=default \
 PUBLIC_RECEIPTS_JITTER_MS=0 \
 RUNESTONE_TEST_FORCE_FACE=shadow \
 PORT="$PORT" \
-npm run dev >/tmp/akalynth_verify_server_trinity.log 2>&1 &
+npm run start >/tmp/akalynth_verify_server_trinity.log 2>&1 &
 SERVER_PID=$!
 wait_for_health
 read -r TRINITY_PLAYER_ID TRINITY_GUEST_TOKEN <<<"$(mint_guest)"
