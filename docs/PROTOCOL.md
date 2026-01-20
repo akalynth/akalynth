@@ -38,9 +38,12 @@ interface Message {
 | `get_pressure_metrics` | Request pressure metrics |
 | `start_work_contract` | Start a work contract |
 | `talk_to_npc` | Interact with NPC |
+| `use_skill` | Use a skill (utility/admin) |
 | `temple_sweep` | Temple sweep action |
 | `grant_gold` | Dev-only: grant gold |
 | `grant_sovereign_prefix` | Dev-only: grant sovereign prefix |
+| `get_mod_reports` | List moderation reports (DEBUG only) |
+| `mod_resolve` | Resolve moderation report (DEBUG only) |
 
 ## Server → Client Messages
 
@@ -80,6 +83,9 @@ interface Message {
 | `work_contract_result` | Work contract completed |
 | `npc_dialogue` | NPC dialogue response |
 | `npc_dialogue_error` | NPC dialogue error |
+| `skill_result` | Skill result (utility/admin) |
+| `mod_reports_snapshot` | Moderation reports snapshot (DEBUG only) |
+| `mod_resolve_result` | Moderation resolution result (DEBUG only) |
 
 ---
 
@@ -916,6 +922,85 @@ NPC dialogue error.
 
 ```json
 {"type": "npc_dialogue_error", "npc_id": "npc_merchant", "code": "not_found", "message": "NPC not found"}
+```
+
+---
+
+### Skills v0 (Utility/Admin)
+
+#### `use_skill` (client → server)
+
+Use a skill. Requires authentication; some skills are DEBUG-only.
+
+```json
+{"type": "use_skill", "skill_id": "mod_scan", "target_id": "p_def456"}
+```
+
+#### `skill_result` (server → client)
+
+Skill execution result.
+
+```json
+{"type": "skill_result", "skill_id": "mod_scan", "success": true, "payload": {"summary": "ok"}}
+```
+
+Failure example:
+```json
+{"type": "skill_result", "skill_id": "mod_scan", "success": false, "reason": "debug_only"}
+```
+
+---
+
+### Moderation v1 (Admin-Only)
+
+#### `get_mod_reports` (client → server)
+
+List moderation reports (DEBUG only).
+
+```json
+{"type": "get_mod_reports", "status": "open", "limit": 50}
+```
+
+#### `mod_reports_snapshot` (server → client)
+
+Snapshot of moderation reports.
+
+```json
+{
+  "type": "mod_reports_snapshot",
+  "reports": [
+    {
+      "case_id": "case_123",
+      "receipt_hash": "blake3:...",
+      "reporter_id": "p_reporter",
+      "target_id": "p_target",
+      "reported_at": "2026-01-20T00:00:00.000Z",
+      "status": "open"
+    }
+  ],
+  "has_more": false
+}
+```
+
+#### `mod_resolve` (client → server)
+
+Resolve a moderation report (DEBUG only). Prefer `receipt_hash` (canonical).
+
+```json
+{"type": "mod_resolve", "receipt_hash": "blake3:...", "resolution": "warning", "reason": "rule_violation"}
+```
+
+#### `mod_resolve_result` (server → client)
+
+Resolution result.
+
+```json
+{"type": "mod_resolve_result", "case_id": "case_123", "success": true}
+```
+
+Failure example:
+```json
+{"type": "mod_resolve_result", "case_id": "case_123", "success": false, "error": "not_authorized"}
 ```
 
 ---
