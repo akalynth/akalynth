@@ -8,11 +8,6 @@ export * from './risk/assessment.js';
 export * from './risk/calculator.js';
 export * from './risk/friction.js';
 
-// Governance Patterns
-export * from './governance/gates.js';
-export * from './governance/approval.js';
-export * from './governance/execution.js';
-
 // Emergency System
 export * from './emergency/override.js';
 export * from './emergency/review.js';
@@ -20,7 +15,10 @@ export * from './emergency/review.js';
 // Execution Patterns
 export * from './patterns/direct.js';
 export * from './patterns/segregation.js';
-export * from './patterns/emergency.js';
+// Note: patterns/emergency.js has duplicate exports with emergency/override.js - skip
+
+// Verification
+export * from './verification/verifier.js';
 
 // Main governance interface
 export * from './ai-governance.js';

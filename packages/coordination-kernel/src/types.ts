@@ -52,7 +52,7 @@ export interface ResolutionRequest {
 }
 
 export interface ResolutionOutcome {
-  result: 'confirmed' | 'denied' | 'contested' | 'expired';
+  result: 'confirmed' | 'denied' | 'contested' | 'expired' | 'insufficient';
   participant_count: number;
   response_count: number;
   resolution_time: number;

@@ -48,10 +48,10 @@ export interface EmergencyAuditReport {
   pending_reviews: number;
   overdue_reviews: number;
   violations_count: number;
-  violations: EmergencyViolation[];
+  violations: VerifierEmergencyViolation[];
 }
 
-export interface EmergencyViolation {
+export interface VerifierEmergencyViolation {
   override_id: string;
   violation_type: 'overdue_review' | 'unjustified_override' | 'self_review' | 'excessive_overrides';
   severity: 'minor' | 'major' | 'critical';
@@ -273,7 +273,7 @@ export class AIToolGovernanceVerifier {
       }
     } catch (error) {
       success = false;
-      state_data = { error: error.message };
+      state_data = { error: error instanceof Error ? error.message : 'Unknown error' };
     }
 
     const replay_time = Date.now() - start_time;
@@ -303,7 +303,7 @@ export class AIToolGovernanceVerifier {
       r.action.includes('emergency') || r.action.includes('override')
     );
 
-    const violations: EmergencyViolation[] = [];
+    const violations: VerifierEmergencyViolation[] = [];
     let overrides_count = 0;
     let justified_count = 0;
     let unjustified_count = 0;
@@ -407,7 +407,7 @@ export class AIToolGovernanceVerifier {
       const lines = content.trim().split('\n');
       this.receipts = lines.map(line => JSON.parse(line));
     } catch (error) {
-      throw new Error(`Failed to load receipt chain: ${error.message}`);
+      throw new Error(`Failed to load receipt chain: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -524,7 +524,9 @@ export class AIToolGovernanceVerifier {
     const recommendations = new Set<string>();
 
     for (const violation of violations) {
-      recommendations.add(...violation.remediation_required);
+      for (const remediation of violation.remediation_required) {
+        recommendations.add(remediation);
+      }
     }
 
     return Array.from(recommendations);

@@ -23,7 +23,7 @@
     "post-bureaucratic"
   ],
   "dependencies": {
-    "@akalynth/coordination-kernel": "^0.1.0",
+    "@akalynth/coordination-kernel": "file:../coordination-kernel",
     "fast-json-stable-stringify": "^2.1.0",
     "commander": "^9.0.0"
   },

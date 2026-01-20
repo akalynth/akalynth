@@ -212,7 +212,7 @@ export class CICDReceiptEmitter {
     // 2. Emit policy_eval with override_required=true (preserves mechanical risk memo)
     const policyResult = await this.policyEngine.evaluateDeployment({
       ...inputs,
-      risk_factors: inputs.risk_factors || {},
+      risk_factors: inputs.risk_factors,
     });
 
     const policyReceipt = await this.emitPolicyEval({

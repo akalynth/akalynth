@@ -176,7 +176,7 @@ export class PolicyEngine {
    * Check for hard prohibitions that deny deployment regardless of approvals
    */
   private checkProhibitions(inputs: CICDReceiptInputs & { risk_factors?: RiskFactors }, riskScore: number): string | null {
-    const factors = inputs.risk_factors || {};
+    const factors: RiskFactors = inputs.risk_factors || {};
 
     // Prohibit extremely risky deployments to production
     if (inputs.env === 'prod' && riskScore >= 9) {

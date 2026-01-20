@@ -68,7 +68,7 @@ export function createReceiptLogger(config: ReceiptLoggerConfig = {}): ReceiptLo
     lastHash = initializeLastHashFromFile(file);
   }
 
-  return {
+  const logger: ReceiptLogger = {
     appendReceipt: async (actor_id, action, inputs, result) => {
       const timestamp = new Date().toISOString();
 
@@ -110,9 +110,9 @@ export function createReceiptLogger(config: ReceiptLoggerConfig = {}): ReceiptLo
       return fullReceipt;
     },
 
-    write: async (receipt) => {
+    write: async function(receipt) {
       // Compatibility method for AuditWriter interface
-      return await this.appendReceipt(
+      return await logger.appendReceipt(
         receipt.actor_id,
         receipt.action,
         receipt.inputs,
@@ -125,7 +125,9 @@ export function createReceiptLogger(config: ReceiptLoggerConfig = {}): ReceiptLo
     close: () => {
       fs.closeSync(fd);
     },
-  } as ReceiptLogger;
+  };
+
+  return logger;
 }
 
 // ============================================================================
