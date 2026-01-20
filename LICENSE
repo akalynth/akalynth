@@ -1,32 +1,51 @@
-Copyright (c) 2026 Akalynth. All Rights Reserved.
+AKALYNTH PROPRIETARY VIEW-ONLY LICENSE
 
-PROPRIETARY LICENSE
+Copyright © 2026 Akalynth. All Rights Reserved.
 
-This software and associated documentation files (the "Software") are the
-exclusive property of Akalynth and its contributors. The Software is protected
-by copyright laws and international treaties.
+1. Ownership
 
-NO PERMISSION IS GRANTED to any person or entity to:
+This software, including all source code, binaries, documentation, designs, and associated materials (collectively, the “Software”), is the exclusive property of Akalynth and its contributors. The Software is protected by copyright law, trade secret law, and international treaties.
 
-1. Copy, reproduce, or duplicate the Software or any portion thereof
-2. Modify, adapt, translate, or create derivative works based on the Software
-3. Distribute, sublicense, lease, rent, or lend the Software
-4. Reverse engineer, disassemble, decompile, or otherwise attempt to derive
-   the source code of the Software
-5. Use the Software for any commercial or non-commercial purpose without
-   explicit written permission from Akalynth
-6. Fork, clone, or create any public or private copies of this repository
+2. No License Granted
 
-VIEWING ONLY
+No license or rights of any kind are granted under this Agreement, whether express, implied, statutory, or otherwise, except as explicitly stated in Section 3.
 
-Access to this repository is granted solely for viewing purposes. Any other
-use requires prior written authorization from Akalynth.
+3. Limited View-Only Permission
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM THE SOFTWARE.
+Permission is granted solely to view the Software for informational and evaluative purposes.
 
-Unauthorized use, reproduction, or distribution of this Software may result
-in civil and criminal penalties.
+This permission does not include the right to:
+	•	Use the Software for any purpose
+	•	Copy, reproduce, or store the Software in any form
+	•	Modify, adapt, translate, or create derivative works
+	•	Distribute, publish, sublicense, lease, rent, or lend
+	•	Fork, clone, mirror, snapshot, or archive the repository
+	•	Reverse engineer, decompile, disassemble, or otherwise attempt to derive source code, structure, or algorithms
+	•	Use the Software for commercial or non-commercial purposes
+	•	Train machine learning or AI systems on the Software or its outputs
 
-For licensing inquiries, contact the repository owner.
+Any action beyond passive viewing requires prior written authorization from Akalynth.
+
+4. Confidentiality & Trade Secrets
+
+The Software may contain proprietary or trade-secret information. Unauthorized access, use, or disclosure is strictly prohibited.
+
+5. Termination
+
+Any unauthorized use immediately and automatically terminates this permission. Upon termination, you must cease all access and destroy any copies or reproductions, whether direct or incidental.
+
+6. Disclaimer of Warranty
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.
+
+7. Limitation of Liability
+
+IN NO EVENT SHALL AKALYNTH OR ITS CONTRIBUTORS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR ITS VIEWING.
+
+8. Enforcement
+
+Unauthorized use, reproduction, or distribution may result in civil and criminal penalties under applicable law.
+
+9. Licensing & Contact
+
+For licensing inquiries or permission requests, contact the repository owner.

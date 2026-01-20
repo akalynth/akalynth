@@ -15,6 +15,9 @@ tmp/
 .tmp/
 **/.tmp/
 
+# Generated reports / exports
+artifacts/
+
 # Audit receipts (local dev only)
 apps/server/audit/
 
@@ -33,6 +36,7 @@ __*/
 # Chronicle local files (dev only)
 chronicle.log
 chronicle.key
+.secrets/
 
 # Rulebook compiled outputs (generated, except .gitkeep)
 rulebook/compiled/operator.key
@@ -49,3 +53,6 @@ apps/server/core.*
 
 # Local IDE/agent state
 .continue/
+packages/shared/*.js
+tools/*.js
+apps/server/.tmp_chain.*/

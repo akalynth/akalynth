@@ -35,6 +35,9 @@ jobs:
           cache: "npm"
           cache-dependency-path: apps/server/package-lock.json
 
+      - name: Docs audit (deterministic)
+        run: node tools/doc_audit.js --ci --out artifacts/akalynth-doc-audit.json --summary artifacts/akalynth-doc-audit-summary.md
+
       - name: Verify protocol docs are in sync
         run: ./scripts/verify_protocol_sync.sh
 
@@ -46,3 +49,37 @@ jobs:
 
       - name: Run MVP verification
         run: ./scripts/verify_mvp.sh
+
+      - name: Chain path discipline check
+        run: bash scripts/test-chain-discipline.sh
+
+      - name: Generate deterministic CI Chronicle key
+        run: |
+          mkdir -p .secrets
+          node --input-type=module -e "
+            import fs from 'node:fs';
+            import crypto from 'node:crypto';
+            const seed = crypto.createHash('sha256').update('akalynth-ci-fixture-key-v1').digest();
+            fs.writeFileSync('.secrets/chronicle.key', seed.subarray(0, 32));
+            fs.chmodSync('.secrets/chronicle.key', 0o600);
+            console.log('[ci] wrote .secrets/chronicle.key (32 bytes, mode 0600)');
+          "
+
+      - name: Generate CI fixture receipts chain (signed)
+        env:
+          CHRONICLE_KEY_PATH: ${{ github.workspace }}/.secrets/chronicle.key
+          AKALYNTH_RECEIPT_CHAIN_PATH: ${{ github.workspace }}/apps/server/fixtures/ci-receipts/receipts.jsonl
+        run: |
+          cd apps/server
+          npm run fixture:generate
+
+      - name: Constitutional verifiers (fixture + unit gates)
+        env:
+          CHRONICLE_KEY_PATH: ${{ github.workspace }}/.secrets/chronicle.key
+          AKALYNTH_RECEIPT_CHAIN_PATH: ${{ github.workspace }}/apps/server/fixtures/ci-receipts/receipts.jsonl
+        run: |
+          cd apps/server
+          npm run verify:lifecycle
+          npm run verify:monetization
+          npm run verify:work-contracts
+          npm run verify:treasury

@@ -106,8 +106,12 @@ export const MODERATION_ACTIONS = {
 ```typescript
 // violation_detected
 {
+  sequence: number;
   timestamp: string;
-  player_id: string;
+  prev_hash: string;
+  event_hash: string;
+  signature: string;
+  actor_id: string;
   action: 'violation_detected';
   inputs: {
     violation_type: 'chat_spam' | 'griefing' | 'exploit' | 'toxic_language';
@@ -116,13 +120,18 @@ export const MODERATION_ACTIONS = {
     context: Record<string, unknown>;
   };
   result: 'detected';
-  evidence_hash: string;
+  inputs_hash: string;
+  outputs_hash: string;
 }
 
 // player_banned
 {
+  sequence: number;
   timestamp: string;
-  player_id: string;
+  prev_hash: string;
+  event_hash: string;
+  signature: string;
+  actor_id: string;
   action: 'player_banned';
   inputs: {
     ban_reason: string;
@@ -131,13 +140,18 @@ export const MODERATION_ACTIONS = {
     permanent: boolean; // Always true in Phase 7
   };
   result: 'banned';
-  evidence_hash: string;
+  inputs_hash: string;
+  outputs_hash: string;
 }
 
 // ban_corrected (data correction only, not appeals)
 {
+  sequence: number;
   timestamp: string;
-  player_id: string;
+  prev_hash: string;
+  event_hash: string;
+  signature: string;
+  actor_id: string;
   action: 'ban_corrected';
   inputs: {
     correction_kind: 'data_correction'; // Typed field, not string matching
@@ -145,13 +159,18 @@ export const MODERATION_ACTIONS = {
     original_ban_receipt: string; // Receipt hash of the ban being corrected
   };
   result: 'corrected';
-  evidence_hash: string;
+  inputs_hash: string;
+  outputs_hash: string;
 }
 
 // admin_ban
 {
+  sequence: number;
   timestamp: string;
-  player_id: string; // Admin player_id
+  prev_hash: string;
+  event_hash: string;
+  signature: string;
+  actor_id: string; // Admin actor_id
   action: 'admin_ban';
   inputs: {
     target_player_id: string;
@@ -159,7 +178,8 @@ export const MODERATION_ACTIONS = {
     capability_used: 'admin:ban';
   };
   result: 'ok';
-  evidence_hash: string;
+  inputs_hash: string;
+  outputs_hash: string;
 }
 ```
 

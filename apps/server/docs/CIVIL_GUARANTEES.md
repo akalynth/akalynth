@@ -1,5 +1,8 @@
 # Akalynth Civil Guarantees v1 — Index
 
+> **Status:** Doctrine (constitutional surface).  
+> **Change control:** Changes must preserve G1–G15 or explicitly amend this index with a version bump.
+
 **Scope**: These guarantees are construction-backed. Any future change must preserve them or explicitly amend this index with a version bump.
 
 ---
