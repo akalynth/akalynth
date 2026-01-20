@@ -323,7 +323,24 @@ export interface ErrorMessage extends BaseMessage {
   message: string;
 }
 
-export interface DeathNoticeMessage extends BaseMessage {
+// Optional v0 UI context (safe to omit for backward compatibility).
+export interface LostItemSummary {
+  kind: string;
+  qty?: number;
+  rarity?: string;
+}
+
+export interface DeathNoticeExtras {
+  chronicle_event_id?: number;
+  lost_items?: LostItemSummary[];
+  killer_name?: string;
+  zone?: string;
+  x?: number;
+  y?: number;
+  time?: string;
+}
+
+export interface DeathNoticeMessage extends BaseMessage, DeathNoticeExtras {
   type: 'death_notice';
   ok: true;
   respawn_in_ms: number;
@@ -825,7 +842,8 @@ export const ServerMessages = {
     respawn_in_ms: number,
     map: MapName,
     spawn: { x: number; y: number },
-    reason: string
+    reason: string,
+    extras?: DeathNoticeExtras
   ): DeathNoticeMessage => ({
     type: 'death_notice',
     ok: true,
@@ -833,6 +851,7 @@ export const ServerMessages = {
     map,
     spawn,
     reason,
+    ...(extras ?? {}),
   }),
 
   error: (code: ErrorCode, message: string): ErrorMessage => ({

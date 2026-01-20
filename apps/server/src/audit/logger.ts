@@ -21,7 +21,7 @@ export interface AuditLoggerConfig {
 }
 
 export interface AuditLogger {
-  write(receipt: Omit<AuditReceipt, 'timestamp' | 'evidence_hash'>): void;
+  write(receipt: Omit<AuditReceipt, 'timestamp' | 'evidence_hash'>): AuditReceipt;
   close(): void;
 }
 
@@ -93,6 +93,9 @@ export function createAuditLogger(config: AuditLoggerConfig = {}): AuditLogger {
       // 4. ONLY THEN call onWrite with offset AFTER the line
       // This ensures SQLite only sees receipts that are durable in JSONL
       config.onWrite?.(fullReceipt, currentOffset);
+
+      // 5. Return the full receipt for callers that need the exact written receipt
+      return fullReceipt;
     },
 
     close: () => {

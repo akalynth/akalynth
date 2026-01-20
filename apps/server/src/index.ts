@@ -905,27 +905,21 @@ function mintStarterKit(playerId: string): void {
     { item_type: 'mark_token', meta: {} },
   ];
 
-  const timestamp = new Date().toISOString();
-
   for (const itemDef of items) {
-    // 1. Build mint receipt (item_id is NOT included - derived from hash)
-    const mintReceipt = {
+    // 1. Write mint receipt and get the actual written receipt back
+    const writtenReceipt = audit.write({
       action: 'item_minted',
       player_id: playerId,
-      timestamp,
       inputs: {
         item_type: itemDef.item_type,
         meta: itemDef.meta,
         reason: 'onboarding',
       },
       result: 'ok',
-    };
+    });
 
-    // 2. Write mint receipt
-    audit.write(mintReceipt);
-
-    // 3. Compute hash locally and derive item_id (same logic as materializer)
-    const mintHash = computeReceiptHash(mintReceipt);
+    // 2. Compute hash from the ACTUAL written receipt (same logic as materializer)
+    const mintHash = computeReceiptHash(writtenReceipt);
     const itemId = generateItemId(mintHash);
 
     // 4. Write item_added_to_inventory receipt
@@ -960,31 +954,25 @@ function mintLegendaryItem(
   itemType: string = 'mark_token',
   tier: number = 1
 ): string {
-  const timestamp = new Date().toISOString();
-
   const meta = {
     legendary: true,
     legendary_tier: tier,
   };
 
-  // 1. Build mint receipt
-  const mintReceipt = {
+  // 1. Write mint receipt and get the actual written receipt back
+  const writtenReceipt = audit.write({
     action: 'item_minted',
     player_id: playerId,
-    timestamp,
     inputs: {
       item_type: itemType,
       meta,
       reason: 'legendary_mint',
     },
     result: 'ok',
-  };
+  });
 
-  // 2. Write mint receipt
-  audit.write(mintReceipt);
-
-  // 3. Compute hash locally and derive item_id
-  const mintHash = computeReceiptHash(mintReceipt);
+  // 2. Compute hash from the ACTUAL written receipt (same logic as materializer)
+  const mintHash = computeReceiptHash(writtenReceipt);
   const itemId = generateItemId(mintHash);
 
   // 4. Write item_added_to_inventory receipt
@@ -1716,6 +1704,14 @@ function processSessionQueue(s: Session, now: number) {
           player_id = s.player?.id ?? `p_${randomUUID()}`;
           guest_token = `gt_${randomUUID()}`;
           name = `Guest_${player_id.slice(-4)}`;
+
+          // Write player creation receipt first (materializes player in DB)
+          audit.write({
+            player_id,
+            action: 'session_guest_minted',
+            inputs: { name },
+            result: 'ok',
+          });
 
           audit.write({
             player_id,
