@@ -99,6 +99,7 @@ import {
   getUnresolvedExpiredRequests,
 } from './world/witness.js';
 import { handleUseSkill, type SkillContext } from './skills/index.js';
+import { handleGetModReports, handleModResolve, type ModerationContext } from './moderation/index.js';
 import type { Element } from '../../../packages/shared/types.js';
 import {
   RUNESTONE_CAST_ACTION,
@@ -3530,6 +3531,45 @@ function processSessionQueue(s: Session, now: number) {
         };
 
         handleUseSkill(skillCtx, msg);
+        break;
+      }
+
+      // Moderation v1 (DEBUG only)
+      case 'get_mod_reports': {
+        if (!requireAuth(s)) break;
+        if (!s.player) break;
+
+        const modCtx: ModerationContext = {
+          playerId: s.player.id,
+          ws: s.ws,
+          isDebugMode: !!process.env.DEBUG,
+          audit: (receipt) => audit.write(receipt),
+          getModerationReports: (status, limit) => persist.getModerationReports(status, limit),
+          getModerationReportByCaseId: (caseId) => persist.getModerationReportByCaseId(caseId),
+          getModerationReportByReceiptHash: (rh) => persist.getModerationReportByReceiptHash(rh),
+          send: (m) => send(s.ws, m as ServerMessage),
+        };
+
+        handleGetModReports(modCtx, msg);
+        break;
+      }
+
+      case 'mod_resolve': {
+        if (!requireAuth(s)) break;
+        if (!s.player) break;
+
+        const modCtx: ModerationContext = {
+          playerId: s.player.id,
+          ws: s.ws,
+          isDebugMode: !!process.env.DEBUG,
+          audit: (receipt) => audit.write(receipt),
+          getModerationReports: (status, limit) => persist.getModerationReports(status, limit),
+          getModerationReportByCaseId: (caseId) => persist.getModerationReportByCaseId(caseId),
+          getModerationReportByReceiptHash: (rh) => persist.getModerationReportByReceiptHash(rh),
+          send: (m) => send(s.ws, m as ServerMessage),
+        };
+
+        handleModResolve(modCtx, msg);
         break;
       }
     }

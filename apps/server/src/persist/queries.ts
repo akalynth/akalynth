@@ -11,6 +11,7 @@ import type {
   InventoryItemRow,
   LegendaryHeatRow,
   ChronicleEventRow,
+  ModerationReportRow,
 } from './types.js';
 
 // ============================================================================
@@ -528,4 +529,82 @@ export function getPlayerHeatSummary(
     hottest_item_id: rows[0].item_id,
     hottest_heat: rows[0].heat,
   };
+}
+
+// ============================================================================
+// Moderation Queries (v1)
+// ============================================================================
+
+/**
+ * Get moderation reports by status.
+ * @param status - 'open' | 'resolved' | 'all' (default 'open')
+ * @param limit - max number of reports (default 50)
+ */
+export function getModerationReports(
+  db: Database.Database,
+  status: 'open' | 'resolved' | 'all' = 'open',
+  limit: number = 50
+): ModerationReportRow[] {
+  const boundLimit = Math.min(Math.max(1, limit), 200);
+
+  if (status === 'all') {
+    const stmt = db.prepare(`
+      SELECT * FROM moderation_reports
+      ORDER BY reported_at DESC
+      LIMIT ?
+    `);
+    return stmt.all(boundLimit) as ModerationReportRow[];
+  }
+
+  const stmt = db.prepare(`
+    SELECT * FROM moderation_reports
+    WHERE status = ?
+    ORDER BY reported_at DESC
+    LIMIT ?
+  `);
+  return stmt.all(status, boundLimit) as ModerationReportRow[];
+}
+
+/**
+ * Get a single moderation report by case_id.
+ */
+export function getModerationReportByCaseId(
+  db: Database.Database,
+  caseId: string
+): ModerationReportRow | null {
+  const stmt = db.prepare(`
+    SELECT * FROM moderation_reports WHERE case_id = ?
+  `);
+  return (stmt.get(caseId) as ModerationReportRow) ?? null;
+}
+
+/**
+ * Get a single moderation report by receipt_hash (canonical lookup).
+ */
+export function getModerationReportByReceiptHash(
+  db: Database.Database,
+  receiptHash: string
+): ModerationReportRow | null {
+  const stmt = db.prepare(`
+    SELECT * FROM moderation_reports WHERE receipt_hash = ?
+  `);
+  return (stmt.get(receiptHash) as ModerationReportRow) ?? null;
+}
+
+/**
+ * Get reports for a specific target player.
+ */
+export function getModerationReportsForTarget(
+  db: Database.Database,
+  targetId: string,
+  limit: number = 50
+): ModerationReportRow[] {
+  const boundLimit = Math.min(Math.max(1, limit), 200);
+  const stmt = db.prepare(`
+    SELECT * FROM moderation_reports
+    WHERE target_id = ?
+    ORDER BY reported_at DESC
+    LIMIT ?
+  `);
+  return stmt.all(targetId, boundLimit) as ModerationReportRow[];
 }
