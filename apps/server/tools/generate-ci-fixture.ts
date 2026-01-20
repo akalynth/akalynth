@@ -30,9 +30,34 @@ async function main(): Promise<void> {
   const receiptDir = path.dirname(receiptPath);
   const actualReceiptFile = path.join(receiptDir, 'receipts.jsonl');
 
+  // Deterministic time for CI fixture generation
+  const fixedTimestamp = process.env.AKALYNTH_FIXED_TIMESTAMP ?? '2026-01-20T00:00:00.000Z';
+  const fixedMs = Date.parse(fixedTimestamp);
+  if (!Number.isFinite(fixedMs)) {
+    throw new Error(`Invalid AKALYNTH_FIXED_TIMESTAMP: ${fixedTimestamp}`);
+  }
+
+  class FixedDate extends Date {
+    constructor(...args: ConstructorParameters<typeof Date>) {
+      if (args.length === 0) {
+        super(fixedMs);
+      } else {
+        super(...(args as any));
+      }
+    }
+
+    static now(): number {
+      return fixedMs;
+    }
+  }
+
+  // Override Date for deterministic receipt timestamps during fixture generation
+  (globalThis as unknown as { Date: typeof Date }).Date = FixedDate;
+
   console.log(`[fixture] config path -> ${receiptPath}`);
   console.log(`[fixture] actual file -> ${actualReceiptFile}`);
   console.log(`[fixture] key -> ${keyPath ?? '(unset)'}`);
+  console.log(`[fixture] fixed timestamp -> ${new Date(fixedMs).toISOString()}`);
 
   // Ensure parent directory exists
   fs.mkdirSync(receiptDir, { recursive: true });
