@@ -6,7 +6,7 @@ import com.akalynth.client.chronicle.ChronicleEventKind
 import com.akalynth.client.chronicle.EventStatus
 import com.akalynth.client.chronicle.Receipt
 import com.akalynth.client.rules.RuleId
-import com.akalynth.client.snapshot.SnapshotV0
+import com.akalynth.client.snapshot.SnapshotEvidenceAdapter
 import com.akalynth.client.ui.state.UiOverlayState
 
 /**
@@ -97,7 +97,11 @@ object ExplanationEngine {
 
         // Add snapshot evidence for state-mutating events (death, drop, pickup)
         if (receipt.type.lowercase() in listOf("death", "item_drop", "item_pickup")) {
-            addSnapshotEvidence(ctx, evidenceRefs, details)
+            val snapshotEvidence = SnapshotEvidenceAdapter.fromContext(ctx)
+            if (snapshotEvidence.hasEvidence) {
+                details.putAll(snapshotEvidence.toDetailsMap())
+                evidenceRefs.addAll(snapshotEvidence.toEvidenceRefs())
+            }
         }
 
         return Explanation(
@@ -256,33 +260,6 @@ object ExplanationEngine {
         payload["zone"]?.let { details["zone"] = it }
     }
 
-    /**
-     * Add snapshot evidence to explanation.
-     *
-     * Snapshots are state attestations that prove consequences.
-     * They don't define rules - they prove rules were enforced.
-     *
-     * @param ctx Context containing snapshot(s)
-     * @param evidenceRefs Mutable list to add snapshot refs to
-     * @param details Mutable map to add snapshot metadata to
-     */
-    private fun addSnapshotEvidence(
-        ctx: ExplainContext,
-        evidenceRefs: MutableList<String>,
-        details: MutableMap<String, Any?>
-    ) {
-        ctx.snapshot?.let { snapshot ->
-            evidenceRefs.add("snapshot:${snapshot.sequence}")
-            details["snapshot_sequence"] = snapshot.sequence
-            details["snapshot_hash"] = snapshot.stateHash
-        }
-
-        // Add sequence transition if both snapshots present
-        if (ctx.prevSnapshot != null && ctx.snapshot != null) {
-            details["sequence_transition"] = "${ctx.prevSnapshot.sequence} → ${ctx.snapshot.sequence}"
-        }
-    }
-
     // =========================================================================
     // Event explanation (delegates based on status)
     // =========================================================================
@@ -358,7 +335,11 @@ object ExplanationEngine {
                 ChronicleEventKind.ITEM_PICKUP
             )
         ) {
-            addSnapshotEvidence(ctx, evidenceRefs, details)
+            val snapshotEvidence = SnapshotEvidenceAdapter.fromContext(ctx)
+            if (snapshotEvidence.hasEvidence) {
+                details.putAll(snapshotEvidence.toDetailsMap())
+                evidenceRefs.addAll(snapshotEvidence.toEvidenceRefs())
+            }
         }
 
         return Explanation(
