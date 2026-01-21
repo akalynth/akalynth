@@ -160,11 +160,11 @@ class CharacterCreateActivity : Activity() {
                         if (obj.optBoolean("ok", false)) {
                             val name = obj.optString("name")
                             val newToken = obj.optString("token").takeIf { it.isNotBlank() }
-                            val expiresAt = obj.optLong("expires_at", store.getExpiresAt())
+                            val expiresAt = obj.optLong("expires_at", 0L)
                             val playerId = obj.optString("player_id")
 
-                            if (newToken != null && playerId.isNotBlank()) {
-                                store.save(playerId, name, newToken, expiresAt)
+                            if (newToken != null && expiresAt > 0 && playerId.isNotBlank()) {
+                                store.saveIfNewer(playerId, name, newToken, expiresAt)
                             }
 
                             mainHandler.post {

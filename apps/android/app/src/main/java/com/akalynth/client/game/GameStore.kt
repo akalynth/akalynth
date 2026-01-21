@@ -2,6 +2,7 @@ package com.akalynth.client.game
 
 import android.content.Context
 import com.akalynth.client.network.ConnectionState
+import com.akalynth.client.network.IdentityStore
 import com.akalynth.client.network.WsClient
 import com.akalynth.client.network.WsEvent
 import com.akalynth.client.protocol.*
@@ -29,6 +30,7 @@ class GameStore(
     val state: StateFlow<GameState> = _state.asStateFlow()
 
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    private val identityStore = IdentityStore(context)
 
     init {
         // Load saved guest token and server URL
@@ -214,11 +216,18 @@ class GameStore(
     }
 
     private fun onConnected() {
-        val token = _state.value.session.guestToken
+        val authToken = identityStore.getToken()
+        val hasAuthToken = !authToken.isNullOrBlank()
+        val guestToken = _state.value.session.guestToken
         wsClient.send(ConnectMessage)
         logSent("connect", "")
-        wsClient.send(LoginMessage(guestToken = token))
-        logSent("login", if (token != null) "returning" else "new")
+        if (hasAuthToken) {
+            wsClient.send(LoginMessage(token = authToken))
+            logSent("login", "token")
+        } else {
+            wsClient.send(LoginMessage(guestToken = guestToken))
+            logSent("login", if (guestToken != null) "returning" else "new")
+        }
         wsClient.updateState(ConnectionState.Authenticating)
     }
 
@@ -257,13 +266,24 @@ class GameStore(
             return
         }
 
-        // Save guest token for future sessions
-        prefs.edit().putString(KEY_GUEST_TOKEN, msg.guestToken).apply()
+        val rotatedToken = msg.token?.takeIf { it.isNotBlank() }
+        val expiresAt = msg.expiresAt
+        if (rotatedToken != null && expiresAt != null) {
+            identityStore.saveIfNewer(msg.playerId, msg.name, rotatedToken, expiresAt)
+            prefs.edit().remove(KEY_GUEST_TOKEN).apply()
+        } else {
+            val guestToken = msg.guestToken?.takeIf { it.isNotBlank() }
+            if (guestToken != null) {
+                prefs.edit().putString(KEY_GUEST_TOKEN, guestToken).apply()
+            } else {
+                prefs.edit().remove(KEY_GUEST_TOKEN).apply()
+            }
+        }
 
         _state.update {
             it.copy(
                 session = SessionState(
-                    guestToken = msg.guestToken,
+                    guestToken = msg.guestToken?.takeIf { token -> token.isNotBlank() },
                     playerId = msg.playerId,
                     playerName = msg.name,
                     serverUrl = currentServerUrl
@@ -358,6 +378,10 @@ class GameStore(
     }
 
     private fun handleError(msg: ErrorMessage) {
+        if (msg.code == "token_invalid" || msg.code == "token_expired") {
+            identityStore.clear()
+            prefs.edit().remove(KEY_GUEST_TOKEN).apply()
+        }
         _state.update {
             it.copy(ui = it.ui.copy(errorMessage = "${msg.code}: ${msg.message}"))
         }

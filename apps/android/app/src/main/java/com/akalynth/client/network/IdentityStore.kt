@@ -22,6 +22,28 @@ class IdentityStore(context: Context) {
             .apply()
     }
 
+    fun saveIfNewer(
+        playerId: String,
+        name: String,
+        token: String,
+        expiresAt: Long,
+        nowMs: Long = System.currentTimeMillis()
+    ): Boolean {
+        if (token.isBlank() || expiresAt <= 0L) return false
+
+        val currentToken = getToken()
+        val currentExpiresAt = getExpiresAt()
+        val shouldUpdate = expiresAt > currentExpiresAt || (token != currentToken && expiresAt > nowMs)
+        if (!shouldUpdate) return false
+
+        val resolvedPlayerId = playerId.ifBlank { getPlayerId().orEmpty() }
+        val resolvedName = name.ifBlank { getPlayerName().orEmpty() }
+        if (resolvedPlayerId.isBlank() || resolvedName.isBlank()) return false
+
+        save(resolvedPlayerId, resolvedName, token, expiresAt)
+        return true
+    }
+
     fun getToken(): String? = prefs.getString(KEY_TOKEN, null)
     fun getPlayerId(): String? = prefs.getString(KEY_PLAYER_ID, null)
     fun getPlayerName(): String? = prefs.getString(KEY_PLAYER_NAME, null)

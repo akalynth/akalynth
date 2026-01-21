@@ -11,7 +11,8 @@ import java.util.concurrent.TimeUnit
  */
 class AkalynthClient(
     private val wsUrl: String = BuildConfig.WS_BASE_URL,
-    private val listener: AkalynthListener
+    private val listener: AkalynthListener,
+    private val identityStore: IdentityStore? = null
 ) {
     private val client = OkHttpClient.Builder()
         .readTimeout(0, TimeUnit.MILLISECONDS)  // No timeout for WS
@@ -19,6 +20,7 @@ class AkalynthClient(
 
     private var webSocket: WebSocket? = null
     private var guestToken: String? = null
+    private var authToken: String? = null
     private var playerId: String? = null
     private var playerName: String? = null
 
@@ -69,13 +71,23 @@ class AkalynthClient(
         when (type) {
             "welcome" -> {
                 // Auto-login after welcome
-                login(guestToken)
+                login()
             }
             "login_ack" -> {
                 if (json.optBoolean("ok", false)) {
                     playerId = json.getString("player_id")
-                    guestToken = json.getString("guest_token")
                     playerName = json.getString("name")
+
+                    val newToken = json.optString("token").takeIf { it.isNotBlank() }
+                    val expiresAt = json.optLong("expires_at", -1).takeIf { it > 0 }
+                    if (newToken != null && expiresAt != null) {
+                        identityStore?.saveIfNewer(playerId.orEmpty(), playerName.orEmpty(), newToken, expiresAt)
+                        authToken = newToken
+                        guestToken = null
+                    } else {
+                        guestToken = json.optString("guest_token").takeIf { it.isNotBlank() }
+                    }
+
                     state = State.LOGGED_IN
                     listener.onStateChange(state)
                     // Auto-enter world
@@ -89,6 +101,12 @@ class AkalynthClient(
                 listener.onStateChange(state)
             }
             "error" -> {
+                val code = json.optString("code")
+                if (code == "token_invalid" || code == "token_expired") {
+                    identityStore?.clear()
+                    authToken = null
+                    guestToken = null
+                }
                 listener.onError("${json.getString("code")}: ${json.getString("message")}")
             }
         }
@@ -98,10 +116,24 @@ class AkalynthClient(
         webSocket?.send(json.toString())
     }
 
-    fun login(token: String?) {
+    fun login(authToken: String? = null, guestToken: String? = null) {
+        val storedToken = identityStore?.getToken()
+        val resolvedToken = listOf(authToken, this.authToken, storedToken)
+            .firstOrNull { !it.isNullOrBlank() }
+        val resolvedGuest = guestToken ?: this.guestToken
+
         send(JSONObject().apply {
             put("type", "login")
-            put("guest_token", token)
+            if (!resolvedToken.isNullOrBlank()) {
+                put("token", resolvedToken)
+                put("guest_token", JSONObject.NULL)
+            } else {
+                if (resolvedGuest != null) {
+                    put("guest_token", resolvedGuest)
+                } else {
+                    put("guest_token", JSONObject.NULL)
+                }
+            }
         })
     }
 

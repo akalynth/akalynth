@@ -10,6 +10,7 @@ import android.widget.ScrollView
 import android.widget.TextView
 import com.akalynth.client.network.AkalynthClient
 import com.akalynth.client.network.HealthApi
+import com.akalynth.client.network.IdentityStore
 import org.json.JSONObject
 import java.io.File
 import java.text.SimpleDateFormat
@@ -26,6 +27,7 @@ class WireTracerActivity : Activity() {
     private lateinit var connectBtn: Button
     private lateinit var moveNorthBtn: Button
     private lateinit var client: AkalynthClient
+    private lateinit var identityStore: IdentityStore
     private var playerName: String? = null
 
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -87,7 +89,9 @@ class WireTracerActivity : Activity() {
         checkHealth()
 
         // Setup client
-        client = AkalynthClient(listener = object : AkalynthClient.AkalynthListener {
+        identityStore = IdentityStore(this)
+        client = AkalynthClient(
+            listener = object : AkalynthClient.AkalynthListener {
             override fun onMessage(type: String, json: JSONObject) {
                 val entry = formatMessage("RX", type, json)
                 appendLog(entry)
@@ -110,7 +114,9 @@ class WireTracerActivity : Activity() {
             override fun onError(error: String) {
                 appendLog("ERR: $error")
             }
-        })
+        },
+            identityStore = identityStore
+        )
     }
 
     private fun checkHealth() {
