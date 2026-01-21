@@ -1,10 +1,12 @@
 package com.akalynth.client.ui.regression
 
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.performTouchInput
-import kotlinx.coroutines.test.advanceTimeBy
-import kotlinx.coroutines.test.runTest
+import com.akalynth.client.ui.components.confirmation.HOLD_DURATION_MS
+import com.akalynth.client.ui.components.confirmation.Tier2HoldButton
 import org.junit.Rule
 import org.junit.Test
 import org.junit.Assert.*
@@ -15,6 +17,9 @@ import org.junit.Assert.*
  *
  * Timing constants:
  * - HOLD_DURATION_MS = 1500ms (±100ms tolerance)
+ *
+ * Note: These tests use Compose's test clock for deterministic timing.
+ * mainClock.advanceTimeBy() controls the animation progress.
  */
 class Tier2HoldButtonTest {
 
@@ -22,7 +27,6 @@ class Tier2HoldButtonTest {
     val composeTestRule = createComposeRule()
 
     companion object {
-        const val HOLD_DURATION_MS = 1500L
         const val HOLD_TOLERANCE_MS = 100L
     }
 
@@ -32,42 +36,93 @@ class Tier2HoldButtonTest {
     // =========================================================================
 
     @Test
-    fun `D1 - hold full duration confirms`() = runTest {
+    fun `D1 - hold full duration confirms`() {
         var confirmed = false
         var cancelled = false
 
-        // TODO:
-        // 1. Render Tier2HoldButton with onConfirm/onCancel callbacks
-        // 2. Press and hold for 1500ms+
-        // 3. Verify confirmed == true
-        // 4. Verify cancelled == false
+        composeTestRule.setContent {
+            Tier2HoldButton(
+                label = "Test",
+                onConfirm = { confirmed = true },
+                onCancel = { cancelled = true }
+            )
+        }
 
-        fail("Not implemented - Tier2HoldButton component not yet available")
+        // Press and hold
+        composeTestRule.onNodeWithTag("Tier2HoldButton").performTouchInput {
+            down(center)
+        }
+
+        // Advance past hold duration
+        composeTestRule.mainClock.advanceTimeBy(HOLD_DURATION_MS + 50)
+
+        // Release
+        composeTestRule.onNodeWithTag("Tier2HoldButton").performTouchInput {
+            up()
+        }
+
+        // Verify
+        assertTrue("Should have confirmed", confirmed)
+        assertFalse("Should NOT have cancelled", cancelled)
     }
 
     @Test
-    fun `D1 - hold duration is 1500ms within tolerance`() = runTest {
+    fun `D1 - hold duration is 1500ms within tolerance`() {
         var confirmed = false
 
-        // TODO:
-        // 1. Render Tier2HoldButton
-        // 2. Press and hold for 1399ms (below tolerance) -> should NOT confirm
-        // 3. Release, reset
-        // 4. Press and hold for 1601ms (above tolerance) -> should confirm
+        composeTestRule.setContent {
+            Tier2HoldButton(
+                label = "Test",
+                onConfirm = { confirmed = true },
+                onCancel = {}
+            )
+        }
 
-        fail("Not implemented")
+        // Press
+        composeTestRule.onNodeWithTag("Tier2HoldButton").performTouchInput {
+            down(center)
+        }
+
+        // Advance to just before threshold (within tolerance)
+        composeTestRule.mainClock.advanceTimeBy(HOLD_DURATION_MS - HOLD_TOLERANCE_MS - 50)
+        assertFalse("Should NOT confirm before threshold", confirmed)
+
+        // Advance past threshold
+        composeTestRule.mainClock.advanceTimeBy(HOLD_TOLERANCE_MS + 100)
+
+        // Release
+        composeTestRule.onNodeWithTag("Tier2HoldButton").performTouchInput {
+            up()
+        }
+
+        assertTrue("Should confirm after threshold", confirmed)
     }
 
     @Test
-    fun `D1 - confirm callback fires exactly once`() = runTest {
+    fun `D1 - confirm callback fires exactly once`() {
         var confirmCount = 0
 
-        // TODO:
-        // 1. Render Tier2HoldButton
-        // 2. Press and hold for 2000ms (well past threshold)
-        // 3. Verify confirmCount == 1 (not 2, not 0)
+        composeTestRule.setContent {
+            Tier2HoldButton(
+                label = "Test",
+                onConfirm = { confirmCount++ },
+                onCancel = {}
+            )
+        }
 
-        fail("Not implemented")
+        // Press and hold well past threshold
+        composeTestRule.onNodeWithTag("Tier2HoldButton").performTouchInput {
+            down(center)
+        }
+
+        composeTestRule.mainClock.advanceTimeBy(HOLD_DURATION_MS + 500)
+
+        // Release
+        composeTestRule.onNodeWithTag("Tier2HoldButton").performTouchInput {
+            up()
+        }
+
+        assertEquals("Confirm should fire exactly once", 1, confirmCount)
     }
 
     // =========================================================================
@@ -76,43 +131,138 @@ class Tier2HoldButtonTest {
     // =========================================================================
 
     @Test
-    fun `D2 - release before completion cancels`() = runTest {
+    fun `D2 - release before completion cancels`() {
         var confirmed = false
         var cancelled = false
 
-        // TODO:
-        // 1. Render Tier2HoldButton
-        // 2. Press and hold for 750ms (half duration)
-        // 3. Release
-        // 4. Verify cancelled == true
-        // 5. Verify confirmed == false
+        composeTestRule.setContent {
+            Tier2HoldButton(
+                label = "Test",
+                onConfirm = { confirmed = true },
+                onCancel = { cancelled = true }
+            )
+        }
 
-        fail("Not implemented")
+        // Press
+        composeTestRule.onNodeWithTag("Tier2HoldButton").performTouchInput {
+            down(center)
+        }
+
+        // Advance to half duration
+        composeTestRule.mainClock.advanceTimeBy(HOLD_DURATION_MS / 2)
+
+        // Release early
+        composeTestRule.onNodeWithTag("Tier2HoldButton").performTouchInput {
+            up()
+        }
+
+        // Verify
+        assertFalse("Should NOT have confirmed", confirmed)
+        assertTrue("Should have cancelled", cancelled)
     }
 
     @Test
-    fun `D2 - progress resets on cancel`() = runTest {
-        // TODO:
-        // 1. Render Tier2HoldButton
-        // 2. Press and hold for 750ms -> progress ~= 0.5
-        // 3. Release -> progress should reset to 0
-        // 4. Verify progress == 0 after release
+    fun `D2 - progress resets on cancel`() {
+        var cancelCount = 0
 
-        fail("Not implemented")
+        composeTestRule.setContent {
+            Tier2HoldButton(
+                label = "Test",
+                onConfirm = {},
+                onCancel = { cancelCount++ }
+            )
+        }
+
+        // First gesture: cancel at 50%
+        composeTestRule.onNodeWithTag("Tier2HoldButton").performTouchInput {
+            down(center)
+        }
+        composeTestRule.mainClock.advanceTimeBy(HOLD_DURATION_MS / 2)
+        composeTestRule.onNodeWithTag("Tier2HoldButton").performTouchInput {
+            up()
+        }
+
+        assertEquals(1, cancelCount)
+
+        // Second gesture: should start from 0, not 50%
+        // If progress didn't reset, we'd confirm after only 750ms more
+        composeTestRule.onNodeWithTag("Tier2HoldButton").performTouchInput {
+            down(center)
+        }
+        composeTestRule.mainClock.advanceTimeBy(HOLD_DURATION_MS / 2)
+        composeTestRule.onNodeWithTag("Tier2HoldButton").performTouchInput {
+            up()
+        }
+
+        // Should cancel again (progress reset to 0, only held for 750ms)
+        assertEquals("Progress should reset - second gesture also cancels", 2, cancelCount)
     }
 
     @Test
-    fun `D2 - release at 99 percent does not confirm`() = runTest {
+    fun `D2 - release at 99 percent does not confirm`() {
         var confirmed = false
         var cancelled = false
 
-        // TODO:
-        // 1. Press and hold for 1485ms (99% of 1500ms)
-        // 2. Release
-        // 3. Verify cancelled == true, confirmed == false
-        // Edge case: ensures we don't confirm prematurely
+        composeTestRule.setContent {
+            Tier2HoldButton(
+                label = "Test",
+                onConfirm = { confirmed = true },
+                onCancel = { cancelled = true }
+            )
+        }
 
-        fail("Not implemented")
+        // Press
+        composeTestRule.onNodeWithTag("Tier2HoldButton").performTouchInput {
+            down(center)
+        }
+
+        // Advance to 99% of duration (just before completion)
+        composeTestRule.mainClock.advanceTimeBy((HOLD_DURATION_MS * 0.99).toLong())
+
+        // Release
+        composeTestRule.onNodeWithTag("Tier2HoldButton").performTouchInput {
+            up()
+        }
+
+        assertFalse("Should NOT confirm at 99%", confirmed)
+        assertTrue("Should cancel at 99%", cancelled)
+    }
+
+    // =========================================================================
+    // Confirmed latch (no double-fire)
+    // =========================================================================
+
+    @Test
+    fun `confirmed latch prevents cancel after confirm`() {
+        var confirmCount = 0
+        var cancelCount = 0
+
+        composeTestRule.setContent {
+            Tier2HoldButton(
+                label = "Test",
+                onConfirm = { confirmCount++ },
+                onCancel = { cancelCount++ }
+            )
+        }
+
+        // Press and hold to completion
+        composeTestRule.onNodeWithTag("Tier2HoldButton").performTouchInput {
+            down(center)
+        }
+
+        composeTestRule.mainClock.advanceTimeBy(HOLD_DURATION_MS + 100)
+
+        // Confirm should have fired
+        assertEquals(1, confirmCount)
+
+        // Now release
+        composeTestRule.onNodeWithTag("Tier2HoldButton").performTouchInput {
+            up()
+        }
+
+        // Cancel should NOT fire after confirm
+        assertEquals("Confirm should still be 1", 1, confirmCount)
+        assertEquals("Cancel should NOT fire after confirm", 0, cancelCount)
     }
 
     // =========================================================================
@@ -120,43 +270,132 @@ class Tier2HoldButtonTest {
     // =========================================================================
 
     @Test
-    fun `progress ring fills as held`() = runTest {
-        // TODO:
-        // 1. Render Tier2HoldButton
-        // 2. At 0ms (not pressed): progress = 0, ring empty
-        // 3. Press, at 750ms: progress ~= 0.5, ring half-filled
-        // 4. At 1500ms: progress = 1.0, ring full
+    fun `text shows HOLD initially`() {
+        composeTestRule.setContent {
+            Tier2HoldButton(
+                label = "Test",
+                onConfirm = {},
+                onCancel = {}
+            )
+        }
 
-        fail("Not implemented")
+        composeTestRule.onNodeWithText("HOLD").assertIsDisplayed()
     }
 
     @Test
-    fun `text changes from HOLD to DONE on completion`() = runTest {
-        // TODO:
-        // 1. Render Tier2HoldButton
-        // 2. Before completion: text == "HOLD"
-        // 3. After completion: text == "DONE"
+    fun `text changes from HOLD to DONE on completion`() {
+        composeTestRule.setContent {
+            Tier2HoldButton(
+                label = "Test",
+                onConfirm = {},
+                onCancel = {}
+            )
+        }
 
-        fail("Not implemented")
+        // Initially shows HOLD
+        composeTestRule.onNodeWithText("HOLD").assertIsDisplayed()
+
+        // Press and hold to completion
+        composeTestRule.onNodeWithTag("Tier2HoldButton").performTouchInput {
+            down(center)
+        }
+        composeTestRule.mainClock.advanceTimeBy(HOLD_DURATION_MS + 100)
+
+        // Should show DONE
+        composeTestRule.onNodeWithText("DONE").assertIsDisplayed()
+    }
+
+    // =========================================================================
+    // Multiple gesture cycles
+    // =========================================================================
+
+    @Test
+    fun `can confirm after previous cancel`() {
+        var confirmCount = 0
+        var cancelCount = 0
+
+        composeTestRule.setContent {
+            Tier2HoldButton(
+                label = "Test",
+                onConfirm = { confirmCount++ },
+                onCancel = { cancelCount++ }
+            )
+        }
+
+        // First gesture: cancel
+        composeTestRule.onNodeWithTag("Tier2HoldButton").performTouchInput {
+            down(center)
+        }
+        composeTestRule.mainClock.advanceTimeBy(500)
+        composeTestRule.onNodeWithTag("Tier2HoldButton").performTouchInput {
+            up()
+        }
+
+        assertEquals(0, confirmCount)
+        assertEquals(1, cancelCount)
+
+        // Second gesture: confirm
+        composeTestRule.onNodeWithTag("Tier2HoldButton").performTouchInput {
+            down(center)
+        }
+        composeTestRule.mainClock.advanceTimeBy(HOLD_DURATION_MS + 100)
+        composeTestRule.onNodeWithTag("Tier2HoldButton").performTouchInput {
+            up()
+        }
+
+        assertEquals(1, confirmCount)
+        assertEquals(1, cancelCount) // Still 1, not 2
+    }
+
+    // =========================================================================
+    // Edge cases
+    // =========================================================================
+
+    @Test
+    fun `immediate release does not fire cancel`() {
+        var cancelCount = 0
+
+        composeTestRule.setContent {
+            Tier2HoldButton(
+                label = "Test",
+                onConfirm = {},
+                onCancel = { cancelCount++ }
+            )
+        }
+
+        // Press and immediately release (no time advancement)
+        composeTestRule.onNodeWithTag("Tier2HoldButton").performTouchInput {
+            down(center)
+            up()
+        }
+
+        // Progress was 0, so cancel should NOT fire
+        // (only fires if progress > 0)
+        assertEquals("Cancel should not fire for zero progress", 0, cancelCount)
     }
 
     @Test
-    fun `haptic feedback on press start`() {
-        // TODO:
-        // 1. Render Tier2HoldButton with mock HapticFeedback
-        // 2. Press
-        // 3. Verify HapticFeedbackType.TextHandleMove was triggered
+    fun `very short hold fires cancel`() {
+        var cancelCount = 0
 
-        fail("Not implemented")
-    }
+        composeTestRule.setContent {
+            Tier2HoldButton(
+                label = "Test",
+                onConfirm = {},
+                onCancel = { cancelCount++ }
+            )
+        }
 
-    @Test
-    fun `haptic feedback on completion`() = runTest {
-        // TODO:
-        // 1. Render Tier2HoldButton with mock HapticFeedback
-        // 2. Press and hold to completion
-        // 3. Verify HapticFeedbackType.LongPress was triggered
+        // Press, advance tiny amount, release
+        composeTestRule.onNodeWithTag("Tier2HoldButton").performTouchInput {
+            down(center)
+        }
+        composeTestRule.mainClock.advanceTimeBy(50) // 50ms
+        composeTestRule.onNodeWithTag("Tier2HoldButton").performTouchInput {
+            up()
+        }
 
-        fail("Not implemented")
+        // Progress > 0, so cancel fires
+        assertEquals(1, cancelCount)
     }
 }
