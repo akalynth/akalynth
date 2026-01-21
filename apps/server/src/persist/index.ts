@@ -84,6 +84,10 @@ export function createPersistenceLayer(
       return queries.getPlayer(db, playerId);
     },
 
+    getPlayerByNameLower(nameLower: string): PlayerRow | null {
+      return queries.getPlayerByNameLower(db, nameLower);
+    },
+
     // Reputation queries
     getReputationScore(playerId: string): number {
       return queries.getReputationScore(db, playerId);

@@ -50,6 +50,9 @@ export interface PlayerRow {
   origin_receipt_id: string | null; // blake3:<hex> of origin_act_sealed receipt
   origin_action: string | null; // The TRIGGER action (e.g., 'combat_resolved'), NOT 'origin_act_sealed'
   origin_sealed_at: string | null; // ISO8601 timestamp
+  // Identity v0.1: Auth method and case-insensitive name
+  auth_method: string; // 'guest' | 'character' | 'sovereign'
+  name_lower: string | null; // LOWER(name) for case-insensitive uniqueness
 }
 
 export interface ReputationEventRow {
@@ -228,6 +231,10 @@ export const RECEIPT_ACTIONS = {
 
   // Origin Act: Player's first meaningful action
   ORIGIN_ACT_SEALED: 'origin_act_sealed',
+
+  // Identity v0.1: Named character creation and token issuance
+  CHARACTER_CREATE: 'character_create',
+  AUTH_TOKEN_ISSUE: 'auth_token_issue',
 } as const;
 
 // Alias mapping for existing receipt actions
@@ -240,6 +247,44 @@ export const ACTION_ALIASES: Record<string, string> = {
   object_picked_up: RECEIPT_ACTIONS.WORLD_OBJECT_TRANSFERRED,
   object_decayed: RECEIPT_ACTIONS.WORLD_OBJECT_REMOVED,
 };
+
+// ============================================================================
+// Identity v0.1 Receipt Types
+// ============================================================================
+
+/**
+ * character_create receipt result values.
+ * All outcomes are recorded for deterministic replay.
+ */
+export type CharacterCreateResult =
+  | 'ok'           // Name allocated successfully
+  | 'name_taken'   // Name already in use (case-insensitive)
+  | 'invalid_name' // Name failed validation (length, characters, reserved)
+  | 'rate_limited' // Too many creation attempts
+  | 'banned';      // Actor is banned (deferred in v0.1)
+
+/**
+ * character_create receipt inputs.
+ * Contains all data needed for deterministic replay.
+ */
+export interface CharacterCreateInputs {
+  player_id: string;   // Newly generated player ID (p_...)
+  name: string;        // Display name
+  name_lower: string;  // Lowercase for uniqueness check
+}
+
+/**
+ * auth_token_issue receipt inputs.
+ * Audit-only: no DB mutation, proves token issuance.
+ */
+export interface AuthTokenIssueInputs {
+  token_id: string;    // blake3:<hex> of token
+  player_id: string;   // Player ID token is bound to
+  issued_at: number;   // Epoch ms
+  expires_at: number;  // Epoch ms
+  nonce: string;       // Determinism binding (captures RNG/time at issuance)
+  trigger: 'character_create' | 'token_refresh' | 'login';
+}
 
 // ============================================================================
 // Persistence Layer Interface
@@ -259,6 +304,7 @@ export interface PersistenceLayer {
 
   // Read queries - Players
   getPlayer(player_id: string): PlayerRow | null;
+  getPlayerByNameLower(name_lower: string): PlayerRow | null;
   getReputationScore(player_id: string): number;
   getReputationEvents(player_id: string, limit?: number): ReputationEventRow[];
   getDeathCount(player_id: string): number;

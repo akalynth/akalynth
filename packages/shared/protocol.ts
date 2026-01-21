@@ -23,7 +23,8 @@ export interface ConnectMessage extends BaseMessage {
 
 export interface LoginMessage extends BaseMessage {
   type: 'login';
-  guest_token: string | null;
+  guest_token?: string | null;  // Legacy guest token (optional)
+  token?: string;               // Signed auth token (preferred)
 }
 
 export interface EnterWorldMessage extends BaseMessage {
@@ -265,7 +266,9 @@ export interface LoginAckMessage extends BaseMessage {
   type: 'login_ack';
   ok?: boolean;
   player_id: string;
-  guest_token: string;
+  guest_token?: string;      // Legacy (deprecated)
+  token?: string;            // Signed auth token (preferred)
+  expires_at?: number;       // Token expiry (epoch ms)
   name: string;
   reason?: string;
 }
@@ -355,7 +358,12 @@ export type ErrorCode =
   | 'not_in_world'
   | 'rate_limited'
   | 'kicked'
-  | 'insufficient_gold';
+  | 'insufficient_gold'
+  | 'token_invalid'      // Token signature/format validation failed
+  | 'token_expired'      // Token expired
+  | 'name_taken'         // Character name already in use
+  | 'invalid_name'       // Character name violates rules
+  | 'banned';            // Account banned (deferred, reserved)
 
 export interface RunestoneResultMessage extends BaseMessage {
   type: 'runestone_result';
@@ -781,7 +789,8 @@ export const ServerMessages = {
     guest_token: string,
     name: string,
     ok: boolean = true,
-    reason?: string
+    reason?: string,
+    options?: { token?: string; expires_at?: number }
   ): LoginAckMessage => ({
     type: 'login_ack',
     ok,
@@ -789,6 +798,8 @@ export const ServerMessages = {
     guest_token,
     name,
     reason,
+    ...(options?.token && { token: options.token }),
+    ...(options?.expires_at && { expires_at: options.expires_at }),
   }),
 
   worldState: (map: MapName, player: PlayerPublic, nearby_players: PlayerPublic[]): WorldStateMessage => ({

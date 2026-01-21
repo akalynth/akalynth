@@ -43,6 +43,18 @@ export function getPlayerByName(
   return (stmt.get(name) as PlayerRow) ?? null;
 }
 
+export function getPlayerByNameLower(
+  db: Database.Database,
+  nameLower: string
+): PlayerRow | null {
+  const stmt = db.prepare(`
+    SELECT player_id, name, created_at, created_receipt, deleted_at, auth_method, name_lower
+    FROM players
+    WHERE name_lower = ? AND deleted_at IS NULL
+  `);
+  return (stmt.get(nameLower) as PlayerRow) ?? null;
+}
+
 export function getPlayerCount(db: Database.Database): number {
   const stmt = db.prepare(`
     SELECT COUNT(*) as count FROM players WHERE deleted_at IS NULL

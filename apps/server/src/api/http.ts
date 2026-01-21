@@ -27,6 +27,11 @@ type SessionMeResult = SessionMeResponse | { error: string; status: number };
 type WorldPlayersResult = WorldPlayersResponse | { error: string; status: number };
 type PublicReceiptsRawResult = ReceiptsResponse | { error: string; status: number };
 
+// Identity v0.1: Character creation result
+export type CharacterCreateResult =
+  | { ok: true; player_id: string; name: string; token: string; issued_at: number; expires_at: number }
+  | { ok: false; code: 'name_taken' | 'invalid_name' | 'rate_limited' | 'banned'; message: string; status: number };
+
 export interface ApiDeps {
   getVersion: () => string;
   getTickMs: () => number;
@@ -41,6 +46,8 @@ export interface ApiDeps {
   queryPublicReceiptsRaw?: (params: PublicReceiptsQueryParams) => PublicReceiptsRawResult;
   queryPublicRumors?: (params: PublicRumorsQueryParams) => PublicRumorsResponse;
   getTransparency?: () => TransparencyResponse;
+  // Identity v0.1: Character creation
+  createCharacter?: (name: string) => CharacterCreateResult;
 }
 
 function json(res: ServerResponse, status: number, body: unknown) {
@@ -83,11 +90,45 @@ function isPublicReceiptsRawError(x: PublicReceiptsRawResult): x is { error: str
   return typeof (x as { error?: unknown }).error === 'string';
 }
 
+function isCharacterCreateError(x: CharacterCreateResult): x is CharacterCreateResult & { ok: false } {
+  return !x.ok;
+}
+
+// Parse JSON body from request (max 4KB)
+function parseJsonBody(req: IncomingMessage): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    let size = 0;
+    const MAX_SIZE = 4096;
+
+    req.on('data', (chunk: Buffer) => {
+      size += chunk.length;
+      if (size > MAX_SIZE) {
+        req.destroy();
+        reject(new Error('Body too large'));
+        return;
+      }
+      chunks.push(chunk);
+    });
+
+    req.on('end', () => {
+      try {
+        const body = Buffer.concat(chunks).toString('utf-8');
+        resolve(body ? JSON.parse(body) : {});
+      } catch {
+        reject(new Error('Invalid JSON'));
+      }
+    });
+
+    req.on('error', reject);
+  });
+}
+
 export function handleHttp(
   req: IncomingMessage,
   res: ServerResponse,
   deps: ApiDeps
-): boolean {
+): boolean | Promise<boolean> {
   const url = new URL(req.url ?? '/', 'http://localhost');
   const path = url.pathname;
   const method = (req.method ?? 'GET').toUpperCase();
@@ -172,6 +213,39 @@ export function handleHttp(
       json(res, 200, sess);
     }
     return true;
+  }
+
+  // Character creation (Identity v0.1)
+  if (path === '/v1/characters/create') {
+    if (method !== 'POST') return (methodNotAllowed(res), true);
+    if (!deps.createCharacter)
+      return (json(res, 501, { error: 'not_implemented' }), true);
+
+    // Async: parse body and create character
+    return (async () => {
+      let body: unknown;
+      try {
+        body = await parseJsonBody(req);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : 'Invalid request';
+        json(res, 400, { ok: false, code: 'invalid_name', message: msg });
+        return true;
+      }
+
+      const name = (body as Record<string, unknown>)?.name;
+      if (typeof name !== 'string' || !name.trim()) {
+        json(res, 400, { ok: false, code: 'invalid_name', message: 'Name is required' });
+        return true;
+      }
+
+      const result = deps.createCharacter!(name.trim());
+      if (isCharacterCreateError(result)) {
+        json(res, result.status, { ok: false, code: result.code, message: result.message });
+      } else {
+        json(res, 200, result);
+      }
+      return true;
+    })();
   }
 
   if (method === 'GET' && path === '/v1/session/me') {

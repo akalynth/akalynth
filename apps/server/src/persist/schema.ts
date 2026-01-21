@@ -7,7 +7,7 @@ import type Database from 'better-sqlite3';
 // Schema Version
 // ============================================================================
 
-export const SCHEMA_VERSION = 9;
+export const SCHEMA_VERSION = 10;
 
 // ============================================================================
 // DDL Statements
@@ -19,9 +19,12 @@ CREATE TABLE IF NOT EXISTS players (
   name            TEXT NOT NULL,
   created_at      TEXT NOT NULL,
   created_receipt TEXT NOT NULL UNIQUE,
-  deleted_at      TEXT DEFAULT NULL
+  deleted_at      TEXT DEFAULT NULL,
+  auth_method     TEXT NOT NULL DEFAULT 'guest',
+  name_lower      TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_players_name ON players(name);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_players_name_lower ON players(name_lower) WHERE deleted_at IS NULL;
 `;
 
 const DDL_REPUTATION_EVENTS = `
@@ -280,6 +283,9 @@ function runMigration(db: Database.Database, version: number): void {
     case 9:
       migrateToV9(db);
       break;
+    case 10:
+      migrateToV10(db);
+      break;
     default:
       throw new Error(`Unknown schema version: ${version}`);
   }
@@ -420,6 +426,36 @@ function migrateToV9(db: Database.Database): void {
     'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
   );
   insertMeta.run('schema_version', '9');
+}
+
+function migrateToV10(db: Database.Database): void {
+  // Identity v0.1: Add auth_method and name_lower columns to players table
+  // Enables named character creation with case-insensitive uniqueness
+
+  // Check if auth_method column already exists (idempotent)
+  const columns = db.prepare(`PRAGMA table_info(players)`).all() as Array<{ name: string }>;
+  const hasAuthMethod = columns.some((c) => c.name === 'auth_method');
+  const hasNameLower = columns.some((c) => c.name === 'name_lower');
+
+  if (!hasAuthMethod) {
+    db.exec(`ALTER TABLE players ADD COLUMN auth_method TEXT NOT NULL DEFAULT 'guest';`);
+  }
+
+  if (!hasNameLower) {
+    db.exec(`ALTER TABLE players ADD COLUMN name_lower TEXT;`);
+    // Backfill existing rows
+    db.exec(`UPDATE players SET name_lower = LOWER(name) WHERE name_lower IS NULL;`);
+  }
+
+  // Create unique index for case-insensitive name lookup (only for non-deleted players)
+  // Idempotent: IF NOT EXISTS
+  db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_players_name_lower ON players(name_lower) WHERE deleted_at IS NULL;`);
+
+  // Update schema version
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', '10');
 }
 
 // ============================================================================

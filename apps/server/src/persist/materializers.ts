@@ -58,6 +58,9 @@ const HANDLERS: Record<string, Handler> = {
   // Moderation v1
   [MODERATION_PLAYER_REPORTED]: handlePlayerReported,
   [MODERATION_RESOLVED]: handleModerationResolved,
+  // Identity v0.1
+  [RECEIPT_ACTIONS.CHARACTER_CREATE]: handleCharacterCreate,
+  [RECEIPT_ACTIONS.AUTH_TOKEN_ISSUE]: handleAuthTokenIssue,
 };
 
 // ============================================================================
@@ -597,6 +600,91 @@ function handleModerationResolved(
 }
 
 // ============================================================================
+// Identity v0.1 Handlers
+// ============================================================================
+
+/**
+ * Handle character_create: Named character creation with deterministic outcomes.
+ *
+ * Receipt schema:
+ *   action: 'character_create'
+ *   actor_id: 'system'
+ *   inputs: { player_id, name, name_lower }
+ *   result: 'ok' | 'name_taken' | 'invalid_name' | 'rate_limited' | 'banned'
+ *
+ * Materializer behavior:
+ *   - result: 'ok' -> INSERT player with auth_method='character'
+ *   - Other results -> No DB mutation (audit-only)
+ *
+ * Determinism: Replay produces same player_id <-> name mapping because:
+ *   1. player_id is captured in inputs (not generated during replay)
+ *   2. name_lower enables case-insensitive uniqueness check
+ *   3. All outcomes (including failures) are recorded
+ */
+function handleCharacterCreate(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const inputs = receipt.inputs ?? {};
+  const result = receipt.result;
+
+  // Only materialize successful creations
+  if (result !== 'ok') {
+    // Audit-only: name_taken, invalid_name, rate_limited, banned
+    // No DB mutation for failed attempts (they're still recorded in receipt chain)
+    return;
+  }
+
+  const playerId = inputs.player_id as string;
+  const name = inputs.name as string;
+  const nameLower = inputs.name_lower as string;
+  const timestamp = receipt.timestamp;
+
+  if (!playerId || !name || !nameLower) return;
+
+  // INSERT OR IGNORE: idempotent via UNIQUE player_id
+  // Uses auth_method='character' to distinguish from guest sessions
+  const stmt = db.prepare(`
+    INSERT INTO players (player_id, name, name_lower, created_at, created_receipt, deleted_at, auth_method)
+    VALUES (?, ?, ?, ?, ?, NULL, 'character')
+    ON CONFLICT(player_id) DO UPDATE SET
+      name = excluded.name,
+      name_lower = excluded.name_lower,
+      created_at = excluded.created_at,
+      auth_method = 'character',
+      deleted_at = NULL
+  `);
+  stmt.run(playerId, name, nameLower, timestamp, receiptHash);
+}
+
+/**
+ * Handle auth_token_issue: Audit-only proof of token issuance.
+ *
+ * Receipt schema:
+ *   action: 'auth_token_issue'
+ *   actor_id: player_id
+ *   inputs: { token_id, player_id, issued_at, expires_at, nonce, trigger }
+ *   result: 'ok'
+ *
+ * Materializer behavior:
+ *   - No DB mutation (audit-only receipt)
+ *   - Token validation happens at runtime, not during replay
+ *
+ * Determinism: nonce captures the RNG/time state at issuance,
+ * allowing verification that the same token would be issued on replay.
+ */
+function handleAuthTokenIssue(
+  _db: Database.Database,
+  _receipt: AuditReceipt,
+  _receiptHash: string
+): void {
+  // Audit-only: no DB mutation
+  // The receipt itself is the proof of token issuance
+  // Token validation is runtime-only (tokens are not stored in DB)
+}
+
+// ============================================================================
 // Chronicle Materialization (Phase 4 + 4.4 E2)
 // ============================================================================
 
@@ -718,6 +806,19 @@ export function materializeChronicle(
       const name = (inputs.name as string) ?? `Guest_${playerId.slice(-4)}`;
       // entity_id: null (player_id is the entity)
       insertChronicleEvent(db, playerId, 'player_created', timestamp, originalAction, receiptHash, null, null, null, null, { name });
+      break;
+    }
+
+    // Character create (Identity v0.1 - named character creation)
+    // Only emit chronicle for successful creations (result='ok')
+    case RECEIPT_ACTIONS.CHARACTER_CREATE: {
+      if (receipt.result !== 'ok') break; // Only chronicle successful creations
+      const charPlayerId = inputs.player_id as string;
+      const name = inputs.name as string;
+      if (!charPlayerId || !name) break;
+      // entity_id: null (player_id is the entity)
+      // Use charPlayerId as the chronicle subject (not actor_id which is 'system')
+      insertChronicleEvent(db, charPlayerId, 'player_created', timestamp, originalAction, receiptHash, null, null, null, null, { name, auth_method: 'character' });
       break;
     }
 

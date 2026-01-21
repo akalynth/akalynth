@@ -57,6 +57,12 @@ import {
 import { createPersistenceLayer, computeReceiptHash, generateItemId } from './persist/index.js';
 import type { InventoryItemRow, PersistenceLayer, WorldObjectRow } from './persist/index.js';
 import { publicActorForReceipt, toPublicReceipt } from './audit/public_receipts.js';
+import {
+  loadAuthKeyPair,
+  signToken,
+  verifyToken,
+  generateNonce,
+} from '../../../packages/coordination-kernel/src/identity/index.js';
 import { createAntiCheatRuntime, onChat, onMoveApplied, onMoveIntent } from './anticheat/detector.js';
 import { applyThrottle, checkTemTimeout, handleTemResponse, issueTemChallenge, isThrottled } from './anticheat/tem.js';
 import { loadSharedMap, createWorldState, toPublicPlayer } from './world/state.js';
@@ -1029,6 +1035,23 @@ if (protectedSlotRows.length > 0) {
   console.log(`[persist] Loaded ${protectedSlotRows.length} protected slot entries`);
 }
 
+// Identity v0.1: Load auth key pair for character token signing
+let authKeyPair: ReturnType<typeof loadAuthKeyPair> | null = null;
+try {
+  if (chainPaths.keyPath) {
+    authKeyPair = loadAuthKeyPair(chainPaths.keyPath);
+    console.log(`[identity] Auth key pair loaded (public key: ${authKeyPair.publicKeyHex.slice(0, 16)}...)`);
+  } else {
+    console.warn('[identity] No key path configured, character creation disabled');
+  }
+} catch (err) {
+  console.error('[identity] Failed to load auth key pair:', err);
+  if (isProductionMode()) {
+    console.error('[identity] FATAL: Auth key required in production mode');
+    process.exit(2);
+  }
+}
+
 // Audit logger with persistence hook + origin sealing
 const audit = createAuditLogger({
   receiptPath: chainPaths.receiptsPath,
@@ -1777,6 +1800,95 @@ function resolveSessionMe(guest_token: string, expiredReason: string): SessionMe
   };
 }
 
+// Identity v0.1: Character creation
+// Reserved names (case-insensitive)
+const RESERVED_NAMES = ['guest', 'admin', 'system', 'sovereign', 'moderator', 'gm', 'support'];
+const NAME_PATTERN = /^[A-Za-z][A-Za-z0-9_-]{2,19}$/;
+
+import type { CharacterCreateResult } from './api/http.js';
+
+function createCharacterHandler(name: string): CharacterCreateResult {
+  if (!authKeyPair) {
+    return { ok: false, code: 'rate_limited', message: 'Character creation not available', status: 503 };
+  }
+
+  const nameLower = name.toLowerCase();
+
+  // Validate name format
+  if (!NAME_PATTERN.test(name)) {
+    audit.write({
+      actor_id: 'system',
+      action: 'character_create',
+      inputs: { name, name_lower: nameLower },
+      result: 'invalid_name',
+    });
+    return { ok: false, code: 'invalid_name', message: 'Name must be 3-20 characters, start with a letter, and contain only letters, numbers, underscores, and hyphens', status: 400 };
+  }
+
+  // Check reserved names
+  if (RESERVED_NAMES.includes(nameLower) || nameLower.startsWith('guest_')) {
+    audit.write({
+      actor_id: 'system',
+      action: 'character_create',
+      inputs: { name, name_lower: nameLower },
+      result: 'invalid_name',
+    });
+    return { ok: false, code: 'invalid_name', message: 'This name is reserved', status: 400 };
+  }
+
+  // Check name uniqueness (case-insensitive)
+  const existing = persist.getPlayerByNameLower(nameLower);
+  if (existing) {
+    audit.write({
+      actor_id: 'system',
+      action: 'character_create',
+      inputs: { name, name_lower: nameLower },
+      result: 'name_taken',
+    });
+    return { ok: false, code: 'name_taken', message: 'Character name is already in use', status: 409 };
+  }
+
+  // Generate player ID
+  const playerId = `p_${randomUUID().replace(/-/g, '')}`;
+  const now = Date.now();
+
+  // Emit character_create receipt
+  audit.write({
+    actor_id: 'system',
+    action: 'character_create',
+    inputs: { player_id: playerId, name, name_lower: nameLower, auth_method: 'character' },
+    result: 'ok',
+  });
+
+  // Generate and sign token
+  const nonce = generateNonce();
+  const signed = signToken(playerId, authKeyPair.privateKey, { nowMs: now, nonce });
+
+  // Emit auth_token_issue receipt
+  audit.write({
+    actor_id: playerId,
+    action: 'auth_token_issue',
+    inputs: {
+      token_id: signed.payload.token_id,
+      player_id: playerId,
+      issued_at: signed.payload.issued_at,
+      expires_at: signed.payload.expires_at,
+      nonce,
+      trigger: 'character_create',
+    },
+    result: 'ok',
+  });
+
+  return {
+    ok: true,
+    player_id: playerId,
+    name,
+    token: signed.wire,
+    issued_at: signed.payload.issued_at,
+    expires_at: signed.payload.expires_at,
+  };
+}
+
 // HTTP control plane
 const httpServer = http.createServer((req, res) => {
   const gate = tlsGate(req);
@@ -1877,6 +1989,93 @@ const httpServer = http.createServer((req, res) => {
       });
       return { player_id, guest_token, name };
     },
+    // Identity v0.1: Character creation
+    createCharacter: (name: string) => {
+      // Check if auth key is available
+      if (!authKeyPair) {
+        return { ok: false as const, code: 'rate_limited' as const, message: 'Character creation not available', status: 503 };
+      }
+
+      // Name validation
+      const NAME_PATTERN = /^[A-Za-z][A-Za-z0-9_-]{2,19}$/;
+      const RESERVED_NAMES = ['guest', 'admin', 'system', 'sovereign', 'moderator', 'gm', 'support'];
+      const nameLower = name.toLowerCase();
+
+      if (!NAME_PATTERN.test(name)) {
+        audit.write({
+          player_id: 'system',
+          action: 'character_create',
+          inputs: { player_id: '', name, name_lower: nameLower },
+          result: 'invalid_name',
+        });
+        return { ok: false as const, code: 'invalid_name' as const, message: 'Name must be 3-20 characters, start with a letter, and contain only letters, numbers, underscores, or hyphens', status: 400 };
+      }
+
+      if (RESERVED_NAMES.includes(nameLower) || nameLower.startsWith('guest_')) {
+        audit.write({
+          player_id: 'system',
+          action: 'character_create',
+          inputs: { player_id: '', name, name_lower: nameLower },
+          result: 'invalid_name',
+        });
+        return { ok: false as const, code: 'invalid_name' as const, message: 'This name is reserved', status: 400 };
+      }
+
+      // Check if name is taken (via persistence layer)
+      const existingPlayer = persist.db.prepare(
+        'SELECT player_id FROM players WHERE name_lower = ? AND deleted_at IS NULL'
+      ).get(nameLower) as { player_id: string } | undefined;
+
+      if (existingPlayer) {
+        audit.write({
+          player_id: 'system',
+          action: 'character_create',
+          inputs: { player_id: '', name, name_lower: nameLower },
+          result: 'name_taken',
+        });
+        return { ok: false as const, code: 'name_taken' as const, message: 'This name is already taken', status: 409 };
+      }
+
+      // Generate player_id and token
+      const now = Date.now();
+      const player_id = `p_${randomUUID()}`;
+      const nonce = generateNonce();
+
+      // Sign the token
+      const signedToken = signToken(player_id, authKeyPair.privateKey, { nowMs: now, nonce });
+
+      // Emit character_create receipt
+      audit.write({
+        player_id: 'system',
+        action: 'character_create',
+        inputs: { player_id, name, name_lower: nameLower },
+        result: 'ok',
+      });
+
+      // Emit auth_token_issue receipt (audit-only, captures nonce for determinism)
+      audit.write({
+        player_id,
+        action: 'auth_token_issue',
+        inputs: {
+          token_id: signedToken.payload.token_id,
+          player_id,
+          issued_at: signedToken.payload.issued_at,
+          expires_at: signedToken.payload.expires_at,
+          nonce,
+          trigger: 'character_create',
+        },
+        result: 'ok',
+      });
+
+      return {
+        ok: true as const,
+        player_id,
+        name,
+        token: signedToken.wire,
+        issued_at: signedToken.payload.issued_at,
+        expires_at: signedToken.payload.expires_at,
+      };
+    },
     getSessionMe: (guest_token: string) => resolveSessionMe(guest_token, 'expired_on_me'),
     getWorldPlayers: (map: MapName, query) => {
       const w = worlds[map];
@@ -1944,7 +2143,19 @@ const httpServer = http.createServer((req, res) => {
     },
   });
 
-  if (!handled) {
+  // Handle both sync and async responses from handleHttp
+  if (handled instanceof Promise) {
+    handled.then((result) => {
+      if (!result) {
+        res.statusCode = 404;
+        res.end('not found');
+      }
+    }).catch((err) => {
+      console.error('[http] Error handling request:', err);
+      res.statusCode = 500;
+      res.end('internal error');
+    });
+  } else if (!handled) {
     res.statusCode = 404;
     res.end('not found');
   }
@@ -2312,11 +2523,54 @@ function processSessionQueue(s: Session, now: number) {
 
       case 'login': {
         let player_id: string;
-        let guest_token: string;
+        let guest_token: string | undefined;
         let name: string;
+        let authToken: string | undefined;
+        let tokenExpiresAt: number | undefined;
 
-        // HTTP-first: token provided
-        if (msg.guest_token) {
+        // Identity v0.1: Signed token takes priority
+        if (msg.token && authKeyPair) {
+          const tokenResult = verifyToken(msg.token, authKeyPair.publicKey, { nowMs: msgNow });
+
+          if (!tokenResult.ok) {
+            const errorCode = tokenResult.error === 'expired' ? 'token_expired' : 'token_invalid';
+            send(s.ws, ServerMessages.error(errorCode, `Token ${tokenResult.error}`));
+            audit.write({
+              player_id: s.connId,
+              action: 'login',
+              inputs: { token_provided: true, error: tokenResult.error },
+              result: 'rejected',
+            });
+            break;
+          }
+
+          // Look up player name from DB
+          const playerRow = persist.getPlayer(tokenResult.payload.player_id);
+          if (!playerRow) {
+            send(s.ws, ServerMessages.error('not_authenticated', 'Player not found'));
+            audit.write({
+              player_id: tokenResult.payload.player_id,
+              action: 'login',
+              inputs: { token_provided: true, error: 'player_not_found' },
+              result: 'rejected',
+            });
+            break;
+          }
+
+          player_id = tokenResult.payload.player_id;
+          name = playerRow.name;
+          authToken = msg.token;
+          tokenExpiresAt = tokenResult.payload.expires_at;
+
+          audit.write({
+            player_id,
+            action: 'login',
+            inputs: { source: 'token', auth_method: 'character' },
+            result: 'ok',
+          });
+        }
+        // Legacy: guest_token provided
+        else if (msg.guest_token) {
           const minted = guestSessions.get(msg.guest_token);
 
           if (!minted) {
@@ -2389,7 +2643,7 @@ function processSessionQueue(s: Session, now: number) {
           });
         }
 
-        s.guestToken = guest_token;
+        s.guestToken = guest_token ?? null;
         s.currentMap = 'Rookguard';
         s.tutorial = { move: false, chat: false, tem: false, gate: false, complete: false };
         s.ledgerHesitationArmed = false;
@@ -2436,7 +2690,7 @@ function processSessionQueue(s: Session, now: number) {
         if (isSovereignByName) {
           if (activeSovereignSessionId && activeSovereignSessionId !== s.connId) {
             // Reject duplicate sovereign
-            send(s.ws, ServerMessages.loginAck(player_id, guest_token, name, false, 'sovereign_already_active'));
+            send(s.ws, ServerMessages.loginAck(player_id, guest_token ?? '', name, false, 'sovereign_already_active'));
             audit.write({
               player_id,
               action: SOVEREIGN_DECLARED_ACTION,
@@ -2465,7 +2719,14 @@ function processSessionQueue(s: Session, now: number) {
           });
         }
 
-        send(s.ws, ServerMessages.loginAck(player_id, guest_token, name));
+        send(s.ws, ServerMessages.loginAck(
+          player_id,
+          guest_token ?? '',
+          name,
+          true,
+          undefined,
+          authToken ? { token: authToken, expires_at: tokenExpiresAt } : undefined
+        ));
         break;
       }
 

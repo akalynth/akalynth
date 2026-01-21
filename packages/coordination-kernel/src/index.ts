@@ -18,6 +18,9 @@ export * from './receipt/index.js';
 // Capability system (Days 6-7: COMPLETE)
 export * from './capability/index.js';
 
+// Identity system (v0.1: Character Identity)
+export * from './identity/index.js';
+
 // Version info
 export const COORDINATION_KERNEL_VERSION = '0.1.0';
 
