@@ -46,65 +46,125 @@ Current Android D-pad is 4-direction only. Spec requires 8-direction for diagona
 
 **Implementation**:
 ```kotlin
-// DPad.kt - Upgrade to 8-direction
+// DPad.kt - Upgrade to 8-direction with continuous press/release
 @Composable
 fun DPad(
     modifier: Modifier = Modifier,
-    onDirection: (Direction) -> Unit,
-    onRelease: () -> Unit = {}
+    onDirectionStart: (Direction) -> Unit,  // Called when press begins
+    onDirectionEnd: () -> Unit              // Called when released
 ) {
     val buttonSize = 44.dp  // Minimum hitbox per spec
 
     Column(modifier = modifier) {
         // Row 1: NW, N, NE
         Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-            DirectionButton("↖", Direction.NORTHWEST, buttonSize, onDirection)
-            DirectionButton("↑", Direction.NORTH, buttonSize, onDirection)
-            DirectionButton("↗", Direction.NORTHEAST, buttonSize, onDirection)
+            DirectionButton("↖", Direction.NORTHWEST, buttonSize, onDirectionStart, onDirectionEnd)
+            DirectionButton("↑", Direction.NORTH, buttonSize, onDirectionStart, onDirectionEnd)
+            DirectionButton("↗", Direction.NORTHEAST, buttonSize, onDirectionStart, onDirectionEnd)
         }
         // Row 2: W, Center, E
         Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-            DirectionButton("←", Direction.WEST, buttonSize, onDirection)
+            DirectionButton("←", Direction.WEST, buttonSize, onDirectionStart, onDirectionEnd)
             Spacer(Modifier.size(buttonSize))  // Dead center
-            DirectionButton("→", Direction.EAST, buttonSize, onDirection)
+            DirectionButton("→", Direction.EAST, buttonSize, onDirectionStart, onDirectionEnd)
         }
         // Row 3: SW, S, SE
         Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-            DirectionButton("↙", Direction.SOUTHWEST, buttonSize, onDirection)
-            DirectionButton("↓", Direction.SOUTH, buttonSize, onDirection)
-            DirectionButton("↘", Direction.SOUTHEAST, buttonSize, onDirection)
+            DirectionButton("↙", Direction.SOUTHWEST, buttonSize, onDirectionStart, onDirectionEnd)
+            DirectionButton("↓", Direction.SOUTH, buttonSize, onDirectionStart, onDirectionEnd)
+            DirectionButton("↘", Direction.SOUTHEAST, buttonSize, onDirectionStart, onDirectionEnd)
         }
+    }
+}
+
+@Composable
+private fun DirectionButton(
+    symbol: String,
+    direction: Direction,
+    size: Dp,
+    onStart: (Direction) -> Unit,
+    onEnd: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(size)
+            .background(AkalynthColors.Surface, RoundedCornerShape(8.dp))
+            .pointerInput(direction) {
+                awaitEachGesture {
+                    val down = awaitFirstDown()
+                    onStart(direction)
+                    // Wait for release (handles drag-off gracefully)
+                    waitForUpOrCancellation()
+                    onEnd()
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(symbol, color = AkalynthColors.TextPrimary, fontSize = 18.sp)
     }
 }
 ```
 
+**Key behavior**: `onDirectionStart` fires on press, `onDirectionEnd` fires on release. This enables continuous movement while held, not discrete taps.
+
 ### 1.2 Enforce Dead Zone
 
-Spec requires ≥100px between D-pad and action buttons.
+Spec requires ≥100px between D-pad and action buttons. Simple alignment is **not enough** — must measure and enforce at runtime for small screens and system insets.
 
 ```kotlin
 @Composable
 fun GameHUD() {
-    Box(modifier = Modifier.fillMaxSize()) {
+    val density = LocalDensity.current
+    val minDeadZonePx = with(density) { AkalynthDimensions.DeadZone.toPx() }
+
+    var dpadBounds by remember { mutableStateOf(Rect.Zero) }
+    var actionBounds by remember { mutableStateOf(Rect.Zero) }
+
+    // Validate dead zone in debug builds
+    LaunchedEffect(dpadBounds, actionBounds) {
+        if (dpadBounds != Rect.Zero && actionBounds != Rect.Zero) {
+            val gap = actionBounds.left - dpadBounds.right
+            check(gap >= minDeadZonePx) {
+                "Dead zone violation: ${gap}px < ${minDeadZonePx}px required"
+            }
+        }
+    }
+
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.systemGestures)  // Respect edge gestures
+    ) {
+        val maxWidth = constraints.maxWidth
+        val dpadWidth = with(density) { (44.dp * 3 + 4.dp).toPx() }  // 3 buttons + gaps
+        val actionWidth = with(density) { (48.dp * 2 + 10.dp).toPx() }  // 2x2 grid estimate
+
+        // Calculate if we have room for dead zone
+        val availableGap = maxWidth - dpadWidth - actionWidth - with(density) { 32.dp.toPx() * 2 }
+        val effectiveDeadZone = maxOf(availableGap, minDeadZonePx)
+
         // Left thumb zone - D-pad
         DPad(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .padding(start = 16.dp, bottom = 32.dp)
+                .onGloballyPositioned { dpadBounds = it.boundsInRoot() },
+            onDirectionStart = { /* ... */ },
+            onDirectionEnd = { /* ... */ }
         )
 
-        // Dead zone enforcer - invisible spacer
-        // Actions positioned with ≥100px gap
-
-        // Right thumb zone - Actions
+        // Right thumb zone - Actions (positioned with calculated gap)
         ActionPanel(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp, bottom = 32.dp)
+                .onGloballyPositioned { actionBounds = it.boundsInRoot() }
         )
     }
 }
 ```
+
+**Why this matters**: On small screens or landscape mode with keyboard, naive alignment can violate the 100px rule. Runtime measurement catches violations early.
 
 ---
 
@@ -140,47 +200,61 @@ fun GameHUD() {
 fun Tier1Button(
     text: String,
     icon: ImageVector,
-    cooldownMs: Long = 500,
+    cooldownMs: Int = 500,
     onClick: () -> Unit
 ) {
     var isPressed by remember { mutableStateOf(false) }
-    var cooldownRemaining by remember { mutableStateOf(0f) }
     val scale by animateFloatAsState(if (isPressed) 0.95f else 1f)
+
+    // Use Animatable for smooth cooldown without LaunchedEffect churn
+    val cooldownProgress = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
 
     Box(
         modifier = Modifier
             .sizeIn(minWidth = 44.dp, minHeight = 44.dp)
             .scale(scale)
+            .background(AkalynthColors.Surface, RoundedCornerShape(8.dp))
             .pointerInput(Unit) {
                 detectTapGestures(
                     onPress = {
-                        if (cooldownRemaining <= 0f) {
+                        if (cooldownProgress.value == 0f) {
                             isPressed = true
                             tryAwaitRelease()
                             isPressed = false
                             onClick()
-                            cooldownRemaining = 1f
+                            // Start cooldown animation (1.0 -> 0.0)
+                            scope.launch {
+                                cooldownProgress.snapTo(1f)
+                                cooldownProgress.animateTo(
+                                    targetValue = 0f,
+                                    animationSpec = tween(cooldownMs, easing = LinearEasing)
+                                )
+                            }
                         }
                     }
                 )
-            }
+            },
+        contentAlignment = Alignment.Center
     ) {
-        // Button content + cooldown overlay
-        Icon(icon, contentDescription = text)
-        if (cooldownRemaining > 0f) {
-            CooldownOverlay(progress = cooldownRemaining)
-        }
-    }
+        Icon(icon, contentDescription = text, tint = AkalynthColors.Gold)
 
-    // Cooldown timer
-    LaunchedEffect(cooldownRemaining) {
-        if (cooldownRemaining > 0f) {
-            delay(16)  // ~60fps
-            cooldownRemaining = (cooldownRemaining - 16f / cooldownMs).coerceAtLeast(0f)
+        // Cooldown overlay
+        if (cooldownProgress.value > 0f) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        AkalynthColors.Background.copy(alpha = 0.6f * cooldownProgress.value),
+                        RoundedCornerShape(8.dp)
+                    )
+            )
         }
     }
 }
 ```
+
+**Why Animatable**: Avoids `LaunchedEffect(cooldownRemaining)` which relaunches on every frame update. Single coroutine from `animateTo()` is cleaner and more performant.
 
 ### 2.2 Tier 2 - Hold to Confirm (1.5s)
 
@@ -235,6 +309,7 @@ fun Tier2HoldButton(
 ) {
     var progress by remember { mutableStateOf(0f) }
     var isHolding by remember { mutableStateOf(false) }
+    val haptics = LocalHapticFeedback.current
 
     // Progress timer
     LaunchedEffect(isHolding) {
@@ -245,6 +320,7 @@ fun Tier2HoldButton(
                 progress = ((System.currentTimeMillis() - startTime) / holdDurationMs.toFloat())
                     .coerceIn(0f, 1f)
                 if (progress >= 1f) {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     onConfirm()
                     isHolding = false
                 }
@@ -258,31 +334,55 @@ fun Tier2HoldButton(
     Box(
         modifier = Modifier
             .size(80.dp)
+            .background(AkalynthColors.Surface, CircleShape)
             .pointerInput(Unit) {
                 detectTapGestures(
                     onPress = {
                         isHolding = true
-                        val released = tryAwaitRelease()
+                        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        tryAwaitRelease()
                         isHolding = false
                     }
                 )
             },
         contentAlignment = Alignment.Center
     ) {
-        // Progress ring
-        Canvas(modifier = Modifier.fillMaxSize()) {
+        // Background ring (track)
+        Canvas(modifier = Modifier.fillMaxSize().padding(4.dp)) {
             drawArc(
-                color = Color.Gold,
-                startAngle = -90f,
-                sweepAngle = 360f * progress,
+                color = AkalynthColors.Background,
+                startAngle = 0f,
+                sweepAngle = 360f,
                 useCenter = false,
                 style = Stroke(width = 4.dp.toPx())
             )
         }
-        Text(if (progress >= 1f) "DONE" else "HOLD")
+
+        // Progress ring (fills as held)
+        Canvas(modifier = Modifier.fillMaxSize().padding(4.dp)) {
+            drawArc(
+                color = AkalynthColors.Gold,
+                startAngle = -90f,
+                sweepAngle = 360f * progress,
+                useCenter = false,
+                style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+            )
+        }
+
+        Text(
+            text = if (progress >= 1f) "DONE" else "HOLD",
+            color = AkalynthColors.TextPrimary,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 ```
+
+**Key additions**:
+- Haptic feedback on press start and completion
+- Background track ring for visual context
+- Rounded stroke caps for polish
+- All colors use `AkalynthColors` tokens
 
 ### 2.3 Tier 3 - Slide to Confirm
 
@@ -341,42 +441,66 @@ fun Tier3SlideConfirm(
     var slideProgress by remember { mutableStateOf(0f) }
     val threshold = 0.9f  // Must slide 90% to confirm
 
+    // Track dimensions computed at runtime (not hardcoded)
+    var trackWidthPx by remember { mutableStateOf(0f) }
+    val thumbSizeDp = 56.dp
+    val density = LocalDensity.current
+    val thumbSizePx = with(density) { thumbSizeDp.toPx() }
+
+    // Snap-back animation
+    val animatedProgress = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(slideProgress) {
+        animatedProgress.snapTo(slideProgress)
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFF1a1a2e), RoundedCornerShape(16.dp))
+            .background(AkalynthColors.SurfaceVariant, RoundedCornerShape(16.dp))
             .padding(24.dp)
     ) {
         // Header
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.Warning, contentDescription = null, tint = Color.Yellow)
+            Icon(Icons.Default.Warning, contentDescription = null, tint = AkalynthColors.Warning)
             Spacer(Modifier.width(8.dp))
-            Text("DROP $itemRarity", color = Color.Yellow, fontWeight = FontWeight.Bold)
+            Text("DROP $itemRarity", color = AkalynthColors.Warning, fontWeight = FontWeight.Bold)
         }
 
         Spacer(Modifier.height(16.dp))
 
         // Item info
-        Text("⚔ $itemName", fontSize = 18.sp, color = Color.White)
+        Text("⚔ $itemName", fontSize = 18.sp, color = AkalynthColors.TextPrimary)
 
         Spacer(Modifier.height(24.dp))
 
-        // Slide track
+        // Slide track - measure width at runtime
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
-                .background(Color(0xFF0d0d1a), RoundedCornerShape(28.dp))
+                .height(thumbSizeDp)
+                .background(AkalynthColors.Background, RoundedCornerShape(28.dp))
+                .onSizeChanged { size ->
+                    trackWidthPx = size.width.toFloat()
+                }
                 .draggable(
                     orientation = Orientation.Horizontal,
-                    state = rememberDraggableState { delta ->
-                        slideProgress = (slideProgress + delta / 300f).coerceIn(0f, 1f)
+                    state = rememberDraggableState { deltaPx ->
+                        if (trackWidthPx > thumbSizePx) {
+                            val maxTravel = trackWidthPx - thumbSizePx
+                            slideProgress = (slideProgress + deltaPx / maxTravel).coerceIn(0f, 1f)
+                        }
                     },
                     onDragStopped = {
                         if (slideProgress >= threshold) {
                             onConfirm()
                         } else {
-                            slideProgress = 0f  // Snap back
+                            // Snap back with animation
+                            scope.launch {
+                                animatedProgress.animateTo(0f, tween(200))
+                                slideProgress = 0f
+                            }
                         }
                     }
                 )
@@ -385,19 +509,22 @@ fun Tier3SlideConfirm(
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .fillMaxWidth(slideProgress)
-                    .background(Color(0xFF4a4a6a), RoundedCornerShape(28.dp))
+                    .fillMaxWidth(animatedProgress.value)
+                    .background(AkalynthColors.Surface, RoundedCornerShape(28.dp))
             )
 
-            // Thumb
+            // Thumb - position calculated from track width at runtime
             Box(
                 modifier = Modifier
-                    .offset { IntOffset((slideProgress * 244).roundToInt().dp.roundToPx(), 0) }
-                    .size(56.dp)
-                    .background(Color.Gold, CircleShape),
+                    .offset {
+                        val maxOffsetPx = (trackWidthPx - thumbSizePx).coerceAtLeast(0f)
+                        IntOffset((animatedProgress.value * maxOffsetPx).roundToInt(), 0)
+                    }
+                    .size(thumbSizeDp)
+                    .background(AkalynthColors.Gold, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.ChevronRight, contentDescription = "Slide", tint = Color.Black)
+                Icon(Icons.Default.ChevronRight, contentDescription = "Slide", tint = AkalynthColors.Background)
             }
 
             // Label
@@ -406,7 +533,7 @@ fun Tier3SlideConfirm(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
                     .padding(end = 16.dp),
-                color = Color.White.copy(alpha = 0.7f)
+                color = AkalynthColors.TextSecondary
             )
         }
 
@@ -414,12 +541,19 @@ fun Tier3SlideConfirm(
 
         Text(
             if (slideProgress >= threshold) "Release to confirm" else "Slide to confirm",
-            color = Color.White.copy(alpha = 0.5f),
+            color = AkalynthColors.TextSecondary,
             fontSize = 12.sp,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
     }
 }
+```
+
+**Key fixes**:
+- `trackWidthPx` measured via `onSizeChanged`, not hardcoded
+- Draggable delta is in pixels, converted using runtime track width
+- Snap-back uses `Animatable` for smooth return
+- All colors use `AkalynthColors` tokens
 ```
 
 ---
