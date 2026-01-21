@@ -26,6 +26,7 @@ class WireTracerActivity : Activity() {
     private lateinit var connectBtn: Button
     private lateinit var moveNorthBtn: Button
     private lateinit var client: AkalynthClient
+    private var playerName: String? = null
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val messages = mutableListOf<String>()
@@ -90,11 +91,17 @@ class WireTracerActivity : Activity() {
             override fun onMessage(type: String, json: JSONObject) {
                 val entry = formatMessage("RX", type, json)
                 appendLog(entry)
+                if (type == "login_ack" && json.optBoolean("ok", false)) {
+                    val name = json.optString("name")
+                    if (name.isNotBlank()) {
+                        playerName = name
+                    }
+                }
             }
 
             override fun onStateChange(state: AkalynthClient.State) {
                 mainHandler.post {
-                    statusView.text = "State: ${state.name}"
+                    updateStatus(state)
                     moveNorthBtn.isEnabled = state == AkalynthClient.State.IN_WORLD
                     connectBtn.isEnabled = state == AkalynthClient.State.DISCONNECTED
                 }
@@ -121,6 +128,11 @@ class WireTracerActivity : Activity() {
     private fun connect() {
         appendLog("Connecting to ${BuildConfig.WS_BASE_URL}...")
         client.connect()
+    }
+
+    private fun updateStatus(state: AkalynthClient.State) {
+        val suffix = playerName?.takeIf { it.isNotBlank() }?.let { " ($it)" } ?: ""
+        statusView.text = "State: ${state.name}$suffix"
     }
 
     private fun formatMessage(dir: String, type: String, json: JSONObject): String {

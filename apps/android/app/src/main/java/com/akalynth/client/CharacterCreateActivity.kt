@@ -91,6 +91,7 @@ class CharacterCreateActivity : Activity() {
     }
 
     private fun onCreateTapped() {
+        if (!createButton.isEnabled) return
         val name = nameInput.text?.toString()?.trim().orEmpty()
         if (name.isBlank()) {
             setStatus("Enter a name.")
