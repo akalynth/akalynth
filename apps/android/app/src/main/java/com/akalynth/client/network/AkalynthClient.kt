@@ -1,6 +1,7 @@
 package com.akalynth.client.network
 
 import com.akalynth.client.BuildConfig
+import android.util.Log
 import okhttp3.*
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
@@ -128,6 +129,7 @@ class AkalynthClient(
                 put("token", resolvedToken)
                 put("guest_token", JSONObject.NULL)
             } else {
+                Log.w("AkalynthAuth", "No auth token present -> falling back to guest login")
                 if (resolvedGuest != null) {
                     put("guest_token", resolvedGuest)
                 } else {
