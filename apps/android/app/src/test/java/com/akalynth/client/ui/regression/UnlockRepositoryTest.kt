@@ -107,14 +107,14 @@ class UnlockRepositoryTest {
             repository.unlockState.collect { emissions.add(it) }
         }
 
-        // Initial emission
-        testScheduler.advanceUntilIdle()
+        // Initial emission - use advanceUntilIdle() which is a TestScope method
+        advanceUntilIdle()
         assertTrue("Should have initial emission", emissions.isNotEmpty())
         assertEquals(0, emissions.last().stage)
 
         // Record combat
         repository.recordCombat()
-        testScheduler.advanceUntilIdle()
+        advanceUntilIdle()
         assertTrue("Should have stage 1 after combat", emissions.any { it.stage == 1 })
 
         job.cancel()
