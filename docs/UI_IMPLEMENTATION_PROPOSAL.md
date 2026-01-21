@@ -5,6 +5,8 @@
 **Baseline**: UI_PROPOSAL.md v0.3 (FROZEN)
 **Date**: 2026-01-21
 
+> **Normative**: This document is normative for Android UI implementation unless superseded by a higher-version `UI_PROPOSAL.md`. Debug client defers to Android behavior when divergent.
+
 ---
 
 ## Executive Summary
