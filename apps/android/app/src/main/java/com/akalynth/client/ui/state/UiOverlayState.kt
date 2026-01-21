@@ -121,13 +121,15 @@ data class ChronicleEventDetails(
 )
 
 /**
- * UI overlay state for death experience flow.
+ * UI overlay state for modal overlays.
  *
  * State transitions:
  * - None → Toast(notice) : on death event
  * - Toast(notice) → Recap(event) : on toast tap
  * - Toast(notice) → None : on auto-dismiss timeout
  * - Recap(event) → None : on dismiss
+ * - None → ConfirmDrop(slot, item) : on hotbar slot long-press
+ * - ConfirmDrop → None : on confirm or cancel
  *
  * Chronicle can also open Recap directly:
  * - None → Recap(event) : on chronicle death row tap
@@ -141,6 +143,17 @@ sealed class UiOverlayState {
 
     /** Death recap sheet displayed */
     data class Recap(val event: ChronicleEvent) : UiOverlayState()
+
+    /**
+     * Hotbar drop confirmation overlay.
+     * Routes to Tier2 (hold) or Tier3 (slide) based on item rarity.
+     */
+    data class ConfirmDrop(
+        val slotIndex: Int,
+        val itemId: String,
+        val itemName: String,
+        val isLegendary: Boolean
+    ) : UiOverlayState()
 }
 
 /**
