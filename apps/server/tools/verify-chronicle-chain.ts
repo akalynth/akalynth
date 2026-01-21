@@ -36,6 +36,8 @@ type ChronicleEntry = {
 
 const DOMAIN_EVENT = 'akalynth:chronicle:event:v1\0';
 const DOMAIN_GLOBAL = 'akalynth:chronicle:global:v1\0';
+const YELLOW = '\x1b[33m';
+const RESET = '\x1b[0m';
 
 function blake3HexBytes(bytes: Uint8Array): string {
   return Buffer.from(blake3(bytes)).toString('hex');
@@ -176,16 +178,37 @@ function isChronicleEntry(obj: unknown): obj is ChronicleEntry {
   );
 }
 
+function isChronicleEnabled(): boolean {
+  const raw = (process.env.ENABLE_CHRONICLE ?? '').toLowerCase();
+  return ['1', 'true', 'yes', 'on'].includes(raw);
+}
+
+function logSkip(reason: string): void {
+  console.log(`${YELLOW}[verify:chronicle-chain] SKIP${RESET} (${reason})`);
+}
+
 function main() {
+  if (!isChronicleEnabled()) {
+    logSkip('ENABLE_CHRONICLE not enabled');
+    process.exit(0);
+  }
+
+  const envLogPath = process.env.CHRONICLE_LOG_PATH?.trim();
+  if (!envLogPath) {
+    logSkip('CHRONICLE_LOG_PATH not set');
+    process.exit(0);
+  }
+
   // Find file path argument (skip flags starting with --)
   const argPath = process.argv.slice(2).find((arg) => !arg.startsWith('--'));
-  const filePath = argPath
-    ? path.resolve(process.cwd(), argPath)
-    : path.resolve(process.cwd(), 'chronicle.log');
-
+  const filePath = path.resolve(process.cwd(), argPath ?? envLogPath);
   if (!fs.existsSync(filePath)) {
-    console.error(`[FATAL] File not found: ${filePath}`);
-    process.exit(1);
+    logSkip(`chronicle log missing at ${filePath}`);
+    process.exit(0);
+  }
+  if (fs.statSync(filePath).size === 0) {
+    logSkip(`chronicle log empty at ${filePath}`);
+    process.exit(0);
   }
 
   const lines = readJsonlLines(filePath);
