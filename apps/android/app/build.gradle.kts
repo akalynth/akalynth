@@ -15,12 +15,21 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "0.1.0"
-
-        buildConfigField("String", "WS_BASE_URL", "\"ws://10.0.2.2:3000\"")
-        buildConfigField("String", "HTTP_BASE_URL", "\"http://10.0.2.2:3000\"")
     }
 
     buildTypes {
+        debug {
+            // Local dev: use emulator loopback
+            buildConfigField("String", "WS_BASE_URL", "\"ws://10.0.2.2:3000\"")
+            buildConfigField("String", "HTTP_BASE_URL", "\"http://10.0.2.2:3000\"")
+        }
+        create("beta") {
+            // Beta server: wss://beta-api.akalynth.com
+            initWith(getByName("debug"))
+            matchingFallbacks += listOf("debug")
+            buildConfigField("String", "WS_BASE_URL", "\"wss://beta-api.akalynth.com\"")
+            buildConfigField("String", "HTTP_BASE_URL", "\"https://beta-api.akalynth.com\"")
+        }
         release {
             isMinifyEnabled = true
             proguardFiles(
@@ -50,6 +59,7 @@ android {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.appcompat)
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
