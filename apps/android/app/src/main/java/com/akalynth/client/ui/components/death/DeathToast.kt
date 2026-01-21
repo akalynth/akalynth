@@ -64,11 +64,24 @@ fun DeathToast(
 ) {
     val haptics = LocalHapticFeedback.current
 
-    // Auto-dismiss timer
+    // Track if user already tapped (prevents timeout from clearing Recap state)
+    var tapped by remember { mutableStateOf(false) }
+
+    // Reset tapped flag when toast becomes visible again
+    LaunchedEffect(visible) {
+        if (visible) {
+            tapped = false
+        }
+    }
+
+    // Auto-dismiss timer (only fires if user hasn't tapped)
     LaunchedEffect(visible) {
         if (visible) {
             delay(TOAST_DURATION_MS)
-            onDismiss()
+            // Only dismiss if user hasn't already tapped to open recap
+            if (!tapped) {
+                onDismiss()
+            }
         }
     }
 
@@ -88,6 +101,7 @@ fun DeathToast(
                 .background(Color(0xDD1A0A0A)) // Dark red-tinted background
                 .clickable {
                     haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    tapped = true  // Prevent timeout from clearing Recap
                     onTap()
                 }
                 .padding(16.dp)
