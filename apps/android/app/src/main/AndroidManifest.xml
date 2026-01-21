@@ -24,6 +24,10 @@
             android:name=".WireTracerActivity"
             android:exported="true"
             android:label="Wire Tracer" />
+        <activity
+            android:name=".CharacterCreateActivity"
+            android:exported="true"
+            android:label="Create Character" />
     </application>
 
 </manifest>
