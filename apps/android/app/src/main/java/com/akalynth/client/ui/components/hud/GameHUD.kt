@@ -1,7 +1,16 @@
 package com.akalynth.client.ui.components.hud
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -109,63 +118,113 @@ fun GameHUD(
                 }
         )
 
-        // Menu: visible at stage >= 1
-        if (stage >= 1) {
-            menu?.invoke(
-                Modifier
-                    .testTag("GameHUD_Menu")
-                    .constrainAs(menuRef) {
-                        end.linkTo(chatRef.start, margin = 8.dp)
-                        top.linkTo(parent.top, margin = 16.dp)
-                    }
+        // Menu: visible at stage >= 1 with animation
+        // Reserved slot ensures layout stability
+        Box(
+            modifier = Modifier
+                .constrainAs(menuRef) {
+                    end.linkTo(chatRef.start, margin = 8.dp)
+                    top.linkTo(parent.top, margin = 16.dp)
+                }
+        ) {
+            // Reserved spacer for layout stability when menu hidden
+            Spacer(
+                modifier = Modifier
+                    .size(MIN_TOUCH_TARGET)
+                    .testTag("GameHUD_Menu_Reserved")
             )
+
+            AnimatedVisibility(
+                visible = stage >= 1 && menu != null,
+                enter = fadeIn() + scaleIn(initialScale = 0.8f),
+                exit = fadeOut() + scaleOut(targetScale = 0.8f)
+            ) {
+                menu?.invoke(Modifier.testTag("GameHUD_Menu"))
+            }
         }
 
-        // Hotbar: visible at stage >= 2
-        if (stage >= 2) {
-            hotbar?.invoke(
-                Modifier
-                    .testTag("GameHUD_Hotbar")
-                    .constrainAs(hotbarRef) {
-                        start.linkTo(parent.start)
-                        end.linkTo(parent.end)
-                        bottom.linkTo(dpadRef.top, margin = 16.dp)
-                    }
-            )
-
-            // Why button: visible at stage >= 2
-            why?.invoke(
-                Modifier
-                    .testTag("GameHUD_Why")
-                    .constrainAs(whyRef) {
-                        end.linkTo(parent.end, margin = 16.dp)
-                        bottom.linkTo(actionsRef.top, margin = 8.dp)
-                    }
-            )
+        // Hotbar: visible at stage >= 2 with slide animation
+        Box(
+            modifier = Modifier
+                .constrainAs(hotbarRef) {
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                    bottom.linkTo(dpadRef.top, margin = 16.dp)
+                }
+        ) {
+            AnimatedVisibility(
+                visible = stage >= 2 && hotbar != null,
+                enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
+            ) {
+                hotbar?.invoke(Modifier.testTag("GameHUD_Hotbar"))
+            }
         }
 
-        // Rep/Gold and Nearby: visible at stage >= 3
-        if (stage >= 3) {
-            repGold?.invoke(
-                Modifier
-                    .testTag("GameHUD_RepGold")
-                    .constrainAs(repGoldRef) {
-                        start.linkTo(healthRef.end, margin = 16.dp)
-                        top.linkTo(parent.top, margin = 16.dp)
-                    }
+        // Why button: visible at stage >= 2 with animation
+        Box(
+            modifier = Modifier
+                .constrainAs(whyRef) {
+                    end.linkTo(parent.end, margin = 16.dp)
+                    bottom.linkTo(actionsRef.top, margin = 8.dp)
+                }
+        ) {
+            // Reserved spacer for layout stability
+            Spacer(
+                modifier = Modifier
+                    .size(MIN_TOUCH_TARGET)
+                    .testTag("GameHUD_Why_Reserved")
             )
 
-            nearby?.invoke(
-                Modifier
-                    .testTag("GameHUD_Nearby")
-                    .constrainAs(nearbyRef) {
-                        start.linkTo(parent.start, margin = 16.dp)
-                        top.linkTo(healthRef.bottom, margin = 8.dp)
-                    }
-            )
+            AnimatedVisibility(
+                visible = stage >= 2 && why != null,
+                enter = fadeIn() + scaleIn(initialScale = 0.8f),
+                exit = fadeOut() + scaleOut(targetScale = 0.8f)
+            ) {
+                why?.invoke(Modifier.testTag("GameHUD_Why"))
+            }
+        }
+
+        // Rep/Gold: visible at stage >= 3 with animation
+        Box(
+            modifier = Modifier
+                .constrainAs(repGoldRef) {
+                    start.linkTo(healthRef.end, margin = 16.dp)
+                    top.linkTo(parent.top, margin = 16.dp)
+                }
+        ) {
+            AnimatedVisibility(
+                visible = stage >= 3 && repGold != null,
+                enter = fadeIn() + scaleIn(initialScale = 0.9f),
+                exit = fadeOut() + scaleOut(targetScale = 0.9f)
+            ) {
+                repGold?.invoke(Modifier.testTag("GameHUD_RepGold"))
+            }
+        }
+
+        // Nearby: visible at stage >= 3 with animation
+        Box(
+            modifier = Modifier
+                .constrainAs(nearbyRef) {
+                    start.linkTo(parent.start, margin = 16.dp)
+                    top.linkTo(healthRef.bottom, margin = 8.dp)
+                }
+        ) {
+            AnimatedVisibility(
+                visible = stage >= 3 && nearby != null,
+                enter = fadeIn() + scaleIn(initialScale = 0.9f),
+                exit = fadeOut() + scaleOut(targetScale = 0.9f)
+            ) {
+                nearby?.invoke(Modifier.testTag("GameHUD_Nearby"))
+            }
         }
     }
 }
+
+/**
+ * Minimum touch target size per accessibility guidelines.
+ */
+val MIN_TOUCH_TARGET = 44.dp
 
 /**
  * Simplified GameHUD for tests that only need D-pad and actions with dead zone.

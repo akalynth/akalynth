@@ -407,6 +407,75 @@ class GameHUDTest {
     }
 
     // =========================================================================
+    // K1-K3: Reserved spacers for layout stability
+    // =========================================================================
+
+    @Test
+    fun `K1 - menu reserved slot exists at stage 0`() {
+        composeTestRule.setContent {
+            GameHUD(
+                stage = 0,
+                dpad = { modifier -> DPadStub(modifier) },
+                actions = { modifier -> ActionPanelStub(modifier) },
+                menu = { modifier -> Box(modifier.size(44.dp)) }
+            )
+        }
+
+        // Menu content should not be displayed, but reserved slot should exist
+        composeTestRule.onNodeWithTag("GameHUD_Menu").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("GameHUD_Menu_Reserved").assertExists()
+    }
+
+    @Test
+    fun `K2 - why reserved slot exists at stage 0`() {
+        composeTestRule.setContent {
+            GameHUD(
+                stage = 0,
+                dpad = { modifier -> DPadStub(modifier) },
+                actions = { modifier -> ActionPanelStub(modifier) },
+                why = { modifier -> Box(modifier.size(44.dp)) }
+            )
+        }
+
+        // Why content should not be displayed, but reserved slot should exist
+        composeTestRule.onNodeWithTag("GameHUD_Why").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("GameHUD_Why_Reserved").assertExists()
+    }
+
+    @Test
+    fun `K3 - reserved slots have minimum touch target size`() {
+        composeTestRule.setContent {
+            GameHUD(
+                stage = 0,
+                dpad = { modifier -> DPadStub(modifier) },
+                actions = { modifier -> ActionPanelStub(modifier) },
+                menu = { modifier -> Box(modifier.size(44.dp)) },
+                why = { modifier -> Box(modifier.size(44.dp)) }
+            )
+        }
+
+        // Verify reserved slots exist (they provide 44dp minimum)
+        val menuReserved = composeTestRule.onNodeWithTag("GameHUD_Menu_Reserved")
+        val whyReserved = composeTestRule.onNodeWithTag("GameHUD_Why_Reserved")
+
+        menuReserved.assertExists()
+        whyReserved.assertExists()
+
+        // Bounds should be at least 44dp
+        val menuBounds = menuReserved.getBoundsInRoot()
+        val whyBounds = whyReserved.getBoundsInRoot()
+
+        assertTrue(
+            "Menu reserved slot should be at least 44dp wide",
+            (menuBounds.right - menuBounds.left).value >= 44f
+        )
+        assertTrue(
+            "Why reserved slot should be at least 44dp wide",
+            (whyBounds.right - whyBounds.left).value >= 44f
+        )
+    }
+
+    // =========================================================================
     // Test Stubs
     // =========================================================================
 
