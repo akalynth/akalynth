@@ -6,6 +6,7 @@ import com.akalynth.client.chronicle.ChronicleEventKind
 import com.akalynth.client.chronicle.EventStatus
 import com.akalynth.client.chronicle.Receipt
 import com.akalynth.client.rules.RuleId
+import com.akalynth.client.snapshot.SnapshotV0
 import com.akalynth.client.ui.state.UiOverlayState
 
 /**
@@ -93,6 +94,11 @@ object ExplanationEngine {
 
         // Add payload evidence
         addPayloadEvidence(receipt.payload, details)
+
+        // Add snapshot evidence for state-mutating events (death, drop, pickup)
+        if (receipt.type.lowercase() in listOf("death", "item_drop", "item_pickup")) {
+            addSnapshotEvidence(ctx, evidenceRefs, details)
+        }
 
         return Explanation(
             explanationId = Explanation.generateId(subjectId, ctx.nowMs),
@@ -250,6 +256,33 @@ object ExplanationEngine {
         payload["zone"]?.let { details["zone"] = it }
     }
 
+    /**
+     * Add snapshot evidence to explanation.
+     *
+     * Snapshots are state attestations that prove consequences.
+     * They don't define rules - they prove rules were enforced.
+     *
+     * @param ctx Context containing snapshot(s)
+     * @param evidenceRefs Mutable list to add snapshot refs to
+     * @param details Mutable map to add snapshot metadata to
+     */
+    private fun addSnapshotEvidence(
+        ctx: ExplainContext,
+        evidenceRefs: MutableList<String>,
+        details: MutableMap<String, Any?>
+    ) {
+        ctx.snapshot?.let { snapshot ->
+            evidenceRefs.add("snapshot:${snapshot.sequence}")
+            details["snapshot_sequence"] = snapshot.sequence
+            details["snapshot_hash"] = snapshot.stateHash
+        }
+
+        // Add sequence transition if both snapshots present
+        if (ctx.prevSnapshot != null && ctx.snapshot != null) {
+            details["sequence_transition"] = "${ctx.prevSnapshot.sequence} → ${ctx.snapshot.sequence}"
+        }
+    }
+
     // =========================================================================
     // Event explanation (delegates based on status)
     // =========================================================================
@@ -292,6 +325,12 @@ object ExplanationEngine {
             "event_id" to event.eventId,
             "kind" to event.kind.name
         )
+        val evidenceRefs = mutableListOf<String>()
+
+        // If event has actionId, it was upgraded from pending (intent → receipt)
+        if (event.actionId != null) {
+            ruleIds.add(RuleId.RECEIPT_UPGRADED_FROM_PENDING)
+        }
 
         // Add domain rules based on kind
         val (domainRules, reason) = getDomainRulesForKind(event)
@@ -308,6 +347,20 @@ object ExplanationEngine {
         event.itemsLost?.let { details["items_lost"] = it }
         event.itemName?.let { details["item_name"] = it }
 
+        // Build evidence refs
+        evidenceRefs.add(event.eventId)
+        event.actionId?.let { evidenceRefs.add(it) }
+
+        // Add snapshot evidence for state-mutating events (death, drop, pickup)
+        if (event.kind in listOf(
+                ChronicleEventKind.DEATH,
+                ChronicleEventKind.ITEM_DROP,
+                ChronicleEventKind.ITEM_PICKUP
+            )
+        ) {
+            addSnapshotEvidence(ctx, evidenceRefs, details)
+        }
+
         return Explanation(
             explanationId = Explanation.generateId(subjectId, ctx.nowMs),
             subjectId = subjectId,
@@ -315,10 +368,7 @@ object ExplanationEngine {
             ruleIds = ruleIds,
             reason = reason,
             details = details,
-            evidenceRefs = buildList {
-                add(event.eventId)
-                event.actionId?.let { add(it) }
-            },
+            evidenceRefs = evidenceRefs,
             timestampMs = ctx.nowMs
         )
     }

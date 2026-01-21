@@ -7,6 +7,7 @@ import com.akalynth.client.chronicle.EventSource
 import com.akalynth.client.chronicle.EventStatus
 import com.akalynth.client.chronicle.Receipt
 import com.akalynth.client.rules.RuleId
+import com.akalynth.client.snapshot.SnapshotV0
 import com.akalynth.client.ui.components.character.CharacterSex
 import com.akalynth.client.ui.components.hotbar.ItemRarity
 import com.akalynth.client.ui.state.ChronicleEventDetails
@@ -26,6 +27,7 @@ import org.junit.Test
  * E) UiBlock → Stage gate explanation
  * F) UiBlock → Overlay contention explanation
  * G) UiBlock → Tier safety explanation
+ * H) Snapshot → Evidence attestation
  */
 class ExplanationEngineTest {
 
@@ -586,5 +588,171 @@ class ExplanationEngineTest {
         val exp2 = ExplanationEngine.explain(ExplainSubject.Intent(intent), fixedCtx)
 
         assertEquals(exp1.explanationId, exp2.explanationId)
+    }
+
+    // =========================================================================
+    // H) Snapshot → Evidence attestation
+    // =========================================================================
+
+    @Test
+    fun `H - death receipt with snapshot has snapshot evidence refs`() {
+        val receipt = Receipt(
+            receiptId = "receipt_death_snap",
+            actionId = null,
+            type = "death",
+            timestampMs = 1705838400000,
+            payload = mapOf("items_lost" to listOf("Sword"))
+        )
+
+        val ctxWithSnapshot = ctx.copy(
+            snapshot = SnapshotV0(sequence = 419, stateHash = "hash_419")
+        )
+
+        val explanation = ExplanationEngine.explain(
+            ExplainSubject.ReceiptSubject(receipt),
+            ctxWithSnapshot
+        )
+
+        assertTrue(explanation.evidenceRefs.any { it.contains("snapshot:419") })
+        assertEquals(419L, explanation.details["snapshot_sequence"])
+        assertEquals("hash_419", explanation.details["snapshot_hash"])
+    }
+
+    @Test
+    fun `H - drop receipt with snapshot has snapshot evidence`() {
+        val receipt = Receipt(
+            receiptId = "receipt_drop_snap",
+            actionId = "action_drop_1",
+            type = "item_drop",
+            timestampMs = 1705838400000,
+            payload = mapOf("item_id" to "sword_123")
+        )
+
+        val ctxWithSnapshot = ctx.copy(
+            snapshot = SnapshotV0(sequence = 100, stateHash = "hash_100")
+        )
+
+        val explanation = ExplanationEngine.explain(
+            ExplainSubject.ReceiptSubject(receipt),
+            ctxWithSnapshot
+        )
+
+        assertTrue(explanation.evidenceRefs.contains("snapshot:100"))
+        assertEquals(100L, explanation.details["snapshot_sequence"])
+    }
+
+    @Test
+    fun `H - confirmed event with snapshot has snapshot evidence`() {
+        val event = ChronicleEvent(
+            eventId = "evt_death_snap",
+            kind = ChronicleEventKind.DEATH,
+            timestampMs = 1705838400000,
+            zone = "Rookguard",
+            status = EventStatus.CONFIRMED,
+            source = EventSource.SERVER_RECEIPT
+        )
+
+        val ctxWithSnapshot = ctx.copy(
+            snapshot = SnapshotV0(sequence = 500, stateHash = "hash_500")
+        )
+
+        val explanation = ExplanationEngine.explain(
+            ExplainSubject.Event(event),
+            ctxWithSnapshot
+        )
+
+        assertTrue(explanation.evidenceRefs.contains("snapshot:500"))
+        assertEquals("hash_500", explanation.details["snapshot_hash"])
+    }
+
+    @Test
+    fun `H - sequence transition when both snapshots present`() {
+        val receipt = Receipt(
+            receiptId = "receipt_death_transition",
+            actionId = null,
+            type = "death",
+            timestampMs = 1705838400000,
+            payload = mapOf("items_lost" to listOf("Sword"))
+        )
+
+        val ctxWithBothSnapshots = ctx.copy(
+            prevSnapshot = SnapshotV0(sequence = 418, stateHash = "hash_418"),
+            snapshot = SnapshotV0(sequence = 419, stateHash = "hash_419")
+        )
+
+        val explanation = ExplanationEngine.explain(
+            ExplainSubject.ReceiptSubject(receipt),
+            ctxWithBothSnapshots
+        )
+
+        assertEquals("418 → 419", explanation.details["sequence_transition"])
+    }
+
+    @Test
+    fun `H - confirmed event with actionId cites RECEIPT_UPGRADED_FROM_PENDING`() {
+        val event = ChronicleEvent(
+            eventId = "evt_drop_upgraded",
+            actionId = "action_drop_original",
+            kind = ChronicleEventKind.ITEM_DROP,
+            timestampMs = 1705838400000,
+            status = EventStatus.CONFIRMED,
+            source = EventSource.SERVER_RECEIPT
+        )
+
+        val explanation = ExplanationEngine.explain(
+            ExplainSubject.Event(event),
+            ctx
+        )
+
+        assertTrue(explanation.citesRule(RuleId.RECEIPT_UPGRADED_FROM_PENDING))
+        assertTrue(explanation.citesRule(RuleId.RECEIPT_CONFIRMED_BY_SERVER))
+    }
+
+    @Test
+    fun `H - non-mutating receipt without snapshot has no snapshot evidence`() {
+        val receipt = Receipt(
+            receiptId = "receipt_zone_enter",
+            actionId = null,
+            type = "zone_enter",
+            timestampMs = 1705838400000,
+            payload = mapOf("zone" to "Azura")
+        )
+
+        val ctxWithSnapshot = ctx.copy(
+            snapshot = SnapshotV0(sequence = 50, stateHash = "hash_50")
+        )
+
+        val explanation = ExplanationEngine.explain(
+            ExplainSubject.ReceiptSubject(receipt),
+            ctxWithSnapshot
+        )
+
+        // zone_enter is not state-mutating, so no snapshot evidence
+        assertFalse(explanation.evidenceRefs.any { it.startsWith("snapshot:") })
+        assertNull(explanation.details["snapshot_sequence"])
+    }
+
+    @Test
+    fun `H - pending event has no snapshot evidence`() {
+        val event = ChronicleEvent(
+            eventId = "pending:action_123",
+            actionId = "action_123",
+            kind = ChronicleEventKind.ITEM_DROP,
+            timestampMs = 1705838400000,
+            status = EventStatus.PENDING,
+            source = EventSource.CLIENT_INTENT
+        )
+
+        val ctxWithSnapshot = ctx.copy(
+            snapshot = SnapshotV0(sequence = 50, stateHash = "hash_50")
+        )
+
+        val explanation = ExplanationEngine.explain(
+            ExplainSubject.Event(event),
+            ctxWithSnapshot
+        )
+
+        // Pending events don't have snapshot evidence yet
+        assertFalse(explanation.evidenceRefs.any { it.startsWith("snapshot:") })
     }
 }

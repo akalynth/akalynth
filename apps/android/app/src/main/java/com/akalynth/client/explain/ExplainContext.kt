@@ -1,5 +1,6 @@
 package com.akalynth.client.explain
 
+import com.akalynth.client.snapshot.SnapshotV0
 import com.akalynth.client.ui.state.UiOverlayState
 
 /**
@@ -11,11 +12,15 @@ import com.akalynth.client.ui.state.UiOverlayState
  * @property nowMs Current timestamp for explanation generation
  * @property overlay Current UI overlay state (for contention explanations)
  * @property unlockStage Current player unlock stage (for stage gate explanations)
+ * @property snapshot Current state attestation (for consequence evidence)
+ * @property prevSnapshot Previous state attestation (for delta evidence)
  */
 data class ExplainContext(
     val nowMs: Long,
     val overlay: UiOverlayState? = null,
-    val unlockStage: Int? = null
+    val unlockStage: Int? = null,
+    val snapshot: SnapshotV0? = null,
+    val prevSnapshot: SnapshotV0? = null
 ) {
     companion object {
         /**
@@ -31,11 +36,15 @@ data class ExplainContext(
         fun forTest(
             nowMs: Long = 1705838400000,
             overlay: UiOverlayState? = null,
-            unlockStage: Int? = null
+            unlockStage: Int? = null,
+            snapshot: SnapshotV0? = null,
+            prevSnapshot: SnapshotV0? = null
         ): ExplainContext = ExplainContext(
             nowMs = nowMs,
             overlay = overlay,
-            unlockStage = unlockStage
+            unlockStage = unlockStage,
+            snapshot = snapshot,
+            prevSnapshot = prevSnapshot
         )
     }
 }
