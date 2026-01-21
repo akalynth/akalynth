@@ -354,6 +354,42 @@ class DeathToastTest {
     }
 
     // =========================================================================
+    // Double overlay contention (critical edge case)
+    // =========================================================================
+
+    @Test
+    fun `timeout does not fire onDismiss after tap`() {
+        // This tests the double overlay contention fix:
+        // If user taps toast (transitioning to Recap), the timeout should NOT
+        // call onDismiss, which would clear the Recap state.
+        var tapCalled = false
+        var dismissCalled = false
+
+        composeTestRule.setContent {
+            DeathToast(
+                notice = createTestNotice(),
+                visible = true,
+                onTap = { tapCalled = true },
+                onDismiss = { dismissCalled = true }
+            )
+        }
+
+        composeTestRule.waitForIdle()
+
+        // Tap the toast (simulating user opening recap)
+        composeTestRule.onNodeWithTag("DeathToast_Content").performClick()
+        assertTrue("onTap should be called", tapCalled)
+        assertFalse("onDismiss should not be called yet", dismissCalled)
+
+        // Now advance time past the auto-dismiss timeout
+        composeTestRule.mainClock.advanceTimeBy(TOAST_DURATION_MS + 500)
+        composeTestRule.waitForIdle()
+
+        // onDismiss should still NOT have been called because user already tapped
+        assertFalse("onDismiss should NOT fire after tap (would clear Recap state)", dismissCalled)
+    }
+
+    // =========================================================================
     // Constants validation
     // =========================================================================
 
