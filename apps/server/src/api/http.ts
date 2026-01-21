@@ -150,6 +150,11 @@ export function handleHttp(
     if (!deps.getTransparency) {
       const defaultResponse: TransparencyResponse = {
         version: deps.getVersion(),
+        server_version: deps.getVersion(),
+        identity: {
+          auth_public_key_hex: '',
+          key_derivation: 'blake3(akalynth/auth/v0 || chronicle_seed)',
+        },
         principles: [
           'Money cannot buy gameplay power',
           'Every state change is receipted',

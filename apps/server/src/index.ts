@@ -62,6 +62,7 @@ import {
   signToken,
   verifyToken,
   generateNonce,
+  getAuthKeyDomain,
 } from '../../../packages/coordination-kernel/src/identity/index.js';
 import { createAntiCheatRuntime, onChat, onMoveApplied, onMoveIntent } from './anticheat/detector.js';
 import { applyThrottle, checkTemTimeout, handleTemResponse, issueTemChallenge, isThrottled } from './anticheat/tem.js';
@@ -171,6 +172,7 @@ import type { SovereignVocation, PrefixGrantSource, WalletCreditReason, WalletDe
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const VERSION = '0.1.0';
+const AUTH_KEY_DERIVATION = `blake3(${getAuthKeyDomain()} || chronicle_seed)`;
 const DEFAULT_GUEST_SESSION_TTL_MS = 10 * 60 * 1000;
 const DEFAULT_GUEST_SESSION_CLEANUP_MS = 60 * 1000;
 const MAX_GUEST_SESSIONS = 10_000;
@@ -1916,6 +1918,31 @@ const httpServer = http.createServer((req, res) => {
         landmarks: w.map.landmarks,
       };
     },
+    getTransparency: () => ({
+      version: VERSION,
+      server_version: VERSION,
+      identity: {
+        auth_public_key_hex: authKeyPair?.publicKeyHex ?? '',
+        key_derivation: AUTH_KEY_DERIVATION,
+      },
+      principles: [
+        'Money cannot buy gameplay power',
+        'Every state change is receipted',
+        'Receipts are cryptographically signed and chain-linked',
+        'Enforcement is deterministic and replayable',
+      ],
+      documentation: {
+        monetization_constitution: '/docs/MONETIZATION_CONSTITUTION.md',
+        architecture: '/docs/ARCHITECTURE.md',
+        anticheat: '/docs/ANTICHEAT.md',
+      },
+      public_receipts_endpoint: '/v1/receipts/public',
+      verification: {
+        chain_integrity: 'npm run verify:lifecycle',
+        monetization_policy: 'npm run verify:monetization',
+        work_contracts: 'npm run verify:work-contracts',
+      },
+    }),
     queryReceipts: (params) => receiptsReader.query(params),
     queryPublicReceipts: (params) => {
       const now = Date.now();

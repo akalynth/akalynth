@@ -109,12 +109,15 @@ token_id = "blake3:" + hex(BLAKE3(preimage))
 
 ### Step 1: Parse Token Wire Format
 
-Split the token on the first `.` character.
+Locate the only `.` separator.
 
 ```
-parts = token.split(".", 2)
-payload_b64 = parts[0]
-signature_b64 = parts[1]
+dot = token.indexOf(".")
+if dot <= 0 or dot != token.lastIndexOf(".") or dot == token.length - 1:
+    reject("malformed_token")
+
+payload_b64 = token.slice(0, dot)
+signature_b64 = token.slice(dot + 1)
 ```
 
 Validation:
@@ -147,6 +150,12 @@ The signature covers the Base64URL-encoded payload bytes, not the decoded JSON. 
 Validation:
 - Signature MUST be exactly 64 bytes
 - `ed25519_verify` MUST return true
+
+### Legacy Compatibility (Transition)
+
+Tokens issued before wire-authenticated signing used a signature over canonical
+JSON bytes (sorted keys). During the transition, verifiers MAY attempt canonical
+JSON verification if payload_b64 verification fails.
 
 ### Step 4: Check Expiration
 
@@ -182,11 +191,18 @@ This confirms the token ID is content-addressed and not fabricated.
 
 ### Step 7: (Optional) Bind to Receipt Chain
 
-If verifying against the receipt chain, locate the `auth_token_issue` receipt:
+If verifying against the receipt chain, locate the `auth_token_issue` receipt by
+matching `inputs.token_id`:
 
 ```
-receipt = find_receipt_by_hash(payload.token_id)  // or by indexed lookup
+receipt = find_receipt(
+  action="auth_token_issue",
+  inputs.token_id=payload.token_id
+)
 ```
+
+Note: `token_id` is a hash of token content, not a receipt hash. Index by
+`inputs.token_id` or scan receipts to find the matching issuance.
 
 Validate the receipt binds the same fields:
 
@@ -217,19 +233,42 @@ GET /v1/transparency
 
 ```json
 {
+  "version": "0.1.0",
+  "server_version": "0.1.0",
   "identity": {
     "auth_public_key_hex": "abc123...",
     "key_derivation": "blake3(akalynth/auth/v0 || chronicle_seed)"
   },
-  "server_version": "0.1.0"
+  "principles": [
+    "Money cannot buy gameplay power",
+    "Every state change is receipted",
+    "Receipts are cryptographically signed and chain-linked",
+    "Enforcement is deterministic and replayable"
+  ],
+  "documentation": {
+    "monetization_constitution": "/docs/MONETIZATION_CONSTITUTION.md",
+    "architecture": "/docs/ARCHITECTURE.md",
+    "anticheat": "/docs/ANTICHEAT.md"
+  },
+  "public_receipts_endpoint": "/v1/receipts/public",
+  "verification": {
+    "chain_integrity": "npm run verify:lifecycle",
+    "monetization_policy": "npm run verify:monetization",
+    "work_contracts": "npm run verify:work-contracts"
+  }
 }
 ```
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `auth_public_key_hex` | string | 32-byte Ed25519 public key, hex-encoded (64 characters) |
-| `key_derivation` | string | Human-readable derivation description |
+| `version` | string | Server version string (legacy) |
 | `server_version` | string | Server version string |
+| `identity.auth_public_key_hex` | string | 32-byte Ed25519 public key, hex-encoded (64 characters) |
+| `identity.key_derivation` | string | Human-readable derivation description |
+| `principles` | string[] | Transparency principles |
+| `documentation.*` | string | Documentation paths |
+| `public_receipts_endpoint` | string | Public receipts feed path |
+| `verification.*` | string | Verification script hints |
 
 ### Caching
 
@@ -250,12 +289,12 @@ Language-agnostic verification implementation:
 ```
 function verify_token(token_string, auth_public_key_hex):
     // Step 1: Parse
-    parts = split(token_string, ".", limit=2)
-    if length(parts) != 2:
+    dot = index_of(token_string, ".")
+    if dot <= 0 or dot != last_index_of(token_string, ".") or dot == length(token_string) - 1:
         return error("malformed_token")
 
-    payload_b64 = parts[0]
-    signature_b64 = parts[1]
+    payload_b64 = slice(token_string, 0, dot)
+    signature_b64 = slice(token_string, dot + 1)
 
     // Step 2: Decode
     try:
@@ -276,7 +315,11 @@ function verify_token(token_string, auth_public_key_hex):
     message = utf8_encode(payload_b64)
 
     if not ed25519_verify(auth_public_key, message, signature):
-        return error("invalid_signature")
+        // Optional legacy fallback (canonical JSON signature)
+        canonical_payload = canonical_json(payload)
+        legacy_message = utf8_encode(canonical_payload)
+        if not ed25519_verify(auth_public_key, legacy_message, signature):
+            return error("invalid_signature")
 
     // Step 4: Check expiration
     now_ms = current_unix_epoch_ms()
@@ -310,6 +353,10 @@ function verify_token(token_string, auth_public_key_hex):
 
 function blake3_hex(input):
     return hex_encode(blake3(utf8_encode(input)))
+
+
+function canonical_json(value):
+    return json_stringify_sorted_keys(value)
 
 
 function compute_token_id(player_id, issued_at, nonce):

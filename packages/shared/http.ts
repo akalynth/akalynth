@@ -169,6 +169,11 @@ export interface PublicRumorsResponse {
 
 export interface TransparencyResponse {
   version: string;
+  server_version: string;
+  identity: {
+    auth_public_key_hex: string;
+    key_derivation: string;
+  };
   principles: string[];
   documentation: {
     monetization_constitution: string;

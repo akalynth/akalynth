@@ -93,12 +93,12 @@ export function signToken(
     nonce,
   };
 
-  // Canonical JSON for deterministic signing
+  // Canonical JSON for deterministic payload encoding
   const payloadJson = canonicalize(payload);
-  const payloadB64 = Buffer.from(payloadJson).toString('base64url');
+  const payloadB64 = Buffer.from(payloadJson, 'utf-8').toString('base64url');
 
-  // Sign the canonical payload JSON
-  const signature = crypto.sign(null, Buffer.from(payloadJson), authPrivateKey);
+  // Sign the encoded payload bytes to authenticate the wire format
+  const signature = crypto.sign(null, Buffer.from(payloadB64, 'utf-8'), authPrivateKey);
   const signatureHex = signature.toString('hex');
   const signatureB64 = signature.toString('base64url');
 
@@ -117,18 +117,25 @@ export function verifyToken(
   options?: {
     nowMs?: number;
     maxTtlMs?: number;
+    allowLegacyCanonical?: boolean;
   }
 ): TokenVerifyResult {
   const nowMs = options?.nowMs ?? Date.now();
   const maxTtlMs = options?.maxTtlMs ?? MAX_TOKEN_TTL_MS;
+  const allowLegacyCanonical = options?.allowLegacyCanonical ?? true;
 
   // Parse wire format
-  const parts = wire.split('.');
-  if (parts.length !== 2) {
+  const dotIndex = wire.indexOf('.');
+  if (
+    dotIndex <= 0 ||
+    dotIndex !== wire.lastIndexOf('.') ||
+    dotIndex >= wire.length - 1
+  ) {
     return { ok: false, error: 'malformed' };
   }
 
-  const [payloadB64, signatureB64] = parts;
+  const payloadB64 = wire.slice(0, dotIndex);
+  const signatureB64 = wire.slice(dotIndex + 1);
 
   let payloadJson: string;
   let payload: AuthTokenPayload;
@@ -139,6 +146,10 @@ export function verifyToken(
     payload = JSON.parse(payloadJson) as AuthTokenPayload;
     signatureBytes = Buffer.from(signatureB64, 'base64url');
   } catch {
+    return { ok: false, error: 'malformed' };
+  }
+
+  if (signatureBytes.length !== 64) {
     return { ok: false, error: 'malformed' };
   }
 
@@ -153,9 +164,18 @@ export function verifyToken(
     return { ok: false, error: 'malformed' };
   }
 
-  // Verify signature over canonical payload
-  const canonicalPayload = canonicalize(payload);
-  const isValid = crypto.verify(null, Buffer.from(canonicalPayload), authPublicKey, signatureBytes);
+  // Verify signature over payload_b64 (wire-authenticated)
+  let isValid = crypto.verify(
+    null,
+    Buffer.from(payloadB64, 'utf-8'),
+    authPublicKey,
+    signatureBytes
+  );
+  if (!isValid && allowLegacyCanonical) {
+    // Legacy fallback: canonical JSON signature (pre-wire-authenticated tokens)
+    const canonicalPayload = canonicalize(payload);
+    isValid = crypto.verify(null, Buffer.from(canonicalPayload), authPublicKey, signatureBytes);
+  }
   if (!isValid) {
     return { ok: false, error: 'invalid_signature' };
   }
