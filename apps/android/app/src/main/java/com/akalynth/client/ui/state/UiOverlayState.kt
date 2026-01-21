@@ -130,9 +130,16 @@ data class ChronicleEventDetails(
  * - Recap(event) → None : on dismiss
  * - None → ConfirmDrop(slot, item) : on hotbar slot long-press
  * - ConfirmDrop → None : on confirm or cancel
+ * - None → Why(context) : on Why button press (only if None)
+ * - Why → None : on dismiss
  *
  * Chronicle can also open Recap directly:
  * - None → Recap(event) : on chronicle death row tap
+ *
+ * Overlay contention policy:
+ * - Why button is BLOCKED if current state is not None
+ * - This prevents Why from overriding critical overlays (Toast, Recap, ConfirmDrop)
+ * - Use [canOpenWhy] extension to check before transitioning
  */
 sealed class UiOverlayState {
     /** No overlay displayed */
@@ -154,6 +161,47 @@ sealed class UiOverlayState {
         val itemName: String,
         val isLegendary: Boolean
     ) : UiOverlayState()
+
+    /**
+     * Why explanation sheet.
+     * Shows contextual help based on current game context.
+     */
+    data class Why(
+        val context: WhyContext
+    ) : UiOverlayState()
+}
+
+/**
+ * Context for Why explanation.
+ */
+@Serializable
+data class WhyContext(
+    /** Current zone */
+    val zone: String,
+
+    /** Recent events that may need explanation */
+    val recentEvents: List<ChronicleEvent> = emptyList(),
+
+    /** Specific question/topic (optional) */
+    val topic: String? = null
+)
+
+/**
+ * Check if Why overlay can be opened (only from None state).
+ * Enforces overlay contention policy.
+ */
+fun UiOverlayState.canOpenWhy(): Boolean = this is None
+
+/**
+ * Priority of overlay states for contention resolution.
+ * Higher priority overlays cannot be replaced by lower priority ones.
+ */
+val UiOverlayState.priority: Int get() = when (this) {
+    is None -> 0
+    is Why -> 1
+    is Toast -> 2
+    is Recap -> 3
+    is ConfirmDrop -> 4
 }
 
 /**
