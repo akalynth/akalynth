@@ -17,8 +17,8 @@ data object ConnectMessage : ClientMessage() {
 @Serializable
 @SerialName("login")
 data class LoginMessage(
-    @SerialName("guest_token") val guestToken: String? = null,
-    val token: String? = null
+    val token: String? = null,
+    @SerialName("guest_token") val guestToken: String? = null
 ) : ClientMessage() {
     override val type: String = "login"
 }

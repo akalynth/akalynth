@@ -15,8 +15,13 @@ object MessageSerializer {
         return when (msg) {
             is ConnectMessage -> """{"type":"connect"}"""
             is LoginMessage -> {
-                val token = msg.guestToken?.let { """"$it"""" } ?: "null"
-                """{"type":"login","guest_token":$token}"""
+                val tokenField = msg.token?.takeIf { it.isNotBlank() }?.let { """"$it"""" }
+                val guestField = msg.guestToken?.takeIf { it.isNotBlank() }?.let { """"$it"""" } ?: "null"
+                if (tokenField != null) {
+                    """{"type":"login","token":$tokenField,"guest_token":$guestField}"""
+                } else {
+                    """{"type":"login","guest_token":$guestField}"""
+                }
             }
             is EnterWorldMessage -> """{"type":"enter_world"}"""
             is MoveIntentMessage -> {

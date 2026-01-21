@@ -18,7 +18,9 @@ data class WelcomeMessage(
 data class LoginAckMessage(
     val ok: Boolean? = true,
     @SerialName("player_id") val playerId: String,
-    @SerialName("guest_token") val guestToken: String,
+    @SerialName("guest_token") val guestToken: String? = null,
+    val token: String? = null,
+    @SerialName("expires_at") val expiresAt: Long? = null,
     val name: String,
     val reason: String? = null
 ) : ServerMessage()
