@@ -130,3 +130,13 @@ echo "  Time:   $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 echo "  Health: $HEALTH_URL"
 echo ""
 sudo systemctl status "$SERVICE_NAME" --no-pager | head -10
+
+echo ""
+info "Git status:"
+git status -sb
+if [[ "$(git rev-parse --abbrev-ref HEAD)" == "HEAD" ]]; then
+    warn "Detached HEAD detected; returning to main"
+    git checkout main || warn "Failed to switch back to main"
+    info "Git status:"
+    git status -sb
+fi
