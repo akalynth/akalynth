@@ -37,8 +37,41 @@ data class DeathNotice(
 )
 
 /**
+ * Event confirmation status for chronicle events.
+ *
+ * Lifecycle:
+ * - Pending: Client-generated event awaiting server acknowledgment
+ * - Confirmed: Server receipt received, event is authoritative
+ * - Rejected: Server rejected the action (rollback required)
+ */
+@Serializable
+enum class EventStatus {
+    @SerialName("pending") PENDING,
+    @SerialName("confirmed") CONFIRMED,
+    @SerialName("rejected") REJECTED
+}
+
+/**
+ * Event source discriminator.
+ *
+ * - ServerReceipt: Event originated from server receipt (authoritative)
+ * - ClientIntent: Event originated from client action (optimistic)
+ */
+@Serializable
+enum class EventSource {
+    @SerialName("server_receipt") SERVER_RECEIPT,
+    @SerialName("client_intent") CLIENT_INTENT
+}
+
+/**
  * Chronicle event for history feed.
  * Represents any recorded player event with type discrimination.
+ *
+ * Canonical model for Sprint 5A event pipeline:
+ * - id: Server-provided or client-generated (pending_* prefix) until ack
+ * - status: Tracks confirmation lifecycle
+ * - source: Discriminates authoritative vs optimistic events
+ * - actionId: Correlates client intent with server receipt
  */
 @Serializable
 data class ChronicleEvent(
@@ -61,7 +94,16 @@ data class ChronicleEvent(
     val y: Int,
 
     /** Kind-specific details (death: killerName, itemsLost; pickup: itemName; etc.) */
-    val details: ChronicleEventDetails = ChronicleEventDetails()
+    val details: ChronicleEventDetails = ChronicleEventDetails(),
+
+    /** Confirmation status (Pending until server ack) */
+    val status: EventStatus = EventStatus.CONFIRMED,
+
+    /** Event source discriminator */
+    val source: EventSource = EventSource.SERVER_RECEIPT,
+
+    /** Client action ID for intent correlation (null for server-only events) */
+    val actionId: String? = null
 )
 
 /**
@@ -206,6 +248,8 @@ val UiOverlayState.priority: Int get() = when (this) {
 
 /**
  * Extension to convert DeathNotice to ChronicleEvent for recap display.
+ * DeathNotice always comes from server, so source is SERVER_RECEIPT
+ * and status is CONFIRMED.
  */
 fun DeathNotice.toChronicleEvent(): ChronicleEvent = ChronicleEvent(
     id = chronicleEventId ?: "pending_${timestamp}",
@@ -217,5 +261,49 @@ fun DeathNotice.toChronicleEvent(): ChronicleEvent = ChronicleEvent(
     details = ChronicleEventDetails(
         killerName = killerName,
         itemsLost = itemsLost.ifEmpty { null }
-    )
+    ),
+    status = EventStatus.CONFIRMED,
+    source = EventSource.SERVER_RECEIPT,
+    actionId = null
+)
+
+/**
+ * Check if event is pending confirmation.
+ */
+fun ChronicleEvent.isPending(): Boolean = status == EventStatus.PENDING
+
+/**
+ * Check if event is confirmed by server.
+ */
+fun ChronicleEvent.isConfirmed(): Boolean = status == EventStatus.CONFIRMED
+
+/**
+ * Check if event was rejected by server.
+ */
+fun ChronicleEvent.isRejected(): Boolean = status == EventStatus.REJECTED
+
+/**
+ * Check if event originated from client intent (optimistic).
+ */
+fun ChronicleEvent.isOptimistic(): Boolean = source == EventSource.CLIENT_INTENT
+
+/**
+ * Check if event is authoritative (from server receipt).
+ */
+fun ChronicleEvent.isAuthoritative(): Boolean = source == EventSource.SERVER_RECEIPT
+
+/**
+ * Create a confirmed copy of a pending event with server-provided ID.
+ */
+fun ChronicleEvent.confirm(serverId: String): ChronicleEvent = copy(
+    id = serverId,
+    status = EventStatus.CONFIRMED,
+    source = EventSource.SERVER_RECEIPT
+)
+
+/**
+ * Create a rejected copy of a pending event.
+ */
+fun ChronicleEvent.reject(): ChronicleEvent = copy(
+    status = EventStatus.REJECTED
 )
