@@ -1185,6 +1185,7 @@ export function parseClientMessage(data: unknown): ClientMessage | null {
       return {
         type: 'login',
         guest_token: typeof msg.guest_token === 'string' ? msg.guest_token : null,
+        token: typeof msg.token === 'string' ? msg.token : undefined,
       };
 
     case 'enter_world':
