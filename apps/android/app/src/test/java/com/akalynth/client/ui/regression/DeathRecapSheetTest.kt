@@ -1,12 +1,20 @@
 package com.akalynth.client.ui.regression
 
-import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.akalynth.client.ui.components.death.DeathRecapSheet
+import com.akalynth.client.ui.components.death.SHEET_OPEN_MS
+import com.akalynth.client.ui.state.ChronicleEvent
+import com.akalynth.client.ui.state.ChronicleEventDetails
+import com.akalynth.client.ui.state.ChronicleEventKind
+import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
-import org.junit.Assert.*
 
 /**
  * Regression tests for death recap sheet.
@@ -20,10 +28,6 @@ class DeathRecapSheetTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    companion object {
-        const val SHEET_OPEN_MS = 300L
-    }
-
     // =========================================================================
     // X3: Recap displays correct details
     // =========================================================================
@@ -34,11 +38,19 @@ class DeathRecapSheetTest {
             killerName = "DarkMage_99"
         )
 
-        // TODO:
-        // 1. Render DeathRecapSheet with deathEvent
-        // 2. Verify "Killed by: DarkMage_99" is displayed
+        composeTestRule.setContent {
+            DeathRecapSheet(
+                event = deathEvent,
+                onCopyEventId = {},
+                onDismiss = {}
+            )
+        }
 
-        fail("Not implemented - DeathRecapSheet component not yet available")
+        composeTestRule.waitForIdle()
+
+        // Verify killer name is displayed
+        composeTestRule.onNodeWithText("DarkMage_99").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Killed by:").assertIsDisplayed()
     }
 
     @Test
@@ -49,11 +61,19 @@ class DeathRecapSheetTest {
             y = 45
         )
 
-        // TODO:
-        // 1. Render DeathRecapSheet with deathEvent
-        // 2. Verify "Location: Azura (12, 45)" is displayed
+        composeTestRule.setContent {
+            DeathRecapSheet(
+                event = deathEvent,
+                onCopyEventId = {},
+                onDismiss = {}
+            )
+        }
 
-        fail("Not implemented")
+        composeTestRule.waitForIdle()
+
+        // Verify location is displayed
+        composeTestRule.onNodeWithText("Location:").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Azura (12, 45)").assertIsDisplayed()
     }
 
     @Test
@@ -62,11 +82,19 @@ class DeathRecapSheetTest {
             timestamp = "2026-01-21T14:32:07Z"
         )
 
-        // TODO:
-        // 1. Render DeathRecapSheet with deathEvent
-        // 2. Verify time is displayed in readable format (e.g., "14:32:07")
+        composeTestRule.setContent {
+            DeathRecapSheet(
+                event = deathEvent,
+                onCopyEventId = {},
+                onDismiss = {}
+            )
+        }
 
-        fail("Not implemented")
+        composeTestRule.waitForIdle()
+
+        // Verify time is displayed in readable format
+        composeTestRule.onNodeWithText("Time:").assertIsDisplayed()
+        composeTestRule.onNodeWithText("14:32:07").assertIsDisplayed()
     }
 
     @Test
@@ -75,12 +103,23 @@ class DeathRecapSheetTest {
             itemsLost = listOf("Flame Sword", "Ration", "Ration")
         )
 
-        // TODO:
-        // 1. Render DeathRecapSheet with deathEvent
-        // 2. Verify "ITEMS LOST (3):" header is displayed
-        // 3. Verify each item is listed
+        composeTestRule.setContent {
+            DeathRecapSheet(
+                event = deathEvent,
+                onCopyEventId = {},
+                onDismiss = {}
+            )
+        }
 
-        fail("Not implemented")
+        composeTestRule.waitForIdle()
+
+        // Verify items lost header
+        composeTestRule.onNodeWithText("ITEMS LOST (3):").assertIsDisplayed()
+
+        // Verify each item is listed
+        composeTestRule.onNodeWithText("Flame Sword").assertIsDisplayed()
+        // Note: "Ration" appears twice but we only check existence
+        composeTestRule.onNodeWithText("Ration").assertIsDisplayed()
     }
 
     @Test
@@ -89,11 +128,18 @@ class DeathRecapSheetTest {
             killerName = null
         )
 
-        // TODO:
-        // 1. Render DeathRecapSheet with no killer
-        // 2. Verify "Killed by: Unknown" or similar placeholder
+        composeTestRule.setContent {
+            DeathRecapSheet(
+                event = deathEvent,
+                onCopyEventId = {},
+                onDismiss = {}
+            )
+        }
 
-        fail("Not implemented")
+        composeTestRule.waitForIdle()
+
+        // Verify environment/unknown placeholder
+        composeTestRule.onNodeWithText("Environment").assertIsDisplayed()
     }
 
     @Test
@@ -102,11 +148,18 @@ class DeathRecapSheetTest {
             itemsLost = emptyList()
         )
 
-        // TODO:
-        // 1. Render DeathRecapSheet with no items
-        // 2. Items section should be hidden or show "No items lost"
+        composeTestRule.setContent {
+            DeathRecapSheet(
+                event = deathEvent,
+                onCopyEventId = {},
+                onDismiss = {}
+            )
+        }
 
-        fail("Not implemented")
+        composeTestRule.waitForIdle()
+
+        // Verify "No items lost" message
+        composeTestRule.onNodeWithText("No items lost").assertIsDisplayed()
     }
 
     // =========================================================================
@@ -119,21 +172,41 @@ class DeathRecapSheetTest {
         val eventId = "evt_12345"
         var copiedId: String? = null
 
-        // TODO:
-        // 1. Render DeathRecapSheet with chronicle_event_id = eventId
-        // 2. Click "COPY EVENT ID" button
-        // 3. Verify onCopyEventId callback received eventId
+        val deathEvent = createMockDeathEvent(
+            chronicleEventId = eventId
+        )
 
-        fail("Not implemented")
+        composeTestRule.setContent {
+            DeathRecapSheet(
+                event = deathEvent,
+                onCopyEventId = { copiedId = it },
+                onDismiss = {}
+            )
+        }
+
+        composeTestRule.waitForIdle()
+
+        // Click copy button
+        composeTestRule.onNodeWithTag("DeathRecapSheet_CopyButton").performClick()
+
+        assertEquals("Copy should receive event ID", eventId, copiedId)
     }
 
     @Test
     fun `X4 - copy button is displayed`() {
-        // TODO:
-        // 1. Render DeathRecapSheet
-        // 2. Verify "COPY EVENT ID" button is visible
+        val deathEvent = createMockDeathEvent()
 
-        fail("Not implemented")
+        composeTestRule.setContent {
+            DeathRecapSheet(
+                event = deathEvent,
+                onCopyEventId = {},
+                onDismiss = {}
+            )
+        }
+
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("COPY EVENT ID").assertIsDisplayed()
     }
 
     @Test
@@ -142,11 +215,61 @@ class DeathRecapSheetTest {
             chronicleEventId = null
         )
 
-        // TODO:
-        // 1. Render DeathRecapSheet with no event ID
-        // 2. Verify button is disabled or hidden
+        composeTestRule.setContent {
+            DeathRecapSheet(
+                event = deathEvent,
+                onCopyEventId = {},
+                onDismiss = {}
+            )
+        }
 
-        fail("Not implemented")
+        composeTestRule.waitForIdle()
+
+        // Button should be disabled (shows "EVENT ID PENDING")
+        composeTestRule.onNodeWithText("EVENT ID PENDING").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("DeathRecapSheet_CopyButton").assertIsNotEnabled()
+    }
+
+    @Test
+    fun `X4 - copy button enabled with valid event id`() {
+        val deathEvent = createMockDeathEvent(
+            chronicleEventId = "evt_valid_123"
+        )
+
+        composeTestRule.setContent {
+            DeathRecapSheet(
+                event = deathEvent,
+                onCopyEventId = {},
+                onDismiss = {}
+            )
+        }
+
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithTag("DeathRecapSheet_CopyButton").assertIsEnabled()
+    }
+
+    @Test
+    fun `X4 - copy button does not crash on null id click`() {
+        var callbackInvoked = false
+        val deathEvent = createMockDeathEvent(
+            chronicleEventId = null
+        )
+
+        composeTestRule.setContent {
+            DeathRecapSheet(
+                event = deathEvent,
+                onCopyEventId = { callbackInvoked = true },
+                onDismiss = {}
+            )
+        }
+
+        composeTestRule.waitForIdle()
+
+        // Try to click disabled button - should not crash
+        composeTestRule.onNodeWithTag("DeathRecapSheet_CopyButton").performClick()
+
+        assertFalse("Callback should not be invoked when disabled", callbackInvoked)
     }
 
     // =========================================================================
@@ -156,22 +279,83 @@ class DeathRecapSheetTest {
     @Test
     fun `dismiss closes sheet`() {
         var dismissed = false
+        val deathEvent = createMockDeathEvent()
 
-        // TODO:
-        // 1. Render DeathRecapSheet with onDismiss callback
-        // 2. Click close button (X)
-        // 3. Verify dismissed == true
+        composeTestRule.setContent {
+            DeathRecapSheet(
+                event = deathEvent,
+                onCopyEventId = {},
+                onDismiss = { dismissed = true }
+            )
+        }
 
-        fail("Not implemented")
+        composeTestRule.waitForIdle()
+
+        // Click close button
+        composeTestRule.onNodeWithTag("DeathRecapSheet_Close").performClick()
+
+        assertTrue("Dismiss should be called", dismissed)
     }
 
     @Test
     fun `header shows DEATH RECAP`() {
-        // TODO:
-        // 1. Render DeathRecapSheet
-        // 2. Verify "DEATH RECAP" header text
+        val deathEvent = createMockDeathEvent()
 
-        fail("Not implemented")
+        composeTestRule.setContent {
+            DeathRecapSheet(
+                event = deathEvent,
+                onCopyEventId = {},
+                onDismiss = {}
+            )
+        }
+
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("DEATH RECAP").assertIsDisplayed()
+    }
+
+    @Test
+    fun `skull icon is displayed`() {
+        val deathEvent = createMockDeathEvent()
+
+        composeTestRule.setContent {
+            DeathRecapSheet(
+                event = deathEvent,
+                onCopyEventId = {},
+                onDismiss = {}
+            )
+        }
+
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("☠").assertIsDisplayed()
+    }
+
+    @Test
+    fun `event id is displayed when present`() {
+        val eventId = "evt_display_test"
+        val deathEvent = createMockDeathEvent(chronicleEventId = eventId)
+
+        composeTestRule.setContent {
+            DeathRecapSheet(
+                event = deathEvent,
+                onCopyEventId = {},
+                onDismiss = {}
+            )
+        }
+
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText(eventId).assertIsDisplayed()
+    }
+
+    // =========================================================================
+    // Constants validation
+    // =========================================================================
+
+    @Test
+    fun `SHEET_OPEN_MS matches spec`() {
+        assertEquals("SHEET_OPEN_MS should be 300", 300L, SHEET_OPEN_MS)
     }
 
     // =========================================================================
@@ -186,21 +370,16 @@ class DeathRecapSheetTest {
         timestamp: String = "2026-01-21T12:00:00Z",
         itemsLost: List<String> = listOf("Test Item"),
         chronicleEventId: String? = "evt_mock"
-    ): Any {
-        // TODO: Return actual ChronicleEvent when available
-        return object {
-            val kind = "death"
-            val zone = zone
-            val x = x
-            val y = y
-            val timestamp = timestamp
-            val details = mapOf(
-                "killer_name" to killerName,
-                "items_lost" to itemsLost
-            )
-            val evidenceRef = chronicleEventId?.let {
-                object { val chronicleEventId = it }
-            }
-        }
-    }
+    ): ChronicleEvent = ChronicleEvent(
+        id = chronicleEventId ?: "pending_$timestamp",
+        kind = ChronicleEventKind.DEATH,
+        timestamp = timestamp,
+        zone = zone,
+        x = x,
+        y = y,
+        details = ChronicleEventDetails(
+            killerName = killerName,
+            itemsLost = itemsLost.ifEmpty { null }
+        )
+    )
 }
