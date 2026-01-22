@@ -1,0 +1,226 @@
+/**
+ * Verification Spine Runner
+ *
+ * Orchestrates verifier execution in dependency order with fail-closed semantics.
+ */
+
+import { VerifyContext, VerifyResult, SpineReport, SpineOptions, VerifyFinding } from './types.js';
+import { VerifierRegistry } from './registry.js';
+import { resolveProfile } from './profiles.js';
+
+/**
+ * Run the verification spine
+ *
+ * @param registry - Verifier registry
+ * @param ctx - Execution context
+ * @param opts - Run options
+ * @returns Spine report with all results
+ */
+export async function runSpine(
+  registry: VerifierRegistry,
+  ctx: VerifyContext,
+  opts: SpineOptions
+): Promise<SpineReport> {
+  const startedAt = new Date().toISOString();
+
+  // Selection precedence:
+  // 1) --only overrides everything
+  // 2) --profile selects a named set
+  // 3) default profile is "full"
+  let selectedIds: string[] | undefined = opts.only;
+
+  if (!selectedIds) {
+    const profile = opts.profile ?? 'full';
+    try {
+      selectedIds = resolveProfile(profile, registry);
+      if (opts.verbose || opts.dryRun) {
+        ctx.log(`[spine] Using profile: ${profile}`);
+      }
+    } catch (err: any) {
+      return {
+        ok: false,
+        mode: opts.mode,
+        startedAt,
+        finishedAt: new Date().toISOString(),
+        durationMs: 0,
+        results: [],
+        summary: { total: 0, passed: 0, failed: 0, skipped: 0 },
+      };
+    }
+  }
+
+  // Resolve execution order (includes dependency resolution)
+  let ordered;
+  try {
+    ordered = registry.resolveOrder(selectedIds);
+  } catch (err) {
+    // Dependency cycle or unknown verifier
+    return {
+      ok: false,
+      mode: opts.mode,
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      durationMs: 0,
+      results: [],
+      summary: { total: 0, passed: 0, failed: 0, skipped: 0 },
+    };
+  }
+
+  // Filter by phase if requested
+  if (opts.phase !== undefined) {
+    ordered = ordered.filter((spec) => spec.phase <= opts.phase!);
+  }
+
+  // Bundle gating: if --bundle provided, only run bundle-capable verifiers
+  const skippedForBundle: string[] = [];
+  if (opts.bundle) {
+    const beforeGating = ordered.length;
+    ordered = ordered.filter((spec) => {
+      if (spec.bundleCapable === true) {
+        return true;
+      } else {
+        skippedForBundle.push(spec.id);
+        return false;
+      }
+    });
+    const afterGating = ordered.length;
+    if (opts.verbose || opts.dryRun) {
+      ctx.log(`[spine] Bundle mode: ${afterGating}/${beforeGating} verifiers are bundle-capable`);
+    }
+  }
+
+  const results: VerifyResult[] = [];
+  let globalOk = true;
+
+  // Emit coverage warning if verifiers were skipped due to bundle mode
+  if (skippedForBundle.length > 0) {
+    const coverageWarning: VerifyResult = {
+      ok: true, // Warning, not failure
+      verifierId: 'bundle-coverage',
+      startedAt: new Date().toISOString(),
+      finishedAt: new Date().toISOString(),
+      findings: [
+        {
+          code: 'BUNDLE_PARTIAL_COVERAGE',
+          severity: 'warn',
+          message: `Bundle mode: ${skippedForBundle.length} verifier(s) skipped (not bundle-capable)`,
+          hint: `Skipped: ${skippedForBundle.join(', ')}. This is expected for bundle verification.`,
+          data: { skipped: skippedForBundle },
+        },
+      ],
+    };
+    results.push(coverageWarning);
+  }
+
+  for (const spec of ordered) {
+    // Check if verifier is audit-safe
+    if (opts.mode === 'audit' && spec.auditSafe === false) {
+      const result: VerifyResult = {
+        ok: false,
+        verifierId: spec.id,
+        startedAt: new Date().toISOString(),
+        finishedAt: new Date().toISOString(),
+        findings: [
+          {
+            code: 'AUDIT_UNSAFE_VERIFIER',
+            severity: 'error',
+            message: `Verifier "${spec.id}" is not audit-safe and cannot run in audit mode.`,
+            hint: `Run without audit mode or mark verifier auditSafe=true after ensuring it is read-only.`,
+          },
+        ],
+      };
+      results.push(result);
+      globalOk = false;
+
+      if (opts.failFast) break;
+      continue;
+    }
+
+    // Dry run: just show what would execute
+    if (opts.dryRun) {
+      ctx.log(`[dry-run] Would execute: ${spec.id} (${spec.title})`);
+      continue;
+    }
+
+    // Execute verifier
+    ctx.log(`[spine] Running verifier: ${spec.id} (${spec.title})`);
+
+    let result: VerifyResult;
+    try {
+      result = await spec.run(ctx);
+    } catch (err: any) {
+      // Unexpected error (not caught by verifier)
+      result = {
+        ok: false,
+        verifierId: spec.id,
+        startedAt: new Date().toISOString(),
+        finishedAt: new Date().toISOString(),
+        findings: [
+          {
+            code: 'VERIFIER_CRASH',
+            severity: 'error',
+            message: `Verifier crashed: ${err.message}`,
+            data: { stack: err.stack },
+          },
+        ],
+      };
+    }
+
+    results.push(result);
+
+    if (!result.ok) {
+      globalOk = false;
+
+      // Fail-fast mode: stop on first failure
+      if (opts.failFast) {
+        ctx.log(`[spine] Verifier ${spec.id} failed. Stopping (fail-fast mode).`);
+        break;
+      }
+    }
+  }
+
+  const finishedAt = new Date().toISOString();
+  const durationMs = new Date(finishedAt).getTime() - new Date(startedAt).getTime();
+
+  // Compute summary
+  const passed = results.filter((r) => r.ok).length;
+  const failed = results.filter((r) => !r.ok).length;
+  const skipped = 0; // TODO: handle skipped verifiers
+
+  return {
+    ok: globalOk,
+    mode: opts.mode,
+    startedAt,
+    finishedAt,
+    durationMs,
+    results,
+    summary: {
+      total: results.length,
+      passed,
+      failed,
+      skipped,
+    },
+  };
+}
+
+/**
+ * Create a skipped result (for verifiers that can't run due to missing deps)
+ */
+export function createSkippedResult(
+  verifierId: string,
+  reason: string
+): VerifyResult {
+  return {
+    ok: true, // Skipped is not a failure
+    verifierId,
+    startedAt: new Date().toISOString(),
+    finishedAt: new Date().toISOString(),
+    findings: [
+      {
+        code: 'VERIFIER_SKIPPED',
+        severity: 'info',
+        message: reason,
+      },
+    ],
+  };
+}

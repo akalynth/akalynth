@@ -71,3 +71,4 @@ packages/ci-cd-change-control/**/final-test*.jsonl
 packages/ci-cd-change-control/**/pass-test*.jsonl
 packages/ci-cd-change-control/**/final-test-receipts/
 packages/ci-cd-change-control/**/test-receipts/
+verify-out/

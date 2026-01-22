@@ -2,7 +2,8 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "build": "tsc"
+    "build": "tsc",
+    "protocol:golden": "npx tsx scripts/generate-protocol-golden.ts"
   },
   "devDependencies": {
     "typescript": "^5.6.0",

@@ -1,0 +1,135 @@
+name: Verification Spine
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build verification spine
+        run: |
+          cd packages/verification-spine
+          npm run build
+
+      - name: Run verification spine
+        id: verify
+        run: |
+          npm run verify -- --mode ci --format json --out verify-out
+        continue-on-error: true
+
+      - name: Upload verification report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verification-report
+          path: verify-out/
+          retention-days: 30
+
+      - name: Generate job summary
+        if: always()
+        run: |
+          node -e "
+          const fs = require('fs');
+          const path = 'verify-out/verification-report.json';
+
+          if (!fs.existsSync(path)) {
+            console.log('## ⚠️ Verification Spine');
+            console.log('');
+            console.log('No verification report found. Check logs above.');
+            process.exit(0);
+          }
+
+          const report = JSON.parse(fs.readFileSync(path, 'utf8'));
+          const failed = report.results.filter(x => !x.ok);
+          const passed = report.results.filter(x => x.ok);
+
+          // Header
+          const icon = report.ok ? '✅' : '❌';
+          console.log(\`## \${icon} Verification Spine\`);
+          console.log('');
+
+          // Summary
+          console.log('**Summary:**');
+          console.log(\`- Mode: \${report.mode}\`);
+          console.log(\`- Total verifiers: \${report.summary.total}\`);
+          console.log(\`- Passed: \${passed.length}\`);
+          console.log(\`- Failed: \${failed.length}\`);
+          console.log(\`- Duration: \${(report.durationMs / 1000).toFixed(1)}s\`);
+          console.log('');
+
+          // Failures (detailed)
+          if (failed.length > 0) {
+            console.log('### ❌ Failures');
+            console.log('');
+            for (const f of failed) {
+              console.log(\`#### \${f.verifierId}\`);
+              console.log('');
+              if (f.findings && f.findings.length > 0) {
+                const topFindings = f.findings.slice(0, 3);
+                for (const finding of topFindings) {
+                  console.log(\`- **[\${finding.severity}]** \${finding.message}\`);
+                  if (finding.hint) {
+                    console.log(\`  - 💡 Fix: \${finding.hint}\`);
+                  }
+                }
+                if (f.findings.length > 3) {
+                  console.log(\`- _(+\${f.findings.length - 3} more findings)_\`);
+                }
+              } else {
+                console.log('- Verifier failed (no findings reported)');
+              }
+              console.log('');
+            }
+
+            console.log('### 🔧 Quick Commands');
+            console.log('');
+            console.log(\`\\\`\\\`\\\`bash\`);
+            console.log('# Run locally (all verifiers)');
+            console.log('npm run verify');
+            console.log('');
+            console.log('# Run specific verifier');
+            if (failed.length > 0) {
+              console.log(\`npm run verify -- --only \${failed[0].verifierId}\`);
+            }
+            console.log('');
+            console.log('# Skip build (faster iteration)');
+            console.log('npm run verify -- --skip-build');
+            console.log(\`\\\`\\\`\\\`\`);
+          }
+
+          // Passed (summary only)
+          if (passed.length > 0 && !report.ok) {
+            console.log('### ✅ Passed');
+            console.log('');
+            console.log(\`\${passed.map(x => x.verifierId).join(', ')}\`);
+            console.log('');
+          }
+
+          // Footer
+          console.log('---');
+          console.log('');
+          console.log('📊 Full report available in artifacts: \`verification-report\`');
+          " >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail if verification failed
+        if: steps.verify.outcome == 'failure'
+        run: |
+          echo "❌ Verification spine failed. See summary above for details."
+          exit 1

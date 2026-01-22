@@ -14,9 +14,12 @@
     "build:server": "cd apps/server && npm run build",
     "build:client": "cd apps/debug-client && npm run build",
     "build": "npm run build:server && npm run build:client",
+    "verify": "node packages/verification-spine/bin/akalynth-verify.js",
+    "verify:quick": "node packages/verification-spine/bin/akalynth-verify.js --profile quick --skip-build",
+    "verify:full": "node packages/verification-spine/bin/akalynth-verify.js --profile full",
+    "verify:audit": "node packages/verification-spine/bin/akalynth-verify.js --profile audit",
     "verify:lifecycle": "npm -w apps/server run verify:lifecycle",
-    "verify:receipt-hygiene": "npm -w apps/server run verify:receipt-hygiene",
-    "verify:quick": "npm -w apps/server run verify:quick"
+    "verify:receipt-hygiene": "npm -w apps/server run verify:receipt-hygiene"
   },
   "keywords": ["mmo", "game", "akalynth", "multiplayer"],
   "author": "",

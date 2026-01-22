@@ -1,0 +1,1834 @@
+{
+  "version": "1.0.0",
+  "generatedAt": "2026-01-22T06:26:51.697Z",
+  "source": {
+    "path": "/home/user/akalynth/packages/shared/protocol.ts",
+    "hash": "sha256:77bacdd47f40eb65d9c10be40b1e8ab58a73a7d1c8f193c92c530ec76448fa96"
+  },
+  "surface": {
+    "version": "1.0.0",
+    "messages": {
+      "client": {
+        "AttackIntentMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "target_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'attack_intent'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "ChatMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "message": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'chat'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "ConnectMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "type": {
+              "type": "'connect'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "DeclareVocationMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "type": {
+              "type": "'declare_vocation'",
+              "optional": false,
+              "readonly": false
+            },
+            "vocation": {
+              "type": "SovereignVocation",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "DropItemMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "item_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'drop_item'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "EnterWorldMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "type": {
+              "type": "'enter_world'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "GetChronicleMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "before": {
+              "type": "string",
+              "optional": true,
+              "readonly": false
+            },
+            "limit": {
+              "type": "number",
+              "optional": true,
+              "readonly": false
+            },
+            "player_id": {
+              "type": "string",
+              "optional": true,
+              "readonly": false
+            },
+            "type": {
+              "type": "'get_chronicle'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "GetEvidenceMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "chronicle_event_id": {
+              "type": "number",
+              "optional": true,
+              "readonly": false
+            },
+            "kind": {
+              "type": "string",
+              "optional": true,
+              "readonly": false
+            },
+            "receipt_hash": {
+              "type": "string",
+              "optional": true,
+              "readonly": false
+            },
+            "type": {
+              "type": "'get_evidence'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "GetModReportsMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "limit": {
+              "type": "number",
+              "optional": true,
+              "readonly": false
+            },
+            "status": {
+              "type": "'all' | 'open' | 'resolved'",
+              "optional": true,
+              "readonly": false
+            },
+            "type": {
+              "type": "'get_mod_reports'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "GetPressureMetricsMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "since": {
+              "type": "string",
+              "optional": true,
+              "readonly": false
+            },
+            "type": {
+              "type": "'get_pressure_metrics'",
+              "optional": false,
+              "readonly": false
+            },
+            "until": {
+              "type": "string",
+              "optional": true,
+              "readonly": false
+            }
+          }
+        },
+        "GrantGoldMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "amount": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "target_player_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'grant_gold'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "GrantSovereignPrefixMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "grant": {
+              "type": "boolean",
+              "optional": false,
+              "readonly": false
+            },
+            "target_player_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'grant_sovereign_prefix'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "InspectPlayerMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "target_player_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'inspect_player'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "InspectWalletMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "type": {
+              "type": "'inspect_wallet'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "KillSelfMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "type": {
+              "type": "'kill_self'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "LoginMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "guest_token": {
+              "type": "null | string",
+              "optional": true,
+              "readonly": false
+            },
+            "token": {
+              "type": "string",
+              "optional": true,
+              "readonly": false
+            },
+            "type": {
+              "type": "'login'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "MintLegendaryMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "item_type": {
+              "type": "string",
+              "optional": true,
+              "readonly": false
+            },
+            "tier": {
+              "type": "number",
+              "optional": true,
+              "readonly": false
+            },
+            "type": {
+              "type": "'mint_legendary'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "ModResolveMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "case_id": {
+              "type": "string",
+              "optional": true,
+              "readonly": false
+            },
+            "reason": {
+              "type": "string",
+              "optional": true,
+              "readonly": false
+            },
+            "receipt_hash": {
+              "type": "string",
+              "optional": true,
+              "readonly": false
+            },
+            "resolution": {
+              "type": "ModerationResolution",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'mod_resolve'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "MoveIntentMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "direction": {
+              "type": "Direction",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'move_intent'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "PayTitheMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "amount": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'pay_tithe'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "PickupItemMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "item_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'pickup_item'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "RunestoneCastMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "guess": {
+              "type": "Element | null",
+              "optional": false,
+              "readonly": false
+            },
+            "table_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'runestone_cast'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "SetProtectedSlotMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "item_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'set_protected_slot'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "StartWorkContractMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "contract_type": {
+              "type": "'temple_sweep'",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'start_work_contract'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "TalkToNpcMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "npc_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'talk_to_npc'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "TemResponseMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "response": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'tem_response'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "TemWitnessResponseMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "request_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "response": {
+              "type": "WitnessResponse",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'tem_witness_response'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "UseSkillMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "skill_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "target_id": {
+              "type": "string",
+              "optional": true,
+              "readonly": false
+            },
+            "type": {
+              "type": "'use_skill'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "WorkTickMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "contract_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'work_tick'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        }
+      },
+      "server": {
+        "ChatBroadcastMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "message": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "name": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "player_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'chat_broadcast'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "ChronicleSnapshotMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "events": {
+              "type": "ChronicleEvent[]",
+              "optional": false,
+              "readonly": false
+            },
+            "has_more": {
+              "type": "boolean",
+              "optional": false,
+              "readonly": false
+            },
+            "player_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'chronicle_snapshot'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "CombatRejectedMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "reason": {
+              "type": "CombatRejectionReason",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'combat_rejected'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "CombatResolvedMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "attacker_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "defender_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "map": {
+              "type": "MapName",
+              "optional": false,
+              "readonly": false
+            },
+            "outcome": {
+              "type": "'kill'",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'combat_resolved'",
+              "optional": false,
+              "readonly": false
+            },
+            "x": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "y": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "DeathNoticeMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "map": {
+              "type": "MapName",
+              "optional": false,
+              "readonly": false
+            },
+            "ok": {
+              "type": "true",
+              "optional": false,
+              "readonly": false
+            },
+            "reason": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "respawn_in_ms": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "spawn": {
+              "type": "{ x: number; y: number }",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'death_notice'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "DropItemResultMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "item_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "ok": {
+              "type": "boolean",
+              "optional": false,
+              "readonly": false
+            },
+            "reason": {
+              "type": "null | string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'drop_item_result'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "ErrorMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "code": {
+              "type": "ErrorCode",
+              "optional": false,
+              "readonly": false
+            },
+            "message": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'error'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "EvidenceSnapshotMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "chronicle_event_id": {
+              "type": "number",
+              "optional": true,
+              "readonly": false
+            },
+            "error_code": {
+              "type": "string",
+              "optional": true,
+              "readonly": false
+            },
+            "evidence": {
+              "type": "{\n    receipt_hashes: {\n      anchor: string;\n      combat_resolved?: string;\n      death?: string;\n    };\n    drop_explanation?: DropExplanationWire;\n  }",
+              "optional": true,
+              "readonly": false
+            },
+            "kind": {
+              "type": "string",
+              "optional": true,
+              "readonly": false
+            },
+            "player_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "receipt_hash": {
+              "type": "string",
+              "optional": true,
+              "readonly": false
+            },
+            "source_action": {
+              "type": "string",
+              "optional": true,
+              "readonly": false
+            },
+            "status": {
+              "type": "EvidenceStatus",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'evidence_snapshot'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "InventorySnapshotMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "items": {
+              "type": "ItemInfo[]",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'inventory_snapshot'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "LoginAckMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "expires_at": {
+              "type": "number",
+              "optional": true,
+              "readonly": false
+            },
+            "guest_token": {
+              "type": "string",
+              "optional": true,
+              "readonly": false
+            },
+            "name": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "ok": {
+              "type": "boolean",
+              "optional": true,
+              "readonly": false
+            },
+            "player_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "reason": {
+              "type": "string",
+              "optional": true,
+              "readonly": false
+            },
+            "token": {
+              "type": "string",
+              "optional": true,
+              "readonly": false
+            },
+            "type": {
+              "type": "'login_ack'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "ModReportsSnapshotMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "has_more": {
+              "type": "boolean",
+              "optional": false,
+              "readonly": false
+            },
+            "reports": {
+              "type": "ModerationReport[]",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'mod_reports_snapshot'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "ModResolveResultMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "case_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "error": {
+              "type": "ModResolveError",
+              "optional": true,
+              "readonly": false
+            },
+            "success": {
+              "type": "boolean",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'mod_resolve_result'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "MoveResultMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "map": {
+              "type": "MapName",
+              "optional": true,
+              "readonly": false
+            },
+            "ok": {
+              "type": "boolean",
+              "optional": false,
+              "readonly": false
+            },
+            "reason": {
+              "type": "null | string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'move_result'",
+              "optional": false,
+              "readonly": false
+            },
+            "x": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "y": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "NpcDialogueErrorMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "error": {
+              "type": "NpcDialogueError",
+              "optional": false,
+              "readonly": false
+            },
+            "npc_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'npc_dialogue_error'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "NpcDialogueMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "line": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "npc_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "place_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "tier": {
+              "type": "NpcRecognitionTier",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'npc_dialogue'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "PickupItemResultMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "item_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "ok": {
+              "type": "boolean",
+              "optional": false,
+              "readonly": false
+            },
+            "reason": {
+              "type": "null | string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'pickup_item_result'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "PlayerInspectMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "badges": {
+              "type": "string[]",
+              "optional": false,
+              "readonly": false
+            },
+            "display_vocation": {
+              "type": "null | string",
+              "optional": false,
+              "readonly": false
+            },
+            "error": {
+              "type": "'not_found'",
+              "optional": true,
+              "readonly": false
+            },
+            "mark": {
+              "type": "null | string",
+              "optional": false,
+              "readonly": false
+            },
+            "name": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "player_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'player_inspect'",
+              "optional": false,
+              "readonly": false
+            },
+            "vocation": {
+              "type": "SovereignVocation | null",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "PlayerJoinedMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "player": {
+              "type": "PlayerPublic",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'player_joined'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "PlayerLeftMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "player_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'player_left'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "PlayerMovedMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "player_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'player_moved'",
+              "optional": false,
+              "readonly": false
+            },
+            "x": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "y": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "PressureMetricsSnapshotMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "error_code": {
+              "type": "'no_chronicle' | 'schema_too_old'",
+              "optional": true,
+              "readonly": false
+            },
+            "metrics": {
+              "type": "PressureMetrics",
+              "optional": true,
+              "readonly": false
+            },
+            "player_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "since": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "status": {
+              "type": "PressureMetricsStatus",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'pressure_metrics_snapshot'",
+              "optional": false,
+              "readonly": false
+            },
+            "until": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "ProtectedSlotSetMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "item_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "player_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "prev_item_id": {
+              "type": "null | string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'protected_slot_set'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "RunestoneDeniedMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "reason": {
+              "type": "RunestoneDenialReason",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'runestone_denied'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "RunestoneResultMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "caster": {
+              "type": "{ id: string; name: string }",
+              "optional": false,
+              "readonly": false
+            },
+            "face": {
+              "type": "Element",
+              "optional": false,
+              "readonly": false
+            },
+            "table_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'runestone_result'",
+              "optional": false,
+              "readonly": false
+            },
+            "whisper": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "SkillResultMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "cooldown_until_ms": {
+              "type": "number",
+              "optional": true,
+              "readonly": false
+            },
+            "payload": {
+              "type": "Record<string, unknown>",
+              "optional": true,
+              "readonly": false
+            },
+            "reason": {
+              "type": "SkillRejectionReason",
+              "optional": true,
+              "readonly": false
+            },
+            "skill_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "success": {
+              "type": "boolean",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'skill_result'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "TemChallengeMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "challenge_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "message": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "timeout_seconds": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'tem_challenge'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "TemWitnessRequestMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "kind": {
+              "type": "'heat_penalty'",
+              "optional": false,
+              "readonly": false
+            },
+            "map": {
+              "type": "MapName",
+              "optional": false,
+              "readonly": false
+            },
+            "prompt": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "request_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "target_actor": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "timestamp": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'tem_witness_request'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "TitheResultMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "error": {
+              "type": "'insufficient_gold' | 'invalid_amount'",
+              "optional": true,
+              "readonly": false
+            },
+            "new_balance": {
+              "type": "number",
+              "optional": true,
+              "readonly": false
+            },
+            "success": {
+              "type": "boolean",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'tithe_result'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "WalletSnapshotMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "gold": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'wallet_snapshot'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "WelcomeMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "type": {
+              "type": "'welcome'",
+              "optional": false,
+              "readonly": false
+            },
+            "version": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "WorkContractResultMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "contract_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "credited_gold": {
+              "type": "number",
+              "optional": true,
+              "readonly": false
+            },
+            "error": {
+              "type": "WorkContractError",
+              "optional": true,
+              "readonly": false
+            },
+            "success": {
+              "type": "boolean",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'work_contract_result'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "WorkContractStartedMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "contract_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "contract_type": {
+              "type": "'temple_sweep'",
+              "optional": false,
+              "readonly": false
+            },
+            "cooldown_seconds": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "min_duration_ms": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "payout_gold": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'work_contract_started'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "WorkProgressMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "contract_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "remaining_ms": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "ticks_observed": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "ticks_required": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'work_progress'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "WorldItemAddedMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "item_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "item_type": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'world_item_added'",
+              "optional": false,
+              "readonly": false
+            },
+            "x": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "y": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "WorldItemRemovedMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "item_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'world_item_removed'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "WorldStateMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "map": {
+              "type": "MapName",
+              "optional": false,
+              "readonly": false
+            },
+            "nearby_players": {
+              "type": "PlayerPublic[]",
+              "optional": false,
+              "readonly": false
+            },
+            "player": {
+              "type": "PlayerPublic",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'world_state'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        }
+      }
+    },
+    "typeAliases": {
+      "CombatRejectionReason": {
+        "kind": "union",
+        "members": [
+          "'attacker_dead'",
+          "'attacker_not_found'",
+          "'cooldown'",
+          "'defender_dead'",
+          "'defender_not_found'",
+          "'different_maps'",
+          "'not_adjacent'",
+          "'pvp_disabled'"
+        ]
+      },
+      "ErrorCode": {
+        "kind": "union",
+        "members": [
+          "'banned'",
+          "'insufficient_gold'",
+          "'invalid_message'",
+          "'invalid_name'",
+          "'kicked'",
+          "'name_taken'",
+          "'not_authenticated'",
+          "'not_in_world'",
+          "'rate_limited'",
+          "'token_expired'",
+          "'token_invalid'"
+        ]
+      },
+      "EvidenceStatus": {
+        "kind": "union",
+        "members": [
+          "'insufficient_data'",
+          "'not_applicable'",
+          "'not_found'",
+          "'ok'"
+        ]
+      },
+      "ModResolveError": {
+        "kind": "union",
+        "members": [
+          "'already_resolved'",
+          "'invalid_resolution'",
+          "'not_authorized'",
+          "'not_found'"
+        ]
+      },
+      "ModerationResolution": {
+        "kind": "union",
+        "members": [
+          "'no_action'",
+          "'temp_mute'",
+          "'warning'"
+        ]
+      },
+      "NpcDialogueError": {
+        "kind": "union",
+        "members": [
+          "'not_found'",
+          "'not_in_place'"
+        ]
+      },
+      "NpcRecognitionTier": {
+        "kind": "union",
+        "members": [
+          "'recognized'",
+          "'seen'",
+          "'stranger'"
+        ]
+      },
+      "PressureMetricsStatus": {
+        "kind": "union",
+        "members": [
+          "'not_ready'",
+          "'ok'"
+        ]
+      },
+      "SkillRejectionReason": {
+        "kind": "union",
+        "members": [
+          "'cooldown'",
+          "'debug_only'",
+          "'invalid_skill'",
+          "'invalid_target'",
+          "'target_not_found'"
+        ]
+      },
+      "WitnessResponse": {
+        "kind": "union",
+        "members": [
+          "'confirm'",
+          "'deny'",
+          "'uncertain'"
+        ]
+      },
+      "WorkContractError": {
+        "kind": "union",
+        "members": [
+          "'already_active'",
+          "'insufficient_presence'",
+          "'invalid_contract'",
+          "'on_cooldown'"
+        ]
+      }
+    },
+    "sharedTypes": {
+      "ChronicleEvent": {
+        "fields": {
+          "details": {
+            "type": "Record<string, unknown>",
+            "optional": false,
+            "readonly": false
+          },
+          "evidence_ref": {
+            "type": "EvidenceRef | null",
+            "optional": true,
+            "readonly": false
+          },
+          "kind": {
+            "type": "string",
+            "optional": false,
+            "readonly": false
+          },
+          "timestamp": {
+            "type": "string",
+            "optional": false,
+            "readonly": false
+          },
+          "x": {
+            "type": "null | number",
+            "optional": false,
+            "readonly": false
+          },
+          "y": {
+            "type": "null | number",
+            "optional": false,
+            "readonly": false
+          },
+          "zone": {
+            "type": "null | string",
+            "optional": false,
+            "readonly": false
+          }
+        }
+      },
+      "DropExplanationWire": {
+        "fields": {
+          "candidates": {
+            "type": "'below_cutoff';\n  }> | 'player_protected' | 'policy_protected' | Array<{\n    item_id: string;\n    item_type: string;\n    base_weight: number;\n    legendary: boolean;\n    legendary_tier: number | null;\n    final_weight: number;\n    deterministic_u: number;\n    selection_key: number;\n    rank: number;\n    dropped: boolean;\n    exclusion_reason: 'none' | null;\n    heat: number;\n    legendary_multiplier: number",
+            "optional": false,
+            "readonly": false
+          },
+          "dropped_item_ids": {
+            "type": "string[]",
+            "optional": false,
+            "readonly": false
+          },
+          "kept_item_ids": {
+            "type": "string[]",
+            "optional": false,
+            "readonly": false
+          },
+          "player_protected_ids": {
+            "type": "string[]",
+            "optional": false,
+            "readonly": false
+          },
+          "policy": {
+            "type": "null;\n    rep_bias: number;\n    stack_bias: number;\n    protected_slots: number;\n    decay_minutes: number;\n  } | {\n    base_drop_ratio: number;\n    min_drop: number;\n    max_drop: number",
+            "optional": false,
+            "readonly": false
+          },
+          "policy_protected_ids": {
+            "type": "string[]",
+            "optional": false,
+            "readonly": false
+          },
+          "ratio_breakdown": {
+            "type": "{\n    base_drop_ratio: number;\n    reputation: number;\n    neg_rep: number;\n    inventory_size: number;\n    stack_excess: number;\n    rep_contribution: number;\n    stack_contribution: number;\n    final_ratio: number;\n    K_raw: number;\n    K_bounded: number;\n    K_final: number;\n  }",
+            "optional": false,
+            "readonly": false
+          },
+          "seed_hash": {
+            "type": "string",
+            "optional": false,
+            "readonly": false
+          }
+        }
+      },
+      "ItemInfo": {
+        "fields": {
+          "item_id": {
+            "type": "string",
+            "optional": false,
+            "readonly": false
+          },
+          "item_type": {
+            "type": "string",
+            "optional": false,
+            "readonly": false
+          },
+          "slot": {
+            "type": "null | string",
+            "optional": true,
+            "readonly": false
+          }
+        }
+      },
+      "ModerationReport": {
+        "fields": {
+          "case_id": {
+            "type": "string",
+            "optional": false,
+            "readonly": false
+          },
+          "reason": {
+            "type": "string",
+            "optional": true,
+            "readonly": false
+          },
+          "receipt_hash": {
+            "type": "string",
+            "optional": false,
+            "readonly": false
+          },
+          "reported_at": {
+            "type": "string",
+            "optional": false,
+            "readonly": false
+          },
+          "reporter_id": {
+            "type": "string",
+            "optional": false,
+            "readonly": false
+          },
+          "resolution": {
+            "type": "ModerationResolution",
+            "optional": true,
+            "readonly": false
+          },
+          "resolution_receipt_hash": {
+            "type": "string",
+            "optional": true,
+            "readonly": false
+          },
+          "resolved_at": {
+            "type": "string",
+            "optional": true,
+            "readonly": false
+          },
+          "resolved_by": {
+            "type": "string",
+            "optional": true,
+            "readonly": false
+          },
+          "status": {
+            "type": "'open' | 'resolved'",
+            "optional": false,
+            "readonly": false
+          },
+          "target_id": {
+            "type": "string",
+            "optional": false,
+            "readonly": false
+          }
+        }
+      },
+      "PressureMetrics": {
+        "fields": {
+          "average_drop_ratio": {
+            "type": "number",
+            "optional": true,
+            "readonly": false
+          },
+          "contributors": {
+            "type": "PressureMetricsContributors",
+            "optional": false,
+            "readonly": false
+          },
+          "deaths_total": {
+            "type": "number",
+            "optional": false,
+            "readonly": false
+          },
+          "deaths_with_protection": {
+            "type": "number",
+            "optional": false,
+            "readonly": false
+          },
+          "exposure_item_minutes": {
+            "type": "number",
+            "optional": false,
+            "readonly": false
+          },
+          "heat_now": {
+            "type": "number",
+            "optional": false,
+            "readonly": false
+          },
+          "hottest_item_heat": {
+            "type": "number",
+            "optional": true,
+            "readonly": false
+          },
+          "hottest_item_id": {
+            "type": "string",
+            "optional": true,
+            "readonly": false
+          },
+          "items_lost_by_type": {
+            "type": "Record<string, number>",
+            "optional": false,
+            "readonly": false
+          },
+          "items_lost_total": {
+            "type": "number",
+            "optional": false,
+            "readonly": false
+          },
+          "legendaries_lost_total": {
+            "type": "number",
+            "optional": false,
+            "readonly": false
+          },
+          "legendary_exposure_minutes": {
+            "type": "number",
+            "optional": false,
+            "readonly": false
+          },
+          "worst_death": {
+            "type": "{\n    receipt_hash: string;\n    drop_ratio: number;\n  }",
+            "optional": true,
+            "readonly": false
+          }
+        }
+      }
+    },
+    "guards": [
+      "isValidDirection",
+      "parseClientMessage"
+    ]
+  }
+}
