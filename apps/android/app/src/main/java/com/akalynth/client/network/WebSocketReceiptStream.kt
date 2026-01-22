@@ -94,8 +94,8 @@ class WebSocketReceiptStream(
                 detailsObj.forEach { (key, value) ->
                     val v = when {
                         value.jsonPrimitive.isString -> value.jsonPrimitive.content
-                        value.jsonPrimitive.longOrNull != null -> value.jsonPrimitive.long
-                        value.jsonPrimitive.intOrNull != null -> value.jsonPrimitive.int
+                        value.jsonPrimitive.longOrNull != null -> value.jsonPrimitive.longOrNull
+                        value.jsonPrimitive.intOrNull != null -> value.jsonPrimitive.intOrNull
                         else -> value.jsonPrimitive.contentOrNull
                     }
                     put(key, v)

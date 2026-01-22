@@ -30,6 +30,10 @@ object MessageSerializer {
                     Direction.SOUTH -> "south"
                     Direction.EAST -> "east"
                     Direction.WEST -> "west"
+                    Direction.NORTHEAST -> "northeast"
+                    Direction.NORTHWEST -> "northwest"
+                    Direction.SOUTHEAST -> "southeast"
+                    Direction.SOUTHWEST -> "southwest"
                 }
                 """{"type":"move_intent","direction":"$dir"}"""
             }

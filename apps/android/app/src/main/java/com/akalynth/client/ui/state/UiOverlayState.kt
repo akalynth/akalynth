@@ -232,18 +232,18 @@ data class WhyContext(
  * Check if Why overlay can be opened (only from None state).
  * Enforces overlay contention policy.
  */
-fun UiOverlayState.canOpenWhy(): Boolean = this is None
+fun UiOverlayState.canOpenWhy(): Boolean = this is UiOverlayState.None
 
 /**
  * Priority of overlay states for contention resolution.
  * Higher priority overlays cannot be replaced by lower priority ones.
  */
 val UiOverlayState.priority: Int get() = when (this) {
-    is None -> 0
-    is Why -> 1
-    is Toast -> 2
-    is Recap -> 3
-    is ConfirmDrop -> 4
+    is UiOverlayState.None -> 0
+    is UiOverlayState.Why -> 1
+    is UiOverlayState.Toast -> 2
+    is UiOverlayState.Recap -> 3
+    is UiOverlayState.ConfirmDrop -> 4
 }
 
 /**

@@ -524,7 +524,7 @@ object ExplanationEngine {
                 overlay.notice.chronicleEventId?.let { evidenceRefs.add(it) }
             }
             is UiOverlayState.Recap -> {
-                evidenceRefs.add(overlay.event.eventId)
+                evidenceRefs.add(overlay.event.id)
             }
             is UiOverlayState.ConfirmDrop -> {
                 evidenceRefs.add("confirm:${overlay.itemId}")

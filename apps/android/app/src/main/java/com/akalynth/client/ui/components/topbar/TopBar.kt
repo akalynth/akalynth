@@ -147,7 +147,7 @@ fun TopBar(
                         .size(MIN_TOUCH_TARGET)
                         .testTag("TopBar_Why_Reserved")
                 )
-                AnimatedVisibility(
+                androidx.compose.animation.AnimatedVisibility(
                     visible = stage >= 2,
                     enter = fadeIn() + scaleIn(initialScale = 0.8f),
                     exit = fadeOut() + scaleOut(targetScale = 0.8f)
@@ -169,7 +169,7 @@ fun TopBar(
                         .size(MIN_TOUCH_TARGET)
                         .testTag("TopBar_Menu_Reserved")
                 )
-                AnimatedVisibility(
+                androidx.compose.animation.AnimatedVisibility(
                     visible = stage >= 1,
                     enter = fadeIn() + scaleIn(initialScale = 0.8f),
                     exit = fadeOut() + scaleOut(targetScale = 0.8f)
