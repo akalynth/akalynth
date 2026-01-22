@@ -1,0 +1,34 @@
+{
+  "name": "@akalynth/verification-spine",
+  "version": "1.0.0",
+  "description": "Unified verification system for Akalynth (18 verifiers, fail-closed)",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "akalynth-verify": "./bin/akalynth-verify.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "verify": "node ./bin/akalynth-verify.js"
+  },
+  "keywords": [
+    "verification",
+    "guarantees",
+    "audit",
+    "civil-guarantees"
+  ],
+  "author": "Akalynth",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "better-sqlite3": "^11.0.0",
+    "fast-json-stable-stringify": "^2.1.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/node": "^20.11.0",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3"
+  }
+}
