@@ -79,6 +79,26 @@ export interface VerifyResult {
 }
 
 /**
+ * Filesystem abstraction for bundle support
+ */
+export interface BundleFS {
+  /** Read file as UTF-8 text */
+  readText(relPath: string): string;
+
+  /** Read file as parsed JSON */
+  readJson<T = unknown>(relPath: string): T;
+
+  /** Check if file or directory exists */
+  exists(relPath: string): boolean;
+
+  /** Resolve path relative to bundle root */
+  resolve(...parts: string[]): string;
+
+  /** Bundle/repo root directory */
+  readonly root: string;
+}
+
+/**
  * Context passed to each verifier
  */
 export interface VerifyContext {
@@ -88,7 +108,7 @@ export interface VerifyContext {
   /** Current working directory */
   cwd: string;
 
-  /** Repository root (where .git lives) */
+  /** Repository root (where .git lives) - prefer ctx.fs.root in bundle-capable verifiers */
   repoRoot: string;
 
   /** Environment variables */
@@ -105,6 +125,9 @@ export interface VerifyContext {
 
   /** Verbose output */
   verbose: boolean;
+
+  /** Filesystem abstraction (supports local repo and bundle modes) */
+  fs: BundleFS;
 }
 
 /**
@@ -128,6 +151,12 @@ export interface VerifierSpec {
 
   /** Is this verifier safe to run in audit mode? (read-only, no mutation) */
   auditSafe?: boolean;
+
+  /** Can this verifier run from a bundle? (default: false) */
+  bundleCapable?: boolean;
+
+  /** Required bundle files (supports files and directories with trailing /) */
+  bundleInputs?: string[];
 
   /** Run the verifier */
   run: (ctx: VerifyContext) => Promise<VerifyResult>;
@@ -197,4 +226,7 @@ export interface SpineOptions {
 
   /** Dry run (show what would run, don't execute) */
   dryRun: boolean;
+
+  /** Bundle directory path (audit mode only) */
+  bundle?: string;
 }

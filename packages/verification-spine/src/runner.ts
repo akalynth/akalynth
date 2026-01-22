@@ -71,8 +71,46 @@ export async function runSpine(
     ordered = ordered.filter((spec) => spec.phase <= opts.phase!);
   }
 
+  // Bundle gating: if --bundle provided, only run bundle-capable verifiers
+  const skippedForBundle: string[] = [];
+  if (opts.bundle) {
+    const beforeGating = ordered.length;
+    ordered = ordered.filter((spec) => {
+      if (spec.bundleCapable === true) {
+        return true;
+      } else {
+        skippedForBundle.push(spec.id);
+        return false;
+      }
+    });
+    const afterGating = ordered.length;
+    if (opts.verbose || opts.dryRun) {
+      ctx.log(`[spine] Bundle mode: ${afterGating}/${beforeGating} verifiers are bundle-capable`);
+    }
+  }
+
   const results: VerifyResult[] = [];
   let globalOk = true;
+
+  // Emit coverage warning if verifiers were skipped due to bundle mode
+  if (skippedForBundle.length > 0) {
+    const coverageWarning: VerifyResult = {
+      ok: true, // Warning, not failure
+      verifierId: 'bundle-coverage',
+      startedAt: new Date().toISOString(),
+      finishedAt: new Date().toISOString(),
+      findings: [
+        {
+          code: 'BUNDLE_PARTIAL_COVERAGE',
+          severity: 'warn',
+          message: `Bundle mode: ${skippedForBundle.length} verifier(s) skipped (not bundle-capable)`,
+          hint: `Skipped: ${skippedForBundle.join(', ')}. This is expected for bundle verification.`,
+          data: { skipped: skippedForBundle },
+        },
+      ],
+    };
+    results.push(coverageWarning);
+  }
 
   for (const spec of ordered) {
     // Check if verifier is audit-safe

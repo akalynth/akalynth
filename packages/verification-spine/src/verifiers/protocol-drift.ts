@@ -40,6 +40,12 @@ export const protocolDriftVerifier: VerifierSpec = {
   phase: 1,
   dependsOn: ['build'],
   auditSafe: true,
+  bundleCapable: true,
+  bundleInputs: [
+    'packages/shared/protocol.ts',
+    'packages/shared/protocol.golden.json',
+    'packages/shared/tsconfig.json',
+  ],
 
   async run(ctx: VerifyContext): Promise<VerifyResult> {
     const startedAt = new Date().toISOString();
@@ -50,7 +56,7 @@ export const protocolDriftVerifier: VerifierSpec = {
     const ackAbsPath = path.join(ctx.repoRoot, ACK_PATH);
 
     // Find tsconfig.json
-    const tsconfigPath = findTsConfig(ctx.repoRoot);
+    const tsconfigPath = findTsConfig(ctx);
     if (!tsconfigPath) {
       findings.push({
         code: 'PROTOCOL_TSCONFIG_NOT_FOUND',
@@ -89,7 +95,7 @@ export const protocolDriftVerifier: VerifierSpec = {
     }
 
     // Load golden snapshot
-    if (!fs.existsSync(goldenAbsPath)) {
+    if (!ctx.fs.exists(GOLDEN_PATH)) {
       findings.push({
         code: 'PROTOCOL_GOLDEN_MISSING',
         severity: 'error',
@@ -107,7 +113,7 @@ export const protocolDriftVerifier: VerifierSpec = {
 
     let golden: GoldenSnapshot;
     try {
-      golden = JSON.parse(fs.readFileSync(goldenAbsPath, 'utf-8'));
+      golden = ctx.fs.readJson<GoldenSnapshot>(GOLDEN_PATH);
     } catch (err: any) {
       findings.push({
         code: 'PROTOCOL_GOLDEN_INVALID',
@@ -179,7 +185,7 @@ export const protocolDriftVerifier: VerifierSpec = {
       }
 
       // Check for acknowledgement
-      if (!fs.existsSync(ackAbsPath)) {
+      if (!ctx.fs.exists(ACK_PATH)) {
         findings.push({
           code: 'PROTOCOL_ACK_FILE_MISSING',
           severity: 'error',
@@ -190,7 +196,7 @@ export const protocolDriftVerifier: VerifierSpec = {
         // Validate acknowledgement
         let ack: BreakingAck;
         try {
-          ack = JSON.parse(fs.readFileSync(ackAbsPath, 'utf-8'));
+          ack = ctx.fs.readJson<BreakingAck>(ACK_PATH);
         } catch {
           findings.push({
             code: 'PROTOCOL_ACK_INVALID',
@@ -297,15 +303,15 @@ export const protocolDriftVerifier: VerifierSpec = {
 // Helper Functions
 // ============================================================================
 
-function findTsConfig(repoRoot: string): string | null {
+function findTsConfig(ctx: VerifyContext): string | null {
   const candidates = [
-    path.join(repoRoot, 'tsconfig.json'),
-    path.join(repoRoot, 'packages/shared/tsconfig.json'),
+    'tsconfig.json',
+    'packages/shared/tsconfig.json',
   ];
 
   for (const candidate of candidates) {
-    if (fs.existsSync(candidate)) {
-      return candidate;
+    if (ctx.fs.exists(candidate)) {
+      return ctx.fs.resolve(candidate);
     }
   }
 

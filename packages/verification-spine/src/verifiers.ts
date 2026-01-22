@@ -64,11 +64,13 @@ export function createDefaultRegistry(): VerifierRegistry {
     phase: 0,
     dependsOn: [],
     auditSafe: true,
+    bundleCapable: true,
+    bundleInputs: ['apps/server/data/akalynth.db'],
     async run(ctx) {
       // Use default path (apps/server/data/akalynth.db)
-      const dbPath = path.join(ctx.repoRoot, 'apps/server/data/akalynth.db');
+      const dbPath = 'apps/server/data/akalynth.db';
 
-      if (!fs.existsSync(dbPath)) {
+      if (!ctx.fs.exists(dbPath)) {
         return {
           ok: true, // Skip is not a failure
           verifierId: 'db-exists',
@@ -101,11 +103,13 @@ export function createDefaultRegistry(): VerifierRegistry {
     phase: 0,
     dependsOn: [],
     auditSafe: true,
+    bundleCapable: true,
+    bundleInputs: ['apps/server/audit/receipts.jsonl'],
     async run(ctx) {
       // Use default path (apps/server/audit/receipts.jsonl)
-      const receiptsPath = path.join(ctx.repoRoot, 'apps/server/audit/receipts.jsonl');
+      const receiptsPath = 'apps/server/audit/receipts.jsonl';
 
-      if (!fs.existsSync(receiptsPath)) {
+      if (!ctx.fs.exists(receiptsPath)) {
         return {
           ok: true, // Skip is not a failure
           verifierId: 'receipts-exist',

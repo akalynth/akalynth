@@ -6,11 +6,12 @@
 
 import * as path from 'node:path';
 import * as fs from 'node:fs';
-import { VerifyContext, VerifyMode, SpineOptions } from './types.js';
+import { VerifyContext, VerifyMode, SpineOptions, BundleFS } from './types.js';
 import { createDefaultRegistry } from './verifiers.js';
 import { runSpine } from './runner.js';
 import { formatTextReport, formatJsonReport } from './reporter.js';
 import { isProfileName } from './profiles.js';
+import { LocalFS, DirBundleFS } from './fs/index.js';
 
 /**
  * Parse CLI arguments
@@ -27,6 +28,7 @@ function parseArgs(args: string[]): SpineOptions {
     format: 'text',
     outDir: './verify-out',
     dryRun: false,
+    bundle: undefined,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -73,6 +75,9 @@ function parseArgs(args: string[]): SpineOptions {
       case '--dry-run':
         opts.dryRun = true;
         break;
+      case '--bundle':
+        opts.bundle = args[++i];
+        break;
       case '--help':
         printHelp();
         process.exit(0);
@@ -80,6 +85,13 @@ function parseArgs(args: string[]): SpineOptions {
         console.error(`Unknown argument: ${arg}`);
         process.exit(3); // Invalid usage
     }
+  }
+
+  // Validate: --bundle requires --mode audit
+  if (opts.bundle && opts.mode !== 'audit') {
+    console.error('[spine] ERROR: --bundle requires --mode audit');
+    console.error('[spine] Bundle verification is only permitted in audit mode for safety.');
+    process.exit(3);
   }
 
   return opts;
@@ -107,6 +119,7 @@ Options:
   --format <text|json>    Output format (default: text)
   --out <dir>             Output directory for artifacts (default: ./verify-out)
   --dry-run               Show what would run, don't execute
+  --bundle <dir>          Verify from audit bundle (requires --mode audit)
   --help                  Show this help message
 
 Profiles:
@@ -123,6 +136,7 @@ Examples:
   npm run verify -- --phase 1             # Run phases 0-1 only
   npm run verify -- --mode ci --format json  # CI mode with JSON output
   npm run verify -- --dry-run             # Show execution plan
+  npm run verify -- --mode audit --bundle ./audit-bundle  # Verify from bundle
 
 Verifier Phases:
   0: Prerequisites (build, db-exists, receipts-exist)
@@ -145,15 +159,31 @@ export async function main(argv: string[]): Promise<void> {
   const args = argv.slice(2); // Remove node and script path
   const opts = parseArgs(args);
 
-  // Find repo root (where .git lives)
-  let repoRoot = process.cwd();
-  while (!fs.existsSync(path.join(repoRoot, '.git'))) {
-    const parent = path.dirname(repoRoot);
-    if (parent === repoRoot) {
-      console.error('[spine] ERROR: Could not find repository root (.git directory)');
+  // Determine root and filesystem mode
+  let repoRoot: string;
+  let bundleFs: BundleFS;
+
+  if (opts.bundle) {
+    // Bundle mode: use provided bundle directory
+    const bundlePath = path.resolve(process.cwd(), opts.bundle);
+    if (!fs.existsSync(bundlePath)) {
+      console.error(`[spine] ERROR: Bundle directory not found: ${bundlePath}`);
       process.exit(2);
     }
-    repoRoot = parent;
+    repoRoot = bundlePath;
+    bundleFs = new DirBundleFS(bundlePath);
+  } else {
+    // Repo mode: find .git directory
+    repoRoot = process.cwd();
+    while (!fs.existsSync(path.join(repoRoot, '.git'))) {
+      const parent = path.dirname(repoRoot);
+      if (parent === repoRoot) {
+        console.error('[spine] ERROR: Could not find repository root (.git directory)');
+        process.exit(2);
+      }
+      repoRoot = parent;
+    }
+    bundleFs = new LocalFS(repoRoot);
   }
 
   // Create output directory
@@ -174,6 +204,7 @@ export async function main(argv: string[]): Promise<void> {
     },
     skipBuild: opts.skipBuild,
     verbose: opts.verbose,
+    fs: bundleFs,
   };
 
   // Create registry and run spine
@@ -181,7 +212,10 @@ export async function main(argv: string[]): Promise<void> {
 
   console.log('[spine] Akalynth Verification Spine v1');
   console.log(`[spine] Mode: ${opts.mode}`);
-  console.log(`[spine] Repo root: ${repoRoot}`);
+  if (opts.bundle) {
+    console.log(`[spine] Bundle mode: ${opts.bundle}`);
+  }
+  console.log(`[spine] Root: ${repoRoot}`);
   console.log(`[spine] Output directory: ${outDir}`);
   console.log('');
 
