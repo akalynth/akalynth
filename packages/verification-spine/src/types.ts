@@ -229,4 +229,13 @@ export interface SpineOptions {
 
   /** Bundle directory path (audit mode only) */
   bundle?: string;
+
+  /** Verify bundle integrity (manifest + hashes) */
+  bundleVerify?: boolean;
+
+  /** Strict mode: reject undeclared files in bundle */
+  bundleStrict?: boolean;
+
+  /** Custom manifest path (default: manifest.json) */
+  bundleManifest?: string;
 }
