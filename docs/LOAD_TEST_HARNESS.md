@@ -477,7 +477,82 @@ npm run loadtest:compare -- runs/run-abc123 runs/run-def456
 
 ---
 
-## 9. Security Notes
+## 9. Interpreting Results
+
+### Understanding the Verdict
+
+| Field | Meaning |
+|-------|---------|
+| `verdict: pass` | All plateaus completed without sustained SLO breach |
+| `verdict: fail` | At least one SLO was breached for >10s continuously |
+| `breaking_point_clients` | Client count at which breach occurred |
+| `breach_reason` | Format: `<metric>: <value> > <threshold> for <duration>s` |
+
+### Example Breach Reasons
+
+```
+tick_p95_ms: 312.50 > 250 for 10.5s
+  → Server tick loop falling behind (95th percentile exceeds 250ms)
+
+cpu_percent_sustained: 94.20 > 90 for 30.0s
+  → CPU saturated for extended period
+
+heap_growth_mb_per_min: 62.30 > 50 for 10.0s
+  → Possible memory leak detected
+
+disconnect_rate_percent: 15.40 > 10 for 10.0s
+  → Connection instability under load
+```
+
+### Server Saturation vs Harness Saturation
+
+**Critical distinction** — when throughput flattens, check which limit was hit:
+
+| Symptom | Cause | Evidence | Action |
+|---------|-------|----------|--------|
+| Low throughput, `global_rate_limited_sends > 0` | **Harness saturation** | Harness hit its own rate cap | Increase `global_msg_sec` or reduce client count |
+| Low throughput, `global_rate_limited_sends = 0` | **Server saturation** | Server can't keep up | This is the real breaking point |
+
+**Rule of thumb**: If `global_rate_limited_sends` is non-zero, you're measuring the harness, not the server.
+
+### Reading the Metrics Summary
+
+```json
+{
+  "tick_duration_ms": { "p50": 45, "p95": 120, "p99": 180, "max": 450 },
+  "message_latency_ms": { "p50": 12, "p95": 35, "p99": 85, "max": 200 },
+  "global_rate_limited_sends": 0,      // ← Should be 0 for valid server measurement
+  "global_send_queue_depth_max": 3     // ← Low = harness keeping up
+}
+```
+
+**Healthy indicators**:
+- `tick_duration_ms.p95 < 250` (server processing within budget)
+- `message_latency_ms.p95 < 100` (responsive under load)
+- `global_rate_limited_sends = 0` (harness not the bottleneck)
+- `peak_memory_mb` stable across plateaus (no leaks)
+
+### Comparing Runs
+
+When using `loadtest:compare`, look for:
+
+| Change | Interpretation |
+|--------|---------------|
+| `tick_p95` +20% | Performance regression (investigate recent commits) |
+| `receipts_per_sec` -15% | Audit pipeline slowdown |
+| `breaking_point_clients` 75→50 | Significant capacity regression |
+| `message_latency_ms.p99` 2x | Tail latency issue (possible GC pauses) |
+
+### Common Pitfalls
+
+1. **Running with `DEBUG=1` in capacity tests** — Debug logging adds overhead; results won't reflect production
+2. **Ignoring `global_rate_limited_sends`** — Non-zero means harness bottleneck, not server bottleneck
+3. **Short plateau durations** — <60s may not catch slow-building issues like memory leaks
+4. **Comparing runs with different seeds** — Use same `--seed` for reproducible comparison
+
+---
+
+## 10. Security Notes
 
 1. **Environment validation**: Harness validates `NODE_ENV !== 'production'` before starting
 2. **Address allowlist**: Only `localhost`, `127.0.0.1`, `::1`, and configured staging IPs
@@ -487,7 +562,7 @@ npm run loadtest:compare -- runs/run-abc123 runs/run-def456
 
 ---
 
-## Related Documents
+## 11. Related Documents
 
 - [MVP Verification Report](./MVP_VERIFICATION_REPORT_v1.md) - Current verification scope
 - [Architecture](./ARCHITECTURE.md) - Server design
