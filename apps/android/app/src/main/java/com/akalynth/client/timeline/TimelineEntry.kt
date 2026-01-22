@@ -5,6 +5,8 @@ import com.akalynth.client.chronicle.Receipt
 import com.akalynth.client.explain.Explanation
 import com.akalynth.client.snapshot.SnapshotEvidence
 import com.akalynth.client.snapshot.SnapshotV0
+import com.akalynth.client.snapshot.diff.SnapshotDiff
+import com.akalynth.client.snapshot.diff.SnapshotDiffAdapter
 
 /**
  * Aligned data at a point in the timeline.
@@ -14,6 +16,7 @@ import com.akalynth.client.snapshot.SnapshotV0
  * - What happened? (receipt)
  * - What's in the ledger? (event)
  * - What state resulted? (snapshot)
+ * - What changed? (diff)
  * - Why did it happen? (explanation)
  *
  * Not all fields are always present. Missing data is represented as null.
@@ -25,6 +28,7 @@ import com.akalynth.client.snapshot.SnapshotV0
  * @property prevSnapshot Snapshot before this event (if tracked)
  * @property snapshot Snapshot after this event (if tracked)
  * @property snapshotEvidence Structured evidence from snapshot transition
+ * @property snapshotDiff Computed diff between prev and current snapshot (lazy)
  * @property explanation Explanation for this event (if generated)
  */
 data class TimelineEntry(
@@ -35,6 +39,7 @@ data class TimelineEntry(
     val prevSnapshot: SnapshotV0? = null,
     val snapshot: SnapshotV0? = null,
     val snapshotEvidence: SnapshotEvidence? = null,
+    val snapshotDiff: SnapshotDiff? = null,
     val explanation: Explanation? = null
 ) {
     /**
@@ -76,6 +81,28 @@ data class TimelineEntry(
      * True if this entry represents an empty point (no data).
      */
     val isEmpty: Boolean get() = event == null && receipt == null && snapshot == null
+
+    /**
+     * True if this entry has a diff.
+     */
+    val hasDiff: Boolean get() = snapshotDiff != null && snapshotDiff.hasChanges
+
+    /**
+     * Compute diff on demand if not already present.
+     *
+     * Returns cached diff if available, otherwise computes from snapshots.
+     */
+    fun computeDiff(): SnapshotDiff {
+        return snapshotDiff ?: SnapshotDiffAdapter.diff(prevSnapshot, snapshot)
+    }
+
+    /**
+     * Create a copy with computed diff attached.
+     */
+    fun withComputedDiff(): TimelineEntry {
+        if (snapshotDiff != null) return this
+        return copy(snapshotDiff = SnapshotDiffAdapter.diff(prevSnapshot, snapshot))
+    }
 
     companion object {
         /**
