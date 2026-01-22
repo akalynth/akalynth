@@ -24,9 +24,9 @@ export function runLegacyVerifier(
   const startedAt = new Date().toISOString();
 
   const fullPath = path.join(ctx.repoRoot, scriptPath);
-  const cwd = path.dirname(fullPath);
+  const cwd = ctx.repoRoot;
 
-  const args = ['npx', 'tsx', path.basename(fullPath)];
+  const args = ['npx', 'tsx', fullPath];
 
   // Add common flags
   if (ctx.skipBuild) {

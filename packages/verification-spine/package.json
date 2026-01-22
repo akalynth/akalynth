@@ -23,7 +23,8 @@
   "license": "UNLICENSED",
   "dependencies": {
     "better-sqlite3": "^11.0.0",
-    "fast-json-stable-stringify": "^2.1.0"
+    "fast-json-stable-stringify": "^2.1.0",
+    "ts-morph": "^27.0.2"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.11",
