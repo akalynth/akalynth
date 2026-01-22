@@ -47,6 +47,46 @@ npm install
 - `npx tsx ../../scripts/heat_out_of_order_smoke.ts`
 - `npx tsx ../../scripts/heat_pr2_out_of_order_smoke.ts`
 
+## ⚠️ Verification Spine (Mandatory)
+
+**All contributions must pass the Verification Spine before merge.**
+
+```bash
+cd apps/server
+npm run verify
+```
+
+The Verification Spine is **not optional tooling** — it is **civilizational law enforcement**.
+
+### What It Verifies
+
+- Civil Guarantees (G1-G15) - Constitutional law
+- Receipt chain integrity - Audit trail
+- Protocol sync - API surface
+- Chronicle chain - Hash chain validity
+- Treasury integrity - Gold/item accounting
+- Heat system - Anti-cheat determinism
+- Protected slots - Item drop policy
+- ...and 11 more domain checks
+
+### Non-Negotiable Invariants
+
+❌ **Forbidden:**
+- No deploy path bypasses `npm run verify`
+- No CI green state without spine success
+- No manual verification bypass
+
+✅ **Required:**
+- All future verifiers register with spine
+- Failure is loud, blocking, and unskippable
+- Every release includes verification metadata
+
+**Full specification:** `docs/VERIFICATION_SPINE_API.md`
+
+**Leverage score:** 9/9 (Critical infrastructure)
+
+---
+
 ## Audit / CI Chronicle Verification
 
 CI runs `verify:receipt-hygiene` with chronicle enabled and a fixture log path. See `.github/workflows/ci.yml` (step: "Receipt + chronicle hygiene (audit)") for the exact `ENABLE_CHRONICLE` and `CHRONICLE_LOG_PATH` wiring.

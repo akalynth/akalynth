@@ -41,6 +41,96 @@ A **unified verification system** that:
 
 ---
 
+## Spine Invariants (Non-Negotiable)
+
+These constraints are **constitutionally binding**. They cannot be bypassed, ignored, or "temporarily disabled."
+
+### ❌ Forbidden (Violations Fail CI)
+
+1. **No deploy path bypasses `npm run verify`**
+   - Every release artifact must pass spine verification
+   - No "emergency deploy" exception
+   - No "we'll verify later" exemption
+
+2. **No CI green state without spine success**
+   - CI must run `npm run verify` and fail if exit code ≠ 0
+   - No merge without spine pass
+   - No "verify" marked as optional check
+
+3. **No release artifact without verification metadata**
+   - Every release includes `verification-report.json`
+   - Report must show all verifiers passed
+   - Report includes timestamp, commit hash, verifier versions
+
+4. **No manual verification bypass**
+   - Developers cannot skip spine locally (may use `--skip-build` for speed, but must run spine)
+   - CI cannot be configured to skip spine
+   - No `SKIP_VERIFICATION=1` env var or equivalent
+
+### ✅ Required (Must Be True)
+
+1. **All future verifiers must register with the spine**
+   - New `verify-*.ts` tools are forbidden (use spine plugins)
+   - Existing tools must be wrapped by spine adapters
+   - Unregistered verifiers are invisible to CI (and thus ineffective)
+
+2. **Order is deterministic and dependency-aware**
+   - Verifiers run in phase order (0 → 3)
+   - Dependencies declared explicitly in verifier metadata
+   - Same inputs always produce same execution order
+
+3. **Failure is loud, blocking, and unskippable**
+   - Exit code 1 on any verifier failure (fail-fast by default)
+   - Exit code 2 on infrastructure error (missing files, etc.)
+   - Exit code 0 only if all verifiers pass
+   - No silent failures, no warnings-as-errors toggle
+
+4. **Verification is observable and reproducible**
+   - Every spine run produces JSON report
+   - Report includes all verifier results, durations, error details
+   - Given same inputs (code + env), spine produces identical results
+
+### 🔒 Enforcement Mechanism
+
+These invariants are enforced by:
+
+1. **CI Pipeline** (`.github/workflows/ci.yml`)
+   ```yaml
+   - name: Verification Spine (Mandatory)
+     run: npm run verify -- --json > verification-report.json
+     # This step MUST NOT have `continue-on-error: true`
+   ```
+
+2. **Git Hooks** (optional but recommended)
+   ```bash
+   # .git/hooks/pre-push
+   npm run verify || exit 1
+   ```
+
+3. **Release Process** (documented in V1_SCOPE.md)
+   - No tag creation without spine pass
+   - Release notes include verification report
+
+4. **Code Review Checklist**
+   - Every PR description must confirm: "Verification spine passes locally"
+   - Reviewers must verify CI spine check passed
+   - New features must include verifier (if adding new guarantees)
+
+### 📜 Rationale
+
+**Why so strict?**
+
+Akalynth's trust model depends on **mechanical enforcement** of guarantees. If verification can be bypassed:
+- Civil Guarantees (G1-G15) become suggestions
+- Receipt chain integrity becomes optional
+- Chronicle signing becomes theater
+
+The spine is not "helpful tooling" — it is **civilizational law enforcement**.
+
+If these constraints feel too strict, that's the point. High-leverage infrastructure should be **hard to remove**.
+
+---
+
 ## Design Principles
 
 ### 1. Fail-Closed
