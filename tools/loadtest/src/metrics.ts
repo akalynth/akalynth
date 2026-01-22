@@ -32,6 +32,9 @@ export interface MetricsSample {
   messages_received?: number;
   errors?: number;
   disconnects?: number;
+  // Global rate limiter metrics
+  global_rate_limited?: number;
+  global_send_queue_depth?: number;
 }
 
 export interface MetricsSummary {
@@ -47,6 +50,9 @@ export interface MetricsSummary {
   total_disconnects: number;
   receipts_per_sec: number;
   duration_sec: number;
+  // Global rate limiter metrics
+  global_rate_limited_sends: number;
+  global_send_queue_depth_max: number;
 }
 
 export interface SLOBreachInfo {
@@ -75,6 +81,10 @@ export class MetricsCollector {
   private totalDisconnects = 0;
   private receiptCount = 0;
 
+  // Global rate limiter tracking
+  private globalRateLimitedSends = 0;
+  private globalSendQueueDepthMax = 0;
+
   private startTime: number = Date.now();
 
   // Breach tracking
@@ -93,6 +103,8 @@ export class MetricsCollector {
     this.totalErrors = 0;
     this.totalDisconnects = 0;
     this.receiptCount = 0;
+    this.globalRateLimitedSends = 0;
+    this.globalSendQueueDepthMax = 0;
     this.startTime = Date.now();
     this.breachStart.clear();
   }
@@ -156,6 +168,16 @@ export class MetricsCollector {
     this.receiptCount++;
   }
 
+  recordGlobalRateLimited(): void {
+    this.globalRateLimitedSends++;
+  }
+
+  recordGlobalSendQueueDepth(depth: number): void {
+    if (depth > this.globalSendQueueDepthMax) {
+      this.globalSendQueueDepthMax = depth;
+    }
+  }
+
   getSamples(): MetricsSample[] {
     return [...this.samples];
   }
@@ -176,6 +198,8 @@ export class MetricsCollector {
       total_disconnects: this.totalDisconnects,
       receipts_per_sec: this.receiptCount / Math.max(durationSec, 1),
       duration_sec: durationSec,
+      global_rate_limited_sends: this.globalRateLimitedSends,
+      global_send_queue_depth_max: this.globalSendQueueDepthMax,
     };
   }
 

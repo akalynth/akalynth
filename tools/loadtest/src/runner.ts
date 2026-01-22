@@ -2,6 +2,7 @@
  * Step Test Runner
  *
  * Orchestrates load test execution with progressive plateau discovery.
+ * Implements hard global rate limiting via token bucket.
  */
 
 import { RunConfig } from './config.js';
@@ -22,6 +23,73 @@ import {
 export interface RunnerOptions {
   verbose?: boolean;
   verifyTem?: boolean;
+}
+
+// -----------------------------------------------------------------------------
+// Global Rate Limiter (Token Bucket)
+// -----------------------------------------------------------------------------
+
+/**
+ * Hard global rate limiter using token bucket algorithm.
+ * All clients must request permission before sending.
+ *
+ * Policy: delay sends rather than drop (more human-like).
+ * Safety: if delay exceeds maxDelayMs, rejects send to prevent harness saturation.
+ */
+export class GlobalRateLimiter {
+  private tokens: number;
+  private readonly capacity: number;
+  private readonly refillRate: number; // tokens per ms
+  private lastRefill: number;
+  private readonly maxDelayMs: number;
+  private pendingQueue: number = 0;
+
+  constructor(tokensPerSec: number, maxDelayMs: number = 5000) {
+    this.capacity = tokensPerSec;
+    this.tokens = tokensPerSec;
+    this.refillRate = tokensPerSec / 1000;
+    this.lastRefill = Date.now();
+    this.maxDelayMs = maxDelayMs;
+  }
+
+  /**
+   * Request permission to send. Returns wait time in ms, or -1 if rejected.
+   * Rejection occurs if delay would exceed maxDelayMs (harness saturation).
+   */
+  requestSend(): number {
+    this.refill();
+
+    if (this.tokens >= 1) {
+      this.tokens -= 1;
+      return 0; // Send immediately
+    }
+
+    // Calculate wait time for next token
+    const tokensNeeded = 1 - this.tokens;
+    const waitMs = tokensNeeded / this.refillRate;
+
+    if (waitMs > this.maxDelayMs) {
+      return -1; // Reject: would cause harness saturation
+    }
+
+    // Reserve the token we'll get after waiting
+    this.tokens -= 1;
+    return Math.ceil(waitMs);
+  }
+
+  private refill(): void {
+    const now = Date.now();
+    const elapsed = now - this.lastRefill;
+    const newTokens = elapsed * this.refillRate;
+
+    this.tokens = Math.min(this.capacity, this.tokens + newTokens);
+    this.lastRefill = now;
+  }
+
+  getQueueDepth(): number {
+    // Approximate pending sends based on token deficit
+    return Math.max(0, Math.ceil(-this.tokens));
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -61,6 +129,7 @@ export class LoadTestRunner {
   private options: RunnerOptions;
   private running = false;
   private aborted = false;
+  private globalRateLimiter: GlobalRateLimiter;
 
   constructor(
     config: RunConfig,
@@ -73,6 +142,13 @@ export class LoadTestRunner {
     this.artifacts = new ArtifactWriter(baseDir, config.run_id);
     this.rng = new SeededRandom(config.random_seed);
     this.options = options;
+
+    // Initialize global rate limiter with hard cap
+    // maxDelayMs=5000: if send would be delayed >5s, abort (harness saturation)
+    this.globalRateLimiter = new GlobalRateLimiter(
+      config.rate_caps.global_msg_sec,
+      5000
+    );
   }
 
   async run(): Promise<RunResults> {
@@ -206,7 +282,25 @@ export class LoadTestRunner {
             { inWorld: client.isInWorld() }
           );
 
-          await client.performAction(action);
+          // Hard global rate limiting: request permission before send
+          const waitMs = this.globalRateLimiter.requestSend();
+
+          // Track queue depth
+          this.metrics.recordGlobalSendQueueDepth(
+            this.globalRateLimiter.getQueueDepth()
+          );
+
+          if (waitMs < 0) {
+            // Rejected: harness saturation (delay would exceed maxDelayMs)
+            this.metrics.recordGlobalRateLimited();
+            // Skip this send but continue loop
+          } else {
+            if (waitMs > 0) {
+              // Delay send to stay within global cap
+              await this.sleep(waitMs);
+            }
+            await client.performAction(action);
+          }
 
           // Think time
           const thinkMs = this.rng.nextInt(

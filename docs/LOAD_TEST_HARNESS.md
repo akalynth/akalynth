@@ -12,6 +12,71 @@ This document specifies the Akalynth load test harness for capacity discovery, S
 
 ---
 
+## Safety Model
+
+> **This harness is bounded by design and intended solely for authorized testing.**
+
+The harness enforces a three-layer safety model to ensure it cannot be misused:
+
+### Layer 1: Production Environment Refusal
+
+The harness refuses to start if either environment variable is set:
+- `NODE_ENV=production`
+- `AKALYNTH_ENV=production`
+
+This check occurs at the earliest entrypoint, before any network I/O.
+
+### Layer 2: Pre-Resolve Hostname Allowlist
+
+Only these hostnames are permitted as targets:
+- `localhost`
+- `127.0.0.1`
+- `::1`
+- `0.0.0.0` (normalized to `127.0.0.1` for client connections)
+
+Staging IPs can be added via `LOADTEST_STAGING_HOSTS` environment variable.
+**Important**: Only IP literals are accepted, not hostnames.
+
+```bash
+# Example: allow staging server at 10.0.1.50
+LOADTEST_STAGING_HOSTS=10.0.1.50,10.0.1.51
+```
+
+### Layer 3: Post-Resolve IP Validation
+
+For hostnames (like `localhost`), the harness resolves them to IPs and validates:
+- Loopback addresses are always allowed: `127.x.x.x`, `::1`
+- Staging IPs from `LOADTEST_STAGING_HOSTS` are allowed
+- **All other IPs are rejected**
+
+This prevents DNS rebinding attacks where a hostname resolves to an unexpected IP.
+
+### Global Rate Limiting (Hard Cap)
+
+The harness enforces a **hard** global send rate using a token bucket algorithm:
+- Even if 100 clients all want to send simultaneously, the harness will not exceed `global_msg_sec`
+- Excess sends are delayed (human-like behavior)
+- If delay would exceed 5 seconds, the send is dropped and counted as `global_rate_limited_sends`
+- This prevents accidental overwhelming of dev boxes or CI runners
+
+### Expected Safety Failures
+
+```bash
+# Production environment blocked
+$ NODE_ENV=production npm run loadtest -- run -s movement-heavy
+Error: SAFETY: Load test harness refuses to run in production environment
+
+# Non-allowlisted host blocked
+$ npm run loadtest -- run -s movement-heavy --server ws://example.com:3000
+Error: SAFETY: Server address 'example.com' not in allowed list.
+
+# Hostname resolving to non-loopback blocked
+$ npm run loadtest -- run -s movement-heavy --server ws://my-staging.internal:3000
+Error: SAFETY: Hostname 'my-staging.internal' resolves to '203.0.113.50' which is not in allowed IP list.
+```
+
+---
+
 ## 1. Safety Envelope (Hard Limits)
 
 ### Allowed Environments

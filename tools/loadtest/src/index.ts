@@ -9,7 +9,7 @@
 import { program } from 'commander';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
-import { buildRunConfig, CLIOptions, HARNESS_VERSION } from './config.js';
+import { buildRunConfig, buildRunConfigSync, CLIOptions, HARNESS_VERSION } from './config.js';
 import { LoadTestRunner } from './runner.js';
 import { listScenarios } from './scenarios/index.js';
 
@@ -35,7 +35,7 @@ program
   .option('-d, --duration <duration>', 'Hold duration (e.g., 60s, 5m)')
   .option('--plateau-duration <duration>', 'Per-plateau hold duration')
   .option('--seed <number>', 'Random seed for reproducibility', parseInt)
-  .option('--server <url>', 'Server WebSocket URL', 'ws://localhost:3000')
+  .option('--server <url>', 'Server WebSocket URL', 'ws://127.0.0.1:3000')
   .option('--verify-tem', 'Verify TEM challenge handling')
   .option('-v, --verbose', 'Verbose output')
   .action(async (opts: CLIOptions) => {
@@ -47,7 +47,7 @@ program
       console.log('╚════════════════════════════════════════════════╝');
       console.log('');
 
-      const config = buildRunConfig(opts);
+      const config = await buildRunConfig(opts);
       const runner = new LoadTestRunner(config, baseDir, {
         verbose: opts.verbose,
         verifyTem: opts.verifyTem,
@@ -83,13 +83,15 @@ program
 
 program
   .command('validate')
-  .description('Validate configuration without running')
+  .description('Validate configuration without running (pre-flight check)')
   .requiredOption('-s, --scenario <name>', 'Scenario to validate')
-  .option('--server <url>', 'Server URL to validate', 'ws://localhost:3000')
+  .option('--server <url>', 'Server URL to validate', 'ws://127.0.0.1:3000')
   .action((opts) => {
     try {
-      buildRunConfig(opts);
-      console.log('Configuration valid');
+      // Use sync validation (no DNS lookup) for quick pre-flight check
+      buildRunConfigSync(opts);
+      console.log('Configuration valid (pre-flight check passed)');
+      console.log('Note: Full DNS resolution validation occurs at run time.');
     } catch (err) {
       console.error(`Validation failed: ${err instanceof Error ? err.message : err}`);
       process.exit(1);
