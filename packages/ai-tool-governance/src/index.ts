@@ -23,8 +23,12 @@ export * from './verification/verifier.js';
 // Main governance interface
 export * from './ai-governance.js';
 
+// Witness-Ledger Architecture binding
+// Enables explainable, auditable, provable AI decisions
+export * from './witness/index.js';
+
 // Version and compliance info
-export const AI_GOVERNANCE_VERSION = '1.0.0';
+export const AI_GOVERNANCE_VERSION = '1.1.0';
 export const CONSTITUTIONAL_COMPLIANT = true;
 export const GOVERNANCE_TYPE = 'ai_tool_execution';
 
