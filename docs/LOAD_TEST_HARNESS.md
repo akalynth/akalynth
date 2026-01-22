@@ -1,0 +1,430 @@
+# Load Test Harness Specification
+
+> **Scope**: Authorized local/staging environments only. Never production.
+
+This document specifies the Akalynth load test harness for capacity discovery, SLO validation, and reproducible audit trails.
+
+## Objectives
+
+1. **Quantify capacity** (clients, msgs/sec, receipts/sec) under realistic workload mixes
+2. **Detect breaking point**: First sustained SLO breach (not forced failure)
+3. **Preserve proof value**: Every run is reproducible and attributable (commit + config → results → root hash)
+
+---
+
+## 1. Safety Envelope (Hard Limits)
+
+### Allowed Environments
+
+| Environment | Allowed | Notes |
+|-------------|---------|-------|
+| Local dev machine | Yes | Primary target |
+| Staging (private network) | Yes | Allowlisted IPs only |
+| Production | **NEVER** | Harness refuses to run |
+| Public/uncontrolled networks | **NEVER** | Hard-coded rejection |
+
+### Hard Caps (Enforced by Harness)
+
+| Control | Default | Purpose |
+|---------|---------|---------|
+| Max clients | 10→25→50→75→100 (step) | Progressive discovery |
+| Per-client send ceiling | 3-10 msgs/sec | Human-like pacing |
+| Global send ceiling | 200-1000 msgs/sec | Prevent runaway pressure |
+| Max run duration | 120s per plateau | Predictable bounds |
+| Reconnect rate ceiling | 1 per 10s per client | Avoid connect storms |
+
+### Stop Conditions (Kill Switch)
+
+A run auto-stops and records breach when **sustained** (>10s continuous):
+
+| SLO | Threshold | Reason |
+|-----|-----------|--------|
+| Tick p95 | > 250ms | Server falling behind |
+| Receipt append p95 | > 100ms | Audit bottleneck |
+| Heap growth slope | > 50 MB/min | Memory leak |
+| CPU utilization | > 90% for 30s | Saturation |
+| WS disconnect rate | > 10% in 60s window | Connection instability |
+| Fatal log signature | Any match | Server crash |
+
+**Breaking point**: First plateau where an SLO breach is sustained.
+
+---
+
+## 2. Workload Scenarios
+
+### Scenario A: Movement-Heavy
+
+```yaml
+name: movement-heavy
+description: Simulates exploration/grinding zones
+mix:
+  move_intent: 70%
+  idle: 20%
+  chat: 10%
+think_time:
+  min_ms: 120
+  max_ms: 450
+```
+
+### Scenario B: Chatty Social Zone
+
+```yaml
+name: chatty
+description: Simulates town squares and social hubs
+mix:
+  chat: 50%
+  move_intent: 30%
+  world_state: 20%
+think_time:
+  min_ms: 250
+  max_ms: 1200
+```
+
+### Scenario C: Edge-Path Lifecycle
+
+```yaml
+name: edge-path
+description: Tests session lifecycle stability
+sequence:
+  - login
+  - enter_world
+  - activity_burst (5-15 actions)
+  - logout
+  - wait (2000-8000ms)
+  - reconnect
+purpose: Validate session lifecycle, receipt correctness, DB pressure
+```
+
+### Scenario D: Tem-Path Verification
+
+```yaml
+name: tem-path
+description: Controlled anti-cheat trigger verification
+behavior:
+  - Normal movement with occasional perfect-cadence bursts
+  - Triggers TEM challenge at controlled rate
+verify:
+  - Challenge issued deterministically
+  - Solve/verify latency stable
+  - Cooldown and escalation correct
+```
+
+---
+
+## 3. Metrics Collection
+
+### Core Runtime SLOs
+
+| Metric | Collection | Target |
+|--------|------------|--------|
+| `tick_duration_ms` | Server instrumentation | p95 < 250ms |
+| `event_loop_lag_ms` | Node.js perf_hooks | p95 < 50ms |
+| `cpu_percent` | process.cpuUsage() | < 90% sustained |
+| `heap_used_mb` | process.memoryUsage() | Stable (no leak) |
+| `gc_pause_ms` | v8 GC hooks | p99 < 100ms |
+
+### Protocol Throughput
+
+| Metric | Collection |
+|--------|------------|
+| `inbound_msgs_per_sec` | Harness counter |
+| `outbound_msgs_per_sec` | Server counter |
+| `message_latency_ms` | Round-trip timing |
+| `error_rate_by_type` | Harness aggregation |
+
+### Proof/Audit Pipeline
+
+| Metric | Collection |
+|--------|------------|
+| `receipts_per_sec` | File growth rate |
+| `receipt_append_latency_ms` | Server instrumentation |
+| `audit_file_size_mb` | File stat |
+| `db_query_latency_ms` | SQLite instrumentation |
+
+### Tem Enforcement
+
+| Metric | Collection |
+|--------|------------|
+| `challenges_per_sec` | Server counter |
+| `challenge_resolution_ms` | Harness timing |
+| `challenge_fail_rate` | Harness aggregation |
+| `throttle_events` | Server counter |
+
+---
+
+## 4. Test Methodology
+
+### Step Test (Primary)
+
+```
+Plateaus: 10 → 25 → 50 → 75 → 100 clients
+
+Per plateau:
+├── Warmup: 10s (ramp to target client count)
+├── Hold: 60-120s (steady state measurement)
+└── Cooldown: 10s (graceful disconnect)
+
+After each plateau:
+├── Record metrics summary
+├── Compare to SLO thresholds
+└── Stop if sustained breach
+```
+
+### Soak Test (Secondary)
+
+```
+Prerequisites: Step test identified safe ceiling
+
+Duration: 30-60 minutes
+Client count: ~70% of breaking point
+Purpose: Detect slow leaks, drift, receipt growth stability
+```
+
+---
+
+## 5. Run Artifacts (Proof-Native)
+
+### One-Command Run
+
+```bash
+npm run loadtest -- \
+  --scenario movement-heavy \
+  --clients 50 \
+  --duration 120s \
+  --seed 42 \
+  --server ws://localhost:3000
+```
+
+### Output Bundle Structure
+
+```
+runs/<run_id>/
+├── RUN.json           # Configuration snapshot
+├── RESULTS.json       # Metrics and verdict
+├── METRICS.jsonl      # Time-series data
+├── AUDIT_HASHES.json  # Integrity proofs
+└── ROOT.txt           # Single root hash
+```
+
+### RUN.json Schema
+
+```typescript
+interface RunConfig {
+  run_id: string;              // UUID
+  git_sha: string;             // e.g., "2be6791"
+  scenario: string;            // e.g., "movement-heavy"
+  client_schedule: number[];   // e.g., [10, 25, 50]
+  rate_caps: {
+    per_client_msg_sec: number;
+    global_msg_sec: number;
+  };
+  random_seed: number;
+  server_addr: string;
+  env_flags: string[];         // e.g., ["DEBUG=1", "ALLOW_INSECURE_LOCAL=1"]
+  started_at: string;          // ISO8601
+  harness_version: string;
+}
+```
+
+### RESULTS.json Schema
+
+```typescript
+interface RunResults {
+  run_id: string;
+  verdict: 'pass' | 'fail';
+  breach_reason?: string;      // Only if fail
+  breaking_point_clients?: number;
+
+  metrics_summary: {
+    tick_duration_ms: Percentiles;
+    event_loop_lag_ms: Percentiles;
+    message_latency_ms: Percentiles;
+    receipts_per_sec: number;
+    receipt_append_latency_ms: Percentiles;
+    peak_memory_mb: number;
+    total_messages_sent: number;
+    total_messages_received: number;
+    total_errors: number;
+  };
+
+  per_plateau: PlateauResult[];
+  ended_at: string;
+  duration_sec: number;
+}
+
+interface Percentiles {
+  p50: number;
+  p95: number;
+  p99: number;
+  max: number;
+}
+
+interface PlateauResult {
+  client_count: number;
+  verdict: 'pass' | 'fail';
+  breach_reason?: string;
+  metrics: MetricsSummary;
+}
+```
+
+### AUDIT_HASHES.json Schema
+
+```typescript
+interface AuditHashes {
+  run_json_hash: string;       // BLAKE3
+  results_json_hash: string;   // BLAKE3
+  metrics_jsonl_hash: string;  // BLAKE3
+  server_receipts_hash?: string; // If accessible
+}
+```
+
+### ROOT.txt
+
+Single line containing BLAKE3 hash over `AUDIT_HASHES.json`.
+
+---
+
+## 6. Implementation Location
+
+```
+tools/loadtest/
+├── package.json
+├── tsconfig.json
+├── src/
+│   ├── index.ts           # CLI entry point
+│   ├── config.ts          # Configuration types and validation
+│   ├── client.ts          # WebSocket client with think-time
+│   ├── runner.ts          # Step test orchestrator
+│   ├── metrics.ts         # Metrics collection and percentiles
+│   ├── artifacts.ts       # Run bundle generation
+│   └── scenarios/
+│       ├── index.ts       # Scenario registry
+│       ├── movement.ts    # Movement-heavy scenario
+│       ├── chatty.ts      # Chatty scenario
+│       ├── edge-path.ts   # Lifecycle scenario
+│       └── tem-path.ts    # Anti-cheat verification
+└── runs/                  # Output directory (gitignored)
+```
+
+---
+
+## 7. CI Integration
+
+### Smoke Test (Required)
+
+```yaml
+# .github/workflows/ci.yml addition
+loadtest-smoke:
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+    - name: Install dependencies
+      run: |
+        cd apps/server && npm ci
+        cd ../../tools/loadtest && npm ci
+    - name: Start server
+      run: |
+        cd apps/server
+        DEBUG=1 ALLOW_INSECURE_LOCAL=1 npm start &
+        sleep 5
+    - name: Run smoke test
+      run: |
+        cd tools/loadtest
+        npm run loadtest -- \
+          --scenario movement-heavy \
+          --clients 5 \
+          --duration 30s \
+          --seed 12345
+```
+
+### Nightly Capacity Test (Optional)
+
+```yaml
+schedule:
+  - cron: '0 3 * * *'  # 3 AM UTC
+
+steps:
+  - name: Full capacity test
+    run: |
+      npm run loadtest -- \
+        --scenario movement-heavy \
+        --step-test \
+        --max-clients 100
+  - name: Upload artifacts
+    uses: actions/upload-artifact@v4
+    with:
+      name: loadtest-results
+      path: tools/loadtest/runs/
+```
+
+---
+
+## 8. Usage Examples
+
+### Find Breaking Point
+
+```bash
+cd tools/loadtest
+npm run loadtest -- \
+  --step-test \
+  --scenario movement-heavy \
+  --max-clients 100 \
+  --plateau-duration 60s \
+  --seed 42
+```
+
+### Soak Test at Safe Ceiling
+
+```bash
+npm run loadtest -- \
+  --scenario movement-heavy \
+  --clients 40 \
+  --duration 1800s \
+  --seed 42
+```
+
+### Verify Tem Path
+
+```bash
+npm run loadtest -- \
+  --scenario tem-path \
+  --clients 10 \
+  --duration 60s \
+  --verify-tem
+```
+
+### Compare Across Commits
+
+```bash
+# Run on commit A
+git checkout abc123
+npm run loadtest -- --scenario movement-heavy --step-test
+
+# Run on commit B
+git checkout def456
+npm run loadtest -- --scenario movement-heavy --step-test
+
+# Compare
+npm run loadtest:compare -- runs/run-abc123 runs/run-def456
+```
+
+---
+
+## 9. Security Notes
+
+1. **Environment validation**: Harness validates `NODE_ENV !== 'production'` before starting
+2. **Address allowlist**: Only `localhost`, `127.0.0.1`, `::1`, and configured staging IPs
+3. **No credential storage**: Harness uses ephemeral guest sessions only
+4. **Rate limiting**: Harness respects and validates against server rate limits
+5. **Audit trail**: All runs produce immutable, hashable artifacts
+
+---
+
+## Related Documents
+
+- [MVP Verification Report](./MVP_VERIFICATION_REPORT_v1.md) - Current verification scope
+- [Architecture](./ARCHITECTURE.md) - Server design
+- [Protocol](./PROTOCOL.md) - Message specifications
+- [Anti-Cheat](./ANTICHEAT.md) - Tem and heat system

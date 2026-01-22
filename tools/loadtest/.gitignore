@@ -1,0 +1,11 @@
+# Build output
+dist/
+
+# Run artifacts (generated per-run)
+runs/
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log
