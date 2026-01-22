@@ -29,8 +29,12 @@ export * from './witness/index.js';
 // "Standards become real when you run the tests."
 export * from './conformance/index.js';
 
+// Anchor system (tamper-evident time-binding)
+// "Witnesses that can leave and be verified years later."
+export * from './anchor/index.js';
+
 // Version info
-export const COORDINATION_KERNEL_VERSION = '0.3.0';
+export const COORDINATION_KERNEL_VERSION = '0.4.0';
 
 // Implementation status marker
 export const KERNEL_STATUS = 'demo_ready' as const;
