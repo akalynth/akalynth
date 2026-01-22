@@ -10,6 +10,7 @@ import { VerifyContext, VerifyMode, SpineOptions } from './types.js';
 import { createDefaultRegistry } from './verifiers.js';
 import { runSpine } from './runner.js';
 import { formatTextReport, formatJsonReport } from './reporter.js';
+import { isProfileName } from './profiles.js';
 
 /**
  * Parse CLI arguments
@@ -19,6 +20,7 @@ function parseArgs(args: string[]): SpineOptions {
     mode: 'dev',
     skipBuild: false,
     verbose: false,
+    profile: undefined,
     only: undefined,
     phase: undefined,
     failFast: true, // Default to fail-fast
@@ -40,6 +42,19 @@ function parseArgs(args: string[]): SpineOptions {
       case '--verbose':
         opts.verbose = true;
         break;
+      case '--profile': {
+        const val = args[++i];
+        if (!val) {
+          console.error('Error: --profile requires a value: quick | full | audit');
+          process.exit(3);
+        }
+        if (!isProfileName(val)) {
+          console.error(`Error: Unknown profile "${val}". Valid: quick, full, audit`);
+          process.exit(3);
+        }
+        opts.profile = val;
+        break;
+      }
       case '--only':
         opts.only = args[++i].split(',');
         break;
@@ -83,9 +98,10 @@ Usage:
 
 Options:
   --mode <dev|ci|audit>   Execution mode (default: dev)
+  --profile <quick|full|audit>  Named profile (default: full)
   --skip-build            Skip TypeScript build (faster)
   --verbose               Show verbose output
-  --only <id,id>          Run only specific verifiers (comma-separated)
+  --only <id,id>          Run only specific verifiers (overrides profile)
   --phase <0-3>           Run up to specific phase
   --no-fail-fast          Continue on failure (don't stop at first fail)
   --format <text|json>    Output format (default: text)
@@ -93,8 +109,15 @@ Options:
   --dry-run               Show what would run, don't execute
   --help                  Show this help message
 
+Profiles:
+  quick   Fast check: Prerequisites + Core Guarantees (Phase 0-1)
+  full    All verifiers (Phase 0-3) [default]
+  audit   Read-only verifiers only (auditSafe=true)
+
 Examples:
-  npm run verify                          # Run all verifiers
+  npm run verify                          # Run all verifiers (full profile)
+  npm run verify:quick                    # Run quick profile
+  npm run verify -- --profile audit       # Run audit profile
   npm run verify -- --skip-build          # Skip build step
   npm run verify -- --only guarantees     # Run only guarantees verifier
   npm run verify -- --phase 1             # Run phases 0-1 only

@@ -6,6 +6,7 @@
 
 import { VerifyContext, VerifyResult, SpineReport, SpineOptions, VerifyFinding } from './types.js';
 import { VerifierRegistry } from './registry.js';
+import { resolveProfile } from './profiles.js';
 
 /**
  * Run the verification spine
@@ -22,10 +23,36 @@ export async function runSpine(
 ): Promise<SpineReport> {
   const startedAt = new Date().toISOString();
 
+  // Selection precedence:
+  // 1) --only overrides everything
+  // 2) --profile selects a named set
+  // 3) default profile is "full"
+  let selectedIds: string[] | undefined = opts.only;
+
+  if (!selectedIds) {
+    const profile = opts.profile ?? 'full';
+    try {
+      selectedIds = resolveProfile(profile, registry);
+      if (opts.verbose || opts.dryRun) {
+        ctx.log(`[spine] Using profile: ${profile}`);
+      }
+    } catch (err: any) {
+      return {
+        ok: false,
+        mode: opts.mode,
+        startedAt,
+        finishedAt: new Date().toISOString(),
+        durationMs: 0,
+        results: [],
+        summary: { total: 0, passed: 0, failed: 0, skipped: 0 },
+      };
+    }
+  }
+
   // Resolve execution order (includes dependency resolution)
   let ordered;
   try {
-    ordered = registry.resolveOrder(opts.only);
+    ordered = registry.resolveOrder(selectedIds);
   } catch (err) {
     // Dependency cycle or unknown verifier
     return {

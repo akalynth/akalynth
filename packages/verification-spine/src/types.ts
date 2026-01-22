@@ -5,6 +5,10 @@
  * Based on the pattern provided by user feedback.
  */
 
+import type { ProfileName } from './profiles.js';
+
+export type { ProfileName };
+
 export type VerifyMode = 'dev' | 'ci' | 'audit';
 
 export type VerifySeverity = 'info' | 'warn' | 'error';
@@ -173,7 +177,10 @@ export interface SpineOptions {
   /** Verbose output */
   verbose: boolean;
 
-  /** Run only specific verifiers (by ID) */
+  /** Optional named profile. Ignored if --only is provided. */
+  profile?: ProfileName;
+
+  /** Run only specific verifiers (by ID) - overrides profile */
   only?: string[];
 
   /** Run up to specific phase */
