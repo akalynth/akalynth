@@ -25,8 +25,12 @@ export * from './identity/index.js';
 // "A witness that can leave and still be trusted."
 export * from './witness/index.js';
 
+// WLA Conformance Suite (RFC WLA-001)
+// "Standards become real when you run the tests."
+export * from './conformance/index.js';
+
 // Version info
-export const COORDINATION_KERNEL_VERSION = '0.2.0';
+export const COORDINATION_KERNEL_VERSION = '0.3.0';
 
 // Implementation status marker
 export const KERNEL_STATUS = 'demo_ready' as const;
