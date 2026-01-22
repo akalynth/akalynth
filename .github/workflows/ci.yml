@@ -95,3 +95,48 @@ jobs:
           npm run verify:monetization
           npm run verify:work-contracts
           npm run verify:treasury
+
+  loadtest-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    needs: verify
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install server dependencies
+        run: cd apps/server && npm ci
+
+      - name: Build server
+        run: cd apps/server && npm run build
+
+      - name: Install loadtest dependencies
+        run: cd tools/loadtest && npm ci
+
+      - name: Start server in background
+        run: |
+          cd apps/server
+          DEBUG=1 ALLOW_INSECURE_LOCAL=1 npm start &
+          sleep 5
+        env:
+          NODE_ENV: development
+
+      - name: Run load test smoke (5 clients, 30s)
+        run: |
+          cd tools/loadtest
+          npm run loadtest -- run --scenario movement-heavy --clients 5 --duration 30s --seed 12345
+
+      - name: Upload load test artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: loadtest-smoke-results
+          path: tools/loadtest/runs/
+          retention-days: 7
