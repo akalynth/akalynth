@@ -1,118 +1,107 @@
-# Witness-Ledger Architecture v1.0 FINAL
+# Witness-Ledger Architecture (WLA)
+
+## Version 1.0 — FINAL
 
 **Status:** FINAL
-**Effective Date:** 2026-01-22
-**RFC:** WLA-001
+**Date:** 2026-01-22
+**Supersedes:** All prior drafts and pre-1.0 implementations
+**Governing RFC:** RFC_WITNESS_LEDGER.md (WLA-001)
 
 ---
 
-## Declaration
+## 1. Declaration of Finality
 
-The Witness-Ledger Architecture (WLA) is hereby declared **v1.0 FINAL**.
+The Witness-Ledger Architecture (WLA) **v1.0 is hereby declared FINAL**.
 
-This specification is frozen. No breaking changes will be made to:
-- Core artifact schemas (WitnessEvent, Snapshot, Explanation, ProofBundle, Fork)
-- The five isolation invariants
-- The three conformance levels (Lite, Standard, Full)
-- Anchoring semantics and verification contracts
+This declaration signifies that the architecture, specification, reference implementation, conformance suite, and anchoring model together form a **complete, stable, and sufficient system** for building witnesses that can leave and still be trusted.
 
-Future work proceeds only through:
-- Non-breaking extensions (new optional fields)
-- Additional backend implementations
-- New application bindings
-- Clarifying errata
+No new core concepts, primitives, or invariants are required for correctness.
 
 ---
 
-## Component Registry
+## 2. Scope of Stability
 
-| Component | Location | Version | Status |
-|-----------|----------|---------|--------|
-| RFC WLA-001 | `docs/RFC_WITNESS_LEDGER.md` | 1.0 | FINAL |
-| Witness Module | `packages/coordination-kernel/src/witness/` | 0.4.0 | STABLE |
-| Conformance Suite | `packages/coordination-kernel/src/conformance/` | 1.0.0 | STABLE |
-| Anchor Module | `packages/coordination-kernel/src/anchor/` | 1.0.0 | STABLE |
-| AI Governance Binding | `packages/ai-tool-governance/src/witness/` | 1.1.0 | STABLE |
+The following components are considered **frozen at v1.0**:
 
-### Supporting Documentation
+* The Witness-Ledger artifact chain
+  *(WitnessEvent → Receipt → ChronicleEvent → Explanation → Snapshot → ProofBundle → Anchor)*
 
-| Document | Location | Purpose |
-|----------|----------|---------|
-| Architecture Overview | `docs/WITNESS_LEDGER_ARCHITECTURE.md` | Master pattern document |
-| Proof Bundle Reference | `docs/PROOF_BUNDLES.md` | Portable evidence specification |
-| Fork Discipline | `docs/SIMULATE_WITHOUT_LYING.md` | Simulation isolation rules |
+* All normative invariants defined in **RFC_WITNESS_LEDGER.md**, including but not limited to:
 
----
+  * Receipt-first authority
+  * No-inference explanations
+  * Deterministic outputs
+  * Fork isolation invariants
+  * Simulation non-contamination guarantees
 
-## Core Guarantees
+* Conformance levels:
 
-### 1. Witness Independence
-A witness can leave the system and still be trusted. Proof bundles are self-contained, portable, and verifiable without access to the original system.
+  * Witness-Lite
+  * Witness-Standard
+  * Witness-Full
 
-### 2. Receipt-First Persistence
-Nothing is true until receipted. State changes require receipt emission. The receipt chain is the canonical source of truth.
+* Proof bundle structure, hashing requirements, and verification semantics
 
-### 3. Fork Isolation
-Simulated events never contaminate confirmed truth. The five isolation invariants are enforced at the type level.
+* Anchoring model and verification guarantees
 
-### 4. Explanation Without Inference
-Systems report causality from receipts; they do not interpret or infer. Every explanation traces to code and receipts.
-
-### 5. Anchor Immutability
-Once anchored, a proof bundle's content hash is committed to external time. Verification works offline, years later.
+Any implementation claiming WLA conformance **MUST** satisfy the v1.0 specification and pass the conformance suite without modification.
 
 ---
 
-## The Five Isolation Invariants
+## 3. Change Policy Post-v1.0
 
-These MUST be enforced by any conforming implementation:
+Following this declaration:
 
-1. **No Confirmed Simulations** - Simulated events NEVER have `confirmed` status
-2. **Source Marker** - Simulated events MUST have `source: 'client_intent'`
-3. **ID Prefix** - Simulated event/action IDs MUST use `sim_` or `fork_` prefix
-4. **Display Marker** - UI rendering MUST include `[SIMULATED]` indicator
-5. **No Interleaving** - Fork timelines MUST NOT mix confirmed and simulated entries
+* ❌ **No new core features** will be added to WLA v1.x
+* ❌ **No weakening** of invariants is permitted
+* ❌ **No semantic reinterpretation** of existing fields is allowed
 
----
+Permitted changes are strictly limited to:
 
-## Conformance Levels
+* Errata and clarifications
+* Security fixes that do not alter semantics
+* Documentation improvements
+* Performance optimizations that preserve determinism
+* Additional *applications* and *adapters* built **on top of** WLA
 
-### Witness-Lite (6 checks)
-Basic event witnessing. Suitable for logging and audit trails.
-
-### Witness-Standard (13 checks)
-Adds proof bundle generation. Suitable for portable evidence.
-
-### Witness-Full (21 checks)
-Adds fork simulation. Suitable for "what-if" analysis and debugging.
-
-Use `validateWitnessLite()`, `validateWitnessStandard()`, or `validateWitnessFull()` from `@akalynth/coordination-kernel/conformance` to verify compliance.
+Any change that would require modifying the core specification or invariants **MUST** result in a new major version (v2.0).
 
 ---
 
-## Stability Commitment
+## 4. Reference Authority
 
-This declaration establishes the following commitments:
+The following artifacts together define WLA v1.0:
 
-1. **Schema Stability** - Core artifact schemas will not change in breaking ways
-2. **Invariant Permanence** - The five isolation invariants are permanent
-3. **Verification Compatibility** - Bundles anchored today will verify in future versions
-4. **Conformance Continuity** - Existing conformance levels will remain valid
+| Artifact                           | Role                         |
+| ---------------------------------- | ---------------------------- |
+| `RFC_WITNESS_LEDGER.md`            | Normative specification      |
+| `WITNESS_LEDGER_ARCHITECTURE.md`   | Architectural narrative      |
+| `PROOF_BUNDLES.md`                 | Proof format reference       |
+| `SIMULATE_WITHOUT_LYING.md`        | Fork & simulation discipline |
+| `coordination-kernel/witness/`     | Reference implementation     |
+| `coordination-kernel/conformance/` | Executable conformance suite |
+| `coordination-kernel/anchor/`      | Anchoring and verification   |
 
----
-
-## Acknowledgments
-
-The Witness-Ledger Architecture emerged from the principle that **trust requires verifiable history**. A system that cannot prove what happened cannot be trusted. A witness that cannot leave cannot truly witness.
-
-WLA v1.0 represents a complete, sufficient, and frozen specification for:
-- Recording events with integrity
-- Building portable evidence
-- Simulating without lying
-- Anchoring across time
-
-The architecture is done. Build on it.
+In case of conflict, **the RFC takes precedence**, followed by the conformance suite.
 
 ---
 
-*"A witness that can leave and still be trusted."*
+## 5. Statement of Intent
+
+WLA v1.0 is not frozen because it is minimal.
+It is frozen because it is **sufficient**.
+
+The architecture now fulfills its founding litmus test:
+
+> **Can this witness leave and still be trusted?**
+> **Yes.**
+
+Further work belongs not in invention, but in **application, adoption, and stewardship**.
+
+---
+
+## 6. Closing
+
+This declaration marks the end of architectural construction and the beginning of operational life.
+
+WLA v1.0 is complete.
