@@ -29,6 +29,9 @@ function parseArgs(args: string[]): SpineOptions {
     outDir: './verify-out',
     dryRun: false,
     bundle: undefined,
+    bundleVerify: undefined,
+    bundleStrict: undefined,
+    bundleManifest: undefined,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -78,6 +81,15 @@ function parseArgs(args: string[]): SpineOptions {
       case '--bundle':
         opts.bundle = args[++i];
         break;
+      case '--bundle-verify':
+        opts.bundleVerify = true;
+        break;
+      case '--bundle-strict':
+        opts.bundleStrict = true;
+        break;
+      case '--bundle-manifest':
+        opts.bundleManifest = args[++i];
+        break;
       case '--help':
         printHelp();
         process.exit(0);
@@ -91,6 +103,24 @@ function parseArgs(args: string[]): SpineOptions {
   if (opts.bundle && opts.mode !== 'audit') {
     console.error('[spine] ERROR: --bundle requires --mode audit');
     console.error('[spine] Bundle verification is only permitted in audit mode for safety.');
+    process.exit(3);
+  }
+
+  // Validate: --bundle-verify requires --bundle
+  if (opts.bundleVerify && !opts.bundle) {
+    console.error('[spine] ERROR: --bundle-verify requires --bundle');
+    process.exit(3);
+  }
+
+  // Validate: --bundle-strict requires --bundle-verify
+  if (opts.bundleStrict && !opts.bundleVerify) {
+    console.error('[spine] ERROR: --bundle-strict requires --bundle-verify');
+    process.exit(3);
+  }
+
+  // Validate: --bundle-manifest requires --bundle
+  if (opts.bundleManifest && !opts.bundle) {
+    console.error('[spine] ERROR: --bundle-manifest requires --bundle');
     process.exit(3);
   }
 
@@ -120,6 +150,9 @@ Options:
   --out <dir>             Output directory for artifacts (default: ./verify-out)
   --dry-run               Show what would run, don't execute
   --bundle <dir>          Verify from audit bundle (requires --mode audit)
+  --bundle-verify         Enforce manifest + hash verification (requires --bundle)
+  --bundle-strict         Reject undeclared files in bundle (requires --bundle-verify)
+  --bundle-manifest <path> Custom manifest path (default: manifest.json)
   --help                  Show this help message
 
 Profiles:
@@ -137,6 +170,7 @@ Examples:
   npm run verify -- --mode ci --format json  # CI mode with JSON output
   npm run verify -- --dry-run             # Show execution plan
   npm run verify -- --mode audit --bundle ./audit-bundle  # Verify from bundle
+  npm run verify -- --mode audit --bundle ./audit-bundle --bundle-verify  # Verify with hash checks
 
 Verifier Phases:
   0: Prerequisites (build, db-exists, receipts-exist)

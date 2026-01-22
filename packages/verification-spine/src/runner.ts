@@ -7,6 +7,7 @@
 import { VerifyContext, VerifyResult, SpineReport, SpineOptions, VerifyFinding } from './types.js';
 import { VerifierRegistry } from './registry.js';
 import { resolveProfile } from './profiles.js';
+import { verifyBundleIntegrity } from './bundle/verify.js';
 
 /**
  * Run the verification spine
@@ -91,6 +92,37 @@ export async function runSpine(
 
   const results: VerifyResult[] = [];
   let globalOk = true;
+
+  // Bundle integrity verification (runs first if --bundle-verify)
+  if (opts.bundle && opts.bundleVerify) {
+    ctx.log('[spine] Running bundle integrity verification...');
+    const bundleIntegrityResult = await verifyBundleIntegrity(ctx, opts);
+    results.push(bundleIntegrityResult);
+
+    if (!bundleIntegrityResult.ok) {
+      globalOk = false;
+      // Fail-fast: if bundle integrity fails, stop immediately
+      if (opts.failFast) {
+        ctx.log('[spine] Bundle integrity verification failed. Stopping (fail-fast mode).');
+        const finishedAt = new Date().toISOString();
+        const durationMs = new Date(finishedAt).getTime() - new Date(startedAt).getTime();
+        return {
+          ok: false,
+          mode: opts.mode,
+          startedAt,
+          finishedAt,
+          durationMs,
+          results,
+          summary: {
+            total: results.length,
+            passed: results.filter((r) => r.ok).length,
+            failed: results.filter((r) => !r.ok).length,
+            skipped: 0,
+          },
+        };
+      }
+    }
+  }
 
   // Emit coverage warning if verifiers were skipped due to bundle mode
   if (skippedForBundle.length > 0) {
