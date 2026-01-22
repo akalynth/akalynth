@@ -47,6 +47,10 @@ npm install
 - `npx tsx ../../scripts/heat_out_of_order_smoke.ts`
 - `npx tsx ../../scripts/heat_pr2_out_of_order_smoke.ts`
 
+## Audit / CI Chronicle Verification
+
+CI runs `verify:receipt-hygiene` with chronicle enabled and a fixture log path. See `.github/workflows/ci.yml` (step: "Receipt + chronicle hygiene (audit)") for the exact `ENABLE_CHRONICLE` and `CHRONICLE_LOG_PATH` wiring.
+
 ## Docs (single source of truth)
 
 Start here: `docs/README.md`

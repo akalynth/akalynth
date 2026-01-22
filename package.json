@@ -13,7 +13,10 @@
     "dev:client": "cd apps/debug-client && npm run dev",
     "build:server": "cd apps/server && npm run build",
     "build:client": "cd apps/debug-client && npm run build",
-    "build": "npm run build:server && npm run build:client"
+    "build": "npm run build:server && npm run build:client",
+    "verify:lifecycle": "npm -w apps/server run verify:lifecycle",
+    "verify:receipt-hygiene": "npm -w apps/server run verify:receipt-hygiene",
+    "verify:quick": "npm -w apps/server run verify:quick"
   },
   "keywords": ["mmo", "game", "akalynth", "multiplayer"],
   "author": "",

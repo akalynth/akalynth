@@ -1053,7 +1053,10 @@ function buildResult(
   const failed = checks.filter(c => !c.passed).length;
 
   const violations: Violation[] = checks
-    .filter(c => !c.passed && c.requirement === 'MUST')
+    .filter(
+      (c): c is CheckResult & { requirement: 'MUST' } =>
+        !c.passed && c.requirement === 'MUST'
+    )
     .map(c => ({
       check_id: c.check_id,
       rfc_section: c.rfc_section,

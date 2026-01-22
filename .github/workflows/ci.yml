@@ -73,6 +73,18 @@ jobs:
           cd apps/server
           npm run fixture:generate
 
+      - name: Generate CI chronicle log fixture
+        run: |
+          cd apps/server
+          node tools/generate-chronicle-log.js fixtures/ci-chronicle/chronicle.log
+
+      - name: Receipt + chronicle hygiene (audit)
+        env:
+          ENABLE_CHRONICLE: "1"
+          CHRONICLE_LOG_PATH: ${{ github.workspace }}/apps/server/fixtures/ci-chronicle/chronicle.log
+          AKALYNTH_RECEIPT_CHAIN_PATH: ${{ github.workspace }}/apps/server/fixtures/ci-receipts/receipts.jsonl
+        run: npm run verify:receipt-hygiene
+
       - name: Constitutional verifiers (fixture + unit gates)
         env:
           CHRONICLE_KEY_PATH: ${{ github.workspace }}/.secrets/chronicle.key

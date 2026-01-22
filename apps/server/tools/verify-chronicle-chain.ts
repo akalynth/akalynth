@@ -36,6 +36,7 @@ type ChronicleEntry = {
 
 const DOMAIN_EVENT = 'akalynth:chronicle:event:v1\0';
 const DOMAIN_GLOBAL = 'akalynth:chronicle:global:v1\0';
+const RED = '\x1b[31m';
 const YELLOW = '\x1b[33m';
 const RESET = '\x1b[0m';
 
@@ -187,6 +188,10 @@ function logSkip(reason: string): void {
   console.log(`${YELLOW}[verify:chronicle-chain] SKIP${RESET} (${reason})`);
 }
 
+function logFail(reason: string): void {
+  console.error(`${RED}[verify:chronicle-chain] FAIL${RESET} (${reason})`);
+}
+
 function main() {
   if (!isChronicleEnabled()) {
     logSkip('ENABLE_CHRONICLE not enabled');
@@ -195,20 +200,20 @@ function main() {
 
   const envLogPath = process.env.CHRONICLE_LOG_PATH?.trim();
   if (!envLogPath) {
-    logSkip('CHRONICLE_LOG_PATH not set');
-    process.exit(0);
+    logFail('CHRONICLE_LOG_PATH not set');
+    process.exit(1);
   }
 
   // Find file path argument (skip flags starting with --)
   const argPath = process.argv.slice(2).find((arg) => !arg.startsWith('--'));
   const filePath = path.resolve(process.cwd(), argPath ?? envLogPath);
   if (!fs.existsSync(filePath)) {
-    logSkip(`chronicle log missing at ${filePath}`);
-    process.exit(0);
+    logFail(`chronicle log missing at ${filePath}`);
+    process.exit(1);
   }
   if (fs.statSync(filePath).size === 0) {
-    logSkip(`chronicle log empty at ${filePath}`);
-    process.exit(0);
+    logFail(`chronicle log empty at ${filePath}`);
+    process.exit(1);
   }
 
   const lines = readJsonlLines(filePath);

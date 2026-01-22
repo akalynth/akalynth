@@ -115,7 +115,7 @@ export function createRuleRegistry(): RuleRegistry {
  */
 export interface ExplanationBuilder {
   /** Build an explanation from context */
-  build<TEvent = WitnessEvent>(
+  build<TEvent extends { event_id?: string } = WitnessEvent>(
     ctx: ExplainContext<TEvent>,
     rule_ids: string[],
     reason: string,
@@ -123,7 +123,7 @@ export interface ExplanationBuilder {
   ): Explanation;
 
   /** Build an explanation for a simulated event */
-  buildSimulated<TEvent = WitnessEvent>(
+  buildSimulated<TEvent extends { event_id?: string } = WitnessEvent>(
     ctx: ExplainContext<TEvent>,
     rule_ids: string[],
     reason: string
