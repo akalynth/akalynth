@@ -1,0 +1,106 @@
+# Akalynth Current Stage
+
+## Stage Label
+
+Akalynth v0.1 is a **pre-alpha, proof-native MMO vertical slice**.
+
+It is not a production MMO, not content-alpha, and not a public launch candidate.
+
+This document is the repo-local boundary for what may be shown to a potential technical driver without implying more maturity than the repository currently proves.
+
+## Mechanically Enforced Today
+
+These claims are supported only to the extent that the named source, script, verifier, or CI job passes for a specific commit.
+
+- Server-authoritative WebSocket intent handling
+- Guest login / session flow
+- Grid movement validation
+- Chat
+- Audit receipt chain
+- Protocol sync checks
+- MVP verification scripts
+- Chronicle / receipt hygiene checks
+- Selected constitutional and domain verifiers
+- Local/debug client build path
+
+## Implemented But Not Release-Claimed
+
+The repository contains code for the systems below. Their existence in code is not a production or release claim.
+
+A system is release-claimed only when it is:
+
+1. listed in this document as release-claimed,
+2. covered by a named verifier or smoke test,
+3. included in a passing local or CI proof run for a named commit,
+4. and included in the run artifact for that claim.
+
+Implemented-but-not-release-claimed systems include:
+
+- Combat
+- Death / respawn
+- Item drop / pickup
+- Protected slots
+- Chronicle evidence
+- Treasury / gold
+- Work contracts
+- NPC recognition
+- Android observe/play client
+- Load-test harness
+- Public/private receipt and rumor surfaces
+
+## Debug-Only Or Environment-Gated
+
+These surfaces must not be presented as production behavior unless a later release document names the gate, verifier, and proof artifact.
+
+- Runestone debug behavior
+- Sovereign debug grants
+- Test death triggers
+- Dev minting
+- Local insecure transport
+- Debug-only raw/public inspection routes
+- Local/staging-only load testing
+
+## In-Memory / Restart-Reset Areas
+
+The following state classes are known to include runtime or process-local behavior and must not be described as durable without a separate persistence proof path.
+
+- Heat runtime state
+- Witness pending requests and cooldowns
+- Some session/world state
+- Sovereign session / echo
+- Capability runtime state
+- Selected combat/session timers
+
+## Not Claimed
+
+Akalynth v0.1 does **not** claim:
+
+- Production deployment readiness
+- Commercial MMO readiness
+- Content-alpha gameplay depth
+- Public player launch readiness
+- Appeals/moderation operations readiness
+- Long-lived persistent-world guarantees
+- Android release readiness
+- External auditor acceptance
+- Cryptographic receipt envelope completeness unless covered by a named verifier output
+
+## Evidence Path
+
+A statement about the repo is evidence-backed only when it names at least one of:
+
+- source file
+- protocol contract
+- receipt fixture
+- verifier output
+- CI run artifact
+- reproducible local command
+- commit SHA
+
+Narrative descriptions are explanatory only. They are not proof artifacts.
+
+## Show Boundary
+
+Safe summary for a potential technical driver:
+
+> Akalynth is a proof-native MMO kernel with a working pre-alpha vertical slice. The repo starts from server authority, receipts, and verification rather than content-first gameplay. It is useful as a base for a technical driver, but it is not production-ready or content-alpha.
