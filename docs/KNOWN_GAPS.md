@@ -20,7 +20,7 @@ A gap is not a failure by itself. A hidden or overstated gap is a failure of pre
 - Large server entrypoint concentrates many concerns in one file.
 - Multiple systems are debug-only or environment-gated.
 - Verifier coverage is uneven across newer gameplay systems.
-- Persistence boundaries need an explicit matrix.
+- Persistence boundaries are classified in `docs/PERSISTENCE_MATRIX.md`, but not yet implemented as restore guarantees.
 - Content loop is not deep enough for content-alpha.
 - CI artifact packaging should be made easier to inspect.
 
@@ -59,4 +59,5 @@ The next closure target is a reproducible local proof run with:
 - captured command transcript,
 - receipt output,
 - known-gaps register,
+- persistence matrix,
 - and one CI artifact bundle.

@@ -71,6 +71,8 @@ The following state classes are known to include runtime or process-local behavi
 - Capability runtime state
 - Selected combat/session timers
 
+For the durable-state classification, use [Persistence Matrix](./PERSISTENCE_MATRIX.md). That matrix is documentation only; it does not implement persistence, migrations, replay, or restore guarantees.
+
 ## Not Claimed
 
 Akalynth v0.1 does **not** claim:
