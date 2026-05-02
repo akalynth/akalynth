@@ -96,6 +96,32 @@ jobs:
           npm run verify:work-contracts
           npm run verify:treasury
 
+      - name: Write showcase summary
+        if: always()
+        run: |
+          {
+            echo "## Akalynth CI Proof Surface"
+            echo ""
+            echo "- Commit: $GITHUB_SHA"
+            echo "- Protocol sync: required"
+            echo "- MVP verification: required"
+            echo "- Receipt/chronicle hygiene: required"
+            echo "- Constitutional verifiers: required"
+            echo ""
+            echo "See uploaded artifact: akalynth-verification-artifacts"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload verification artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: akalynth-verification-artifacts
+          path: |
+            artifacts/
+            apps/server/fixtures/ci-receipts/
+            apps/server/fixtures/ci-chronicle/
+          retention-days: 14
+
   loadtest-smoke:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
