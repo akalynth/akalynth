@@ -27,16 +27,18 @@ The goal is not to launch the game in 30 days. The goal is to make the proof-nat
 
 ### Objectives
 
-- Classify all in-memory state.
+- Use `docs/PERSISTENCE_MATRIX.md` as the state durability baseline.
 - Decide which state must persist for v0.2.
 - Identify which persistence claims need verifier coverage.
 - Avoid broad database rewrites before classification.
+- Preserve explicit restart-reset behavior where durability is not needed.
 
 ### Exit Artifacts
 
-- `docs/PERSISTENCE_MATRIX.md`
+- Updated `docs/PERSISTENCE_MATRIX.md` if source inspection changes any row.
 - At least one verifier or smoke test covering one selected persistence boundary.
 - Clear deferral list for non-persisted runtime state.
+- No durable-state claim unless backed by command output and artifact.
 
 ## Week 3: Client Show Path
 
