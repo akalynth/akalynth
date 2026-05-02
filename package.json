@@ -18,6 +18,7 @@
     "verify:quick": "node packages/verification-spine/bin/akalynth-verify.js --profile quick --skip-build",
     "verify:full": "node packages/verification-spine/bin/akalynth-verify.js --profile full",
     "verify:audit": "node packages/verification-spine/bin/akalynth-verify.js --profile audit",
+    "verify:showcase": "bash scripts/showcase_local.sh",
     "verify:lifecycle": "npm -w apps/server run verify:lifecycle",
     "verify:receipt-hygiene": "npm -w apps/server run verify:receipt-hygiene"
   },

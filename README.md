@@ -8,6 +8,18 @@ A Tibia-world-feel MMO with a **server-authoritative** architecture and **anti-b
 
 **Platform policy**: Linux server + Android client only. **Windows is intentionally unsupported.**
 
+## Current Stage
+
+Akalynth v0.1 is a **pre-alpha, proof-native MMO vertical slice**.
+
+It is not a production MMO, not content-alpha, and not a public launch candidate. For the canonical claim boundary, start with:
+
+- `docs/CURRENT_STAGE.md`
+- `docs/DRIVER_BRIEF.md`
+- `docs/SHOWCASE_RUNBOOK.md`
+- `docs/KNOWN_GAPS.md`
+- `docs/DRIVER_30_DAY_PLAN.md`
+
 ## Quickstart (Server)
 
 ```bash
@@ -46,6 +58,16 @@ npm install
 - `npm run verify:receipt-hygiene`
 - `npx tsx ../../scripts/heat_out_of_order_smoke.ts`
 - `npx tsx ../../scripts/heat_pr2_out_of_order_smoke.ts`
+
+## Showcase Preflight
+
+For a bounded local preflight before showing the repo to a potential technical driver:
+
+```bash
+npm run verify:showcase
+```
+
+This script checks protocol sync, server build, MVP verification, and debug-client build. It does not start the server or client and does not prove production readiness.
 
 ## ⚠️ Verification Spine (Mandatory)
 
@@ -94,6 +116,17 @@ CI runs `verify:receipt-hygiene` with chronicle enabled and a fixture log path. 
 ## Docs (single source of truth)
 
 Start here: `docs/README.md`
+
+Showcase / driver packet:
+
+- `docs/CURRENT_STAGE.md`
+- `docs/DRIVER_BRIEF.md`
+- `docs/SHOWCASE_RUNBOOK.md`
+- `docs/PROOF_RUN_TEMPLATE.md`
+- `docs/KNOWN_GAPS.md`
+- `docs/DRIVER_30_DAY_PLAN.md`
+
+Core docs:
 
 - `docs/V1_SCOPE.md`
 - `docs/ARCHITECTURE.md`
