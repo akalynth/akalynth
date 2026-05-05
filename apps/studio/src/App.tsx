@@ -33,7 +33,8 @@ interface StudioSmokeResult {
   error?: string;
 }
 
-type Mode = 'paint' | 'spawn';
+type Mode = 'paint' | 'spawn' | 'marker';
+type MarkerId = 'move' | 'chat' | 'tem' | 'gate';
 
 const SERVER_PORT = 3000;
 const TILE_SIZE = 24;
@@ -50,6 +51,13 @@ const TILE_LABELS = [
   { code: TileCode.GateToAzura, label: 'gate', color: '#7644a8' },
 ];
 
+const MISSION_MARKERS: Array<{ id: MarkerId; label: string; code: TileCode; glyph: string }> = [
+  { id: 'move', label: 'move', code: TileCode.TutorialMove, glyph: 'M' },
+  { id: 'chat', label: 'signal', code: TileCode.TutorialChat, glyph: 'S' },
+  { id: 'tem', label: 'tem', code: TileCode.TutorialTem, glyph: 'T' },
+  { id: 'gate', label: 'gate', code: TileCode.GateToAzura, glyph: 'G' },
+];
+
 function apiBase() {
   const configured = import.meta.env.VITE_STUDIO_API_BASE;
   if (configured) return configured.replace(/\/$/, '');
@@ -64,6 +72,31 @@ function mapTileColor(code: number) {
   return TILE_LABELS.find((tile) => tile.code === code)?.color ?? '#111827';
 }
 
+function markerAt(map: MapData, marker: MarkerId): { x: number; y: number } | null {
+  const landmarks = map.landmarks as Record<string, any>;
+  if (marker === 'gate') {
+    const gate = landmarks.gate_to_azura;
+    return Number.isInteger(gate?.x) && Number.isInteger(gate?.y) ? { x: gate.x, y: gate.y } : null;
+  }
+  const point = landmarks.tutorial?.[marker];
+  return Number.isInteger(point?.x) && Number.isInteger(point?.y) ? { x: point.x, y: point.y } : null;
+}
+
+function placeMarker(map: MapData, marker: MarkerId, x: number, y: number): MapData {
+  const next = cloneMap(map);
+  const landmarks = { ...(next.landmarks as Record<string, any>) };
+  const point = { x, y, width: 1, height: 1 };
+  if (marker === 'gate') {
+    landmarks.gate_to_azura = point;
+  } else {
+    landmarks.tutorial = { ...(landmarks.tutorial ?? {}), [marker]: point };
+  }
+  next.landmarks = landmarks as MapData['landmarks'];
+  const markerConfig = MISSION_MARKERS.find((entry) => entry.id === marker);
+  if (markerConfig) next.tiles[y * next.width + x] = markerConfig.code;
+  return next;
+}
+
 export function App() {
   const [baseUrl] = useState(apiBase);
   const [maps, setMaps] = useState<MapEntry[]>([]);
@@ -72,6 +105,7 @@ export function App() {
   const [draftId, setDraftId] = useState('phone-test');
   const [map, setMap] = useState<MapData | null>(null);
   const [mode, setMode] = useState<Mode>('paint');
+  const [marker, setMarker] = useState<MarkerId>('move');
   const [tile, setTile] = useState<number>(TileCode.Grass);
   const [zoom, setZoom] = useState(1);
   const [message, setMessage] = useState('');
@@ -86,6 +120,17 @@ export function App() {
     if (!idResult.ok) errors.push(...idResult.errors);
     return errors;
   }, [draftId, map]);
+
+  const markerIndex = useMemo(() => {
+    const index = new Map<number, { glyph: string; label: string }>();
+    if (!map) return index;
+    for (const entry of MISSION_MARKERS) {
+      const point = markerAt(map, entry.id);
+      if (!point) continue;
+      index.set(point.y * map.width + point.x, { glyph: entry.glyph, label: entry.label });
+    }
+    return index;
+  }, [map]);
 
   async function loadList() {
     const response = await fetch(`${baseUrl}/v1/studio/maps`);
@@ -118,6 +163,8 @@ export function App() {
       const next = cloneMap(current);
       if (mode === 'spawn') {
         next.spawn = { x, y };
+      } else if (mode === 'marker') {
+        return placeMarker(next, marker, x, y);
       } else {
         next.tiles[index] = tile;
       }
@@ -221,6 +268,7 @@ export function App() {
         <div className="segmented">
           <button className={mode === 'paint' ? 'active' : ''} onClick={() => setMode('paint')}>Paint</button>
           <button className={mode === 'spawn' ? 'active' : ''} onClick={() => setMode('spawn')}>Spawn</button>
+          <button className={mode === 'marker' ? 'active' : ''} onClick={() => setMode('marker')}>Markers</button>
         </div>
         <div className="zoom-row">
           <button onClick={() => setZoom((value) => Math.max(0.5, value - 0.25))}>-</button>
@@ -246,6 +294,26 @@ export function App() {
         ))}
       </section>
 
+      <section className="marker-bar" aria-label="mission markers">
+        {MISSION_MARKERS.map((entry) => {
+          const point = map ? markerAt(map, entry.id) : null;
+          return (
+            <button
+              key={entry.id}
+              className={marker === entry.id && mode === 'marker' ? 'marker-choice active' : 'marker-choice'}
+              onClick={() => {
+                setMarker(entry.id);
+                setMode('marker');
+              }}
+            >
+              <span>{entry.glyph}</span>
+              <strong>{entry.label}</strong>
+              <em>{point ? `${point.x},${point.y}` : 'unset'}</em>
+            </button>
+          );
+        })}
+      </section>
+
       <section className="workspace">
         <div className="map-scroll">
           {map && (
@@ -263,10 +331,11 @@ export function App() {
                 const x = index % map.width;
                 const y = Math.floor(index / map.width);
                 const isSpawn = map.spawn.x === x && map.spawn.y === y;
+                const missionMarker = markerIndex.get(index);
                 return (
                   <button
                     key={index}
-                    className={isSpawn ? 'map-cell spawn' : 'map-cell'}
+                    className={`${isSpawn ? 'map-cell spawn' : 'map-cell'} ${missionMarker ? 'marker' : ''}`}
                     style={{ background: mapTileColor(code) }}
                     onPointerDown={(event) => {
                       event.preventDefault();
@@ -278,7 +347,7 @@ export function App() {
                     }}
                     title={`${x},${y}`}
                   >
-                    {isSpawn ? 'S' : ''}
+                    {isSpawn ? 'S' : missionMarker?.glyph ?? ''}
                   </button>
                 );
               })}
@@ -330,6 +399,27 @@ export function App() {
             {lastSmoke?.error ? <p className="proof-error">{lastSmoke.error}</p> : null}
           </section>
           {message && <p className="message">{message}</p>}
+          <section className="marker-panel">
+            <h2>Mission markers</h2>
+            <div className="marker-summary">
+              {MISSION_MARKERS.map((entry) => {
+                const point = map ? markerAt(map, entry.id) : null;
+                return (
+                  <button
+                    key={entry.id}
+                    className={marker === entry.id && mode === 'marker' ? 'active' : ''}
+                    onClick={() => {
+                      setMarker(entry.id);
+                      setMode('marker');
+                    }}
+                  >
+                    <span>{entry.glyph}</span>
+                    {point ? `${entry.label} ${point.x},${point.y}` : `${entry.label} unset`}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
           <h2>Validate</h2>
           <ul className={validation.length ? 'errors' : 'ok'}>
             {validation.length ? validation.map((error) => <li key={error}>{error}</li>) : <li>Map and draft ID are valid.</li>}

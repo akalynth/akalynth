@@ -27,6 +27,13 @@ const TILE_COLOR: Record<number, string> = {
   [TileCode.GateToAzura]: '#4d2d73',
 };
 
+const TILE_GLYPH: Record<number, string> = {
+  [TileCode.TutorialMove]: 'M',
+  [TileCode.TutorialChat]: 'S',
+  [TileCode.TutorialTem]: 'T',
+  [TileCode.GateToAzura]: 'G',
+};
+
 export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget }: MapCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const othersById = useMemo(() => {
@@ -52,6 +59,12 @@ export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget
         const code = map.tiles[idx];
         ctx.fillStyle = TILE_COLOR[code] || '#121820';
         ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        const glyph = TILE_GLYPH[code];
+        if (glyph) {
+          ctx.fillStyle = '#f7e9a7';
+          ctx.font = 'bold 9px "Space Grotesk", sans-serif';
+          ctx.fillText(glyph, x * TILE_SIZE + 3, y * TILE_SIZE + 9);
+        }
       }
     }
 

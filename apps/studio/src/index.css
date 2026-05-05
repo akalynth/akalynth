@@ -140,6 +140,12 @@ button.active,
   gap: 8px;
 }
 
+.marker-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  gap: 8px;
+}
+
 .tile-choice {
   display: flex;
   align-items: center;
@@ -155,6 +161,42 @@ button.active,
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 5px;
   background: var(--tile-color);
+}
+
+.marker-choice {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 8px;
+  align-items: center;
+  justify-content: start;
+  padding: 8px;
+  text-align: left;
+}
+
+.marker-choice span,
+.marker-summary span {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid rgba(226, 183, 20, 0.5);
+  border-radius: 7px;
+  background: rgba(226, 183, 20, 0.12);
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.marker-choice strong {
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.marker-choice em {
+  grid-column: 2;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
 }
 
 .workspace {
@@ -198,6 +240,10 @@ button.active,
 .map-cell.spawn {
   outline: 2px solid #fff;
   outline-offset: -3px;
+}
+
+.map-cell.marker {
+  box-shadow: inset 0 0 0 2px rgba(226, 183, 20, 0.72);
 }
 
 .side-panel {
@@ -257,6 +303,31 @@ button.active,
 .proof-fail,
 .proof-error {
   color: var(--bad);
+}
+
+.marker-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #10182a;
+}
+
+.marker-summary {
+  display: grid;
+  gap: 6px;
+}
+
+.marker-summary button {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+  align-items: center;
+  min-height: 42px;
+  padding: 7px;
+  text-align: left;
 }
 
 .proof-detail,

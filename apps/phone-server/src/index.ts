@@ -5,7 +5,15 @@ import { createHash, randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer, WebSocket } from 'ws';
 
-import { DIRECTION_OFFSETS, WALKABLE_TILES, type Direction, type MapData, type PlayerPublic } from '../../../packages/shared/types.js';
+import {
+  DIRECTION_OFFSETS,
+  TileCode,
+  WALKABLE_TILES,
+  type Direction,
+  type MapData,
+  type PlayerPublic,
+  type PlayLoopProgress,
+} from '../../../packages/shared/types.js';
 import type { MapName } from '../../../packages/shared/http.js';
 import { validateDraftId, validateMapData } from '../../../packages/shared/map-validation.js';
 
@@ -17,7 +25,8 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../.
 const DRAFT_MAP_DIR = path.join(ROOT, 'data', 'phone-studio', 'maps');
 const CANONICAL_MAP_IDS: MapName[] = ['Rookguard', 'Azura'];
 const STUDIO_SMOKE_ID = 'studio-smoke-test';
-const STUDIO_SMOKE_SPAWN = { x: 3, y: 2 };
+const STUDIO_SMOKE_SPAWN = { x: 2, y: 2 };
+const STUDIO_SMOKE_MUTATION = { x: 4, y: 3, tile: TileCode.Stone };
 
 function loadMap(name: Lowercase<MapName>): MapData {
   const file = path.join(ROOT, 'packages', 'shared', 'maps', `${name}.json`);
@@ -57,6 +66,7 @@ interface Session {
 interface PhonePlayer extends PlayerPublic {
   token: string;
   map: MapName;
+  loop: PlayLoopProgress;
   socket?: WebSocket;
 }
 
@@ -82,6 +92,10 @@ function canonicalPath(name: Lowercase<MapName>) {
 
 function hashFile(file: string) {
   return createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+}
+
+function hashMapTiles(map: MapData) {
+  return createHash('sha256').update(JSON.stringify(map.tiles)).digest('hex');
 }
 
 function readRequestJson(req: http.IncomingMessage): Promise<unknown> {
@@ -180,9 +194,12 @@ function runStudioSmoke() {
       spawn: { ...STUDIO_SMOKE_SPAWN },
       name: 'Rookguard',
     };
-    const replacementIndex = draft.tiles.findIndex((tile, index) => index !== 0 && tile !== draft.tiles[0]);
-    if (replacementIndex < 0) throw new Error('no_mutable_tile');
-    draft.tiles[0] = draft.tiles[replacementIndex];
+    const mutationIndex = STUDIO_SMOKE_MUTATION.y * draft.width + STUDIO_SMOKE_MUTATION.x;
+    draft.tiles[mutationIndex] = STUDIO_SMOKE_MUTATION.tile;
+    draft.tiles[2 * draft.width + 3] = TileCode.TutorialMove;
+    draft.tiles[2 * draft.width + 5] = TileCode.TutorialChat;
+    draft.tiles[2 * draft.width + 7] = TileCode.TutorialTem;
+    draft.tiles[2 * draft.width + 10] = TileCode.GateToAzura;
 
     const mapResult = validateMapData(draft);
     if (!mapResult.ok) throw new Error(mapResult.errors.join('; '));
@@ -201,7 +218,24 @@ function runStudioSmoke() {
     if (worldMap.spawn.x !== STUDIO_SMOKE_SPAWN.x || worldMap.spawn.y !== STUDIO_SMOKE_SPAWN.y) {
       throw new Error('world_spawn_mismatch');
     }
+    if (worldMap.tiles[mutationIndex] !== STUDIO_SMOKE_MUTATION.tile) {
+      throw new Error('world_tile_mutation_mismatch');
+    }
     details.push(`world_spawn=${worldMap.spawn.x},${worldMap.spawn.y}`);
+    details.push(`world_tile=${STUDIO_SMOKE_MUTATION.x},${STUDIO_SMOKE_MUTATION.y}:${worldMap.tiles[mutationIndex]}`);
+
+    const session = createGuest();
+    const player = ensurePlayer(session, 'Rookguard');
+    const path: Direction[] = ['east', 'east', 'east', 'east', 'east', 'east', 'east', 'east'];
+    for (const direction of path) {
+      const result = movePlayer(player, direction);
+      if (!result.ok) throw new Error(`loop_move_failed:${direction}:${result.reason}`);
+    }
+    if (!player.loop.complete || !player.loop.gateOpen) {
+      throw new Error('play_loop_incomplete');
+    }
+    details.push(`play_loop=${player.loop.lastEvent}`);
+    resetRuntimeState();
 
     const after = {
       rookguard: hashFile(canonicalFiles.rookguard),
@@ -240,7 +274,7 @@ function sendJson(res: http.ServerResponse, status: number, body: unknown) {
   res.writeHead(status, {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Authorization, Content-Type',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
     'Content-Type': 'application/json',
   });
   res.end(data);
@@ -292,10 +326,115 @@ function publicSession(session: Session) {
   };
 }
 
+function nextObjective(loop: PlayLoopProgress): string {
+  if (!loop.move) return 'Reach the movement anchor';
+  if (!loop.chat) return 'Reach the signal tile';
+  if (!loop.tem) return 'Cross the Tem tile';
+  if (!loop.gate) return 'Enter the open gate';
+  return 'Run complete';
+}
+
+function createLoopProgress(): PlayLoopProgress {
+  const loop: PlayLoopProgress = {
+    move: false,
+    chat: false,
+    tem: false,
+    gate: false,
+    complete: false,
+    gateOpen: false,
+    objective: '',
+    lastEvent: null,
+  };
+  loop.objective = nextObjective(loop);
+  return loop;
+}
+
+function cloneLoop(loop: PlayLoopProgress): PlayLoopProgress {
+  return { ...loop };
+}
+
+function tileAt(map: MapData, x: number, y: number): number | null {
+  if (x < 0 || y < 0 || x >= map.width || y >= map.height) return null;
+  return map.tiles[y * map.width + x] ?? null;
+}
+
 function isWalkable(map: MapData, x: number, y: number): boolean {
   if (x < 0 || y < 0 || x >= map.width || y >= map.height) return false;
-  const code = map.tiles[y * map.width + x];
+  const code = tileAt(map, x, y);
+  if (code === null) return false;
   return WALKABLE_TILES.has(code);
+}
+
+function canEnterTile(player: PhonePlayer, map: MapData, x: number, y: number): { ok: boolean; reason: string | null } {
+  if (!isWalkable(map, x, y)) return { ok: false, reason: 'blocked' };
+  const code = tileAt(map, x, y);
+  if (code === TileCode.GateToAzura && !player.loop.gateOpen) {
+    return { ok: false, reason: 'gate_locked' };
+  }
+  return { ok: true, reason: null };
+}
+
+function applyTileTrigger(player: PhonePlayer, code: number | null): string | null {
+  if (code === null || player.loop.complete) return null;
+  const loop = player.loop;
+  let event: string | null = null;
+
+  if (code === TileCode.TutorialMove && !loop.move) {
+    loop.move = true;
+    event = 'movement_anchor_reached';
+  } else if (code === TileCode.TutorialChat && !loop.chat) {
+    loop.chat = true;
+    event = 'signal_tile_reached';
+  } else if (code === TileCode.TutorialTem && !loop.tem) {
+    loop.tem = true;
+    loop.gateOpen = true;
+    event = 'tem_tile_crossed_gate_open';
+  } else if (code === TileCode.GateToAzura && loop.gateOpen && !loop.gate) {
+    loop.gate = true;
+    loop.complete = true;
+    event = 'gate_entered_run_complete';
+    player.reputation = (player.reputation ?? 0) + 1;
+  }
+
+  if (!event) return null;
+  loop.objective = nextObjective(loop);
+  loop.lastEvent = event;
+  return event;
+}
+
+function movePlayer(player: PhonePlayer, direction: Direction) {
+  const delta = DIRECTION_OFFSETS[direction];
+  if (!delta) return { ok: false, x: player.x, y: player.y, reason: 'bad_direction', loop: cloneLoop(player.loop), event: null };
+  const map = resolveRuntimeMap(player.map);
+  const nx = player.x + delta.x;
+  const ny = player.y + delta.y;
+  const enter = canEnterTile(player, map, nx, ny);
+  if (!enter.ok) {
+    return { ok: false, x: player.x, y: player.y, reason: enter.reason, loop: cloneLoop(player.loop), event: null };
+  }
+
+  player.x = nx;
+  player.y = ny;
+  const event = applyTileTrigger(player, tileAt(map, player.x, player.y));
+  chronicle.get(player.id)?.push({
+    kind: 'move',
+    timestamp: new Date().toISOString(),
+    zone: player.map,
+    x: player.x,
+    y: player.y,
+    details: { direction, loop_event: event },
+  });
+  if (event) {
+    chronicle.get(player.id)?.push({
+      kind: 'play_loop',
+      timestamp: new Date().toISOString(),
+      zone: player.map,
+      x: player.x,
+      y: player.y,
+      details: { event, objective: player.loop.objective, gate_open: player.loop.gateOpen },
+    });
+  }
+  return { ok: true, x: player.x, y: player.y, reason: null, loop: cloneLoop(player.loop), event };
 }
 
 function ensurePlayer(session: Session, mapName: MapName = 'Rookguard'): PhonePlayer {
@@ -311,6 +450,7 @@ function ensurePlayer(session: Session, mapName: MapName = 'Rookguard'): PhonePl
     map: mapName,
     status: 'alive',
     reputation: 0,
+    loop: createLoopProgress(),
   };
   players.set(player.id, player);
   chronicle.set(player.id, [{
@@ -338,6 +478,7 @@ function toPublicPlayer(player: PhonePlayer): PlayerPublic {
     y: player.y,
     status: player.status,
     reputation: player.reputation,
+    loop: cloneLoop(player.loop),
   };
 }
 
@@ -505,9 +646,12 @@ async function handleHttp(req: http.IncomingMessage, res: http.ServerResponse) {
         width: map.width,
         height: map.height,
         spawn: map.spawn,
+        tile_hash: hashMapTiles(map),
+        active_playtest_id: activePlaytest?.map.name === mapName ? activePlaytest.id : null,
       },
+      map_data: map,
       player_count: Array.from(players.values()).filter((p) => p.map === mapName).length,
-      ...(session && player ? { me: { ...publicSession(session), status: player.status } } : {}),
+      ...(session && player ? { me: { ...publicSession(session), status: player.status, loop: cloneLoop(player.loop) }, loop: cloneLoop(player.loop) } : {}),
     });
     return;
   }
@@ -556,11 +700,14 @@ function handleMessage(socket: WebSocket, raw: Buffer | ArrayBuffer | Buffer[]) 
     case 'enter_world': {
       const player = socketState.get(socket)?.player;
       if (!player) return send(socket, { type: 'error', code: 'not_authenticated', message: 'login first' });
+      const map = resolveRuntimeMap(player.map);
       send(socket, {
         type: 'world_state',
         map: player.map,
+        map_data: map,
         player: toPublicPlayer(player),
         nearby_players: nearbyPlayers(player),
+        loop: cloneLoop(player.loop),
       });
       broadcast(player.map, { type: 'player_joined', player: toPublicPlayer(player) }, socket);
       return;
@@ -569,26 +716,24 @@ function handleMessage(socket: WebSocket, raw: Buffer | ArrayBuffer | Buffer[]) 
       const player = socketState.get(socket)?.player;
       if (!player) return send(socket, { type: 'error', code: 'not_authenticated', message: 'login first' });
       const direction = msg.direction as Direction;
-      const delta = DIRECTION_OFFSETS[direction];
-      if (!delta) return send(socket, { type: 'move_result', ok: false, x: player.x, y: player.y, reason: 'bad_direction' });
-      const map = resolveRuntimeMap(player.map);
-      const nx = player.x + delta.x;
-      const ny = player.y + delta.y;
-      if (!isWalkable(map, nx, ny)) {
-        send(socket, { type: 'move_result', ok: false, x: player.x, y: player.y, reason: 'blocked', map: player.map });
+      const result = movePlayer(player, direction);
+      if (!result.ok) {
+        send(socket, { type: 'move_result', ok: false, x: result.x, y: result.y, reason: result.reason, map: player.map, loop: result.loop });
         return;
       }
-      player.x = nx;
-      player.y = ny;
-      chronicle.get(player.id)?.push({
-        kind: 'move',
-        timestamp: new Date().toISOString(),
-        zone: player.map,
-        x: player.x,
-        y: player.y,
-        details: { direction },
+      send(socket, {
+        type: 'move_result',
+        ok: true,
+        x: result.x,
+        y: result.y,
+        reason: null,
+        map: player.map,
+        loop: result.loop,
+        event: result.event,
       });
-      send(socket, { type: 'move_result', ok: true, x: player.x, y: player.y, reason: null, map: player.map });
+      if (result.event) {
+        send(socket, { type: 'loop_update', loop: result.loop, event: result.event, map: player.map });
+      }
       broadcast(player.map, { type: 'player_moved', player_id: player.id, x: player.x, y: player.y }, socket);
       return;
     }
@@ -600,13 +745,17 @@ function handleMessage(socket: WebSocket, raw: Buffer | ArrayBuffer | Buffer[]) 
       const payload = { type: 'chat_broadcast', player_id: player.id, name: player.name, message };
       send(socket, payload);
       broadcast(player.map, payload, socket);
+      const loopEvent = applyTileTrigger(player, tileAt(resolveRuntimeMap(player.map), player.x, player.y));
+      if (loopEvent) {
+        send(socket, { type: 'loop_update', loop: cloneLoop(player.loop), event: loopEvent, map: player.map });
+      }
       chronicle.get(player.id)?.push({
         kind: 'chat',
         timestamp: new Date().toISOString(),
         zone: player.map,
         x: player.x,
         y: player.y,
-        details: { message },
+        details: { message, loop_event: loopEvent },
       });
       return;
     }

@@ -114,6 +114,8 @@ function DebugApp() {
   const now = useNow();
   const toast = state.toast && now < state.toast.expiresAt ? state.toast : null;
   const activePlaytestLabel = proof?.activeId ?? 'canonical';
+  const objectiveLabel = state.loop?.objective ?? 'Enter Rookguard';
+  const healthLabel = state.world.me?.status === 'dead' ? 'Down' : 'Alive';
   const smokeState = proof?.lastSmoke?.ok ? 'pass' : proof?.lastSmoke ? 'fail' : proofError ? 'offline' : 'idle';
   const smokeLabel =
     smokeState === 'pass' ? 'passed' :
@@ -381,8 +383,8 @@ function DebugApp() {
                 <strong>{state.world.me ? `${state.world.me.x},${state.world.me.y}` : '--'}</strong>
               </div>
               <div>
-                <span>Nearby</span>
-                <strong>{others.length}</strong>
+                <span>Health</span>
+                <strong>{healthLabel}</strong>
               </div>
               <div>
                 <span>Link</span>
@@ -391,6 +393,10 @@ function DebugApp() {
             </div>
           </div>
           <div className="hud hud-proof" aria-label="studio proof">
+            <div className={`proof-chip objective-chip ${state.loop?.complete ? 'proof-chip--pass' : ''}`}>
+              <span>Objective</span>
+              <strong>{objectiveLabel}</strong>
+            </div>
             <div className="proof-chip">
               <span>Playtest</span>
               <strong>{activePlaytestLabel}</strong>
@@ -420,6 +426,7 @@ function DebugApp() {
               onAttack={api.sendAttack}
               attackReady={attackReady}
               targetName={targetName}
+              loop={state.loop}
             />
           </div>
         </section>
