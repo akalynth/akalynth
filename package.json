@@ -14,6 +14,8 @@
     "build:server": "cd apps/server && npm run build",
     "build:client": "cd apps/debug-client && npm run build",
     "build": "npm run build:server && npm run build:client",
+    "studio-smoke": "node scripts/studio-smoke.mjs",
+    "build:game": "(cd apps/phone-server && npm run build) && (cd apps/studio && npm run build) && (cd apps/debug-client && npm run build) && npm run studio-smoke",
     "verify": "node packages/verification-spine/bin/akalynth-verify.js",
     "verify:quick": "node packages/verification-spine/bin/akalynth-verify.js --profile quick --skip-build",
     "verify:full": "node packages/verification-spine/bin/akalynth-verify.js --profile full",
