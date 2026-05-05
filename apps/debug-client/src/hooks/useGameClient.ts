@@ -13,7 +13,9 @@ import {
   DIRECTION_OFFSETS,
   WALKABLE_TILES,
   type Direction,
+  type MapData,
   type PlayerPublic,
+  type PlayLoopProgress,
 } from '@shared/types';
 import { getMap } from '../data/maps';
 import type {
@@ -54,6 +56,7 @@ function initialState(mapName: MapName): GameClientState {
     cooldowns: { attackEndsAt: 0 } as ActionCooldown,
     ui: { stage: 0 },
     chat: [],
+    loop: null,
     toast: null,
     recapOpen: false,
     deathRecap: null,
@@ -190,6 +193,34 @@ function buildDeathRecap(
   return { deathEvent, lost, selectedBy: selectedBy ?? 'latest' };
 }
 
+function isMapData(value: unknown): value is MapData {
+  if (!value || typeof value !== 'object') return false;
+  const map = value as Partial<MapData>;
+  return (
+    typeof map.name === 'string' &&
+    typeof map.width === 'number' &&
+    typeof map.height === 'number' &&
+    Array.isArray(map.tiles) &&
+    !!map.spawn &&
+    typeof map.spawn.x === 'number' &&
+    typeof map.spawn.y === 'number'
+  );
+}
+
+function isLoop(value: unknown): value is PlayLoopProgress {
+  if (!value || typeof value !== 'object') return false;
+  const loop = value as Partial<PlayLoopProgress>;
+  return (
+    typeof loop.move === 'boolean' &&
+    typeof loop.chat === 'boolean' &&
+    typeof loop.tem === 'boolean' &&
+    typeof loop.gate === 'boolean' &&
+    typeof loop.complete === 'boolean' &&
+    typeof loop.gateOpen === 'boolean' &&
+    typeof loop.objective === 'string'
+  );
+}
+
 export function useGameClient(mapName: MapName): [GameClientState, GameClientApi] {
   const config = useMemo(() => loadConfig(), []);
   const [state, setState] = useState(() => initialState(mapName));
@@ -253,6 +284,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
         conn: { phase: 'awaiting_world_state' },
         world: { map: getMap(map), me: null, others: new Map() },
         chat: [],
+        loop: null,
         toast: null,
         recapOpen: false,
         deathRecap: null,
@@ -621,6 +653,8 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
               };
             case 'world_state': {
               const nextMap = data.map as MapName | undefined;
+              const runtimeMap = isMapData(data.map_data) ? data.map_data : null;
+              const loop = isLoop(data.loop) ? data.loop : isLoop(data.player?.loop) ? data.player.loop : s.loop;
               const base = nextMap && nextMap !== s.world.map.name
                 ? resetForMap(s, nextMap)
                 : s;
@@ -629,7 +663,8 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
               return {
                 ...base,
                 conn,
-                world: { ...base.world, me: data.player, others },
+                loop,
+                world: { map: runtimeMap ?? base.world.map, me: data.player, others },
               };
             }
             case 'player_moved': {
@@ -668,8 +703,16 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
               }
               if (!s.world.me) return { ...s, conn };
               const me = { ...s.world.me, x: data.x, y: data.y } as PlayerPublic;
+              const loop = isLoop(data.loop) ? data.loop : s.loop;
               pendingMoves.current = [];
-              return { ...s, conn, world: { ...s.world, me } };
+              return { ...s, conn, loop, world: { ...s.world, me } };
+            }
+            case 'loop_update': {
+              const loop = isLoop(data.loop) ? data.loop : s.loop;
+              const next = loop && data.event
+                ? pushToast(s, 'objective', loop.objective, String(data.event).includes('complete') ? 'DONE' : 'STEP')
+                : s;
+              return { ...next, conn, loop };
             }
             case 'chat_broadcast': {
               const entry: ChatMessageEntry = {
@@ -835,8 +878,12 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
       const data = await resp.json();
       setState((s) => {
         const status = data.me?.status || s.session.status;
+        const runtimeMap = isMapData(data.map_data) ? data.map_data : s.world.map;
+        const loop = isLoop(data.loop) ? data.loop : isLoop(data.me?.loop) ? data.me.loop : s.loop;
         return {
           ...s,
+          loop,
+          world: { ...s.world, map: runtimeMap },
           session: { ...s.session, status },
         };
       });

@@ -84,6 +84,12 @@ export interface TutorialProgress {
   complete: boolean;
 }
 
+export interface PlayLoopProgress extends TutorialProgress {
+  gateOpen: boolean;
+  objective: string;
+  lastEvent?: string | null;
+}
+
 export interface PlayerPublic {
   id: string;
   name: string;
@@ -96,6 +102,7 @@ export interface PlayerPublic {
   title?: string | null;
   badges?: string[];
   mark?: string | null;
+  loop?: PlayLoopProgress;
 }
 
 // ============================================================================

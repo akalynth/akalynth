@@ -22,6 +22,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { execSync, spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import Database from 'better-sqlite3';
 import { SCHEMA_VERSION } from '../src/persist/schema';
 import { resolveChainPaths } from '../../../packages/shared/paths.js';
@@ -33,9 +34,12 @@ import { resolveChainPaths } from '../../../packages/shared/paths.js';
 const args = process.argv.slice(2);
 const SKIP_BUILD = args.includes('--skip-build');
 const VERBOSE = args.includes('--verbose');
+const TOOL_DIR = path.dirname(fileURLToPath(import.meta.url));
+const SERVER_DIR = path.resolve(TOOL_DIR, '..');
+const REPO_ROOT = path.resolve(SERVER_DIR, '../..');
 
 // Canonical path resolution (single source of truth)
-const chainPaths = resolveChainPaths(path.resolve(process.cwd()));
+const chainPaths = resolveChainPaths(REPO_ROOT);
 const DB_PATH = chainPaths.dbPath;
 const RECEIPTS_PATH = chainPaths.receiptsPath;
 
@@ -77,7 +81,7 @@ function checkBuild(): void {
 
   log('Checking TypeScript build...');
   const result = spawnSync('npm', ['run', 'build'], {
-    cwd: process.cwd(),
+    cwd: SERVER_DIR,
     stdio: VERBOSE ? 'inherit' : 'pipe',
     encoding: 'utf-8',
   });
@@ -93,7 +97,7 @@ function checkBuild(): void {
 // ============================================================================
 
 function checkDatabaseExists(): Database.Database | null {
-  const absDb = path.resolve(process.cwd(), DB_PATH);
+  const absDb = path.resolve(REPO_ROOT, DB_PATH);
 
   if (!fs.existsSync(absDb)) {
     skip('DB_EXISTS', `database not found at ${absDb} (fresh install?)`);
@@ -147,7 +151,7 @@ function checkG12Heat(): void {
   log('Checking G12: Legendary heat integrity...');
 
   const result = spawnSync('npx', ['tsx', 'tools/verify-heat.ts'], {
-    cwd: process.cwd(),
+    cwd: SERVER_DIR,
     stdio: VERBOSE ? 'inherit' : 'pipe',
     encoding: 'utf-8',
     env: { ...process.env, AKALYNTH_DB_PATH: DB_PATH, AKALYNTH_RECEIPTS_PATH: RECEIPTS_PATH },
@@ -172,7 +176,7 @@ function checkG13Protected(): void {
   log('Checking G13: Protected slot integrity...');
 
   const result = spawnSync('npx', ['tsx', 'tools/verify-protected.ts'], {
-    cwd: process.cwd(),
+    cwd: SERVER_DIR,
     stdio: VERBOSE ? 'inherit' : 'pipe',
     encoding: 'utf-8',
     env: { ...process.env, AKALYNTH_DB_PATH: DB_PATH },
@@ -195,7 +199,7 @@ function checkG14Chronicle(): void {
   log('Checking G14: Chronicle integrity...');
 
   const result = spawnSync('npx', ['tsx', 'tools/verify-chronicle.ts'], {
-    cwd: process.cwd(),
+    cwd: SERVER_DIR,
     stdio: VERBOSE ? 'inherit' : 'pipe',
     encoding: 'utf-8',
     env: { ...process.env, AKALYNTH_DB_PATH: DB_PATH },
@@ -224,7 +228,7 @@ function checkG15Evidence(): void {
   log('Checking G15: Evidence consistency...');
 
   const result = spawnSync('npx', ['tsx', 'tools/verify-evidence.ts'], {
-    cwd: process.cwd(),
+    cwd: SERVER_DIR,
     stdio: VERBOSE ? 'inherit' : 'pipe',
     encoding: 'utf-8',
     env: { ...process.env, AKALYNTH_DB_PATH: DB_PATH, AKALYNTH_RECEIPTS_PATH: RECEIPTS_PATH },
@@ -338,7 +342,7 @@ function checkG5Rebuildable(db: Database.Database): void {
 function checkReceiptsExist(): void {
   log('Checking G1/G3: Receipts file...');
 
-  const absReceipts = path.resolve(process.cwd(), RECEIPTS_PATH);
+  const absReceipts = path.resolve(REPO_ROOT, RECEIPTS_PATH);
 
   if (!fs.existsSync(absReceipts)) {
     skip('RECEIPTS_EXIST', 'no receipts file yet (fresh install?)');

@@ -1,4 +1,4 @@
-import type { Direction, MapData, PlayerPublic, PlayerStatus } from '@shared/types';
+import type { Direction, MapData, PlayerPublic, PlayerStatus, PlayLoopProgress } from '@shared/types';
 import type { MapName } from '@shared/http';
 import type { ChronicleEvent } from '@shared/protocol';
 
@@ -84,6 +84,7 @@ export interface GameClientState {
   cooldowns: ActionCooldown;
   ui: UiStage;
   chat: ChatMessageEntry[];
+  loop: PlayLoopProgress | null;
   toast: ToastNotice | null;
   recapOpen: boolean;
   deathRecap: DeathRecap | null;
