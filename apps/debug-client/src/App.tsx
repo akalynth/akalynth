@@ -10,8 +10,22 @@ import { ChatSheet } from './components/ChatSheet';
 import { TopBar } from './components/TopBar';
 import { NearbyList } from './components/NearbyList';
 import { ExistenceShell } from './components/ExistenceShell';
+import { loadConfig } from './config';
 
 type ChronicleGroup = { day: string; items: ChronicleEvent[] };
+
+interface StudioProofState {
+  activeId: string | null;
+  lastSmoke: null | {
+    ok: boolean;
+    ranAt: string;
+    draftId: string;
+    worldSpawn?: { x: number; y: number };
+    canonicalUnchanged: boolean;
+    details: string[];
+    error?: string;
+  };
+}
 
 function dayKey(iso: string): string {
   const ms = Date.parse(iso);
@@ -91,10 +105,21 @@ export default function App() {
 
 function DebugApp() {
   const initialMap: MapName = 'Rookguard';
+  const config = useMemo(() => loadConfig(), []);
   const [state, api] = useGameClient(initialMap);
   const [chatOpen, setChatOpen] = useState(false);
+  const [proof, setProof] = useState<StudioProofState | null>(null);
+  const [proofRunning, setProofRunning] = useState(false);
+  const [proofError, setProofError] = useState<string | null>(null);
   const now = useNow();
   const toast = state.toast && now < state.toast.expiresAt ? state.toast : null;
+  const activePlaytestLabel = proof?.activeId ?? 'canonical';
+  const smokeState = proof?.lastSmoke?.ok ? 'pass' : proof?.lastSmoke ? 'fail' : proofError ? 'offline' : 'idle';
+  const smokeLabel =
+    smokeState === 'pass' ? 'passed' :
+    smokeState === 'fail' ? 'failed' :
+    smokeState === 'offline' ? 'offline' :
+    'ready';
 
   const hasAutoTarget = useMemo(() => {
     if (!state.world.me) return false;
@@ -153,6 +178,54 @@ function DebugApp() {
       }
     };
   }, [eventId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function refreshProof() {
+      try {
+        const response = await fetch(`${config.httpBase}/v1/studio/maps`);
+        if (!response.ok) throw new Error(`proof ${response.status}`);
+        const data = await response.json() as {
+          activePlaytest: null | { id: string };
+          lastStudioSmoke?: StudioProofState['lastSmoke'];
+        };
+        if (cancelled) return;
+        setProof({
+          activeId: data.activePlaytest?.id ?? null,
+          lastSmoke: data.lastStudioSmoke ?? null,
+        });
+        setProofError(null);
+      } catch (error) {
+        if (cancelled) return;
+        setProof(null);
+        setProofError(error instanceof Error ? error.message : String(error));
+      }
+    }
+
+    void refreshProof();
+    const timer = window.setInterval(refreshProof, 5000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [config.httpBase]);
+
+  async function runProofSmoke() {
+    setProofRunning(true);
+    try {
+      const response = await fetch(`${config.httpBase}/v1/studio/smoke`, { method: 'POST' });
+      const data = await response.json() as NonNullable<StudioProofState['lastSmoke']>;
+      setProof({
+        activeId: data.draftId,
+        lastSmoke: data,
+      });
+      setProofError(data.ok ? null : data.error ?? 'smoke failed');
+    } catch (error) {
+      setProofError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setProofRunning(false);
+    }
+  }
 
   return (
     <div className="app-shell">
@@ -295,14 +368,36 @@ function DebugApp() {
             fx={state.combat.fx}
             onSelectTarget={api.setTarget}
           />
-          <div className="hud">
-            <div className="hud-card">
-              <div>Map: {state.world.map.name}</div>
+          <div className="scene-vignette" />
+          <div className="hud hud-primary" aria-label="play status">
+            <div className="hud-card hud-card--identity">
+              <span className="hud-kicker">Akalynth</span>
+              <strong>{state.session.name ?? 'Phone guest'}</strong>
+              <span>{state.world.map.name}</span>
+            </div>
+            <div className="hud-card hud-card--stats">
               <div>
-                You: {state.world.me ? `${state.world.me.x}, ${state.world.me.y}` : 'connecting…'}
+                <span>Position</span>
+                <strong>{state.world.me ? `${state.world.me.x},${state.world.me.y}` : '--'}</strong>
               </div>
-              <div>Nearby: {others.length}</div>
-              <div>Conn: {state.conn.phase}</div>
+              <div>
+                <span>Nearby</span>
+                <strong>{others.length}</strong>
+              </div>
+              <div>
+                <span>Link</span>
+                <strong>{state.conn.phase}</strong>
+              </div>
+            </div>
+          </div>
+          <div className="hud hud-proof" aria-label="studio proof">
+            <div className="proof-chip">
+              <span>Playtest</span>
+              <strong>{activePlaytestLabel}</strong>
+            </div>
+            <div className={`proof-chip proof-chip--${smokeState}`}>
+              <span>Smoke</span>
+              <strong>{smokeLabel}</strong>
             </div>
           </div>
           {state.ui.stage >= 3 && <NearbyList players={roster} />}
@@ -315,7 +410,7 @@ function DebugApp() {
           />
         </section>
 
-        <section className="stage stage-controls">
+        <section className="stage stage-controls" aria-label="touch controls">
           <div className="thumb-zone left">
             <DPad onMove={api.sendMove} onRelease={api.releaseMove} onStopAll={api.stopMoves} />
           </div>
@@ -329,17 +424,57 @@ function DebugApp() {
           </div>
         </section>
 
-        <section className="stage stage-bottom">
-          <div className="bottom-actions">
-            <button className="chat-toggle" onClick={() => setChatOpen(true)}>
-              Open Chat
+        <section
+          className={`stage stage-bottom command-dock proof-${smokeState}`}
+          style={{
+            display: 'block',
+            left: '0.55rem',
+            maxWidth: 'calc(100vw - 1.1rem)',
+            right: 'auto',
+            width: 'calc(100vw - 1.1rem)',
+          }}
+        >
+          <div
+            className="bottom-actions"
+            style={{
+              display: 'grid',
+              gap: '0.42rem',
+              gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+              minWidth: 0,
+              width: '100%',
+            }}
+          >
+            <button
+              className="chat-toggle"
+              aria-label="Open chat"
+              style={{ minWidth: 0, width: '100%' }}
+              onClick={() => setChatOpen(true)}
+            >
+              Chat
             </button>
-            <button className="chronicle-toggle" onClick={api.openChronicle}>
-              Chronicle
+            <button
+              className="chronicle-toggle"
+              aria-label="Open chronicle"
+              style={{ minWidth: 0, width: '100%' }}
+              onClick={api.openChronicle}
+            >
+              Log
+            </button>
+            <button
+              className="proof-toggle"
+              aria-label={proofRunning ? 'Running proof' : 'Run proof'}
+              style={{ minWidth: 0, width: '100%' }}
+              onClick={() => void runProofSmoke()}
+              disabled={proofRunning}
+            >
+              {proofRunning ? 'Running' : 'Proof'}
             </button>
           </div>
           <div className="status-pills">
             <span className="pill">World synced</span>
+            {proof?.lastSmoke?.worldSpawn && (
+              <span className="pill proof-pill">Proof {proof.lastSmoke.worldSpawn.x},{proof.lastSmoke.worldSpawn.y}</span>
+            )}
             {state.world.me?.status === 'dead' && <span className="pill warning">Dead</span>}
           </div>
         </section>
