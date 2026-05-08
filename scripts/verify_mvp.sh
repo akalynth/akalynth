@@ -208,6 +208,9 @@ mint_guest() {
 }
 log "Akalynth MVP verify @ $WS_URL"
 for cmd in node npm bash curl jq; do need_cmd "$cmd"; done
+cd "$ROOT_DIR"
+npm install --silent
+npm --silent run build:packages
 cd "$SERVER_DIR"
 npm install --silent
 log "Building server..."
