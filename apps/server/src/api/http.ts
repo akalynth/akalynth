@@ -20,12 +20,14 @@ import type {
   PublicRumorsResponse,
   WorldPlayersQuery,
   TransparencyResponse,
+  AntiCheatPriorResponse,
 } from '../../../../packages/shared/http.js';
 
 type GuestSessionMintResult = GuestSessionResponse | { error: string; status?: number };
 type SessionMeResult = SessionMeResponse | { error: string; status: number };
 type WorldPlayersResult = WorldPlayersResponse | { error: string; status: number };
 type PublicReceiptsRawResult = ReceiptsResponse | { error: string; status: number };
+type AntiCheatPriorResult = AntiCheatPriorResponse | { error: string; status: number };
 
 // Identity v0.1: Character creation result
 export type CharacterCreateResult =
@@ -46,6 +48,7 @@ export interface ApiDeps {
   queryPublicReceiptsRaw?: (params: PublicReceiptsQueryParams) => PublicReceiptsRawResult;
   queryPublicRumors?: (params: PublicRumorsQueryParams) => PublicRumorsResponse;
   getTransparency?: () => TransparencyResponse;
+  queryAntiCheatPrior?: (playerId: string) => AntiCheatPriorResult;
   // Identity v0.1: Character creation
   createCharacter?: (name: string) => CharacterCreateResult;
 }
@@ -87,6 +90,10 @@ function isWorldStateError(x: WorldStateResult): x is { error: string; status: n
 }
 
 function isPublicReceiptsRawError(x: PublicReceiptsRawResult): x is { error: string; status: number } {
+  return typeof (x as { error?: unknown }).error === 'string';
+}
+
+function isAntiCheatPriorError(x: AntiCheatPriorResult): x is { error: string; status: number } {
   return typeof (x as { error?: unknown }).error === 'string';
 }
 
@@ -331,6 +338,24 @@ export function handleHttp(
 
     const result = deps.getWorldState(map, token);
     if (isWorldStateError(result)) {
+      json(res, result.status, { error: result.error });
+    } else {
+      json(res, 200, result);
+    }
+    return true;
+  }
+
+  if (method === 'GET' && path === '/v1/anticheat/priors') {
+    if (!deps.queryAntiCheatPrior) return (json(res, 501, { error: 'not_implemented' }), true);
+
+    const playerId = url.searchParams.get('player_id');
+    if (!playerId) {
+      json(res, 400, { error: 'player_id_required' });
+      return true;
+    }
+
+    const result = deps.queryAntiCheatPrior(playerId);
+    if (isAntiCheatPriorError(result)) {
       json(res, result.status, { error: result.error });
     } else {
       json(res, 200, result);

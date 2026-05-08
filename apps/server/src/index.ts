@@ -65,6 +65,7 @@ import {
   getAuthKeyDomain,
 } from '../../../packages/coordination-kernel/src/identity/index.js';
 import { createAntiCheatRuntime, onChat, onMoveApplied, onMoveIntent } from './anticheat/detector.js';
+import { createAntiCheatPriorStore } from './anticheat/priors.js';
 import { applyThrottle, checkTemTimeout, handleTemResponse, issueTemChallenge, isThrottled } from './anticheat/tem.js';
 import { loadSharedMap, createWorldState, toPublicPlayer } from './world/state.js';
 import { indexFor, tryMove } from './world/movement.js';
@@ -177,6 +178,7 @@ const DEFAULT_GUEST_SESSION_TTL_MS = 10 * 60 * 1000;
 const DEFAULT_GUEST_SESSION_CLEANUP_MS = 60 * 1000;
 const MAX_GUEST_SESSIONS = 10_000;
 const DEBUG_MODE = process.env.DEBUG === '1';
+const ANTICHEAT_PRIORS_PATH = process.env.AKALYNTH_ANTICHEAT_PRIORS_PATH;
 const DEV_MINT_ENABLED = parseBoolEnv(process.env.AKALYNTH_DEV_MINT, false);
 const REQUIRE_TLS = parseBoolEnv(process.env.REQUIRE_TLS, true);
 const ALLOW_INSECURE_LOCAL = parseBoolEnv(process.env.ALLOW_INSECURE_LOCAL, false);
@@ -1072,6 +1074,10 @@ const audit = createAuditLogger({
   },
 });
 const receiptsReader = createReceiptsReader(chainPaths.receiptsPath);
+const antiCheatPriorStore = createAntiCheatPriorStore({
+  enabled: DEBUG_MODE,
+  filePath: ANTICHEAT_PRIORS_PATH,
+});
 const lifecycleInputs = {
   receipts_path: chainPaths.receiptsPath,
   pid: process.pid,
@@ -1989,6 +1995,7 @@ const httpServer = http.createServer((req, res) => {
         has_more: raw.has_more,
       };
     },
+    queryAntiCheatPrior: (playerId) => antiCheatPriorStore.queryPlayerPrior(playerId),
     mintGuestSession: () => {
       const now = Date.now();
       pruneExpiredGuestSessions(now);

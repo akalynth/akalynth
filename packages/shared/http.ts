@@ -1,7 +1,14 @@
 // packages/shared/http.ts
 // HTTP Control Plane contract (API-first). Keep stable.
 
-import type { PlayerPublic, PlayerStatus } from './types.js';
+import type {
+  LearningFeatureRow,
+  PlayerPublic,
+  PlayerStatus,
+  SuspicionBand,
+  SuspicionScore,
+  SuspicionTopSignal,
+} from './types.js';
 
 export type MapName = 'Rookguard' | 'Azura';
 
@@ -187,3 +194,28 @@ export interface TransparencyResponse {
     work_contracts: string;
   };
 }
+
+// ============================================================================
+// Anti-Cheat Priors API (debug/operator)
+// ============================================================================
+
+export interface AntiCheatPriorRecord {
+  player_id: string;
+  session_id: string;
+  score: number;
+  band: SuspicionBand;
+  top_signals: SuspicionTopSignal[];
+  feature_version: string;
+  model_version: string;
+  computed_at: string;
+  first_sequence: number;
+  last_sequence: number;
+  receipt_count: number;
+}
+
+export interface AntiCheatPriorResponse {
+  prior: AntiCheatPriorRecord;
+}
+
+export type AntiCheatPriorImportRecord = SuspicionScore;
+export type AntiCheatFeatureImportRecord = LearningFeatureRow;
