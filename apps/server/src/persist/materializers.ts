@@ -4,6 +4,7 @@
 import { blake3 } from '@noble/hashes/blake3';
 import type Database from 'better-sqlite3';
 import type { AuditReceipt } from '../../../../packages/shared/types.js';
+import { THROTTLE_DURATION_MS } from '../../../../packages/shared/types.js';
 import { ACTION_ALIASES, RECEIPT_ACTIONS } from './types.js';
 import { computeReceiptHash } from './hash.js';
 
@@ -53,6 +54,14 @@ const HANDLERS: Record<string, Handler> = {
   [RECEIPT_ACTIONS.ITEM_PICKED_UP_FROM_WORLD]: handleItemPickedUpFromWorld,
   // Phase 3: Legendary heat
   [RECEIPT_ACTIONS.LEGENDARY_HEAT_CHANGED]: handleLegendaryHeatChanged,
+  // Phase 3.5: Player heat + enforcement memory
+  [RECEIPT_ACTIONS.PLAYER_HEAT_CHANGED]: handlePlayerHeatChanged,
+  [RECEIPT_ACTIONS.HEAT_PENALTY_APPLIED]: handleHeatPenaltyApplied,
+  [RECEIPT_ACTIONS.HEAT_TEM_ESCALATION]: handleHeatTemEscalation,
+  [RECEIPT_ACTIONS.TEM_CHALLENGE_FAILED]: handleTemChallengeFailed,
+  [RECEIPT_ACTIONS.THROTTLE]: handleThrottleApplied,
+  [RECEIPT_ACTIONS.KICK]: handleKickApplied,
+  [RECEIPT_ACTIONS.WARN_ISSUED]: handleWarnIssued,
   // Phase 3.2: Protected slots
   [RECEIPT_ACTIONS.INVENTORY_SLOT_CHANGED]: handleInventorySlotChanged,
   // Moderation v1
@@ -500,6 +509,151 @@ function handleLegendaryHeatChanged(
       updated_at = excluded.updated_at,
       last_receipt = excluded.last_receipt
   `).run(itemId, newHeat, receipt.timestamp, receiptHash);
+}
+
+function handlePlayerHeatChanged(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const inputs = receipt.inputs ?? {};
+  const newScore = inputs.new_score as number;
+
+  if (typeof newScore !== 'number' || !Number.isFinite(newScore)) return;
+
+  db.prepare(`
+    INSERT INTO player_heat (player_id, heat, penalty_until_ms, last_tem_ms, updated_at, last_receipt)
+    VALUES (?, ?, NULL, NULL, ?, ?)
+    ON CONFLICT(player_id) DO UPDATE SET
+      heat = excluded.heat,
+      updated_at = excluded.updated_at,
+      last_receipt = excluded.last_receipt
+  `).run(receipt.actor_id, newScore, receipt.timestamp, receiptHash);
+}
+
+function handleHeatPenaltyApplied(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const inputs = receipt.inputs ?? {};
+  const durationMs = inputs.duration_ms as number;
+  const timestampMs = Date.parse(receipt.timestamp);
+
+  if (!Number.isFinite(durationMs) || !Number.isFinite(timestampMs)) return;
+
+  const penaltyUntilMs = timestampMs + durationMs;
+  db.prepare(`
+    INSERT INTO player_heat (player_id, heat, penalty_until_ms, last_tem_ms, updated_at, last_receipt)
+    VALUES (?, 0, ?, NULL, ?, ?)
+    ON CONFLICT(player_id) DO UPDATE SET
+      penalty_until_ms = excluded.penalty_until_ms,
+      updated_at = excluded.updated_at,
+      last_receipt = excluded.last_receipt
+  `).run(receipt.actor_id, penaltyUntilMs, receipt.timestamp, receiptHash);
+}
+
+function handleHeatTemEscalation(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const timestampMs = Date.parse(receipt.timestamp);
+  if (!Number.isFinite(timestampMs)) return;
+
+  db.prepare(`
+    INSERT INTO player_heat (player_id, heat, penalty_until_ms, last_tem_ms, updated_at, last_receipt)
+    VALUES (?, 0, NULL, ?, ?, ?)
+    ON CONFLICT(player_id) DO UPDATE SET
+      last_tem_ms = excluded.last_tem_ms,
+      updated_at = excluded.updated_at,
+      last_receipt = excluded.last_receipt
+  `).run(receipt.actor_id, timestampMs, receipt.timestamp, receiptHash);
+}
+
+function handleTemChallengeFailed(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const timestampMs = Date.parse(receipt.timestamp);
+  if (!Number.isFinite(timestampMs)) return;
+  const throttleUntilMs = timestampMs + THROTTLE_DURATION_MS;
+
+  db.prepare(`
+    INSERT INTO player_anticheat_enforcement
+    (player_id, warn_count, tem_failed_count, throttle_count, kick_count, throttle_until_ms, updated_at, last_receipt)
+    VALUES (?, 0, 1, 1, 0, ?, ?, ?)
+    ON CONFLICT(player_id) DO UPDATE SET
+      tem_failed_count = player_anticheat_enforcement.tem_failed_count + 1,
+      throttle_count = player_anticheat_enforcement.throttle_count + 1,
+      throttle_until_ms = CASE
+        WHEN player_anticheat_enforcement.throttle_until_ms IS NULL THEN excluded.throttle_until_ms
+        WHEN excluded.throttle_until_ms > player_anticheat_enforcement.throttle_until_ms THEN excluded.throttle_until_ms
+        ELSE player_anticheat_enforcement.throttle_until_ms
+      END,
+      updated_at = excluded.updated_at,
+      last_receipt = excluded.last_receipt
+  `).run(receipt.actor_id, throttleUntilMs, receipt.timestamp, receiptHash);
+}
+
+function handleThrottleApplied(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const inputs = receipt.inputs ?? {};
+  const durationMs = typeof inputs.duration_ms === 'number' ? (inputs.duration_ms as number) : THROTTLE_DURATION_MS;
+  const timestampMs = Date.parse(receipt.timestamp);
+  if (!Number.isFinite(durationMs) || !Number.isFinite(timestampMs)) return;
+
+  const throttleUntilMs = timestampMs + durationMs;
+  db.prepare(`
+    INSERT INTO player_anticheat_enforcement
+    (player_id, warn_count, tem_failed_count, throttle_count, kick_count, throttle_until_ms, updated_at, last_receipt)
+    VALUES (?, 0, 0, 1, 0, ?, ?, ?)
+    ON CONFLICT(player_id) DO UPDATE SET
+      throttle_count = player_anticheat_enforcement.throttle_count + 1,
+      throttle_until_ms = CASE
+        WHEN player_anticheat_enforcement.throttle_until_ms IS NULL THEN excluded.throttle_until_ms
+        WHEN excluded.throttle_until_ms > player_anticheat_enforcement.throttle_until_ms THEN excluded.throttle_until_ms
+        ELSE player_anticheat_enforcement.throttle_until_ms
+      END,
+      updated_at = excluded.updated_at,
+      last_receipt = excluded.last_receipt
+  `).run(receipt.actor_id, throttleUntilMs, receipt.timestamp, receiptHash);
+}
+
+function handleKickApplied(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  db.prepare(`
+    INSERT INTO player_anticheat_enforcement
+    (player_id, warn_count, tem_failed_count, throttle_count, kick_count, throttle_until_ms, updated_at, last_receipt)
+    VALUES (?, 0, 0, 0, 1, NULL, ?, ?)
+    ON CONFLICT(player_id) DO UPDATE SET
+      kick_count = player_anticheat_enforcement.kick_count + 1,
+      updated_at = excluded.updated_at,
+      last_receipt = excluded.last_receipt
+  `).run(receipt.actor_id, receipt.timestamp, receiptHash);
+}
+
+function handleWarnIssued(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  db.prepare(`
+    INSERT INTO player_anticheat_enforcement
+    (player_id, warn_count, tem_failed_count, throttle_count, kick_count, throttle_until_ms, updated_at, last_receipt)
+    VALUES (?, 1, 0, 0, 0, NULL, ?, ?)
+    ON CONFLICT(player_id) DO UPDATE SET
+      warn_count = player_anticheat_enforcement.warn_count + 1,
+      updated_at = excluded.updated_at,
+      last_receipt = excluded.last_receipt
+  `).run(receipt.actor_id, receipt.timestamp, receiptHash);
 }
 
 // ============================================================================

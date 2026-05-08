@@ -7,6 +7,13 @@ export type HeatState = {
   reason_counters: Record<string, number>;
 };
 
+export interface PersistedHeatState {
+  heat: number;
+  penalty_until_ms: number | null;
+  last_tem_ms: number | null;
+  updated_at: string;
+}
+
 const clampScore = (value: number): number => Math.max(0, Math.min(100, value));
 
 function clearExpiredPenalty(state: HeatState, nowMs: number): HeatState {
@@ -25,6 +32,24 @@ export function createHeatState(nowMs: number): HeatState {
     penalty_until_ms: null,
     reason_counters: {},
   };
+}
+
+export function hydrateHeatState(
+  saved: PersistedHeatState,
+  nowMs: number,
+  decayPerMin: number
+): HeatState {
+  const updatedAtMs = Date.parse(saved.updated_at);
+  const base: HeatState = {
+    score: Number.isFinite(saved.heat) ? clampScore(saved.heat) : 0,
+    last_updated_ms: Number.isFinite(updatedAtMs) ? updatedAtMs : nowMs,
+    last_tem_trigger_ms: saved.last_tem_ms,
+    last_decay_ms: Number.isFinite(updatedAtMs) ? updatedAtMs : nowMs,
+    penalty_until_ms: saved.penalty_until_ms,
+    reason_counters: {},
+  };
+
+  return applyDecay(base, nowMs, decayPerMin).state;
 }
 
 export function applyDecay(

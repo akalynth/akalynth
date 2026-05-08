@@ -64,7 +64,7 @@ import {
   generateNonce,
   getAuthKeyDomain,
 } from '../../../packages/coordination-kernel/src/identity/index.js';
-import { createAntiCheatRuntime, onChat, onMoveApplied, onMoveIntent } from './anticheat/detector.js';
+import { createAntiCheatRuntime, hydrateAntiCheatRuntime, onChat, onMoveApplied, onMoveIntent } from './anticheat/detector.js';
 import { applyThrottle, checkTemTimeout, handleTemResponse, issueTemChallenge, isThrottled } from './anticheat/tem.js';
 import { loadSharedMap, createWorldState, toPublicPlayer } from './world/state.js';
 import { indexFor, tryMove } from './world/movement.js';
@@ -84,6 +84,7 @@ import { rngCommitV1, rngRevealHex32 } from './world/rng.js';
 import {
   addHeat,
   createHeatState,
+  hydrateHeatState,
   isPenaltyActive,
   shouldApplyPenalty,
   shouldTemEscalate,
@@ -2691,21 +2692,12 @@ function processSessionQueue(s: Session, now: number) {
         const savedHeat = persist.getPlayerHeat(player_id);
         if (savedHeat) {
           const now = Date.now();
+          s.heat = hydrateHeatState(savedHeat, now, HEAT_DECAY_PER_MIN);
+        }
 
-          // Restore score
-          const heatRaw = savedHeat.heat;
-          const heat = Number.isFinite(heatRaw) ? Math.max(0, heatRaw) : 0;
-          s.heat.score = heat;
-
-          // Restore penalty window if still active
-          if (savedHeat.penalty_until_ms !== null && savedHeat.penalty_until_ms > now) {
-            s.heat.penalty_until_ms = savedHeat.penalty_until_ms;
-          }
-
-          // Restore TEM cooldown anchor
-          if (savedHeat.last_tem_ms !== null) {
-            s.heat.last_tem_trigger_ms = savedHeat.last_tem_ms;
-          }
+        const savedAntiCheat = persist.getPlayerAntiCheatEnforcement(player_id);
+        if (savedAntiCheat) {
+          s.anti = hydrateAntiCheatRuntime(savedAntiCheat, Date.now());
         }
 
         // Sovereign presence detection (security-gated)
