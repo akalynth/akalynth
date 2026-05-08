@@ -45,18 +45,21 @@ Produce an evidence-backed audit of:
 - No evidence, no claim.
 
 ## Commands (Ops)
-- `sudo ss -ltnp | rg ':(80|443|3000)\\b'`
+- AKALYNTH_AUDIT_BASE_URL="${AKALYNTH_AUDIT_BASE_URL:-https://api.akalynth.com}"
+- AKALYNTH_AUDIT_WS_URL="${AKALYNTH_AUDIT_WS_URL:-wss://api.akalynth.com}"
+- `sudo ss -ltnp | rg ":(80|443|3000)\\b"`
 - `sudo ufw status verbose`
-- `curl -s https://beta-api.akalynth.com/v1/health`
-- `curl -s https://beta-api.akalynth.com/v1/transparency | jq .`
-- `timeout 5 wscat -c wss://beta-api.akalynth.com`
+- `curl -s "$AKALYNTH_AUDIT_BASE_URL/v1/health"`
+- `curl -s "$AKALYNTH_AUDIT_BASE_URL/v1/transparency" | jq .`
+- `timeout 5 wscat -c "$AKALYNTH_AUDIT_WS_URL"`
 - `systemd-analyze security akalynth --no-pager`
+- Active default target is `https://api.akalynth.com`; set AKALYNTH_AUDIT_BASE_URL or AKALYNTH_AUDIT_WS_URL explicitly to `https://beta-api.akalynth.com` for beta-path audits only. This does not change the frozen `docs/CLIENT_CONTRACT_V0_1.md` client contract.
 
 ## Commands (Repo)
 - `npm run build:server`
 - `npm run verify:lifecycle`
 - `npm run verify:receipt-hygiene`
-- `rg 'character_create|auth_token_issue' receipts.jsonl | tail -50`
+- `rg "character_create|auth_token_issue" receipts.jsonl | tail -50`
 
 ## Must-check files
 - `docs/CLIENT_CONTRACT_V0_1.md`

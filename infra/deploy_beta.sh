@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 # Akalynth Beta Deploy Script
+# NOTE: this file name is historical; it is retained for existing runbooks and operators.
+# Default deploy health target is the active API: https://api.akalynth.com/v1/health.
+# Set AKALYNTH_HEALTH_URL to override for beta or alternate lanes.
 # Usage: ./infra/deploy_beta.sh [tag|branch]
 # Example: ./infra/deploy_beta.sh v1.0.3-world-law
 
