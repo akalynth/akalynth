@@ -26,6 +26,7 @@ import type {
   InventoryItemRow,
   LegendaryHeatRow,
   PlayerHeatRow,
+  PlayerAntiCheatEnforcementRow,
   ChronicleEventRow,
   ModerationReportRow,
 } from './types.js';
@@ -156,6 +157,10 @@ export function createPersistenceLayer(
 
     getPlayerHeat(playerId: string): PlayerHeatRow | null {
       return queries.getPlayerHeat(db, playerId);
+    },
+
+    getPlayerAntiCheatEnforcement(playerId: string): PlayerAntiCheatEnforcementRow | null {
+      return queries.getPlayerAntiCheatEnforcement(db, playerId);
     },
 
     // Protected slot queries (Phase 3.2)

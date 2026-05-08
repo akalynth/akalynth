@@ -24,6 +24,12 @@ export interface AntiCheatRuntime {
   chatTimestamps: number[];
 }
 
+export interface PersistedAntiCheatEnforcementState {
+  warn_count: number;
+  kick_count: number;
+  throttle_until_ms: number | null;
+}
+
 export type DetectorAction =
   | { action: 'none' }
   | { action: 'warn'; signal: Signal }
@@ -49,6 +55,19 @@ export function createAntiCheatRuntime(now: number): AntiCheatRuntime {
     cadenceIntervalsMs: [],
     chatTimestamps: [],
   };
+}
+
+export function hydrateAntiCheatRuntime(
+  saved: PersistedAntiCheatEnforcementState,
+  now: number
+): AntiCheatRuntime {
+  const runtime = createAntiCheatRuntime(now);
+  runtime.state.warnCount = Number.isFinite(saved.warn_count) ? Math.max(0, saved.warn_count) : 0;
+  runtime.state.kickCount = Number.isFinite(saved.kick_count) ? Math.max(0, saved.kick_count) : 0;
+  if (saved.throttle_until_ms !== null && saved.throttle_until_ms > now) {
+    runtime.state.throttleUntil = saved.throttle_until_ms;
+  }
+  return runtime;
 }
 
 export function decaySignals(rt: AntiCheatRuntime, now: number): void {
@@ -164,4 +183,3 @@ export function onChat(rt: AntiCheatRuntime, now: number): DetectorAction {
 
   return { action: 'none' };
 }
-

@@ -14,7 +14,7 @@
     "build:server": "cd apps/server && npm run build",
     "build:client": "cd apps/debug-client && npm run build",
     "build": "npm run build:server && npm run build:client",
-    "build:packages": "npm -w @akalynth/coordination-kernel run build && npm -w @akalynth/verification-spine run build",
+    "build:packages": "npm -w @akalynth/coordination-kernel run build && npm -w @akalynth/learning-spine run build && npm -w @akalynth/verification-spine run build",
     "studio-smoke": "node scripts/studio-smoke.mjs",
     "build:game": "(cd apps/phone-server && npm run build) && (cd apps/studio && npm run build) && (cd apps/debug-client && npm run build) && npm run studio-smoke",
     "verify": "npm run build:packages && node packages/verification-spine/bin/akalynth-verify.js",

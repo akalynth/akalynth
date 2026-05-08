@@ -134,6 +134,17 @@ export interface PlayerHeatRow {
   last_receipt: string; // receipt_hash of last modification
 }
 
+export interface PlayerAntiCheatEnforcementRow {
+  player_id: string;
+  warn_count: number;
+  tem_failed_count: number;
+  throttle_count: number;
+  kick_count: number;
+  throttle_until_ms: number | null; // epoch ms or null
+  updated_at: string; // ISO8601
+  last_receipt: string; // receipt_hash of last modification
+}
+
 // Phase 4: Chronicle event projection
 export type ChronicleEventKind =
   | 'player_created'
@@ -228,6 +239,11 @@ export const RECEIPT_ACTIONS = {
   // Phase 3.5: Player heat (PR2)
   HEAT_PENALTY_APPLIED: 'heat_penalty_applied',
   HEAT_TEM_ESCALATION: 'heat_tem_escalation',
+  TEM_CHALLENGE_FAILED: 'tem_challenge_failed',
+  TEM_CHALLENGE_PASSED: 'tem_challenge_passed',
+  THROTTLE: 'throttle',
+  KICK: 'kick',
+  WARN_ISSUED: 'warn_issued',
 
   // Origin Act: Player's first meaningful action
   ORIGIN_ACT_SEALED: 'origin_act_sealed',
@@ -331,6 +347,7 @@ export interface PersistenceLayer {
 
   // Read queries - Player Heat (Phase 3.5)
   getPlayerHeat(player_id: string): PlayerHeatRow | null;
+  getPlayerAntiCheatEnforcement(player_id: string): PlayerAntiCheatEnforcementRow | null;
 
   // Read queries - Protected Slots (Phase 3.2)
   getProtectedSlots(): Array<{ owner_player_id: string; item_id: string; updated_at: string }>;

@@ -11,6 +11,7 @@ import type {
   InventoryItemRow,
   LegendaryHeatRow,
   PlayerHeatRow,
+  PlayerAntiCheatEnforcementRow,
   ChronicleEventRow,
   ModerationReportRow,
 } from './types.js';
@@ -364,6 +365,18 @@ export function getPlayerHeat(
     WHERE player_id = ?
   `);
   return (stmt.get(playerId) as PlayerHeatRow) ?? null;
+}
+
+export function getPlayerAntiCheatEnforcement(
+  db: Database.Database,
+  playerId: string
+): PlayerAntiCheatEnforcementRow | null {
+  const stmt = db.prepare(`
+    SELECT player_id, warn_count, tem_failed_count, throttle_count, kick_count, throttle_until_ms, updated_at, last_receipt
+    FROM player_anticheat_enforcement
+    WHERE player_id = ?
+  `);
+  return (stmt.get(playerId) as PlayerAntiCheatEnforcementRow) ?? null;
 }
 
 // ============================================================================

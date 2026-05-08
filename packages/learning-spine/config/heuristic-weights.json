@@ -1,0 +1,18 @@
+{
+  "model_version": "anti_cheat_heuristic_v1",
+  "feature_version": "anti_cheat_features_v1",
+  "rules": [
+    { "feature": "reject_ratio", "weight": 12, "scale": 0.25 },
+    { "feature": "perfect_cadence_count", "weight": 22, "scale": 1 },
+    { "feature": "tem_challenge_issued_count", "weight": 10, "scale": 1 },
+    { "feature": "tem_failed_count", "weight": 24, "scale": 1 },
+    { "feature": "max_heat_seen", "weight": 14, "scale": 35 },
+    { "feature": "heat_escalation_count", "weight": 10, "scale": 1 },
+    { "feature": "runestone_denial_spam_count", "weight": 7, "scale": 3 },
+    { "feature": "repeated_legend_probe_count", "weight": 7, "scale": 2 },
+    { "feature": "chat_rate_spike_count", "weight": 10, "scale": 2 },
+    { "feature": "throttle_count", "weight": 10, "scale": 1 },
+    { "feature": "kick_count", "weight": 16, "scale": 1 },
+    { "feature": "rate_limit_exceeded_count", "weight": 8, "scale": 2 }
+  ]
+}

@@ -64,7 +64,8 @@ import {
   generateNonce,
   getAuthKeyDomain,
 } from '../../../packages/coordination-kernel/src/identity/index.js';
-import { createAntiCheatRuntime, onChat, onMoveApplied, onMoveIntent } from './anticheat/detector.js';
+import { createAntiCheatRuntime, hydrateAntiCheatRuntime, onChat, onMoveApplied, onMoveIntent } from './anticheat/detector.js';
+import { createAntiCheatPriorStore } from './anticheat/priors.js';
 import { applyThrottle, checkTemTimeout, handleTemResponse, issueTemChallenge, isThrottled } from './anticheat/tem.js';
 import { loadSharedMap, createWorldState, toPublicPlayer } from './world/state.js';
 import { indexFor, tryMove } from './world/movement.js';
@@ -84,6 +85,7 @@ import { rngCommitV1, rngRevealHex32 } from './world/rng.js';
 import {
   addHeat,
   createHeatState,
+  hydrateHeatState,
   isPenaltyActive,
   shouldApplyPenalty,
   shouldTemEscalate,
@@ -177,6 +179,7 @@ const DEFAULT_GUEST_SESSION_TTL_MS = 10 * 60 * 1000;
 const DEFAULT_GUEST_SESSION_CLEANUP_MS = 60 * 1000;
 const MAX_GUEST_SESSIONS = 10_000;
 const DEBUG_MODE = process.env.DEBUG === '1';
+const ANTICHEAT_PRIORS_PATH = process.env.AKALYNTH_ANTICHEAT_PRIORS_PATH;
 const DEV_MINT_ENABLED = parseBoolEnv(process.env.AKALYNTH_DEV_MINT, false);
 const REQUIRE_TLS = parseBoolEnv(process.env.REQUIRE_TLS, true);
 const ALLOW_INSECURE_LOCAL = parseBoolEnv(process.env.ALLOW_INSECURE_LOCAL, false);
@@ -1072,6 +1075,10 @@ const audit = createAuditLogger({
   },
 });
 const receiptsReader = createReceiptsReader(chainPaths.receiptsPath);
+const antiCheatPriorStore = createAntiCheatPriorStore({
+  enabled: DEBUG_MODE,
+  filePath: ANTICHEAT_PRIORS_PATH,
+});
 const lifecycleInputs = {
   receipts_path: chainPaths.receiptsPath,
   pid: process.pid,
@@ -1989,6 +1996,7 @@ const httpServer = http.createServer((req, res) => {
         has_more: raw.has_more,
       };
     },
+    queryAntiCheatPrior: (playerId) => antiCheatPriorStore.queryPlayerPrior(playerId),
     mintGuestSession: () => {
       const now = Date.now();
       pruneExpiredGuestSessions(now);
@@ -2691,21 +2699,12 @@ function processSessionQueue(s: Session, now: number) {
         const savedHeat = persist.getPlayerHeat(player_id);
         if (savedHeat) {
           const now = Date.now();
+          s.heat = hydrateHeatState(savedHeat, now, HEAT_DECAY_PER_MIN);
+        }
 
-          // Restore score
-          const heatRaw = savedHeat.heat;
-          const heat = Number.isFinite(heatRaw) ? Math.max(0, heatRaw) : 0;
-          s.heat.score = heat;
-
-          // Restore penalty window if still active
-          if (savedHeat.penalty_until_ms !== null && savedHeat.penalty_until_ms > now) {
-            s.heat.penalty_until_ms = savedHeat.penalty_until_ms;
-          }
-
-          // Restore TEM cooldown anchor
-          if (savedHeat.last_tem_ms !== null) {
-            s.heat.last_tem_trigger_ms = savedHeat.last_tem_ms;
-          }
+        const savedAntiCheat = persist.getPlayerAntiCheatEnforcement(player_id);
+        if (savedAntiCheat) {
+          s.anti = hydrateAntiCheatRuntime(savedAntiCheat, Date.now());
         }
 
         // Sovereign presence detection (security-gated)

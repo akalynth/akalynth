@@ -12,6 +12,7 @@
     "verify:quick": "tsx tools/verify-guarantees.ts --skip-build",
     "verify:heat": "tsx tools/verify-heat.ts",
     "verify:protected": "tsx tools/verify-protected.ts",
+    "verify:anticheat-persistence": "tsx tools/verify-anticheat-persistence.ts",
     "verify:lifecycle": "tsx tools/verify-lifecycle.ts",
     "verify:chronicle": "tsx tools/verify-chronicle.ts",
     "verify:chronicle-chain": "tsx tools/verify-chronicle-chain.ts",
