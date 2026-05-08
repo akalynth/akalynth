@@ -20,4 +20,3 @@ Output should name:
 - Player-facing text.
 - Mechanical changes, if any.
 - Verification path.
-

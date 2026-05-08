@@ -51,4 +51,3 @@ model_verbosity = "medium"
 approval_policy = "on-request"
 sandbox_mode = "workspace-write"
 web_search = "cached"
-

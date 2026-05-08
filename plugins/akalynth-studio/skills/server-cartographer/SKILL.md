@@ -24,4 +24,3 @@ Expected layout:
 - Service: `akalynth`
 - Reverse proxy: Caddy
 - Public API: `https://api.akalynth.com/v1/health`
-

@@ -22,4 +22,3 @@ Verification:
 - Name replay/chain commands.
 - Report receipt count and chain status.
 - Separate bootstrap-only artifacts from live runtime artifacts.
-

@@ -21,4 +21,3 @@ Rules:
 - Do not say a test passed unless command output proves it.
 - If a native dependency fails due environment, classify it separately from code failure.
 - For server deploy checks, include systemd, logs, local health, external health, firewall, and ports.
-

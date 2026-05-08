@@ -22,4 +22,3 @@ Rules:
 - Prefer adding evidence and verification before adding harsher penalties.
 
 Verification should include a focused anti-cheat test plus any receipt-chain impact.
-

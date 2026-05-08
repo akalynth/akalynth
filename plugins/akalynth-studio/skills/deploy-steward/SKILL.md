@@ -27,4 +27,3 @@ Required deploy evidence:
 - Rollback notes with exact paths/commands.
 
 Stop before overwriting secrets, deleting runtime data, changing DNS, disabling root SSH, or opening new ports.
-

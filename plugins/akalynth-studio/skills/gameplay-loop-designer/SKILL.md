@@ -22,4 +22,3 @@ Output should include:
 - Receipts emitted.
 - Anti-cheat or abuse risks.
 - Test or playtest path.
-

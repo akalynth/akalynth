@@ -22,4 +22,3 @@ Required note format:
 - Compatibility impact.
 - Client action required.
 - Verification command/output.
-
