@@ -19,6 +19,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { execSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { resolveChainPaths, validateKeyFile, isProductionMode } from '../../../packages/shared/paths.js';
 
 interface CheckResult {
@@ -30,10 +31,18 @@ interface CheckResult {
 
 const results: CheckResult[] = [];
 
-function runCheck(name: string, command: string): CheckResult {
+const TOOL_DIR = path.dirname(fileURLToPath(import.meta.url));
+const SERVER_DIR = path.resolve(TOOL_DIR, '..');
+const REPO_ROOT = path.resolve(SERVER_DIR, '../..');
+
+function shellQuote(value: string): string {
+  return `'${value.replace(/'/g, `'\\''`)}'`;
+}
+
+function runCheck(name: string, command: string, cwd = process.cwd()): CheckResult {
   try {
     execSync(command, {
-      cwd: process.cwd(),
+      cwd,
       stdio: 'pipe',
       timeout: 120_000, // 2 min max per check
     });
@@ -109,7 +118,11 @@ function main(): void {
 
   // 4) Chain discipline (static analysis)
   console.log('[chain discipline]');
-  const chainDiscipline = runCheck('chain_discipline', 'bash ../../scripts/test-chain-discipline.sh');
+  const chainDiscipline = runCheck(
+    'chain_discipline',
+    'bash scripts/test-chain-discipline.sh',
+    REPO_ROOT
+  );
   if (chainDiscipline.passed) {
     ok('Chain discipline checks passed');
   } else {
@@ -121,7 +134,10 @@ function main(): void {
   // 5) Lifecycle verification (if receipts exist)
   if (fs.existsSync(chainPaths.receiptsPath)) {
     console.log('[lifecycle verification]');
-    const lifecycle = runCheck('lifecycle', 'npm run verify:lifecycle');
+    const lifecycle = runCheck(
+      'lifecycle',
+      `npx tsx ${shellQuote(path.join(SERVER_DIR, 'tools/verify-lifecycle.ts'))}`
+    );
     if (lifecycle.passed) {
       ok('Lifecycle verification passed');
     } else {
@@ -141,7 +157,10 @@ function main(): void {
   // 6) Chronicle chain verification (if receipts exist)
   if (fs.existsSync(chainPaths.receiptsPath)) {
     console.log('[chronicle chain verification]');
-    const chronicle = runCheck('chronicle_chain', 'npm run verify:chronicle-chain');
+    const chronicle = runCheck(
+      'chronicle_chain',
+      `npx tsx ${shellQuote(path.join(SERVER_DIR, 'tools/verify-chronicle-chain.ts'))}`
+    );
     if (chronicle.passed) {
       ok('Chronicle chain verification passed');
     } else {
