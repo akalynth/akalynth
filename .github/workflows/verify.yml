@@ -31,6 +31,7 @@ jobs:
       - name: Run verification spine
         id: verify
         run: |
+          npm run build:packages
           node packages/verification-spine/bin/akalynth-verify.js \
             --mode ci \
             --profile quick \
