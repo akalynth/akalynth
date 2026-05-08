@@ -49,7 +49,7 @@ Produce an evidence-backed audit of:
 From repo root, generate fixtures and run the audit gate:
 ```bash
 mkdir -p .secrets
-node --input-type=module -e "import fs from node:fs; import crypto from node:crypto; const seed = crypto.createHash(sha256).update(akalynth-ci-fixture-key-v1).digest(); fs.writeFileSync(.secrets/chronicle.key, seed.subarray(0, 32)); fs.chmodSync(.secrets/chronicle.key, 0o600);"
+node --input-type=module -e "import fs from 'node:fs'; import crypto from 'node:crypto'; const seed = crypto.createHash('sha256').update('akalynth-ci-fixture-key-v1').digest(); fs.writeFileSync('.secrets/chronicle.key', seed.subarray(0, 32)); fs.chmodSync('.secrets/chronicle.key', 0o600);"
 CHRONICLE_KEY_PATH=$PWD/.secrets/chronicle.key AKALYNTH_RECEIPT_CHAIN_PATH=$PWD/apps/server/fixtures/ci-receipts/receipts.jsonl npm -w apps/server run fixture:generate
 node apps/server/tools/generate-chronicle-log.js apps/server/fixtures/ci-chronicle/chronicle.log
 ENABLE_CHRONICLE=1 CHRONICLE_LOG_PATH=$PWD/apps/server/fixtures/ci-chronicle/chronicle.log AKALYNTH_RECEIPT_CHAIN_PATH=$PWD/apps/server/fixtures/ci-receipts/receipts.jsonl npm run verify:receipt-hygiene
