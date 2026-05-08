@@ -1,0 +1,24 @@
+{
+  "name": "@akalynth/learning-spine",
+  "version": "0.1.0",
+  "description": "Receipt-driven offline anti-cheat learning pipeline for Akalynth",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "akalynth-extract-features": "./bin/akalynth-extract-features.js",
+    "akalynth-score-anticheat": "./bin/akalynth-score-anticheat.js",
+    "akalynth-report-anticheat": "./bin/akalynth-report-anticheat.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@akalynth/coordination-kernel": "file:../coordination-kernel"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
+  }
+}
