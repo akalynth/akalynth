@@ -160,6 +160,7 @@ jobs:
             fs.chmodSync(keyPath, 0o600);
           " "$RUN_DIR/secrets/chronicle.key"
           cd apps/server
+          npm run rulebook:genesis
           DEBUG=1 \
           ALLOW_INSECURE_LOCAL=1 \
           AKALYNTH_LIFECYCLE_VERIFY=0 \
