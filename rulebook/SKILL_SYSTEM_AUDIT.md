@@ -29,24 +29,27 @@ Produce an evidence-backed audit of:
 - No evidence, no claim.
 
 ## Commands (Ops)
-- `sudo ss -ltnp | rg ':(80|443|3000)\\b'`
+- AKALYNTH_AUDIT_BASE_URL="${AKALYNTH_AUDIT_BASE_URL:-https://api.akalynth.com}"
+- AKALYNTH_AUDIT_WS_URL="${AKALYNTH_AUDIT_WS_URL:-wss://api.akalynth.com}"
+- `sudo ss -ltnp | rg ":(80|443|3000)\\b"`
 - `sudo ufw status verbose`
-- `curl -s https://beta-api.akalynth.com/v1/health`
-- `curl -s https://beta-api.akalynth.com/v1/transparency | jq .`
-- `timeout 5 wscat -c wss://beta-api.akalynth.com`
+- `curl -s "$AKALYNTH_AUDIT_BASE_URL/v1/health"`
+- `curl -s "$AKALYNTH_AUDIT_BASE_URL/v1/transparency" | jq .`
+- `timeout 5 wscat -c "$AKALYNTH_AUDIT_WS_URL"`
 - `systemd-analyze security akalynth --no-pager`
+- Active default target is `https://api.akalynth.com`; set AKALYNTH_AUDIT_BASE_URL or AKALYNTH_AUDIT_WS_URL explicitly to `https://beta-api.akalynth.com` for beta-path audits only. This does not change the frozen `docs/CLIENT_CONTRACT_V0_1.md` client contract.
 
 ## Commands (Repo)
 - `npm run build:server`
 - `npm run verify:lifecycle`
 - `npm run verify:receipt-hygiene`
-- `rg 'character_create|auth_token_issue' receipts.jsonl | tail -50`
+- `rg "character_create|auth_token_issue" receipts.jsonl | tail -50`
 
 ## Local Full Audit (chronicle enabled)
 From repo root, generate fixtures and run the audit gate:
 ```bash
 mkdir -p .secrets
-node --input-type=module -e "import fs from 'node:fs'; import crypto from 'node:crypto'; const seed = crypto.createHash('sha256').update('akalynth-ci-fixture-key-v1').digest(); fs.writeFileSync('.secrets/chronicle.key', seed.subarray(0, 32)); fs.chmodSync('.secrets/chronicle.key', 0o600);"
+node --input-type=module -e "import fs from node:fs; import crypto from node:crypto; const seed = crypto.createHash(sha256).update(akalynth-ci-fixture-key-v1).digest(); fs.writeFileSync(.secrets/chronicle.key, seed.subarray(0, 32)); fs.chmodSync(.secrets/chronicle.key, 0o600);"
 CHRONICLE_KEY_PATH=$PWD/.secrets/chronicle.key AKALYNTH_RECEIPT_CHAIN_PATH=$PWD/apps/server/fixtures/ci-receipts/receipts.jsonl npm -w apps/server run fixture:generate
 node apps/server/tools/generate-chronicle-log.js apps/server/fixtures/ci-chronicle/chronicle.log
 ENABLE_CHRONICLE=1 CHRONICLE_LOG_PATH=$PWD/apps/server/fixtures/ci-chronicle/chronicle.log AKALYNTH_RECEIPT_CHAIN_PATH=$PWD/apps/server/fixtures/ci-receipts/receipts.jsonl npm run verify:receipt-hygiene
