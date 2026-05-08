@@ -7,7 +7,6 @@
 # Example: ./infra/deploy_beta.sh v1.0.3-world-law
 
 set -euo pipefail
-set -euo pipefail
 
 REPO_ROOT="/opt/akalynth"
 HEALTH_URL="${AKALYNTH_HEALTH_URL:-https://api.akalynth.com/v1/health}"
