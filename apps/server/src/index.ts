@@ -173,6 +173,7 @@ import {
 import type { SovereignVocation, PrefixGrantSource, WalletCreditReason, WalletDebitReason } from '../../../packages/shared/types.js';
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
+const HOST = process.env.HOST || '0.0.0.0';
 const VERSION = '0.1.0';
 const AUTH_KEY_DERIVATION = `blake3(${getAuthKeyDomain()} || chronicle_seed)`;
 const DEFAULT_GUEST_SESSION_TTL_MS = 10 * 60 * 1000;
@@ -4723,8 +4724,8 @@ setInterval(() => {
   }
 }, HEAT_DECAY_TICK_MS);
 
-httpServer.listen(PORT, '0.0.0.0', () => {
-  console.log(`HTTP+WS listening on :${PORT}`);
-  console.log(`HTTP health: http://localhost:${PORT}/v1/health`);
-  console.log(`WS: ws://localhost:${PORT}`);
+httpServer.listen(PORT, HOST, () => {
+  console.log(`HTTP+WS listening on ${HOST}:${PORT}`);
+  console.log(`HTTP health: http://${HOST}:${PORT}/v1/health`);
+  console.log(`WS: ws://${HOST}:${PORT}`);
 });
