@@ -148,9 +148,32 @@ jobs:
 
       - name: Start server in background
         run: |
+          RUN_DIR="$(mktemp -d)"
+          mkdir -p "$RUN_DIR/audit" "$RUN_DIR/data" "$RUN_DIR/secrets"
+          touch "$RUN_DIR/audit/receipts.jsonl"
+          node --input-type=module -e "
+            import fs from 'node:fs';
+            import crypto from 'node:crypto';
+            const keyPath = process.argv[1];
+            const seed = crypto.createHash('sha256').update('akalynth-loadtest-smoke-key-v1').digest();
+            fs.writeFileSync(keyPath, seed.subarray(0, 32));
+            fs.chmodSync(keyPath, 0o600);
+          " "$RUN_DIR/secrets/chronicle.key"
           cd apps/server
-          DEBUG=1 ALLOW_INSECURE_LOCAL=1 npm start &
-          sleep 5
+          DEBUG=1 \
+          ALLOW_INSECURE_LOCAL=1 \
+          AKALYNTH_LIFECYCLE_VERIFY=0 \
+          AKALYNTH_RECEIPT_CHAIN_PATH="$RUN_DIR/audit/receipts.jsonl" \
+          AKALYNTH_DB_PATH="$RUN_DIR/data/akalynth.db" \
+          AKALYNTH_REPLAY_MARKER_PATH="$RUN_DIR/data/replay_marker.json" \
+          CHRONICLE_KEY_PATH="$RUN_DIR/secrets/chronicle.key" \
+          npm start >"$RUN_DIR/server.log" 2>&1 &
+          for i in {1..20}; do
+            curl -sf http://127.0.0.1:3000/v1/health >/dev/null && exit 0
+            sleep 0.5
+          done
+          cat "$RUN_DIR/server.log"
+          exit 1
         env:
           NODE_ENV: development
 
