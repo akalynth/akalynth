@@ -21,6 +21,7 @@ Environment=CHRONICLE_KEY_PATH=/etc/akalynth/chronicle.key
 
 # Server mode
 Environment=PORT=3000
+Environment=HOST=127.0.0.1
 Environment=REQUIRE_TLS=1
 Environment=TRUST_PROXY=1
 Environment=TRUST_PROXY_LOOPBACK_ONLY=1

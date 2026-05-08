@@ -6,7 +6,7 @@
 set -euo pipefail
 
 REPO_ROOT="/opt/akalynth"
-HEALTH_URL="https://beta-api.akalynth.com/v1/health"
+HEALTH_URL="${AKALYNTH_HEALTH_URL:-https://api.akalynth.com/v1/health}"
 SERVICE_NAME="akalynth"
 
 # Colors
@@ -71,9 +71,9 @@ log "Verifying better-sqlite3 can load..."
 node -e "require('better-sqlite3'); console.log('better-sqlite3 OK')" >/dev/null
 log "Native module load verified"
 
-# 4. Build shared package
-log "Building shared package..."
-npm -w packages/shared run build
+# 4. Build workspace packages
+log "Building workspace packages..."
+npm run build:packages
 
 # 5. Build server
 log "Building server..."

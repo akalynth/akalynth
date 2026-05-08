@@ -1,0 +1,53 @@
+# Akalynth Codex example config.
+# Copy values into ~/.codex/config.toml when you want this posture locally.
+# Do not add API keys, SSH private keys, Cloudflare tokens, or production secrets.
+
+model = "gpt-5.5"
+model_provider = "openai"
+model_reasoning_effort = "high"
+model_verbosity = "medium"
+approval_policy = "on-request"
+sandbox_mode = "read-only"
+web_search = "cached"
+
+[projects."/opt/akalynth"]
+trust_level = "trusted"
+
+[sandbox_workspace_write]
+network_access = false
+writable_roots = []
+exclude_tmpdir_env_var = false
+exclude_slash_tmp = false
+
+[shell_environment_policy]
+inherit = "core"
+ignore_default_excludes = false
+include_only = [
+  "PATH",
+  "HOME",
+  "USER",
+  "SHELL",
+  "TERM",
+  "LANG",
+  "LC_*",
+  "PWD",
+  "TMPDIR"
+]
+
+[profiles.akalynth-review]
+model = "gpt-5.5"
+model_provider = "openai"
+model_reasoning_effort = "high"
+model_verbosity = "medium"
+approval_policy = "on-request"
+sandbox_mode = "read-only"
+web_search = "cached"
+
+[profiles.akalynth-deploy]
+model = "gpt-5.5"
+model_provider = "openai"
+model_reasoning_effort = "high"
+model_verbosity = "medium"
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+web_search = "cached"
