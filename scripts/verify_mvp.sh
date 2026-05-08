@@ -208,6 +208,25 @@ mint_guest() {
 }
 log "Akalynth MVP verify @ $WS_URL"
 for cmd in node npm bash curl jq; do need_cmd "$cmd"; done
+
+if [[ -z "${CHRONICLE_KEY_PATH:-}" ]]; then
+  if [[ -z "$RUN_DIR" ]]; then
+    RUN_DIR="$(mktemp -d)"
+    RUN_DIR_TEMP=1
+  fi
+  CHRONICLE_KEY_PATH="$RUN_DIR/secrets/chronicle.key"
+  mkdir -p "$(dirname "$CHRONICLE_KEY_PATH")"
+  node --input-type=module -e "
+    import crypto from 'node:crypto';
+    import fs from 'node:fs';
+    const keyPath = process.argv[1];
+    const seed = crypto.createHash('sha256').update('akalynth-mvp-verify-temp-key-v1').digest();
+    fs.writeFileSync(keyPath, seed.subarray(0, 32));
+    fs.chmodSync(keyPath, 0o600);
+  " "$CHRONICLE_KEY_PATH"
+  export CHRONICLE_KEY_PATH
+fi
+
 cd "$ROOT_DIR"
 npm install --silent
 npm --silent run build:packages
