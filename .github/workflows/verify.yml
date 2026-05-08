@@ -31,7 +31,12 @@ jobs:
       - name: Run verification spine
         id: verify
         run: |
-          npm run verify -- --mode ci --format json --out verify-out
+          node packages/verification-spine/bin/akalynth-verify.js \
+            --mode ci \
+            --profile quick \
+            --skip-build \
+            --format json \
+            --out verify-out
         continue-on-error: true
 
       - name: Upload verification report

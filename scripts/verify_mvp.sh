@@ -5,6 +5,7 @@ set -euo pipefail
 set -o monitor
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SERVER_DIR="$ROOT_DIR/apps/server"
+LOG_DIR="${TMPDIR:-/tmp}/akalynth-verify"
 RECEIPTS_ENV_SET=0
 if [[ -n "${AKALYNTH_RECEIPT_CHAIN_PATH:-}" || -n "${AKALYNTH_RECEIPTS_PATH:-}" || -n "${RECEIPTS:-}" ]]; then
   RECEIPTS_ENV_SET=1
@@ -103,7 +104,7 @@ wait_for_health() {
     curl -sf "$HTTP_URL/v1/health" >/dev/null 2>&1 && return 0
     sleep 0.3
   done
-  die "Server not ready on $HTTP_URL. Check /tmp/akalynth_verify_server.log"
+  die "Server not ready on $HTTP_URL. Check $LOG_DIR/akalynth_verify_server.log"
 }
 wait_for_http_code() {
   local url="$1" want="$2" timeout_s="${3:-12}"
@@ -212,6 +213,7 @@ npm install --silent
 log "Building server..."
 npm --silent run build
 [[ -f "$HARNESS" ]] || die "Missing harness: $HARNESS"
+mkdir -p "$LOG_DIR"
 
 # Clean up any lingering processes on test ports
 log "Cleaning up test ports..."
@@ -223,12 +225,18 @@ kill_port "$((PORT + 51))"
 # Ensure rulebook compiled artifacts exist for built server
 if [[ ! -f "$ROOT_DIR/rulebook/compiled/RULEBOOK_ROOT.txt" ]]; then
   log "Generating rulebook (missing compiled artifacts)..."
-  (cd "$SERVER_DIR" && npm run rulebook:genesis) >/tmp/akalynth_verify_rulebook.log 2>&1 \
-    || die "rulebook:genesis failed. See /tmp/akalynth_verify_rulebook.log"
+  (cd "$SERVER_DIR" && npm run rulebook:genesis) >"$LOG_DIR/akalynth_verify_rulebook.log" 2>&1 \
+    || die "rulebook:genesis failed. See $LOG_DIR/akalynth_verify_rulebook.log"
 fi
 
 port_in_use && die "PORT=$PORT already in use. Set PORT to a free port and re-run."
 mkdir -p "$(dirname "$RECEIPTS")"
+if [[ -n "${AKALYNTH_DB_PATH:-}" ]]; then
+  mkdir -p "$(dirname "$AKALYNTH_DB_PATH")"
+fi
+if [[ -n "${AKALYNTH_REPLAY_MARKER_PATH:-}" ]]; then
+  mkdir -p "$(dirname "$AKALYNTH_REPLAY_MARKER_PATH")"
+fi
 touch "$RECEIPTS"
 
 ORIG_PORT="$PORT"
@@ -248,7 +256,7 @@ REQUIRE_TLS=1 \
 TRUST_PROXY=0 \
 ALLOW_INSECURE_LOCAL=0 \
 PORT="$PORT" \
-npm run start >/tmp/akalynth_verify_server_tls_spoof.log 2>&1 &
+npm run start >"$LOG_DIR/akalynth_verify_server_tls_spoof.log" 2>&1 &
 SERVER_PID=$!
 wait_for_http_code "$HTTP_URL/v1/health" "403" 20
 SPOOF_HTTP_CODE="$(curl -s -o /dev/null -w "%{http_code}" -H "x-forwarded-proto: https" "$HTTP_URL/v1/maps")"
@@ -300,7 +308,7 @@ TRUST_PROXY=1 \
 TRUST_PROXY_LOOPBACK_ONLY=1 \
 ALLOW_INSECURE_LOCAL=0 \
 PORT="$PORT" \
-npm run start >/tmp/akalynth_verify_server_tls_trust.log 2>&1 &
+npm run start >"$LOG_DIR/akalynth_verify_server_tls_trust.log" 2>&1 &
 SERVER_PID=$!
 wait_for_http_code "$HTTP_URL/v1/health" "403" 20
 NOHDR_CODE="$(curl -s -o /dev/null -w "%{http_code}" "$HTTP_URL/v1/maps")"
@@ -367,7 +375,7 @@ SOVEREIGN_ALLOW_NAME_MATCH=1 \
 CAPS_ENABLED=1 \
 CAPS_DEBUG_GRANT_SOVEREIGN=1 \
 PORT="$PORT" \
-npm run start >/tmp/akalynth_verify_server.log 2>&1 &
+npm run start >"$LOG_DIR/akalynth_verify_server.log" 2>&1 &
 SERVER_PID=$!
 wait_for_health
 curl -sf "$HTTP_URL/v1/maps" | grep -q 'Rookguard' || die "HTTP /v1/maps missing Rookguard"
@@ -476,13 +484,13 @@ TRUST_PROXY=0 \
 HEAT_PENALTY_THRESHOLD=30 \
 WITNESS_COUNT=1 \
 PORT="$PORT" \
-npm run start >/tmp/akalynth_verify_server_witness.log 2>&1 &
+npm run start >"$LOG_DIR/akalynth_verify_server_witness.log" 2>&1 &
 SERVER_PID=$!
 wait_for_health
 
 # 1) Connect witness client first and let it sit waiting for request
 read -r WITNESS_PLAYER_ID WITNESS_TOKEN <<<"$(mint_guest)"
-WITNESS_OUT="/tmp/akalynth_witness_harness.json"
+WITNESS_OUT="$LOG_DIR/akalynth_witness_harness.json"
 run_ws_scenario_bg "witness" "$WITNESS_TOKEN" "$WITNESS_OUT" 25
 
 # Give witness time to connect and enter world before triggering heat
@@ -537,7 +545,7 @@ SOVEREIGN_ALLOW_NAME_MATCH=1 \
 CAPS_ENABLED=1 \
 CAPS_DEBUG_GRANT_SOVEREIGN=1 \
 PORT="$PORT" \
-npm run start >/tmp/akalynth_verify_server.log 2>&1 &
+npm run start >"$LOG_DIR/akalynth_verify_server.log" 2>&1 &
 SERVER_PID=$!
 wait_for_health
 log "Sovereign presence flow..."
@@ -603,7 +611,7 @@ PUBLIC_RECEIPTS_DELAY_PROFILE=default \
 PUBLIC_RECEIPTS_JITTER_MS=0 \
 RUNESTONE_TEST_FORCE_FACE=shadow \
 PORT="$PORT" \
-npm run start >/tmp/akalynth_verify_server_trinity.log 2>&1 &
+npm run start >"$LOG_DIR/akalynth_verify_server_trinity.log" 2>&1 &
 SERVER_PID=$!
 wait_for_health
 read -r TRINITY_PLAYER_ID TRINITY_GUEST_TOKEN <<<"$(mint_guest)"
