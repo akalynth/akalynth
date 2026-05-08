@@ -138,10 +138,10 @@ jobs:
           node-version: "20"
 
       - name: Install server dependencies
-        run: cd apps/server && npm ci
+        run: npm ci
 
       - name: Build server
-        run: cd apps/server && npm run build
+        run: npm run build:packages && npm -w apps/server run build
 
       - name: Install loadtest dependencies
         run: cd tools/loadtest && npm ci
