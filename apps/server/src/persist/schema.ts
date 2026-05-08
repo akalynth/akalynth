@@ -7,7 +7,7 @@ import type Database from 'better-sqlite3';
 // Schema Version
 // ============================================================================
 
-export const SCHEMA_VERSION = 10;
+export const SCHEMA_VERSION = 11;
 
 // ============================================================================
 // DDL Statements
@@ -183,6 +183,22 @@ CREATE TABLE IF NOT EXISTS player_heat (
 CREATE INDEX IF NOT EXISTS idx_player_heat_score ON player_heat(heat DESC);
 `;
 
+// Phase 3.6: Durable anti-cheat enforcement memory
+const DDL_PLAYER_ANTICHEAT_ENFORCEMENT = `
+CREATE TABLE IF NOT EXISTS player_anticheat_enforcement (
+  player_id          TEXT PRIMARY KEY,
+  warn_count         INTEGER NOT NULL DEFAULT 0,
+  tem_failed_count   INTEGER NOT NULL DEFAULT 0,
+  throttle_count     INTEGER NOT NULL DEFAULT 0,
+  kick_count         INTEGER NOT NULL DEFAULT 0,
+  throttle_until_ms  INTEGER,
+  updated_at         TEXT NOT NULL,
+  last_receipt       TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_player_anticheat_throttle ON player_anticheat_enforcement(throttle_until_ms);
+CREATE INDEX IF NOT EXISTS idx_player_anticheat_kicks ON player_anticheat_enforcement(kick_count DESC);
+`;
+
 // ============================================================================
 // Schema Initialization
 // ============================================================================
@@ -285,6 +301,9 @@ function runMigration(db: Database.Database, version: number): void {
       break;
     case 10:
       migrateToV10(db);
+      break;
+    case 11:
+      migrateToV11(db);
       break;
     default:
       throw new Error(`Unknown schema version: ${version}`);
@@ -458,12 +477,28 @@ function migrateToV10(db: Database.Database): void {
   insertMeta.run('schema_version', '10');
 }
 
+function migrateToV11(db: Database.Database): void {
+  // Phase 3.6: add durable anti-cheat enforcement state
+  db.exec(DDL_PLAYER_ANTICHEAT_ENFORCEMENT);
+
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', '11');
+}
+
 // ============================================================================
 // Schema Utilities
 // ============================================================================
 
 export function resetSchema(db: Database.Database): void {
   // Drop all tables and recreate (for testing/recovery)
+  db.exec('DROP TABLE IF EXISTS player_anticheat_enforcement');
+  db.exec('DROP TABLE IF EXISTS player_heat');
+  db.exec('DROP TABLE IF EXISTS chronicle_events');
+  db.exec('DROP TABLE IF EXISTS legendary_heat');
+  db.exec('DROP TABLE IF EXISTS inventory_items');
+  db.exec('DROP TABLE IF EXISTS items');
   db.exec('DROP TABLE IF EXISTS world_objects');
   db.exec('DROP TABLE IF EXISTS deaths');
   db.exec('DROP TABLE IF EXISTS reputation_events');
@@ -477,7 +512,7 @@ export function resetSchema(db: Database.Database): void {
 export function getTableCounts(
   db: Database.Database
 ): Record<string, number> {
-  const tables = ['players', 'reputation_events', 'deaths', 'world_objects', 'items', 'inventory_items', 'legendary_heat', 'chronicle_events', 'moderation_reports'];
+  const tables = ['players', 'reputation_events', 'deaths', 'world_objects', 'items', 'inventory_items', 'legendary_heat', 'player_heat', 'player_anticheat_enforcement', 'chronicle_events', 'moderation_reports'];
   const counts: Record<string, number> = {};
 
   for (const table of tables) {
