@@ -50,7 +50,7 @@ jobs:
               [ -z "$file" ] && continue
 
               case "$file" in
-                .codex/*|.agents/*|plugins/akalynth-studio/*|tools/validate-codex-plugin.mjs)
+                .codex/*|.agents/*|plugins/akalynth-studio/*|tools/validate-codex-plugin.mjs|.github/ISSUE_TEMPLATE/*)
                   ;;
                 package.json)
                   package_diff="$(git diff --unified=0 "$BASE_SHA" "$HEAD_SHA" -- package.json)"
@@ -76,7 +76,7 @@ jobs:
             echo "## CI path classification"
             echo ""
             echo "- Event: $EVENT_NAME"
-            echo "- Codex/plugin only: $codex_plugin_only"
+            echo "- Repo metadata fastpath eligible: $codex_plugin_only"
             echo "- Full CI required: $full_ci_required"
             echo ""
             echo "### Changed files"
@@ -89,7 +89,7 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-  codex-plugin:
+  repo-metadata:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -111,6 +111,49 @@ jobs:
 
       - name: Validate Codex/plugin scaffold
         run: npm run validate:codex-plugin
+
+      - name: Validate delegation issue templates
+        run: |
+          node --input-type=module - <<'NODE'
+          import fs from 'node:fs';
+
+          const requiredFiles = [
+            '.github/ISSUE_TEMPLATE/delegation-task.yml',
+            '.github/ISSUE_TEMPLATE/config.yml',
+          ];
+          const requiredMarkers = [
+            'name: Delegation task',
+            'title: "[Delegation] "',
+            'delegation',
+            'state:triage',
+            'Scope lane',
+            'Preferred skill lane',
+            'Allowed files / areas',
+            'Forbidden files / actions',
+            'Acceptance criteria',
+            'Verification commands',
+            'Expected branch name',
+            'PR linkage requirement',
+            'Closure evidence',
+            'Dependencies / blockers',
+            'Assignee or delegation target',
+            'blank_issues_enabled: false',
+          ];
+
+          const combined = requiredFiles.map((file) => {
+            if (!fs.existsSync(file)) throw new Error(`missing issue template: ${file}`);
+            const text = fs.readFileSync(file, 'utf8');
+            if (text.trim().length === 0) throw new Error(`empty issue template: ${file}`);
+            return text;
+          }).join('\n');
+
+          const missing = requiredMarkers.filter((marker) => !combined.includes(marker));
+          if (missing.length > 0) {
+            throw new Error(`missing issue template markers: ${missing.join(', ')}`);
+          }
+
+          console.log('delegation issue templates validated');
+          NODE
 
       - name: Build packages
         run: npm run build:packages
