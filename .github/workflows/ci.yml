@@ -11,11 +11,120 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      codex_plugin_only: ${{ steps.classify.outputs.codex_plugin_only }}
+      full_ci_required: ${{ steps.classify.outputs.full_ci_required }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Classify changed paths
+        id: classify
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+
+          codex_plugin_only=false
+          full_ci_required=true
+
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            changed_files="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
+            full_ci_required=false
+            codex_plugin_only=true
+
+            if [ -z "$changed_files" ]; then
+              codex_plugin_only=false
+              full_ci_required=false
+            fi
+
+            while IFS= read -r file; do
+              [ -z "$file" ] && continue
+
+              case "$file" in
+                .codex/*|.agents/*|plugins/akalynth-studio/*|tools/validate-codex-plugin.mjs)
+                  ;;
+                package.json)
+                  package_diff="$(git diff --unified=0 "$BASE_SHA" "$HEAD_SHA" -- package.json)"
+                  if printf '%s\n' "$package_diff" | grep -E '^[+-][^+-]' | grep -v 'validate:codex-plugin' >/dev/null; then
+                    codex_plugin_only=false
+                    full_ci_required=true
+                  fi
+                  ;;
+                *)
+                  codex_plugin_only=false
+                  full_ci_required=true
+                  ;;
+              esac
+            done <<< "$changed_files"
+          fi
+
+          {
+            echo "codex_plugin_only=$codex_plugin_only"
+            echo "full_ci_required=$full_ci_required"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## CI path classification"
+            echo ""
+            echo "- Event: $EVENT_NAME"
+            echo "- Codex/plugin only: $codex_plugin_only"
+            echo "- Full CI required: $full_ci_required"
+            echo ""
+            echo "### Changed files"
+            echo '```'
+            if [ "$EVENT_NAME" = "pull_request" ]; then
+              printf '%s\n' "$changed_files"
+            else
+              echo "push to main: full CI forced"
+            fi
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  codex-plugin:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    needs: changes
+    if: github.event_name == 'pull_request' && needs.changes.outputs.codex_plugin_only == 'true'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate Codex/plugin scaffold
+        run: npm run validate:codex-plugin
+
+      - name: Build packages
+        run: npm run build:packages
+
+      - name: Build server
+        run: npm -w apps/server run build
+
   verify:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read
+    needs: changes
+    if: github.event_name == 'push' || needs.changes.outputs.full_ci_required == 'true'
 
     steps:
       - uses: actions/checkout@v4
@@ -127,7 +236,8 @@ jobs:
     timeout-minutes: 5
     permissions:
       contents: read
-    needs: verify
+    needs: [changes, verify]
+    if: github.event_name == 'push' || needs.changes.outputs.full_ci_required == 'true'
 
     steps:
       - uses: actions/checkout@v4
