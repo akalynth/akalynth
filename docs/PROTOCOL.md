@@ -1,1085 +1,438 @@
 # Protocol
 
-All messages are JSON over WebSocket.
+This document describes the WebSocket protocol currently backed by source code.
+
+## Source Authority
+
+The protocol authority is:
+
+- `packages/shared/protocol.ts`
+- `packages/shared/types.ts`
+- `packages/shared/protocol.golden.json`
+- `scripts/verify_protocol_sync.sh`
+
+`packages/shared/protocol.ts` exports `PROTOCOL_VERSION = '1.0.0'`.
+
+This document is documentation only. It does not change shared types, runtime handlers, generated artifacts, clients, deployment state, or live service behavior.
+
+## Verification Contract
+
+`bash scripts/verify_protocol_sync.sh` mechanically compares message type literals in `packages/shared/protocol.ts` against fourth-level message headings in this file.
+
+The current sync script has one known compatibility wrinkle: its grep also matches the `contract_type: 'temple_sweep'` literal. For that reason this document includes a dedicated `temple_sweep` heading under **Contract Type Literals**, while explicitly stating that `temple_sweep` is not a top-level WebSocket message.
+
+## Runtime Gates
+
+The server remains authoritative. Clients send intent; the server validates state, applies runtime gates, mutates server-owned state, writes receipts where implemented, and returns results.
+
+Important gates:
+
+- authentication is required for gameplay actions after connection/login
+- world-entry state gates movement, chat, combat, items, chronicle, evidence, and economy actions
+- DEBUG-only messages must not be treated as normal client capabilities
+- moderation report and resolution messages are currently gated by authenticated session plus DEBUG mode; this document does not claim a role-based admin policy unless server code adds one
+- optional fields are compatibility surfaces, not authority transfers to the client
+
+## Compatibility Notes
+
+`login` and `login_ack` carry both legacy guest-token fields and newer signed-token fields. `token` is preferred where available. `guest_token` remains present for legacy compatibility.
+
+Server messages may include optional fields for UI context. Clients should tolerate unknown additional fields, but they should not treat unknown message types as valid gameplay authority.
+
+## Android Subset Caveat
+
+The Android client may implement only a subset of this protocol at any given time. The shared protocol file remains the contract authority; client support is a separate compatibility question.
 
 ## Message Format
 
+All messages are JSON objects over WebSocket and include a `type` field.
+
 ```typescript
-interface Message {
+interface BaseMessage {
   type: string;
-  [key: string]: any;
 }
 ```
 
 ## Client → Server Messages
 
-| Type | Description |
-|------|-------------|
-| `connect` | Establish connection |
-| `login` | Authenticate with guest token |
-| `enter_world` | Enter game world |
-| `move_intent` | Request movement |
-| `chat` | Send chat message |
-| `tem_response` | Respond to Tem challenge |
-| `kill_self` | Test-only death trigger |
-| `runestone_cast` | Cast at runestone table |
-| `tem_witness_response` | Respond to witness request |
-| `drop_item` | Drop item from inventory |
-| `pickup_item` | Pick up world item |
-| `attack_intent` | Attack another player |
-| `mint_legendary` | Dev-only: mint legendary item |
-| `set_protected_slot` | Protect an item from death drops |
-| `get_chronicle` | Request chronicle events |
-| `get_evidence` | Request evidence for chronicle event |
-| `declare_vocation` | Declare player vocation |
-| `pay_tithe` | Pay gold tithe |
-| `inspect_wallet` | Request wallet snapshot |
-| `inspect_player` | Request player info |
-| `get_pressure_metrics` | Request pressure metrics |
-| `start_work_contract` | Start a work contract |
-| `work_tick` | Record a work contract tick |
-| `talk_to_npc` | Interact with NPC |
-| `use_skill` | Use a skill (utility/admin) |
-| `temple_sweep` | Temple sweep action |
-| `grant_gold` | Dev-only: grant gold |
-| `grant_sovereign_prefix` | Dev-only: grant sovereign prefix |
-| `get_mod_reports` | List moderation reports (DEBUG only) |
-| `mod_resolve` | Resolve moderation report (DEBUG only) |
+| Type | Source-backed role |
+| --- | --- |
+| `connect` | Client requests a WebSocket connection handshake. The server may answer with `welcome`. |
+| `login` | Authenticates the session. `token` is preferred where available; `guest_token` remains legacy-compatible. |
+| `enter_world` | Requests entry into the active world after authentication. |
+| `move_intent` | Requests movement by `direction`. The server validates movement and remains authoritative for position. |
+| `chat` | Submits a chat message. Chat can also satisfy an active Tem challenge when the response is correct. |
+| `tem_response` | Responds directly to an active Tem challenge. |
+| `kill_self` | Test-only death trigger subject to the server test gate. |
+| `runestone_cast` | Casts at a runestone table with `table_id` and optional prediction `guess`. Omitted or invalid `guess` is normalized to `null` by parser handling. |
+| `tem_witness_response` | Responds to a heat-penalty witness request with `confirm`, `deny`, or `uncertain`. |
+| `drop_item` | Requests dropping an inventory item by `item_id`. |
+| `pickup_item` | Requests picking up a world item by `item_id`. |
+| `attack_intent` | Requests attack against `target_id`. The server validates adjacency, map, status, and PvP gates. |
+| `mint_legendary` | DEBUG/dev-only legendary item minting message. It is not a normal client capability. |
+| `set_protected_slot` | Requests changing the item protected from death drops. |
+| `get_chronicle` | Requests chronicle events for self or another player, with optional pagination. |
+| `get_evidence` | Requests evidence by `chronicle_event_id` or `receipt_hash`. |
+| `get_pressure_metrics` | Requests pressure metrics over optional `since`/`until` timestamps. |
+| `declare_vocation` | Declares the player's vocation from the shared vocation enum. |
+| `inspect_player` | Requests profile/identity information for `target_player_id`. |
+| `grant_sovereign_prefix` | DEBUG-only grant or revoke of sovereign prefix for `target_player_id`. |
+| `inspect_wallet` | Requests the caller's wallet snapshot. |
+| `pay_tithe` | Pays a gold tithe by `amount`. |
+| `grant_gold` | DEBUG-only gold grant for `target_player_id`. |
+| `start_work_contract` | Starts a work contract. The current `contract_type` literal is `temple_sweep`. |
+| `work_tick` | Records a presence tick for an active work contract. |
+| `talk_to_npc` | Interacts with an NPC by `npc_id`. |
+| `use_skill` | Uses a utility/admin skill by `skill_id` and optional `target_id`. |
+| `get_mod_reports` | DEBUG-only moderation report listing. Current runtime gate is authenticated session plus DEBUG mode. |
+| `mod_resolve` | DEBUG-only moderation resolution. `receipt_hash` is the preferred lookup key; `case_id` is legacy. Current runtime gate is authenticated session plus DEBUG mode. |
 
 ## Server → Client Messages
 
-| Type | Description |
-|------|-------------|
-| `welcome` | Connection accepted |
-| `login_ack` | Login result |
-| `world_state` | Initial world snapshot |
-| `move_result` | Movement result |
-| `player_moved` | Another player moved |
-| `player_joined` | Player entered world |
-| `player_left` | Player left world |
-| `chat_broadcast` | Chat from player |
-| `tem_challenge` | Anti-bot challenge |
-| `error` | Error message |
-| `death_notice` | Death/respawn info |
-| `runestone_result` | Runestone cast result (broadcast) |
-| `runestone_denied` | Runestone cast rejected |
-| `tem_witness_request` | Request to witness heat penalty |
-| `drop_item_result` | Drop item result |
-| `pickup_item_result` | Pickup item result |
-| `inventory_snapshot` | Full inventory state |
-| `world_item_added` | Item spawned in world |
-| `world_item_removed` | Item removed from world |
-| `combat_resolved` | Combat outcome (broadcast) |
-| `combat_rejected` | Combat rejected |
-| `protected_slot_set` | Protected slot changed |
-| `chronicle_snapshot` | Chronicle events response |
-| `evidence_snapshot` | Evidence response |
-| `tithe_result` | Tithe payment result |
-| `wallet_snapshot` | Wallet state snapshot |
-| `player_inspect` | Player info response |
-| `pressure_metrics_snapshot` | Pressure metrics response |
-| `work_contract_started` | Work contract started |
-| `work_progress` | Work contract progress |
-| `work_contract_result` | Work contract completed |
-| `npc_dialogue` | NPC dialogue response |
-| `npc_dialogue_error` | NPC dialogue error |
-| `skill_result` | Skill result (utility/admin) |
-| `mod_reports_snapshot` | Moderation reports snapshot (DEBUG only) |
-| `mod_resolve_result` | Moderation resolution result (DEBUG only) |
-
----
-
-## Message Types
-
-### Connection
-
-#### `connect` (client → server)
-
-Request to establish connection.
-
-```json
-{"type": "connect"}
-```
-
-#### `welcome` (server → client)
-
-Connection accepted.
-
-```json
-{
-  "type": "welcome",
-  "version": "0.1.0"
-}
-```
-
----
-
-### Authentication
-
-#### `login` (client → server)
-
-Login with guest token (auto-generated if not provided).
-Guest tokens are single-use and expire after a short TTL (default 10 minutes,
-configurable via `GUEST_SESSION_TTL_MS`). Expired tokens return
-`error: "not_authenticated"`.
-
-```json
-{
-  "type": "login",
-  "guest_token": null
-}
-```
-
-#### `login_ack` (server → client)
-
-Login result.
-
-```json
-{
-  "type": "login_ack",
-  "ok": true,
-  "player_id": "p_abc123",
-  "guest_token": "gt_xyz789",
-  "name": "Guest_1234"
-}
-```
-
-Failed login:
-```json
-{
-  "type": "login_ack",
-  "ok": false,
-  "player_id": "",
-  "guest_token": "",
-  "name": "",
-  "reason": "invalid_token"
-}
-```
-
----
-
-### World
-
-#### `enter_world` (client → server)
-
-Request to enter the game world.
-
-```json
-{"type": "enter_world"}
-```
-
-#### `world_state` (server → client)
-
-Initial world snapshot.
-
-```json
-{
-  "type": "world_state",
-  "player": {
-    "id": "p_abc123",
-    "x": 32,
-    "y": 32,
-    "name": "Guest_1234",
-    "status": "alive"
-  },
-  "nearby_players": [
-    {"id": "p_def456", "x": 30, "y": 32, "name": "Guest_5678", "status": "alive"}
-  ]
-}
-```
-
----
-
-### Movement
-
-#### `move_intent` (client → server)
-
-Request to move in a direction.
-
-```json
-{
-  "type": "move_intent",
-  "direction": "north"
-}
-```
-
-Valid directions: `"north"`, `"south"`, `"east"`, `"west"`
-
-#### `move_result` (server → client)
-
-Movement result.
+| Type | Source-backed role |
+| --- | --- |
+| `welcome` | Server accepts the connection and returns a protocol/application version string. |
+| `login_ack` | Returns login result, player identity, token fields, and optional failure reason. |
+| `world_state` | Initial world snapshot containing `map`, the current player, and nearby players. |
+| `move_result` | Result of a move intent. The server returns authoritative coordinates and optional `map`. |
+| `player_moved` | Broadcast that another player moved. |
+| `player_joined` | Broadcast that another player entered the world. |
+| `player_left` | Broadcast that a player left. |
+| `chat_broadcast` | Broadcast chat message. |
+| `tem_challenge` | Tem anti-bot challenge with challenge id, prompt message, and timeout seconds. |
+| `error` | Generic error response using the shared `ErrorCode` union. |
+| `death_notice` | Death/respawn notice with respawn time, map, spawn, reason, and optional UI context. |
+| `runestone_result` | Broadcast result of a runestone cast. |
+| `runestone_denied` | Runestone cast denial with `RunestoneDenialReason`. |
+| `tem_witness_request` | Witness request for a heat penalty. |
+| `drop_item_result` | Drop request result. |
+| `pickup_item_result` | Pickup request result. |
+| `inventory_snapshot` | Full inventory snapshot. |
+| `world_item_added` | Broadcast that an item appeared in the world. |
+| `world_item_removed` | Broadcast that an item was removed from the world. |
+| `combat_resolved` | Broadcast resolved combat kill outcome. |
+| `combat_rejected` | Combat rejection with a shared rejection reason. |
+| `protected_slot_set` | Protected slot change result. |
+| `chronicle_snapshot` | Chronicle event response with pagination flag. |
+| `evidence_snapshot` | Evidence response with status, anchor echo, and optional drop explanation. |
+| `pressure_metrics_snapshot` | Pressure metrics response for the requested interval. |
+| `player_inspect` | Player profile/identity response. |
+| `wallet_snapshot` | Wallet response for the caller. |
+| `tithe_result` | Tithe payment result with `success`, optional `new_balance`, and optional error. |
+| `work_contract_started` | Work contract started confirmation. |
+| `work_progress` | Work contract progress update. |
+| `work_contract_result` | Work contract result with optional credited gold or error. |
+| `npc_dialogue` | NPC dialogue response. |
+| `npc_dialogue_error` | NPC dialogue error response. |
+| `skill_result` | Utility/admin skill result. |
+| `mod_reports_snapshot` | Moderation report snapshot. |
+| `mod_resolve_result` | Moderation resolution result. |
 
-```json
-{
-  "type": "move_result",
-  "ok": true,
-  "x": 32,
-  "y": 31,
-  "reason": null
-}
-```
-
-Rejection example:
-```json
-{
-  "type": "move_result",
-  "ok": false,
-  "x": 32,
-  "y": 32,
-  "reason": "tile_blocked"
-}
-```
-
-#### `player_moved` (server → client, broadcast)
+## Client → Server Details
 
-Another player moved.
+#### `connect`
 
-```json
-{
-  "type": "player_moved",
-  "player_id": "p_def456",
-  "x": 31,
-  "y": 32
-}
-```
-
-#### `player_joined` (server → client, broadcast)
-
-Another player entered the world.
-
-```json
-{
-  "type": "player_joined",
-  "player": {
-    "id": "p_def456",
-    "x": 32,
-    "y": 32,
-    "name": "Guest_5678",
-    "status": "alive"
-  }
-}
-```
-
-#### `player_left` (server → client, broadcast)
-
-A player left the world.
+Client requests a WebSocket connection handshake.
 
-```json
-{
-  "type": "player_left",
-  "player_id": "p_def456"
-}
-```
+#### `login`
 
----
+Authenticates the session. `token` is preferred. `guest_token` is legacy-compatible and optional.
 
-### Chat
+#### `enter_world`
 
-#### `chat` (client → server)
+Requests entry into the active world after authentication.
 
-Send a chat message.
+#### `move_intent`
 
-```json
-{
-  "type": "chat",
-  "message": "Hello everyone!"
-}
-```
-
-#### `chat_broadcast` (server → client)
-
-Chat message from a player.
-
-```json
-{
-  "type": "chat_broadcast",
-  "player_id": "p_abc123",
-  "name": "Guest_1234",
-  "message": "Hello everyone!"
-}
-```
-
----
-
-### Anti-Cheat
-
-#### `tem_challenge` (server → client)
+Requests movement by `direction`.
 
-Tem anti-bot challenge.
+#### `chat`
 
-```json
-{
-  "type": "tem_challenge",
-  "challenge_id": "tc_123",
-  "message": "Hi! Type AZURA in chat within 15 seconds.",
-  "timeout_seconds": 15
-}
-```
-
-#### `tem_response` (client → server)
-
-Response to Tem challenge.
-
-```json
-{
-  "type": "tem_response",
-  "response": "AZURA"
-}
-```
+Submits a chat message. Chat may satisfy an active Tem challenge when the content is the expected challenge response.
 
----
+#### `tem_response`
 
-### Witness System
+Responds directly to an active Tem challenge.
 
-#### `tem_witness_request` (server → client)
+#### `kill_self`
 
-Request nearby players to witness a heat penalty.
+Test-only death trigger subject to server-side test gate handling.
 
-```json
-{
-  "type": "tem_witness_request",
-  "request_id": "wr_abc123",
-  "timestamp": "2025-01-10T12:00:00.000Z",
-  "map": "Azura",
-  "target_actor": "p_def456",
-  "prompt": "Did you see suspicious behavior from this player?",
-  "kind": "heat_penalty"
-}
-```
-
-#### `tem_witness_response` (client → server)
+#### `runestone_cast`
 
-Respond to a witness request.
+Casts at a runestone table. `table_id` identifies the table. `guess` may be an `Element`, `null`, omitted, or invalid input that parser handling normalizes to `null` for compatibility.
 
-```json
-{
-  "type": "tem_witness_response",
-  "request_id": "wr_abc123",
-  "response": "confirm"
-}
-```
+#### `tem_witness_response`
 
-Valid responses: `"confirm"`, `"deny"`, `"uncertain"`
+Responds to a heat-penalty witness request. Valid responses are `confirm`, `deny`, and `uncertain`.
 
----
+#### `drop_item`
 
-### Runestone
+Requests dropping an inventory item by `item_id`.
 
-#### `runestone_cast` (client → server)
+#### `pickup_item`
 
-Cast at a runestone table. The `guess` is optional (for prediction games).
+Requests picking up a world item by `item_id`.
 
-```json
-{
-  "type": "runestone_cast",
-  "table_id": "rt_plaza_1",
-  "guess": null
-}
-```
+#### `attack_intent`
 
-With prediction:
-```json
-{
-  "type": "runestone_cast",
-  "table_id": "rt_plaza_1",
-  "guess": "fire"
-}
-```
+Requests attack against `target_id`.
 
-Valid elements: `"fire"`, `"water"`, `"earth"`, `"air"`, `"light"`, `"shadow"`
+#### `mint_legendary`
 
-#### `runestone_result` (server → client, broadcast)
+DEBUG/dev-only legendary item minting message.
 
-Result of a runestone cast (broadcast to all nearby players).
+#### `set_protected_slot`
 
-```json
-{
-  "type": "runestone_result",
-  "table_id": "rt_plaza_1",
-  "caster": {"id": "p_abc123", "name": "Guest_1234"},
-  "face": "fire",
-  "whisper": "The flames speak of hidden power..."
-}
-```
+Requests changing the protected item slot.
 
-#### `runestone_denied` (server → client)
+#### `get_chronicle`
 
-Runestone cast was rejected.
+Requests chronicle events. Optional fields are `player_id`, `limit`, and `before`.
 
-```json
-{
-  "type": "runestone_denied",
-  "reason": "cooldown"
-}
-```
+#### `get_evidence`
 
-Denial reasons:
-- `cooldown` - Player on cooldown
-- `not_near_table` - Not adjacent to a runestone table
-- `not_authorized` - Lacks capability
-- `rate_limited` - Too many casts
+Requests evidence using `chronicle_event_id` or `receipt_hash`, with optional `kind` sanity guard.
 
----
+#### `get_pressure_metrics`
 
-### Death
+Requests pressure metrics over optional `since` and `until` timestamps.
 
-#### `kill_self` (client → server)
+#### `declare_vocation`
 
-Test-only helper to trigger death/respawn. Requires environment variable
-`ALLOW_TEST_DEATH=1`. Otherwise returns `error: "invalid_message"`.
-
-```json
-{"type": "kill_self"}
-```
+Declares the player's vocation.
 
-#### `death_notice` (server → client)
+#### `inspect_player`
 
-Sent immediately after death is handled. Provides respawn timing and spawn
-location. Detailed truth lives in receipts.
+Requests player identity/profile view using `target_player_id`.
 
-```json
-{
-  "type": "death_notice",
-  "ok": true,
-  "respawn_in_ms": 15000,
-  "map": "Rookguard",
-  "spawn": {"x": 32, "y": 32},
-  "reason": "test"
-}
-```
+#### `grant_sovereign_prefix`
 
----
+DEBUG-only sovereign prefix grant/revoke using `target_player_id` and `grant`.
 
-### Items (Phase 2)
+#### `inspect_wallet`
 
-#### `drop_item` (client → server)
+Requests the caller's wallet snapshot.
 
-Drop an item from inventory onto the world.
+#### `pay_tithe`
 
-```json
-{
-  "type": "drop_item",
-  "item_id": "item_abc123"
-}
-```
+Pays a gold tithe by `amount`.
 
-#### `drop_item_result` (server → client)
+#### `grant_gold`
 
-Result of drop attempt.
+DEBUG-only gold grant using `target_player_id` and `amount`.
 
-```json
-{
-  "type": "drop_item_result",
-  "ok": true,
-  "item_id": "item_abc123",
-  "reason": null
-}
-```
+#### `start_work_contract`
 
-#### `pickup_item` (client → server)
+Starts a work contract. The current supported contract type is `temple_sweep`.
 
-Pick up an item from the world.
+#### `work_tick`
 
-```json
-{
-  "type": "pickup_item",
-  "item_id": "item_abc123"
-}
-```
-
-#### `pickup_item_result` (server → client)
-
-Result of pickup attempt.
-
-```json
-{
-  "type": "pickup_item_result",
-  "ok": true,
-  "item_id": "item_abc123",
-  "reason": null
-}
-```
+Records a presence tick for an active work contract.
 
-#### `inventory_snapshot` (server → client)
+#### `talk_to_npc`
 
-Full inventory state. Sent on enter_world and after inventory changes.
+Interacts with an NPC by `npc_id`.
 
-```json
-{
-  "type": "inventory_snapshot",
-  "items": [
-    {"item_id": "item_abc123", "item_type": "gold_coin", "slot": null},
-    {"item_id": "item_def456", "item_type": "sword", "slot": "protected"}
-  ]
-}
-```
+#### `use_skill`
 
-#### `world_item_added` (server → client, broadcast)
+Uses a utility/admin skill by `skill_id` and optional `target_id`.
 
-An item was added to the world.
-
-```json
-{
-  "type": "world_item_added",
-  "item_id": "item_abc123",
-  "item_type": "gold_coin",
-  "x": 32,
-  "y": 33
-}
-```
+#### `get_mod_reports`
 
-#### `world_item_removed` (server → client, broadcast)
+Lists moderation reports. Current runtime gate is authenticated session plus DEBUG mode. No role-based admin policy is asserted by this document.
 
-An item was removed from the world.
+#### `mod_resolve`
 
-```json
-{
-  "type": "world_item_removed",
-  "item_id": "item_abc123"
-}
-```
+Resolves a moderation report. Current runtime gate is authenticated session plus DEBUG mode. `receipt_hash` is preferred; `case_id` is legacy.
 
----
+## Server → Client Details
 
-### Combat (Phase 3)
+#### `welcome`
 
-#### `attack_intent` (client → server)
+Server accepts the connection and returns a version string.
 
-Attack another player. Must be adjacent.
+#### `login_ack`
 
-```json
-{
-  "type": "attack_intent",
-  "target_player_id": "p_def456"
-}
-```
-
-#### `combat_resolved` (server → client, broadcast)
-
-Combat outcome. Broadcast to all nearby players.
-
-```json
-{
-  "type": "combat_resolved",
-  "attacker_id": "p_abc123",
-  "defender_id": "p_def456",
-  "outcome": "kill",
-  "map": "Azura",
-  "x": 32,
-  "y": 33
-}
-```
-
-#### `combat_rejected` (server → client)
-
-Combat was rejected.
-
-```json
-{
-  "type": "combat_rejected",
-  "reason": "not_adjacent"
-}
-```
-
-Rejection reasons:
-- `cooldown` - Attack on cooldown
-- `not_adjacent` - Target not adjacent
-- `pvp_disabled` - PvP not allowed in this zone
-- `attacker_dead` - Attacker is dead
-- `defender_dead` - Defender is dead
-- `different_maps` - Not on same map
-- `attacker_not_found` - Attacker not found
-- `defender_not_found` - Defender not found
-
----
-
-### Protected Slots (Phase 3.2)
-
-#### `set_protected_slot` (client → server)
-
-Protect an item from being dropped on death. Only one item can be protected.
-
-```json
-{
-  "type": "set_protected_slot",
-  "item_id": "item_abc123"
-}
-```
-
-#### `protected_slot_set` (server → client)
-
-Protected slot was changed.
-
-```json
-{
-  "type": "protected_slot_set",
-  "player_id": "p_abc123",
-  "item_id": "item_def456",
-  "prev_item_id": "item_abc123"
-}
-```
-
----
-
-### Chronicle (Phase 4)
-
-#### `get_chronicle` (client → server)
-
-Request chronicle events. Can request own or another player's chronicle.
-
-```json
-{
-  "type": "get_chronicle",
-  "player_id": "p_def456",
-  "limit": 50,
-  "before": "2025-01-10T12:00:00.000Z"
-}
-```
-
-All fields optional:
-- `player_id` - Target player (omit for own chronicle)
-- `limit` - Max events (default 50, max 200)
-- `before` - Pagination cursor (ISO8601 timestamp)
-
-#### `chronicle_snapshot` (server → client)
-
-Chronicle events response.
-
-```json
-{
-  "type": "chronicle_snapshot",
-  "player_id": "p_abc123",
-  "events": [
-    {
-      "kind": "death",
-      "timestamp": "2025-01-10T12:00:00.000Z",
-      "zone": "Azura",
-      "x": 32,
-      "y": 33,
-      "details": {"cause": "player", "attacker_id": "p_def456"},
-      "evidence_ref": {
-        "chronicle_event_id": 42,
-        "receipt_hash": "sha256:abc123..."
-      }
-    }
-  ],
-  "has_more": true
-}
-```
-
-Event kinds include: `death`, `item_lost`, `legendary_lost`, `respawn`, `zone_enter`, etc.
-
----
-
-### Evidence (Phase 4.4)
-
-#### `get_evidence` (client → server)
-
-Request evidence for a chronicle event. Requires at least one anchor.
-
-```json
-{
-  "type": "get_evidence",
-  "chronicle_event_id": 42,
-  "kind": "death"
-}
-```
-
-Or by receipt hash:
-```json
-{
-  "type": "get_evidence",
-  "receipt_hash": "sha256:abc123..."
-}
-```
-
-#### `evidence_snapshot` (server → client)
-
-Evidence response. Contains full forensic breakdown for death drops.
-
-```json
-{
-  "type": "evidence_snapshot",
-  "status": "ok",
-  "player_id": "p_abc123",
-  "chronicle_event_id": 42,
-  "receipt_hash": "sha256:abc123...",
-  "source_action": "death",
-  "kind": "death",
-  "evidence": {
-    "receipt_hashes": {
-      "anchor": "sha256:abc123...",
-      "combat_resolved": "sha256:def456...",
-      "death": "sha256:ghi789..."
-    },
-    "drop_explanation": {
-      "policy": {
-        "base_drop_ratio": 0.25,
-        "min_drop": 1,
-        "max_drop": null,
-        "rep_bias": 0.1,
-        "stack_bias": 0.05,
-        "protected_slots": 1,
-        "decay_minutes": 15
-      },
-      "ratio_breakdown": {
-        "base_drop_ratio": 0.25,
-        "reputation": 100,
-        "neg_rep": 0,
-        "inventory_size": 10,
-        "stack_excess": 0,
-        "rep_contribution": 0,
-        "stack_contribution": 0,
-        "final_ratio": 0.25,
-        "K_raw": 2.5,
-        "K_bounded": 3,
-        "K_final": 2
-      },
-      "player_protected_ids": ["item_sword"],
-      "policy_protected_ids": [],
-      "candidates": [
-        {
-          "item_id": "item_abc",
-          "item_type": "gold_coin",
-          "base_weight": 1.0,
-          "legendary": false,
-          "legendary_tier": null,
-          "heat": 0,
-          "legendary_multiplier": null,
-          "final_weight": 1.0,
-          "deterministic_u": 0.42,
-          "selection_key": 0.42,
-          "rank": 1,
-          "dropped": true,
-          "exclusion_reason": "none"
-        }
-      ],
-      "dropped_item_ids": ["item_abc"],
-      "kept_item_ids": ["item_sword"],
-      "seed_hash": "sha256:seed..."
-    }
-  }
-}
-```
-
-Status values:
-- `ok` - Evidence found and returned
-- `not_found` - Chronicle event or receipt not found
-- `not_applicable` - Event type doesn't have evidence
-- `insufficient_data` - Missing required receipts
-
----
-
-### Economy / Vocation
-
-#### `declare_vocation` (client → server)
-
-Declare player's vocation.
-
-```json
-{"type": "declare_vocation", "vocation": "merchant"}
-```
-
-#### `pay_tithe` (client → server)
-
-Pay gold tithe.
-
-```json
-{"type": "pay_tithe", "amount": 100}
-```
-
-#### `tithe_result` (server → client)
-
-Tithe payment result.
-
-```json
-{"type": "tithe_result", "ok": true, "amount": 100, "new_balance": 400, "receipt_hash": "blake3:..."}
-```
-
----
-
-### Wallet / Inspection
-
-#### `inspect_wallet` (client → server)
-
-Request wallet snapshot for a player.
-
-```json
-{"type": "inspect_wallet", "player_id": "p_abc123"}
-```
-
-#### `wallet_snapshot` (server → client)
-
-Wallet state response.
-
-```json
-{"type": "wallet_snapshot", "player_id": "p_abc123", "gold": 500, "sovereign_prefix": false}
-```
-
-#### `inspect_player` (client → server)
-
-Request player info.
-
-```json
-{"type": "inspect_player", "player_id": "p_abc123"}
-```
-
-#### `player_inspect` (server → client)
-
-Player info response.
-
-```json
-{"type": "player_inspect", "player_id": "p_abc123", "name": "Alice", "status": "alive"}
-```
-
----
-
-### Pressure
-
-#### `get_pressure_metrics` (client → server)
-
-Request pressure metrics for a player.
-
-```json
-{"type": "get_pressure_metrics", "player_id": "p_abc123"}
-```
-
-#### `pressure_metrics_snapshot` (server → client)
-
-Pressure metrics response.
-
-```json
-{"type": "pressure_metrics_snapshot", "player_id": "p_abc123", "metrics": {}}
-```
-
----
-
-### Work Contracts
-
-#### `start_work_contract` (client → server)
-
-Start a work contract.
-
-```json
-{"type": "start_work_contract", "contract_type": "temple_sweep"}
-```
-
-#### `work_tick` (client → server)
-
-Record a work contract tick (presence proof).
-
-```json
-{"type": "work_tick", "contract_id": "wc_123"}
-```
-
-#### `work_contract_started` (server → client)
+Returns login result, player identity, token fields, expiry where present, and optional failure reason.
+
+#### `world_state`
+
+Initial world snapshot containing `map`, current player, and nearby players.
+
+#### `move_result`
+
+Move result with authoritative coordinates, reason, and optional map.
+
+#### `player_moved`
+
+Broadcast that another player moved.
+
+#### `player_joined`
+
+Broadcast that another player entered the world.
+
+#### `player_left`
+
+Broadcast that a player left.
+
+#### `chat_broadcast`
+
+Broadcast chat message.
+
+#### `tem_challenge`
+
+Tem challenge with challenge id, prompt, and timeout seconds.
+
+#### `error`
+
+Error response using `ErrorCode`.
+
+#### `death_notice`
+
+Death/respawn notice with optional UI context.
+
+#### `runestone_result`
+
+Broadcast result of a runestone cast.
+
+#### `runestone_denied`
+
+Runestone denial with shared denial reason.
+
+#### `tem_witness_request`
+
+Witness request for a heat penalty.
+
+#### `drop_item_result`
+
+Drop request result.
+
+#### `pickup_item_result`
+
+Pickup request result.
+
+#### `inventory_snapshot`
+
+Full inventory snapshot.
+
+#### `world_item_added`
+
+Broadcast that an item appeared in the world.
+
+#### `world_item_removed`
+
+Broadcast that an item was removed from the world.
+
+#### `combat_resolved`
+
+Broadcast resolved combat kill outcome.
+
+#### `combat_rejected`
+
+Combat rejection with shared reason.
+
+#### `protected_slot_set`
+
+Protected slot change result.
+
+#### `chronicle_snapshot`
+
+Chronicle event response.
+
+#### `evidence_snapshot`
+
+Evidence response with status, anchor echo, optional receipt hashes, and optional drop explanation.
+
+#### `pressure_metrics_snapshot`
+
+Pressure metrics response for the requested interval.
+
+#### `player_inspect`
+
+Player profile/identity response.
+
+#### `wallet_snapshot`
+
+Wallet response for the caller.
+
+#### `tithe_result`
+
+Tithe payment result with `success`, optional `new_balance`, and optional error.
+
+#### `work_contract_started`
 
 Work contract started confirmation.
 
-```json
-{
-  "type": "work_contract_started",
-  "contract_id": "wc_123",
-  "contract_type": "temple_sweep",
-  "payout_gold": 50,
-  "cooldown_seconds": 120,
-  "min_duration_ms": 30000
-}
-```
-
-#### `work_progress` (server → client)
+#### `work_progress`
 
 Work contract progress update.
 
-```json
-{
-  "type": "work_progress",
-  "contract_id": "wc_123",
-  "ticks_observed": 4,
-  "ticks_required": 10,
-  "remaining_ms": 12000
-}
-```
+#### `work_contract_result`
 
-#### `work_contract_result` (server → client)
+Work contract result with optional credited gold or error.
 
-Work contract completed.
-
-```json
-{"type": "work_contract_result", "contract_id": "wc_123", "success": true, "credited_gold": 50}
-```
-
----
-
-### NPC Dialogue
-
-#### `talk_to_npc` (client → server)
-
-Interact with an NPC.
-
-```json
-{"type": "talk_to_npc", "npc_id": "npc_merchant"}
-```
-
-#### `npc_dialogue` (server → client)
+#### `npc_dialogue`
 
 NPC dialogue response.
 
-```json
-{"type": "npc_dialogue", "npc_id": "npc_merchant", "place_id": "rookguard_square", "tier": "seen", "line": "Welcome traveler!"}
-```
+#### `npc_dialogue_error`
 
-#### `npc_dialogue_error` (server → client)
+NPC dialogue error response.
 
-NPC dialogue error.
+#### `skill_result`
 
-```json
-{"type": "npc_dialogue_error", "npc_id": "npc_merchant", "error": "not_found"}
-```
+Utility/admin skill result.
 
----
+#### `mod_reports_snapshot`
 
-### Skills v0 (Utility/Admin)
+Moderation report snapshot.
 
-#### `use_skill` (client → server)
+#### `mod_resolve_result`
 
-Use a skill. Requires authentication; some skills are DEBUG-only.
+Moderation resolution result.
 
-```json
-{"type": "use_skill", "skill_id": "mod_scan", "target_id": "p_def456"}
-```
+## Contract Type Literals
 
-#### `skill_result` (server → client)
+This section exists to preserve the current protocol-sync verifier behavior while avoiding a false WebSocket-message claim.
 
-Skill execution result.
+#### `temple_sweep`
+
+`temple_sweep` is not a top-level WebSocket message. Clients should not send `{ "type": "temple_sweep" }`.
+
+Clients start the temple sweep work contract by sending:
 
 ```json
-{"type": "skill_result", "skill_id": "mod_scan", "success": true, "payload": {"summary": "ok"}}
+{ "type": "start_work_contract", "contract_type": "temple_sweep" }
 ```
 
-Failure example:
-```json
-{"type": "skill_result", "skill_id": "mod_scan", "success": false, "reason": "debug_only"}
-```
+The current sync script includes this heading because its extraction pattern also matches the `contract_type: 'temple_sweep'` literal. A future verifier patch should distinguish message `type` literals from contract value literals.
 
----
+## Error Codes
 
-### Moderation v1 (Admin-Only)
+The current shared error code union includes:
 
-#### `get_mod_reports` (client → server)
+- `invalid_message`
+- `not_authenticated`
+- `not_in_world`
+- `rate_limited`
+- `kicked`
+- `insufficient_gold`
+- `token_invalid`
+- `token_expired`
+- `name_taken`
+- `invalid_name`
+- `banned`
 
-List moderation reports (DEBUG only).
+These are error code values, not message types.
 
-```json
-{"type": "get_mod_reports", "status": "open", "limit": 50}
-```
+## Non-Claims
 
-#### `mod_reports_snapshot` (server → client)
+This document does not claim:
 
-Snapshot of moderation reports.
-
-```json
-{
-  "type": "mod_reports_snapshot",
-  "reports": [
-    {
-      "case_id": "case_123",
-      "receipt_hash": "blake3:...",
-      "reporter_id": "p_reporter",
-      "target_id": "p_target",
-      "reported_at": "2026-01-20T00:00:00.000Z",
-      "status": "open"
-    }
-  ],
-  "has_more": false
-}
-```
-
-#### `mod_resolve` (client → server)
-
-Resolve a moderation report (DEBUG only). Prefer `receipt_hash` (canonical).
-
-```json
-{"type": "mod_resolve", "receipt_hash": "blake3:...", "resolution": "warning", "reason": "rule_violation"}
-```
-
-#### `mod_resolve_result` (server → client)
-
-Resolution result.
-
-```json
-{"type": "mod_resolve_result", "case_id": "case_123", "success": true}
-```
-
-Failure example:
-```json
-{"type": "mod_resolve_result", "case_id": "case_123", "success": false, "error": "not_authorized"}
-```
-
----
-
-### Temple
-
-#### `temple_sweep` (client → server)
-
-Temple sweep action.
-
-```json
-{"type": "temple_sweep"}
-```
-
----
-
-### Dev-Only Messages
-
-#### `mint_legendary` (client → server)
-
-Dev-only: Mint a legendary item. Requires `DEBUG=1`.
-
-```json
-{
-  "type": "mint_legendary",
-  "item_type": "mark_token",
-  "tier": 3
-}
-```
-
-- `item_type` - Item type (default: "mark_token")
-- `tier` - Legendary tier 1-5 (default: 1)
-
-#### `grant_gold` (client → server)
-
-Dev-only: Grant gold to a player. Requires `DEBUG=1`.
-
-```json
-{"type": "grant_gold", "player_id": "p_abc123", "amount": 1000}
-```
-
-#### `grant_sovereign_prefix` (client → server)
-
-Dev-only: Grant sovereign prefix to a player. Requires `DEBUG=1`.
-
-```json
-{"type": "grant_sovereign_prefix", "player_id": "p_abc123", "enabled": true}
-```
-
----
-
-### Errors
-
-#### `error` (server → client)
-
-```json
-{
-  "type": "error",
-  "code": "invalid_message",
-  "message": "Unknown message type"
-}
-```
-
-Error codes:
-- `invalid_message` - Malformed or unknown message
-- `not_authenticated` - Action requires login
-- `not_in_world` - Action requires being in world
-- `rate_limited` - Too many requests
-- `kicked` - Player was kicked
+- all clients implement every message family
+- live production deployment equals the current source tree
+- DEBUG-only messages are available to normal clients
+- moderation has role-based admin enforcement beyond the current DEBUG-mode gate
+- generated artifacts or runtime state were rewritten by this documentation lane
+- protocol compatibility was proven beyond the named source and verifier mechanisms
