@@ -64,8 +64,60 @@ function startServer() {
     cwd: `${ROOT}/apps/phone-server`,
     env: { ...process.env, PORT: String(PORT) },
     stdio: 'ignore',
+    detached: process.platform !== 'win32',
   });
   return proc;
+}
+
+async function stopServer(server) {
+  if (!server.pid || server.exitCode !== null || server.signalCode !== null) return;
+
+  const exited = new Promise((resolve) => {
+    server.once('exit', resolve);
+  });
+
+  const target = process.platform === 'win32' ? server.pid : -server.pid;
+  try {
+    process.kill(target, 'SIGTERM');
+  } catch (error) {
+    if (error?.code === 'ESRCH') return;
+    throw error;
+  }
+
+  const graceful = await Promise.race([
+    exited.then(() => true),
+    sleep(2500).then(() => false),
+  ]);
+  if (graceful) return;
+
+  try {
+    process.kill(target, 'SIGKILL');
+  } catch (error) {
+    if (error?.code !== 'ESRCH') throw error;
+  }
+  await Promise.race([
+    exited,
+    sleep(1000),
+  ]);
+}
+
+async function closeWebSocket(ws) {
+  if (ws.readyState === WebSocket.CLOSED) return;
+  if (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN) {
+    await new Promise((resolve) => {
+      const timer = setTimeout(() => {
+        ws.terminate();
+        resolve();
+      }, 1000);
+      ws.once('close', () => {
+        clearTimeout(timer);
+        resolve();
+      });
+      ws.close();
+    });
+    return;
+  }
+  ws.terminate();
 }
 
 function setTile(map, x, y, code) {
@@ -148,7 +200,7 @@ async function runPlayableLoop(token, logs) {
     }
     logs.push(`play_loop_complete=${loop.lastEvent}`);
   } finally {
-    client.ws.close();
+    await closeWebSocket(client.ws);
   }
 }
 
@@ -211,9 +263,7 @@ async function main() {
     console.log('studio_smoke_passed');
     logs.forEach((line) => console.log(line));
   } finally {
-    if (server.pid) {
-      server.kill('SIGINT');
-    }
+    await stopServer(server);
     await fs.rm(new URL(`data/phone-studio/maps/${MAP_ID}.json`, `file://${ROOT}/`), { force: true }).catch(() => {});
   }
 }
