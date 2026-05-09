@@ -1,189 +1,163 @@
 # Anti-Cheat System
 
-## Core Principle
+This document describes the anti-cheat behavior currently backed by source code. It is not a production hardening claim and it does not prove live restart behavior outside the local verifier named below.
 
-**Authoritative server always wins.**
+## Source Authority
 
-- Client sends *intent* (e.g., "move north")
-- Server validates and applies
-- Server sends result
-- Client renders only
+Current source authority for this document:
 
-The client NEVER tells the server "I am at position X,Y". This alone prevents 80% of cheats.
+- `apps/server/src/anticheat/`
+- `apps/server/src/world/heat.ts`
+- `apps/server/src/persist/`
+- `apps/server/src/index.ts`
+- `apps/server/tools/verify-anticheat-persistence.ts`
 
-**Status (v1)**: Detection signals, Tem challenges, and receipt logging are implemented. Enforcement actions like throttles, kicks, and bans are **planned** and must not be treated as active guarantees.
+Shared constants and receipt action names live in `packages/shared/constants.ts` and `packages/shared/types.ts`.
 
-## Detection Signals
+## Runtime Model
 
-### 1. Speed Hacks / Impossible Movement
+The server is authoritative. Clients send intent, such as movement, chat, and Tem responses. The server validates the intent, mutates server-owned session state, writes receipts for relevant actions, and sends the result back to the client.
 
-- **Signal**: Move intents arriving faster than allowed tick rate
-- **Check**: Timestamp between moves < minimum allowed interval
-- **Example**: 10 moves in 500ms when minimum is 100ms/move
+The client does not get to report its own authoritative position or clear its own anti-cheat state. Detection and enforcement state is held server-side in each active session.
 
-### 2. Pathing Anomalies
+## Runtime Detection and Enforcement
 
-- **Signal**: Movement that skips tiles or teleports
-- **Check**: Distance between old position and requested new position > 1 tile
-- **Example**: Player at (10,10) requests move to (15,10) in one step
+`apps/server/src/anticheat/detector.ts` maintains per-session anti-cheat runtime state:
 
-### 3. Action Cadence Patterns
+- recent signals
+- active Tem challenge state
+- throttle window
+- warning and kick counters
+- recent movement and cadence intervals
+- recent chat timestamps
 
-- **Signal**: Perfectly regular timing between actions (bot signature)
-- **Check**: Variance in action intervals is suspiciously low
-- **Example**: Exactly 100ms between every action for 100+ actions
+The detector currently covers these code paths:
 
-### 4. Repeated Identical Timing
+| Area | Source-backed behavior |
+| --- | --- |
+| Move intent speed | `onMoveIntent` records a `speed_violation` when move intents arrive faster than `MIN_MOVE_INTERVAL_MS`. The server requests a Tem challenge if one is not already active. |
+| Applied movement cadence | `onMoveApplied` tracks movement cadence, looks for near-perfect tick timing using the cadence constants, records `perfect_cadence`, and requests a Tem challenge when the cooldown allows it. |
+| Chat spam | `onChat` records `chat_spam` when at least 8 chat attempts occur in 5 seconds. It applies a throttle when not already throttled and kicks for chat spam while the session is already throttled. |
+| Signal decay | Detector signals decay after `SIGNAL_DECAY_MS`. Movement and cadence interval windows are kept bounded. |
 
-- **Signal**: Same exact millisecond intervals repeated
-- **Check**: Hash of interval patterns matches known bot signatures
-- **Example**: [100, 100, 100, 100, ...] vs human [97, 103, 98, 105, ...]
+`apps/server/src/index.ts` wires those detector actions into runtime behavior:
 
-### 5. Chat Spam
+- active Tem challenges block movement until answered or timed out
+- speed and cadence detections issue `tem_challenge_issued` receipts
+- perfect cadence adds player heat
+- chat spam adds player heat and can apply throttle
+- chat while throttled is rate-limited
+- chat spam while already throttled can kick the session
+- failed Tem responses and Tem timeouts apply throttle and write `tem_challenge_failed`
 
-- **Signal**: Rapid repeated messages
-- **Check**: Message rate exceeds threshold
-- **Example**: 10 messages in 5 seconds
+The code also has per-IP rate checks for connection, movement, and chat abuse. Those checks are separate from the per-player detector state described above.
 
-## Enforcement Ladder
+## Tem Challenge Behavior
 
-**Note:** The ladder below describes intended policy. Only Tem challenge + receipt logging are guaranteed in v1.
+`apps/server/src/anticheat/tem.ts` owns Tem challenge state transitions.
 
-Escalation happens when signals persist or are severe.
+Current behavior:
 
-| Level | Action | Trigger |
-|-------|--------|---------|
-| 1 | **Warn** | First suspicious signal detected |
-| 2 | **Tem Challenge** | Repeated signals or failed to improve after warn |
-| 3 | **Throttle** | Failed Tem challenge or continued violations |
-| 4 | **Kick** | Multiple throttle periods or severe violation |
-| 5 | **Temp Ban** | Repeated kicks or confirmed bot activity |
+- challenge IDs are generated as `tc_${randomUUID()}`
+- challenge text asks the player to type `AZURA`
+- timeout length comes from `TEM_TIMEOUT_SECONDS`
+- `tem_response` messages and chat messages can satisfy an active challenge
+- wrong responses and timeouts fail the challenge
+- failed challenges clear challenge state and apply a throttle window through `applyThrottle`
+- successful responses clear challenge state and write `tem_challenge_passed`
 
-### Throttle Effects
+The server may issue Tem challenges from:
 
-- Movement speed reduced by 50%
-- Chat rate limited to 1 message per 10 seconds
-- Duration: 5 minutes
+- speed violation detection
+- perfect cadence detection
+- heat escalation
+- the tutorial Tem tile
 
-### Kick
+## Heat Behavior
 
-- Immediate disconnect
-- Can reconnect immediately (unless banned)
-- Logged for review
+`apps/server/src/world/heat.ts` stores player heat as server state with:
 
-### Temp Ban
+- `score`
+- last update and decay timestamps
+- last Tem trigger timestamp
+- active penalty window
+- per-reason counters
 
-- Cannot connect for 1 hour (increases with repeat offenses)
-- Logged for review
+Heat is clamped from 0 to 100. It decays over time using `HEAT_DECAY_PER_MIN`. `apps/server/src/index.ts` adds heat for current anti-cheat and gameplay triggers, writes `heat_changed`, and then evaluates escalation:
 
-## Tem Challenge
+- at `HEAT_TEM_THRESHOLD`, the server can issue a Tem challenge and write `heat_tem_escalation`
+- at `HEAT_PENALTY_THRESHOLD`, the server can start a move-throttle penalty window and write `heat_penalty_applied`
 
-Tem is an anti-bot guardian that issues simple challenges.
+Heat penalties are source-backed runtime behavior. This document does not claim a live production restart proof for those penalties.
 
-### How It Works
+## Persistence and Restore
 
-1. Server detects suspicious behavior
-2. Server sends `tem_challenge` message
-3. Player must type the correct response in chat within timeout
-4. Server validates response
+`apps/server/src/persist/` materializes receipt-backed anti-cheat state into SQLite projections.
 
-### Challenge Format
+Current projected tables:
 
-```json
-{
-  "type": "tem_challenge",
-  "challenge_id": "tc_123",
-  "message": "Hi! Type AZURA in chat within 15 seconds.",
-  "timeout_seconds": 15
-}
+- `player_heat`
+- `player_anticheat_enforcement`
+
+Current materialized receipt actions include:
+
+- `heat_changed`
+- `heat_penalty_applied`
+- `heat_tem_escalation`
+- `tem_challenge_failed`
+- `throttle`
+- `kick`
+- `warn_issued`
+
+On session restore, `apps/server/src/index.ts` reads persisted heat and enforcement state and hydrates:
+
+- heat through `hydrateHeatState`
+- enforcement memory through `hydrateAntiCheatRuntime`
+
+Hydration preserves active, unexpired penalty and throttle windows and drops expired windows.
+
+## Prior-State Lookup
+
+`apps/server/src/anticheat/priors.ts` provides a read-only prior lookup store when configured with `AKALYNTH_ANTICHEAT_PRIORS_PATH`. The store reads JSONL prior records and returns a prior by player ID through the HTTP/API context.
+
+This is a lookup path. It does not itself punish, throttle, kick, or mutate runtime anti-cheat state.
+
+## Local Verification
+
+The current local verification command is:
+
+```bash
+npm -w apps/server run verify:anticheat-persistence
 ```
 
-### Outcomes
+`apps/server/tools/verify-anticheat-persistence.ts` creates temporary receipt and database paths, writes anti-cheat receipts, checks live materialization, replays from receipts into a fresh database, and checks restored state. It verifies:
 
-| Result | Action |
-|--------|--------|
-| Correct response in time | Challenge passed, restrictions lifted |
-| Wrong response | Challenge failed, escalate to throttle |
-| No response (timeout) | Challenge failed, escalate to throttle |
+- `player_heat` projection is present
+- heat score, penalty window, and last Tem timestamp survive materialization and replay
+- `player_anticheat_enforcement` projection is present
+- Tem failure, throttle, and kick counters are restored
+- active throttle and penalty windows hydrate while unexpired
+- expired throttle and penalty windows are cleared during hydration
 
-### Design Goals
+The lane that patches this document also runs:
 
-- **Low friction for humans**: Simple word typing, 15 seconds is plenty
-- **Blocks bots**: Requires reading and responding contextually
-- **Logged for appeals**: All challenges and responses are recorded
-
-## Audit Receipts
-
-Every anti-cheat action emits a JSONL receipt.
-
-### Format
-
-```json
-{
-  "sequence": 1,
-  "timestamp": "2024-01-15T10:30:00.000Z",
-  "prev_hash": "genesis",
-  "event_hash": "blake3:abc123...",
-  "signature": "ed25519:...",
-  "actor_id": "p_abc123",
-  "action": "tem_challenge_issued",
-  "inputs": {
-    "trigger": "speed_violation",
-    "signal_count": 5,
-    "signal_window_ms": 2000
-  },
-  "result": "challenge_sent",
-  "inputs_hash": "blake3:def456...",
-  "outputs_hash": "blake3:789abc..."
-}
+```bash
+npm -w apps/server run build
+npm -w apps/server run verify:anticheat-persistence
 ```
 
-### Logged Events
+Passing those commands proves local build and receipt-backed persistence behavior for this source tree. It does not prove a live production restart unless a separate runtime lane records that evidence.
 
-- `signal_detected` - Suspicious signal found
-- `warn_issued` - Warning sent to player
-- `tem_challenge_issued` - Tem challenge sent
-- `tem_challenge_passed` - Player passed challenge
-- `tem_challenge_failed` - Player failed challenge
-- `throttle_applied` - Throttle restrictions activated
-- `throttle_lifted` - Throttle restrictions removed
-- `kick_executed` - Player kicked
-- `temp_ban_applied` - Temporary ban activated
+## Receipts and Player Feedback
 
-## Implementation Notes
+Anti-cheat-relevant runtime actions write receipts for challenge, heat, throttle, kick, and related outcomes. Player-facing feedback is intentionally narrower than internal evidence: the server can tell a player they are rate-limited, challenged, throttled, or kicked without exposing the full detector details.
 
-### State Per Player
+## Non-Claims
 
-```typescript
-interface AntiCheatState {
-  signals: Signal[];           // Recent signals (rolling window)
-  warnCount: number;           // Warnings issued
-  temChallengeActive: boolean; // Currently challenged
-  temChallengeId: string | null;
-  temChallengeExpires: number | null;
-  throttleUntil: number | null;
-  kickCount: number;           // Kicks this session
-}
-```
+This document does not claim:
 
-### Signal Decay
-
-- Signals older than 60 seconds are discarded
-- This prevents old behavior from haunting reformed players
-
-### Appeal Process
-
-**Not implemented in v1.** Receipt logs exist for auditability, but there is no formal appeal workflow yet.
-
-## DEBUG-Gated Features
-
-Certain features require `DEBUG=1` environment variable:
-
-| Feature | Env Var | Purpose |
-|---------|---------|---------|
-| Test death trigger | `DEBUG=1` + `ALLOW_TEST_DEATH=1` | `kill_self` command for testing |
-| Runestone casting | `DEBUG=1` | Access to runestone tables |
-| Forced runestone face | `DEBUG=1` + `RUNESTONE_TEST_FORCE_FACE=<element>` | Deterministic rolls for testing |
-| Public receipts raw | `DEBUG=1` | `/v1/receipts/public_raw` endpoint |
-
-In production, Tem will gate runestone access via capability tokens (not yet implemented).
+- cheating cannot occur
+- the system is complete
+- live production restart behavior has been proven
+- generated or runtime state was rewritten by this documentation lane
+- `docs/PROTOCOL.md` or archive/demotion documents were changed by this lane
