@@ -81,6 +81,10 @@ Showcase / driver packet:
 - [Known Gaps](./KNOWN_GAPS.md) - release blockers, engineering risks, and presentation rules
 - [30-Day Driver Plan](./DRIVER_30_DAY_PLAN.md) - bounded next execution path
 
+Design / production notes:
+
+- [Classic 32 Art And Mobile UI Direction](./CLASSIC_32_ART_AND_MOBILE_UI_DIRECTION.md) - old-school 32x32 art direction, OpenAI asset pipeline, and mobile HUD rules
+
 Core docs:
 
 - [V1 Scope Fence](./V1_SCOPE.md) - what v1 includes and explicitly defers
