@@ -1,0 +1,165 @@
+name: Delegation task
+description: Create a scoped Akalynth task that can be delegated to a human or Codex lane.
+title: "[Delegation] "
+labels:
+  - delegation
+  - state:triage
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: One sentence describing the delegated task.
+      placeholder: Add a concise task summary.
+    validations:
+      required: true
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: Describe the desired outcome and why it matters.
+      placeholder: State the end state this task should produce.
+    validations:
+      required: true
+
+  - type: textarea
+    id: background
+    attributes:
+      label: Background / context
+      description: Link related PRs, commits, incidents, docs, constraints, or prior closure notes.
+      placeholder: Add repo links, operational context, and relevant constraints.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scope_lane
+    attributes:
+      label: Scope lane
+      description: Pick the primary authority boundary for this task.
+      options:
+        - runtime
+        - protocol
+        - infra
+        - Codex/plugin
+        - docs
+        - test
+        - audit
+    validations:
+      required: true
+
+  - type: dropdown
+    id: preferred_skill_lane
+    attributes:
+      label: Preferred skill lane
+      description: Pick the Akalynth Studio or Codex skill that should guide the work.
+      options:
+        - delegation-steward
+        - server-cartographer
+        - gameplay-loop-designer
+        - protocol-guardian
+        - receipt-chain-steward
+        - anti-cheat-steward
+        - map-and-lore-builder
+        - deploy-steward
+        - test-runner
+        - akalynth-system-audit
+    validations:
+      required: true
+
+  - type: textarea
+    id: allowed_files
+    attributes:
+      label: Allowed files / areas
+      description: Name the paths, modules, docs, or systems the delegate may change or inspect.
+      placeholder: |
+        - .github/ISSUE_TEMPLATE/**
+        - plugins/akalynth-studio/skills/**
+    validations:
+      required: true
+
+  - type: textarea
+    id: forbidden_actions
+    attributes:
+      label: Forbidden files / actions
+      description: Name paths and operations that are out of scope, including runtime, deploy, protocol, or production-data restrictions when relevant.
+      placeholder: |
+        - Do not touch apps/server runtime code.
+        - Do not run deploy scripts or systemctl.
+        - Do not edit /etc/akalynth or /var/lib/akalynth.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance criteria
+      description: List the concrete conditions that must be true before the task is complete.
+      placeholder: |
+        - The issue template contains all required delegation fields.
+        - Plugin validation passes.
+    validations:
+      required: true
+
+  - type: textarea
+    id: verification_commands
+    attributes:
+      label: Verification commands
+      description: List the commands or checks that prove the task is complete.
+      placeholder: |
+        - git diff --check
+        - npm run validate:codex-plugin
+        - npm run build:packages
+    validations:
+      required: true
+
+  - type: input
+    id: expected_branch_name
+    attributes:
+      label: Expected branch name
+      description: Use codex/issue-<issue-number>-<short-kebab-summary> unless the task requires another convention.
+      placeholder: codex/issue-123-add-delegation-task-template
+    validations:
+      required: true
+
+  - type: textarea
+    id: pr_linkage
+    attributes:
+      label: PR linkage requirement
+      description: Use `Closes #<issue>` only when the PR completes the issue. Use `Refs #<issue>` for partial work.
+      placeholder: The implementation PR must include Closes #<issue> only if all acceptance criteria are satisfied.
+    validations:
+      required: true
+
+  - type: textarea
+    id: closure_evidence
+    attributes:
+      label: Closure evidence
+      description: Required evidence before the task can be closed.
+      placeholder: |
+        - Branch name
+        - PR URL
+        - Merge commit or final commit SHA
+        - Verification commands and results
+        - Boundary statement
+        - Skipped checks and reason
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies_blockers
+    attributes:
+      label: Dependencies / blockers
+      description: Name any external decisions, credentials, labels, PRs, issues, or environment state needed before execution.
+      placeholder: List blockers, or write "None."
+    validations:
+      required: true
+
+  - type: input
+    id: assignee_or_target
+    attributes:
+      label: Assignee or delegation target
+      description: Name the intended human owner, Codex lane, or review target.
+      placeholder: Codex, @username, or a named lane.
+    validations:
+      required: true
