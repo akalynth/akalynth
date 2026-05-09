@@ -22,6 +22,7 @@
     "verify:full": "npm run build:packages && node packages/verification-spine/bin/akalynth-verify.js --profile full",
     "verify:audit": "npm run build:packages && node packages/verification-spine/bin/akalynth-verify.js --profile audit",
     "verify:showcase": "bash scripts/showcase_local.sh",
+    "validate:codex-plugin": "node tools/validate-codex-plugin.mjs",
     "verify:lifecycle": "npm -w apps/server run verify:lifecycle",
     "verify:receipt-hygiene": "npm -w apps/server run verify:receipt-hygiene"
   },

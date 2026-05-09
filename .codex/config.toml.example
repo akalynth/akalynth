@@ -1,6 +1,8 @@
 # Akalynth Codex example config.
 # Copy values into ~/.codex/config.toml when you want this posture locally.
 # Do not add API keys, SSH private keys, Cloudflare tokens, or production secrets.
+# /opt/akalynth is the live server tree. Do not use it as the default Codex
+# write workspace unless that authority is explicitly approved for the session.
 
 model = "gpt-5.5"
 model_provider = "openai"
@@ -10,7 +12,7 @@ approval_policy = "on-request"
 sandbox_mode = "read-only"
 web_search = "cached"
 
-[projects."/opt/akalynth"]
+[projects."/home/codex-akalynth/work/akalynth-candidate"]
 trust_level = "trusted"
 
 [sandbox_workspace_write]
