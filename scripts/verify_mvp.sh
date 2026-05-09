@@ -23,7 +23,15 @@ log() { echo -e "🧪 $*"; }
 die() { echo -e "❌ $*" >&2; exit 1; }
 need_cmd() { command -v "$1" >/dev/null 2>&1 || die "Missing command: $1"; }
 TIMEOUT_BIN="$(command -v timeout || true)"
-run_timeout() { local secs="$1"; shift; [[ -n "$TIMEOUT_BIN" ]] && "$TIMEOUT_BIN" "$secs" "$@" || "$@"; }
+run_timeout() {
+  local secs="$1"
+  shift
+  if [[ -n "$TIMEOUT_BIN" ]]; then
+    "$TIMEOUT_BIN" "$secs" "$@"
+  else
+    "$@"
+  fi
+}
 
 RUN_DIR=""
 RUN_DIR_TEMP=0
@@ -157,17 +165,35 @@ run_ws_scenario() {
 }
 run_ws_scenario_bg() {
   local scenario="$1" token="$2" outfile="$3" timeout_s="${4:-$TIMEOUT_SECONDS}"
+  local ready_file="${5:-}"
   rm -f "$outfile" "${outfile}.code"
+  if [[ -n "$ready_file" ]]; then
+    rm -f "$ready_file"
+  fi
   (
     set +e
-    run_timeout "$timeout_s" node "$HARNESS" \
+    local cmd=(
+      node "$HARNESS"
       --ws-url "$WS_URL" \
       --guest-token "$token" \
-      --scenario "$SCENARIOS_DIR/$scenario.json" \
-      >"$outfile" 2>&1
+      --scenario "$SCENARIOS_DIR/$scenario.json"
+    )
+    if [[ -n "$ready_file" ]]; then
+      cmd+=(--ready-file "$ready_file")
+    fi
+    run_timeout "$timeout_s" "${cmd[@]}" >"$outfile" 2>&1
     echo $? >"${outfile}.code"
   ) &
   WITNESS_BG_PID=$!
+}
+wait_for_file() {
+  local desc="$1" file="$2" timeout_s="${3:-10}"
+  local deadline=$((SECONDS + timeout_s))
+  while (( SECONDS < deadline )); do
+    [[ -s "$file" ]] && return 0
+    sleep 0.2
+  done
+  die "$desc"
 }
 wait_ws_bg_ok() {
   local label="$1" outfile="$2" timeout_s="${3:-$TIMEOUT_SECONDS}"
@@ -517,21 +543,20 @@ wait_for_health
 # 1) Connect witness client first and let it sit waiting for request
 read -r WITNESS_PLAYER_ID WITNESS_TOKEN <<<"$(mint_guest)"
 WITNESS_OUT="$LOG_DIR/akalynth_witness_harness.json"
-run_ws_scenario_bg "witness" "$WITNESS_TOKEN" "$WITNESS_OUT" 25
-
-# Give witness time to connect and enter world before triggering heat
-sleep 2
+WITNESS_READY="$LOG_DIR/akalynth_witness_ready.json"
+run_ws_scenario_bg "witness" "$WITNESS_TOKEN" "$WITNESS_OUT" 25 "$WITNESS_READY"
+wait_for_file "Witness harness did not enter world" "$WITNESS_READY" 10
 
 # 2) Trigger a heat penalty on a separate target (this should emit ledger_marked → witness_requested)
 read -r TARGET_PLAYER_ID TARGET_TOKEN <<<"$(mint_guest)"
 TARGET_JSON="$(run_ws_scenario witness_trigger "$TARGET_TOKEN" 15)"
 assert_ws_ok "witness_target" "$TARGET_JSON"
+wait_for_receipt "witness_requested" "$TARGET_PLAYER_ID" '[.receipts[] | select(.inputs.kind=="heat_penalty")] | length > 0' >/dev/null
 
 # 3) Witness harness must complete (received request + sent response)
 wait_ws_bg_ok "witness" "$WITNESS_OUT" 25
 
 # 4) Assert receipts exist (private only)
-wait_for_receipt "witness_requested" "$TARGET_PLAYER_ID" '[.receipts[] | select(.inputs.kind=="heat_penalty")] | length > 0' >/dev/null
 wait_for_receipt "witness_response" "$WITNESS_PLAYER_ID" '[.receipts[] | select(.inputs.request_id and .inputs.response)] | length > 0' >/dev/null
 
 # 5) Ensure no player_id leaks in witness WS output
