@@ -10,7 +10,9 @@
       "Bash(pnpm health *)",
       "Bash(pnpm proof:smoke *)",
       "Bash(npm -w apps/server run build)",
-      "Bash(npm -w apps/debug-client run build)"
+      "Bash(npm -w apps/debug-client run build)",
+      "Bash(host *)",
+      "Bash(whois *)"
     ]
   }
 }

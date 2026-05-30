@@ -4850,7 +4850,24 @@ function processSessionQueue(s: Session, now: number) {
         }
 
         const tier = resolveDialogueTier(s.player!.id, npc.place_id);
-        const line = buildNpcDialogue(npc, tier);
+
+        // Dialogue Contract v1: seed varied-but-deterministic phrasing on a
+        // DURABLE per-(player,npc,tier) talk counter. The nonce is the number
+        // of prior talks, read from the receipt-sourced projection — so it
+        // survives reconnects AND is reconstructed identically on replay.
+        const nonce = persist.getNpcTalkCount(s.player!.id, msg.npc_id, tier);
+        const line = buildNpcDialogue(npc, tier, { playerId: s.player!.id, nonce });
+
+        // Record the talk so the next visit's nonce advances. The onWrite hook
+        // materializes this into npc_talk_events synchronously (canon source).
+        // Dialogue is read-only flavor: this receipt records that the player
+        // spoke, not any world mutation.
+        audit.write({
+          player_id: s.player!.id,
+          action: 'npc_talked',
+          inputs: { npc_id: msg.npc_id, tier },
+          result: 'ok',
+        });
 
         send(s.ws, ServerMessages.npcDialogue(msg.npc_id, npc.place_id, tier, line));
 
