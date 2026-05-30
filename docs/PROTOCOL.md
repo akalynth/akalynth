@@ -11,7 +11,7 @@ The protocol authority is:
 - `packages/shared/protocol.golden.json`
 - `scripts/verify_protocol_sync.sh`
 
-`packages/shared/protocol.ts` exports `PROTOCOL_VERSION = '1.0.0'`.
+`packages/shared/protocol.ts` exports `PROTOCOL_VERSION = '1.1.0'`. v1.1.0 is an **additive, non-breaking** bump over v1.0.0 (Property Ownership v0 messages); no existing message changed, so the frozen `CLIENT_CONTRACT_V0_1` wire compatibility holds.
 
 This document is documentation only. It does not change shared types, runtime handlers, generated artifacts, clients, deployment state, or live service behavior.
 
@@ -86,6 +86,10 @@ interface BaseMessage {
 | `use_skill` | Uses a utility/admin skill by `skill_id` and optional `target_id`. |
 | `get_mod_reports` | DEBUG-only moderation report listing. Current runtime gate is authenticated session plus DEBUG mode. |
 | `mod_resolve` | DEBUG-only moderation resolution. `receipt_hash` is the preferred lookup key; `case_id` is legacy. Current runtime gate is authenticated session plus DEBUG mode. |
+| `buy_house` | Buys a house by `property_id` (primary sale if unowned, resale if listed). Price is server-side. |
+| `list_house` | Lists an owned house for sale at `price`. |
+| `unlist_house` | Removes an owned house from the market. |
+| `get_property_ledger` | Requests a property's ownership ledger. |
 
 ## Server → Client Messages
 
@@ -127,6 +131,11 @@ interface BaseMessage {
 | `skill_result` | Utility/admin skill result. |
 | `mod_reports_snapshot` | Moderation report snapshot. |
 | `mod_resolve_result` | Moderation resolution result. |
+| `property_snapshot` | Full property/house state (anonymized owners) sent on `enter_world`. |
+| `property_state` | A single property's updated public state. |
+| `house_sold` | Zone broadcast when a house changes hands (buyer/seller names, price, sale count). |
+| `property_result` | Result of a buy/list/unlist intent with optional denial reason. |
+| `property_ledger` | Ownership ledger (anonymized history + sale count) for a property. |
 
 ## Client → Server Details
 
@@ -245,6 +254,22 @@ Lists moderation reports. Current runtime gate is authenticated session plus DEB
 #### `mod_resolve`
 
 Resolves a moderation report. Current runtime gate is authenticated session plus DEBUG mode. `receipt_hash` is preferred; `case_id` is legacy.
+
+#### `buy_house`
+
+Buys a house by `property_id`. Primary sale (treasury → buyer, gold sink) if the plot is unowned; resale (seller → buyer, conserved) if it is listed. Price is determined server-side; the client never supplies it.
+
+#### `list_house`
+
+Lists an owned house for sale at `price` (integer gold, 1..MAX). Only the current owner may list.
+
+#### `unlist_house`
+
+Removes an owned house from the market. Only the current owner may unlist.
+
+#### `get_property_ledger`
+
+Requests the ownership ledger (owner history + sale count) for a `property_id`.
 
 ## Server → Client Details
 
@@ -391,6 +416,26 @@ Moderation report snapshot.
 #### `mod_resolve_result`
 
 Moderation resolution result.
+
+#### `property_snapshot`
+
+Full property/house state sent on `enter_world`. Owners are exposed as `owner_name` only — never raw player ids.
+
+#### `property_state`
+
+Single property's updated public state, sent to the actor after buy/list/unlist and broadcast to the zone on changes.
+
+#### `house_sold`
+
+Zone broadcast when a house changes hands: `property_id`, `plot_id`, `zone`, `buyer_name`, `seller_name` (null = treasury/primary sale), `price`, and `sale_count`.
+
+#### `property_result`
+
+Result of a `buy_house`/`list_house`/`unlist_house` intent with `success` and optional `reason` (`unknown_plot`, `not_for_sale`, `cannot_buy_own`, `insufficient_gold`, `not_owner`, `invalid_price`).
+
+#### `property_ledger`
+
+Ownership ledger for a property: `owner_history` (names anonymized) and `sale_count`.
 
 ## Contract Type Literals
 

@@ -4117,21 +4117,27 @@
         "x": 10,
         "y": 32,
         "width": 2,
-        "height": 2
+        "height": 2,
+        "district": "Harbor Edge",
+        "primary_price_gold": 500
       },
       {
         "id": "H2",
         "x": 14,
         "y": 32,
         "width": 2,
-        "height": 2
+        "height": 2,
+        "district": "Market Quarter",
+        "primary_price_gold": 1000
       },
       {
         "id": "H3",
         "x": 18,
         "y": 32,
         "width": 2,
-        "height": 2
+        "height": 2,
+        "district": "South Gate",
+        "primary_price_gold": 2000
       }
     ],
     "plaza": {

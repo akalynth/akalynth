@@ -1,12 +1,12 @@
 {
-  "version": "1.0.0",
-  "generatedAt": "2026-01-22T06:26:51.697Z",
+  "version": "1.1.0",
+  "generatedAt": "2026-05-30T19:58:40.841Z",
   "source": {
-    "path": "/home/user/akalynth/packages/shared/protocol.ts",
-    "hash": "sha256:77bacdd47f40eb65d9c10be40b1e8ab58a73a7d1c8f193c92c530ec76448fa96"
+    "path": "/opt/akalynth/packages/shared/protocol.ts",
+    "hash": "sha256:224feaa763faa22be9960b47d694ba32f10a31796ff09a626445326150e00e2c"
   },
   "surface": {
-    "version": "1.0.0",
+    "version": "1.1.0",
     "messages": {
       "client": {
         "AttackIntentMessage": {
@@ -19,6 +19,21 @@
             },
             "type": {
               "type": "'attack_intent'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "BuyHouseMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "property_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'buy_house'",
               "optional": false,
               "readonly": false
             }
@@ -179,6 +194,21 @@
             }
           }
         },
+        "GetPropertyLedgerMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "property_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'get_property_ledger'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
         "GrantGoldMessage": {
           "extends": "BaseMessage",
           "fields": {
@@ -249,6 +279,26 @@
           "fields": {
             "type": {
               "type": "'kill_self'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "ListHouseMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "price": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "property_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'list_house'",
               "optional": false,
               "readonly": false
             }
@@ -464,6 +514,21 @@
             },
             "type": {
               "type": "'tem_witness_response'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "UnlistHouseMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "property_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'unlist_house'",
               "optional": false,
               "readonly": false
             }
@@ -736,6 +801,51 @@
             },
             "type": {
               "type": "'evidence_snapshot'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "HouseSoldMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "buyer_name": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "plot_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "price": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "property_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "sale_count": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "seller_name": {
+              "type": "null | string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'house_sold'",
+              "optional": false,
+              "readonly": false
+            },
+            "zone": {
+              "type": "string",
               "optional": false,
               "readonly": false
             }
@@ -1091,6 +1201,91 @@
             },
             "until": {
               "type": "string",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "PropertyLedgerMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "owner_history": {
+              "type": "PropertyOwnerHistoryEntry[]",
+              "optional": false,
+              "readonly": false
+            },
+            "property_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "sale_count": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'property_ledger'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "PropertyResultMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "action": {
+              "type": "'buy_house' | 'list_house' | 'unlist_house'",
+              "optional": false,
+              "readonly": false
+            },
+            "property_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "reason": {
+              "type": "PropertyDenialReason",
+              "optional": true,
+              "readonly": false
+            },
+            "success": {
+              "type": "boolean",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'property_result'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "PropertySnapshotMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "properties": {
+              "type": "PropertyPublic[]",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'property_snapshot'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "PropertyStateMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "property": {
+              "type": "PropertyPublic",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'property_state'",
               "optional": false,
               "readonly": false
             }
@@ -1821,6 +2016,104 @@
           "worst_death": {
             "type": "{\n    receipt_hash: string;\n    drop_ratio: number;\n  }",
             "optional": true,
+            "readonly": false
+          }
+        }
+      },
+      "PropertyOwnerHistoryEntry": {
+        "fields": {
+          "action": {
+            "type": "'purchased' | 'transferred'",
+            "optional": false,
+            "readonly": false
+          },
+          "from_name": {
+            "type": "null | string",
+            "optional": false,
+            "readonly": false
+          },
+          "price": {
+            "type": "number",
+            "optional": false,
+            "readonly": false
+          },
+          "timestamp": {
+            "type": "string",
+            "optional": false,
+            "readonly": false
+          },
+          "to_name": {
+            "type": "string",
+            "optional": false,
+            "readonly": false
+          }
+        }
+      },
+      "PropertyPublic": {
+        "fields": {
+          "district": {
+            "type": "null | string",
+            "optional": false,
+            "readonly": false
+          },
+          "height": {
+            "type": "number",
+            "optional": false,
+            "readonly": false
+          },
+          "listed_price_gold": {
+            "type": "null | number",
+            "optional": false,
+            "readonly": false
+          },
+          "owner_name": {
+            "type": "null | string",
+            "optional": false,
+            "readonly": false
+          },
+          "plot_id": {
+            "type": "string",
+            "optional": false,
+            "readonly": false
+          },
+          "primary_price_gold": {
+            "type": "number",
+            "optional": false,
+            "readonly": false
+          },
+          "property_id": {
+            "type": "string",
+            "optional": false,
+            "readonly": false
+          },
+          "sale_count": {
+            "type": "number",
+            "optional": false,
+            "readonly": false
+          },
+          "status": {
+            "type": "PropertyStatus",
+            "optional": false,
+            "readonly": false
+          },
+          "width": {
+            "type": "number",
+            "optional": false,
+            "readonly": false
+          },
+          "x": {
+            "type": "number",
+            "optional": false,
+            "readonly": false
+          },
+          "y": {
+            "type": "number",
+            "optional": false,
+            "readonly": false
+          },
+          "zone": {
+            "type": "string",
+            "optional": false,
             "readonly": false
           }
         }

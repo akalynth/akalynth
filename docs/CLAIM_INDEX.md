@@ -148,6 +148,7 @@ Backed by a verifier/CI job for a specific commit (`CURRENT_STAGE.md` §Mechanic
 | Receipt/chronicle hygiene; lifecycle (fixture receipts) | `apps/server` `verify:receipt-hygiene`, `verify:lifecycle` |
 | Monetization rules (fixture receipts) | `apps/server` `npm run verify:monetization` |
 | Mob-loot item ids are receipt-derived (deterministic/replay-safe) | `apps/server` `npm run verify:mob-loot` *(added this session)* |
+| Property ownership v0: single owner (P-H1), gold conserved/no-mint (P-H2), receipt-derived state (P-H3), guard rails incl. ungated buy (P-H4), replay determinism (P-H5), projection==DB (P-H6) | `apps/server` `npm run verify:property`; `apps/server/src/world/property.ts`; `docs/PERSISTENCE_MATRIX.md` |
 | Public transparency surfaces exist (`/v1/receipts/public`, `/v1/transparency`) | `apps/server/src/api/http.ts`; `V1_SCOPE.md` |
 
 > **Nuance:** Treasury, work-contracts, NPC recognition, etc. have **unit verifiers** (mechanically checked, above) yet are listed under *Implemented But Not Release-Claimed* below as **gameplay features**. Both are true: the verifier passes; the feature is not release-claimed.

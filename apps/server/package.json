@@ -28,6 +28,7 @@
     "verify:monetization": "tsx tools/verify-monetization.ts",
     "verify:treasury": "tsx tools/verify-treasury.ts",
     "verify:work-contracts": "tsx tools/verify-work-contracts.ts",
+    "verify:property": "tsx tools/verify-property.ts",
     "verify:ops": "tsx tools/verify-ops.ts",
     "fixture:generate": "tsx tools/generate-ci-fixture.ts",
     "materialize-db": "tsx tools/materialize-db.ts",

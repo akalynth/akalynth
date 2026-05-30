@@ -359,6 +359,18 @@ export function createDefaultRegistry(): VerifierRegistry {
     },
   };
 
+  const propertyVerifier: VerifierSpec = {
+    id: 'property',
+    title: 'Property Ownership',
+    description: 'Verifies house ownership, transfers, gold conservation, and replay/DB determinism',
+    phase: 2,
+    dependsOn: ['db-exists', 'receipts-exist'],
+    auditSafe: true,
+    async run(ctx) {
+      return runLegacyVerifier('apps/server/tools/verify-property.ts', 'property', ctx);
+    },
+  };
+
   // ============================================================================
   // Phase 3: Integration Tests (1 verifier)
   // ============================================================================
@@ -406,6 +418,7 @@ export function createDefaultRegistry(): VerifierRegistry {
   registry.register(rateLimitsVerifier);
   registry.register(treasuryVerifier);
   registry.register(workContractsVerifier);
+  registry.register(propertyVerifier);
 
   // Phase 3
   registry.register(opsVerifier);
