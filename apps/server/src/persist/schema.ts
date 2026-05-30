@@ -7,7 +7,7 @@ import type Database from 'better-sqlite3';
 // Schema Version
 // ============================================================================
 
-export const SCHEMA_VERSION = 11;
+export const SCHEMA_VERSION = 12;
 
 // ============================================================================
 // DDL Statements
@@ -199,6 +199,23 @@ CREATE INDEX IF NOT EXISTS idx_player_anticheat_throttle ON player_anticheat_enf
 CREATE INDEX IF NOT EXISTS idx_player_anticheat_kicks ON player_anticheat_enforcement(kick_count DESC);
 `;
 
+// Dialogue Contract v1: durable, replay-sourced NPC talk counter.
+// Append-only event log; the nonce is COUNT(*) per (player, npc, tier).
+// UNIQUE(receipt_hash) makes re-materialization idempotent (replay-safe).
+// NO FK to players — avoids replay ordering issues if a talk receipt is
+// materialized before player_created (mirrors player_heat).
+const DDL_NPC_TALK_EVENTS = `
+CREATE TABLE IF NOT EXISTS npc_talk_events (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  player_id     TEXT NOT NULL,
+  npc_id        TEXT NOT NULL,
+  tier          TEXT NOT NULL,
+  timestamp     TEXT NOT NULL,
+  receipt_hash  TEXT NOT NULL UNIQUE
+);
+CREATE INDEX IF NOT EXISTS idx_npc_talk_player_npc_tier ON npc_talk_events(player_id, npc_id, tier);
+`;
+
 // ============================================================================
 // Schema Initialization
 // ============================================================================
@@ -304,6 +321,9 @@ function runMigration(db: Database.Database, version: number): void {
       break;
     case 11:
       migrateToV11(db);
+      break;
+    case 12:
+      migrateToV12(db);
       break;
     default:
       throw new Error(`Unknown schema version: ${version}`);
@@ -487,12 +507,23 @@ function migrateToV11(db: Database.Database): void {
   insertMeta.run('schema_version', '11');
 }
 
+function migrateToV12(db: Database.Database): void {
+  // Dialogue Contract v1: durable NPC talk counter (seeds dialogue variation)
+  db.exec(DDL_NPC_TALK_EVENTS);
+
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', '12');
+}
+
 // ============================================================================
 // Schema Utilities
 // ============================================================================
 
 export function resetSchema(db: Database.Database): void {
   // Drop all tables and recreate (for testing/recovery)
+  db.exec('DROP TABLE IF EXISTS npc_talk_events');
   db.exec('DROP TABLE IF EXISTS player_anticheat_enforcement');
   db.exec('DROP TABLE IF EXISTS player_heat');
   db.exec('DROP TABLE IF EXISTS chronicle_events');
@@ -512,7 +543,7 @@ export function resetSchema(db: Database.Database): void {
 export function getTableCounts(
   db: Database.Database
 ): Record<string, number> {
-  const tables = ['players', 'reputation_events', 'deaths', 'world_objects', 'items', 'inventory_items', 'legendary_heat', 'player_heat', 'player_anticheat_enforcement', 'chronicle_events', 'moderation_reports'];
+  const tables = ['players', 'reputation_events', 'deaths', 'world_objects', 'items', 'inventory_items', 'legendary_heat', 'player_heat', 'player_anticheat_enforcement', 'chronicle_events', 'moderation_reports', 'npc_talk_events'];
   const counts: Record<string, number> = {};
 
   for (const table of tables) {

@@ -15,8 +15,11 @@ import {
   getNpcDef,
   resolveDialogueTier,
   buildNpcDialogue,
+  getNpcIntent,
   getAllNpcIds,
 } from '../src/world/npcs.js';
+import type { NpcDef } from '../src/world/npcs.js';
+import type { NpcRecognitionTier } from '../../../packages/shared/protocol.js';
 import type { AuditReceipt, MapData } from '../../../packages/shared/types.js';
 import {
   PRESENCE_LINGER_THRESHOLD_MS,
@@ -137,23 +140,31 @@ test('getNpcDef returns null for unknown NPC', () => {
   assertEquals(npc, null, 'unknown NPC should return null');
 });
 
+const ALL_TIERS: NpcRecognitionTier[] = ['stranger', 'seen', 'recognized'];
+
 test('getNpcDef returns valid NPC definitions', () => {
   const herald = getNpcDef('rookguard_herald');
   assertEquals(herald !== null, true, 'rookguard_herald should exist');
   assertEquals(herald?.place_id, 'rookguard:plaza', 'herald should be in plaza');
-  assertEquals(typeof herald?.lines.stranger, 'string', 'should have stranger line');
-  assertEquals(typeof herald?.lines.seen, 'string', 'should have seen line');
-  assertEquals(typeof herald?.lines.recognized, 'string', 'should have recognized line');
+  for (const tier of ALL_TIERS) {
+    const contract = herald?.tiers[tier];
+    assertEquals(typeof contract?.intent_id, 'string', `${tier} should have intent_id`);
+    assertEquals((contract?.openers.length ?? 0) > 0, true, `${tier} should have >=1 opener`);
+  }
 });
 
-test('all registered NPCs have valid definitions', () => {
+test('all registered NPCs have valid contracts (intent + opener per tier)', () => {
   const npcIds = getAllNpcIds();
   assertEquals(npcIds.length >= 4, true, 'should have at least 4 NPCs');
 
   for (const npcId of npcIds) {
     const npc = getNpcDef(npcId);
     assertEquals(npc !== null, true, `${npcId} should exist`);
-    assertEquals(typeof npc?.lines.stranger, 'string', `${npcId} should have stranger line`);
+    for (const tier of ALL_TIERS) {
+      const contract = npc?.tiers[tier];
+      assertEquals(typeof contract?.intent_id, 'string', `${npcId}.${tier} needs intent_id`);
+      assertEquals((contract?.openers.length ?? 0) > 0, true, `${npcId}.${tier} needs an opener`);
+    }
   }
 });
 
@@ -231,21 +242,55 @@ test('recognized overrides seen', () => {
   assertEquals(resolveDialogueTier('player-5', 'rookguard:plaza'), 'recognized', 'recognized overrides seen');
 });
 
-test('buildNpcDialogue returns correct line for tier', () => {
-  const npc = getNpcDef('rookguard_herald');
-  if (!npc) throw new Error('NPC not found');
+test('buildNpcDialogue: must_convey facts always surface regardless of variation', () => {
+  for (const npcId of getAllNpcIds()) {
+    const npc = getNpcDef(npcId)!;
+    for (const tier of ALL_TIERS) {
+      const mustFacts = npc.tiers[tier].must_convey;
+      if (mustFacts.length === 0) continue;
+      // Sweep many nonces; every must_convey text must appear in every line.
+      for (let nonce = 0; nonce < 24; nonce++) {
+        const line = buildNpcDialogue(npc, tier, { playerId: 'player-X', nonce });
+        for (const fact of mustFacts) {
+          assertEquals(
+            line.includes(fact.text),
+            true,
+            `${npcId}.${tier} nonce=${nonce} must convey "${fact.fact_id}"`,
+          );
+        }
+      }
+    }
+  }
+});
 
-  const strangerLine = buildNpcDialogue(npc, 'stranger');
-  const seenLine = buildNpcDialogue(npc, 'seen');
-  const recognizedLine = buildNpcDialogue(npc, 'recognized');
+test('buildNpcDialogue: intent is invariant across variation', () => {
+  // The "same thing" — intent_id — never depends on the seed.
+  const npc = getNpcDef('azura_steward')!;
+  assertEquals(getNpcIntent(npc, 'stranger'), 'azura_steward_intro', 'intent stable');
+  assertEquals(getNpcIntent(npc, 'recognized'), 'azura_steward_ledger', 'intent stable');
+});
 
-  assertEquals(strangerLine, npc.lines.stranger, 'stranger line should match');
-  assertEquals(seenLine, npc.lines.seen, 'seen line should match');
-  assertEquals(recognizedLine, npc.lines.recognized, 'recognized line should match');
+test('buildNpcDialogue: deterministic for identical seed', () => {
+  const npc = getNpcDef('azura_herald')!;
+  const a = buildNpcDialogue(npc, 'stranger', { playerId: 'player-D', nonce: 7 });
+  const b = buildNpcDialogue(npc, 'stranger', { playerId: 'player-D', nonce: 7 });
+  assertEquals(a, b, 'same seed must produce identical line (replayable)');
+});
 
-  // Lines should be different
-  assertEquals(strangerLine !== seenLine, true, 'stranger and seen should differ');
-  assertEquals(seenLine !== recognizedLine, true, 'seen and recognized should differ');
+test('buildNpcDialogue: varies the surface across nonces (same thing, said different)', () => {
+  const npc = getNpcDef('azura_herald')!;
+  const variants = new Set<string>();
+  for (let nonce = 0; nonce < 16; nonce++) {
+    variants.add(buildNpcDialogue(npc, 'stranger', { playerId: 'player-V', nonce }));
+  }
+  // With 3 openers and 2 optional facts there must be real surface variety.
+  assertEquals(variants.size >= 3, true, `expected varied lines, got ${variants.size}`);
+});
+
+test('buildNpcDialogue: tiers express distinct intents', () => {
+  const npc = getNpcDef('rookguard_herald')!;
+  const intents = new Set(ALL_TIERS.map(t => getNpcIntent(npc, t)));
+  assertEquals(intents.size, 3, 'each tier should have a distinct intent');
 });
 
 test('NPC place gating - different place returns different tier', () => {

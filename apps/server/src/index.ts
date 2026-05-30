@@ -681,6 +681,10 @@ type Session = {
   attackFailures: number[]; // timestamps of failed attacks
   skillCooldowns: Map<string, number>;
   heraldMet: boolean;
+  // Dialogue Contract v1: per-utterance variation nonce, keyed by `${npc_id}:${tier}`.
+  // Deterministic and replayable within a session; dialogue is cosmetic and
+  // intentionally not part of the receipt chain (NPCs may not change the world).
+  npcTalkCounts: Map<string, number>;
 };
 
 const sessions = new Map<string, Session>();
@@ -2565,6 +2569,7 @@ wss.on('connection', (ws, req: IncomingMessage) => {
     attackFailures: [],
     skillCooldowns: new Map(),
     heraldMet: false,
+    npcTalkCounts: new Map(),
   };
 
   sessions.set(connId, s);
@@ -4850,7 +4855,14 @@ function processSessionQueue(s: Session, now: number) {
         }
 
         const tier = resolveDialogueTier(s.player!.id, npc.place_id);
-        const line = buildNpcDialogue(npc, tier);
+
+        // Dialogue Contract v1: seed varied-but-deterministic phrasing on a
+        // per-(npc,tier) talk counter so repeat visits say the same thing
+        // differently, while replaying identically within the session.
+        const talkKey = `${msg.npc_id}:${tier}`;
+        const nonce = s.npcTalkCounts.get(talkKey) ?? 0;
+        s.npcTalkCounts.set(talkKey, nonce + 1);
+        const line = buildNpcDialogue(npc, tier, { playerId: s.player!.id, nonce });
 
         send(s.ws, ServerMessages.npcDialogue(msg.npc_id, npc.place_id, tier, line));
 
