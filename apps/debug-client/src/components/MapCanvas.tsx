@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { MapData, PlayerPublic } from '@shared/types';
 import { TileCode } from '@shared/types';
 import type { FloatingText } from '../types';
+import { LANDMARK_LORE, TILE_LORE, type LoreEntry } from '../data/lore';
 
 interface GroundItem { item_id: string; item_type: string; x: number; y: number }
 
@@ -53,13 +54,55 @@ function landmarkBox(value: unknown): LandmarkBox | null {
   };
 }
 
+type LoreHitBox = LandmarkBox & { lore: LoreEntry };
+
+// Flatten map landmarks that have lore into hit-boxes. Handles direct boxes and
+// arrays of boxes (e.g. house_plots, which share the array-key lore entry).
+function loreHitBoxes(landmarks: MapData['landmarks']): LoreHitBox[] {
+  const boxes: LoreHitBox[] = [];
+  for (const [key, value] of Object.entries(landmarks as Record<string, unknown>)) {
+    const lore = LANDMARK_LORE[key];
+    if (!lore) continue;
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        const box = landmarkBox(item);
+        if (box) boxes.push({ ...box, lore });
+      }
+    } else {
+      const box = landmarkBox(value);
+      if (box) boxes.push({ ...box, lore });
+    }
+  }
+  return boxes;
+}
+
+function loreAt(map: MapData, hitBoxes: LoreHitBox[], tx: number, ty: number): LoreEntry | null {
+  if (tx < 0 || ty < 0 || tx >= map.width || ty >= map.height) return null;
+  // Landmarks are more specific than tiles, so they take priority.
+  for (const b of hitBoxes) {
+    if (tx >= b.x && tx < b.x + b.width && ty >= b.y && ty < b.y + b.height) return b.lore;
+  }
+  return TILE_LORE[map.tiles[ty * map.width + tx] as TileCode] ?? null;
+}
+
 export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget, groundItems }: MapCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [tooltip, setTooltip] = useState<{ lore: LoreEntry; x: number; y: number } | null>(null);
   const othersById = useMemo(() => {
     const m = new Map<string, PlayerPublic>();
     for (const p of others) m.set(p.id, p);
     return m;
   }, [others]);
+  const hitBoxes = useMemo(() => loreHitBoxes(map.landmarks), [map.landmarks]);
+
+  const tileAtEvent = (e: { clientX: number; clientY: number }) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const rect = canvas.getBoundingClientRect();
+    const px = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const py = (e.clientY - rect.top) * (canvas.height / rect.height);
+    return { tx: Math.floor(px / TILE_SIZE), ty: Math.floor(py / TILE_SIZE) };
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -161,25 +204,30 @@ export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget
   }, [map, me, others, nowMs, targetId, fx, othersById, groundItems]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="map-canvas"
-      aria-label="world-map"
-      onClick={(e) => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        const px = (e.clientX - rect.left) * scaleX;
-        const py = (e.clientY - rect.top) * scaleY;
-        const tx = Math.floor(px / TILE_SIZE);
-        const ty = Math.floor(py / TILE_SIZE);
-
-        const hit = others.find((p) => p.x === tx && p.y === ty) ?? null;
-        if (hit) onSelectTarget(hit.id);
-        else onSelectTarget(null);
-      }}
-    />
+    <>
+      <canvas
+        ref={canvasRef}
+        className="map-canvas"
+        aria-label="world-map"
+        onClick={(e) => {
+          const t = tileAtEvent(e);
+          if (!t) return;
+          const hit = others.find((p) => p.x === t.tx && p.y === t.ty) ?? null;
+          onSelectTarget(hit ? hit.id : null);
+        }}
+        onMouseMove={(e) => {
+          const t = tileAtEvent(e);
+          const lore = t ? loreAt(map, hitBoxes, t.tx, t.ty) : null;
+          setTooltip(lore ? { lore, x: e.clientX, y: e.clientY } : null);
+        }}
+        onMouseLeave={() => setTooltip(null)}
+      />
+      {tooltip && (
+        <div className="map-tooltip" role="tooltip" style={{ left: tooltip.x + 14, top: tooltip.y + 14 }}>
+          <div className="map-tooltip-title">{tooltip.lore.title}</div>
+          <div className="map-tooltip-body">{tooltip.lore.body}</div>
+        </div>
+      )}
+    </>
   );
 }
