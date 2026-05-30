@@ -73,6 +73,8 @@ function initialState(mapName: MapName): GameClientState {
     combat: { targetId: null, fx: [] },
     groundItems: new Map(),
     workContract: null,
+    inventory: [],
+    gold: 0,
   };
 }
 
@@ -318,6 +320,8 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
         combat: { targetId: null, fx: [] },
         groundItems: new Map(),
         workContract: null,
+        inventory: [],
+        gold: 0,
       };
     },
     [clearMoveTimer]
@@ -908,11 +912,29 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
 
             case 'work_contract_result': {
               const success = data.success === true;
-              const gold = typeof data.credited_gold === 'number' ? data.credited_gold : 0;
+              const goldEarned = typeof data.credited_gold === 'number' ? data.credited_gold : 0;
               const errMsg = typeof data.error === 'string' ? data.error.replace(/_/g, ' ') : null;
-              const line = success ? `Sweep done — ${gold} gold earned` : `Sweep failed: ${errMsg ?? 'unknown'}`;
-              const next = pushToast(s, 'npc', line, success ? 'SWEEP' : 'SWEEP');
+              const line = success ? `Sweep done — ${goldEarned} gold earned` : `Sweep failed: ${errMsg ?? 'unknown'}`;
+              const next = pushToast(s, 'npc', line, 'SWEEP');
               return { ...next, workContract: null };
+            }
+
+            case 'inventory_snapshot': {
+              const items = Array.isArray(data.items)
+                ? (data.items as { item_id: string; item_type: string; slot?: string | null }[])
+                    .filter(i => typeof i.item_id === 'string' && typeof i.item_type === 'string')
+                : [];
+              return { ...s, conn, inventory: items };
+            }
+
+            case 'wallet_snapshot': {
+              const gold = typeof data.gold === 'number' ? data.gold : s.gold;
+              return { ...s, conn, gold };
+            }
+
+            case 'pickup_item_result': {
+              if (data.ok !== true) return { ...s, conn };
+              return pushToast(s, 'npc', 'Item picked up', 'LOOT');
             }
 
             case 'chronicle_snapshot': {

@@ -1,6 +1,8 @@
 import type { PlayLoopProgress } from '@shared/types';
 
 interface NpcRef { npc_id: string; label: string }
+interface ItemRef { item_id: string; item_type: string; slot?: string | null }
+
 interface GroundItem { item_id: string; item_type: string; x: number; y: number }
 interface WorkContractRef {
   contract_id: string;
@@ -27,6 +29,14 @@ interface ActionsPanelProps {
   workContract: WorkContractRef | null;
   targetName: string | null;
   loop: PlayLoopProgress | null;
+  inventory: ItemRef[];
+  gold: number;
+}
+
+function itemLabel(item_type: string): string {
+  return item_type
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, c => c.toUpperCase());
 }
 
 export function ActionsPanel({
@@ -46,9 +56,12 @@ export function ActionsPanel({
   workContract,
   targetName,
   loop,
+  inventory,
+  gold,
 }: ActionsPanelProps) {
   const inGuildHall = nearbyNpc?.npc_id === 'azura_steward';
   const sweepRemainSec = workContract ? Math.ceil(workContract.remaining_ms / 1000) : 0;
+  const hotbarItems = inventory.slice(0, 3);
 
   return (
     <div className="actions-panel" aria-label="Actions">
@@ -62,6 +75,7 @@ export function ActionsPanel({
           <i className={loop?.gate ? 'done' : ''}>Gate</i>
         </div>
       </div>
+      {gold > 0 && <div className="gold-display">Gold: {gold}</div>}
       {nearLegendStone && (
         <div className="legend-stone-hint">A legend stone pulses nearby. It refuses approach.</div>
       )}
@@ -129,9 +143,20 @@ export function ActionsPanel({
       )}
       {stage >= 2 && (
         <div className="hotbar">
-          <div className="hotbar-slot active">Slot 1</div>
-          <div className="hotbar-slot disabled">Slot 2 (locked)</div>
-          <div className="hotbar-slot disabled">Slot 3 (locked)</div>
+          {hotbarItems.length > 0
+            ? hotbarItems.map(item => (
+                <div
+                  key={item.item_id}
+                  className={`hotbar-slot active${item.slot === 'protected' ? ' protected' : ''}`}
+                  title={itemLabel(item.item_type)}
+                >
+                  {itemLabel(item.item_type)}
+                </div>
+              ))
+            : null}
+          {Array.from({ length: Math.max(0, 3 - hotbarItems.length) }).map((_, i) => (
+            <div key={`empty-${i}`} className="hotbar-slot disabled">Empty</div>
+          ))}
         </div>
       )}
     </div>
