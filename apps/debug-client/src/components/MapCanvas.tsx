@@ -2,7 +2,14 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { MapData, PlayerPublic } from '@shared/types';
 import { TileCode } from '@shared/types';
 import type { FloatingText } from '../types';
-import { LANDMARK_LORE, LANDMARK_MARKERS, TILE_LORE, type LoreEntry } from '../data/lore';
+import {
+  LANDMARK_LORE,
+  LANDMARK_MARKERS,
+  SPAWN_MARKER,
+  TILE_LORE,
+  spawnLore,
+  type LoreEntry,
+} from '../data/lore';
 
 interface GroundItem { item_id: string; item_type: string; x: number; y: number }
 
@@ -82,6 +89,7 @@ function loreAt(map: MapData, hitBoxes: LoreHitBox[], tx: number, ty: number): L
   for (const b of hitBoxes) {
     if (tx >= b.x && tx < b.x + b.width && ty >= b.y && ty < b.y + b.height) return b.lore;
   }
+  if (tx === map.spawn.x && ty === map.spawn.y) return spawnLore(map.name);
   return TILE_LORE[map.tiles[ty * map.width + tx] as TileCode] ?? null;
 }
 
@@ -155,6 +163,12 @@ export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget
         if (box) drawMarker(box, marker.glyph, marker.color);
       }
     }
+
+    drawMarker(
+      { x: map.spawn.x, y: map.spawn.y, width: 1, height: 1 },
+      SPAWN_MARKER.glyph,
+      SPAWN_MARKER.color,
+    );
 
     if (groundItems) {
       for (const item of groundItems.values()) {

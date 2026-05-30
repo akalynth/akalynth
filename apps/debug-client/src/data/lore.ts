@@ -43,6 +43,31 @@ export const LANDMARK_LORE: Record<string, LoreEntry> = {
   },
 };
 
+// The spawn point (map.spawn) is not a landmark, so it carries its own lore,
+// keyed by map name with a generic fallback for any future map.
+export const SPAWN_LORE: Record<string, LoreEntry> = {
+  Rookguard: {
+    title: 'Spawn',
+    body: 'Where every guest first wakes in Rookguard, at the head of the tutorial corridor.',
+  },
+  Azura: {
+    title: 'Spawn',
+    body: 'The center of the city, where new arrivals appear after clearing Rookguard.',
+  },
+};
+
+export const DEFAULT_SPAWN_LORE: LoreEntry = {
+  title: 'Spawn',
+  body: 'Where players enter this map.',
+};
+
+export function spawnLore(mapName: string): LoreEntry {
+  return SPAWN_LORE[mapName] ?? DEFAULT_SPAWN_LORE;
+}
+
+// Marker glyph + color for the spawn point.
+export const SPAWN_MARKER = { glyph: '★', color: '#8ec6ff' };
+
 // Visible map markers for landmarks, keyed by landmark key. A marker makes the
 // landmark (and its tooltip) discoverable; multi-tile landmarks get one pin
 // centered on the box, arrays (house_plots) get one pin per entry.
