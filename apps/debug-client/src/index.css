@@ -344,6 +344,26 @@ body {
   color: var(--muted);
 }
 
+.hotbar-slot.active {
+  border-style: solid;
+  border-color: rgba(240, 200, 60, 0.35);
+  font-size: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hotbar-slot.active.protected {
+  border-color: rgba(167, 139, 250, 0.55);
+}
+
+.gold-display {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #f0c83c;
+  letter-spacing: 0.03em;
+}
+
 .stage-bottom {
   display: flex;
   align-items: center;

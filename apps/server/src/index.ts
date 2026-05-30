@@ -3936,6 +3936,14 @@ function processSessionQueue(s: Session, now: number) {
           // Broadcast to zone: item removed from world
           broadcastToMap(s.currentMap, ServerMessages.worldItemRemoved(msg.item_id));
 
+          // Sync inventory to client
+          const invIds = getPlayerInventoryIds(s.player!.id);
+          const invItems = invIds.map(id => {
+            const item = persist.getItem(id);
+            return { item_id: id, item_type: item?.item_type ?? 'unknown', slot: null };
+          });
+          send(s.ws, ServerMessages.inventorySnapshot(invItems));
+
           audit.write({
             player_id: s.player!.id,
             action: 'pickup_item',
@@ -4700,6 +4708,9 @@ function processSessionQueue(s: Session, now: number) {
               completeResult.ok ? completeResult.credited_gold : undefined,
               completeResult.ok ? undefined : completeResult.error
             ));
+            if (completeResult.ok) {
+              send(s.ws, ServerMessages.walletSnapshot(getGoldBalance(s.player.id)));
+            }
           }
         }
         // Silent drop for invalid ticks (anti-spam)

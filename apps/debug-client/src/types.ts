@@ -109,6 +109,8 @@ export interface GameClientState {
     ticks_required: number;
     remaining_ms: number;
   } | null;
+  inventory: { item_id: string; item_type: string; slot?: string | null }[];
+  gold: number;
 }
 
 export interface GameClientApi {

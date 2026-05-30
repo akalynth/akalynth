@@ -509,6 +509,8 @@ function DebugApp() {
               workContract={state.workContract}
               targetName={targetName}
               loop={state.loop}
+              inventory={state.inventory}
+              gold={state.gold}
             />
           </div>
         </section>
