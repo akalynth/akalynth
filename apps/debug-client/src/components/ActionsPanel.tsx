@@ -2,7 +2,6 @@ import type { PlayLoopProgress } from '@shared/types';
 
 interface NpcRef { npc_id: string; label: string }
 interface ItemRef { item_id: string; item_type: string; slot?: string | null }
-
 interface GroundItem { item_id: string; item_type: string; x: number; y: number }
 interface WorkContractRef {
   contract_id: string;
@@ -12,6 +11,11 @@ interface WorkContractRef {
   remaining_ms: number;
 }
 
+const SHOP_DEFS = [
+  { skill_id: 'shop:pilgrim_mark', label: 'Pilgrim Mark', price: 10 },
+  { skill_id: 'shop:healing_herb', label: 'Healing Herb', price: 5 },
+] as const;
+
 interface ActionsPanelProps {
   stage: 0 | 1 | 2 | 3;
   onAttack: () => void;
@@ -20,6 +24,7 @@ interface ActionsPanelProps {
   onPickup: (itemId: string) => void;
   onStartWork: () => void;
   onTickWork: () => void;
+  onBuy: (skillId: string) => void;
   attackReady: boolean;
   ritualReady: boolean;
   ritualHint: string;
@@ -47,6 +52,7 @@ export function ActionsPanel({
   onPickup,
   onStartWork,
   onTickWork,
+  onBuy,
   attackReady,
   ritualReady,
   ritualHint,
@@ -138,6 +144,21 @@ export function ActionsPanel({
                 Start Sweep
               </button>
             </>
+          )}
+          {inGuildHall && (
+            <div className="shop-section">
+              <div className="shop-header">Guild Store</div>
+              {SHOP_DEFS.map(item => (
+                <button
+                  key={item.skill_id}
+                  className="action-btn shop-btn"
+                  onClick={() => onBuy(item.skill_id)}
+                  disabled={gold < item.price}
+                >
+                  {item.label} ({item.price}g)
+                </button>
+              ))}
+            </div>
           )}
         </>
       )}

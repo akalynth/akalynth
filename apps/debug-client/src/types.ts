@@ -120,6 +120,7 @@ export interface GameClientApi {
   sendAttack: () => void;
   castRunestone: () => void;
   talkToNpc: (npcId: string) => void;
+  useSkill: (skillId: string) => void;
   pickupItem: (itemId: string) => void;
   startWork: () => void;
   tickWork: () => void;

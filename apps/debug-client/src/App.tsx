@@ -501,6 +501,7 @@ function DebugApp() {
               onPickup={api.pickupItem}
               onStartWork={api.startWork}
               onTickWork={api.tickWork}
+              onBuy={api.useSkill}
               attackReady={attackReady}
               ritualReady={ritualReady}
               ritualHint={ritualHint}
