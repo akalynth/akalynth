@@ -1,5 +1,9 @@
 # Witness-Ledger Architecture (WLA)
 
+> **Status:** Historical / archived doctrine.
+> **Current authority:** This document is not current Akalynth game-runtime authority and is not an active release or governance claim.
+> **Disposition:** The `FINAL` language below is preserved as historical context only. Current authority for Akalynth behavior comes from source code, source-bound docs, verification scripts, receipts, and explicitly opened proof lanes.
+
 ## Version 1.0 — FINAL
 
 **Status:** FINAL
