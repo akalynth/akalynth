@@ -13,6 +13,7 @@ import type {
   ChatMessage,
   GetChronicleMessage,
   ChronicleEvent,
+  PropertyPublic,
 } from '@shared/protocol';
 import type { MapName } from '@shared/http';
 import {
@@ -76,6 +77,7 @@ function initialState(mapName: MapName): GameClientState {
     workContract: null,
     inventory: [],
     gold: 0,
+    properties: new Map(),
   };
 }
 
@@ -323,6 +325,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
         workContract: null,
         inventory: [],
         gold: 0,
+        properties: new Map(),
       };
     },
     [clearMoveTimer]
@@ -565,6 +568,18 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
   const startWork = useCallback(() => {
     const payload: StartWorkContractMessage = { type: 'start_work_contract', contract_type: 'temple_sweep' };
     send(payload);
+  }, [send]);
+
+  const buyHouse = useCallback((propertyId: string) => {
+    send({ type: 'buy_house', property_id: propertyId });
+  }, [send]);
+
+  const listHouse = useCallback((propertyId: string, price: number) => {
+    send({ type: 'list_house', property_id: propertyId, price });
+  }, [send]);
+
+  const unlistHouse = useCallback((propertyId: string) => {
+    send({ type: 'unlist_house', property_id: propertyId });
   }, [send]);
 
   const tickWork = useCallback(() => {
@@ -988,6 +1003,35 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
               return { ...s, conn, gold };
             }
 
+            // Property Ownership v0
+            case 'property_snapshot': {
+              const list = Array.isArray(data.properties) ? (data.properties as PropertyPublic[]) : [];
+              const properties = new Map<string, PropertyPublic>();
+              for (const p of list) properties.set(p.property_id, p);
+              return { ...s, conn, properties };
+            }
+
+            case 'property_state': {
+              const p = data.property as PropertyPublic | undefined;
+              if (!p || typeof p.property_id !== 'string') return { ...s, conn };
+              const properties = new Map(s.properties);
+              properties.set(p.property_id, p);
+              return { ...s, conn, properties };
+            }
+
+            case 'house_sold': {
+              const buyer = typeof data.buyer_name === 'string' ? data.buyer_name : 'someone';
+              const plot = typeof data.plot_id === 'string' ? data.plot_id : '';
+              const price = typeof data.price === 'number' ? data.price : 0;
+              return pushToast({ ...s, conn }, 'system', `${plot} sold to ${buyer} for ${price}g`, 'SOLD');
+            }
+
+            case 'property_result': {
+              if (data.success === true) return { ...s, conn };
+              const reason = typeof data.reason === 'string' ? data.reason : 'denied';
+              return pushToast({ ...s, conn }, 'system', `House action failed: ${reason}`, 'DENIED');
+            }
+
             case 'pickup_item_result': {
               if (data.ok !== true) return { ...s, conn };
               return pushToast(s, 'npc', 'Item picked up', 'LOOT');
@@ -1191,6 +1235,9 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     relog,
     openChat,
     closeChat,
+    buyHouse,
+    listHouse,
+    unlistHouse,
   };
 
   return [state, api];

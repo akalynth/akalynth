@@ -22,6 +22,8 @@ interface MapCanvasProps {
   fx: FloatingText[];
   onSelectTarget: (playerId: string | null) => void;
   groundItems?: Map<string, GroundItem>;
+  // Property Ownership v0: keyed by plot_id (e.g. "H1") → ownership label info.
+  propertyByPlot?: Map<string, { status: string; owner_name: string | null; listed_price_gold: number | null }>;
 }
 
 const TILE_SIZE = 12;
@@ -93,7 +95,7 @@ function loreAt(map: MapData, hitBoxes: LoreHitBox[], tx: number, ty: number): L
   return TILE_LORE[map.tiles[ty * map.width + tx] as TileCode] ?? null;
 }
 
-export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget, groundItems }: MapCanvasProps) {
+export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget, groundItems, propertyByPlot }: MapCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [tooltip, setTooltip] = useState<{ lore: LoreEntry; x: number; y: number } | null>(null);
   const othersById = useMemo(() => {
@@ -170,6 +172,37 @@ export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget
       SPAWN_MARKER.color,
     );
 
+    // Property Ownership v0: neighborhood ownership labels above house plots.
+    // Drives screenshot 3 (Neighborhood view).
+    const housePlots = map.landmarks.house_plots;
+    if (propertyByPlot && Array.isArray(housePlots)) {
+      ctx.textAlign = 'center';
+      for (const plot of housePlots) {
+        const info = propertyByPlot.get(plot.id);
+        if (!info) continue;
+        const cx = (plot.x + plot.width / 2) * TILE_SIZE;
+        const topY = plot.y * TILE_SIZE - 3;
+        let label: string;
+        let color: string;
+        if (info.status === 'listed') {
+          label = info.listed_price_gold != null ? `For Sale ${info.listed_price_gold}g` : 'For Sale';
+          color = '#fbbf24';
+        } else if (info.status === 'owned') {
+          label = `Owned by ${info.owner_name ?? '???'}`;
+          color = '#7ee787';
+        } else {
+          label = 'Available';
+          color = '#8b949e';
+        }
+        ctx.font = 'bold 8px "Space Grotesk", sans-serif';
+        ctx.fillStyle = '#081018';
+        ctx.fillText(label, cx + 0.5, topY + 0.5);
+        ctx.fillStyle = color;
+        ctx.fillText(label, cx, topY);
+      }
+      ctx.textAlign = 'left';
+    }
+
     if (groundItems) {
       for (const item of groundItems.values()) {
         const cx = item.x * TILE_SIZE + TILE_SIZE / 2;
@@ -220,7 +253,7 @@ export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget
       ctx.fillText(f.text, f.x * TILE_SIZE + 2, f.y * TILE_SIZE - lift);
       ctx.restore();
     }
-  }, [map, me, others, nowMs, targetId, fx, othersById, groundItems]);
+  }, [map, me, others, nowMs, targetId, fx, othersById, groundItems, propertyByPlot]);
 
   return (
     <>
