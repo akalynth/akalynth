@@ -1,5 +1,5 @@
 /**
- * All Akalynth Verifiers (22 total + 3 prerequisites)
+ * All Akalynth Verifiers (23 total + 3 prerequisites)
  *
  * Dependency graph and registration for the verification spine.
  */
@@ -176,7 +176,7 @@ export function createDefaultRegistry(): VerifierRegistry {
   };
 
   // ============================================================================
-  // Phase 2: Domain Checks (12 verifiers)
+  // Phase 2: Domain Checks (13 verifiers)
   // ============================================================================
 
   const chronicleVerifier: VerifierSpec = {
@@ -287,6 +287,18 @@ export function createDefaultRegistry(): VerifierRegistry {
     },
   };
 
+  const npcDialogueCounterVerifier: VerifierSpec = {
+    id: 'npc-dialogue-counter',
+    title: 'NPC Dialogue Counter',
+    description: 'Verifies the durable, receipt-sourced NPC talk counter survives reconnect and replay (Dialogue Contract v1)',
+    phase: 2,
+    dependsOn: ['build'],
+    auditSafe: true,
+    async run(ctx) {
+      return runLegacyVerifier('apps/server/tools/verify-npc-dialogue-counter.ts', 'npc-dialogue-counter', ctx);
+    },
+  };
+
   const presenceVerifier: VerifierSpec = {
     id: 'presence',
     title: 'Presence System',
@@ -388,6 +400,7 @@ export function createDefaultRegistry(): VerifierRegistry {
   registry.register(metricsVerifier);
   registry.register(monetizationVerifier);
   registry.register(npcRecognitionVerifier);
+  registry.register(npcDialogueCounterVerifier);
   registry.register(presenceVerifier);
   registry.register(protectedVerifier);
   registry.register(rateLimitsVerifier);

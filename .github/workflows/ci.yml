@@ -251,6 +251,18 @@ jobs:
           npm run verify:work-contracts
           npm run verify:treasury
 
+      - name: Self-contained unit verifiers (Phase 2)
+        # These verifiers build their own mock/temp state (no live DB or running
+        # server required), so they gate on every full CI run. DB-dependent
+        # verifiers (heat/protected/chronicle/evidence) and the server-dependent
+        # rate-limits verifier are intentionally excluded here.
+        run: |
+          cd apps/server
+          npm run verify:npc-recognition
+          npm run verify:npc-dialogue
+          npm run verify:presence
+          npm run verify:costed-actions
+
       - name: Write showcase summary
         if: always()
         run: |
