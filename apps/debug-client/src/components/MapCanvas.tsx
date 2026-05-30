@@ -122,14 +122,18 @@ export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget
     }
 
     const drawPlayer = (p: PlayerPublic, color: string) => {
+      const dead = p.status === 'dead';
+      ctx.save();
+      if (dead) ctx.globalAlpha = 0.4;
       ctx.fillStyle = color;
       ctx.fillRect(p.x * TILE_SIZE, p.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-      ctx.fillStyle = '#0b0c10';
+      ctx.fillStyle = dead ? '#8a93a5' : '#0b0c10';
       ctx.font = '10px "DM Sans", sans-serif';
       ctx.fillText(p.name, p.x * TILE_SIZE + 2, p.y * TILE_SIZE - 2);
+      ctx.restore();
     };
 
-    others.forEach((p) => drawPlayer(p, '#d2d7ff'));
+    others.forEach((p) => drawPlayer(p, p.status === 'dead' ? '#4b5563' : '#d2d7ff'));
     if (me) drawPlayer(me, '#ffe08a');
 
     const target = targetId ? othersById.get(targetId) ?? null : null;

@@ -145,7 +145,7 @@ import {
 } from './world/echo.js';
 import {
   initMobs,
-  getAliveMobsForMap,
+  getMobsForMap,
   getMobById,
   hitMob,
   mobToPublicPlayer,
@@ -2388,7 +2388,7 @@ function applyRespawnNow(s: Session, now: number) {
   }
 
   // Include alive mobs
-  for (const mob of getAliveMobsForMap(s.currentMap)) {
+  for (const mob of getMobsForMap(s.currentMap)) {
     nearby.push(mobToPublicPlayer(mob));
   }
 
@@ -2911,7 +2911,7 @@ function processSessionQueue(s: Session, now: number) {
         }
 
         // Include alive mobs
-        for (const mob of getAliveMobsForMap(s.currentMap)) {
+        for (const mob of getMobsForMap(s.currentMap)) {
           nearby.push(mobToPublicPlayer(mob));
         }
 
@@ -3575,7 +3575,7 @@ function processSessionQueue(s: Session, now: number) {
                 }
 
                 // Include alive mobs
-                for (const mob of getAliveMobsForMap('Azura')) {
+                for (const mob of getMobsForMap('Azura')) {
                   nearbyAzura.push(mobToPublicPlayer(mob));
                 }
 
@@ -4026,7 +4026,8 @@ function processSessionQueue(s: Session, now: number) {
               s.currentMap,
               ServerMessages.combatResolved(attackerId, targetId, 'kill', s.currentMap, mob.def.x, mob.def.y)
             );
-            broadcastToMap(s.currentMap, ServerMessages.playerLeft(targetId));
+            // Leave a corpse with a respawn countdown (status 'dead', not attackable)
+            broadcastToMap(s.currentMap, ServerMessages.playerJoined(mobToPublicPlayer(hit.mob)));
 
             // Spawn loot at mob position
             const lootItemId = `loot:${mob.def.mob_type}:${Date.now()}`;
@@ -5012,13 +5013,16 @@ setInterval(() => {
 // Mob system init
 initMobs();
 
-// Mob respawn tick — revive dead mobs and broadcast player_joined
+// Mob respawn tick — revive due mobs, refresh corpse countdowns
 setInterval(() => {
-  const revived = tickMobRespawns();
-  for (const mob of revived) {
-    broadcastToMap(mob.def.map, ServerMessages.playerJoined(mobToPublicPlayer(mob)));
+  tickMobRespawns();
+  // Re-broadcast every mob (alive HP / dead countdown) so clients update
+  for (const map of ['Rookguard', 'Azura'] as const) {
+    for (const mob of getMobsForMap(map)) {
+      broadcastToMap(map, ServerMessages.playerJoined(mobToPublicPlayer(mob)));
+    }
   }
-}, 5_000);
+}, 1_000);
 
 httpServer.listen(PORT, HOST, () => {
   console.log(`HTTP+WS listening on ${HOST}:${PORT}`);
