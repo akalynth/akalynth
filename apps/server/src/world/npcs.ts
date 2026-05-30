@@ -65,9 +65,9 @@ const NPC_REGISTRY: NpcDef[] = [
     npc_id: 'azura_steward',
     place_id: 'azura:guild_hall',
     lines: {
-      stranger: "The guild offers one standing duty: the temple sweep. It is quiet work. Receipted. You will not grow rich, but the ledger will remember you showed up.",
-      seen: "You have visited before. If you are ready to work, say so and the sweep contract opens.",
-      recognized: "The guild knows your name now. The sweep is always open. So is the ledger — every tick you give is written.",
+      stranger: "The guild offers work and trade. The temple sweep pays in gold. With gold, you may purchase a Pilgrim Mark (10g) or a Healing Herb (5g) from the guild stores.",
+      seen: "Back again. The sweep is always open. The guild stores remain: Pilgrim Mark (10g), Healing Herb (5g).",
+      recognized: "The guild knows your name. Your receipts are in the ledger. The stores are open — buy what you need.",
     },
   },
 ];

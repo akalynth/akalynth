@@ -325,6 +325,35 @@ body {
   color: #a78bfa;
 }
 
+.shop-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #1f2937;
+}
+
+.shop-header {
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-align: center;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.shop-btn {
+  border-color: rgba(52, 211, 153, 0.4);
+  color: #34d399;
+  font-size: 0.85rem;
+}
+
+.shop-btn:disabled {
+  border-color: #1f2937;
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
 .hotbar {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

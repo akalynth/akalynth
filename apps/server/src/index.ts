@@ -188,6 +188,11 @@ const DEFAULT_GUEST_SESSION_TTL_MS = 10 * 60 * 1000;
 const DEFAULT_GUEST_SESSION_CLEANUP_MS = 60 * 1000;
 const MAX_GUEST_SESSIONS = 10_000;
 const DEBUG_MODE = process.env.DEBUG === '1';
+
+const SHOP_ITEMS: Record<string, { item_type: string; price: number }> = {
+  'pilgrim_mark': { item_type: 'pilgrim_mark', price: 10 },
+  'healing_herb': { item_type: 'healing_herb', price: 5 },
+};
 const ANTICHEAT_PRIORS_PATH = process.env.AKALYNTH_ANTICHEAT_PRIORS_PATH;
 const DEV_MINT_ENABLED = parseBoolEnv(process.env.AKALYNTH_DEV_MINT, false);
 const REQUIRE_TLS = parseBoolEnv(process.env.REQUIRE_TLS, true);
@@ -4755,6 +4760,68 @@ function processSessionQueue(s: Session, now: number) {
       case 'use_skill': {
         if (!requireAuth(s)) break;
         if (!s.player) break;
+
+        // Shop purchase intercept
+        if (msg.skill_id.startsWith('shop:')) {
+          const shopKey = msg.skill_id.slice(5);
+          const shopItem = SHOP_ITEMS[shopKey];
+
+          if (!shopItem) {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_skill' }));
+            break;
+          }
+
+          const playerPlace = getCurrentPlace(s.player.id);
+          if (playerPlace !== 'azura:guild_hall') {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_target' }));
+            break;
+          }
+
+          if (!canAfford(s.player.id, shopItem.price)) {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_skill', payload: { error: 'insufficient_gold' } }));
+            break;
+          }
+
+          // Debit gold
+          audit.write({
+            player_id: s.player.id,
+            action: WALLET_DEBIT_ACTION,
+            inputs: { amount: shopItem.price, reason: 'action_cost:shop_purchase' as WalletDebitReason },
+            result: 'ok',
+          });
+
+          // Mint item using receipt chain
+          const mintReceipt = audit.write({
+            action: 'item_minted',
+            player_id: s.player.id,
+            inputs: { item_type: shopItem.item_type, meta: { source: 'shop', shop_key: shopKey }, reason: 'shop_purchase' },
+            result: 'ok',
+          });
+          const mintHash = computeReceiptHash(mintReceipt);
+          const itemId = generateItemId(mintHash);
+
+          audit.write({
+            action: 'item_added_to_inventory',
+            player_id: s.player.id,
+            inputs: { item_id: itemId, slot: null, source: 'shop' },
+            result: 'ok',
+          });
+
+          if (!inventory.has(s.player.id)) inventory.set(s.player.id, new Set());
+          inventory.get(s.player.id)!.add(itemId);
+
+          // Sync inventory (use known type for newly minted item)
+          const invIds = getPlayerInventoryIds(s.player.id);
+          const invItems = invIds.map(id => ({
+            item_id: id,
+            item_type: persist.getItem(id)?.item_type ?? (id === itemId ? shopItem.item_type : 'unknown'),
+            slot: null,
+          }));
+          send(s.ws, ServerMessages.inventorySnapshot(invItems));
+          send(s.ws, ServerMessages.walletSnapshot(getGoldBalance(s.player.id)));
+          send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { item_id: itemId, item_type: shopItem.item_type } }));
+          break;
+        }
 
         const skillCtx: SkillContext = {
           playerId: s.player.id,

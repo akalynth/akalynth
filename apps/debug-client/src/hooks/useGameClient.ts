@@ -6,6 +6,7 @@ import type {
   AttackIntentMessage,
   RunestoneCastMessage,
   TalkToNpcMessage,
+  UseSkillMessage,
   PickupItemMessage,
   StartWorkContractMessage,
   WorkTickMessage,
@@ -551,6 +552,11 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     send(payload);
   }, [send]);
 
+  const useSkill = useCallback((skillId: string) => {
+    const payload: UseSkillMessage = { type: 'use_skill', skill_id: skillId };
+    send(payload);
+  }, [send]);
+
   const pickupItem = useCallback((itemId: string) => {
     const payload: PickupItemMessage = { type: 'pickup_item', item_id: itemId };
     send(payload);
@@ -872,6 +878,25 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
               return pushToast(s, 'npc', msg, 'NPC');
             }
 
+            case 'skill_result': {
+              const skillId = typeof data.skill_id === 'string' ? data.skill_id : '';
+              if (!skillId.startsWith('shop:')) return { ...s, conn };
+              const success = data.success === true;
+              const itemType = (data.payload as Record<string, unknown> | undefined)?.item_type;
+              const label = typeof itemType === 'string'
+                ? itemType.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+                : skillId.slice(5).replace(/_/g, ' ');
+              const errorHint = (data.payload as Record<string, unknown> | undefined)?.error;
+              const line = success
+                ? `Purchased: ${label}`
+                : errorHint === 'insufficient_gold'
+                  ? 'Not enough gold'
+                  : data.reason === 'invalid_target'
+                    ? 'Must be in the guild hall'
+                    : 'Purchase failed';
+              return pushToast(s, 'npc', line, 'SHOP');
+            }
+
             case 'world_item_added': {
               if (typeof data.item_id !== 'string') return { ...s, conn };
               const nextItems = new Map(s.groundItems);
@@ -1108,6 +1133,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     sendAttack,
     castRunestone,
     talkToNpc,
+    useSkill,
     pickupItem,
     startWork,
     tickWork,
