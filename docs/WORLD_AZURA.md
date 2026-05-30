@@ -83,7 +83,7 @@ A hall raised before there were guilds to fill it. The doors do not open yet.
 
 ### The House Plots — `H1`–`H3`
 
-Three marked plots along the northern residential row, waiting for owners.
+Three marked plots along the central residential row, just below the Guild Hall, waiting for owners.
 
 - **Status:** placeholders. No buy, enter, or ownership mechanic exists yet. Reserved coordinates only.
 
