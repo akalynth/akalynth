@@ -1,0 +1,24 @@
+#!/bin/sh
+set -eu
+
+AKALYNTH_UID="${AKALYNTH_UID:-10001}"
+AKALYNTH_GID="${AKALYNTH_GID:-10001}"
+
+if [ "$(id -u)" = "0" ]; then
+  mkdir -p /var/lib/akalynth/data /var/lib/akalynth/audit
+  chown -R "$AKALYNTH_UID:$AKALYNTH_GID" /var/lib/akalynth
+
+  if [ -n "${CHRONICLE_KEY_PATH:-}" ] && [ -f "$CHRONICLE_KEY_PATH" ]; then
+    mkdir -p /tmp/akalynth-secrets
+    chmod 0700 /tmp/akalynth-secrets
+    cp "$CHRONICLE_KEY_PATH" /tmp/akalynth-secrets/chronicle.key
+    chmod 0400 /tmp/akalynth-secrets/chronicle.key
+    chown -R "$AKALYNTH_UID:$AKALYNTH_GID" /tmp/akalynth-secrets
+    export CHRONICLE_KEY_PATH=/tmp/akalynth-secrets/chronicle.key
+  fi
+
+  export HOME=/var/lib/akalynth
+  exec setpriv --reuid="$AKALYNTH_UID" --regid="$AKALYNTH_GID" --clear-groups "$@"
+fi
+
+exec "$@"

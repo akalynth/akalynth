@@ -35,6 +35,22 @@ Test with:
 wscat -c ws://localhost:3000
 ```
 
+## Docker Runtime
+
+The production-shaped server container lives under `infra/docker/`.
+
+```bash
+npm run verify:docker-runtime
+npm run render:docker-runtime
+npm run smoke:docker-runtime
+```
+
+The smoke command builds `akalynth/server:local`, boots a disposable container
+with a temporary chronicle key and runtime volume, checks internal health, and
+cleans up after itself. The render command writes reviewable host runtime files
+to `.tmp/akalynth-docker-runtime` by default. For host-managed Docker Compose
+and systemd notes, see `infra/README.md`.
+
 ## Typical Dev Flow (Linux + Android)
 
 1) Fresh setup

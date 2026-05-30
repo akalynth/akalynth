@@ -1,0 +1,60 @@
+name: akalynth-game
+
+services:
+  akalynth-server:
+    image: ${AKALYNTH_IMAGE:-akalynth/server:local}
+    restart: unless-stopped
+    env_file:
+      - ${AKALYNTH_ENV_FILE:-./server.env}
+    environment:
+      - NODE_ENV=production
+      - AKALYNTH_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+      - REQUIRE_TLS=1
+      - TRUST_PROXY=1
+      - TRUST_PROXY_LOOPBACK_ONLY=1
+      - ALLOW_INSECURE_LOCAL=0
+      - AKALYNTH_RECEIPT_CHAIN_PATH=/var/lib/akalynth/audit/receipts.jsonl
+      - AKALYNTH_DB_PATH=/var/lib/akalynth/data/akalynth.db
+      - AKALYNTH_REPLAY_MARKER_PATH=/var/lib/akalynth/data/replay_marker.json
+      - CHRONICLE_KEY_PATH=/run/secrets/chronicle.key
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - akalynth_runtime:/var/lib/akalynth
+    secrets:
+      - source: chronicle_key
+        target: chronicle.key
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - SETGID
+      - SETUID
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "const http=require('node:http');const req=http.get({host:'127.0.0.1',port:Number(process.env.PORT||3000),path:'/v1/health',headers:{'x-forwarded-proto':'https'}},res=>{res.resume();process.exit(res.statusCode===200?0:1);});req.on('error',()=>process.exit(1));req.setTimeout(4000,()=>{req.destroy();process.exit(1);});"
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+secrets:
+  chronicle_key:
+    file: ${AKALYNTH_CHRONICLE_KEY_FILE:-/etc/akalynth/chronicle.key}
+
+volumes:
+  akalynth_runtime:
+    name: akalynth_game_runtime

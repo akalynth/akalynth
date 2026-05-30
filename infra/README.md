@@ -1,3 +1,53 @@
 # Infra
+
 Infrastructure config and runbooks for CI, Docker, deploy, and observability.
 Used by automation and operations only.
+
+## Docker Server Runtime
+
+The server runtime image is defined in `infra/docker/server.Dockerfile`.
+It builds the workspace packages, builds `apps/server`, keeps the runtime
+paths under `/var/lib/akalynth`, and runs as the non-root `akalynth` user.
+The container entrypoint starts as root only long enough to normalize mounted
+runtime paths and copy the mounted chronicle key into tmpfs with `0400`
+permissions before dropping to UID/GID `10001`. The Compose template drops all
+capabilities and adds back only `CHOWN`, `DAC_OVERRIDE`, `SETGID`, and `SETUID`
+for that entrypoint handoff.
+
+The Compose example in `infra/docker/compose.server.example.yml` keeps the
+container port bound to `127.0.0.1:3000` for a host-local reverse proxy. It
+does not publish the game server directly to the public network.
+
+Useful checks:
+
+```bash
+npm run verify:docker-runtime
+docker compose -f infra/docker/compose.server.example.yml config
+docker build -f infra/docker/server.Dockerfile -t akalynth/server:local .
+npm run render:docker-runtime
+npm run smoke:docker-runtime
+```
+
+Host-managed Docker runtime:
+
+- Render host files with `npm run render:docker-runtime`. By default this writes
+  to `.tmp/akalynth-docker-runtime` for review.
+- Existing rendered files are not overwritten unless
+  `AKALYNTH_RENDER_OVERWRITE=1` is set.
+- Install the rendered `compose.yml` to `/etc/akalynth/compose.yml` for the live
+  host after setting an immutable image tag or digest.
+- Keep live non-secret environment values in `/etc/akalynth/server.env`.
+- Keep operator overrides such as `AKALYNTH_COMPOSE_FILE`,
+  `AKALYNTH_ENV_FILE`, and `AKALYNTH_CHRONICLE_KEY_FILE` in
+  `/etc/akalynth/docker.env` if the defaults need to change.
+- Use `infra/systemd/akalynth-docker.service` as the systemd template for a
+  host-local Docker Compose runtime.
+- Disable the direct Node `akalynth.service` before enabling the Docker unit
+  in a live migration window, so only one process owns `127.0.0.1:3000`.
+
+Production notes:
+
+- Keep the chronicle key file host-local or under approved encrypted custody.
+- Keep `/var/lib/akalynth` backed by the owning host's runtime backup process.
+- Use `AKALYNTH_BOOTSTRAP=1` only for an explicitly approved fresh genesis.
+- Keep Caddy or another approved reverse proxy in front of the loopback bind.

@@ -1,0 +1,37 @@
+# Git and local agent state
+.git
+.github
+.codex
+.continue
+
+# Dependency and build outputs
+node_modules
+**/node_modules
+dist
+**/dist
+build
+**/build
+**/.vite
+**/*.tsbuildinfo
+
+# Runtime data and local secrets
+apps/server/audit
+apps/server/data
+chronicle.log
+chronicle.key
+.secrets
+*.env
+*.local
+
+# Logs, temp files, and reports
+*.log
+tmp
+.tmp
+**/.tmp
+artifacts
+verify-out
+coverage
+**/coverage
+
+# OS/editor noise
+.DS_Store

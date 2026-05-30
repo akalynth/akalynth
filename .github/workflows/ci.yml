@@ -187,6 +187,9 @@ jobs:
           cache: "npm"
           cache-dependency-path: apps/server/package-lock.json
 
+      - name: Verify Docker runtime artifacts
+        run: npm run verify:docker-runtime
+
       - name: Docs audit (deterministic)
         run: node tools/doc_audit.js --ci --out artifacts/akalynth-doc-audit.json --summary artifacts/akalynth-doc-audit-summary.md
 
