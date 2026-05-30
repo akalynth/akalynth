@@ -5,6 +5,7 @@ import type {
   MoveIntentMessage,
   AttackIntentMessage,
   RunestoneCastMessage,
+  TalkToNpcMessage,
   ChatMessage,
   GetChronicleMessage,
   ChronicleEvent,
@@ -534,6 +535,11 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     send(payload);
   }, [send]);
 
+  const talkToNpc = useCallback((npcId: string) => {
+    const payload: TalkToNpcMessage = { type: 'talk_to_npc', npc_id: npcId };
+    send(payload);
+  }, [send]);
+
   const sendChat = useCallback(
     (message: string) => {
       if (!message.trim()) return;
@@ -821,6 +827,21 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
               return pushToast(s, 'runestone', line, 'RITUAL');
             }
 
+            case 'npc_dialogue': {
+              const npcLabel = typeof data.npc_id === 'string'
+                ? data.npc_id.replace(/_/g, ' ')
+                : 'NPC';
+              const line = typeof data.line === 'string' ? data.line : '...';
+              return pushToast(s, 'npc', line, npcLabel.toUpperCase());
+            }
+
+            case 'npc_dialogue_error': {
+              const msg = data.error === 'not_in_place'
+                ? 'Not close enough to speak'
+                : 'Unknown NPC';
+              return pushToast(s, 'npc', msg, 'NPC');
+            }
+
             case 'chronicle_snapshot': {
               const events = Array.isArray(data.events) ? data.events as ChronicleEvent[] : [];
               const hasMore = typeof data.has_more === 'boolean' ? data.has_more : false;
@@ -991,6 +1012,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     stopMoves,
     sendAttack,
     castRunestone,
+    talkToNpc,
     sendChat,
     requestChronicle,
     openChronicle,

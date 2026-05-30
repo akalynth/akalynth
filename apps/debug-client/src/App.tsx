@@ -82,6 +82,26 @@ function isNearLandmark(player: PlayerPublic | null, map: MapData, key: string, 
   return player.x >= minX && player.x <= maxX && player.y >= minY && player.y <= maxY;
 }
 
+const NPC_DEFS = [
+  { npc_id: 'rookguard_guide', place_id: 'rookguard', label: 'Guide' },
+  { npc_id: 'azura_herald',   place_id: 'azura:plaza',      label: 'Herald' },
+  { npc_id: 'azura_steward',  place_id: 'azura:guild_hall', label: 'Steward' },
+] as const;
+
+function isInPlace(player: PlayerPublic | null, map: MapData, mapName: string, placeId: string): boolean {
+  if (!player) return false;
+  const colonIdx = placeId.indexOf(':');
+  const mapPart = colonIdx === -1 ? placeId : placeId.slice(0, colonIdx);
+  const subPlace = colonIdx === -1 ? null : placeId.slice(colonIdx + 1);
+  if (mapName.toLowerCase() !== mapPart) return false;
+  if (!subPlace) return true;
+  const lm = (map.landmarks as Record<string, unknown>)[subPlace];
+  const box = landmarkBox(lm);
+  if (!box) return false;
+  return player.x >= box.x && player.x < box.x + box.width &&
+         player.y >= box.y && player.y < box.y + box.height;
+}
+
 function renderChronicleEvent(ev: ChronicleEvent): ChronicleRender {
   const details = (ev.details ?? {}) as Record<string, unknown>;
   switch (ev.kind) {
@@ -166,6 +186,10 @@ function DebugApp() {
     (state.combat.targetId ? true : hasAutoTarget);
   const ritualReady = isNearLandmark(state.world.me, state.world.map, 'runestone_table');
   const ritualHint = ritualReady ? 'Runestone nearby' : 'No runestone nearby';
+  const currentMapName = state.world.map.name;
+  const nearbyNpc = NPC_DEFS.find(n =>
+    isInPlace(state.world.me, state.world.map, currentMapName, n.place_id)
+  ) ?? null;
   const others = useMemo(() => Array.from(state.world.others.values()), [state.world.others]);
   const roster = useMemo(() => others.slice().sort((a, b) => a.name.localeCompare(b.name)), [others]);
   const targetName = useMemo(() => {
@@ -463,9 +487,11 @@ function DebugApp() {
               stage={state.ui.stage}
               onAttack={api.sendAttack}
               onRitual={api.castRunestone}
+              onTalk={api.talkToNpc}
               attackReady={attackReady}
               ritualReady={ritualReady}
               ritualHint={ritualHint}
+              nearbyNpc={nearbyNpc}
               targetName={targetName}
               loop={state.loop}
             />

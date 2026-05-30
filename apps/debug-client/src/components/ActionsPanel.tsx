@@ -1,12 +1,16 @@
 import type { PlayLoopProgress } from '@shared/types';
 
+interface NpcRef { npc_id: string; label: string }
+
 interface ActionsPanelProps {
   stage: 0 | 1 | 2 | 3;
   onAttack: () => void;
   onRitual: () => void;
+  onTalk: (npcId: string) => void;
   attackReady: boolean;
   ritualReady: boolean;
   ritualHint: string;
+  nearbyNpc: NpcRef | null;
   targetName: string | null;
   loop: PlayLoopProgress | null;
 }
@@ -15,9 +19,11 @@ export function ActionsPanel({
   stage,
   onAttack,
   onRitual,
+  onTalk,
   attackReady,
   ritualReady,
   ritualHint,
+  nearbyNpc,
   targetName,
   loop,
 }: ActionsPanelProps) {
@@ -53,6 +59,17 @@ export function ActionsPanel({
           >
             Ritual
           </button>
+          {nearbyNpc && (
+            <>
+              <div className="npc-line">{nearbyNpc.label} is nearby</div>
+              <button
+                className="action-btn talk-btn"
+                onClick={() => onTalk(nearbyNpc.npc_id)}
+              >
+                Talk
+              </button>
+            </>
+          )}
         </>
       )}
       {stage >= 2 && (

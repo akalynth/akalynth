@@ -2308,7 +2308,7 @@ function playLoopFor(s: Session) {
   else if (!s.tutorial.chat) objective = 'Send a signal in chat';
   else if (!s.tutorial.tem) objective = 'Answer Tem: AZURA';
   else if (!s.tutorial.gate) objective = 'Enter the Azura gate';
-  else objective = 'Explore Azura';
+  else objective = 'Seek the Azura herald in the southern plaza';
 
   return {
     ...s.tutorial,

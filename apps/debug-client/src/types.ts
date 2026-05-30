@@ -109,6 +109,7 @@ export interface GameClientApi {
   stopMoves: () => void;
   sendAttack: () => void;
   castRunestone: () => void;
+  talkToNpc: (npcId: string) => void;
   sendChat: (message: string) => void;
   requestChronicle: (limit?: number, openRecap?: boolean) => void;
   openChronicle: () => void;
