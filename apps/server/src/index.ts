@@ -150,6 +150,7 @@ import {
   hitMob,
   mobToPublicPlayer,
   tickMobRespawns,
+  spawnMobLoot,
 } from './world/mobs.js';
 import { CAP_ECHO_SPAWN } from '../../../packages/shared/types.js';
 import { getEvidence, type EvidenceContext, type EvidenceRequest } from './evidence/handler.js';
@@ -4114,24 +4115,42 @@ function processSessionQueue(s: Session, now: number) {
             // Leave a corpse with a respawn countdown (status 'dead', not attackable)
             broadcastToMap(s.currentMap, ServerMessages.playerJoined(mobToPublicPlayer(hit.mob)));
 
-            // Spawn loot at mob position
-            const lootItemId = `loot:${mob.def.mob_type}:${Date.now()}`;
+            // Spawn loot at mob position. spawnMobLoot derives the item_id from the
+            // mob_loot_spawned receipt hash (same convention as item_minted) — deterministic,
+            // replay-safe, and unique per spawn; the receipt body carries no item_id.
             const lootType = `${mob.def.mob_type}_goo`;
             const decayAt = new Date(Date.now() + 3 * 60_000).toISOString(); // 3 min decay
+            const goo = spawnMobLoot(attackerId, lootType, s.currentMap, mob.def.x, mob.def.y, {
+              writeReceipt: (r) => audit.write(r),
+              computeReceiptHash,
+              generateItemId,
+            });
             if (!worldItems.has(s.currentMap)) worldItems.set(s.currentMap, new Map());
-            worldItems.get(s.currentMap)!.set(lootItemId, {
-              x: mob.def.x,
-              y: mob.def.y,
+            worldItems.get(s.currentMap)!.set(goo.itemId, {
+              x: goo.x,
+              y: goo.y,
               decayAt,
-              itemType: lootType,
+              itemType: goo.itemType,
             });
-            audit.write({
-              player_id: attackerId,
-              action: 'mob_loot_spawned',
-              inputs: { item_id: lootItemId, item_type: lootType, map: s.currentMap, x: mob.def.x, y: mob.def.y },
-              result: 'ok',
-            });
-            broadcastToMap(s.currentMap, ServerMessages.worldItemAdded(lootItemId, lootType, mob.def.x, mob.def.y));
+            broadcastToMap(s.currentMap, ServerMessages.worldItemAdded(goo.itemId, goo.itemType, mob.def.x, mob.def.y));
+
+            // Training Slime additionally drops a 'slime' trophy (guaranteed, plain item).
+            // Mirrors the goo loot path: in-memory world item, mob_loot_spawned receipt,
+            // 3-min decay. The receipt-derived id is unique per spawn (no tile/ms collision).
+            if (mob.def.mob_type === 'training_slime') {
+              const slime = spawnMobLoot(attackerId, 'slime', s.currentMap, mob.def.x, mob.def.y, {
+                writeReceipt: (r) => audit.write(r),
+                computeReceiptHash,
+                generateItemId,
+              });
+              worldItems.get(s.currentMap)!.set(slime.itemId, {
+                x: slime.x,
+                y: slime.y,
+                decayAt,
+                itemType: slime.itemType,
+              });
+              broadcastToMap(s.currentMap, ServerMessages.worldItemAdded(slime.itemId, slime.itemType, mob.def.x, mob.def.y));
+            }
           }
           break;
         }

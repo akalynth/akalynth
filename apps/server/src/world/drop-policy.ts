@@ -61,6 +61,7 @@ const ITEM_BASE_WEIGHT: Record<string, number> = {
   torch: 1.0,
   ration: 1.0,
   mark_token: 0.5, // slightly safer
+  slime: 1.0, // Training Slime trophy drop
   unknown: 1.0,
 };
 
