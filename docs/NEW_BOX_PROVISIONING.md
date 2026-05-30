@@ -82,38 +82,52 @@ npm -w apps/server run build
 test -f /opt/akalynth/dist/server/apps/server/src/index.js && echo "build OK"
 ```
 
-### A5. Genesis (one-time) — creates the auth keypair + chronicle key
+### A5. Genesis (one-time)
 
-Run **once**, as the `akalynth` user, with the systemd env so paths match the
-unit. This writes `/etc/akalynth/chronicle.key` and seeds the empty chain.
+Two distinct steps. The server does **not** mint the chronicle key, and there
+is **no `--bootstrap-only` flag** — `AKALYNTH_BOOTSTRAP=1` creates the empty
+receipts file and then runs normally. The auth/transparency public key is
+*derived from* the chronicle key seed (`loadAuthKeyPair`), so creating the key
+is what makes `/v1/transparency.auth_public_key_hex` non-empty.
+
+**A5.1 — create the chronicle key** (random 32-byte seed, mode ≤ 0600, owned by
+`akalynth`; `validateKeyFile` rejects any group/other bits):
 
 ```bash
-sudo -u akalynth env \
-  HOME=/var/lib/akalynth \
-  AKALYNTH_BOOTSTRAP=1 \
-  AKALYNTH_RECEIPT_CHAIN_PATH=/var/lib/akalynth/audit/receipts.jsonl \
-  AKALYNTH_DB_PATH=/var/lib/akalynth/data/akalynth.db \
-  CHRONICLE_KEY_PATH=/etc/akalynth/chronicle.key \
-  node /opt/akalynth/dist/server/apps/server/src/index.js --bootstrap-only 2>&1 | tail -20
-# Confirm the key now exists, locked down:
-chmod 0400 /etc/akalynth/chronicle.key && chown akalynth:akalynth /etc/akalynth/chronicle.key
-ls -l /etc/akalynth/chronicle.key
+install -d -o akalynth -g akalynth -m 0750 /etc/akalynth
+head -c 32 /dev/urandom > /etc/akalynth/chronicle.key
+chmod 0400 /etc/akalynth/chronicle.key
+chown akalynth:akalynth /etc/akalynth/chronicle.key
+ls -l /etc/akalynth/chronicle.key   # expect -r-------- akalynth akalynth
 ```
 
-> If the server has no `--bootstrap-only` flag, start the service once with
-> `AKALYNTH_BOOTSTRAP=1` set in a drop-in, confirm the key is written, then
-> remove the bootstrap env and restart. **Never** re-bootstrap after genesis —
-> it mints a new identity and breaks the receipt chain.
+**A5.2 — stage the one-shot bootstrap drop-in** (the unit is installed and
+started in A6, which also removes this drop-in after the first healthy start):
+
+```bash
+mkdir -p /etc/systemd/system/akalynth.service.d
+printf '[Service]\nEnvironment=AKALYNTH_BOOTSTRAP=1\n' > /etc/systemd/system/akalynth.service.d/bootstrap.conf
+```
+
+> **Never** keep `AKALYNTH_BOOTSTRAP=1` set after genesis, and never
+> re-bootstrap once receipts/DB exist — the server refuses bootstrap if a DB or
+> replay marker is present (`index.ts:993`), but removing the drop-in keeps the
+> safety unambiguous.
 
 ### A6. systemd
 
 ```bash
 install -m 0644 /opt/akalynth/infra/systemd/akalynth.service /etc/systemd/system/akalynth.service
 systemctl daemon-reload
-systemctl enable --now akalynth
+systemctl enable --now akalynth          # first start runs genesis via the A5.2 drop-in
 systemctl is-enabled akalynth && systemctl is-active akalynth
-journalctl -u akalynth --no-pager -n 80
-curl -sf http://127.0.0.1:3000/v1/health     # expect {"ok":true,...}
+journalctl -u akalynth --no-pager -n 80  # expect [bootstrap] Created empty receipts file + [identity] Auth key pair loaded
+curl -sf http://127.0.0.1:3000/v1/health # expect {"ok":true,...}
+
+# After a healthy first start, undo the one-shot bootstrap:
+rm -f /etc/systemd/system/akalynth.service.d/bootstrap.conf
+systemctl daemon-reload && systemctl restart akalynth
+curl -sf http://127.0.0.1:3000/v1/health # still {"ok":true,...} with receipts now present
 ```
 
 ### A7. Caddy (reverse proxy + TLS)
