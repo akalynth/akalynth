@@ -8,10 +8,15 @@ import type { Duplex } from 'node:stream';
 import { WebSocketServer, WebSocket } from 'ws';
 import { createHash, randomUUID } from 'node:crypto';
 
-import type { ClientMessage, LostItemSummary, ServerMessage } from '../../../packages/shared/protocol.js';
+import type { ClientMessage, LostItemSummary, ServerMessage, PropertyPublic, PropertyOwnerHistoryEntry } from '../../../packages/shared/protocol.js';
 import { ServerMessages, parseClientMessage } from '../../../packages/shared/protocol.js';
 import type { Player, TutorialProgress } from '../../../packages/shared/types.js';
 import {
+  PROPERTY_CREATED_ACTION,
+  PROPERTY_LISTED_ACTION,
+  PROPERTY_UNLISTED_ACTION,
+  PROPERTY_PURCHASED_ACTION,
+  PROPERTY_TRANSFERRED_ACTION,
   FIRST_ATTEMPT_STONE_ACTION,
   HEAT_CHANGED_ACTION,
   LEDGER_MARKED_ACTION,
@@ -158,6 +163,16 @@ import { computePressureMetrics } from './metrics/pressure.js';
 import type { ItemForDrop } from './world/drop-policy.js';
 import { getIdentity } from './world/identity.js';
 import { getGoldBalance, canAfford, withTreasuryLock, debitForAction } from './world/treasury.js';
+import {
+  ensurePropertiesSeeded,
+  hydrateProperty,
+  getProperty,
+  getAllProperties,
+  getMarketListings,
+  isValidPrice,
+  makePropertyId,
+  type PropertyProjection,
+} from './world/property.js';
 import { maybeSealOriginFromReceipt } from './world/origin.js';
 import {
   startContract,
@@ -1495,6 +1510,7 @@ registerMapPlaces(worlds.Azura.map, 'Azura');
 // Load item system state from SQLite (Phase 2) - after worlds is declared
 loadInventories();
 loadWorldItems();
+loadPropertiesAndSeed();
 
 // ============================================================================
 // Item System Functions (Phase 2)
@@ -1542,6 +1558,86 @@ function loadWorldItems(): void {
       console.log(`[items] Loaded ${rows.length} world items in ${zone}`);
     }
   }
+}
+
+// ============================================================================
+// Property Ownership v0
+// ============================================================================
+
+// Hydrate the in-memory property projection from SQLite, then emit a
+// property_created receipt for any map house plot not yet registered.
+// Idempotent: warm boots hydrate-then-skip; fresh boots seed once.
+function loadPropertiesAndSeed(): void {
+  const rows = persist.getProperties();
+  for (const row of rows) {
+    let history: PropertyProjection['owner_history'] = [];
+    try {
+      history = JSON.parse(row.owner_history);
+    } catch {
+      history = [];
+    }
+    hydrateProperty({
+      property_id: row.property_id,
+      zone: row.zone,
+      plot_id: row.plot_id,
+      x: row.x,
+      y: row.y,
+      width: row.width,
+      height: row.height,
+      district: row.district,
+      owner_player_id: row.owner_player_id,
+      status: row.status as PropertyProjection['status'],
+      listed_price_gold: row.listed_price_gold,
+      primary_price_gold: row.primary_price_gold,
+      purchased_at: row.purchased_at,
+      sale_count: row.sale_count,
+      owner_history: history,
+      genesis_receipt: row.genesis_receipt,
+      last_receipt: row.last_receipt,
+    });
+  }
+
+  // Seed any plots defined on the Azura map but not yet in the registry.
+  const plots = worlds.Azura.map.landmarks.house_plots ?? [];
+  ensurePropertiesSeeded(plots, 'Azura', (r) => audit.write(r));
+  console.log(`[property] Loaded ${rows.length} properties; ensured ${plots.length} Azura plots seeded`);
+}
+
+// Resolve a player id to a display name (durable lookup; null = treasury/unowned).
+function resolvePlayerName(playerId: string | null): string | null {
+  if (!playerId) return null;
+  const online = findPlayerByIdOnline(playerId);
+  if (online) return online.name;
+  return persist.getPlayer(playerId)?.name ?? playerId;
+}
+
+// Project a property to its anonymized public wire form (owner_name, never id).
+function propertyToPublic(p: PropertyProjection): PropertyPublic {
+  return {
+    property_id: p.property_id,
+    zone: p.zone,
+    plot_id: p.plot_id,
+    x: p.x,
+    y: p.y,
+    width: p.width,
+    height: p.height,
+    district: p.district,
+    status: p.status,
+    owner_name: resolvePlayerName(p.owner_player_id),
+    primary_price_gold: p.primary_price_gold,
+    listed_price_gold: p.listed_price_gold,
+    sale_count: p.sale_count,
+  };
+}
+
+function ownerHistoryToPublic(p: PropertyProjection): PropertyOwnerHistoryEntry[] {
+  return p.owner_history.map((h) => ({
+    from_name: resolvePlayerName(h.from),
+    to_name: resolvePlayerName(h.to) ?? h.to,
+    price: h.price,
+    action: h.action,
+    timestamp: h.timestamp,
+  }));
 }
 
 /**
@@ -2210,6 +2306,39 @@ const httpServer = http.createServer((req, res) => {
         };
       }
       return base;
+    },
+    // Property Ownership v0 (public, anonymized)
+    getPropertyMarket: () => {
+      const listings = getMarketListings().map((p) => ({
+        property_id: p.property_id,
+        zone: p.zone,
+        plot_id: p.plot_id,
+        district: p.district,
+        status: p.status,
+        owner_name: resolvePlayerName(p.owner_player_id),
+        primary_price_gold: p.primary_price_gold,
+        listed_price_gold: p.listed_price_gold,
+      }));
+      return { listings, total: listings.length };
+    },
+    getPropertyLedger: (property_id: string) => {
+      const p = getProperty(property_id);
+      if (!p) return null;
+      const history = ownerHistoryToPublic(p);
+      const owners = new Set<string>();
+      for (const h of p.owner_history) owners.add(h.to);
+      const last = history.length > 0 ? history[history.length - 1] : null;
+      return {
+        property_id: p.property_id,
+        district: p.district,
+        owner_name: resolvePlayerName(p.owner_player_id),
+        sale_count: p.sale_count,
+        owner_count: owners.size,
+        last_sale: last
+          ? { from_name: last.from_name, to_name: last.to_name, price: last.price, timestamp: last.timestamp }
+          : null,
+        owner_history: history,
+      };
     },
   });
 
@@ -3016,6 +3145,10 @@ function processSessionQueue(s: Session, now: number) {
           return { item_id: itemId, item_type: item?.item_type ?? 'unknown' };
         });
         send(s.ws, ServerMessages.inventorySnapshot(itemInfos));
+
+        // Send property snapshot (Property Ownership v0) so the client can
+        // render ownership/market state immediately.
+        send(s.ws, ServerMessages.propertySnapshot(getAllProperties().map(propertyToPublic)));
 
         broadcastToMap(s.currentMap, ServerMessages.playerJoined(toPublicPlayer(s.player!)), s.connId);
 
@@ -4834,6 +4967,160 @@ function processSessionQueue(s: Session, now: number) {
           }
         }
         // Silent drop for invalid ticks (anti-spam)
+        break;
+      }
+
+      // ========================================================================
+      // Property Ownership v0 (House Market)
+      // Handlers are fully synchronous: per-session sequential processing +
+      // synchronous audit.write make the read→validate→emit sequence atomic on
+      // the event loop (same guarantee pay_tithe relies on). The materializer's
+      // owner-predicate WHERE clause is the durable backstop.
+      // ========================================================================
+
+      case 'buy_house': {
+        if (!requireAuth(s) || !s.player) break;
+        const buyer = s.player.id;
+        const prop = getProperty(msg.property_id);
+        if (!prop) {
+          send(s.ws, ServerMessages.propertyResult('buy_house', false, msg.property_id, 'unknown_plot'));
+          break;
+        }
+        if (prop.owner_player_id === buyer) {
+          send(s.ws, ServerMessages.propertyResult('buy_house', false, msg.property_id, 'cannot_buy_own'));
+          break;
+        }
+
+        if (prop.status === 'unowned') {
+          // Primary sale: treasury → buyer (pure gold sink).
+          const price = prop.primary_price_gold;
+          if (!canAfford(buyer, price)) {
+            send(s.ws, ServerMessages.propertyResult('buy_house', false, msg.property_id, 'insufficient_gold'));
+            break;
+          }
+          audit.write({
+            player_id: buyer,
+            action: WALLET_DEBIT_ACTION,
+            inputs: { amount: price, reason: `property_purchase:${prop.property_id}` as WalletDebitReason },
+            result: 'ok',
+          });
+          audit.write({
+            player_id: buyer,
+            action: PROPERTY_PURCHASED_ACTION,
+            inputs: { property_id: prop.property_id, price },
+            result: 'ok',
+          });
+        } else if (prop.status === 'listed' && prop.listed_price_gold != null && prop.owner_player_id) {
+          // Resale: seller → buyer (conserved). Price read server-side.
+          const price = prop.listed_price_gold;
+          const seller = prop.owner_player_id;
+          if (!canAfford(buyer, price)) {
+            send(s.ws, ServerMessages.propertyResult('buy_house', false, msg.property_id, 'insufficient_gold'));
+            break;
+          }
+          audit.write({
+            player_id: buyer,
+            action: WALLET_DEBIT_ACTION,
+            inputs: { amount: price, reason: `property_transfer:${prop.property_id}` as WalletDebitReason },
+            result: 'ok',
+          });
+          audit.write({
+            player_id: seller,
+            action: WALLET_CREDIT_ACTION,
+            inputs: { amount: price, reason: `property_sale:${prop.property_id}` as WalletCreditReason },
+            result: 'ok',
+          });
+          audit.write({
+            player_id: buyer,
+            action: PROPERTY_TRANSFERRED_ACTION,
+            inputs: { property_id: prop.property_id, seller_id: seller, price },
+            result: 'ok',
+          });
+        } else {
+          send(s.ws, ServerMessages.propertyResult('buy_house', false, msg.property_id, 'not_for_sale'));
+          break;
+        }
+
+        // Success: projection updated synchronously via the audit reducer hook.
+        const updated = getProperty(msg.property_id)!;
+        const sellerName = updated.owner_history.length >= 2
+          ? resolvePlayerName(updated.owner_history[updated.owner_history.length - 1].from)
+          : null;
+        send(s.ws, ServerMessages.propertyResult('buy_house', true, msg.property_id));
+        send(s.ws, ServerMessages.propertyState(propertyToPublic(updated)));
+        send(s.ws, ServerMessages.walletSnapshot(getGoldBalance(buyer)));
+        broadcastToMap(
+          updated.zone as 'Rookguard' | 'Azura',
+          ServerMessages.houseSold(
+            updated.property_id,
+            updated.plot_id,
+            updated.zone,
+            s.player.name,
+            sellerName,
+            updated.owner_history[updated.owner_history.length - 1]?.price ?? 0,
+            updated.sale_count
+          )
+        );
+        break;
+      }
+
+      case 'list_house': {
+        if (!requireAuth(s) || !s.player) break;
+        const prop = getProperty(msg.property_id);
+        if (!prop) {
+          send(s.ws, ServerMessages.propertyResult('list_house', false, msg.property_id, 'unknown_plot'));
+          break;
+        }
+        if (prop.owner_player_id !== s.player.id) {
+          send(s.ws, ServerMessages.propertyResult('list_house', false, msg.property_id, 'not_owner'));
+          break;
+        }
+        if (!isValidPrice(msg.price)) {
+          send(s.ws, ServerMessages.propertyResult('list_house', false, msg.property_id, 'invalid_price'));
+          break;
+        }
+        audit.write({
+          player_id: s.player.id,
+          action: PROPERTY_LISTED_ACTION,
+          inputs: { property_id: prop.property_id, price: msg.price },
+          result: 'ok',
+        });
+        const updated = getProperty(msg.property_id)!;
+        send(s.ws, ServerMessages.propertyResult('list_house', true, msg.property_id));
+        send(s.ws, ServerMessages.propertyState(propertyToPublic(updated)));
+        broadcastToMap(updated.zone as 'Rookguard' | 'Azura', ServerMessages.propertyState(propertyToPublic(updated)), s.connId);
+        break;
+      }
+
+      case 'unlist_house': {
+        if (!requireAuth(s) || !s.player) break;
+        const prop = getProperty(msg.property_id);
+        if (!prop) {
+          send(s.ws, ServerMessages.propertyResult('unlist_house', false, msg.property_id, 'unknown_plot'));
+          break;
+        }
+        if (prop.owner_player_id !== s.player.id) {
+          send(s.ws, ServerMessages.propertyResult('unlist_house', false, msg.property_id, 'not_owner'));
+          break;
+        }
+        audit.write({
+          player_id: s.player.id,
+          action: PROPERTY_UNLISTED_ACTION,
+          inputs: { property_id: prop.property_id },
+          result: 'ok',
+        });
+        const updated = getProperty(msg.property_id)!;
+        send(s.ws, ServerMessages.propertyResult('unlist_house', true, msg.property_id));
+        send(s.ws, ServerMessages.propertyState(propertyToPublic(updated)));
+        broadcastToMap(updated.zone as 'Rookguard' | 'Azura', ServerMessages.propertyState(propertyToPublic(updated)), s.connId);
+        break;
+      }
+
+      case 'get_property_ledger': {
+        if (!requireAuth(s) || !s.player) break;
+        const prop = getProperty(msg.property_id);
+        if (!prop) break;
+        send(s.ws, ServerMessages.propertyLedger(prop.property_id, ownerHistoryToPublic(prop), prop.sale_count));
         break;
       }
 

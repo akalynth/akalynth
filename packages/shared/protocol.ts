@@ -1,7 +1,7 @@
 // Akalynth Protocol Messages
 // All messages sent over WebSocket
 
-import type { Direction, Element, PlayerPublic, RunestoneDenialReason, SovereignVocation } from './types.js';
+import type { Direction, Element, PlayerPublic, PropertyDenialReason, PropertyStatus, RunestoneDenialReason, SovereignVocation } from './types.js';
 import { ELEMENTS, SOVEREIGN_VOCATIONS } from './types.js';
 import type { MapName } from './http.js';
 
@@ -9,7 +9,7 @@ import type { MapName } from './http.js';
 // Protocol Version
 // ============================================================================
 
-export const PROTOCOL_VERSION = '1.0.0';
+export const PROTOCOL_VERSION = '1.1.0';
 
 // ============================================================================
 // Base Message
@@ -228,6 +228,60 @@ export interface ModResolveMessage extends BaseMessage {
   reason?: string;
 }
 
+// ============================================================================
+// Property Ownership v0 (House Market)
+// ============================================================================
+
+// Public (anonymized) view of a property — NEVER carries raw player_id.
+export interface PropertyPublic {
+  property_id: string;
+  zone: string;
+  plot_id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  district: string | null;
+  status: PropertyStatus;
+  owner_name: string | null;        // resolved display name (null = unowned/treasury)
+  primary_price_gold: number;
+  listed_price_gold: number | null; // set when status = 'listed'
+  sale_count: number;
+}
+
+export interface PropertyOwnerHistoryEntry {
+  from_name: string | null;
+  to_name: string;
+  price: number;
+  action: 'purchased' | 'transferred';
+  timestamp: string;
+}
+
+// Client → Server: buy a house (primary sale if unowned, resale if listed)
+export interface BuyHouseMessage extends BaseMessage {
+  type: 'buy_house';
+  property_id: string;
+}
+
+// Client → Server: list an owned house for sale
+export interface ListHouseMessage extends BaseMessage {
+  type: 'list_house';
+  property_id: string;
+  price: number;
+}
+
+// Client → Server: remove an owned house from the market
+export interface UnlistHouseMessage extends BaseMessage {
+  type: 'unlist_house';
+  property_id: string;
+}
+
+// Client → Server: request a property's ownership ledger
+export interface GetPropertyLedgerMessage extends BaseMessage {
+  type: 'get_property_ledger';
+  property_id: string;
+}
+
 export type ClientMessage =
   | ConnectMessage
   | LoginMessage
@@ -257,7 +311,11 @@ export type ClientMessage =
   | TalkToNpcMessage
   | UseSkillMessage
   | GetModReportsMessage
-  | ModResolveMessage;
+  | ModResolveMessage
+  | BuyHouseMessage
+  | ListHouseMessage
+  | UnlistHouseMessage
+  | GetPropertyLedgerMessage;
 
 // ============================================================================
 // Server → Client Messages
@@ -742,6 +800,51 @@ export interface ModResolveResultMessage extends BaseMessage {
   error?: ModResolveError;
 }
 
+// ============================================================================
+// Property Ownership v0 (Server → Client)
+// ============================================================================
+
+// Full property state on enter_world.
+export interface PropertySnapshotMessage extends BaseMessage {
+  type: 'property_snapshot';
+  properties: PropertyPublic[];
+}
+
+// Single property state (after buy/list/unlist), and zone broadcast of changes.
+export interface PropertyStateMessage extends BaseMessage {
+  type: 'property_state';
+  property: PropertyPublic;
+}
+
+// Broadcast when a house changes hands (primary sale or resale).
+export interface HouseSoldMessage extends BaseMessage {
+  type: 'house_sold';
+  property_id: string;
+  plot_id: string;
+  zone: string;
+  buyer_name: string;
+  seller_name: string | null; // null = treasury (primary sale)
+  price: number;
+  sale_count: number;
+}
+
+// Result of a buy/list/unlist intent.
+export interface PropertyResultMessage extends BaseMessage {
+  type: 'property_result';
+  action: 'buy_house' | 'list_house' | 'unlist_house';
+  success: boolean;
+  property_id: string;
+  reason?: PropertyDenialReason;
+}
+
+// Ownership ledger for a property.
+export interface PropertyLedgerMessage extends BaseMessage {
+  type: 'property_ledger';
+  property_id: string;
+  owner_history: PropertyOwnerHistoryEntry[];
+  sale_count: number;
+}
+
 export type ServerMessage =
   | WelcomeMessage
   | LoginAckMessage
@@ -778,7 +881,12 @@ export type ServerMessage =
   | NpcDialogueErrorMessage
   | SkillResultMessage
   | ModReportsSnapshotMessage
-  | ModResolveResultMessage;
+  | ModResolveResultMessage
+  | PropertySnapshotMessage
+  | PropertyStateMessage
+  | HouseSoldMessage
+  | PropertyResultMessage
+  | PropertyLedgerMessage;
 
 // ============================================================================
 // Message Factories
@@ -1167,6 +1275,60 @@ export const ServerMessages = {
     case_id,
     error,
   }),
+
+  // Property Ownership v0
+  propertySnapshot: (properties: PropertyPublic[]): PropertySnapshotMessage => ({
+    type: 'property_snapshot',
+    properties,
+  }),
+
+  propertyState: (property: PropertyPublic): PropertyStateMessage => ({
+    type: 'property_state',
+    property,
+  }),
+
+  houseSold: (
+    property_id: string,
+    plot_id: string,
+    zone: string,
+    buyer_name: string,
+    seller_name: string | null,
+    price: number,
+    sale_count: number
+  ): HouseSoldMessage => ({
+    type: 'house_sold',
+    property_id,
+    plot_id,
+    zone,
+    buyer_name,
+    seller_name,
+    price,
+    sale_count,
+  }),
+
+  propertyResult: (
+    action: 'buy_house' | 'list_house' | 'unlist_house',
+    success: boolean,
+    property_id: string,
+    reason?: PropertyDenialReason
+  ): PropertyResultMessage => ({
+    type: 'property_result',
+    action,
+    success,
+    property_id,
+    reason,
+  }),
+
+  propertyLedger: (
+    property_id: string,
+    owner_history: PropertyOwnerHistoryEntry[],
+    sale_count: number
+  ): PropertyLedgerMessage => ({
+    type: 'property_ledger',
+    property_id,
+    owner_history,
+    sale_count,
+  }),
 };
 
 // ============================================================================
@@ -1376,6 +1538,28 @@ export function parseClientMessage(data: unknown): ClientMessage | null {
       }
       const reason = typeof msg.reason === 'string' ? msg.reason : undefined;
       return { type: 'mod_resolve', case_id, receipt_hash, resolution, reason };
+    }
+
+    // Property Ownership v0
+    case 'buy_house': {
+      if (typeof msg.property_id !== 'string') return null;
+      return { type: 'buy_house', property_id: msg.property_id };
+    }
+
+    case 'list_house': {
+      if (typeof msg.property_id !== 'string') return null;
+      if (typeof msg.price !== 'number') return null;
+      return { type: 'list_house', property_id: msg.property_id, price: msg.price };
+    }
+
+    case 'unlist_house': {
+      if (typeof msg.property_id !== 'string') return null;
+      return { type: 'unlist_house', property_id: msg.property_id };
+    }
+
+    case 'get_property_ledger': {
+      if (typeof msg.property_id !== 'string') return null;
+      return { type: 'get_property_ledger', property_id: msg.property_id };
     }
 
     default:

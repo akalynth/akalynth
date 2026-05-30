@@ -7,7 +7,7 @@ import type Database from 'better-sqlite3';
 // Schema Version
 // ============================================================================
 
-export const SCHEMA_VERSION = 12;
+export const SCHEMA_VERSION = 13;
 
 // ============================================================================
 // DDL Statements
@@ -216,6 +216,38 @@ CREATE TABLE IF NOT EXISTS npc_talk_events (
 CREATE INDEX IF NOT EXISTS idx_npc_talk_player_npc_tier ON npc_talk_events(player_id, npc_id, tier);
 `;
 
+// Property Registry v0: durable house ownership projection.
+// owner_player_id NULL = treasury/unowned. Ownership, sale_count, and
+// owner_history are receipt-derived (property_* actions). genesis_receipt
+// UNIQUE makes property_created re-materialization idempotent.
+// NO FK to players — a property receipt may materialize before player_created
+// (mirrors player_heat rationale).
+const DDL_PROPERTIES = `
+CREATE TABLE IF NOT EXISTS properties (
+  property_id        TEXT PRIMARY KEY,
+  zone               TEXT NOT NULL,
+  plot_id            TEXT NOT NULL,
+  x                  INTEGER NOT NULL,
+  y                  INTEGER NOT NULL,
+  width              INTEGER NOT NULL,
+  height             INTEGER NOT NULL,
+  district           TEXT DEFAULT NULL,
+  owner_player_id    TEXT DEFAULT NULL,
+  status             TEXT NOT NULL DEFAULT 'unowned',
+  listed_price_gold  INTEGER DEFAULT NULL,
+  primary_price_gold INTEGER NOT NULL DEFAULT 0,
+  purchased_at       TEXT DEFAULT NULL,
+  sale_count         INTEGER NOT NULL DEFAULT 0,
+  owner_history      TEXT NOT NULL DEFAULT '[]',
+  genesis_receipt    TEXT NOT NULL UNIQUE,
+  last_receipt       TEXT NOT NULL,
+  created_at         TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_properties_zone_status ON properties(zone, status);
+CREATE INDEX IF NOT EXISTS idx_properties_owner ON properties(owner_player_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_properties_plot ON properties(zone, plot_id);
+`;
+
 // ============================================================================
 // Schema Initialization
 // ============================================================================
@@ -324,6 +356,9 @@ function runMigration(db: Database.Database, version: number): void {
       break;
     case 12:
       migrateToV12(db);
+      break;
+    case 13:
+      migrateToV13(db);
       break;
     default:
       throw new Error(`Unknown schema version: ${version}`);
@@ -517,12 +552,23 @@ function migrateToV12(db: Database.Database): void {
   insertMeta.run('schema_version', '12');
 }
 
+function migrateToV13(db: Database.Database): void {
+  // Property Ownership v0: durable house registry
+  db.exec(DDL_PROPERTIES);
+
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', '13');
+}
+
 // ============================================================================
 // Schema Utilities
 // ============================================================================
 
 export function resetSchema(db: Database.Database): void {
   // Drop all tables and recreate (for testing/recovery)
+  db.exec('DROP TABLE IF EXISTS properties');
   db.exec('DROP TABLE IF EXISTS npc_talk_events');
   db.exec('DROP TABLE IF EXISTS player_anticheat_enforcement');
   db.exec('DROP TABLE IF EXISTS player_heat');
@@ -543,7 +589,7 @@ export function resetSchema(db: Database.Database): void {
 export function getTableCounts(
   db: Database.Database
 ): Record<string, number> {
-  const tables = ['players', 'reputation_events', 'deaths', 'world_objects', 'items', 'inventory_items', 'legendary_heat', 'player_heat', 'player_anticheat_enforcement', 'chronicle_events', 'moderation_reports', 'npc_talk_events'];
+  const tables = ['players', 'reputation_events', 'deaths', 'world_objects', 'items', 'inventory_items', 'legendary_heat', 'player_heat', 'player_anticheat_enforcement', 'chronicle_events', 'moderation_reports', 'npc_talk_events', 'properties'];
   const counts: Record<string, number> = {};
 
   for (const table of tables) {

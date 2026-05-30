@@ -5,6 +5,7 @@ import { applyReceiptToIdentity } from '../world/identity.js';
 import { applyReceiptToTreasury } from '../world/treasury.js';
 import { applyReceiptToWorkContracts } from '../world/work_contracts.js';
 import { applyReceiptToPresence } from '../world/presence.js';
+import { applyReceiptToProperty } from '../world/property.js';
 
 // ============================================================================
 // Types
@@ -57,6 +58,7 @@ export function createAuditLogger(config: AuditLoggerConfig): AuditLogger {
       applyReceiptToTreasury(receipt);
       applyReceiptToWorkContracts(receipt);
       applyReceiptToPresence(receipt);
+      applyReceiptToProperty(receipt);
 
       // Forward to external callback if provided
       config.onWrite?.(receipt, offsetAfterLine);

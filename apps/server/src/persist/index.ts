@@ -29,6 +29,7 @@ import type {
   PlayerAntiCheatEnforcementRow,
   ChronicleEventRow,
   ModerationReportRow,
+  PropertyRow,
 } from './types.js';
 export type { DeathRow, ModerationReportRow } from './types.js';
 import { initSchema } from './schema.js';
@@ -171,6 +172,23 @@ export function createPersistenceLayer(
     // Protected slot queries (Phase 3.2)
     getProtectedSlots(): Array<{ owner_player_id: string; item_id: string; updated_at: string }> {
       return queries.getProtectedSlots(db);
+    },
+
+    // Property queries (Property Ownership v0)
+    getProperties(zone?: string): PropertyRow[] {
+      return queries.getProperties(db, zone);
+    },
+
+    getProperty(propertyId: string): PropertyRow | null {
+      return queries.getProperty(db, propertyId);
+    },
+
+    getPropertyByPlot(zone: string, plotId: string): PropertyRow | null {
+      return queries.getPropertyByPlot(db, zone, plotId);
+    },
+
+    getPropertiesForOwner(playerId: string): PropertyRow[] {
+      return queries.getPropertiesForOwner(db, playerId);
     },
 
     // Chronicle queries (Phase 4)

@@ -171,6 +171,44 @@ export interface PublicRumorsResponse {
 }
 
 // ============================================================================
+// Property Market API (public, anonymized)
+// ============================================================================
+
+export interface PropertyMarketListing {
+  property_id: string;
+  zone: string;
+  plot_id: string;
+  district: string | null;
+  status: 'unowned' | 'owned' | 'listed';
+  owner_name: string | null; // anonymized display name; never a raw player id
+  primary_price_gold: number;
+  listed_price_gold: number | null;
+}
+
+export interface PropertyMarketResponse {
+  listings: PropertyMarketListing[];
+  total: number;
+}
+
+export interface PropertyLedgerEntry {
+  from_name: string | null;
+  to_name: string;
+  price: number;
+  action: 'purchased' | 'transferred';
+  timestamp: string;
+}
+
+export interface PropertyLedgerResponse {
+  property_id: string;
+  district: string | null;
+  owner_name: string | null;
+  sale_count: number;
+  owner_count: number; // distinct owners over the property's history
+  last_sale: { from_name: string | null; to_name: string; price: number; timestamp: string } | null;
+  owner_history: PropertyLedgerEntry[];
+}
+
+// ============================================================================
 // Transparency API (public)
 // ============================================================================
 
