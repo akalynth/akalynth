@@ -26,6 +26,15 @@ interface NpcDef {
 
 const NPC_REGISTRY: NpcDef[] = [
   {
+    npc_id: 'rookguard_guide',
+    place_id: 'rookguard',
+    lines: {
+      stranger: "Welcome, traveler. Step onto the glowing rune ahead, then send a chat signal, then answer Tem's challenge. The gate to Azura opens when all three are done.",
+      seen: "Still finding your way? Move rune, then chat, then answer Tem — the gate will open.",
+      recognized: "You've done this before. The gate remembers you.",
+    },
+  },
+  {
     npc_id: 'rookguard_herald',
     place_id: 'rookguard:plaza',
     lines: {

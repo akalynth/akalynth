@@ -291,6 +291,16 @@ body {
   color: var(--accent-strong);
 }
 
+.npc-line {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.talk-btn {
+  border-color: rgba(97, 216, 198, 0.42);
+  color: #61d8c6;
+}
+
 .hotbar {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -996,6 +1006,7 @@ body,
 .action-hint,
 .target-line,
 .ritual-line,
+.npc-line,
 .action-locked {
   color: var(--muted);
 }
@@ -1148,7 +1159,8 @@ body,
 
   .action-hint,
   .target-line,
-  .ritual-line {
+  .ritual-line,
+  .npc-line {
     display: none;
   }
 
