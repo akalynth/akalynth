@@ -1,3 +1,6 @@
+ARCHIVED (2026-05-30): point-in-time audit result from 2026-01-20. Superseded by the
+re-runnable audit procedure in ../SYSTEM_AUDIT_CODEX_POST_REPAIR.md. Kept for history.
+
 SYSTEM AUDIT — POST-REPAIR (Work Ticks + Bootstrap + Replay Determinism) v1
   • Commit: <fill>
   • Date: <fill or omit>

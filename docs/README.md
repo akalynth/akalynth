@@ -129,7 +129,7 @@ Verification, governance, and proof docs:
 - [Constitutional Amendment Process](./CONSTITUTIONAL_AMENDMENTS.md) - formal process for modifying constitutional files
 - [Proof Bundles](./PROOF_BUNDLES.md) - portable, immutable, independently verifiable proof packets
 - [Simulate Without Lying](./SIMULATE_WITHOUT_LYING.md) - Fork/Replay system for counterfactuals isolated from truth
-- [MVP Verification Report v1](./MVP_VERIFICATION_REPORT_v1.md) - recorded MVP verification result
+- [MVP Verification Report v1](./archive/MVP_VERIFICATION_REPORT_v1.md) - **archived** point-in-time verification record (superseded by the verification spine)
 - [Load Test Harness](./LOAD_TEST_HARNESS.md) - load-test spec (authorized local/staging only)
 - [High-Leverage Decision Checklist](./HIGH_LEVERAGE_DECISION_CHECKLIST.md) - checklist for high-leverage task selection
 - [Leverage Tier Mapping](./LEVERAGE_TIER_MAPPING.md) - current-state leverage tier mapping
@@ -138,7 +138,6 @@ Monetization docs:
 
 - [Monetization Blueprint](./MONETIZATION_BLUEPRINT.md) - future-proof rules for non-competitive purchases
 - [Monetization Constitution](./MONETIZATION_CONSTITUTION.md) - formal, enforceable monetization policy
-- [Monetization Constitution Review](./MONETIZATION_CONSTITUTION_REVIEW.md) - rationale, enforcement notes, and loophole closures
 - [Monetization Receipts](./MONETIZATION_RECEIPTS.md) - receipt schema for auditable, reversible monetization
 - [Monetization Justifications](./MONETIZATION_JUSTIFICATIONS.md) - registry of “not power” justification IDs
 
@@ -152,7 +151,7 @@ UI / client docs:
 
 Audits:
 
-- [System Audit — Post-Repair v1](./AUDITS/SYSTEM_AUDIT_POST_REPAIR_v1.md) - post-repair audit (work ticks, bootstrap, replay determinism)
+- [System Audit — Post-Repair v1](./AUDITS/ARCHIVED/SYSTEM_AUDIT_POST_REPAIR_v1.md) - **archived** point-in-time audit result (superseded by the Codex audit procedure)
 - [System Audit — Codex Post-Repair](./AUDITS/SYSTEM_AUDIT_CODEX_POST_REPAIR.md) - Codex post-repair audit prompt
 
 Frozen reference specs (WLA v1.0 — no further changes):

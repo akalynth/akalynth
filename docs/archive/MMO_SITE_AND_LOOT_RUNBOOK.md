@@ -1,5 +1,7 @@
 # Akalynth MMO Site & Mob-Loot Fix Runbook
 
+> **ARCHIVED (2026-05-30).** Both deliverables shipped (mmo-site PR #75; mob-loot id fix PR #81, commit `1aff123`). This is a completed-work evidence log, not an active runbook. Kept for history.
+
 > **Purpose:** Reproduce, serve, screenshot, and verify the two deliverables from this work session — the static **Akalynth marketing/shop site** (`mmo-site/`) and the **receipt-derived mob-loot item-id fix** — from a fresh checkout.
 
 ## Scope
