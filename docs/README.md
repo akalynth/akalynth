@@ -66,9 +66,25 @@ akalynth/
   docs/               # Specifications and stage boundaries
   scripts/            # Bootstrap, verification, and dev scripts (Linux)
   tools/              # Tooling and validators
-  infra/              # Deploy notes, CI/CD, infrastructure
+  infra/              # Deploy notes, CI/CD, Docker runtime, infrastructure
   data/               # Map/data sources
 ```
+
+## Docker Runtime
+
+The server Docker runtime is documented in `../infra/README.md`.
+
+Useful local checks:
+
+```bash
+npm run verify:docker-runtime
+npm run render:docker-runtime
+npm run smoke:docker-runtime
+```
+
+The render command writes reviewable host runtime files to `.tmp/` by default.
+The smoke command uses disposable Docker state only. Live host migration still
+requires backup, rollback, and single-runtime-owner gates.
 
 ## Documentation
 

@@ -1901,6 +1901,13 @@ function createCharacterHandler(name: string): CharacterCreateResult {
 
 // HTTP control plane
 const httpServer = http.createServer((req, res) => {
+  const devCors = applyDevCors(req, res);
+  if ((req.method ?? '').toUpperCase() === 'OPTIONS' && devCors) {
+    res.statusCode = 204;
+    res.end();
+    return;
+  }
+
   const gate = tlsGate(req);
   if (!gate.ok) {
     rejectInsecureHttp(res);
@@ -2266,6 +2273,57 @@ function findPlayerByIdOnline(playerId: string): Player | null {
 
 function send(ws: WebSocket, message: ServerMessage) {
   if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(message));
+}
+
+function isLocalDevOrigin(origin: string): boolean {
+  try {
+    const url = new URL(origin);
+    return (
+      (url.protocol === 'http:' || url.protocol === 'https:') &&
+      (url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname === '::1')
+    );
+  } catch {
+    return false;
+  }
+}
+
+function applyDevCors(req: IncomingMessage, res: ServerResponse): boolean {
+  if (!DEBUG_MODE && !ALLOW_INSECURE_LOCAL) return false;
+  const origin = req.headers.origin;
+  if (typeof origin !== 'string' || !isLocalDevOrigin(origin)) return false;
+
+  res.setHeader('access-control-allow-origin', origin);
+  res.setHeader('access-control-allow-methods', 'GET,POST,OPTIONS');
+  res.setHeader('access-control-allow-headers', 'authorization,content-type');
+  res.setHeader('access-control-max-age', '600');
+  res.setHeader('vary', 'Origin');
+  return true;
+}
+
+function playLoopFor(s: Session) {
+  const gateOpen = s.tutorial.move && s.tutorial.chat && s.tutorial.tem;
+  let objective = 'Step onto the move rune';
+
+  if (!s.tutorial.move) objective = 'Step onto the move rune';
+  else if (!s.tutorial.chat) objective = 'Send a signal in chat';
+  else if (!s.tutorial.tem) objective = 'Answer Tem: AZURA';
+  else if (!s.tutorial.gate) objective = 'Enter the Azura gate';
+  else objective = 'Explore Azura';
+
+  return {
+    ...s.tutorial,
+    gateOpen,
+    objective,
+  };
+}
+
+function sendLoopUpdate(s: Session, event: string) {
+  if (!s.player || s.ws.readyState !== WebSocket.OPEN) return;
+  s.ws.send(JSON.stringify({
+    type: 'loop_update',
+    event,
+    loop: playLoopFor(s),
+  }));
 }
 
 function broadcastToMap(map: 'Rookguard' | 'Azura', message: ServerMessage, excludeConnId?: string) {

@@ -4,6 +4,7 @@ import type {
   EnterWorldMessage,
   MoveIntentMessage,
   AttackIntentMessage,
+  RunestoneCastMessage,
   ChatMessage,
   GetChronicleMessage,
   ChronicleEvent,
@@ -36,6 +37,7 @@ import { loadConfig } from '../config';
 const MOVE_REPEAT_MS = 130;
 const MOVE_TOKENS_PER_SEC_MAX = 10;
 const ATTACK_COOLDOWN_MS = 1200;
+const RUNESTONE_TABLE_ID = 'rookguard_runestone_table_01';
 const MAX_CHAT = 50;
 const DEFAULT_RESPAWN_MS = 15_000;
 
@@ -115,6 +117,21 @@ function findOldestTimestamp(events: ChronicleEvent[]): string | null {
     }
   }
   return oldest?.timestamp ?? null;
+}
+
+function runestoneDenialText(reason: unknown): string {
+  switch (reason) {
+    case 'cooldown':
+      return 'The runestone is cooling down';
+    case 'not_near_table':
+      return 'No runestone nearby';
+    case 'not_authorized':
+      return 'Ritual disabled on this server';
+    case 'rate_limited':
+      return 'Ritual rate limited';
+    default:
+      return 'Ritual refused';
+  }
 }
 
 function getEventGroupId(event: ChronicleEvent): number | null {
@@ -508,6 +525,15 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     if (navigator.vibrate) navigator.vibrate(30);
   }, [send]);
 
+  const castRunestone = useCallback(() => {
+    const payload: RunestoneCastMessage = {
+      type: 'runestone_cast',
+      table_id: RUNESTONE_TABLE_ID,
+      guess: null,
+    };
+    send(payload);
+  }, [send]);
+
   const sendChat = useCallback(
     (message: string) => {
       if (!message.trim()) return;
@@ -779,6 +805,22 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
               return { ...next, conn, cooldowns: { ...next.cooldowns, attackEndsAt: cooldownEndsAt } };
             }
 
+            case 'runestone_result': {
+              const face = typeof data.face === 'string' ? data.face : 'unknown';
+              const whisper = typeof data.whisper === 'string' ? data.whisper : 'The stone answers.';
+              const casterName =
+                data.caster && typeof data.caster === 'object' && typeof data.caster.name === 'string'
+                  ? data.caster.name
+                  : 'someone';
+              const line = `${casterName} cast the runestone: ${face}. ${whisper}`;
+              return pushToast(s, 'runestone', line, String(face).toUpperCase());
+            }
+
+            case 'runestone_denied': {
+              const line = runestoneDenialText(data.reason);
+              return pushToast(s, 'runestone', line, 'RITUAL');
+            }
+
             case 'chronicle_snapshot': {
               const events = Array.isArray(data.events) ? data.events as ChronicleEvent[] : [];
               const hasMore = typeof data.has_more === 'boolean' ? data.has_more : false;
@@ -948,6 +990,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     releaseMove,
     stopMoves,
     sendAttack,
+    castRunestone,
     sendChat,
     requestChronicle,
     openChronicle,

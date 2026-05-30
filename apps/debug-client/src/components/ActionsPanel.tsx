@@ -3,12 +3,24 @@ import type { PlayLoopProgress } from '@shared/types';
 interface ActionsPanelProps {
   stage: 0 | 1 | 2 | 3;
   onAttack: () => void;
+  onRitual: () => void;
   attackReady: boolean;
+  ritualReady: boolean;
+  ritualHint: string;
   targetName: string | null;
   loop: PlayLoopProgress | null;
 }
 
-export function ActionsPanel({ stage, onAttack, attackReady, targetName, loop }: ActionsPanelProps) {
+export function ActionsPanel({
+  stage,
+  onAttack,
+  onRitual,
+  attackReady,
+  ritualReady,
+  ritualHint,
+  targetName,
+  loop,
+}: ActionsPanelProps) {
   return (
     <div className="actions-panel" aria-label="Actions">
       <div className="mission-card">
@@ -32,6 +44,14 @@ export function ActionsPanel({ stage, onAttack, attackReady, targetName, loop }:
             disabled={!attackReady}
           >
             Attack
+          </button>
+          <div className="ritual-line">{ritualHint}</div>
+          <button
+            className={`action-btn ritual-btn ${ritualReady ? '' : 'cooling'}`}
+            onClick={() => ritualReady && onRitual()}
+            disabled={!ritualReady}
+          >
+            Ritual
           </button>
         </>
       )}

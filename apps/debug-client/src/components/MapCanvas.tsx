@@ -34,6 +34,22 @@ const TILE_GLYPH: Record<number, string> = {
   [TileCode.GateToAzura]: 'G',
 };
 
+type LandmarkBox = { x: number; y: number; width: number; height: number };
+
+function landmarkBox(value: unknown): LandmarkBox | null {
+  if (!value || typeof value !== 'object') return null;
+  const raw = value as Record<string, unknown>;
+  const x = typeof raw.x === 'number' ? raw.x : null;
+  const y = typeof raw.y === 'number' ? raw.y : null;
+  if (x === null || y === null) return null;
+  return {
+    x,
+    y,
+    width: typeof raw.width === 'number' ? raw.width : 1,
+    height: typeof raw.height === 'number' ? raw.height : 1,
+  };
+}
+
 export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget }: MapCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const othersById = useMemo(() => {
@@ -67,6 +83,27 @@ export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget
         }
       }
     }
+
+    const drawLandmark = (key: string, glyph: string, color: string) => {
+      const box = landmarkBox((map.landmarks as Record<string, unknown>)[key]);
+      if (!box) return;
+      const cx = box.x * TILE_SIZE + TILE_SIZE / 2;
+      const cy = box.y * TILE_SIZE + TILE_SIZE / 2;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(cx, cy, TILE_SIZE * 0.45, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#081018';
+      ctx.font = 'bold 9px "Space Grotesk", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(glyph, cx, cy + 0.5);
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+    };
+
+    drawLandmark('runestone_table', 'R', '#f0c83c');
+    drawLandmark('legend_stone', '!', '#61d8c6');
 
     const drawPlayer = (p: PlayerPublic, color: string) => {
       ctx.fillStyle = color;
