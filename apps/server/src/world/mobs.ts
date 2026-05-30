@@ -83,6 +83,13 @@ export function getAliveMobsForMap(map: MapName): MobState[] {
   return Array.from(mobs.values()).filter(m => m.dead_until_ms === null);
 }
 
+// All mobs on a map (alive and dead corpses awaiting respawn).
+export function getMobsForMap(map: MapName): MobState[] {
+  const mobs = mobsByMap.get(map);
+  if (!mobs) return [];
+  return Array.from(mobs.values());
+}
+
 export function getMobById(mobId: string): MobState | null {
   for (const mobs of mobsByMap.values()) {
     const mob = mobs.get(mobId);
@@ -92,8 +99,19 @@ export function getMobById(mobId: string): MobState | null {
 }
 
 export function mobToPublicPlayer(mob: MobState): PlayerPublic {
-  const hp = mob.dead_until_ms === null ? mob.hp : 0;
-  const hpStr = `${'♥'.repeat(hp)}${'·'.repeat(Math.max(0, mob.def.max_hp - hp))}`;
+  if (mob.dead_until_ms !== null) {
+    const secs = Math.max(0, Math.ceil((mob.dead_until_ms - Date.now()) / 1000));
+    return {
+      id: mob.mob_id,
+      name: `${mob.def.display_name} ☠ ${secs}s`,
+      x: mob.def.x,
+      y: mob.def.y,
+      status: 'dead',
+      badges: ['mob'],
+      mark: 'training_mob',
+    };
+  }
+  const hpStr = `${'♥'.repeat(mob.hp)}${'·'.repeat(Math.max(0, mob.def.max_hp - mob.hp))}`;
   return {
     id: mob.mob_id,
     name: `${mob.def.display_name} ${hpStr}`,
