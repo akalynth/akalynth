@@ -117,6 +117,16 @@ Core docs:
 - [World: Azura](./WORLD_AZURA.md) - city layout, spawn zone, landmarks
 - [Copilot Delegation](./COPILOT_DELEGATION.md) - custom agents, domain specialists, constraint enforcement
 
+Frozen reference specs (WLA v1.0 — no further changes):
+
+- [Witness-Ledger Architecture](./reference/WITNESS_LEDGER_ARCHITECTURE.md) - architectural narrative for the WLA pattern
+- [WLA v1.0 Final](./reference/WLA_V1_FINAL.md) - finality declaration, frozen conformance scope
+- [RFC WLA-001](./reference/RFC_WITNESS_LEDGER.md) - normative specification
+
+Speculative / deferred (out of scope for v1):
+
+- [Mail MMO System](./speculative/AKALYNTH_MAIL_MMO.v1.md) - design doctrine, not active
+
 ## V1 Claim Boundary
 
 The original MVP was:
