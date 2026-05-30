@@ -4,7 +4,7 @@
 // No AI, no movement. Respawn after fixed delay.
 
 import type { MapName } from '../../../../packages/shared/http.js';
-import type { PlayerPublic } from '../../../../packages/shared/types.js';
+import type { AuditReceipt, PlayerPublic } from '../../../../packages/shared/types.js';
 
 export interface MobDef {
   mob_type: string;
@@ -154,4 +154,63 @@ export function tickMobRespawns(): MobState[] {
     }
   }
   return revived;
+}
+
+// ============================================================================
+// Loot Spawn
+// ============================================================================
+
+/** Minimal shape of an audit.write input the loot spawner needs. */
+export interface MobLootWriteInput {
+  player_id?: string;
+  actor_id?: string;
+  action: 'mob_loot_spawned';
+  inputs: Record<string, unknown>;
+  result: 'ok';
+}
+
+/** Dependencies injected so the spawner stays pure and unit-testable. */
+export interface MobLootDeps {
+  writeReceipt: (input: MobLootWriteInput) => AuditReceipt;
+  computeReceiptHash: (receipt: object) => string;
+  generateItemId: (receiptHash: string) => string;
+}
+
+export interface MobLootSpawn {
+  itemId: string;
+  itemType: string;
+  map: MapName;
+  x: number;
+  y: number;
+}
+
+/**
+ * Spawn one mob-loot world item and emit its `mob_loot_spawned` receipt.
+ *
+ * The item_id is DERIVED from the receipt hash (the same convention as
+ * `item_minted`, see persist/materializers `generateItemId`) — NOT from
+ * wall-clock time. This makes the id deterministic, replay-safe, and unique
+ * per spawn (each receipt's content differs, so each hash differs). Because the
+ * id is derived from the hash, the receipt body must NOT carry `item_id`
+ * (that would be a hash cycle).
+ *
+ * Pure: it writes a receipt and returns the derived loot; the caller is
+ * responsible for placing the world item and broadcasting it.
+ */
+export function spawnMobLoot(
+  attackerId: string,
+  itemType: string,
+  map: MapName,
+  x: number,
+  y: number,
+  deps: MobLootDeps
+): MobLootSpawn {
+  const receipt = deps.writeReceipt({
+    player_id: attackerId,
+    action: 'mob_loot_spawned',
+    inputs: { item_type: itemType, map, x, y },
+    result: 'ok',
+  });
+  const itemId = deps.generateItemId(deps.computeReceiptHash(receipt));
+  return { itemId, itemType, map, x, y };
 }

@@ -30,7 +30,8 @@
     "chronicle:demo": "tsx tools/chronicle-demo.ts",
     "chronicle:adapter:smoke": "tsx tools/chronicle-adapter-smoke.ts",
     "rulebook:genesis": "tsx tools/genesis-rulebook.ts",
-    "install-hooks": "bash scripts/install-hooks.sh"
+    "install-hooks": "bash scripts/install-hooks.sh",
+    "verify:mob-loot": "tsx tools/verify-mob-loot.ts"
   },
   "dependencies": {
     "@akalynth/coordination-kernel": "file:../../packages/coordination-kernel",
