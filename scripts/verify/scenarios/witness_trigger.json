@@ -7,15 +7,14 @@
     { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 300 },
     { "send": { "type": "move_intent", "direction": "south" }, "delay_ms": 300 },
     { "send": { "type": "move_intent", "direction": "south" }, "delay_ms": 300 },
-    { "send": { "type": "runestone_cast", "table_id": "rookguard_runestone_table_01" }, "delay_ms": 500 },
-    { "send": { "type": "runestone_cast", "table_id": "rookguard_runestone_table_01" }, "delay_ms": 200 },
-    { "send": { "type": "runestone_cast", "table_id": "rookguard_runestone_table_01" }, "delay_ms": 200 },
-    { "send": { "type": "runestone_cast", "table_id": "rookguard_runestone_table_01" }, "delay_ms": 200 },
-    { "send": { "type": "runestone_cast", "table_id": "rookguard_runestone_table_01" }, "delay_ms": 200 },
-    { "send": { "type": "runestone_cast", "table_id": "rookguard_runestone_table_01" }, "delay_ms": 200 },
-    { "send": { "type": "runestone_cast", "table_id": "rookguard_runestone_table_01" }, "delay_ms": 200 },
-    { "send": { "type": "runestone_cast", "table_id": "rookguard_runestone_table_01" }, "delay_ms": 200 },
-    { "send": { "type": "runestone_cast", "table_id": "rookguard_runestone_table_01" }, "delay_ms": 200 }
+    { "send": { "type": "runestone_cast", "table_id": "rookguard_runestone_table_01" }, "delay_ms": 100 },
+    {
+      "repeat": 14,
+      "delay_ms": 50,
+      "pattern": [
+        { "type": "runestone_cast", "table_id": "rookguard_runestone_table_01" }
+      ]
+    }
   ],
   "expect": []
 }
