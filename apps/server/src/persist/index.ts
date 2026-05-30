@@ -163,6 +163,11 @@ export function createPersistenceLayer(
       return queries.getPlayerAntiCheatEnforcement(db, playerId);
     },
 
+    // NPC dialogue (Dialogue Contract v1)
+    getNpcTalkCount(playerId: string, npcId: string, tier: string): number {
+      return queries.getNpcTalkCount(db, playerId, npcId, tier);
+    },
+
     // Protected slot queries (Phase 3.2)
     getProtectedSlots(): Array<{ owner_player_id: string; item_id: string; updated_at: string }> {
       return queries.getProtectedSlots(db);

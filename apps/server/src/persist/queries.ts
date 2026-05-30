@@ -157,6 +157,24 @@ export function getDeathCount(
   return row.count;
 }
 
+/**
+ * Dialogue Contract v1: number of prior talks for (player, npc, tier).
+ * This is the durable, replay-reconstructable variation nonce.
+ */
+export function getNpcTalkCount(
+  db: Database.Database,
+  playerId: string,
+  npcId: string,
+  tier: string
+): number {
+  const stmt = db.prepare(`
+    SELECT COUNT(*) as count FROM npc_talk_events
+    WHERE player_id = ? AND npc_id = ? AND tier = ?
+  `);
+  const row = stmt.get(playerId, npcId, tier) as { count: number };
+  return row.count;
+}
+
 export function getLastDeath(
   db: Database.Database,
   playerId: string
