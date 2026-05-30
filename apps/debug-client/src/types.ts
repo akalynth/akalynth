@@ -1,6 +1,6 @@
 import type { Direction, MapData, PlayerPublic, PlayerStatus, PlayLoopProgress } from '@shared/types';
 import type { MapName } from '@shared/http';
-import type { ChronicleEvent } from '@shared/protocol';
+import type { ChronicleEvent, PropertyPublic } from '@shared/protocol';
 
 export type InputDirection =
   | Direction
@@ -111,6 +111,8 @@ export interface GameClientState {
   } | null;
   inventory: { item_id: string; item_type: string; slot?: string | null }[];
   gold: number;
+  // Property Ownership v0: house registry, keyed by property_id (server-authoritative).
+  properties: Map<string, PropertyPublic>;
 }
 
 export interface GameClientApi {
@@ -143,4 +145,8 @@ export interface GameClientApi {
   relog: () => void;
   openChat: () => void;
   closeChat: () => void;
+  // Property Ownership v0
+  buyHouse: (propertyId: string) => void;
+  listHouse: (propertyId: string, price: number) => void;
+  unlistHouse: (propertyId: string) => void;
 }
