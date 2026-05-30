@@ -168,3 +168,15 @@ If a change cannot pass the “not power” test, it is not an amendment — it 
 Any system, feature, or item that violates this constitution must be disabled regardless of revenue impact.
 
 Audit failure overrides commercial considerations.
+
+## Appendix A — Rationale (why these constraints hold)
+
+> Merged from the former `MONETIZATION_CONSTITUTION_REVIEW.md` (2026-05-30). Non-normative: explains why the constraints exist; it grants no exceptions.
+
+1. **Power is defined operationally, not morally.** Most games say "no pay-to-win" and collapse because *win* is undefined. By defining Power, Outcome, Bypass, Progress Rate, and Soft Power (Article II), debates become proof obligations: if a purchase cannot be proven non-power, it is forbidden. That makes the policy enforceable by reviewers, auditors, and tools — not just culture.
+2. **Article III is absolute.** The Forever Forbidden list has no exceptions, no "temporary," no "just this once." Maintainers can point to the constitution instead of negotiating under pressure.
+3. **Memory is separated from fabrication.** "Money buys preservation, not fabrication" (Article IV.2) is the difference between a legend and a lie. You may only record what you actually did.
+4. **Convenience is bounded by a measurable invariant.** Time saved must never convert into more progress per hour (Article IV.3), so convenience cannot quietly become soft power.
+5. **Future value entry is constrained without being committed to.** Article V fixes the invariants any money/crypto layer must obey *if* one is ever enabled — keeping optionality without moral debt.
+
+The "Soft Power" definition (Article II) and the Enforcement clause (Article VIII) were originally proposed as enhancements in the review notes and have since been ratified into the articles above.

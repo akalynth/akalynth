@@ -580,7 +580,7 @@ When using `loadtest:compare`, look for:
 
 ## 11. Related Documents
 
-- [MVP Verification Report](./MVP_VERIFICATION_REPORT_v1.md) - Current verification scope
+- [MVP Verification Report](./archive/MVP_VERIFICATION_REPORT_v1.md) - archived point-in-time verification record
 - [Architecture](./ARCHITECTURE.md) - Server design
 - [Protocol](./PROTOCOL.md) - Message specifications
 - [Anti-Cheat](./ANTICHEAT.md) - Tem and heat system
