@@ -186,6 +186,7 @@ function DebugApp() {
     (state.combat.targetId ? true : hasAutoTarget);
   const ritualReady = isNearLandmark(state.world.me, state.world.map, 'runestone_table');
   const ritualHint = ritualReady ? 'Runestone nearby' : 'No runestone nearby';
+  const nearLegendStone = isNearLandmark(state.world.me, state.world.map, 'legend_stone', 2);
   const currentMapName = state.world.map.name;
   const nearbyNpc = NPC_DEFS.find(n =>
     isInPlace(state.world.me, state.world.map, currentMapName, n.place_id)
@@ -491,6 +492,7 @@ function DebugApp() {
               attackReady={attackReady}
               ritualReady={ritualReady}
               ritualHint={ritualHint}
+              nearLegendStone={nearLegendStone}
               nearbyNpc={nearbyNpc}
               targetName={targetName}
               loop={state.loop}

@@ -271,6 +271,14 @@ body {
   font-size: 0.85rem;
 }
 
+.legend-stone-hint {
+  color: #a78bfa;
+  font-size: 0.8rem;
+  font-style: italic;
+  text-align: center;
+  padding: 0.25rem 0;
+}
+
 .action-btn {
   padding: 1rem;
   border-radius: 0.75rem;

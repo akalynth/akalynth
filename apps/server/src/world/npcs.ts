@@ -56,18 +56,18 @@ const NPC_REGISTRY: NpcDef[] = [
     npc_id: 'azura_herald',
     place_id: 'azura:plaza',
     lines: {
-      stranger: "Azura welcomes all who seek its streets.",
-      seen: "The city has seen you before. Walk carefully.",
-      recognized: "You know these streets well. Azura remembers.",
+      stranger: "You made it through Rookguard — not everyone does. The guild hall is north of the plaza if you want work. And if you feel drawn toward something you cannot name, that is normal. Walk carefully.",
+      seen: "Back again. The plaza remembers those who linger. The steward at the guild hall has tasks for those willing to stay.",
+      recognized: "You know these streets now. The city runs deeper than the plaza. Ask the steward about the sweep if you want to be useful.",
     },
   },
   {
     npc_id: 'azura_steward',
     place_id: 'azura:guild_hall',
     lines: {
-      stranger: "State your business with the Azura guild.",
-      seen: "Your presence has been noted. Speak.",
-      recognized: "A regular. The guild acknowledges your dedication.",
+      stranger: "The guild offers one standing duty: the temple sweep. It is quiet work. Receipted. You will not grow rich, but the ledger will remember you showed up.",
+      seen: "You have visited before. If you are ready to work, say so and the sweep contract opens.",
+      recognized: "The guild knows your name now. The sweep is always open. So is the ledger — every tick you give is written.",
     },
   },
 ];

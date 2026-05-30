@@ -10,6 +10,7 @@ interface ActionsPanelProps {
   attackReady: boolean;
   ritualReady: boolean;
   ritualHint: string;
+  nearLegendStone: boolean;
   nearbyNpc: NpcRef | null;
   targetName: string | null;
   loop: PlayLoopProgress | null;
@@ -23,6 +24,7 @@ export function ActionsPanel({
   attackReady,
   ritualReady,
   ritualHint,
+  nearLegendStone,
   nearbyNpc,
   targetName,
   loop,
@@ -39,6 +41,9 @@ export function ActionsPanel({
           <i className={loop?.gate ? 'done' : ''}>Gate</i>
         </div>
       </div>
+      {nearLegendStone && (
+        <div className="legend-stone-hint">A legend stone pulses nearby. It refuses approach.</div>
+      )}
       {stage < 1 && <div className="action-locked">Stage 1 unlocks actions</div>}
       {stage >= 1 && (
         <>
