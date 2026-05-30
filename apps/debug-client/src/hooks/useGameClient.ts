@@ -880,21 +880,29 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
 
             case 'skill_result': {
               const skillId = typeof data.skill_id === 'string' ? data.skill_id : '';
-              if (!skillId.startsWith('shop:')) return { ...s, conn };
               const success = data.success === true;
-              const itemType = (data.payload as Record<string, unknown> | undefined)?.item_type;
-              const label = typeof itemType === 'string'
-                ? itemType.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-                : skillId.slice(5).replace(/_/g, ' ');
-              const errorHint = (data.payload as Record<string, unknown> | undefined)?.error;
-              const line = success
-                ? `Purchased: ${label}`
-                : errorHint === 'insufficient_gold'
-                  ? 'Not enough gold'
-                  : data.reason === 'invalid_target'
-                    ? 'Must be in the guild hall'
-                    : 'Purchase failed';
-              return pushToast(s, 'npc', line, 'SHOP');
+              const payload = data.payload as Record<string, unknown> | undefined;
+              if (skillId.startsWith('item:use:')) {
+                const effect = typeof payload?.effect === 'string' ? payload.effect : 'Used.';
+                const line = success ? effect : 'Cannot use that item here.';
+                return pushToast(s, 'npc', line, 'USE');
+              }
+              if (skillId.startsWith('shop:')) {
+                const itemType = payload?.item_type;
+                const label = typeof itemType === 'string'
+                  ? itemType.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+                  : skillId.slice(5).replace(/_/g, ' ');
+                const errorHint = payload?.error;
+                const line = success
+                  ? `Purchased: ${label}`
+                  : errorHint === 'insufficient_gold'
+                    ? 'Not enough gold'
+                    : data.reason === 'invalid_target'
+                      ? 'Must be in the guild hall'
+                      : 'Purchase failed';
+                return pushToast(s, 'npc', line, 'SHOP');
+              }
+              return { ...s, conn };
             }
 
             case 'world_item_added': {

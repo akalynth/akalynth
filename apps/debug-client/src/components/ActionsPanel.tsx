@@ -16,6 +16,8 @@ const SHOP_DEFS = [
   { skill_id: 'shop:healing_herb', label: 'Healing Herb', price: 5 },
 ] as const;
 
+const USABLE_TYPES = new Set(['healing_herb', 'training_slime_goo', 'city_rat_goo']);
+
 interface ActionsPanelProps {
   stage: 0 | 1 | 2 | 3;
   onAttack: () => void;
@@ -25,6 +27,7 @@ interface ActionsPanelProps {
   onStartWork: () => void;
   onTickWork: () => void;
   onBuy: (skillId: string) => void;
+  onUseItem: (itemId: string) => void;
   attackReady: boolean;
   ritualReady: boolean;
   ritualHint: string;
@@ -53,6 +56,7 @@ export function ActionsPanel({
   onStartWork,
   onTickWork,
   onBuy,
+  onUseItem,
   attackReady,
   ritualReady,
   ritualHint,
@@ -165,15 +169,28 @@ export function ActionsPanel({
       {stage >= 2 && (
         <div className="hotbar">
           {hotbarItems.length > 0
-            ? hotbarItems.map(item => (
-                <div
-                  key={item.item_id}
-                  className={`hotbar-slot active${item.slot === 'protected' ? ' protected' : ''}`}
-                  title={itemLabel(item.item_type)}
-                >
-                  {itemLabel(item.item_type)}
-                </div>
-              ))
+            ? hotbarItems.map(item => {
+                const usable = USABLE_TYPES.has(item.item_type);
+                return usable ? (
+                  <button
+                    key={item.item_id}
+                    className={`hotbar-slot active usable${item.slot === 'protected' ? ' protected' : ''}`}
+                    title={`Use ${itemLabel(item.item_type)}`}
+                    onClick={() => onUseItem(item.item_id)}
+                  >
+                    {itemLabel(item.item_type)}
+                    <span className="use-hint">tap to use</span>
+                  </button>
+                ) : (
+                  <div
+                    key={item.item_id}
+                    className={`hotbar-slot active${item.slot === 'protected' ? ' protected' : ''}`}
+                    title={itemLabel(item.item_type)}
+                  >
+                    {itemLabel(item.item_type)}
+                  </div>
+                );
+              })
             : null}
           {Array.from({ length: Math.max(0, 3 - hotbarItems.length) }).map((_, i) => (
             <div key={`empty-${i}`} className="hotbar-slot disabled">Empty</div>
