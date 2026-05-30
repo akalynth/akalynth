@@ -42,7 +42,7 @@ These documents are informative or future-facing and are **not** v1 law:
 - `apps/server/docs/PHASE6_WITNESS_INTERFACE.md`
 - `apps/server/docs/EVIDENCE_UI_SPEC.md`
 - `apps/server/docs/PHASE7_MODERATION.md`
-- `docs/AKALYNTH_MAIL_MMO.v1.md`
+- `docs/speculative/AKALYNTH_MAIL_MMO.v1.md`
 - `packages/coordination-kernel/CONSTITUTIONAL_API_FREEZE.md`
 - `packages/coordination-kernel/examples/README.md`
 - `packages/coordination-kernel/examples/REGULATOR_VERIFICATION.md`
