@@ -72,15 +72,15 @@ Any change that would require modifying the core specification or invariants **M
 
 The following artifacts together define WLA v1.0:
 
-| Artifact                           | Role                         |
-| ---------------------------------- | ---------------------------- |
-| `RFC_WITNESS_LEDGER.md`            | Normative specification      |
-| `WITNESS_LEDGER_ARCHITECTURE.md`   | Architectural narrative      |
-| `PROOF_BUNDLES.md`                 | Proof format reference       |
-| `SIMULATE_WITHOUT_LYING.md`        | Fork & simulation discipline |
-| `coordination-kernel/witness/`     | Reference implementation     |
-| `coordination-kernel/conformance/` | Executable conformance suite |
-| `coordination-kernel/anchor/`      | Anchoring and verification   |
+| Artifact                                          | Role                         |
+| ------------------------------------------------- | ---------------------------- |
+| `docs/reference/RFC_WITNESS_LEDGER.md`            | Normative specification      |
+| `docs/reference/WITNESS_LEDGER_ARCHITECTURE.md`   | Architectural narrative      |
+| `docs/PROOF_BUNDLES.md`                           | Proof format reference       |
+| `docs/SIMULATE_WITHOUT_LYING.md`                  | Fork & simulation discipline |
+| `packages/coordination-kernel/src/witness/`       | Reference implementation     |
+| `packages/coordination-kernel/src/conformance/`   | Executable conformance suite |
+| `packages/coordination-kernel/src/anchor/`        | Anchoring and verification   |
 
 In case of conflict, **the RFC takes precedence**, followed by the conformance suite.
 

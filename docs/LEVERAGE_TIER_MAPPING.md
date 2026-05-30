@@ -258,6 +258,6 @@ If answers are all "no" → **question the PR's necessity**.
 ## See Also
 
 - [HIGH_LEVERAGE_DECISION_CHECKLIST.md](HIGH_LEVERAGE_DECISION_CHECKLIST.md) - Decision engine
-- [VERIFICATION_SPINE_API.md](VERIFICATION_SPINE_API.md) - Unified verification design (next)
+- [VERIFICATION_SPINE_API.md](VERIFICATION_SPINE_API.md) - Unified verification design
 - [SPINE_V1.md](SPINE_V1.md) - Directory structure lock
 - [V1_SCOPE.md](V1_SCOPE.md) - Current scope boundaries

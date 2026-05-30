@@ -1,5 +1,7 @@
 # World: Azura
 
+> **Purpose:** Reference for the Azura city map — the first major destination after onboarding. Source of truth is `packages/shared/maps/azura.json`; this doc must stay consistent with it.
+
 Azura is the **first major city** after players complete the Rookguard onboarding zone. All guests must clear the tutorial checklist in Rookguard before the server transfers them here.
 
 ## Map Specifications

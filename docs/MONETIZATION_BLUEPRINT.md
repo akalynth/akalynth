@@ -142,7 +142,7 @@ It should:
 
 Ideal abstraction:
 
-```
+```text
 Money → Support Tokens → Non-competitive uses only
 ```
 

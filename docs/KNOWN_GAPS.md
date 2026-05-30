@@ -1,5 +1,7 @@
 # Akalynth Known Gaps
 
+> Last reviewed against `main` on 2026-05-30.
+
 ## Purpose
 
 This file prevents showcase language from outrunning the repository's current proof surface.

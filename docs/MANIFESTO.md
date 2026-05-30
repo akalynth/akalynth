@@ -1,4 +1,6 @@
-# Akalynth -- A World That Remembers
+# Akalynth — A World That Remembers
+
+> **Purpose:** The narrative manifesto for Akalynth — the world's tone, the Ledger, and why the world becomes legendary.
 
 Akalynth exists to turn actions into history. The world does not ask for your story; it writes it, and it outlives you.
 

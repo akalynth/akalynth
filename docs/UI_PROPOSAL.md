@@ -259,6 +259,9 @@ Half-sheet modal. Shows what happened, not forensic math.
 Consumes `DeathNoticeMessage` and `ChronicleEvent`:
 
 ```typescript
+// Simplified v0 view. The canonical type in packages/shared/protocol.ts
+// also carries ok: true plus optional DeathNoticeExtras
+// (chronicle_event_id, lost_items, killer_name, zone, x, y, time).
 interface DeathNoticeMessage {
   type: 'death_notice';
   respawn_in_ms: number;

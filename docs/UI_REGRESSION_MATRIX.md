@@ -32,7 +32,7 @@
 
 ### Test Coverage
 
-```
+```text
 M1 → DPadTest.allEightDirectionsMapCorrectly()
 M1 → DPadTest.holdingDirectionMaintainsMovement()
 M2 → DPadTest.releasingStopsMovement()
@@ -54,7 +54,7 @@ M4 → GameHUDTest.deadZoneEnforcedSmallScreen()
 
 ### Test Coverage
 
-```
+```text
 A1 → Tier1ButtonTest.tapTriggersExactlyOneCallback()
 A1 → Tier1ButtonTest.cooldownOverlayAppearsAfterTap()
 A2 → Tier1ButtonTest.tapDuringCooldownIsIgnored()
@@ -78,7 +78,7 @@ A4 → GameHUDTest.attackVisibleAtStage1()
 
 ### Test Coverage
 
-```
+```text
 D1 → Tier2HoldButtonTest.holdFullDurationConfirms()
 D1 → Tier2HoldButtonTest.holdDurationIs1500ms()
 D2 → Tier2HoldButtonTest.releaseBeforeCompletionCancels()
@@ -107,7 +107,7 @@ D7 → GameHUDTest.hotbarVisibleAtStage2()
 
 ### Test Coverage
 
-```
+```text
 U1 → UnlockStateTest.freshInstallIsStage0()
 U1 → GameHUDTest.stage0ShowsOnlyDpadHpChat()
 U2 → UnlockStateTest.combatTriggersStage1()
@@ -134,7 +134,7 @@ U6 → UnlockRepositoryTest.writeConfirmedBeforeStateChange()
 
 ### Test Coverage
 
-```
+```text
 X1 → DeathToastTest.appearsWithin500ms()
 X1 → DeathToastTest.showsItemsLost()
 X2 → DeathToastTest.autoDismissesAt5000ms()
@@ -158,7 +158,7 @@ X5 → GameHUDTest.whyButtonVisibleAtStage2()
 
 ### Test Coverage
 
-```
+```text
 C1 → ChronicleSheetTest.eventsGroupedByDay()
 C2 → ChronicleSheetTest.deathRowOpensRecap()
 C2 → ChronicleSheetTest.nonDeathRowsNotTappable()
@@ -179,7 +179,7 @@ C4 → ChronicleSheetTest.correctIconsForEventKinds()
 
 ### Test Coverage
 
-```
+```text
 N1 → CharacterCreateScreenTest.createDisabledWhenNameEmpty()
 N2 → CharacterCreateScreenTest.nameMaxLength16()
 N3 → CharacterCreateScreenTest.sexSelectionTogglesSprite()
@@ -217,19 +217,24 @@ All tests in this matrix must pass before PR merge. CI runs:
 
 ### Test Structure
 
-```
+```text
 app/src/test/java/com/akalynth/client/ui/regression/
+├── CharacterCreateScreenTest.kt
+├── ChronicleSheetTest.kt
 ├── DPadTest.kt
+├── DeathRecapSheetTest.kt
+├── DeathToastTest.kt
+├── FakeDataStore.kt            # test helper
+├── GameHUDTest.kt
+├── HotbarDropConfirmationTest.kt
+├── HotbarTest.kt
 ├── Tier1ButtonTest.kt
 ├── Tier2HoldButtonTest.kt
 ├── Tier3SlideConfirmTest.kt
-├── GameHUDTest.kt
-├── UnlockStateTest.kt
+├── TopBarTest.kt
 ├── UnlockRepositoryTest.kt
-├── DeathToastTest.kt
-├── DeathRecapSheetTest.kt
-├── ChronicleSheetTest.kt
-└── CharacterCreateScreenTest.kt
+├── UnlockStateTest.kt
+└── WhyExplanationSheetTest.kt
 ```
 
 ### Failure Policy

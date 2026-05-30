@@ -36,9 +36,12 @@ Source: `.codex/config.toml.example`
 
 - Intended as a template to copy into `~/.codex/config.toml`.
 - Warns that `/opt/akalynth` is the live server tree.
-- Recommends read-only review by default.
-- Defines an explicit `akalynth-deploy` profile for workspace-write sessions.
+- Recommends read-only review by default (`sandbox_mode = "read-only"`).
+- Defines an `akalynth-review` profile (read-only) and an explicit
+  `akalynth-deploy` profile for workspace-write sessions.
 - Keeps workspace-write network disabled in the example.
+- Marks `/home/codex-akalynth/work/akalynth-candidate` as the trusted project in
+  the example (a candidate checkout, distinct from the live `/opt/akalynth`).
 - Warns against committing API keys, SSH private keys, Cloudflare tokens, or production secrets.
 
 ## Project Codex Files

@@ -1,5 +1,7 @@
 # V1 Scope Fence
 
+> **Purpose:** Define exactly what v1 covers, what it does not, and which guarantees are mechanically enforced today — so claims stay aligned with code and CI.
+
 ## Intent
 
 Define what v1 covers and what it explicitly does not. This prevents scope drift and ensures v1 claims match code and CI behavior.
@@ -9,12 +11,12 @@ Define what v1 covers and what it explicitly does not. This prevents scope drift
 - Signed, append-only receipt chain (runtime writes + persisted file)
 - Deterministic replay + bootstrap rules (fatal on missing receipts unless explicit bootstrap; lenient forbidden in production)
 - CI gates (invariant guard, docs audit, protocol sync, build, MVP verify, chain discipline)
-- Constitutional verifiers in CI:
-  - `verify:lifecycle` (fixture receipts)
+- Constitutional verifiers in CI (defined in `apps/server/package.json`; run from `apps/server/`, or via the workspace, e.g. `npm -w apps/server run verify:monetization`):
+  - `verify:lifecycle` (fixture receipts) — also exposed at repo root as `npm run verify:lifecycle`
   - `verify:monetization` (fixture receipts)
   - `verify:work-contracts` (unit)
   - `verify:treasury` (unit)
-- Public transparency feed exists (`/v1/receipts/public`) and docs describe what it is today
+- Public transparency surfaces exist: `/v1/receipts/public` (and `/v1/transparency`, `/v1/receipts`), served by `apps/server/src/api/http.ts`; docs describe what they are today
 
 ## Out of Scope (v1)
 

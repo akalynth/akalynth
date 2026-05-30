@@ -2,6 +2,19 @@
 
 This document describes the anti-cheat behavior currently backed by source code. It is not a production hardening claim and it does not prove live restart behavior outside the local verifier named below.
 
+## Contents
+
+- [Source Authority](#source-authority)
+- [Runtime Model](#runtime-model)
+- [Runtime Detection and Enforcement](#runtime-detection-and-enforcement)
+- [Tem Challenge Behavior](#tem-challenge-behavior)
+- [Heat Behavior](#heat-behavior)
+- [Persistence and Restore](#persistence-and-restore)
+- [Prior-State Lookup](#prior-state-lookup)
+- [Local Verification](#local-verification)
+- [Receipts and Player Feedback](#receipts-and-player-feedback)
+- [Non-Claims](#non-claims)
+
 ## Source Authority
 
 Current source authority for this document:

@@ -1,5 +1,7 @@
 # World: Rookguard (Training Zone)
 
+> **Purpose:** Reference for the Rookguard onboarding map. Source of truth is `packages/shared/maps/rookguard.json`; this doc must stay consistent with it.
+
 Rookguard is the **mandatory 32×32 onboarding map** every guest must complete before entering Azura. It exists to prove that a human is at the keyboard and to warm players up on core systems (movement intent, chat, Tem challenge).
 
 ## Map Specifications
@@ -41,6 +43,17 @@ Row y=2:
 
 Single-tile corridor surrounded by walls to keep focus on onboarding.
 ```
+
+## Additional Landmarks
+
+Beyond the tutorial corridor, `rookguard.json` also defines two non-tile landmarks at fixed coordinates:
+
+| Landmark | Coordinates | Notes |
+|----------|-------------|-------|
+| `runestone_table` | `(4, 4)` | Anchor for the Rookguard runestone (see `apps/server/src/world/runestone.ts`). |
+| `legend_stone` | `(6, 6)` | Legend/lore marker. |
+
+These are landmark entries (not walkable-tile codes) and may be referenced by gameplay systems independently of the tutorial path.
 
 ## Map Data
 

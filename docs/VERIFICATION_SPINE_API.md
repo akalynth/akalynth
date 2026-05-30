@@ -1,9 +1,18 @@
 # Verification Spine API v1
 
-**Status:** Design (Implementation Pending)
+**Status:** Implemented (this document is the original design; see "Implementation Notes" below for how the shipped spine differs)
 **Effective:** 2026-01-22
 **Leverage Score:** 9 (Critical)
-**Purpose:** Unify 18 scattered verification tools into a single, fail-closed spine
+**Purpose:** Unify the scattered verification tools into a single, fail-closed spine
+
+> **Implementation Notes (current code, kept in sync with this design):**
+> The spine ships in `packages/verification-spine/`. A few names and flags evolved from this design doc:
+> - The execution engine lives in `src/runner.ts` (`runSpine`), not `src/orchestrator.ts`.
+> - Verifiers are defined in `src/verifiers.ts` (and `src/verifiers/`) and registered via `createDefaultRegistry()`; there is no `src/adapters/` directory of one-file-per-tool adapters as sketched below.
+> - JSON output uses `--format json` (the `--json` flag in older examples is not implemented).
+> - The CLI adds `--mode <dev|ci|audit>`, named `--profile <quick|full|audit>`, audit-bundle flags (`--bundle`, `--bundle-verify`, `--bundle-strict`, `--bundle-manifest`), and `--out <dir>`. Run `node packages/verification-spine/bin/akalynth-verify.js --help` for the authoritative flag list.
+> - Exit codes: `0` pass, `1` fail, `2` infrastructure error, `3` invalid usage.
+> - The registered verifier set differs from the catalog below (see the FLAGGED section in the upgrade report). Treat the running CLI as ground truth for the verifier list.
 
 ---
 
@@ -292,7 +301,8 @@ const VERIFIERS: Verifier[] = [
 
 ### 3. Orchestrator
 
-**Location:** `packages/verification-spine/src/orchestrator.ts`
+**Location (as designed):** `packages/verification-spine/src/orchestrator.ts`
+**Location (as shipped):** `packages/verification-spine/src/runner.ts` (exports `runSpine`)
 
 **Responsibilities:**
 - Runs verifiers in dependency order
@@ -466,8 +476,8 @@ npm run verify -- --phase 2
 # Continue on failure (don't stop at first fail)
 npm run verify -- --no-fail-fast
 
-# Output as JSON
-npm run verify -- --json
+# Output as JSON (shipped flag is --format json; the older --json is not implemented)
+npm run verify -- --format json
 
 # Dry run (show what would run, don't execute)
 npm run verify -- --dry-run
@@ -486,8 +496,9 @@ npm run verify -- --skip-build --phase 1
 
 **Full CI check:**
 ```bash
-npm run verify -- --json > verification-report.json
+npm run verify -- --format json > verification-report.json
 # Runs all phases, outputs JSON for CI parsing
+# (the spine also writes verification-report.json into its --out dir, default ./verify-out)
 ```
 
 **Debug specific verifier:**
@@ -906,5 +917,5 @@ No other changes needed.
 
 - [HIGH_LEVERAGE_DECISION_CHECKLIST.md](HIGH_LEVERAGE_DECISION_CHECKLIST.md) - Decision engine (scored this 9/9)
 - [LEVERAGE_TIER_MAPPING.md](LEVERAGE_TIER_MAPPING.md) - Current state audit
-- [CIVIL_GUARANTEES.md](apps/server/docs/CIVIL_GUARANTEES.md) - Constitutional law
+- [CIVIL_GUARANTEES.md](../apps/server/docs/CIVIL_GUARANTEES.md) - Constitutional law
 - [V1_SCOPE.md](V1_SCOPE.md) - Release boundaries

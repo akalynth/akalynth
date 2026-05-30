@@ -3,6 +3,17 @@
 Infrastructure config and runbooks for CI, Docker, deploy, and observability.
 Used by automation and operations only.
 
+## Files
+
+- `infra/docker/server.Dockerfile` — server runtime image.
+- `infra/docker/server.env.example` — example non-secret server environment.
+- `infra/docker/compose.server.example.yml` — Compose template (loopback bind).
+- `infra/docker/compose.host.example.yml` — host-side Compose example.
+- `infra/docker/akalynth-container-entrypoint` — container entrypoint script.
+- `infra/systemd/akalynth.service` — systemd unit for the direct Node runtime.
+- `infra/systemd/akalynth-docker.service` — systemd unit for the Docker Compose runtime.
+- `infra/deploy_beta.sh` — beta deploy helper.
+
 ## Docker Server Runtime
 
 The server runtime image is defined in `infra/docker/server.Dockerfile`.

@@ -10,6 +10,13 @@ Client handoff contract for Chronicle Evidence clickthrough UI.
 
 **E4 is UI-only. Zero server changes required.**
 
+> **Verification note (2026-05-30):** The server side of this contract already
+> exists — `get_evidence` / `evidence_snapshot` are defined in
+> `packages/shared/protocol.ts`, handled in `apps/server/src/index.ts`
+> (`case 'get_evidence'`), backed by `apps/server/src/evidence/`, and covered by
+> `apps/server/tools/verify-evidence.ts`. What remains deferred for v1 is the
+> *client* clickthrough UI described in this document.
+
 | Property | Guarantee |
 |----------|-----------|
 | **Read-only** | No new receipts emitted, no state mutation |

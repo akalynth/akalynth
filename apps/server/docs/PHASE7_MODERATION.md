@@ -4,6 +4,20 @@
 
 **Status (v1):** Deferred. This document describes a future system and is not implemented or enforced in v1.
 
+> **Verification notes (2026-05-30):**
+> - None of the modules referenced below exist yet: `world/moderation.ts`,
+>   `world/violation_detector.ts`, `world/auto_moderation.ts`, the
+>   `MODERATION_ACTIONS` constant, or the `player_bans` / `violations` tables.
+>   They remain proposed.
+> - A `moderation_reports` table *does* already exist in `persist/schema.ts`
+>   (with `status` and `target_id` indexes). It is not the same as the
+>   `player_bans` / `violations` schema proposed here; reconcile the two before
+>   implementation.
+> - The proposed `WARNING_ISSUED: 'warning_issued'` action overlaps with the
+>   anti-cheat receipt action that already ships as `warn_issued`
+>   (`persist/types.ts` `RECEIPT_ACTIONS.WARN_ISSUED`). Decide whether to reuse
+>   the existing name or intentionally introduce a separate one. **FLAG.**
+
 ---
 
 ## Critical Design Decisions (G1–G15 Preservation)

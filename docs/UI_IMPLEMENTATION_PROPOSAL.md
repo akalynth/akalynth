@@ -15,28 +15,41 @@ The v0 UI spec is frozen and well-defined. This document proposes the **implemen
 
 ### Current Gap Analysis
 
+> **Note (verification pass, 2026-05-30):** This table predates the Android
+> implementation. Many components named in the spec now exist on Android
+> (see `apps/android/app/src/main/java/com/akalynth/client/ui/components/`).
+> The "Android" column below has been corrected to reflect components that are
+> present in source; depth/correctness of each was NOT re-validated here and is
+> flagged for human review.
+
 | Feature | Spec Status | Android | Debug Client |
 |---------|-------------|---------|--------------|
-| Thumb-zone layout | Defined | Partial | Partial |
-| D-pad (8-dir) | Required | 4-dir only | 8-dir |
-| Safety confirmations (T0-T3) | Required | None | None |
-| Progressive disclosure | Required | None | Mock only |
-| Character creation | Required | Placeholder | None |
-| Death toast (L1) | Required | None | Partial |
-| Death recap (L2) | Required | None | Implemented |
-| Chronicle feed | Required | None | Implemented |
-| Chat sheet | Required | Partial | Implemented |
-| Inventory UI | Required | None | None |
-| Tem challenge | Required | Implemented | Partial |
-| Witness dialog | Required | Implemented | None |
+| Thumb-zone layout | Defined | Present (`hud/GameHUD.kt`) | Partial |
+| D-pad (8-dir) | Required | 8-dir (`movement/DPad.kt`) | 8-dir (`components/DPad.tsx`) |
+| Safety confirmations (T0-T3) | Required | Present (`confirmation/`) | None |
+| Progressive disclosure | Required | Present (`progression/`) | Mock only |
+| Character creation | Required | Present (`character/CharacterCreateScreen.kt`) | None |
+| Death toast (L1) | Required | Present (`death/DeathToast.kt`) | Partial |
+| Death recap (L2) | Required | Present (`death/DeathRecapSheet.kt`) | None |
+| Chronicle feed | Required | Present (`chronicle/ChronicleSheet.kt`) | None |
+| Chat sheet | Required | Present (`ChatOverlay.kt`) | Implemented (`ChatSheet.tsx`) |
+| Inventory UI (hotbar) | Required | Present (`hotbar/Hotbar.kt`) | None |
+| Tem challenge | Required | Present (`TemChallengeDialog.kt`) | Partial |
+| Witness dialog | Required | Present (`WitnessDialog.kt`) | None |
 
 ---
 
 ## Phase 1: Core Layout Fixes (Android Priority)
 
-### 1.1 Upgrade D-pad to 8-Direction
+### 1.1 D-pad (8-Direction)
 
-Current Android D-pad is 4-direction only. Spec requires 8-direction for diagonal movement.
+Spec requires 8-direction for diagonal movement.
+
+> **Verification note:** The shipped `movement/DPad.kt` is already 8-direction
+> but exposes a single `onDirection: (Direction) -> Unit` press callback rather
+> than the `onDirectionStart`/`onDirectionEnd` pair proposed below. The proposed
+> continuous press/release signature remains the design intent; reconcile before
+> treating the snippet as normative.
 
 ```
      ┌─────────────────┐
@@ -556,7 +569,6 @@ fun Tier3SlideConfirm(
 - Draggable delta is in pixels, converted using runtime track width
 - Snap-back uses `Animatable` for smooth return
 - All colors use `AkalynthColors` tokens
-```
 
 ---
 

@@ -6,6 +6,14 @@ Scripts should be idempotent and documented.
 
 ## Quick index
 
+- Bootstrap: `bootstrap_linux.sh`
+- V1-binding gates: `ci_invariant_guard.sh`, `verify_protocol_sync.sh`, `test-chain-discipline.sh`
+- MVP / smoke: `verify_mvp.sh`, `showcase_local.sh`, `studio-smoke.mjs`
+- Docker runtime: `verify-docker-runtime.sh`, `smoke-docker-runtime.sh`, `render-docker-runtime.sh`
+- Policy guards / hooks: `phase_gate.ts`, `precommit-hook.sh`, `refuse_windows.{js,sh}`, `warn_protocol_change.sh`, `require-chronicle.js`
+- Formatting: `format_ts.sh`
+- Verification harness: `verify/` (see `verify/README.md`)
+
 ## Scope (v1)
 
 ### V1-binding gates
@@ -24,23 +32,27 @@ Scripts should be idempotent and documented.
 - `scripts/bootstrap_linux.sh`: Linux-only bootstrap for system deps (apt installs node/npm/git/build tools). Run: `sudo ./scripts/bootstrap_linux.sh`
 - `scripts/ci_invariant_guard.sh`: CI guard enforcing API-first invariants (checks required verification scripts on runtime changes). Run: `./scripts/ci_invariant_guard.sh`
 - `scripts/format_ts.sh`: Prettier formatter for a single TS/TSX file (used by tooling via `CLAUDE_FILE_PATH`). Run: `CLAUDE_FILE_PATH=path/to/file.ts ./scripts/format_ts.sh`
-- `scripts/heat_out_of_order_smoke.ts`: Smoke test for heat receipt timestamp guard (older receipt must not overwrite newer heat). Run: `npx tsx scripts/heat_out_of_order_smoke.ts`
-- `scripts/heat_pr2_out_of_order_smoke.ts`: Smoke test for PR2 heat timestamp guards + column isolation. Run: `npx tsx scripts/heat_pr2_out_of_order_smoke.ts`
 - `scripts/phase_gate.ts`: PreToolUse hook that blocks high-risk/forbidden edits unless `verify:quick` passes. Invoked by hook runner (reads JSON on stdin).
 - `scripts/precommit-hook.sh`: Pretool/precommit guard for OS policy + oversized staged blobs. Install as a git hook or run manually.
 - `scripts/refuse_windows.js`: Exits non-zero on Windows (Node-based policy guard). Run: `node scripts/refuse_windows.js`
 - `scripts/refuse_windows.sh`: Exits non-zero on Windows (shell-based policy guard). Run: `./scripts/refuse_windows.sh`
+- `scripts/require-chronicle.js`: Guard that asserts a chronicle/receipt prerequisite before a gated action.
+- `scripts/warn_protocol_change.sh`: Advisory warning when protocol-relevant files change.
+- `scripts/test-chain-discipline.sh`: V1-binding gate for receipt chain discipline. Run: `./scripts/test-chain-discipline.sh`
+- `scripts/showcase_local.sh`: Local showcase runner (backs `npm run verify:showcase`).
+- `scripts/studio-smoke.mjs`: Studio smoke test (backs `npm run studio-smoke`). Run: `node scripts/studio-smoke.mjs`
 - `scripts/verify_mvp.sh`: End-to-end MVP verification (boots server, runs HTTP/WS scenarios, asserts receipts). Run: `PORT=3101 ./scripts/verify_mvp.sh`
 - `scripts/verify_protocol_sync.sh`: Ensures `docs/PROTOCOL.md` matches `packages/shared/protocol.ts`. Run: `./scripts/verify_protocol_sync.sh`
+
+### Docker runtime scripts
+- `scripts/verify-docker-runtime.sh`: Backs `npm run verify:docker-runtime` (see `infra/README.md`).
+- `scripts/smoke-docker-runtime.sh`: Backs `npm run smoke:docker-runtime`.
+- `scripts/render-docker-runtime.sh`: Backs `npm run render:docker-runtime` (renders host Docker files into `.tmp/akalynth-docker-runtime` by default).
 
 ### Verification harness
 - `scripts/verify/README.md`: How to run the WebSocket verification harness and scenario schema.
 - `scripts/verify/ws_harness.mjs`: Deterministic WS scenario runner used by `verify_mvp.sh` (JSON report to stdout).
 - `scripts/verify/scenarios/*.json`: Scenario definitions used by the harness (see Scenario details below).
-
-### Directories (currently empty)
-- `scripts/bootstrap/`: Reserved for bootstrap helpers.
-- `scripts/release/`: Reserved for release automation helpers.
 
 ## Scenario details
 - `scripts/verify/scenarios/baseline.json`: Basic movement/chat flow; expects welcome/login/world_state/move_result.
@@ -57,5 +69,4 @@ Scripts should be idempotent and documented.
 - `scripts/verify/scenarios/witness_trigger.json`: Movement/runestone spam to trigger a witness request on another client.
 
 ## Notes
-- Heat smoke tests delete temp data unless `SMOKE_KEEP_TMP=1` is set.
 - `verify_mvp.sh` targets `apps/server/`; see `scripts/verify/README.md` for env knobs.

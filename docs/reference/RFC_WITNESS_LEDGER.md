@@ -102,7 +102,7 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 ### 3.1 The Artifact Chain
 
-```
+```text
 Intent → Receipt → Witness Event → Snapshot → Explanation → Proof Bundle
                                                                ↓
                                               Fork (optional, non-authoritative)
@@ -122,7 +122,7 @@ Each artifact builds on the previous:
 
 ### 3.2 Authority Model
 
-```
+```text
                     ┌─────────────────┐
                     │    Authority    │
                     │  (issues receipts) │
@@ -447,9 +447,9 @@ Future versions may register:
 
 ### 9.2 Informative References
 
-- WITNESS_LEDGER_ARCHITECTURE.md (VaultMesh documentation)
-- PROOF_BUNDLES.md (VaultMesh documentation)
-- SIMULATE_WITHOUT_LYING.md (VaultMesh documentation)
+- `docs/reference/WITNESS_LEDGER_ARCHITECTURE.md` (architectural narrative)
+- `docs/PROOF_BUNDLES.md` (proof format reference)
+- `docs/SIMULATE_WITHOUT_LYING.md` (fork & simulation discipline)
 
 ---
 

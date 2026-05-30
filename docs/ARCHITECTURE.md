@@ -1,5 +1,7 @@
 # Architecture
 
+How the Akalynth server stays authoritative over an untrusted client: the tick loop, transport posture, anti-cheat and enforcement systems, the receipt/audit chain, and the networking choices behind the MVP.
+
 ## Core Principle
 
 **Server authoritative simulation.**
@@ -19,7 +21,7 @@ The client is never trusted. It sends *intent*, and the server decides truth.
 
 ## Server Loop
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                    GAME TICK (100ms)                        │
 ├─────────────────────────────────────────────────────────────┤
@@ -53,7 +55,7 @@ The client is never trusted. It sends *intent*, and the server decides truth.
 
 ### Anti-Cheat Pipeline (`apps/server/src/anticheat/`)
 
-```
+```text
 Intent → Detector → Decision → Enforcement → Audit
 ```
 
@@ -208,7 +210,7 @@ A social gambling/ritual artifact inspired by Tibia's dice system, but with Akal
 
 ## Data Flow
 
-```
+```text
 Client                          Server
   │                               │
   ├──── move_intent ─────────────►│
