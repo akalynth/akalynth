@@ -59,6 +59,9 @@ ufw enable
 ### A3. Repo + runtime paths
 
 ```bash
+# Repo is PRIVATE — authenticate first (one of):
+#   gh auth login && gh auth setup-git          # gh as HTTPS credential helper
+#   or add a read-only deploy key to the repo and clone via git@github.com
 git clone https://github.com/VaultSovereign/akalynth.git /opt/akalynth
 cd /opt/akalynth && git checkout main
 
@@ -191,6 +194,7 @@ echo 'export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform
 ### B3. Clone + build
 
 ```bash
+# Private repo — authenticate first (gh auth setup-git, or a deploy key)
 git clone https://github.com/VaultSovereign/akalynth.git ~/akalynth
 cd ~/akalynth
 npm install
