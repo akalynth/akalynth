@@ -193,6 +193,13 @@ const SHOP_ITEMS: Record<string, { item_type: string; price: number }> = {
   'pilgrim_mark': { item_type: 'pilgrim_mark', price: 10 },
   'healing_herb': { item_type: 'healing_herb', price: 5 },
 };
+
+// PvE player health (PvP combat remains the instant-kill weighted generator)
+const PLAYER_MAX_HP = 10;
+const HEALING_HERB_AMOUNT = 5;
+const MOB_AGGRO_DAMAGE = 1;
+const MOB_AGGRO_TICK_MS = 2000;
+const AGGRESSIVE_MOB_TYPES = new Set(['city_rat']);
 const ANTICHEAT_PRIORS_PATH = process.env.AKALYNTH_ANTICHEAT_PRIORS_PATH;
 const DEV_MINT_ENABLED = parseBoolEnv(process.env.AKALYNTH_DEV_MINT, false);
 const REQUIRE_TLS = parseBoolEnv(process.env.REQUIRE_TLS, true);
@@ -2367,6 +2374,8 @@ function applyRespawnNow(s: Session, now: number) {
     setAlive: (pos) => {
       s.player!.status = 'alive';
       s.player!.dead_until_ms = null;
+      s.player!.hp = PLAYER_MAX_HP;
+      s.player!.max_hp = PLAYER_MAX_HP;
       s.player!.x = pos.x;
       s.player!.y = pos.y;
     },
@@ -2394,6 +2403,80 @@ function applyRespawnNow(s: Session, now: number) {
 
   send(s.ws, ServerMessages.worldState(s.currentMap, toPublicPlayer(s.player!, true), nearby));
   s.respawnTimer = null;
+}
+
+// Re-send the authoritative world snapshot to one player (used after HP changes).
+function sendWorldStateRefresh(s: Session): void {
+  if (!s.player || s.ws.readyState !== WebSocket.OPEN) return;
+  const w = worlds[s.currentMap];
+  if (!w) return;
+  const nearby = Array.from(w.players.values())
+    .filter((p) => p.id !== s.player!.id)
+    .map((p) => toPublicPlayer(p));
+  const echo = getEchoForMap(s.currentMap);
+  if (echo) nearby.push(echoToPublicPlayer(echo));
+  for (const mob of getMobsForMap(s.currentMap)) nearby.push(mobToPublicPlayer(mob));
+  send(s.ws, ServerMessages.worldState(s.currentMap, toPublicPlayer(s.player!, true), nearby));
+}
+
+// Apply death to a player slain by a mob (HP hit 0). Mirrors the kill_self path.
+function applyMobDeath(s: Session, mobType: string, now: number): void {
+  if (!s.player) return;
+  const w = worlds[s.currentMap];
+  if (!w) return;
+
+  if (s.respawnTimer) {
+    clearTimeout(s.respawnTimer);
+    s.respawnTimer = null;
+  }
+
+  const deathResult = applyDeath({
+    now,
+    player_id: s.player.id,
+    map: s.currentMap,
+    position: { x: s.player.x, y: s.player.y },
+    cause: 'npc',
+    killer_id: null,
+    respawn_delay_ms: DEATH_RESPAWN_DELAY_MS,
+    current_status: s.player.status,
+    current_dead_until_ms: s.player.dead_until_ms,
+    lastDamage: { at_ms: now, source_type: 'unknown', source_id: mobType },
+    gateUnlocked: s.tutorial.complete,
+    emitFirstOf: () => {},
+    audit,
+    setDead: (dead_until_ms) => {
+      if (!s.player) return;
+      s.player.status = 'dead';
+      s.player.dead_until_ms = dead_until_ms;
+    },
+    adjustReputation: (delta) => {
+      if (!s.player) return;
+      s.player.reputation = (s.player.reputation ?? 0) + delta;
+    },
+  });
+
+  if (deathResult.changed) {
+    const deathTs = new Date().toISOString();
+    recordLedgerDeath(s.player.id, s.currentMap, deathTs);
+    s.ledgerHesitationArmed = false;
+    s.ledgerHesitationDeathTs = null;
+    chronicleEvent('death', `did:akalynth:${s.player.id}`, s.player.caps ?? [], {
+      player_id: s.player.id,
+      map: s.currentMap,
+      x: s.player.x,
+      y: s.player.y,
+      cause: 'npc',
+      killer_id: null,
+    });
+  }
+
+  scheduleRespawnIfNeeded(s, now);
+  send(s.ws, ServerMessages.deathNotice(
+    deathResult.respawn_in_ms,
+    s.currentMap,
+    w.map.spawn,
+    deathResult.changed ? 'npc' : 'already_dead'
+  ));
 }
 
 function scheduleRespawnIfNeeded(s: Session, now: number) {
@@ -2772,6 +2855,8 @@ function processSessionQueue(s: Session, now: number) {
           state: 'authenticated',
           status: 'alive',
           dead_until_ms: null,
+          hp: PLAYER_MAX_HP,
+          max_hp: PLAYER_MAX_HP,
           reputation: 0,
           caps: [],
         };
@@ -4837,12 +4922,20 @@ function processSessionQueue(s: Session, now: number) {
           const itemType = item?.item_type ?? 'unknown';
 
           let effectMsg = 'Used.';
+          let hpChanged = false;
           if (itemType === 'healing_herb') {
             if (s.player.status === 'dead' && s.player.dead_until_ms != null) {
               s.player.dead_until_ms = Math.max(Date.now(), s.player.dead_until_ms - 10_000);
               effectMsg = 'The herb restores vitality. Respawn hastened by 10 seconds.';
             } else {
-              effectMsg = 'You feel a surge of vitality.';
+              const before = s.player.hp ?? PLAYER_MAX_HP;
+              const max = s.player.max_hp ?? PLAYER_MAX_HP;
+              const after = Math.min(max, before + HEALING_HERB_AMOUNT);
+              s.player.hp = after;
+              hpChanged = after !== before;
+              effectMsg = hpChanged
+                ? `The herb knits your wounds. +${after - before} HP (${after}/${max}).`
+                : 'You are already at full health.';
             }
           } else if (itemType.endsWith('_goo')) {
             effectMsg = 'The goo dissolves. Something in the air shifts.';
@@ -4864,6 +4957,7 @@ function processSessionQueue(s: Session, now: number) {
             slot: null,
           }));
           send(s.ws, ServerMessages.inventorySnapshot(invItems));
+          if (hpChanged) sendWorldStateRefresh(s);
           send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { effect: effectMsg, item_type: itemType } }));
           break;
         }
@@ -5023,6 +5117,40 @@ setInterval(() => {
     }
   }
 }, 1_000);
+
+// Mob aggression tick — aggressive mobs damage adjacent in-world players (PvE)
+setInterval(() => {
+  const now = Date.now();
+  for (const map of ['Rookguard', 'Azura'] as const) {
+    const aggressors = getMobsForMap(map).filter(
+      (m) => m.dead_until_ms === null && AGGRESSIVE_MOB_TYPES.has(m.def.mob_type)
+    );
+    if (aggressors.length === 0) continue;
+    for (const s of sessions.values()) {
+      if (!s.player || !s.inWorld || s.currentMap !== map) continue;
+      if (s.player.status === 'dead') continue;
+      for (const mob of aggressors) {
+        if (Math.abs(s.player.x - mob.def.x) <= 1 && Math.abs(s.player.y - mob.def.y) <= 1) {
+          const hp = Math.max(0, (s.player.hp ?? PLAYER_MAX_HP) - MOB_AGGRO_DAMAGE);
+          s.player.hp = hp;
+          s.lastDamage = { at_ms: now, source_type: 'unknown', source_id: mob.def.mob_type };
+          audit.write({
+            player_id: s.player.id,
+            action: 'mob_attack',
+            inputs: { mob_id: mob.mob_id, mob_type: mob.def.mob_type, damage: MOB_AGGRO_DAMAGE, hp_remaining: hp, map },
+            result: 'ok',
+          });
+          if (hp <= 0) {
+            applyMobDeath(s, mob.def.mob_type, now);
+          } else {
+            sendWorldStateRefresh(s);
+          }
+          break; // at most one aggressor hit per tick
+        }
+      }
+    }
+  }
+}, MOB_AGGRO_TICK_MS);
 
 httpServer.listen(PORT, HOST, () => {
   console.log(`HTTP+WS listening on ${HOST}:${PORT}`);

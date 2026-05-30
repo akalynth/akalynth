@@ -63,6 +63,8 @@ export interface Player {
   state: PlayerState;
   status: PlayerStatus;
   dead_until_ms?: number | null;
+  hp?: number;
+  max_hp?: number;
   reputation?: number;
   // Sovereign presence (cosmetic only)
   title?: string | null;
@@ -97,6 +99,8 @@ export interface PlayerPublic {
   y: number;
   status: PlayerStatus;
   dead_until_ms?: number | null;
+  hp?: number;
+  max_hp?: number;
   reputation?: number;
   // Sovereign presence (cosmetic only)
   title?: string | null;

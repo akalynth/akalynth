@@ -164,7 +164,18 @@ function DebugApp() {
   const toast = state.toast && now < state.toast.expiresAt ? state.toast : null;
   const activePlaytestLabel = proof?.activeId ?? 'canonical';
   const objectiveLabel = state.loop?.objective ?? 'Enter Rookguard';
-  const healthLabel = state.world.me?.status === 'dead' ? 'Down' : 'Alive';
+  const meHp = state.world.me?.hp;
+  const meMaxHp = state.world.me?.max_hp;
+  const healthLabel =
+    state.world.me?.status === 'dead'
+      ? 'Down'
+      : typeof meHp === 'number' && typeof meMaxHp === 'number'
+        ? `${meHp}/${meMaxHp}`
+        : 'Alive';
+  const healthPct =
+    typeof meHp === 'number' && typeof meMaxHp === 'number' && meMaxHp > 0
+      ? Math.max(0, Math.min(100, Math.round((meHp / meMaxHp) * 100)))
+      : 100;
   const smokeState = proof?.lastSmoke?.ok ? 'pass' : proof?.lastSmoke ? 'fail' : proofError ? 'offline' : 'idle';
   const smokeLabel =
     smokeState === 'pass' ? 'passed' :
@@ -457,6 +468,12 @@ function DebugApp() {
               <div>
                 <span>Health</span>
                 <strong>{healthLabel}</strong>
+                <div className="hp-bar" aria-hidden="true">
+                  <div
+                    className={`hp-bar-fill ${healthPct <= 30 ? 'low' : ''}`}
+                    style={{ width: `${state.world.me?.status === 'dead' ? 0 : healthPct}%` }}
+                  />
+                </div>
               </div>
               <div>
                 <span>Link</span>
