@@ -126,6 +126,31 @@ body {
   display: block;
 }
 
+.map-tooltip {
+  position: fixed;
+  z-index: 50;
+  max-width: 16rem;
+  padding: 0.45rem 0.6rem;
+  background: rgba(13, 17, 23, 0.96);
+  border: 1px solid #2b3647;
+  border-radius: 0.5rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+.map-tooltip-title {
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: #f7e9a7;
+  margin-bottom: 0.15rem;
+}
+
+.map-tooltip-body {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: #c8d0dc;
+}
+
 .hud {
   position: absolute;
   top: 0.75rem;
