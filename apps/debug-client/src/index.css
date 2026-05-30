@@ -314,6 +314,17 @@ body {
   color: #fbbf24;
 }
 
+.sweep-line {
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.sweep-btn {
+  border-color: rgba(167, 139, 250, 0.45);
+  color: #a78bfa;
+}
+
 .hotbar {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

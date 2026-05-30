@@ -1,8 +1,14 @@
 import type { PlayLoopProgress } from '@shared/types';
 
 interface NpcRef { npc_id: string; label: string }
-
 interface GroundItem { item_id: string; item_type: string; x: number; y: number }
+interface WorkContractRef {
+  contract_id: string;
+  payout_gold: number;
+  ticks_observed: number;
+  ticks_required: number;
+  remaining_ms: number;
+}
 
 interface ActionsPanelProps {
   stage: 0 | 1 | 2 | 3;
@@ -10,12 +16,15 @@ interface ActionsPanelProps {
   onRitual: () => void;
   onTalk: (npcId: string) => void;
   onPickup: (itemId: string) => void;
+  onStartWork: () => void;
+  onTickWork: () => void;
   attackReady: boolean;
   ritualReady: boolean;
   ritualHint: string;
   nearLegendStone: boolean;
   nearbyNpc: NpcRef | null;
   groundItemHere: GroundItem | null;
+  workContract: WorkContractRef | null;
   targetName: string | null;
   loop: PlayLoopProgress | null;
 }
@@ -26,15 +35,21 @@ export function ActionsPanel({
   onRitual,
   onTalk,
   onPickup,
+  onStartWork,
+  onTickWork,
   attackReady,
   ritualReady,
   ritualHint,
   nearLegendStone,
   nearbyNpc,
   groundItemHere,
+  workContract,
   targetName,
   loop,
 }: ActionsPanelProps) {
+  const inGuildHall = nearbyNpc?.npc_id === 'azura_steward';
+  const sweepRemainSec = workContract ? Math.ceil(workContract.remaining_ms / 1000) : 0;
+
   return (
     <div className="actions-panel" aria-label="Actions">
       <div className="mission-card">
@@ -89,6 +104,24 @@ export function ActionsPanel({
                 onClick={() => onPickup(groundItemHere.item_id)}
               >
                 Pick up
+              </button>
+            </>
+          )}
+          {workContract ? (
+            <>
+              <div className="sweep-line">
+                Sweep: {workContract.ticks_observed}/{workContract.ticks_required} ticks
+                {sweepRemainSec > 0 ? ` · ${sweepRemainSec}s left` : ''}
+              </div>
+              <button className="action-btn sweep-btn" onClick={onTickWork}>
+                Tick
+              </button>
+            </>
+          ) : inGuildHall && (
+            <>
+              <div className="sweep-line">Temple sweep available</div>
+              <button className="action-btn sweep-btn" onClick={onStartWork}>
+                Start Sweep
               </button>
             </>
           )}
