@@ -4798,28 +4798,72 @@ function processSessionQueue(s: Session, now: number) {
             result: 'ok',
           });
           const mintHash = computeReceiptHash(mintReceipt);
-          const itemId = generateItemId(mintHash);
+          const shopItemId = generateItemId(mintHash);
 
           audit.write({
             action: 'item_added_to_inventory',
             player_id: s.player.id,
-            inputs: { item_id: itemId, slot: null, source: 'shop' },
+            inputs: { item_id: shopItemId, slot: null, source: 'shop' },
             result: 'ok',
           });
 
           if (!inventory.has(s.player.id)) inventory.set(s.player.id, new Set());
-          inventory.get(s.player.id)!.add(itemId);
+          inventory.get(s.player.id)!.add(shopItemId);
 
           // Sync inventory (use known type for newly minted item)
+          const shopInvIds = getPlayerInventoryIds(s.player.id);
+          const shopInvItems = shopInvIds.map(id => ({
+            item_id: id,
+            item_type: persist.getItem(id)?.item_type ?? (id === shopItemId ? shopItem.item_type : 'unknown'),
+            slot: null,
+          }));
+          send(s.ws, ServerMessages.inventorySnapshot(shopInvItems));
+          send(s.ws, ServerMessages.walletSnapshot(getGoldBalance(s.player.id)));
+          send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { item_id: shopItemId, item_type: shopItem.item_type } }));
+          break;
+        }
+
+        // Item use intercept
+        if (msg.skill_id.startsWith('item:use:')) {
+          const itemId = msg.skill_id.slice(9);
+          const playerInv = inventory.get(s.player.id);
+          if (!playerInv || !playerInv.has(itemId)) {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_target' }));
+            break;
+          }
+
+          const item = persist.getItem(itemId);
+          const itemType = item?.item_type ?? 'unknown';
+
+          let effectMsg = 'Used.';
+          if (itemType === 'healing_herb') {
+            if (s.player.status === 'dead' && s.player.dead_until_ms != null) {
+              s.player.dead_until_ms = Math.max(Date.now(), s.player.dead_until_ms - 10_000);
+              effectMsg = 'The herb restores vitality. Respawn hastened by 10 seconds.';
+            } else {
+              effectMsg = 'You feel a surge of vitality.';
+            }
+          } else if (itemType.endsWith('_goo')) {
+            effectMsg = 'The goo dissolves. Something in the air shifts.';
+          }
+
+          playerInv.delete(itemId);
+
+          audit.write({
+            player_id: s.player.id,
+            action: 'item_used',
+            inputs: { item_id: itemId, item_type: itemType, effect: effectMsg },
+            result: 'ok',
+          });
+
           const invIds = getPlayerInventoryIds(s.player.id);
           const invItems = invIds.map(id => ({
             item_id: id,
-            item_type: persist.getItem(id)?.item_type ?? (id === itemId ? shopItem.item_type : 'unknown'),
+            item_type: persist.getItem(id)?.item_type ?? 'unknown',
             slot: null,
           }));
           send(s.ws, ServerMessages.inventorySnapshot(invItems));
-          send(s.ws, ServerMessages.walletSnapshot(getGoldBalance(s.player.id)));
-          send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { item_id: itemId, item_type: shopItem.item_type } }));
+          send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { effect: effectMsg, item_type: itemType } }));
           break;
         }
 
