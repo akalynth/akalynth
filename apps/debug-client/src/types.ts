@@ -140,6 +140,7 @@ export interface GameClientApi {
   setTarget: (playerId: string | null) => void;
   setStage: (stage: UiStage['stage']) => void;
   toggleMap: (map: MapName) => void;
+  relog: () => void;
   openChat: () => void;
   closeChat: () => void;
 }

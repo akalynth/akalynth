@@ -1148,6 +1148,16 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     [boot, resetSessionState]
   );
 
+  // Log out and sign back in with a fresh session (character-select flow).
+  const relog = useCallback(() => {
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+    resetSessionState(mapName);
+    boot(mapName);
+  }, [boot, mapName, resetSessionState]);
+
   useEffect(() => {
     resetSessionState(mapName);
     boot(mapName);
@@ -1178,6 +1188,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     setTarget,
     setStage,
     toggleMap,
+    relog,
     openChat,
     closeChat,
   };
