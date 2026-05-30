@@ -10,6 +10,8 @@ Akalynth v0.1 is a **pre-alpha, proof-native MMO vertical slice**.
 
 It is not a production MMO, not content-alpha, and not a public launch candidate. The canonical current-stage boundary is maintained in [Current Stage](./CURRENT_STAGE.md).
 
+> **Lost in the docs?** Start at the [Doc Map & Claim Index](./CLAIM_INDEX.md) — every doc grouped by role, plus an index of the project's claims keyed to their evidence and status.
+
 ## Quick Start
 
 ### 1. Bootstrap (Debian/Ubuntu)
