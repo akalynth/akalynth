@@ -1,6 +1,6 @@
 # Constitutional AI Tool Governance
 
-**Constitutional Framework 1.0.0** · package `@akalynth/ai-tool-governance` v1.1.0 — Constitutional Framework for AI Tool Execution
+**Constitutional Framework 1.0.0** · package `@akalynth/ai-tool-governance` v1.0.0 — Constitutional Framework for AI Tool Execution
 
 > **v1 note:** This governance package is not part of the Akalynth v1 enforcement surface.
 

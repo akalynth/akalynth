@@ -144,8 +144,8 @@ Based on this audit, here are the **immediate high-leverage tasks** for `claude/
 
 **Priority 0 (Critical, Missing)**
 
-1. **Unified Verification Spine API** (Score: 9)
-   - Unify 18 scattered `verify-*.ts` tools
+1. **Unified Verification Spine API** (Score: 9) — ✅ **Implemented (update 2026-05-30):** shipped as `packages/verification-spine/` (22 verifiers), wired into root `npm run verify`. See `docs/VERIFICATION_SPINE_API.md`.
+   - Unify the scattered `verify-*.ts` tools
    - Single entry point: `npm run verify` or `akalynth-verify`
    - Output: pass/fail + actionable errors
    - Files: `packages/verification-spine/` (new package)
@@ -175,7 +175,7 @@ Based on this audit, here are the **immediate high-leverage tasks** for `claude/
 5. **Deterministic Test Fixture Generator** (Score: 7)
    - Automated fixture creation with fixed timestamps
    - Replaces manual fixture writes
-   - Files: `apps/server/tools/generate-fixtures.ts`
+   - Files: `apps/server/tools/generate-ci-fixture.ts` (and `apps/server/scripts/generate-evidence-fixtures.ts`)
    - **ETA:** 1 implementation session
 
 ---
