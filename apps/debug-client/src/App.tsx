@@ -176,6 +176,11 @@ function DebugApp() {
     typeof meHp === 'number' && typeof meMaxHp === 'number' && meMaxHp > 0
       ? Math.max(0, Math.min(100, Math.round((meHp / meMaxHp) * 100)))
       : 100;
+  const isDead = state.world.me?.status === 'dead';
+  const respawnInSec =
+    isDead && typeof state.world.me?.dead_until_ms === 'number'
+      ? Math.max(0, Math.ceil((state.world.me.dead_until_ms - now) / 1000))
+      : null;
   const smokeState = proof?.lastSmoke?.ok ? 'pass' : proof?.lastSmoke ? 'fail' : proofError ? 'offline' : 'idle';
   const smokeLabel =
     smokeState === 'pass' ? 'passed' :
@@ -454,8 +459,18 @@ function DebugApp() {
             groundItems={state.groundItems}
           />
           <div className="scene-vignette" />
-          {state.world.me?.status !== 'dead' && healthPct <= 30 && (
+          {!isDead && healthPct <= 30 && (
             <div className="low-hp-vignette" aria-hidden="true" />
+          )}
+          {isDead && (
+            <div className="death-overlay" role="status">
+              <div className="death-overlay-title">You died</div>
+              <div className="death-overlay-sub">
+                {respawnInSec && respawnInSec > 0
+                  ? `Respawning in ${respawnInSec}s`
+                  : 'Respawning…'}
+              </div>
+            </div>
           )}
           <div className="hud hud-primary" aria-label="play status">
             <div className="hud-card hud-card--identity">
