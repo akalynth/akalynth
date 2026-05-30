@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Akalynth — The World of Azura</title>
+    <meta
+      name="description"
+      content="Akalynth is a server-authoritative, anti-bot-first MMO set in the world of Azura. Explore, trade, and survive in a living top-down realm."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <!--
+      Akalynth marketing + shop site.
+      The classic-MMO look (stone backdrop, parchment content, gold-on-brown
+      sidebar) is recreated with original CSS and Akalynth branding. No third-party
+      logos, artwork, or copy are used.
+    -->
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header" role="banner">
+      <div class="header-inner">
+        <a class="brand" href="index.html#home" data-nav="home">
+          <span class="brand-mark" aria-hidden="true">⚔</span>
+          <span class="brand-text">
+            <span class="brand-name">Akalynth</span>
+            <span class="brand-tag">The World of Azura</span>
+          </span>
+        </a>
+        <nav class="top-nav" aria-label="Primary">
+          <ul>
+            <li><a class="tab-btn is-active" href="index.html#home" data-nav="home" aria-current="page">Home</a></li>
+            <li><a class="tab-btn" href="index.html#world" data-nav="world">World</a></li>
+            <li><a class="tab-btn" href="shop.html" data-nav="shop">Shop</a></li>
+            <li><a class="tab-btn" href="index.html#account" data-nav="account">Account</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <div class="layout">
+      <!-- Ornate sidebar -->
+      <aside class="sidebar" aria-label="Sidebar">
+        <section class="panel">
+          <h2 class="panel-title">Realm Status</h2>
+          <div class="panel-body">
+            <ul class="status-list">
+              <li><span class="dot dot-amber"></span> Stage: <strong>Pre-alpha</strong></li>
+              <li><span class="dot dot-green"></span> World: <strong>Azura</strong></li>
+              <li><span class="dot dot-green"></span> Authority: <strong>Server-side</strong></li>
+              <li><span class="dot dot-blue"></span> Guardian: <strong>Tem (anti-bot)</strong></li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2 class="panel-title">Adventurers</h2>
+          <div class="panel-body">
+            <p class="muted">Online now</p>
+            <p class="big-number" id="online-count">—</p>
+            <p class="muted small">Live counts arrive with open beta.</p>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2 class="panel-title">Your Pack</h2>
+          <div class="panel-body">
+            <p class="cart-summary">
+              <span id="cart-count">0</span> item(s) ·
+              <span id="cart-total">0</span> coins
+            </p>
+            <a class="btn btn-ghost btn-block" href="shop.html">Open Shop</a>
+          </div>
+        </section>
+      </aside>
+
+      <!-- Parchment content column -->
+      <main class="content" id="main" role="main" tabindex="-1">
+        <!-- HOME -->
+        <section class="tab-panel is-active" id="home" role="tabpanel">
+          <h1 class="page-title">Welcome to Akalynth</h1>
+          <article class="parchment">
+            <p class="lede">
+              A Tibia-world-feel MMO with a server-authoritative heart and an
+              anti-bot-first soul. Step into <strong>Azura</strong> — a living,
+              top-down realm where every action is witnessed and every receipt is true.
+            </p>
+            <p>
+              Akalynth is built around a simple promise: the world is fair because the
+              server is the single source of truth. No client-side trickery, no silent
+              economy drift. Our guardian <strong>Tem</strong> keeps the realm honest so
+              human adventurers — not bots — earn the spoils.
+            </p>
+          </article>
+
+          <h2 class="section-title">Latest Tidings</h2>
+          <article class="parchment news">
+            <h3 class="news-title">The Gates of Azura</h3>
+            <p class="news-meta">Posted by the Chroniclers · Pre-alpha dispatch</p>
+            <p>
+              The vertical slice walks: connect over WebSocket, claim an identity, move
+              through the world, and watch every step land in the chronicle. This is a
+              proof-native foundation, not a finished kingdom — and that honesty is the point.
+            </p>
+          </article>
+          <article class="parchment news">
+            <h3 class="news-title">Tem Stands Watch</h3>
+            <p class="news-meta">Posted by the Wardens · Anti-cheat notes</p>
+            <p>
+              Heat accrues, challenges issue, and enforcement is deterministic. The
+              anti-bot spine is wired into the receipt chain so fairness is verifiable,
+              not merely promised.
+            </p>
+          </article>
+        </section>
+
+        <!-- WORLD -->
+        <section class="tab-panel" id="world" role="tabpanel" hidden>
+          <h1 class="page-title">The World of Azura</h1>
+          <article class="parchment">
+            <p class="lede">
+              Azura is a top-down realm of stone halls, lantern-lit roads, and quiet
+              chill-zones between the danger. Explore at your own pace.
+            </p>
+            <div class="feature-grid">
+              <div class="feature">
+                <h3>Server-Authoritative</h3>
+                <p>The world resolves on the server. What you see is what truly happened.</p>
+              </div>
+              <div class="feature">
+                <h3>Receipts &amp; Chronicle</h3>
+                <p>Every meaningful action is recorded in a verifiable hash chain.</p>
+              </div>
+              <div class="feature">
+                <h3>Anti-Bot First</h3>
+                <p>Tem keeps the realm for humans, with deterministic enforcement.</p>
+              </div>
+              <div class="feature">
+                <h3>Linux &amp; Android</h3>
+                <p>A lean server and a native Android companion. No bloat.</p>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <!-- ACCOUNT -->
+        <section class="tab-panel" id="account" role="tabpanel" hidden>
+          <h1 class="page-title">Adventurer's Ledger</h1>
+          <article class="parchment">
+            <p class="lede">Account features open with the beta. For now, here's what awaits.</p>
+            <ul class="check-list">
+              <li>Identity-based login backed by the coordination kernel.</li>
+              <li>Character roster bound to your verified identity.</li>
+              <li>Receipt history — see your own chronicle.</li>
+              <li>Premium time and cosmetic inventory.</li>
+            </ul>
+            <button class="btn btn-gold" disabled>Sign in (coming soon)</button>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <footer class="site-footer" role="contentinfo">
+      <div class="footer-inner">
+        <p>© <span id="year"></span> Akalynth · The World of Azura — a pre-alpha, proof-native MMO.</p>
+        <p class="small muted">
+          Linux server + Android client. Classic-MMO aesthetic recreated with original art and copy.
+        </p>
+      </div>
+    </footer>
+
+    <script src="js/app.js" defer></script>
+  </body>
+</html>
