@@ -1771,6 +1771,7 @@ function decayTick(now: Date): void {
           result: 'ok',
         });
         items.delete(itemId);
+        broadcastToMap(zone as 'Rookguard' | 'Azura', ServerMessages.worldItemRemoved(itemId));
       }
     }
   }
@@ -3998,6 +3999,11 @@ function processSessionQueue(s: Session, now: number) {
 
           const hit = hitMob(targetId, 1);
           if (!hit) break;
+
+          if (!hit.dead) {
+            // Broadcast updated mob (with HP reflected in name) to all players on map
+            broadcastToMap(s.currentMap, ServerMessages.playerJoined(mobToPublicPlayer(hit.mob)));
+          }
 
           if (hit.dead) {
             audit.write({

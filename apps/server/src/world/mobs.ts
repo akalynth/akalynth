@@ -92,9 +92,11 @@ export function getMobById(mobId: string): MobState | null {
 }
 
 export function mobToPublicPlayer(mob: MobState): PlayerPublic {
+  const hp = mob.dead_until_ms === null ? mob.hp : 0;
+  const hpStr = `${'♥'.repeat(hp)}${'·'.repeat(Math.max(0, mob.def.max_hp - hp))}`;
   return {
     id: mob.mob_id,
-    name: mob.def.display_name,
+    name: `${mob.def.display_name} ${hpStr}`,
     x: mob.def.x,
     y: mob.def.y,
     status: 'alive',
