@@ -6,6 +6,7 @@ import type {
   AttackIntentMessage,
   RunestoneCastMessage,
   TalkToNpcMessage,
+  PickupItemMessage,
   ChatMessage,
   GetChronicleMessage,
   ChronicleEvent,
@@ -68,6 +69,7 @@ function initialState(mapName: MapName): GameClientState {
     chronicleOpen: false,
     chronicle: null,
     combat: { targetId: null, fx: [] },
+    groundItems: new Map(),
   };
 }
 
@@ -311,6 +313,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
         chronicleOpen: false,
         chronicle: null,
         combat: { targetId: null, fx: [] },
+        groundItems: new Map(),
       };
     },
     [clearMoveTimer]
@@ -537,6 +540,11 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
 
   const talkToNpc = useCallback((npcId: string) => {
     const payload: TalkToNpcMessage = { type: 'talk_to_npc', npc_id: npcId };
+    send(payload);
+  }, [send]);
+
+  const pickupItem = useCallback((itemId: string) => {
+    const payload: PickupItemMessage = { type: 'pickup_item', item_id: itemId };
     send(payload);
   }, [send]);
 
@@ -842,6 +850,25 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
               return pushToast(s, 'npc', msg, 'NPC');
             }
 
+            case 'world_item_added': {
+              if (typeof data.item_id !== 'string') return { ...s, conn };
+              const nextItems = new Map(s.groundItems);
+              nextItems.set(data.item_id, {
+                item_id: data.item_id,
+                item_type: typeof data.item_type === 'string' ? data.item_type : 'item',
+                x: typeof data.x === 'number' ? data.x : 0,
+                y: typeof data.y === 'number' ? data.y : 0,
+              });
+              return { ...s, conn, groundItems: nextItems };
+            }
+
+            case 'world_item_removed': {
+              if (typeof data.item_id !== 'string') return { ...s, conn };
+              const nextItems = new Map(s.groundItems);
+              nextItems.delete(data.item_id);
+              return { ...s, conn, groundItems: nextItems };
+            }
+
             case 'chronicle_snapshot': {
               const events = Array.isArray(data.events) ? data.events as ChronicleEvent[] : [];
               const hasMore = typeof data.has_more === 'boolean' ? data.has_more : false;
@@ -1013,6 +1040,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     sendAttack,
     castRunestone,
     talkToNpc,
+    pickupItem,
     sendChat,
     requestChronicle,
     openChronicle,

@@ -43,6 +43,15 @@ const MOB_DEFS: MobDef[] = [
     y: 14,
     respawn_ms: 30_000,
   },
+  {
+    mob_type: 'city_rat',
+    display_name: 'City Rat',
+    max_hp: 5,
+    map: 'Azura',
+    x: 40,
+    y: 20,
+    respawn_ms: 45_000,
+  },
 ];
 
 // ============================================================================

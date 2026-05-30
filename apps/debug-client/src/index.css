@@ -309,6 +309,11 @@ body {
   color: #61d8c6;
 }
 
+.pickup-btn {
+  border-color: rgba(251, 191, 36, 0.5);
+  color: #fbbf24;
+}
+
 .hotbar {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

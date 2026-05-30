@@ -667,6 +667,7 @@ type Session = {
   // Plan B: Attack spam tracking (for heat escalation)
   attackFailures: number[]; // timestamps of failed attacks
   skillCooldowns: Map<string, number>;
+  heraldMet: boolean;
 };
 
 const sessions = new Map<string, Session>();
@@ -2316,7 +2317,8 @@ function playLoopFor(s: Session) {
   else if (!s.tutorial.chat) objective = 'Send a signal in chat';
   else if (!s.tutorial.tem) objective = 'Answer Tem: AZURA';
   else if (!s.tutorial.gate) objective = 'Enter the Azura gate';
-  else objective = 'Seek the Azura herald in the southern plaza';
+  else if (!s.heraldMet) objective = 'Seek the Azura herald in the southern plaza';
+  else objective = 'Talk to the steward at guild hall';
 
   return {
     ...s.tutorial,
@@ -2472,6 +2474,7 @@ wss.on('connection', (ws, req: IncomingMessage) => {
     clientIp,
     attackFailures: [],
     skillCooldowns: new Map(),
+    heraldMet: false,
   };
 
   sessions.set(connId, s);
@@ -4005,6 +4008,25 @@ function processSessionQueue(s: Session, now: number) {
               ServerMessages.combatResolved(attackerId, targetId, 'kill', s.currentMap, mob.def.x, mob.def.y)
             );
             broadcastToMap(s.currentMap, ServerMessages.playerLeft(targetId));
+
+            // Spawn loot at mob position
+            const lootItemId = `loot:${mob.def.mob_type}:${Date.now()}`;
+            const lootType = `${mob.def.mob_type}_goo`;
+            const decayAt = new Date(Date.now() + 3 * 60_000).toISOString(); // 3 min decay
+            if (!worldItems.has(s.currentMap)) worldItems.set(s.currentMap, new Map());
+            worldItems.get(s.currentMap)!.set(lootItemId, {
+              x: mob.def.x,
+              y: mob.def.y,
+              decayAt,
+              itemType: lootType,
+            });
+            audit.write({
+              player_id: attackerId,
+              action: 'mob_loot_spawned',
+              inputs: { item_id: lootItemId, item_type: lootType, map: s.currentMap, x: mob.def.x, y: mob.def.y },
+              result: 'ok',
+            });
+            broadcastToMap(s.currentMap, ServerMessages.worldItemAdded(lootItemId, lootType, mob.def.x, mob.def.y));
           }
           break;
         }
@@ -4704,6 +4726,11 @@ function processSessionQueue(s: Session, now: number) {
         const line = buildNpcDialogue(npc, tier);
 
         send(s.ws, ServerMessages.npcDialogue(msg.npc_id, npc.place_id, tier, line));
+
+        if (msg.npc_id === 'azura_herald' && !s.heraldMet) {
+          s.heraldMet = true;
+          sendLoopUpdate(s, 'herald_met');
+        }
         break;
       }
 

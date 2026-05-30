@@ -2,16 +2,20 @@ import type { PlayLoopProgress } from '@shared/types';
 
 interface NpcRef { npc_id: string; label: string }
 
+interface GroundItem { item_id: string; item_type: string; x: number; y: number }
+
 interface ActionsPanelProps {
   stage: 0 | 1 | 2 | 3;
   onAttack: () => void;
   onRitual: () => void;
   onTalk: (npcId: string) => void;
+  onPickup: (itemId: string) => void;
   attackReady: boolean;
   ritualReady: boolean;
   ritualHint: string;
   nearLegendStone: boolean;
   nearbyNpc: NpcRef | null;
+  groundItemHere: GroundItem | null;
   targetName: string | null;
   loop: PlayLoopProgress | null;
 }
@@ -21,11 +25,13 @@ export function ActionsPanel({
   onAttack,
   onRitual,
   onTalk,
+  onPickup,
   attackReady,
   ritualReady,
   ritualHint,
   nearLegendStone,
   nearbyNpc,
+  groundItemHere,
   targetName,
   loop,
 }: ActionsPanelProps) {
@@ -72,6 +78,17 @@ export function ActionsPanel({
                 onClick={() => onTalk(nearbyNpc.npc_id)}
               >
                 Talk
+              </button>
+            </>
+          )}
+          {groundItemHere && (
+            <>
+              <div className="npc-line">{groundItemHere.item_type.replace(/_/g, ' ')} on ground</div>
+              <button
+                className="action-btn pickup-btn"
+                onClick={() => onPickup(groundItemHere.item_id)}
+              >
+                Pick up
               </button>
             </>
           )}

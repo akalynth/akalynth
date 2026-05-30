@@ -191,6 +191,14 @@ function DebugApp() {
   const nearbyNpc = NPC_DEFS.find(n =>
     isInPlace(state.world.me, state.world.map, currentMapName, n.place_id)
   ) ?? null;
+  const groundItemHere = useMemo(() => {
+    if (!state.world.me) return null;
+    const { x, y } = state.world.me;
+    for (const item of state.groundItems.values()) {
+      if (item.x === x && item.y === y) return item;
+    }
+    return null;
+  }, [state.world.me, state.groundItems]);
   const others = useMemo(() => Array.from(state.world.others.values()), [state.world.others]);
   const roster = useMemo(() => others.slice().sort((a, b) => a.name.localeCompare(b.name)), [others]);
   const targetName = useMemo(() => {
@@ -489,11 +497,13 @@ function DebugApp() {
               onAttack={api.sendAttack}
               onRitual={api.castRunestone}
               onTalk={api.talkToNpc}
+              onPickup={api.pickupItem}
               attackReady={attackReady}
               ritualReady={ritualReady}
               ritualHint={ritualHint}
               nearLegendStone={nearLegendStone}
               nearbyNpc={nearbyNpc}
+              groundItemHere={groundItemHere}
               targetName={targetName}
               loop={state.loop}
             />
