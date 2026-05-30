@@ -117,7 +117,10 @@ npm run verify:lifecycle      # Boot/shutdown ordering
 npm run verify:monetization   # Monetization policy
 npm run verify:work-contracts # Work contract rules
 npm run verify:treasury       # Gold consistency
-npm run verify:ops            # Full verification suite
+npm run verify:ops            # Operational/deployment readiness
 ```
+
+The full suite is the root spine (`npm run verify`), which runs all verifiers; the
+server-scoped `verify:*` scripts above (run from `apps/server`) each check one domain.
 
 All must pass without modification to pass CI.

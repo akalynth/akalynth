@@ -9,14 +9,13 @@
 >   `world/violation_detector.ts`, `world/auto_moderation.ts`, the
 >   `MODERATION_ACTIONS` constant, or the `player_bans` / `violations` tables.
 >   They remain proposed.
-> - A `moderation_reports` table *does* already exist in `persist/schema.ts`
->   (with `status` and `target_id` indexes). It is not the same as the
->   `player_bans` / `violations` schema proposed here; reconcile the two before
->   implementation.
-> - The proposed `WARNING_ISSUED: 'warning_issued'` action overlaps with the
->   anti-cheat receipt action that already ships as `warn_issued`
->   (`persist/types.ts` `RECEIPT_ACTIONS.WARN_ISSUED`). Decide whether to reuse
->   the existing name or intentionally introduce a separate one. **FLAG.**
+> - A `moderation_reports` table already ships in `persist/schema.ts` (the player
+>   **report queue**). The `player_bans` / `violations` tables below are
+>   complementary receipt projections, not replacements — see the reconciliation
+>   note in the SQLite Schema section.
+> - The moderation warning action is named `mod_warning_issued` to stay distinct
+>   from the shipped anti-cheat action `warn_issued`
+>   (`persist/types.ts` `RECEIPT_ACTIONS.WARN_ISSUED`), avoiding a colliding value.
 
 ---
 
@@ -100,7 +99,9 @@ export const MODERATION_ACTIONS = {
   BAN_CORRECTED: 'ban_corrected', // Only for data correction, not appeals
   
   // Warnings (informational, still permanent)
-  WARNING_ISSUED: 'warning_issued',
+  // NOTE: distinct from the shipped anti-cheat action `warn_issued`
+  // (apps/server/src/persist/types.ts). This is the human-moderation warning.
+  MOD_WARNING_ISSUED: 'mod_warning_issued',
   
   // Admin actions (capability-gated)
   ADMIN_BAN: 'admin_ban',
@@ -204,6 +205,12 @@ export const MODERATION_ACTIONS = {
 ## SQLite Schema
 
 ### New Tables
+
+> **Reconcile with existing schema:** a `moderation_reports` table already ships in
+> `apps/server/src/persist/schema.ts` (the player **report queue** — `case_id`,
+> `reporter_id`, `target_id`, `status`, resolution fields). The tables below are
+> complementary projections (ban state + violation history) driven by receipts, not
+> replacements for it. Add them via the same migration path as `DDL_MODERATION_REPORTS`.
 
 ```sql
 -- Player bans (projection from receipts)

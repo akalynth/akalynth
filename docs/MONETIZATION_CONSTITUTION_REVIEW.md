@@ -107,13 +107,18 @@ That keeps optionality without moral debt.
 
 ---
 
-## Two Optional Improvements (Surgical, Not Required)
+## Two Improvements (Since Adopted)
 
-These are enhancements, not fixes. If you do nothing, the constitution is still solid.
+> **Update (2026-05-30):** both improvements below have since been ratified into
+> `MONETIZATION_CONSTITUTION.md` — "Soft Power" is now defined in Article II (line 34)
+> and "Article VIII — Enforcement" exists (line 166). They are recorded here for
+> historical context; they are no longer optional/proposed.
 
-### 🔧 Optional Addition 1: Explicit “Soft Power” Clause
+These were originally proposed as enhancements, not fixes.
 
-Add to Article II — Definitions:
+### ✅ Addition 1 (adopted): Explicit “Soft Power” Clause
+
+Added to Article II — Definitions:
 
 - **Soft Power**: Any purchase that does not directly modify mechanics, but statistically increases access, opportunity, visibility, or social leverage in contested systems.
 
@@ -125,9 +130,9 @@ Why this helps:
 
 ---
 
-### 🔧 Optional Addition 2: Enforcement Authority Clause
+### ✅ Addition 2 (adopted): Enforcement Authority Clause
 
-Add a short Article VIII — Enforcement (3–4 lines):
+Added as Article VIII — Enforcement:
 
 ## Article VIII — Enforcement
 

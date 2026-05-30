@@ -84,11 +84,16 @@ This is the most dangerous layer — so it’s tightly constrained.
 
 Allowed:
 
-- Queue convenience (cosmetic priority, not faster completion)
 - Offline notifications / logs
 - Inventory organization tools
 - Replay tools (combat logs, heat graphs, receipts UI)
 - Cosmetic fast-travel visuals (not shorter routes)
+
+Proposed, **not yet ratified** into the binding constitution (the items above
+mirror `MONETIZATION_CONSTITUTION.md` Article IV.3; this one does not appear there yet):
+
+- Queue convenience (cosmetic priority, not faster completion) — requires a
+  constitutional amendment before it is permitted. Until ratified, treat as not allowed.
 
 Explicitly Not Allowed:
 

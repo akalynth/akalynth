@@ -374,7 +374,7 @@ These five invariants MUST be enforced for Witness-Full conformance:
 ```
 1. Simulated events MUST NOT have status "confirmed"
 2. Simulated events MUST have source "client_intent"
-3. Simulated event IDs MUST start with "sim_" or "fork_"
+3. Simulated event IDs MUST start with "sim_" (the fork container carries the `fork_` prefix; simulated events embed it after `sim_`, e.g. `sim_fork_abc_101`)
 4. Simulated explanations MUST contain "[SIMULATED]" marker
 5. Inherited entries MUST precede simulated entries (no interleaving)
 ```

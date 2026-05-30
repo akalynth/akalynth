@@ -563,4 +563,15 @@ As the project grows, custom agents become increasingly valuable—they're livin
 
 ---
 
-> **[FLAGGED FOR HUMAN]** This doc was written for a `.claude/agents/` + `.claude/commands/` + root `CLAUDE.md` layout that no longer exists; the repo now uses `.claude/skills/`. Concrete paths and examples have been updated to the current layout, but the conceptual framing (e.g. the "Custom Agents vs Commands" distinction, the named `chronicle-evidence-engineer`/`protocol-engineer`/`anticheat-engineer` agents under "Future Agent Opportunities") still reflects the old model. A maintainer should decide whether to fully re-anchor this guide on the skills model or retire it in favor of per-skill `SKILL.md` files.
+## Maintainer note
+
+Concrete paths and examples in this guide have been updated to the current
+`.claude/skills/` layout (there is no `.claude/agents/`, `.claude/commands/`, or root
+`CLAUDE.md`). The named specialists referenced throughout — `protocol-engineer`,
+`anticheat-engineer`, `world-engineer`, `chronicle-evidence-engineer` — are
+**illustrative future skills**, not skills that exist today; the authoritative list is
+whatever lives under `.claude/skills/`.
+
+Open decision for maintainers: whether to keep this conceptual guide (which still uses
+the older "custom agents vs commands" framing generically) or retire it in favor of the
+per-skill `SKILL.md` files. This is a documentation-strategy choice, not a factual fix.
