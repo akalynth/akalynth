@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { MapName } from '@shared/http';
 import type { ChronicleEvent } from '@shared/protocol';
+import type { MapData, PlayerPublic } from '@shared/types';
 import { useGameClient } from './hooks/useGameClient';
 import { useExistenceMode } from './hooks/useExistenceMode';
 import { MapCanvas } from './components/MapCanvas';
@@ -54,6 +55,33 @@ function groupChronicleByDay(events: ChronicleEvent[]): ChronicleGroup[] {
 
 type ChronicleRender = { icon: string; text: string };
 
+type LandmarkBox = { x: number; y: number; width: number; height: number };
+
+function landmarkBox(value: unknown): LandmarkBox | null {
+  if (!value || typeof value !== 'object') return null;
+  const raw = value as Record<string, unknown>;
+  const x = typeof raw.x === 'number' ? raw.x : null;
+  const y = typeof raw.y === 'number' ? raw.y : null;
+  if (x === null || y === null) return null;
+  return {
+    x,
+    y,
+    width: typeof raw.width === 'number' ? raw.width : 1,
+    height: typeof raw.height === 'number' ? raw.height : 1,
+  };
+}
+
+function isNearLandmark(player: PlayerPublic | null, map: MapData, key: string, radius = 1): boolean {
+  if (!player) return false;
+  const mark = landmarkBox((map.landmarks as Record<string, unknown>)[key]);
+  if (!mark) return false;
+  const minX = mark.x - radius;
+  const maxX = mark.x + mark.width - 1 + radius;
+  const minY = mark.y - radius;
+  const maxY = mark.y + mark.height - 1 + radius;
+  return player.x >= minX && player.x <= maxX && player.y >= minY && player.y <= maxY;
+}
+
 function renderChronicleEvent(ev: ChronicleEvent): ChronicleRender {
   const details = (ev.details ?? {}) as Record<string, unknown>;
   switch (ev.kind) {
@@ -106,6 +134,7 @@ export default function App() {
 function DebugApp() {
   const initialMap: MapName = 'Rookguard';
   const config = useMemo(() => loadConfig(), []);
+  const studioProofEnabled = import.meta.env.VITE_ENABLE_STUDIO_PROOF === '1';
   const [state, api] = useGameClient(initialMap);
   const [chatOpen, setChatOpen] = useState(false);
   const [proof, setProof] = useState<StudioProofState | null>(null);
@@ -135,6 +164,8 @@ function DebugApp() {
     !!state.world.me &&
     now >= state.cooldowns.attackEndsAt &&
     (state.combat.targetId ? true : hasAutoTarget);
+  const ritualReady = isNearLandmark(state.world.me, state.world.map, 'runestone_table');
+  const ritualHint = ritualReady ? 'Runestone nearby' : 'No runestone nearby';
   const others = useMemo(() => Array.from(state.world.others.values()), [state.world.others]);
   const roster = useMemo(() => others.slice().sort((a, b) => a.name.localeCompare(b.name)), [others]);
   const targetName = useMemo(() => {
@@ -182,6 +213,12 @@ function DebugApp() {
   }, [eventId]);
 
   useEffect(() => {
+    if (!studioProofEnabled) {
+      setProof(null);
+      setProofError(null);
+      return;
+    }
+
     let cancelled = false;
     async function refreshProof() {
       try {
@@ -210,9 +247,10 @@ function DebugApp() {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [config.httpBase]);
+  }, [config.httpBase, studioProofEnabled]);
 
   async function runProofSmoke() {
+    if (!studioProofEnabled) return;
     setProofRunning(true);
     try {
       const response = await fetch(`${config.httpBase}/v1/studio/smoke`, { method: 'POST' });
@@ -424,7 +462,10 @@ function DebugApp() {
             <ActionsPanel
               stage={state.ui.stage}
               onAttack={api.sendAttack}
+              onRitual={api.castRunestone}
               attackReady={attackReady}
+              ritualReady={ritualReady}
+              ritualHint={ritualHint}
               targetName={targetName}
               loop={state.loop}
             />
@@ -472,7 +513,7 @@ function DebugApp() {
               aria-label={proofRunning ? 'Running proof' : 'Run proof'}
               style={{ minWidth: 0, width: '100%' }}
               onClick={() => void runProofSmoke()}
-              disabled={proofRunning}
+              disabled={proofRunning || !studioProofEnabled}
             >
               {proofRunning ? 'Running' : 'Proof'}
             </button>

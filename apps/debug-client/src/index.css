@@ -266,6 +266,11 @@ body {
   font-size: 0.85rem;
 }
 
+.ritual-line {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
 .action-btn {
   padding: 1rem;
   border-radius: 0.75rem;
@@ -279,6 +284,11 @@ body {
 .action-btn.cooling {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.ritual-btn:not(.cooling) {
+  border-color: rgba(240, 200, 60, 0.42);
+  color: var(--accent-strong);
 }
 
 .hotbar {
@@ -985,6 +995,7 @@ body,
 
 .action-hint,
 .target-line,
+.ritual-line,
 .action-locked {
   color: var(--muted);
 }
@@ -1136,7 +1147,8 @@ body,
   }
 
   .action-hint,
-  .target-line {
+  .target-line,
+  .ritual-line {
     display: none;
   }
 

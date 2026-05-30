@@ -108,6 +108,7 @@ export interface GameClientApi {
   releaseMove: (dir: InputDirection) => void;
   stopMoves: () => void;
   sendAttack: () => void;
+  castRunestone: () => void;
   sendChat: (message: string) => void;
   requestChronicle: (limit?: number, openRecap?: boolean) => void;
   openChronicle: () => void;
