@@ -7,6 +7,8 @@ import type {
   RunestoneCastMessage,
   TalkToNpcMessage,
   PickupItemMessage,
+  StartWorkContractMessage,
+  WorkTickMessage,
   ChatMessage,
   GetChronicleMessage,
   ChronicleEvent,
@@ -70,6 +72,7 @@ function initialState(mapName: MapName): GameClientState {
     chronicle: null,
     combat: { targetId: null, fx: [] },
     groundItems: new Map(),
+    workContract: null,
   };
 }
 
@@ -314,6 +317,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
         chronicle: null,
         combat: { targetId: null, fx: [] },
         groundItems: new Map(),
+        workContract: null,
       };
     },
     [clearMoveTimer]
@@ -546,6 +550,20 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
   const pickupItem = useCallback((itemId: string) => {
     const payload: PickupItemMessage = { type: 'pickup_item', item_id: itemId };
     send(payload);
+  }, [send]);
+
+  const startWork = useCallback(() => {
+    const payload: StartWorkContractMessage = { type: 'start_work_contract', contract_type: 'temple_sweep' };
+    send(payload);
+  }, [send]);
+
+  const tickWork = useCallback(() => {
+    setState(s => {
+      if (!s.workContract) return s;
+      const payload: WorkTickMessage = { type: 'work_tick', contract_id: s.workContract.contract_id };
+      send(payload);
+      return s;
+    });
   }, [send]);
 
   const sendChat = useCallback(
@@ -869,6 +887,34 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
               return { ...s, conn, groundItems: nextItems };
             }
 
+            case 'work_contract_started': {
+              const contract_id = typeof data.contract_id === 'string' ? data.contract_id : '';
+              const payout_gold = typeof data.payout_gold === 'number' ? data.payout_gold : 0;
+              const ticks_required = typeof data.ticks_required === 'number' ? data.ticks_required : 0;
+              const min_duration_ms = typeof data.min_duration_ms === 'number' ? data.min_duration_ms : 0;
+              return {
+                ...s, conn,
+                workContract: { contract_id, payout_gold, ticks_observed: 0, ticks_required, remaining_ms: min_duration_ms },
+              };
+            }
+
+            case 'work_progress': {
+              if (!s.workContract) return { ...s, conn };
+              const ticks_observed = typeof data.ticks_observed === 'number' ? data.ticks_observed : s.workContract.ticks_observed;
+              const ticks_required = typeof data.ticks_required === 'number' ? data.ticks_required : s.workContract.ticks_required;
+              const remaining_ms = typeof data.remaining_ms === 'number' ? data.remaining_ms : s.workContract.remaining_ms;
+              return { ...s, conn, workContract: { ...s.workContract, ticks_observed, ticks_required, remaining_ms } };
+            }
+
+            case 'work_contract_result': {
+              const success = data.success === true;
+              const gold = typeof data.credited_gold === 'number' ? data.credited_gold : 0;
+              const errMsg = typeof data.error === 'string' ? data.error.replace(/_/g, ' ') : null;
+              const line = success ? `Sweep done — ${gold} gold earned` : `Sweep failed: ${errMsg ?? 'unknown'}`;
+              const next = pushToast(s, 'npc', line, success ? 'SWEEP' : 'SWEEP');
+              return { ...next, workContract: null };
+            }
+
             case 'chronicle_snapshot': {
               const events = Array.isArray(data.events) ? data.events as ChronicleEvent[] : [];
               const hasMore = typeof data.has_more === 'boolean' ? data.has_more : false;
@@ -1041,6 +1087,8 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     castRunestone,
     talkToNpc,
     pickupItem,
+    startWork,
+    tickWork,
     sendChat,
     requestChronicle,
     openChronicle,

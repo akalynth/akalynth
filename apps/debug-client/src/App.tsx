@@ -498,12 +498,15 @@ function DebugApp() {
               onRitual={api.castRunestone}
               onTalk={api.talkToNpc}
               onPickup={api.pickupItem}
+              onStartWork={api.startWork}
+              onTickWork={api.tickWork}
               attackReady={attackReady}
               ritualReady={ritualReady}
               ritualHint={ritualHint}
               nearLegendStone={nearLegendStone}
               nearbyNpc={nearbyNpc}
               groundItemHere={groundItemHere}
+              workContract={state.workContract}
               targetName={targetName}
               loop={state.loop}
             />

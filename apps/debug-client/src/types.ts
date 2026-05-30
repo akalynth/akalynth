@@ -102,6 +102,13 @@ export interface GameClientState {
     fx: FloatingText[];
   };
   groundItems: Map<string, { item_id: string; item_type: string; x: number; y: number }>;
+  workContract: {
+    contract_id: string;
+    payout_gold: number;
+    ticks_observed: number;
+    ticks_required: number;
+    remaining_ms: number;
+  } | null;
 }
 
 export interface GameClientApi {
@@ -112,6 +119,8 @@ export interface GameClientApi {
   castRunestone: () => void;
   talkToNpc: (npcId: string) => void;
   pickupItem: (itemId: string) => void;
+  startWork: () => void;
+  tickWork: () => void;
   sendChat: (message: string) => void;
   requestChronicle: (limit?: number, openRecap?: boolean) => void;
   openChronicle: () => void;
