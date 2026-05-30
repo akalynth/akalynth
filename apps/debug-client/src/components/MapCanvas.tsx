@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { MapData, PlayerPublic } from '@shared/types';
 import { TileCode } from '@shared/types';
 import type { FloatingText } from '../types';
-import { LANDMARK_LORE, TILE_LORE, type LoreEntry } from '../data/lore';
+import { LANDMARK_LORE, LANDMARK_MARKERS, TILE_LORE, type LoreEntry } from '../data/lore';
 
 interface GroundItem { item_id: string; item_type: string; x: number; y: number }
 
@@ -130,11 +130,9 @@ export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget
       }
     }
 
-    const drawLandmark = (key: string, glyph: string, color: string) => {
-      const box = landmarkBox((map.landmarks as Record<string, unknown>)[key]);
-      if (!box) return;
-      const cx = box.x * TILE_SIZE + TILE_SIZE / 2;
-      const cy = box.y * TILE_SIZE + TILE_SIZE / 2;
+    const drawMarker = (box: LandmarkBox, glyph: string, color: string) => {
+      const cx = (box.x + box.width / 2) * TILE_SIZE;
+      const cy = (box.y + box.height / 2) * TILE_SIZE;
       ctx.fillStyle = color;
       ctx.beginPath();
       ctx.arc(cx, cy, TILE_SIZE * 0.45, 0, Math.PI * 2);
@@ -148,8 +146,15 @@ export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget
       ctx.textBaseline = 'alphabetic';
     };
 
-    drawLandmark('runestone_table', 'R', '#f0c83c');
-    drawLandmark('legend_stone', '!', '#61d8c6');
+    for (const [key, value] of Object.entries(map.landmarks as Record<string, unknown>)) {
+      const marker = LANDMARK_MARKERS[key];
+      if (!marker) continue;
+      const items = Array.isArray(value) ? value : [value];
+      for (const item of items) {
+        const box = landmarkBox(item);
+        if (box) drawMarker(box, marker.glyph, marker.color);
+      }
+    }
 
     if (groundItems) {
       for (const item of groundItems.values()) {

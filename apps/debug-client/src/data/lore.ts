@@ -43,6 +43,17 @@ export const LANDMARK_LORE: Record<string, LoreEntry> = {
   },
 };
 
+// Visible map markers for landmarks, keyed by landmark key. A marker makes the
+// landmark (and its tooltip) discoverable; multi-tile landmarks get one pin
+// centered on the box, arrays (house_plots) get one pin per entry.
+export const LANDMARK_MARKERS: Record<string, { glyph: string; color: string }> = {
+  runestone_table: { glyph: 'R', color: '#f0c83c' },
+  legend_stone: { glyph: '!', color: '#61d8c6' },
+  guild_hall: { glyph: 'G', color: '#c98bdb' },
+  plaza: { glyph: 'P', color: '#7fd1a6' },
+  house_plots: { glyph: 'H', color: '#e0a86b' },
+};
+
 // Keyed by tile code. Describes the tutorial steps the server enforces.
 export const TILE_LORE: Partial<Record<TileCode, LoreEntry>> = {
   [TileCode.TutorialMove]: {
