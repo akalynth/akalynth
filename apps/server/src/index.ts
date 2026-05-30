@@ -79,7 +79,7 @@ import {
 } from './world/presence.js';
 import { getNpcDef, resolveDialogueTier, buildNpcDialogue } from './world/npcs.js';
 import { applyDeath, applyRespawn } from './world/death.js';
-import { handleAttackIntent, type CombatContext, type WorldItem as CombatWorldItem } from './world/combat.js';
+import { handleAttackIntent, COMBAT_COOLDOWN_MS, type CombatContext, type WorldItem as CombatWorldItem } from './world/combat.js';
 import { getLegendaryHeat, setLegendaryHeat } from './world/drop-policy.js';
 import { rngCommitV1, rngRevealHex32 } from './world/rng.js';
 import {
@@ -143,6 +143,14 @@ import {
   hasActiveEcho,
   echoToPublicPlayer,
 } from './world/echo.js';
+import {
+  initMobs,
+  getAliveMobsForMap,
+  getMobById,
+  hitMob,
+  mobToPublicPlayer,
+  tickMobRespawns,
+} from './world/mobs.js';
 import { CAP_ECHO_SPAWN } from '../../../packages/shared/types.js';
 import { getEvidence, type EvidenceContext, type EvidenceRequest } from './evidence/handler.js';
 import { computePressureMetrics } from './metrics/pressure.js';
@@ -2371,6 +2379,11 @@ function applyRespawnNow(s: Session, now: number) {
     nearby.push(echoToPublicPlayer(respawnEcho));
   }
 
+  // Include alive mobs
+  for (const mob of getAliveMobsForMap(s.currentMap)) {
+    nearby.push(mobToPublicPlayer(mob));
+  }
+
   send(s.ws, ServerMessages.worldState(s.currentMap, toPublicPlayer(s.player!, true), nearby));
   s.respawnTimer = null;
 }
@@ -2886,6 +2899,11 @@ function processSessionQueue(s: Session, now: number) {
         const echo = getEchoForMap(s.currentMap);
         if (echo) {
           nearby.push(echoToPublicPlayer(echo));
+        }
+
+        // Include alive mobs
+        for (const mob of getAliveMobsForMap(s.currentMap)) {
+          nearby.push(mobToPublicPlayer(mob));
         }
 
         audit.write({ player_id: s.player!.id, action: 'enter_world', inputs: {}, result: 'ok' });
@@ -3547,6 +3565,11 @@ function processSessionQueue(s: Session, now: number) {
                   nearbyAzura.push(echoToPublicPlayer(azuraEcho));
                 }
 
+                // Include alive mobs
+                for (const mob of getAliveMobsForMap('Azura')) {
+                  nearbyAzura.push(mobToPublicPlayer(mob));
+                }
+
                 send(s.ws, ServerMessages.worldState(s.currentMap, toPublicPlayer(s.player!, true), nearbyAzura));
                 broadcastToMap('Azura', ServerMessages.playerJoined(toPublicPlayer(s.player!)), s.connId);
 
@@ -3936,6 +3959,55 @@ function processSessionQueue(s: Session, now: number) {
         const attackerId = s.player!.id;
         const targetId = msg.target_id;
         const msgNow = Date.now();
+
+        // Mob attack path — intercept before PvP handler
+        if (targetId.startsWith('mob:')) {
+          const mob = getMobById(targetId);
+          if (!mob || mob.dead_until_ms !== null) {
+            send(s.ws, ServerMessages.combatRejected('defender_dead'));
+            break;
+          }
+
+          // Cooldown check (reuse PvP cooldown)
+          const lastAttack = lastAttackAt.get(attackerId) ?? 0;
+          if (msgNow - lastAttack < COMBAT_COOLDOWN_MS) {
+            send(s.ws, ServerMessages.combatRejected('cooldown'));
+            break;
+          }
+
+          // Adjacency check
+          const ax = s.player!.x;
+          const ay = s.player!.y;
+          if (Math.abs(ax - mob.def.x) > 1 || Math.abs(ay - mob.def.y) > 1) {
+            send(s.ws, ServerMessages.combatRejected('not_adjacent'));
+            break;
+          }
+
+          lastAttackAt.set(attackerId, msgNow);
+
+          const hit = hitMob(targetId, 1);
+          if (!hit) break;
+
+          if (hit.dead) {
+            audit.write({
+              player_id: attackerId,
+              action: 'mob_kill',
+              inputs: {
+                mob_id: targetId,
+                mob_type: mob.def.mob_type,
+                map: s.currentMap,
+                position: { x: mob.def.x, y: mob.def.y },
+              },
+              result: 'ok',
+            });
+            broadcastToMap(
+              s.currentMap,
+              ServerMessages.combatResolved(attackerId, targetId, 'kill', s.currentMap, mob.def.x, mob.def.y)
+            );
+            broadcastToMap(s.currentMap, ServerMessages.playerLeft(targetId));
+          }
+          break;
+        }
 
         // Build combat context
         const ctx: CombatContext = {
@@ -4781,6 +4853,17 @@ setInterval(() => {
     }
   }
 }, HEAT_DECAY_TICK_MS);
+
+// Mob system init
+initMobs();
+
+// Mob respawn tick — revive dead mobs and broadcast player_joined
+setInterval(() => {
+  const revived = tickMobRespawns();
+  for (const mob of revived) {
+    broadcastToMap(mob.def.map, ServerMessages.playerJoined(mobToPublicPlayer(mob)));
+  }
+}, 5_000);
 
 httpServer.listen(PORT, HOST, () => {
   console.log(`HTTP+WS listening on ${HOST}:${PORT}`);
