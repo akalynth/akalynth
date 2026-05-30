@@ -160,6 +160,7 @@ function DebugApp() {
   const [proof, setProof] = useState<StudioProofState | null>(null);
   const [proofRunning, setProofRunning] = useState(false);
   const [proofError, setProofError] = useState<string | null>(null);
+  const [deathModalOpen, setDeathModalOpen] = useState(false);
   const now = useNow();
   const toast = state.toast && now < state.toast.expiresAt ? state.toast : null;
   const activePlaytestLabel = proof?.activeId ?? 'canonical';
@@ -176,6 +177,11 @@ function DebugApp() {
     typeof meHp === 'number' && typeof meMaxHp === 'number' && meMaxHp > 0
       ? Math.max(0, Math.min(100, Math.round((meHp / meMaxHp) * 100)))
       : 100;
+  const isDead = state.world.me?.status === 'dead';
+  // Latch a blocking death popup; only the player dismisses it by signing back in.
+  useEffect(() => {
+    if (isDead) setDeathModalOpen(true);
+  }, [isDead]);
   const smokeState = proof?.lastSmoke?.ok ? 'pass' : proof?.lastSmoke ? 'fail' : proofError ? 'offline' : 'idle';
   const smokeLabel =
     smokeState === 'pass' ? 'passed' :
@@ -454,8 +460,29 @@ function DebugApp() {
             groundItems={state.groundItems}
           />
           <div className="scene-vignette" />
-          {state.world.me?.status !== 'dead' && healthPct <= 30 && (
+          {!isDead && healthPct <= 30 && (
             <div className="low-hp-vignette" aria-hidden="true" />
+          )}
+          {deathModalOpen && (
+            <div className="death-overlay" role="dialog" aria-modal="true">
+              <div className="death-modal">
+                <div className="death-overlay-title">You died</div>
+                <div className="death-overlay-sub">
+                  Your run has ended. Sign back in to return to character select.
+                </div>
+                <div className="death-modal-actions">
+                  <button
+                    className="action-btn death-relog-btn"
+                    onClick={() => {
+                      setDeathModalOpen(false);
+                      api.relog();
+                    }}
+                  >
+                    Sign in again
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
           <div className="hud hud-primary" aria-label="play status">
             <div className="hud-card hud-card--identity">
