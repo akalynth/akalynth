@@ -440,6 +440,7 @@ function DebugApp() {
             targetId={state.combat.targetId}
             fx={state.combat.fx}
             onSelectTarget={api.setTarget}
+            groundItems={state.groundItems}
           />
           <div className="scene-vignette" />
           <div className="hud hud-primary" aria-label="play status">

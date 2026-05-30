@@ -3,6 +3,8 @@ import type { MapData, PlayerPublic } from '@shared/types';
 import { TileCode } from '@shared/types';
 import type { FloatingText } from '../types';
 
+interface GroundItem { item_id: string; item_type: string; x: number; y: number }
+
 interface MapCanvasProps {
   map: MapData;
   me: PlayerPublic | null;
@@ -11,6 +13,7 @@ interface MapCanvasProps {
   targetId: string | null;
   fx: FloatingText[];
   onSelectTarget: (playerId: string | null) => void;
+  groundItems?: Map<string, GroundItem>;
 }
 
 const TILE_SIZE = 12;
@@ -50,7 +53,7 @@ function landmarkBox(value: unknown): LandmarkBox | null {
   };
 }
 
-export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget }: MapCanvasProps) {
+export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget, groundItems }: MapCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const othersById = useMemo(() => {
     const m = new Map<string, PlayerPublic>();
@@ -105,6 +108,19 @@ export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget
     drawLandmark('runestone_table', 'R', '#f0c83c');
     drawLandmark('legend_stone', '!', '#61d8c6');
 
+    if (groundItems) {
+      for (const item of groundItems.values()) {
+        const cx = item.x * TILE_SIZE + TILE_SIZE / 2;
+        const cy = item.y * TILE_SIZE + TILE_SIZE * 0.75;
+        ctx.fillStyle = '#fbbf24';
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(Math.PI / 4);
+        ctx.fillRect(-2.5, -2.5, 5, 5);
+        ctx.restore();
+      }
+    }
+
     const drawPlayer = (p: PlayerPublic, color: string) => {
       ctx.fillStyle = color;
       ctx.fillRect(p.x * TILE_SIZE, p.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
@@ -137,7 +153,7 @@ export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget
       ctx.fillText(f.text, f.x * TILE_SIZE + 2, f.y * TILE_SIZE - lift);
       ctx.restore();
     }
-  }, [map, me, others, nowMs, targetId, fx, othersById]);
+  }, [map, me, others, nowMs, targetId, fx, othersById, groundItems]);
 
   return (
     <canvas
