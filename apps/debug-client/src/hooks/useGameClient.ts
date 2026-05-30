@@ -728,12 +728,35 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
                 : s;
               const others = new Map<string, PlayerPublic>();
               for (const p of data.nearby_players || []) others.set(p.id, p);
-              return {
+
+              // Detect HP loss on self (same map only) → damage feedback
+              const prevHp = s.world.me?.hp;
+              const newHp = (data.player as PlayerPublic | undefined)?.hp;
+              const sameMap = !nextMap || nextMap === s.world.map.name;
+              let next: GameClientState = {
                 ...base,
                 conn,
                 loop,
                 world: { map: runtimeMap ?? base.world.map, me: data.player, others },
               };
+              if (
+                sameMap &&
+                typeof prevHp === 'number' &&
+                typeof newHp === 'number' &&
+                newHp < prevHp &&
+                data.player
+              ) {
+                const dmg = prevHp - newHp;
+                next = addFx(next, {
+                  x: data.player.x,
+                  y: data.player.y,
+                  text: `-${dmg}`,
+                  at: Date.now(),
+                  ttlMs: 900,
+                });
+                next = pushToast(next, 'combat', `Took ${dmg} damage — ${newHp} HP left`, 'HIT');
+              }
+              return next;
             }
             case 'player_moved': {
               const { player_id, x, y } = data;
@@ -1020,7 +1043,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
                 data.respawn_in_ms >= 0
                   ? data.respawn_in_ms
                   : DEFAULT_RESPAWN_MS;
-              const me = { ...s.world.me, status: 'dead', dead_until_ms: Date.now() + respawnMs };
+              const me = { ...s.world.me, status: 'dead' as const, dead_until_ms: Date.now() + respawnMs };
               const hasLostItems = Object.prototype.hasOwnProperty.call(data, 'lost_items');
               const detail = hasLostItems ? formatLostItems((data as { lost_items?: unknown }).lost_items) : undefined;
               const toast: ToastNotice = {

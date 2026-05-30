@@ -454,6 +454,9 @@ function DebugApp() {
             groundItems={state.groundItems}
           />
           <div className="scene-vignette" />
+          {state.world.me?.status !== 'dead' && healthPct <= 30 && (
+            <div className="low-hp-vignette" aria-hidden="true" />
+          )}
           <div className="hud hud-primary" aria-label="play status">
             <div className="hud-card hud-card--identity">
               <span className="hud-kicker">Akalynth</span>
