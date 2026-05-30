@@ -17,7 +17,7 @@ Every action is:
 
 ### 1. Intent (Claim)
 
-```
+```text
 Actor → System: "I want to move north"
 ```
 
@@ -28,7 +28,7 @@ An intent is a **claim** — a request for action that has no authority until ac
 
 ### 2. Receipt (Authority)
 
-```
+```text
 System → Actor: "Move accepted. Receipt: rcpt_12345"
 ```
 
@@ -85,7 +85,7 @@ A snapshot is a **point-in-time state commitment**. It:
 
 ## The Pipeline
 
-```
+```text
 Intent → Receipt → ChronicleEvent → Snapshot → Explanation → ProofBundle
   ↑                                                              ↓
   └──────────── Replay Scrubber (fork for what-if) ──────────────┘
@@ -141,7 +141,7 @@ Same inputs → same outputs, always:
 
 ## Component Map
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                         Client Side                              │
 ├─────────────────────────────────────────────────────────────────┤

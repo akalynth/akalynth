@@ -1,6 +1,8 @@
 # Constitutional AI Tool Governance
 
-**Version 1.0.0** - Constitutional Framework for AI Tool Execution
+**Constitutional Framework 1.0.0** · package `@akalynth/ai-tool-governance` v1.1.0 — Constitutional Framework for AI Tool Execution
+
+> **v1 note:** This governance package is not part of the Akalynth v1 enforcement surface.
 
 > **Status:** Doctrine (constitutional surface for this package). Changes require an explicit amendment.
 
@@ -164,10 +166,11 @@ const request = {
   // ... other fields
 };
 
-// Requires approval workflow
+// Requires approval workflow (segregation enforced)
 const approval = await governance.requestApproval(request);
 await governance.approveRequest(approval.id, independent_approver);
-const result = await governance.executeWithApproval(approval.id);
+// Once approved, execute through the normal gate
+const result = await governance.executeTool(request, gate);
 ```
 
 ### Emergency Override (Critical Risk)
@@ -209,6 +212,9 @@ ai-gov-verify emergency-audit --overdue-only
 
 # Check overall constitutional status
 ai-gov-verify status --detailed
+
+# Check API/constitutional version compatibility
+ai-gov-verify version-check
 ```
 
 ### Programmatic Verification
@@ -219,13 +225,10 @@ const compliant = await governance.verifyCompliance();
 
 // Generate compliance report
 const report = await governance.generateComplianceReport();
-const compliant = report.violations.length === 0 && report.chain_integrity === 'valid';
-console.log(`Compliance: ${compliant ? 'PASS' : 'FAIL'}`);
+const ok = report.violations.length === 0 && report.chain_integrity === 'valid';
+console.log(`Compliance: ${ok ? 'PASS' : 'FAIL'}`);
 console.log(`Violations: ${report.violations.length}`);
-
-// Check emergency override statistics
-const emergency_stats = await governance.getEmergencyStatistics();
-console.log(`Pending Reviews: ${emergency_stats.pending_reviews}`);
+console.log(`Compliance score: ${report.compliance_score}`);
 ```
 
 ## 📊 Risk Assessment
@@ -239,6 +242,7 @@ AI tools are automatically assessed using constitutional risk factors:
 - **File system access**: +2 points
 - **Network access**: +2 points
 - **Privileged execution**: +3 points
+- **Irreversible action**: +3 points
 
 ### Risk Mitigation (Subtractive)
 - **Rollback available**: -1 point
@@ -355,17 +359,25 @@ const approval = await governance.requestApproval(high_risk_request);
 
 // Independent approval required
 await governance.approveRequest(approval.id, independent_approver);
-const result = await governance.executeWithApproval(approval.id);
+// After approval, execute through the normal gate
+const gate = await governance.determineGate(await governance.assessRisk(high_risk_request));
+const result = await governance.executeTool(high_risk_request, gate);
 ```
 
 ### Run Complete Demonstration
 
 ```typescript
 // See examples/constitutional-proof-demo.ts
-import { ConstitutionalProofDemo } from '@akalynth/ai-tool-governance/examples';
+import { ConstitutionalProofDemo } from './examples/constitutional-proof-demo.js';
 
 const demo = new ConstitutionalProofDemo();
 await demo.runCompleteProof();
+```
+
+Or run it directly:
+
+```bash
+npx tsx examples/constitutional-proof-demo.ts
 ```
 
 ## 🏗️ Architecture
@@ -392,18 +404,18 @@ await demo.runCompleteProof();
 
 ### Key Components
 
-- **ConstitutionalRiskAssessor**: Deterministic risk evaluation
-- **ConstitutionalFrictionManager**: Temporal constraint enforcement
-- **ExecutionPatterns**: Risk-based execution strategies
-- **EmergencyOverride**: Emergency powers with accountability
-- **PostFactoReview**: Mandatory emergency review process
-- **ComplianceVerifier**: Constitutional compliance checking
+- **`ConstitutionalRiskAssessor`** / **`ConstitutionalRiskCalculator`**: Deterministic risk evaluation (`src/risk/`)
+- **`ConstitutionalFrictionManager`**: Temporal constraint enforcement (`src/risk/friction.ts`)
+- **`DirectExecutionPattern`** / **`SegregationExecutionPattern`** / **`EmergencyExecutionPattern`**: Risk-based execution strategies (`src/patterns/`)
+- **`ConstitutionalEmergencyOverride`**: Emergency powers with accountability (`src/emergency/override.ts`)
+- **`ConstitutionalPostFactoReview`**: Mandatory emergency review process (`src/emergency/review.ts`)
+- **`AIToolGovernanceVerifier`**: Constitutional compliance checking (`src/verification/verifier.ts`)
 
 ## 🧪 Testing
 
 ```bash
-npm test
-npm run verify
+npm test          # jest (no test suites are committed yet)
+npm run verify    # node bin/ai-gov-verify (prints CLI usage; see "Constitutional Verification")
 ```
 
 ## 📚 Documentation

@@ -2,6 +2,26 @@
 
 This document captures the current direction for Akalynth's old-school 2D world art and mobile UI. It is a design and production note, not a release claim.
 
+## Contents
+
+- [Goal](#goal)
+- [Research Summary](#research-summary)
+- [Version Target](#version-target)
+- [Legal And Creative Boundary](#legal-and-creative-boundary)
+- [OpenAI Asset Pipeline](#openai-asset-pipeline)
+- [Prompt Pattern](#prompt-pattern)
+- [Production Rules](#production-rules)
+- [First Asset Set](#first-asset-set)
+- [Mobile UI Direction](#mobile-ui-direction)
+- [Mobile Controls](#mobile-controls)
+- [Action Ring](#action-ring)
+- [Inventory And Chat](#inventory-and-chat)
+- [Combat Targeting](#combat-targeting)
+- [Visual UI Style](#visual-ui-style)
+- [Mobile MVP UI Scope](#mobile-mvp-ui-scope)
+- [Open Questions](#open-questions)
+- [Sources](#sources)
+
 ## Goal
 
 Build an original Akalynth visual language that preserves the readability and social feel of early 2000s top-down MMOs without copying Tibia assets, maps, item silhouettes, names, or proprietary client data.

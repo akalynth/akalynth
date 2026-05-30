@@ -115,17 +115,22 @@ When that sentence is true, Phase 6 is complete.
 
 ---
 
-## Fixtures (Planned)
+## Fixtures
 
-Located in `apps/server/fixtures/` (not yet committed for v1):
+Located in `apps/server/fixtures/` (present in the source tree):
 
 | File | Purpose |
 |------|---------|
 | `chronicle_snapshot.json` | Chronicle events with evidence_ref |
 | `evidence_snapshot.json` | Full evidence payload |
-| `test_receipts.jsonl` | Portable receipts for rebuild |
+| `ci-receipts/receipts.jsonl` | Portable receipts for rebuild |
 | `summary.json` | Metadata for assertions |
 | `README.md` | Contract rules |
+
+> The fixture files above exist. The UI that consumes them (Chronicle list,
+> Evidence drawer) is still the deferred future contract described in this
+> document — fixtures being present does not imply the Witness Interface UI is
+> implemented in v1.
 
 ---
 

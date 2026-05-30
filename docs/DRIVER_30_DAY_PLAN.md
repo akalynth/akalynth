@@ -1,6 +1,8 @@
 # Akalynth 30-Day Driver Plan
 
-## Purpose
+> **Purpose:** A bounded, 30-day execution path for a prospective technical driver.
+>
+> **Dates:** Weeks are relative to the driver's Day 1 (start date). Set Day 1 when the driver begins; the four weeks below run consecutively from there.
 
 This plan gives a potential technical driver a bounded execution path.
 

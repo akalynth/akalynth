@@ -152,7 +152,8 @@ export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget
       const lift = 10 + t * 14;
       ctx.save();
       ctx.globalAlpha = alpha;
-      ctx.fillStyle = '#ffffff';
+      // Damage numbers (start with '-') read red; everything else white
+      ctx.fillStyle = f.text.startsWith('-') ? '#ef4444' : '#ffffff';
       ctx.font = 'bold 12px "Space Grotesk", sans-serif';
       ctx.fillText(f.text, f.x * TILE_SIZE + 2, f.y * TILE_SIZE - lift);
       ctx.restore();

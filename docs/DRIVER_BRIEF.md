@@ -1,5 +1,7 @@
 # Akalynth Technical Driver Brief
 
+> **Purpose:** Orient a prospective technical driver on what Akalynth is, what is genuinely valuable in the repo today, and what to evaluate first. Pair this with `docs/SHOWCASE_RUNBOOK.md` (how to run it), `docs/CURRENT_STAGE.md` (claim boundary), and `docs/KNOWN_GAPS.md`.
+
 ## One-Line Description
 
 Akalynth is a server-authoritative MMO prototype built around audit receipts, verifier gates, and proof-native game operations.

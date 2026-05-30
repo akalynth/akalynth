@@ -1,9 +1,25 @@
 # Mail Edge: Golden Receipt
 
-> **Status:** Design doctrine (out of scope for Akalynth v1)
-> **Effective:** 2026-01-02
+> **Purpose:** Speculative design doctrine for a receipt-emitting mail transport ("Mail Edge"). It applies the receipts-first philosophy to email but is **not implemented** in this repository.
+>
+> **Status:** Speculative / design doctrine (explicitly **out of scope for Akalynth v1**; listed under "Non-binding / Future Specs" in `docs/V1_SCOPE.md`). Nothing here is built — there is no Mail Edge code, `policy.rs`, or VaultMesh mail pipeline in this repo. Schemas, paths, and code anchors below describe a proposed design, not shipped behavior.
+> **Effective (design draft):** 2026-01-02
 > **Scroll:** `MAIL_EDGE.v1`
 > **Change control:** Doctrine. Changes require a version bump of the Scroll and an explicit amendment note (no silent edits).
+
+## Contents
+
+- [1. Doctrine](#1-doctrine)
+- [2. Receipt Types (v1 Contract)](#2-receipt-types-v1-contract)
+- [3. Canonical Hashing](#3-canonical-hashing)
+- [4. Artifact Bundle Layout](#4-artifact-bundle-layout)
+- [5. Receipt Format](#5-receipt-format)
+- [6. Quarantine & Rejection](#6-quarantine--rejection)
+- [7. Outbound Receipts](#7-outbound-receipts)
+- [8. Policy v1 Decision Matrix](#8-policy-v1-decision-matrix)
+- [9. Invariants (Hard Law)](#9-invariants-hard-law)
+- [10. What This Is NOT](#10-what-this-is-not)
+- [11. Future Work (Out of Scope for v1)](#11-future-work-out-of-scope-for-v1)
 
 ---
 

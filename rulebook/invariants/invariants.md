@@ -1,5 +1,7 @@
 # Akalynth Invariants
 
+> **Purpose:** Engineering invariants for the runtime (server authority, anti-cheat, identity, chronicle). For civil/governance guarantees see `docs/GOVERNANCE_INVARIANTS.md` and `apps/server/docs/CIVIL_GUARANTEES.md`.
+
 These invariants MUST hold at all times. Violation of any invariant is a critical bug.
 
 ## Server Authority

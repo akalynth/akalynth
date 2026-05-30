@@ -3,9 +3,9 @@
 > **Status:** Legacy draft (non-binding for v1).  
 > **Change control:** Not active; superseded by docs/GOVERNANCE_INVARIANTS.md.
 
-**Document State**: Historical draft (not in effect for v1)
-**Effective Date**: Not effective
-**Amendment Authority**: N/A (superseded by docs/GOVERNANCE_INVARIANTS.md)
+- **Document State**: Historical draft (not in effect for v1)
+- **Effective Date**: Not effective
+- **Amendment Authority**: N/A (superseded by `docs/GOVERNANCE_INVARIANTS.md`)
 
 ---
 

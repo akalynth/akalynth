@@ -136,7 +136,7 @@ If real money (or crypto) is ever enabled:
 
 Ideal abstraction:
 
-```
+```text
 Money → Support Tokens → Non-competitive uses only
 ```
 

@@ -49,7 +49,7 @@ Out of scope:
 
 Observed canonical sequence:
 
-```
+```text
 connect
 -> welcome
 -> login

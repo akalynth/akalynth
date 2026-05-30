@@ -53,8 +53,13 @@ If the client can't connect to the server:
 
 ### Android SDK
 
-The Android SDK is not installed by default. Run:
+`postCreateCommand.sh` runs automatically when the container is created (it is
+wired via `postCreateCommand` in `devcontainer.json`). It bootstraps the Android
+SDK only when an Android app is present (it checks for `apps/android/gradlew`),
+downloading the Android command-line tools.
+
+To re-run the bootstrap manually:
+
 ```bash
 bash .devcontainer/postCreateCommand.sh
 ```
-to bootstrap it (downloads ~2GB).

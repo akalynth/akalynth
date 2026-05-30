@@ -1,9 +1,25 @@
-# World Evolution — Record Change, Don’t Overwrite Truth
+# World Evolution — Record Change, Don't Overwrite Truth
 
-> **Status:** Doctrine (future-facing; non-binding for v1).  
+> **Purpose:** Long-horizon design doctrine for how Akalynth should evolve over time without corrupting its history.
+>
+> **Status:** Doctrine (future-facing; non-binding for v1). Listed under "Non-binding / Future Specs" in `docs/V1_SCOPE.md`.  
 > **Change control:** Amendments apply only once this doctrine is activated.  
-> **Governs:** epoching, replay semantics, “no overwrite truth,” founder-absence constraints.  
+> **Governs:** epoching, replay semantics, "no overwrite truth," founder-absence constraints.  
 > **Scope:** Anything that can affect outcomes must be versioned and provable.
+
+## Contents
+
+- [The Core Principle](#the-core-principle)
+- [1. Freeze the laws, not the world](#1-freeze-the-laws-not-the-world)
+- [2. Version reality instead of patching it](#2-version-reality-instead-of-patching-it)
+- [3. Let systems age and die (on purpose)](#3-let-systems-age-and-die-on-purpose)
+- [4. Make players co-authors, not consumers](#4-make-players-co-authors-not-consumers)
+- [5. Make the economy supportive, not extractive](#5-make-the-economy-supportive-not-extractive)
+- [6. Design for founder absence](#6-design-for-founder-absence)
+- [7. Accept that evolution includes failure](#7-accept-that-evolution-includes-failure)
+- [8. The final invariant (most important)](#8-the-final-invariant-most-important)
+- [v1 Scope Note (Non-binding)](#-v1-scope-note-non-binding)
+- [Final Launch Cut (Minimal, Correct, Durable)](#final-launch-cut-minimal-correct-durable)
 
 To make it evolve forever, you don’t build more systems — you build constraints that let evolution happen without corruption.
 

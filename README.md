@@ -70,10 +70,10 @@ npm install
 
 4) Runtime/API edits: `./scripts/verify_mvp.sh`
 
-5) Focused persistence/receipt checks (from apps/server):
+5) Focused persistence/receipt/anti-cheat checks (from apps/server):
 - `npm run verify:receipt-hygiene`
-- `npx tsx ../../scripts/heat_out_of_order_smoke.ts`
-- `npx tsx ../../scripts/heat_pr2_out_of_order_smoke.ts`
+- `npm run verify:heat`
+- `npm run verify:anticheat-persistence`
 
 ## Showcase Preflight
 
@@ -89,10 +89,17 @@ This script checks protocol sync, server build, MVP verification, and debug-clie
 
 **All contributions must pass the Verification Spine before merge.**
 
+Run the spine from the repository root:
+
 ```bash
-cd apps/server
 npm run verify
 ```
+
+This builds the verification packages and runs `packages/verification-spine/bin/akalynth-verify.js`.
+Profile variants are also available: `npm run verify:quick`, `npm run verify:full`, and `npm run verify:audit`.
+
+> Note: `npm run verify` inside `apps/server` is a different, server-scoped check
+> (`tsx tools/verify-guarantees.ts`), not the full spine.
 
 The Verification Spine is **not optional tooling** — it is **civilizational law enforcement**.
 

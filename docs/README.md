@@ -61,8 +61,11 @@ This checks protocol sync, server build, MVP verification, and debug-client buil
 akalynth/
   apps/server/        # Authoritative MMO server (TypeScript)
   apps/debug-client/  # Debug web client (Vite)
-  apps/android/       # Android client foundation
-  packages/shared/    # Shared schemas/types
+  apps/studio/        # Studio web app (Vite)
+  apps/phone-server/  # Phone/companion server (TypeScript)
+  apps/android/       # Android client (Kotlin/Compose)
+  packages/           # Shared libraries (shared, coordination-kernel, verification-spine, ...)
+  crates/             # Rust crates (chronicle witness kernel)
   docs/               # Specifications and stage boundaries
   scripts/            # Bootstrap, verification, and dev scripts (Linux)
   tools/              # Tooling and validators
@@ -106,16 +109,49 @@ Core docs:
 - [V1 Scope Fence](./V1_SCOPE.md) - what v1 includes and explicitly defers
 - [Architecture](./ARCHITECTURE.md) - server loop, world state, anti-cheat pipeline
 - [Protocol](./PROTOCOL.md) - message types and examples
+- [Client Contract v0.1 (Frozen)](./CLIENT_CONTRACT_V0_1.md) - frozen Android/client wire compatibility contract
 - [Anti-Cheat](./ANTICHEAT.md) - detection signals, Tem challenge, enforcement
-- [Governance Invariants](./GOVERNANCE_INVARIANTS.md) - civil guarantees and auditability constraints
+- [Identity Verification v0.1](./IDENTITY_VERIFICATION.md) - external verification protocol for identity tokens
+- [Persistence Matrix](./PERSISTENCE_MATRIX.md) - state classified by durability, authority, and evidence
+- [Manifesto](./MANIFESTO.md) - narrative manifesto: the world's tone, the Ledger, and why it endures
+- [World: Azura](./WORLD_AZURA.md) - city layout, spawn zone, landmarks
+- [World: Rookguard](./WORLD_ROOKGUARD.md) - mandatory 32×32 onboarding/training map
 - [World Evolution](./WORLD_EVOLUTION.md) - epochs, sunsets, and founder-absence survival rules
+- [Copilot Delegation](./COPILOT_DELEGATION.md) - custom agents, domain specialists, constraint enforcement
+
+Verification, governance, and proof docs:
+
+- [Verification Spine API v1](./VERIFICATION_SPINE_API.md) - the mandatory pre-merge verification system contract
+- [Spine Lock v1](./SPINE_V1.md) - locked spine surface and verifier registration rules
+- [Governance Invariants](./GOVERNANCE_INVARIANTS.md) - civil guarantees and auditability constraints
+- [Constitutional Amendment Process](./CONSTITUTIONAL_AMENDMENTS.md) - formal process for modifying constitutional files
+- [Proof Bundles](./PROOF_BUNDLES.md) - portable, immutable, independently verifiable proof packets
+- [Simulate Without Lying](./SIMULATE_WITHOUT_LYING.md) - Fork/Replay system for counterfactuals isolated from truth
+- [MVP Verification Report v1](./MVP_VERIFICATION_REPORT_v1.md) - recorded MVP verification result
+- [Load Test Harness](./LOAD_TEST_HARNESS.md) - load-test spec (authorized local/staging only)
+- [High-Leverage Decision Checklist](./HIGH_LEVERAGE_DECISION_CHECKLIST.md) - checklist for high-leverage task selection
+- [Leverage Tier Mapping](./LEVERAGE_TIER_MAPPING.md) - current-state leverage tier mapping
+
+Monetization docs:
+
 - [Monetization Blueprint](./MONETIZATION_BLUEPRINT.md) - future-proof rules for non-competitive purchases
 - [Monetization Constitution](./MONETIZATION_CONSTITUTION.md) - formal, enforceable monetization policy
 - [Monetization Constitution Review](./MONETIZATION_CONSTITUTION_REVIEW.md) - rationale, enforcement notes, and loophole closures
 - [Monetization Receipts](./MONETIZATION_RECEIPTS.md) - receipt schema for auditable, reversible monetization
 - [Monetization Justifications](./MONETIZATION_JUSTIFICATIONS.md) - registry of “not power” justification IDs
-- [World: Azura](./WORLD_AZURA.md) - city layout, spawn zone, landmarks
-- [Copilot Delegation](./COPILOT_DELEGATION.md) - custom agents, domain specialists, constraint enforcement
+
+UI / client docs:
+
+- [UI Proposal (FREEZE)](./UI_PROPOSAL.md) - frozen Mobile UI v0 spec
+- [UI Implementation Proposal](./UI_IMPLEMENTATION_PROPOSAL.md) - normative Android UI implementation guidance
+- [UI Mapping Checklist](./UI_MAPPING_CHECKLIST.md) - implementation mapping checklist against the UI spec
+- [UI Regression Matrix](./UI_REGRESSION_MATRIX.md) - behavioral contract for Android UI, mapped to tests
+- [APK Distribution Checklist](./APK_DISTRIBUTION_CHECKLIST.md) - ship & observe rollout checklist
+
+Audits:
+
+- [System Audit — Post-Repair v1](./AUDITS/SYSTEM_AUDIT_POST_REPAIR_v1.md) - post-repair audit (work ticks, bootstrap, replay determinism)
+- [System Audit — Codex Post-Repair](./AUDITS/SYSTEM_AUDIT_CODEX_POST_REPAIR.md) - Codex post-repair audit prompt
 
 Frozen reference specs (WLA v1.0 — no further changes):
 

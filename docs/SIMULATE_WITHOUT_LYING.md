@@ -29,7 +29,7 @@ This is what it means to "simulate without lying."
 
 ## Architecture
 
-```
+```text
 Authoritative Timeline
   │
   ├── seq 1: CONFIRMED (inherited)
@@ -327,7 +327,7 @@ The bundle will:
 
 ### "What if?" UI
 
-```
+```text
 [Player Death Screen]
 You died to Goblin and lost:
 - Iron Sword
