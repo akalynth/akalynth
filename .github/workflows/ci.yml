@@ -262,6 +262,8 @@ jobs:
           npm run verify:npc-dialogue
           npm run verify:presence
           npm run verify:costed-actions
+          npm run verify:mob-loot
+          npm run verify:item-pickup-type
 
       - name: Write showcase summary
         if: always()

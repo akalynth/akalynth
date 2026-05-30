@@ -35,7 +35,8 @@
     "chronicle:adapter:smoke": "tsx tools/chronicle-adapter-smoke.ts",
     "rulebook:genesis": "tsx tools/genesis-rulebook.ts",
     "install-hooks": "bash scripts/install-hooks.sh",
-    "verify:mob-loot": "tsx tools/verify-mob-loot.ts"
+    "verify:mob-loot": "tsx tools/verify-mob-loot.ts",
+    "verify:item-pickup-type": "tsx tools/verify-item-pickup-type.ts"
   },
   "dependencies": {
     "@akalynth/coordination-kernel": "file:../../packages/coordination-kernel",
