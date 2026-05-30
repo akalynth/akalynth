@@ -154,36 +154,16 @@ export function handleHttp(
 
   // Transparency (public proof of fairness)
   if (method === 'GET' && path === '/v1/transparency') {
-    if (!deps.getTransparency) {
-      const defaultResponse: TransparencyResponse = {
-        version: deps.getVersion(),
-        server_version: deps.getVersion(),
-        identity: {
-          auth_public_key_hex: '',
-          key_derivation: 'blake3(akalynth/auth/v0 || chronicle_seed)',
-        },
-        principles: [
-          'Money cannot buy gameplay power',
-          'Every state change is receipted',
-          'Receipts are cryptographically signed and chain-linked',
-          'Enforcement is deterministic and replayable',
-        ],
-        documentation: {
-          monetization_constitution: '/docs/MONETIZATION_CONSTITUTION.md',
-          architecture: '/docs/ARCHITECTURE.md',
-          anticheat: '/docs/ANTICHEAT.md',
-        },
-        public_receipts_endpoint: '/v1/receipts/public',
-        verification: {
-          chain_integrity: 'npm run verify:lifecycle',
-          monetization_policy: 'npm run verify:monetization',
-          work_contracts: 'npm run verify:work-contracts',
-        },
-      };
-      json(res, 200, defaultResponse);
+    const transparency = deps.getTransparency?.();
+    // Refuse rather than advertise an empty identity: a server with no auth
+    // key is unbootstrapped/misconfigured and must not publish a fairness
+    // proof it cannot back. Serving auth_public_key_hex: '' would be a false
+    // claim of transparency.
+    if (!transparency || !transparency.identity.auth_public_key_hex) {
+      json(res, 503, { error: 'transparency_unavailable' });
       return true;
     }
-    json(res, 200, deps.getTransparency());
+    json(res, 200, transparency);
     return true;
   }
 

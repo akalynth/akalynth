@@ -24,6 +24,7 @@
     "verify:rate-limits": "tsx tools/verify-rate-limits.ts",
     "verify:evidence": "tsx tools/verify-evidence.ts",
     "verify:identity": "tsx tools/verify-identity.ts",
+    "verify:transparency": "tsx tools/verify-transparency.ts",
     "verify:doctrine": "tsx tools/verify-doctrine.ts",
     "verify:monetization": "tsx tools/verify-monetization.ts",
     "verify:treasury": "tsx tools/verify-treasury.ts",
