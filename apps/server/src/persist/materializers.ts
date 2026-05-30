@@ -365,11 +365,14 @@ function handleItemAddedToInventory(
   `).run(receipt.actor_id, `Guest_${receipt.actor_id.slice(-4)}`, receipt.timestamp, receiptHash);
 
   // Safety net: ensure item exists (handles receipt reordering edge cases)
-  // This creates a stub row if item_minted receipt hasn't been processed yet
+  // This creates a stub row if item_minted receipt hasn't been processed yet.
+  // For mob loot (never item_minted) the type is carried on the pickup receipt;
+  // fall back to 'unknown' for older receipts / mints that fill the real row.
+  const stubItemType = (inputs.item_type as string) ?? 'unknown';
   db.prepare(`
     INSERT OR IGNORE INTO items (item_id, item_type, created_at, genesis_receipt, meta_json)
     VALUES (?, ?, ?, ?, ?)
-  `).run(itemId, 'unknown', receipt.timestamp, receiptHash, '{}');
+  `).run(itemId, stubItemType, receipt.timestamp, receiptHash, '{}');
 
   // Upsert into inventory
   db.prepare(`

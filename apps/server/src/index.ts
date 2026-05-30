@@ -1752,6 +1752,10 @@ function handlePickupItem(
     player_id: playerId,
     inputs: {
       item_id: itemId,
+      // Carry the world item's type so the materializer can record it. Mob loot
+      // (`*_goo`, `slime`) is never `item_minted`, so pickup is the only place the
+      // type is known; without this it would persist/display as 'unknown'.
+      item_type: item.itemType,
       slot: null,
       source: 'pickup',
     },
