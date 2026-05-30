@@ -30,6 +30,7 @@
     "verify:work-contracts": "tsx tools/verify-work-contracts.ts",
     "verify:ops": "tsx tools/verify-ops.ts",
     "fixture:generate": "tsx tools/generate-ci-fixture.ts",
+    "materialize-db": "tsx tools/materialize-db.ts",
     "export:monetization-redacted": "tsx tools/export-monetization-redacted.ts",
     "chronicle:demo": "tsx tools/chronicle-demo.ts",
     "chronicle:adapter:smoke": "tsx tools/chronicle-adapter-smoke.ts",

@@ -233,6 +233,17 @@ jobs:
           cd apps/server
           node tools/generate-chronicle-log.js fixtures/ci-chronicle/chronicle.log
 
+      - name: Materialize DB from fixture receipts
+        # Replays the signed fixture receipts into data/akalynth.db so the
+        # DB-backed verifiers (heat/protected/chronicle/evidence) have the
+        # SQLite projection they read. Same path resolver the verifiers use.
+        env:
+          CHRONICLE_KEY_PATH: ${{ github.workspace }}/.secrets/chronicle.key
+          AKALYNTH_RECEIPT_CHAIN_PATH: ${{ github.workspace }}/apps/server/fixtures/ci-receipts/receipts.jsonl
+        run: |
+          cd apps/server
+          npm run materialize-db
+
       - name: Receipt + chronicle hygiene (audit)
         env:
           ENABLE_CHRONICLE: "1"
@@ -262,6 +273,20 @@ jobs:
           npm run verify:npc-dialogue
           npm run verify:presence
           npm run verify:costed-actions
+
+      - name: DB-backed verifiers (Phase 2)
+        # Verify the SQLite projection (materialized above) matches the
+        # canonical receipts. rate-limits is excluded here: it is an
+        # integration test that needs a running server (see loadtest-smoke).
+        env:
+          CHRONICLE_KEY_PATH: ${{ github.workspace }}/.secrets/chronicle.key
+          AKALYNTH_RECEIPT_CHAIN_PATH: ${{ github.workspace }}/apps/server/fixtures/ci-receipts/receipts.jsonl
+        run: |
+          cd apps/server
+          npm run verify:heat
+          npm run verify:protected
+          npm run verify:chronicle
+          npm run verify:evidence
 
       - name: Write showcase summary
         if: always()
@@ -350,6 +375,53 @@ jobs:
         run: |
           cd tools/loadtest
           npm run loadtest -- run --scenario movement-heavy --clients 2 --duration 5s --seed 12345
+
+      - name: Verify rate limits (isolated scenarios)
+        # Each scenario runs against its OWN fresh server on a separate port, so
+        # the per-IP connection budget can't bleed between scenarios (on a shared
+        # server the next connect hits the limit ip_flood just consumed). The
+        # smoke server on :3000 keeps running here; these use :3001+ to avoid it.
+        env:
+          NODE_ENV: development
+        run: |
+          KEY_DIR="$(mktemp -d)"
+          node --input-type=module -e "
+            import fs from 'node:fs';
+            import crypto from 'node:crypto';
+            const keyPath = process.argv[1];
+            const seed = crypto.createHash('sha256').update('akalynth-ratelimit-key-v1').digest();
+            fs.writeFileSync(keyPath, seed.subarray(0, 32));
+            fs.chmodSync(keyPath, 0o600);
+          " "$KEY_DIR/chronicle.key"
+          cd apps/server
+          npm run rulebook:genesis
+          port=3001
+          for scen in ip_flood move_spam chat_spam attack_spam; do
+            RUN_DIR="$(mktemp -d)"
+            mkdir -p "$RUN_DIR/audit" "$RUN_DIR/data"
+            touch "$RUN_DIR/audit/receipts.jsonl"
+            DEBUG=1 \
+            ALLOW_INSECURE_LOCAL=1 \
+            AKALYNTH_LIFECYCLE_VERIFY=0 \
+            PORT=$port \
+            AKALYNTH_RECEIPT_CHAIN_PATH="$RUN_DIR/audit/receipts.jsonl" \
+            AKALYNTH_DB_PATH="$RUN_DIR/data/akalynth.db" \
+            AKALYNTH_REPLAY_MARKER_PATH="$RUN_DIR/data/replay_marker.json" \
+            CHRONICLE_KEY_PATH="$KEY_DIR/chronicle.key" \
+            npm start >"$RUN_DIR/server.log" 2>&1 &
+            ok=0
+            for i in $(seq 1 30); do
+              curl -sf "http://127.0.0.1:$port/v1/health" >/dev/null && { ok=1; break; }
+              sleep 0.5
+            done
+            if [ "$ok" != 1 ]; then
+              echo "rate-limit server failed to start for $scen"
+              cat "$RUN_DIR/server.log"
+              exit 1
+            fi
+            WS_URL="ws://127.0.0.1:$port" npm run verify:rate-limits -- --scenario=$scen || exit 1
+            port=$((port + 1))
+          done
 
       - name: Upload load test artifacts
         uses: actions/upload-artifact@v4
