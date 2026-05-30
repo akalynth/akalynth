@@ -180,6 +180,16 @@ export interface ChronicleEventRow {
   evidence_ref: string | null; // Phase 4.4 E2: JSON EvidenceRef or null
 }
 
+// Dialogue Contract v1: append-only NPC talk event (durable variation nonce source)
+export interface NpcTalkEventRow {
+  id: number;
+  player_id: string;
+  npc_id: string;
+  tier: string;
+  timestamp: string; // ISO8601
+  receipt_hash: string;
+}
+
 // Moderation v1: Report queue projection
 export type ModerationReportStatus = 'open' | 'resolved';
 export type ModerationResolution = 'no_action' | 'warning' | 'temp_mute';
@@ -251,6 +261,9 @@ export const RECEIPT_ACTIONS = {
   // Identity v0.1: Named character creation and token issuance
   CHARACTER_CREATE: 'character_create',
   AUTH_TOKEN_ISSUE: 'auth_token_issue',
+
+  // Dialogue Contract v1: durable NPC talk counter (seeds dialogue variation)
+  NPC_TALKED: 'npc_talked',
 } as const;
 
 // Alias mapping for existing receipt actions
@@ -348,6 +361,11 @@ export interface PersistenceLayer {
   // Read queries - Player Heat (Phase 3.5)
   getPlayerHeat(player_id: string): PlayerHeatRow | null;
   getPlayerAntiCheatEnforcement(player_id: string): PlayerAntiCheatEnforcementRow | null;
+
+  // Read queries - NPC dialogue (Dialogue Contract v1)
+  // Returns how many times the player has already talked to this NPC at this
+  // tier; used as the deterministic, durable variation nonce.
+  getNpcTalkCount(player_id: string, npc_id: string, tier: string): number;
 
   // Read queries - Protected Slots (Phase 3.2)
   getProtectedSlots(): Array<{ owner_player_id: string; item_id: string; updated_at: string }>;

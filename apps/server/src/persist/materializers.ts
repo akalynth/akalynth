@@ -70,6 +70,8 @@ const HANDLERS: Record<string, Handler> = {
   // Identity v0.1
   [RECEIPT_ACTIONS.CHARACTER_CREATE]: handleCharacterCreate,
   [RECEIPT_ACTIONS.AUTH_TOKEN_ISSUE]: handleAuthTokenIssue,
+  // Dialogue Contract v1
+  [RECEIPT_ACTIONS.NPC_TALKED]: handleNpcTalked,
 };
 
 // ============================================================================
@@ -836,6 +838,36 @@ function handleAuthTokenIssue(
   // Audit-only: no DB mutation
   // The receipt itself is the proof of token issuance
   // Token validation is runtime-only (tokens are not stored in DB)
+}
+
+// ============================================================================
+// Dialogue Contract v1 Handler
+// ============================================================================
+
+/**
+ * Handle npc_talked: append one row per talk to the durable counter log.
+ *
+ * Idempotent via UNIQUE(receipt_hash): re-materializing the same receipt
+ * (replay resume, full rebuild) never double-counts. The variation nonce is
+ * derived at read time as COUNT(*) per (player, npc, tier), so a rebuild from
+ * receipts reconstructs identical counts — "receipts are canon".
+ */
+function handleNpcTalked(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const inputs = receipt.inputs ?? {};
+  const npcId = inputs.npc_id as string;
+  const tier = inputs.tier as string;
+  const playerId = receipt.actor_id;
+
+  if (!npcId || !tier || !playerId) return;
+
+  db.prepare(`
+    INSERT OR IGNORE INTO npc_talk_events (player_id, npc_id, tier, timestamp, receipt_hash)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(playerId, npcId, tier, receipt.timestamp, receiptHash);
 }
 
 // ============================================================================
