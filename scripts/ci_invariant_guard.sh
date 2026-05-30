@@ -43,6 +43,7 @@ API_CHANGED=0
 SERVER_SRC_CHANGED=0
 SHARED_CHANGED=0
 SCRIPTS_CHANGED=0
+DOCKER_RUNTIME_CHANGED=0
 DOCS_ONLY=1
 
 while IFS= read -r file; do
@@ -71,6 +72,10 @@ while IFS= read -r file; do
       ;;
     scripts/*)
       SCRIPTS_CHANGED=1
+      DOCS_ONLY=0
+      ;;
+    infra/docker/*|.dockerignore)
+      DOCKER_RUNTIME_CHANGED=1
       DOCS_ONLY=0
       ;;
     docs/*|*.md|.gitignore|.github/*)
@@ -138,6 +143,17 @@ if [[ "$DOCS_ONLY" -eq 0 ]]; then
 else
   log "Docs-only change detected, skipping runtime invariant checks"
   pass "Docs-only changes are allowed"
+fi
+
+# Invariant E: Docker runtime changes require Docker artifact verification
+if [[ "$DOCKER_RUNTIME_CHANGED" -eq 1 ]]; then
+  log "Invariant E: Docker runtime files changed"
+  if [[ ! -f "$ROOT_DIR/scripts/verify-docker-runtime.sh" ]]; then
+    fail "Missing scripts/verify-docker-runtime.sh"
+    ERRORS=$((ERRORS + 1))
+  else
+    pass "verify-docker-runtime.sh exists (will run in CI)"
+  fi
 fi
 
 header "Summary"
