@@ -101,6 +101,7 @@ export interface GameClientState {
     targetId: string | null;
     fx: FloatingText[];
   };
+  groundItems: Map<string, { item_id: string; item_type: string; x: number; y: number }>;
 }
 
 export interface GameClientApi {
@@ -110,6 +111,7 @@ export interface GameClientApi {
   sendAttack: () => void;
   castRunestone: () => void;
   talkToNpc: (npcId: string) => void;
+  pickupItem: (itemId: string) => void;
   sendChat: (message: string) => void;
   requestChronicle: (limit?: number, openRecap?: boolean) => void;
   openChronicle: () => void;
