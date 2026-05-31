@@ -13,6 +13,8 @@
 import { blake3 } from '@noble/hashes/blake3';
 import stableStringify from 'fast-json-stable-stringify';
 import { rngCommit, rngDrawU32Legacy } from './rng.js';
+import { computeDeathDrops, type ItemForDrop } from './dropPolicy.js';
+import type { MapName } from './http.js';
 
 export type CheckStatus = 'pass' | 'fail' | 'not_checked' | 'unsupported';
 
@@ -192,6 +194,16 @@ function verifyCombatResolved(receipt: Record<string, unknown>): OutcomeVerifica
 
   const inp = inputs as Record<string, unknown>;
 
+  // ----- F1/#100: receipt-contained RNG proof path -----
+  // When the receipt carries inputs.rng_proof, we can recompute the RNG output
+  // AND the final outcome (dropped_item_ids) from the artifact alone. This
+  // upgrades replay_consistent → rng_consistent. It is NEVER "verified":
+  // precommit_anchoring stays "fail" because the receipt does not prove the
+  // server committed to the reveal seed before the outcome (that is #101).
+  if ('rng_proof' in inp) {
+    return verifyReceiptRngProof(receipt, inp);
+  }
+
   // ----- SEED BINDING (deterministic replay) -----
   // Reconstruct the base object the server hashed to produce drop_seed_hash and
   // compare against the receipt's recorded drop_seed_hash.
@@ -249,6 +261,220 @@ function verifyCombatResolved(receipt: Record<string, unknown>): OutcomeVerifica
     // Shape + seed binding passed; no RNG triple to check.
     final_status = 'replay_consistent';
   }
+
+  return {
+    receipt_shape_valid,
+    receipt_authenticity,
+    chronicle_inclusion,
+    rng_commit_reveal,
+    outcome_derivation,
+    precommit_anchoring,
+    final_status,
+    reason_codes,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// F1/#100: receipt-contained RNG proof verification (offline)
+// ---------------------------------------------------------------------------
+//
+// Recomputes — from the receipt artifact alone — (a) the receipt body hash that
+// seeded the draw, (b) the rng_commit/reveal/output triple, and (c) the final
+// dropped_item_ids via the shared dropPolicy module. Precommit anchoring ALWAYS
+// fails (PRECOMMIT_NOT_PROVEN): this proof does not show the server committed to
+// the reveal seed before the outcome. final_status maxes out at "rng_consistent".
+
+function reconstructItemsForDrop(raw: unknown): ItemForDrop[] | null {
+  if (!Array.isArray(raw)) return null;
+  const out: ItemForDrop[] = [];
+  for (const entry of raw) {
+    if (!isObject(entry)) return null;
+    if (typeof entry['item_id'] !== 'string') return null;
+    if (typeof entry['item_type'] !== 'string') return null;
+    const item: ItemForDrop = {
+      item_id: entry['item_id'] as string,
+      item_type: entry['item_type'] as string,
+    };
+    if (isObject(entry['meta'])) item.meta = entry['meta'] as Record<string, unknown>;
+    if ('slot' in entry) item.slot = (entry['slot'] as string | null) ?? null;
+    out.push(item);
+  }
+  return out;
+}
+
+// Build the per-item heat lookup the server used at selection time. The proof
+// folds each legendary item's heat into its meta.heat; we hand that to the
+// shared selector so the offline recompute never needs live server state.
+function buildHeatLookup(items: ItemForDrop[]): Map<string, number> {
+  const m = new Map<string, number>();
+  for (const it of items) {
+    const h = it.meta?.['heat'];
+    if (typeof h === 'number') m.set(it.item_id, h);
+  }
+  return m;
+}
+
+function verifyReceiptRngProof(
+  receipt: Record<string, unknown>,
+  inp: Record<string, unknown>
+): OutcomeVerificationResult {
+  const reason_codes: string[] = [];
+
+  const receipt_authenticity: CheckStatus = 'not_checked';
+  reason_codes.push('RECEIPT_SIGNATURE_NOT_CHECKED');
+  const chronicle_inclusion: CheckStatus = 'not_checked';
+  reason_codes.push('CHRONICLE_INCLUSION_NOT_CHECKED');
+
+  // Precommit anchoring is ALWAYS unproven for v1 (tracked in #101).
+  const precommit_anchoring: CheckStatus = 'fail';
+  reason_codes.push('PRECOMMIT_NOT_PROVEN');
+
+  const receipt_shape_valid = true; // shape already validated by caller
+
+  const proof = inp['rng_proof'];
+  if (!isObject(proof)) {
+    reason_codes.push('MISSING_RNG_PROOF');
+    return {
+      receipt_shape_valid,
+      receipt_authenticity,
+      chronicle_inclusion,
+      rng_commit_reveal: 'fail',
+      outcome_derivation: 'fail',
+      precommit_anchoring,
+      final_status: 'failed',
+      reason_codes,
+    };
+  }
+
+  // ----- unsupported outcome type (e.g. future non-loot proofs) -----
+  if (proof['outcome_type'] !== 'loot_drop') {
+    reason_codes.push('UNSUPPORTED_OUTCOME_TYPE');
+    return {
+      receipt_shape_valid,
+      receipt_authenticity,
+      chronicle_inclusion,
+      rng_commit_reveal: 'unsupported',
+      outcome_derivation: 'unsupported',
+      precommit_anchoring,
+      final_status: 'unsupported',
+      reason_codes,
+    };
+  }
+
+  const revealSeed = proof['reveal_seed'];
+  const bodyHash = proof['receipt_body_hash'];
+  const rngOut = proof['rng_out'];
+  const commit = proof['rng_commit'];
+
+  // ----- receipt_body_hash: recompute from combatResolvedBase -----
+  let bodyHashOk = false;
+  if (typeof bodyHash !== 'string' || bodyHash.length === 0) {
+    reason_codes.push('MISSING_RECEIPT_BODY_HASH');
+  } else {
+    const base = {
+      actor_id: receipt['actor_id'],
+      action: 'combat_resolved',
+      inputs: {
+        target_player_id: inp['target_player_id'],
+        map: inp['map'],
+        position: inp['position'],
+        outcome: inp['outcome'],
+      },
+      result: 'ok',
+    };
+    const recomputed = computeReceiptHash(base);
+    // Body hash must equal both the recomputed base hash AND the receipt's
+    // drop_seed_hash (the seed the server recorded). Either divergence is fatal.
+    bodyHashOk = recomputed === bodyHash && bodyHash === inp['drop_seed_hash'];
+    if (!bodyHashOk) reason_codes.push('RECEIPT_BODY_HASH_MISMATCH');
+  }
+
+  // ----- rng_commit_reveal: commit binding + per-index RNG output -----
+  let rng_commit_reveal: CheckStatus = 'pass';
+  if (typeof revealSeed !== 'string' || revealSeed.length === 0) {
+    reason_codes.push('MISSING_RNG_REVEAL_SEED');
+    rng_commit_reveal = 'fail';
+  }
+  if (!Array.isArray(rngOut)) {
+    reason_codes.push('MISSING_RNG_OUTPUT');
+    rng_commit_reveal = 'fail';
+  }
+
+  if (rng_commit_reveal !== 'fail') {
+    const seedStr = revealSeed as string;
+    const outs = rngOut as unknown[];
+
+    if (typeof commit === 'string' && commit.length > 0) {
+      // The commit must bind the revealed seed: rngCommit(reveal_seed) === commit.
+      // A tampered commit (or a deferred v1 domain/actor-separated commit that
+      // cannot be reproduced offline) fails this binding → COMMIT_MISMATCH, and
+      // we additionally flag LEGACY_PRECOMMIT_UNBOUND to record that the commit
+      // present does not bind the reveal seed under the v0 scheme.
+      if (rngCommit(seedStr) !== commit) {
+        reason_codes.push('COMMIT_MISMATCH');
+        reason_codes.push('LEGACY_PRECOMMIT_UNBOUND');
+        rng_commit_reveal = 'fail';
+      }
+    }
+
+    for (let i = 0; i < outs.length; i++) {
+      if (outs[i] !== rngDrawU32Legacy(seedStr, i)) {
+        reason_codes.push('RNG_OUTPUT_MISMATCH');
+        rng_commit_reveal = 'fail';
+        break;
+      }
+    }
+  }
+
+  // ----- outcome_derivation: recompute dropped_item_ids via shared dropPolicy -----
+  let outcome_derivation: CheckStatus = 'pass';
+  const derivation = proof['derivation'];
+  const dInputs = isObject(derivation) ? derivation['inputs'] : undefined;
+
+  if (!isObject(dInputs)) {
+    reason_codes.push('OUTCOME_MISMATCH');
+    outcome_derivation = 'fail';
+  } else {
+    const items = reconstructItemsForDrop(dInputs['items']);
+    const reputation = dInputs['reputation'];
+    const map = dInputs['map'];
+    const dropped = inp['dropped_item_ids'];
+
+    if (
+      items === null ||
+      typeof reputation !== 'number' ||
+      typeof map !== 'string' ||
+      typeof revealSeed !== 'string' ||
+      !Array.isArray(dropped)
+    ) {
+      reason_codes.push('OUTCOME_MISMATCH');
+      outcome_derivation = 'fail';
+    } else {
+      const heatLookup = buildHeatLookup(items);
+      const recomputed = computeDeathDrops(
+        items,
+        map as MapName,
+        reputation,
+        revealSeed,
+        [],
+        heatLookup
+      ).droppedItemIds;
+
+      const expected = dropped as unknown[];
+      const sameLen = recomputed.length === expected.length;
+      const sameItems =
+        sameLen && recomputed.every((id, i) => id === expected[i]);
+      if (!sameItems) {
+        reason_codes.push('OUTCOME_MISMATCH');
+        outcome_derivation = 'fail';
+      }
+    }
+  }
+
+  // ----- final_status -----
+  const allPass =
+    bodyHashOk && rng_commit_reveal === 'pass' && outcome_derivation === 'pass';
+  const final_status: FinalStatus = allPass ? 'rng_consistent' : 'failed';
 
   return {
     receipt_shape_valid,
