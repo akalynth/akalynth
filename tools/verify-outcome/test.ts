@@ -205,78 +205,86 @@ const cases: Case[] = [
     ],
   },
 
-  // ---- #101: v2 precommit-anchored proof fixtures (chronicle-aware) ----
-  // DOWNGRADE (this release): commit-before-outcome ordering is NOT chain-proven
-  // (chronicle and receipt logs use separate seq spaces; caller-supplied ordinals
-  // are not trusted). So precommit_anchoring is always "not_checked"
-  // (ORDERING_NOT_CHAIN_PROVEN) and "verified" is UNREACHABLE. The cryptographic
-  // commit/reveal binding + outcome derivation still cap at rng_consistent.
-  // Real ordering proof is a #94-coordinated follow-up.
+  // ---- #104: v2 precommit-anchored proof fixtures (chronicle-GLOBAL-CHAIN-aware) ----
+  // Ordering is checked by the verifier RE-CHECKING the chronicle global hash
+  // chain (Seal 2.3) over a supplied slice (same computation as
+  // verify-chronicle-chain.ts) and requiring commit < death(outcome) < reveal by
+  // link-checked POSITION. BUT a hash-linked slice is forgeable on its own (the
+  // events are not signature-authenticated here), so a consistent slice yields
+  // SLICE_NOT_AUTHENTICATED and "verified" is UNREACHABLE — ceiling rng_consistent.
+  // Slice authentication (verifying chronicle-event signatures) is the follow-up.
   {
-    // Even WITH auth pubkey + commit+reveal context: ordering unproven → caps at
-    // rng_consistent, NOT verified. (authenticity passes silently.)
+    // Valid ordered slice + valid pubkey: ordering consistent but slice
+    // UNAUTHENTICATED → rng_consistent, NOT verified.
     file: 'rng-v2-anchored-verified.json',
-    contextFile: 'rng-v2-anchored-verified.context.json',
+    contextFile: 'rng-v2-slice-valid-pubkey.context.json',
     expectFinal: 'rng_consistent',
-    expectReasons: ['ORDERING_NOT_CHAIN_PROVEN'],
+    expectReasons: ['SLICE_NOT_AUTHENTICATED'],
   },
   {
-    // Reveal present, no auth pubkey → rng_consistent, ordering unproven.
+    // Valid ordered slice, NO pubkey → rng_consistent, slice unauthenticated.
     file: 'rng-v2-anchored-verified.json',
-    contextFile: 'rng-v2-anchored-no-pubkey.context.json',
+    contextFile: 'rng-v2-slice-valid-no-pubkey.context.json',
     expectFinal: 'rng_consistent',
-    expectReasons: ['RECEIPT_SIGNATURE_NOT_CHECKED', 'ORDERING_NOT_CHAIN_PROVEN'],
+    expectReasons: ['SLICE_NOT_AUTHENTICATED', 'RECEIPT_SIGNATURE_NOT_CHECKED'],
   },
   {
-    // Commit present, reveal NOT yet published → replay_consistent, NOT failed.
+    // Commit recorded AFTER the death in the verified chain → FAILED. This is the
+    // mis-order #101 could NOT catch; the global-chain position now detects it.
     file: 'rng-v2-anchored-verified.json',
-    contextFile: 'rng-v2-reveal-pending.context.json',
-    expectFinal: 'replay_consistent',
-    expectReasons: [
-      'REVEAL_NOT_PUBLISHED',
-      'RECEIPT_SIGNATURE_NOT_CHECKED',
-      'ORDERING_NOT_CHAIN_PROVEN',
-    ],
-  },
-  {
-    // Documents the gap: a commit ordered AFTER the outcome is NOT detected,
-    // because ordering is not chain-proven. Still rng_consistent (the binding is
-    // valid); ORDERING_NOT_CHAIN_PROVEN flags that ordering was not verified.
-    // Detecting this requires the chronicle-global-hash ordering follow-up.
-    file: 'rng-v2-anchored-verified.json',
-    contextFile: 'rng-v2-commit-out-of-order.context.json',
-    expectFinal: 'rng_consistent',
-    expectReasons: ['RECEIPT_SIGNATURE_NOT_CHECKED', 'ORDERING_NOT_CHAIN_PROVEN'],
-  },
-  {
-    file: 'rng-v2-tampered-rng-out.json',
-    contextFile: 'rng-v2-anchored-no-pubkey.context.json',
+    contextFile: 'rng-v2-slice-commit-out-of-order.context.json',
     expectFinal: 'failed',
-    expectReasons: [
-      'RNG_OUTPUT_MISMATCH',
-      'RECEIPT_SIGNATURE_NOT_CHECKED',
-      'ORDERING_NOT_CHAIN_PROVEN',
-    ],
+    expectReasons: ['PRECOMMIT_OUT_OF_ORDER', 'RECEIPT_SIGNATURE_NOT_CHECKED'],
+  },
+  {
+    // A broken global-chain link in the slice → FAILED (CHRONICLE_CHAIN_BROKEN).
+    file: 'rng-v2-anchored-verified.json',
+    contextFile: 'rng-v2-slice-broken-link.context.json',
+    expectFinal: 'failed',
+    expectReasons: ['CHRONICLE_CHAIN_BROKEN', 'RECEIPT_SIGNATURE_NOT_CHECKED'],
+  },
+  {
+    // Death event missing / no matching drop_seed_hash → FAILED.
+    file: 'rng-v2-anchored-verified.json',
+    contextFile: 'rng-v2-slice-no-death.context.json',
+    expectFinal: 'failed',
+    expectReasons: ['OUTCOME_EVENT_NOT_FOUND', 'RECEIPT_SIGNATURE_NOT_CHECKED'],
+  },
+  {
+    // Commit < death present, reveal NOT yet published in the slice →
+    // replay_consistent (NOT failed).
+    file: 'rng-v2-anchored-verified.json',
+    contextFile: 'rng-v2-slice-reveal-pending.context.json',
+    expectFinal: 'replay_consistent',
+    expectReasons: ['REVEAL_NOT_PUBLISHED', 'RECEIPT_SIGNATURE_NOT_CHECKED'],
+  },
+  {
+    // NO chronicle slice (deprecated reveal-only binding) → rng_consistent,
+    // ordering not chain-proven. Unchanged receipt-only ceiling.
+    file: 'rng-v2-anchored-verified.json',
+    contextFile: 'rng-v2-no-slice-reveal.context.json',
+    expectFinal: 'rng_consistent',
+    expectReasons: ['ORDERING_NOT_CHAIN_PROVEN', 'RECEIPT_SIGNATURE_NOT_CHECKED'],
+  },
+  {
+    // Tampered rng_out, verified slice → FAILED (RNG_OUTPUT_MISMATCH). The chain
+    // verifies + events are ordered, but the derivation does not.
+    file: 'rng-v2-tampered-rng-out.json',
+    contextFile: 'rng-v2-slice-valid-no-pubkey.context.json',
+    expectFinal: 'failed',
+    expectReasons: ['RNG_OUTPUT_MISMATCH', 'RECEIPT_SIGNATURE_NOT_CHECKED', 'SLICE_NOT_AUTHENTICATED'],
   },
   {
     file: 'rng-v2-tampered-outcome.json',
-    contextFile: 'rng-v2-anchored-no-pubkey.context.json',
+    contextFile: 'rng-v2-slice-valid-no-pubkey.context.json',
     expectFinal: 'failed',
-    expectReasons: [
-      'OUTCOME_MISMATCH',
-      'RECEIPT_SIGNATURE_NOT_CHECKED',
-      'ORDERING_NOT_CHAIN_PROVEN',
-    ],
+    expectReasons: ['OUTCOME_MISMATCH', 'RECEIPT_SIGNATURE_NOT_CHECKED', 'SLICE_NOT_AUTHENTICATED'],
   },
   {
     file: 'rng-v2-precommit-mismatch.json',
-    contextFile: 'rng-v2-anchored-no-pubkey.context.json',
+    contextFile: 'rng-v2-slice-valid-no-pubkey.context.json',
     expectFinal: 'failed',
-    expectReasons: [
-      'PRECOMMIT_COMMIT_MISMATCH',
-      'RECEIPT_SIGNATURE_NOT_CHECKED',
-      'ORDERING_NOT_CHAIN_PROVEN',
-    ],
+    expectReasons: ['PRECOMMIT_COMMIT_MISMATCH', 'RECEIPT_SIGNATURE_NOT_CHECKED', 'SLICE_NOT_AUTHENTICATED'],
   },
 ];
 
@@ -328,14 +336,22 @@ for (const c of cases) {
         );
       }
     } else {
-      // v2 invariant (this release): ordering is NOT chain-proven, so "verified"
-      // is UNREACHABLE and precommit_anchoring must never be "pass".
+      // v2 invariant (this release): "verified" is UNREACHABLE. A hash-linked
+      // chronicle slice is forgeable; until each slice event's signature is
+      // verified (slice authentication — a follow-up), ordering is not trusted,
+      // chronicle_inclusion/precommit_anchoring never reach "pass", and the v2
+      // ceiling is rng_consistent.
       if ((result.final_status as string) === 'verified') {
-        throw new Error(`[${label}] illegal "verified" — v2 ordering is not chain-proven yet`);
+        throw new Error(`[${label}] illegal "verified" — v2 slice is not authenticated yet`);
       }
       if (result.precommit_anchoring === 'pass') {
         throw new Error(
-          `[${label}] v2 precommit_anchoring must not be "pass" (got ${result.precommit_anchoring})`
+          `[${label}] precommit_anchoring must not be "pass" (slice unauthenticated), got ${result.precommit_anchoring}`
+        );
+      }
+      if (result.chronicle_inclusion === 'pass') {
+        throw new Error(
+          `[${label}] chronicle_inclusion must not be "pass" (slice unauthenticated), got ${result.chronicle_inclusion}`
         );
       }
     }

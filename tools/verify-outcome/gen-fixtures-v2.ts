@@ -22,9 +22,19 @@ import { blake3 } from '@noble/hashes/blake3';
 import stableStringify from 'fast-json-stable-stringify';
 import { rngCommitV1, rngDeriveSeedV2 } from '../../packages/shared/rng.js';
 import { computeDeathDrops, type ItemForDrop } from '../../packages/shared/dropPolicy.js';
+import {
+  type ChronicleEntry,
+  computePayloadHash,
+  computeEventHash,
+  computeGlobalEventHash,
+} from '../../packages/shared/chronicleChain.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const FIXTURES = path.resolve(__dirname, '../../packages/shared/test/fixtures');
+// Output dir is overridable (GEN_FIXTURES_OUT) so the deterministic slice/context
+// files can be regenerated + diffed without clobbering the committed, signed
+// receipts (whose Ed25519 keypair is random per run).
+const FIXTURES =
+  process.env.GEN_FIXTURES_OUT ?? path.resolve(__dirname, '../../packages/shared/test/fixtures');
 
 // ---- canonical hashing (byte-identical to apps/server/src/persist/hash.ts) ----
 function blake3Hex(data: string): string {
@@ -36,8 +46,11 @@ function computeReceiptHash(receipt: object): string {
 }
 
 // ---- Ed25519 keypair (raw 32-byte seed/pub, like coordination-kernel) ----
+// DETERMINISTIC seed so the signed receipts + their pubkey context regenerate
+// byte-identically (the test asserts the committed signature against the
+// committed pubkey). Do NOT switch back to crypto.randomBytes.
 const PKCS8_PREFIX = Buffer.from('302e020100300506032b657004220420', 'hex');
-const seed = crypto.randomBytes(32);
+const seed = blake3(new TextEncoder().encode('akalynth:fixture:rng-v2:ed25519-seed:v1')).slice(0, 32);
 const privateKey = crypto.createPrivateKey({
   key: Buffer.concat([PKCS8_PREFIX, seed]),
   format: 'der',
@@ -195,27 +208,122 @@ function write(name: string, obj: unknown): void {
 const verified = buildReceipt({ seq: OUTCOME_SEQ, proof: buildProof(), sign: true });
 write('rng-v2-anchored-verified.json', verified);
 
-// Sidecar chronicle/pubkey context for the verified + no-pubkey cases.
-const contextWithReveal = {
-  commitEvent: { seq: COMMIT_SEQ, rng_commit: commit, actor: targetId },
-  revealEvent: { seq: REVEAL_SEQ, rng_reveal: reveal, actor: targetId },
-  outcomeSeq: OUTCOME_SEQ,
-};
-write('rng-v2-anchored-verified.context.json', { ...contextWithReveal, authPublicKeyHex });
-write('rng-v2-anchored-no-pubkey.context.json', { ...contextWithReveal });
+// ===========================================================================
+// #104: chronicle-GLOBAL-CHAIN slice contexts (ordering proof).
+// ===========================================================================
+// Build ORDERED chronicle slices with a correct Seal 2.3 global hash chain,
+// using the SHARED chain computation (computePayloadHash/computeEventHash/
+// computeGlobalEventHash) — the SAME functions verify-chronicle-chain.ts uses,
+// so the fixtures cannot diverge from the verifier's recomputation.
+const WORLD_ID = map;
+const RULEBOOK_ROOT = 'blake3:rulebook-root-fixture';
 
-// reveal-pending: commit present, NO reveal event yet.
-write('rng-v2-reveal-pending.context.json', {
-  commitEvent: { seq: COMMIT_SEQ, rng_commit: commit, actor: targetId },
-  outcomeSeq: OUTCOME_SEQ,
+function computeCapsHash(caps: string[]): string {
+  return blake3Hex(stableStringify(caps ?? []));
+}
+
+type ChainState = { lastByActor: Map<string, string>; lastGlobal: string };
+
+function makeEntry(
+  spec: { event_type: string; actor: string; tick: number; payload: Record<string, unknown> },
+  state: ChainState
+): ChronicleEntry {
+  const caps: string[] = [];
+  const entry: ChronicleEntry = {
+    v: 1,
+    world_id: WORLD_ID,
+    rulebook_root: RULEBOOK_ROOT,
+    tick: spec.tick,
+    event_type: spec.event_type,
+    actor: spec.actor,
+    caps_hash: computeCapsHash(caps),
+    caps,
+    payload: { ...spec.payload },
+  };
+  const payload_hash = computePayloadHash(entry.payload);
+  const prev_event_hash = state.lastByActor.get(entry.actor) ?? 'genesis';
+  const event_hash = computeEventHash(entry, prev_event_hash, payload_hash);
+  const prev_global_hash = state.lastGlobal;
+  const global_event_hash = computeGlobalEventHash(
+    entry,
+    payload_hash,
+    event_hash,
+    prev_global_hash
+  );
+  entry.payload.payload_hash = payload_hash;
+  entry.payload.prev_event_hash = prev_event_hash;
+  entry.payload.event_hash = event_hash;
+  entry.payload.prev_global_hash = prev_global_hash;
+  entry.payload.global_event_hash = global_event_hash;
+  state.lastByActor.set(entry.actor, event_hash);
+  state.lastGlobal = global_event_hash;
+  return entry;
+}
+
+const commitPayload = () => ({ rng_domain: eventDomain, rng_commit: commit });
+const revealPayload = () => ({ rng_domain: eventDomain, rng_commit: commit, rng_reveal: reveal });
+// The death event carries the linkage the verifier matches on (drop_seed_hash =
+// the combat seed = proof.event_preimage_hash). We deliberately do NOT embed the
+// raw rng_out / commit here: the v2 outcome proof lives in the receipt, and the
+// session's commit/reveal binding is verified from the rng_commit / rng_reveal
+// events. (This also keeps the slice consistent with verify-chronicle-chain's
+// generic rng_out path, which is v0-only.)
+const deathPayload = () => ({
+  player_id: targetId,
+  map: WORLD_ID,
+  x: position.x,
+  y: position.y,
+  cause: 'killed_by_player',
+  killer_id: actorId,
+  drop_seed_hash: seedHash,
+  dropped_item_ids: droppedItemIds,
 });
 
-// commit-out-of-order: commit seq > outcome seq.
-write('rng-v2-commit-out-of-order.context.json', {
-  commitEvent: { seq: OUTCOME_SEQ + 5, rng_commit: commit, actor: targetId },
-  revealEvent: { seq: REVEAL_SEQ, rng_reveal: reveal, actor: targetId },
-  outcomeSeq: OUTCOME_SEQ,
+function buildSlice(order: Array<'commit' | 'death' | 'reveal' | 'noise'>): ChronicleEntry[] {
+  const state: ChainState = { lastByActor: new Map(), lastGlobal: 'genesis' };
+  const out: ChronicleEntry[] = [];
+  let tick = 100;
+  for (const ev of order) {
+    tick += 1;
+    if (ev === 'noise') {
+      out.push(
+        makeEntry(
+          { event_type: 'move', actor: 'did:akalynth:bystander-001', tick, payload: { to: { x: 1, y: 2 } } },
+          state
+        )
+      );
+      continue;
+    }
+    const event_type = ev === 'commit' ? 'rng_commit' : ev === 'reveal' ? 'rng_reveal' : 'death';
+    const payload = ev === 'commit' ? commitPayload() : ev === 'reveal' ? revealPayload() : deathPayload();
+    out.push(makeEntry({ event_type, actor: targetId, tick, payload }, state));
+  }
+  return out;
+}
+
+// Valid ordered slice (commit < death < reveal), with unrelated noise.
+const validSlice = buildSlice(['commit', 'noise', 'death', 'noise', 'reveal']);
+write('rng-v2-slice-valid-pubkey.context.json', { chronicle: validSlice, authPublicKeyHex });
+write('rng-v2-slice-valid-no-pubkey.context.json', { chronicle: validSlice });
+
+// Commit recorded AFTER the death (mis-order #101 could not catch).
+write('rng-v2-slice-commit-out-of-order.context.json', {
+  chronicle: buildSlice(['death', 'commit', 'reveal']),
 });
+
+// Reveal not yet published (commit < death, no reveal).
+write('rng-v2-slice-reveal-pending.context.json', { chronicle: buildSlice(['commit', 'death']) });
+
+// Death event missing / no matching drop_seed_hash.
+write('rng-v2-slice-no-death.context.json', { chronicle: buildSlice(['commit', 'reveal']) });
+
+// Broken global-chain link: corrupt the death event's global_event_hash.
+const brokenSlice = buildSlice(['commit', 'death', 'reveal']);
+brokenSlice[1].payload.global_event_hash = 'blake3:' + 'de'.repeat(32);
+write('rng-v2-slice-broken-link.context.json', { chronicle: brokenSlice });
+
+// No-slice deprecated reveal-only binding path (no ordering proof).
+write('rng-v2-no-slice-reveal.context.json', { revealSeed: reveal });
 
 // ---- tampered rng_out ----
 const badOut = rngOut.slice();

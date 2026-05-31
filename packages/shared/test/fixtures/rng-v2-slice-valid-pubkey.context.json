@@ -1,0 +1,116 @@
+{
+  "chronicle": [
+    {
+      "v": 1,
+      "world_id": "Azura",
+      "rulebook_root": "blake3:rulebook-root-fixture",
+      "tick": 101,
+      "event_type": "rng_commit",
+      "actor": "did:akalynth:victim-001",
+      "caps_hash": "blake3:d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+      "caps": [],
+      "payload": {
+        "rng_domain": "death_drop:v1",
+        "rng_commit": "blake3:daf236cc11f0b62ef5ae7dd4722ff37d6a192e7d5229886341bf0c81620bf272",
+        "payload_hash": "blake3:45d9a1460fef59a689f991fce20f3d523b18ab0ed0f25e7a72c69f0e129ee7e9",
+        "prev_event_hash": "genesis",
+        "event_hash": "blake3:b6442b194a8f7b8ed698bacfdeee01a0d5cc52667d29142ad2768aa2214c0eb5",
+        "prev_global_hash": "genesis",
+        "global_event_hash": "blake3:507c2c304e701c13474154c27d62c7b03ec0f278722d52f97dfc12665f73c9b4"
+      }
+    },
+    {
+      "v": 1,
+      "world_id": "Azura",
+      "rulebook_root": "blake3:rulebook-root-fixture",
+      "tick": 102,
+      "event_type": "move",
+      "actor": "did:akalynth:bystander-001",
+      "caps_hash": "blake3:d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+      "caps": [],
+      "payload": {
+        "to": {
+          "x": 1,
+          "y": 2
+        },
+        "payload_hash": "blake3:026ecbcaced8864b241f78d15f63aae02eef457802e568ae853fc706a78b5b5a",
+        "prev_event_hash": "genesis",
+        "event_hash": "blake3:99cb9b8ad9f594184140da3866c09c432b44556056a5cb3265b0efa18c46cfba",
+        "prev_global_hash": "blake3:507c2c304e701c13474154c27d62c7b03ec0f278722d52f97dfc12665f73c9b4",
+        "global_event_hash": "blake3:a99f56fb300612e81103edf970f7f430ba50f4036a73089cd47f264f0c60da88"
+      }
+    },
+    {
+      "v": 1,
+      "world_id": "Azura",
+      "rulebook_root": "blake3:rulebook-root-fixture",
+      "tick": 103,
+      "event_type": "death",
+      "actor": "did:akalynth:victim-001",
+      "caps_hash": "blake3:d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+      "caps": [],
+      "payload": {
+        "player_id": "did:akalynth:victim-001",
+        "map": "Azura",
+        "x": 12,
+        "y": 34,
+        "cause": "killed_by_player",
+        "killer_id": "did:akalynth:attacker-001",
+        "drop_seed_hash": "blake3:03797e01d4fcb3e2ac678799d4ff704d0aeec12ec92e7145d9e97e2b8616c159",
+        "dropped_item_ids": [
+          "item-legendary-001",
+          "item-ration-001",
+          "item-torch-001",
+          "item-torch-002"
+        ],
+        "payload_hash": "blake3:1bb684c393d43bed15d5adbc7aa2bc1e40be53a0f5ed5d690ed9e3da13bc6c1e",
+        "prev_event_hash": "blake3:b6442b194a8f7b8ed698bacfdeee01a0d5cc52667d29142ad2768aa2214c0eb5",
+        "event_hash": "blake3:600daca9ec6c7643517759a7360cf5d99b76b0b3bf9330104cd3299890af97b2",
+        "prev_global_hash": "blake3:a99f56fb300612e81103edf970f7f430ba50f4036a73089cd47f264f0c60da88",
+        "global_event_hash": "blake3:872bbbe03aaf3d1bb0b1887c5170ec560423084ea1bd21e8ac9daf55fa65b03a"
+      }
+    },
+    {
+      "v": 1,
+      "world_id": "Azura",
+      "rulebook_root": "blake3:rulebook-root-fixture",
+      "tick": 104,
+      "event_type": "move",
+      "actor": "did:akalynth:bystander-001",
+      "caps_hash": "blake3:d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+      "caps": [],
+      "payload": {
+        "to": {
+          "x": 1,
+          "y": 2
+        },
+        "payload_hash": "blake3:026ecbcaced8864b241f78d15f63aae02eef457802e568ae853fc706a78b5b5a",
+        "prev_event_hash": "blake3:99cb9b8ad9f594184140da3866c09c432b44556056a5cb3265b0efa18c46cfba",
+        "event_hash": "blake3:e1e0980124458bea1a1e16d9f6aabd6aeb56c8c34b9093ac3914b3e87316e706",
+        "prev_global_hash": "blake3:872bbbe03aaf3d1bb0b1887c5170ec560423084ea1bd21e8ac9daf55fa65b03a",
+        "global_event_hash": "blake3:7476c590eefd49306f8901754e69095ad06179e462b5546ad435c5781035f461"
+      }
+    },
+    {
+      "v": 1,
+      "world_id": "Azura",
+      "rulebook_root": "blake3:rulebook-root-fixture",
+      "tick": 105,
+      "event_type": "rng_reveal",
+      "actor": "did:akalynth:victim-001",
+      "caps_hash": "blake3:d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+      "caps": [],
+      "payload": {
+        "rng_domain": "death_drop:v1",
+        "rng_commit": "blake3:daf236cc11f0b62ef5ae7dd4722ff37d6a192e7d5229886341bf0c81620bf272",
+        "rng_reveal": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "payload_hash": "blake3:29c7837a2f388c08b19b6d6a0119dc8740a2a729fede23b147faac5f619894b9",
+        "prev_event_hash": "blake3:600daca9ec6c7643517759a7360cf5d99b76b0b3bf9330104cd3299890af97b2",
+        "event_hash": "blake3:0fb5d8e9de37314c1be5bfa3acc252ba86c382b09b116159a33838f97a9a225c",
+        "prev_global_hash": "blake3:7476c590eefd49306f8901754e69095ad06179e462b5546ad435c5781035f461",
+        "global_event_hash": "blake3:783f255b213f64706e57ac3aae1a0cc090f16861473f5e3ded7b3f54943207af"
+      }
+    }
+  ],
+  "authPublicKeyHex": "b8209ad9b0f2dee413d158c73e9c16c489dcc868c3e8adbd4ec10ff415da790c"
+}
