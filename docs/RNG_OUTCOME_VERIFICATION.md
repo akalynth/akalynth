@@ -162,9 +162,104 @@ There is no pre-committed hidden secret anchoring the death-drop outcome.
 Accordingly, `precommit_anchoring` is always `fail` with reason
 `PRECOMMIT_NOT_PROVEN`, and we avoid any fairness-guarantee framing.
 
+## Receipt-contained RNG proof v1
+
+Receipt-contained RNG proof v1 lets an offline verifier recompute the recorded RNG
+output and final outcome from the receipt artifact alone. It does not prove that
+the server committed to the reveal seed before the outcome. Precommit anchoring
+remains future work tracked in #101.
+
+### What is persisted
+
+The final `combat_resolved` receipt now carries `inputs.rng_proof`:
+
+```
+inputs.rng_proof = {
+  version: 1,
+  scheme: "receipt_hash_seeded_replay",
+  outcome_type: "loot_drop",
+  receipt_body_hash: <drop_seed_hash>,   // = computeReceiptHash(combatResolvedBase)
+  rng_commit: <commit>,                  // v0: rngCommit(reveal_seed)
+  reveal_seed: <drop_seed_hash>,         // seed fed to the PRF
+  rng_out: [<u32>, ...],                 // raw draws, in selection order
+  derivation: {
+    algorithm: "rngDrawU32Legacy/selectItemsToDrop@v0",
+    domain: "pvp_loot_drop",
+    inputs: {
+      items: [ { item_id, item_type, meta?{ legendary, legendary_tier, heat } } ],
+      reputation, map, protected_item_id
+    }
+  }
+}
+```
+
+`derivation.inputs` is **exactly** what `computeDeathDrops` consumed. Legendary
+weighting depends on per-item heat (server in-memory state), so each legendary
+item's heat at selection time is folded into `meta.heat`. The verifier rebuilds a
+heat lookup from those values and feeds the shared `packages/shared/dropPolicy.ts`
+selector, so the recompute never touches live server state or SQLite.
+
+### Supported outcome: `loot_drop`
+
+For a `loot_drop` proof the verifier (`packages/shared/verifyOutcome.ts`) checks,
+offline, from the receipt alone:
+
+- **receipt_body_hash** — recompute `computeReceiptHash(combatResolvedBase)` from
+  the receipt's named subset and require it to equal both `rng_proof.receipt_body_hash`
+  and `inputs.drop_seed_hash` (else `RECEIPT_BODY_HASH_MISMATCH`).
+- **rng_commit_reveal** — `rngCommit(reveal_seed) === rng_commit` when a commit is
+  present (else `COMMIT_MISMATCH` + `LEGACY_PRECOMMIT_UNBOUND`), and
+  `rng_out[i] === rngDrawU32Legacy(reveal_seed, i)` for every draw (else
+  `RNG_OUTPUT_MISMATCH`).
+- **outcome_derivation** — recompute `computeDeathDrops(items, map, reputation,
+  reveal_seed, [], heatLookup)` and compare to `inputs.dropped_item_ids` (else
+  `OUTCOME_MISMATCH`).
+- **precommit_anchoring** — always `fail` / `PRECOMMIT_NOT_PROVEN` (see below).
+
+When all checked steps pass, `final_status` is **`rng_consistent`**. Any checked
+failure yields `failed`. A proof with an `outcome_type` other than `loot_drop`
+yields `unsupported` / `UNSUPPORTED_OUTCOME_TYPE`.
+
+### Why this moves `replay_consistent` → `rng_consistent`
+
+Before v1, a persisted receipt carried only the drop fields, so the verifier could
+recompute the *seed binding* (deterministic replay) but had no RNG triple and no
+inventory snapshot — best attainable was `replay_consistent`. The persisted
+`rng_proof` now supplies the commit/reveal/output triple **and** the exact drop
+inputs, so the verifier can re-derive both the RNG output and the dropped set
+offline. That is strictly more than replay: it is `rng_consistent`.
+
+### Why it still is not precommit fairness (#101)
+
+The seed is `computeReceiptHash(combatResolvedBase)` — derived from the outcome's
+own fields, not from a hidden secret the server bound to *before* the outcome was
+known. The persisted `rng_commit` (v0) is `rngCommit(reveal_seed)`, which binds the
+revealed seed but not a *prior* commitment. So `precommit_anchoring` stays `fail`,
+the verifier never returns `verified`, and the ceiling is `rng_consistent`.
+Precommit anchoring is tracked in #101.
+
+### Hash-preimage boundary (no circularity)
+
+`rng_proof` is added to the FINAL persisted receipt **inside `inputs`**, alongside
+`dropped_item_ids` / `drop_seed_hash`. It is **never** part of `combatResolvedBase`,
+the named subset hashed to produce the seed. The verifier reconstructs
+`combatResolvedBase` from only `{actor_id, action, inputs.{target_player_id, map,
+position, outcome}, result}`, ignoring `rng_proof` and the drop fields. This keeps
+the seed and the loot selection unchanged when the proof is added, and prevents the
+proof from feeding back into the seed it claims to prove. The seed-invariant test
+(`tools/verify-outcome/test.ts`) asserts `computeReceiptHash(combatResolvedBase)` is
+byte-identical with and without the envelope.
+
 ## Known limitations (findings)
 
-### F1 — The RNG proof triple is broadcast-only, not persisted to receipts
+### F1 — RESOLVED (#100): the RNG proof is now persisted to the receipt
+
+Historically the `rng_commit` / `rng_reveal` / `rng_out` triple was emitted only on
+the live client broadcast, so a persisted receipt verified offline could reach at
+best `replay_consistent`. As of #100 the receipt carries `inputs.rng_proof` (see
+"Receipt-contained RNG proof v1" above), and an offline verifier reaches
+`rng_consistent`. The original broadcast-only behavior is described below for
+historical context.
 
 The `rng_commit` / `rng_reveal` / `rng_out` triple is emitted on the **live client
 broadcast** (`apps/server/src/index.ts`, chronicle `death` event), but the

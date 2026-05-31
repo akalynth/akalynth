@@ -1,0 +1,75 @@
+{
+  "sequence": 102,
+  "timestamp": "2026-05-31T12:00:00.000Z",
+  "actor_id": "did:akalynth:attacker-001",
+  "action": "combat_resolved",
+  "inputs": {
+    "target_player_id": "did:akalynth:victim-001",
+    "map": "Azura",
+    "position": {
+      "x": 12,
+      "y": 34
+    },
+    "outcome": "kill",
+    "dropped_item_ids": [
+      "item-legendary-001",
+      "item-ration-001",
+      "item-torch-002",
+      "item-torch-001"
+    ],
+    "drop_seed_hash": "blake3:03797e01d4fcb3e2ac678799d4ff704d0aeec12ec92e7145d9e97e2b8616c159",
+    "protected_item_id": null,
+    "rng_proof": {
+      "version": 1,
+      "scheme": "receipt_hash_seeded_replay",
+      "outcome_type": "loot_drop",
+      "receipt_body_hash": "blake3:03797e01d4fcb3e2ac678799d4ff704d0aeec12ec92e7145d9e97e2b8616c159",
+      "rng_commit": "blake3:dededededededededededededededededededededededededededededededede",
+      "reveal_seed": "blake3:03797e01d4fcb3e2ac678799d4ff704d0aeec12ec92e7145d9e97e2b8616c159",
+      "rng_out": [
+        466122438,
+        1928383895,
+        764285833,
+        2959601787,
+        941724044
+      ],
+      "derivation": {
+        "algorithm": "rngDrawU32Legacy/selectItemsToDrop@v0",
+        "domain": "pvp_loot_drop",
+        "inputs": {
+          "items": [
+            {
+              "item_id": "item-torch-001",
+              "item_type": "torch"
+            },
+            {
+              "item_id": "item-ration-001",
+              "item_type": "ration"
+            },
+            {
+              "item_id": "item-mark-001",
+              "item_type": "mark_token"
+            },
+            {
+              "item_id": "item-legendary-001",
+              "item_type": "unknown",
+              "meta": {
+                "legendary": true,
+                "legendary_tier": 2,
+                "heat": 7.5
+              }
+            },
+            {
+              "item_id": "item-torch-002",
+              "item_type": "torch"
+            }
+          ],
+          "reputation": -4,
+          "map": "Azura",
+          "protected_item_id": null
+        }
+      }
+    }
+  },
+  "result": "ok"
+}
