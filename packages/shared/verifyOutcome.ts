@@ -665,47 +665,29 @@ function verifyReceiptRngProofV2(
     if (!preimageOk) reason_codes.push('EVENT_PREIMAGE_HASH_MISMATCH');
   }
 
-  // outcome ordinal: explicit context override, else the receipt's own sequence.
-  const outcomeSeq =
-    typeof ctx.outcomeSeq === 'number'
-      ? ctx.outcomeSeq
-      : typeof receipt['sequence'] === 'number'
-        ? (receipt['sequence'] as number)
-        : undefined;
+  // ----- chronicle inclusion / ordering: NOT chain-proven yet -----
+  // The chronicle log and the receipt log use SEPARATE sequence spaces, so a
+  // cross-log "commit_seq < outcome_seq < reveal_seq" comparison is only as
+  // trustworthy as the caller-supplied ordinals — that is NOT an independent
+  // proof and is exactly the "unacceptable evidence" #101 names. Until ordering
+  // is verified against the chronicle GLOBAL hash chain (a follow-up coordinated
+  // with #94), we make NO ordering claim: chronicle_inclusion and
+  // precommit_anchoring stay "not_checked", and final_status can NEVER reach
+  // "verified" on this path. The cryptographic commit/reveal binding and the
+  // outcome derivation below still gate "rng_consistent".
+  const chronicle_inclusion: CheckStatus = 'not_checked';
+  const precommit_anchoring: CheckStatus = 'not_checked';
+  reason_codes.push('ORDERING_NOT_CHAIN_PROVEN');
 
-  // ----- chronicle inclusion / ordering -----
-  let chronicle_inclusion: CheckStatus = 'pass';
-  let precommit_anchoring: CheckStatus = 'pass';
-
-  if (!commitEvent || typeof commitEvent.seq !== 'number') {
-    reason_codes.push('PRECOMMIT_MISSING');
-    chronicle_inclusion = 'fail';
-    precommit_anchoring = 'fail';
-  } else if (typeof outcomeSeq === 'number' && commitEvent.seq >= outcomeSeq) {
-    reason_codes.push('PRECOMMIT_OUT_OF_ORDER');
-    chronicle_inclusion = 'fail';
-    precommit_anchoring = 'fail';
-  }
-
-  // precommit_ref must carry the commit value.
+  // precommit_ref must carry the commit value (used for the binding check below).
   let refCommit: unknown;
   if (isObject(precommitRef)) {
     refCommit = precommitRef['commit'];
   } else {
     reason_codes.push('PRECOMMIT_MISSING');
-    if (chronicle_inclusion === 'pass') chronicle_inclusion = 'fail';
-    if (precommit_anchoring === 'pass') precommit_anchoring = 'fail';
   }
 
-  // reveal must come AFTER the outcome when present.
   const haveReveal = !!revealEvent && isStringNonEmpty(revealEvent.rng_reveal);
-  if (revealEvent && typeof revealEvent.seq === 'number' && typeof outcomeSeq === 'number') {
-    if (revealEvent.seq <= outcomeSeq) {
-      reason_codes.push('REVEAL_OUT_OF_ORDER');
-      chronicle_inclusion = 'fail';
-      precommit_anchoring = 'fail';
-    }
-  }
 
   // ----- precommit binding + derivation (need the reveal secret) -----
   let rng_commit_reveal: CheckStatus = 'pass';
@@ -715,7 +697,6 @@ function verifyReceiptRngProofV2(
     reason_codes.push('REVEAL_NOT_PUBLISHED');
     rng_commit_reveal = 'not_checked';
     outcome_derivation = 'not_checked';
-    if (precommit_anchoring === 'pass') precommit_anchoring = 'not_checked';
   } else {
     const reveal = revealEvent!.rng_reveal as string;
 
@@ -834,33 +815,25 @@ function verifyReceiptRngProofV2(
   }
 
   // ----- final_status -----
+  // NOTE: "verified" is intentionally UNREACHABLE on the v2 path in this release.
+  // It requires precommit_anchoring === 'pass', which needs chronicle-global-hash
+  // ordering that is not yet implemented (ORDERING_NOT_CHAIN_PROVEN). The ceiling
+  // here is rng_consistent: the commit binds the revealed seed and the outcome
+  // derives from it, but the commit-before-outcome ordering is not chain-proven.
   const hardFail =
     rng_commit_reveal === 'fail' ||
     outcome_derivation === 'fail' ||
-    chronicle_inclusion === 'fail' ||
     receipt_authenticity === 'fail';
 
   let final_status: FinalStatus;
   if (hardFail) {
     final_status = 'failed';
   } else if (!haveReveal) {
-    // Reveal pending: precommit cannot be anchored offline yet. NOT a failure.
+    // Reveal pending: nothing to anchor offline yet. NOT a failure.
     final_status = 'replay_consistent';
-  } else if (
-    precommit_anchoring === 'pass' &&
-    rng_commit_reveal === 'pass' &&
-    outcome_derivation === 'pass' &&
-    chronicle_inclusion === 'pass' &&
-    receipt_authenticity === 'pass'
-  ) {
-    final_status = 'verified';
-  } else if (
-    precommit_anchoring === 'pass' &&
-    rng_commit_reveal === 'pass' &&
-    outcome_derivation === 'pass'
-  ) {
+  } else if (rng_commit_reveal === 'pass' && outcome_derivation === 'pass') {
+    // Commit/reveal binding + outcome derivation verified; ordering unproven.
     final_status = 'rng_consistent';
-    reason_codes.push('PRECOMMIT_ANCHORED');
   } else {
     final_status = 'replay_consistent';
   }

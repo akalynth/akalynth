@@ -206,53 +206,77 @@ const cases: Case[] = [
   },
 
   // ---- #101: v2 precommit-anchored proof fixtures (chronicle-aware) ----
-  // "verified" is reachable ONLY with BOTH a supplied auth pubkey AND the
-  // chronicle commit+reveal context. Same receipt, different context → caps.
+  // DOWNGRADE (this release): commit-before-outcome ordering is NOT chain-proven
+  // (chronicle and receipt logs use separate seq spaces; caller-supplied ordinals
+  // are not trusted). So precommit_anchoring is always "not_checked"
+  // (ORDERING_NOT_CHAIN_PROVEN) and "verified" is UNREACHABLE. The cryptographic
+  // commit/reveal binding + outcome derivation still cap at rng_consistent.
+  // Real ordering proof is a #94-coordinated follow-up.
   {
+    // Even WITH auth pubkey + commit+reveal context: ordering unproven → caps at
+    // rng_consistent, NOT verified. (authenticity passes silently.)
     file: 'rng-v2-anchored-verified.json',
     contextFile: 'rng-v2-anchored-verified.context.json',
-    expectFinal: 'verified',
-    expectReasons: [],
+    expectFinal: 'rng_consistent',
+    expectReasons: ['ORDERING_NOT_CHAIN_PROVEN'],
   },
   {
-    // Reveal present, but NO auth pubkey → authenticity not_checked → capped at
-    // rng_consistent with PRECOMMIT_ANCHORED.
+    // Reveal present, no auth pubkey → rng_consistent, ordering unproven.
     file: 'rng-v2-anchored-verified.json',
     contextFile: 'rng-v2-anchored-no-pubkey.context.json',
     expectFinal: 'rng_consistent',
-    expectReasons: ['RECEIPT_SIGNATURE_NOT_CHECKED', 'PRECOMMIT_ANCHORED'],
+    expectReasons: ['RECEIPT_SIGNATURE_NOT_CHECKED', 'ORDERING_NOT_CHAIN_PROVEN'],
   },
   {
     // Commit present, reveal NOT yet published → replay_consistent, NOT failed.
     file: 'rng-v2-anchored-verified.json',
     contextFile: 'rng-v2-reveal-pending.context.json',
     expectFinal: 'replay_consistent',
-    expectReasons: ['REVEAL_NOT_PUBLISHED', 'RECEIPT_SIGNATURE_NOT_CHECKED'],
+    expectReasons: [
+      'REVEAL_NOT_PUBLISHED',
+      'RECEIPT_SIGNATURE_NOT_CHECKED',
+      'ORDERING_NOT_CHAIN_PROVEN',
+    ],
   },
   {
-    // Commit ordered AFTER the outcome → ordering tamper → failed.
+    // Documents the gap: a commit ordered AFTER the outcome is NOT detected,
+    // because ordering is not chain-proven. Still rng_consistent (the binding is
+    // valid); ORDERING_NOT_CHAIN_PROVEN flags that ordering was not verified.
+    // Detecting this requires the chronicle-global-hash ordering follow-up.
     file: 'rng-v2-anchored-verified.json',
     contextFile: 'rng-v2-commit-out-of-order.context.json',
-    expectFinal: 'failed',
-    expectReasons: ['PRECOMMIT_OUT_OF_ORDER', 'RECEIPT_SIGNATURE_NOT_CHECKED'],
+    expectFinal: 'rng_consistent',
+    expectReasons: ['RECEIPT_SIGNATURE_NOT_CHECKED', 'ORDERING_NOT_CHAIN_PROVEN'],
   },
   {
     file: 'rng-v2-tampered-rng-out.json',
     contextFile: 'rng-v2-anchored-no-pubkey.context.json',
     expectFinal: 'failed',
-    expectReasons: ['RNG_OUTPUT_MISMATCH', 'RECEIPT_SIGNATURE_NOT_CHECKED'],
+    expectReasons: [
+      'RNG_OUTPUT_MISMATCH',
+      'RECEIPT_SIGNATURE_NOT_CHECKED',
+      'ORDERING_NOT_CHAIN_PROVEN',
+    ],
   },
   {
     file: 'rng-v2-tampered-outcome.json',
     contextFile: 'rng-v2-anchored-no-pubkey.context.json',
     expectFinal: 'failed',
-    expectReasons: ['OUTCOME_MISMATCH', 'RECEIPT_SIGNATURE_NOT_CHECKED'],
+    expectReasons: [
+      'OUTCOME_MISMATCH',
+      'RECEIPT_SIGNATURE_NOT_CHECKED',
+      'ORDERING_NOT_CHAIN_PROVEN',
+    ],
   },
   {
     file: 'rng-v2-precommit-mismatch.json',
     contextFile: 'rng-v2-anchored-no-pubkey.context.json',
     expectFinal: 'failed',
-    expectReasons: ['PRECOMMIT_COMMIT_MISMATCH', 'RECEIPT_SIGNATURE_NOT_CHECKED'],
+    expectReasons: [
+      'PRECOMMIT_COMMIT_MISMATCH',
+      'RECEIPT_SIGNATURE_NOT_CHECKED',
+      'ORDERING_NOT_CHAIN_PROVEN',
+    ],
   },
 ];
 
@@ -304,11 +328,14 @@ for (const c of cases) {
         );
       }
     } else {
-      // v2 invariant: "verified" is reachable ONLY when authenticity passed
-      // (i.e. a pubkey was supplied AND the signature verified).
-      if (result.final_status === 'verified' && result.receipt_authenticity !== 'pass') {
+      // v2 invariant (this release): ordering is NOT chain-proven, so "verified"
+      // is UNREACHABLE and precommit_anchoring must never be "pass".
+      if ((result.final_status as string) === 'verified') {
+        throw new Error(`[${label}] illegal "verified" — v2 ordering is not chain-proven yet`);
+      }
+      if (result.precommit_anchoring === 'pass') {
         throw new Error(
-          `[${label}] "verified" without receipt_authenticity=pass (got ${result.receipt_authenticity})`
+          `[${label}] v2 precommit_anchoring must not be "pass" (got ${result.precommit_anchoring})`
         );
       }
     }
