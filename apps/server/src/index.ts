@@ -1168,6 +1168,13 @@ function emitShutdown(signal: string) {
     clearInterval(heartbeatInterval);
     heartbeatInterval = null;
   }
+  // Never block exit indefinitely: force-exit if graceful shutdown stalls
+  // (e.g. lifecycle verification or audit flush hangs).
+  const forceExit = setTimeout(() => {
+    console.error(`[audit] Graceful shutdown timed out (${signal}); forcing exit`);
+    process.exit(0);
+  }, 5_000);
+  forceExit.unref();
   try {
     audit.write({
       actor_id: 'server',
@@ -1180,6 +1187,7 @@ function emitShutdown(signal: string) {
   } catch (error) {
     console.error(`[audit] Failed to write server_shutdown receipt: ${String(error)}`);
   } finally {
+    clearTimeout(forceExit);
     audit.close();
     process.exit(0);
   }
