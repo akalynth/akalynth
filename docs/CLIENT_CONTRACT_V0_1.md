@@ -7,7 +7,7 @@ Server may evolve internally, but MUST remain backward compatible with this cont
 
 | Environment | HTTP Base | WS Base |
 |---|---|---|
-| beta | `https://beta-api.akalynth.com` | `wss://beta-api.akalynth.com` |
+| beta | `http://beta-api.akalynth.com` | `ws://beta-api.akalynth.com` |
 | prod (reserved) | `https://api.akalynth.com` | `wss://api.akalynth.com` |
 | local dev (emulator) | `http://10.0.2.2:3000` | `ws://10.0.2.2:3000` |
 
@@ -51,8 +51,8 @@ Error response body (all non-200):
 ## WebSocket
 
 ### Connection
-- Client opens WebSocket to `wss://<base>`
-- No special headers required (TLS via Cloudflare/Caddy)
+- Client opens WebSocket to the configured WS Base.
+- No special headers required; use the scheme from the environment table.
 
 ### First Server Message (immediate)
 ```json

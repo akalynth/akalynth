@@ -75,6 +75,7 @@ verify-out/
 
 # Secrets — never track local env files (e.g. tools/asset-gen/.env holds an API key)
 **/.env
+.cf.env
 
 # asset-gen Python tooling and raw AI source dumps (local only, regenerable)
 tools/asset-gen/.venv/

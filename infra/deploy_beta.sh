@@ -157,12 +157,12 @@ if ! restart_and_check; then
     rollback
 fi
 
-# 10. Quick cert/origin sanity
-log "Verifying TLS chain..."
-if curl -sI "$HEALTH_URL" 2>/dev/null | grep -qi "cloudflare\|caddy"; then
-    log "TLS chain OK (Cloudflare → Caddy → Node)"
+# 10. Quick proxy/origin sanity
+log "Verifying proxy/origin chain..."
+if curl -sD - -o /dev/null "$HEALTH_URL" 2>/dev/null | grep -qi "cloudflare\|caddy"; then
+    log "Proxy/origin chain OK"
 else
-    warn "Could not verify TLS chain (may still be OK)"
+    warn "Could not verify proxy/origin chain (may still be OK)"
 fi
 
 # 11. Show status
