@@ -1,5 +1,5 @@
 {
-  "sequence": 105,
+  "sequence": 107,
   "timestamp": "2026-05-31T12:00:00.000Z",
   "actor_id": "did:akalynth:attacker-001",
   "action": "combat_resolved",
@@ -23,9 +23,9 @@
       "version": 1,
       "scheme": "receipt_hash_seeded_replay",
       "outcome_type": "loot_drop",
-      "rng_commit_scheme": "death_drop:v0",
-      "receipt_body_hash": "blake3:abababababababababababababababababababababababababababababababab",
-      "rng_commit": "blake3:c0d009aa427590696e2749da0a79120cd04107cf195eb88412e1ed858fe99613",
+      "rng_commit_scheme": "death_drop:v1",
+      "receipt_body_hash": "blake3:03797e01d4fcb3e2ac678799d4ff704d0aeec12ec92e7145d9e97e2b8616c159",
+      "rng_commit": "blake3:a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
       "reveal_seed": "blake3:03797e01d4fcb3e2ac678799d4ff704d0aeec12ec92e7145d9e97e2b8616c159",
       "rng_out": [
         466122438,

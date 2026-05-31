@@ -129,12 +129,14 @@ const cases: Case[] = [
       'PRECOMMIT_NOT_PROVEN',
       'RECEIPT_BODY_HASH_MISMATCH',
       'COMMIT_MISMATCH',
-      'LEGACY_PRECOMMIT_UNBOUND',
       'RNG_OUTPUT_MISMATCH',
       'OUTCOME_MISMATCH',
     ],
   },
   {
+    // v0 commit tampered: rngCommit(reveal_seed) no longer matches → genuine
+    // tampering (COMMIT_MISMATCH). LEGACY_PRECOMMIT_UNBOUND is NOT emitted here —
+    // that code is reserved for legitimate, offline-unverifiable v1 commits.
     file: 'rng-v1-proof-tampered-commit.json',
     expectFinal: 'failed',
     expectReasons: [
@@ -142,7 +144,6 @@ const cases: Case[] = [
       'CHRONICLE_INCLUSION_NOT_CHECKED',
       'PRECOMMIT_NOT_PROVEN',
       'COMMIT_MISMATCH',
-      'LEGACY_PRECOMMIT_UNBOUND',
     ],
   },
   {
@@ -183,6 +184,21 @@ const cases: Case[] = [
       'CHRONICLE_INCLUSION_NOT_CHECKED',
       'PRECOMMIT_NOT_PROVEN',
       'UNSUPPORTED_OUTCOME_TYPE',
+    ],
+  },
+  {
+    // LEGITIMATE v1-commit receipt (NOT tampered): the deferred precommit cannot
+    // be reproduced offline, so rng_commit_reveal is "unsupported"
+    // (LEGACY_PRECOMMIT_UNBOUND) while rng output + outcome derivation still
+    // verify. This must be replay_consistent, NOT failed. Real v1 commit
+    // verification is tracked in #101.
+    file: 'rng-v1-proof-v1commit-legacy.json',
+    expectFinal: 'replay_consistent',
+    expectReasons: [
+      'RECEIPT_SIGNATURE_NOT_CHECKED',
+      'CHRONICLE_INCLUSION_NOT_CHECKED',
+      'PRECOMMIT_NOT_PROVEN',
+      'LEGACY_PRECOMMIT_UNBOUND',
     ],
   },
 ];

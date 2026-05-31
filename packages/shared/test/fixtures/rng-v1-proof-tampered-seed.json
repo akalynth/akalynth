@@ -23,6 +23,7 @@
       "version": 1,
       "scheme": "receipt_hash_seeded_replay",
       "outcome_type": "loot_drop",
+      "rng_commit_scheme": "death_drop:v0",
       "receipt_body_hash": "blake3:0000000000000000000000000000000000000000000000000000000000000000",
       "rng_commit": "blake3:c0d009aa427590696e2749da0a79120cd04107cf195eb88412e1ed858fe99613",
       "reveal_seed": "blake3:0000000000000000000000000000000000000000000000000000000000000000",

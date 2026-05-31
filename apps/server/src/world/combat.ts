@@ -77,6 +77,12 @@ export interface ReceiptRngProof {
   version: 1;
   scheme: 'receipt_hash_seeded_replay';
   outcome_type: 'loot_drop';
+  // Commit scheme of rng_commit. 'death_drop:v0' commits are rngCommit(reveal_seed)
+  // and are reproducible offline. 'death_drop:v1' commits are deferred,
+  // domain/actor-separated precommits that CANNOT be reproduced from the receipt
+  // alone — an offline verifier must treat them as unverifiable (not tampered),
+  // with real precommit verification deferred to #101.
+  rng_commit_scheme: 'death_drop:v0' | 'death_drop:v1';
   receipt_body_hash: string; // === drop_seed_hash === computeReceiptHash(combatResolvedBase)
   rng_commit: string;
   reveal_seed: string; // === receipt_body_hash; the seed fed to the PRF
@@ -357,6 +363,7 @@ export function handleAttackIntent(ctx: CombatContext): AttackResult {
     version: 1,
     scheme: 'receipt_hash_seeded_replay',
     outcome_type: 'loot_drop',
+    rng_commit_scheme: dropRng.rng_domain === 'death_drop:v1' ? 'death_drop:v1' : 'death_drop:v0',
     receipt_body_hash: seedHash,
     rng_commit: dropRng.rng_commit,
     reveal_seed: seedHash,

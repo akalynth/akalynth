@@ -238,6 +238,27 @@ revealed seed but not a *prior* commitment. So `precommit_anchoring` stays `fail
 the verifier never returns `verified`, and the ceiling is `rng_consistent`.
 Precommit anchoring is tracked in #101.
 
+### Commit scheme: `death_drop:v0` vs `death_drop:v1`
+
+The proof records `rng_commit_scheme`, because the server emits two commit kinds:
+
+- **`death_drop:v0`** — `rng_commit === rngCommit(reveal_seed)`. Reproducible
+  offline, so a mismatch is genuine tampering → `COMMIT_MISMATCH`, `final_status:
+  failed`. A valid v0 receipt reaches `rng_consistent`.
+- **`death_drop:v1`** — a deferred, domain/actor-separated precommit (registered
+  before the kill) that **cannot be reproduced from the receipt alone**. A
+  legitimate v1 receipt is **not** a failure: `rng_commit_reveal` is `unsupported`
+  (`LEGACY_PRECOMMIT_UNBOUND`), the RNG output and dropped set still verify, and
+  `final_status` is **`replay_consistent`**. The verifier must never report a
+  legitimate v1 receipt as `failed`. Actually verifying the v1 precommit — proving
+  it was recorded *before* the outcome and bound to derivation — is #101.
+
+This distinction matters in practice: the live server emits v1 commits whenever a
+session has a precommit registered, so most real loot receipts verify as
+`replay_consistent` today. `rng_consistent` applies to the v0 commit path. Either
+way, RNG-output recomputation and outcome derivation are checked, and a tampered
+`rng_out` / outcome / body hash fails under **both** schemes.
+
 ### Hash-preimage boundary (no circularity)
 
 `rng_proof` is added to the FINAL persisted receipt **inside `inputs`**, alongside

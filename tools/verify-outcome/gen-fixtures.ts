@@ -101,6 +101,7 @@ function buildReceipt(overrides: {
     version: 1,
     scheme: 'receipt_hash_seeded_replay',
     outcome_type: 'loot_drop',
+    rng_commit_scheme: 'death_drop:v0',
     receipt_body_hash: seedHash,
     rng_commit: rngCommit(seedHash),
     reveal_seed: seedHash,
@@ -189,6 +190,23 @@ const unsupported = buildReceipt({
   proofOverride: { outcome_type: 'some_future_outcome' },
 });
 write('rng-v1-proof-unsupported-outcome.json', unsupported);
+
+// ---- LEGITIMATE v1-commit receipt (NOT tampered) ----
+// The server's death_drop:v1 path records a deferred, domain/actor-separated
+// precommit that cannot be reproduced offline. Such a receipt is honest: its
+// rng_out + dropped_item_ids still verify against reveal_seed, only the commit
+// binding is unprovable offline. Expected: rng_commit_reveal=unsupported
+// (LEGACY_PRECOMMIT_UNBOUND), outcome_derivation=pass, final_status=replay_consistent
+// — NOT failed. Real v1 commit verification is deferred to #101.
+const v1Legit = buildReceipt({
+  seq: 107,
+  proofOverride: {
+    rng_commit_scheme: 'death_drop:v1',
+    // A v1 precommit value (over a secret reveal, not rngCommit(seedHash)).
+    rng_commit: 'blake3:' + 'a1'.repeat(32),
+  },
+});
+write('rng-v1-proof-v1commit-legacy.json', v1Legit);
 
 console.log('\nseedHash =', seedHash);
 console.log('droppedItemIds =', JSON.stringify(droppedItemIds));

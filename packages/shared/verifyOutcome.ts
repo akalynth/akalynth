@@ -404,19 +404,28 @@ function verifyReceiptRngProof(
     const seedStr = revealSeed as string;
     const outs = rngOut as unknown[];
 
+    // Commit scheme governs how rng_commit is interpreted:
+    //  - v0: rng_commit === rngCommit(reveal_seed); reproducible offline, so a
+    //    mismatch is genuine tampering → COMMIT_MISMATCH (fail).
+    //  - v1: a deferred, domain/actor-separated precommit that CANNOT be
+    //    reproduced from the receipt alone. A legitimate v1 receipt is NOT a
+    //    failure — the commit binding is simply unverifiable offline. We mark
+    //    rng_commit_reveal "unsupported" + LEGACY_PRECOMMIT_UNBOUND; real
+    //    precommit verification is tracked in #101.
+    const isV1Commit = proof['rng_commit_scheme'] === 'death_drop:v1';
     if (typeof commit === 'string' && commit.length > 0) {
-      // The commit must bind the revealed seed: rngCommit(reveal_seed) === commit.
-      // A tampered commit (or a deferred v1 domain/actor-separated commit that
-      // cannot be reproduced offline) fails this binding → COMMIT_MISMATCH, and
-      // we additionally flag LEGACY_PRECOMMIT_UNBOUND to record that the commit
-      // present does not bind the reveal seed under the v0 scheme.
-      if (rngCommit(seedStr) !== commit) {
-        reason_codes.push('COMMIT_MISMATCH');
+      if (isV1Commit) {
         reason_codes.push('LEGACY_PRECOMMIT_UNBOUND');
+        rng_commit_reveal = 'unsupported';
+      } else if (rngCommit(seedStr) !== commit) {
+        reason_codes.push('COMMIT_MISMATCH');
         rng_commit_reveal = 'fail';
       }
     }
 
+    // RNG output recomputation is checked independently of the commit scheme: a
+    // draw that does not derive from the revealed seed is tampering under any
+    // scheme, and overrides an "unsupported" v1 commit with a hard fail.
     for (let i = 0; i < outs.length; i++) {
       if (outs[i] !== rngDrawU32Legacy(seedStr, i)) {
         reason_codes.push('RNG_OUTPUT_MISMATCH');
@@ -472,9 +481,22 @@ function verifyReceiptRngProof(
   }
 
   // ----- final_status -----
-  const allPass =
-    bodyHashOk && rng_commit_reveal === 'pass' && outcome_derivation === 'pass';
-  const final_status: FinalStatus = allPass ? 'rng_consistent' : 'failed';
+  // Genuine integrity failures (seed binding, RNG-output recomputation, or
+  // outcome derivation) → failed. Otherwise:
+  //  - v0 commit verified + outcome derived → rng_consistent.
+  //  - v1 commit unverifiable offline (but seed/output/outcome all checked) →
+  //    replay_consistent. This is NOT a failure — it is honest about the commit
+  //    being unprovable offline until #101. final_status is NEVER "verified".
+  const hardFail =
+    !bodyHashOk || rng_commit_reveal === 'fail' || outcome_derivation !== 'pass';
+  let final_status: FinalStatus;
+  if (hardFail) {
+    final_status = 'failed';
+  } else if (rng_commit_reveal === 'pass') {
+    final_status = 'rng_consistent';
+  } else {
+    final_status = 'replay_consistent';
+  }
 
   return {
     receipt_shape_valid,
