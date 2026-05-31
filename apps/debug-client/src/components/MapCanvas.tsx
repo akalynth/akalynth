@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTileSprites } from '../hooks/useTileSprites';
 import type { MapData, PlayerPublic } from '@shared/types';
 import { TileCode } from '@shared/types';
 import type { FloatingText } from '../types';
@@ -97,6 +98,7 @@ function loreAt(map: MapData, hitBoxes: LoreHitBox[], tx: number, ty: number): L
 
 export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget, groundItems, propertyByPlot }: MapCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const { images: tileSprites, ready: spritesReady } = useTileSprites();
   const [tooltip, setTooltip] = useState<{ lore: LoreEntry; x: number; y: number } | null>(null);
   const othersById = useMemo(() => {
     const m = new Map<string, PlayerPublic>();
@@ -121,6 +123,8 @@ export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget
     canvas.height = map.height * TILE_SIZE;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+    // Pixel-art tiles: keep hard edges when scaling 32px sprites to TILE_SIZE.
+    ctx.imageSmoothingEnabled = false;
 
     ctx.fillStyle = '#0d1117';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -129,8 +133,14 @@ export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget
       for (let x = 0; x < map.width; x++) {
         const idx = y * map.width + x;
         const code = map.tiles[idx];
-        ctx.fillStyle = TILE_COLOR[code] || '#121820';
-        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        const sprite = tileSprites.get(code);
+        if (sprite) {
+          ctx.drawImage(sprite, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        } else {
+          // No committed art for this code (e.g. tutorial/gate tiles): flat color.
+          ctx.fillStyle = TILE_COLOR[code] || '#121820';
+          ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        }
         const glyph = TILE_GLYPH[code];
         if (glyph) {
           ctx.fillStyle = '#f7e9a7';
@@ -253,7 +263,7 @@ export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget
       ctx.fillText(f.text, f.x * TILE_SIZE + 2, f.y * TILE_SIZE - lift);
       ctx.restore();
     }
-  }, [map, me, others, nowMs, targetId, fx, othersById, groundItems, propertyByPlot]);
+  }, [map, me, others, nowMs, targetId, fx, othersById, groundItems, propertyByPlot, tileSprites, spritesReady]);
 
   return (
     <>
