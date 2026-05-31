@@ -275,6 +275,7 @@ jobs:
           npm run verify:costed-actions
           npm run verify:mob-loot
           npm run verify:item-pickup-type
+          npm run verify:anticheat-persistence
 
       - name: DB-backed verifiers (Phase 2)
         # Verify the SQLite projection (materialized above) matches the
