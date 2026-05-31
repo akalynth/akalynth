@@ -462,3 +462,58 @@ required, or that any client entropy was mixed in. In particular, the
 in a session. That is an honest precommit-before-outcome, but it is **not**
 per-event unpredictability — knowing the reveal (after disconnect) lets anyone
 recompute every drop in that session.
+
+---
+
+## Inventory commitment (v1 privacy) — #103
+
+Starting with the salted-commitment build, `rng_proof.derivation.inputs` on
+**both** v1 and v2 receipts replaces the plaintext `items` array with two fields:
+
+| Field | Type | Public? | Purpose |
+|---|---|---|---|
+| `inventory_commit` | `string` (`blake3:<hex>`) | Yes | Salted BLAKE3 commitment over the items |
+| `inventory_size` | `number` | Yes | `items.length` — needed to compute drop count K |
+
+The plaintext `items` array is **no longer in the public receipt**, so the
+victim's full inventory is not exposed at kill time.
+
+### Commitment scheme
+
+```
+inventory_commit = blake3("akalynth:rng:inv:v1" || salt || stableStringify(items))
+```
+
+- **Domain**: `"akalynth:rng:inv:v1"` (string prefix, no NUL)
+- **Salt**: 16 random bytes (32 hex chars), generated at kill time, used once,
+  then discarded — **never** stored in the receipt, server logs, or any public
+  artifact
+- **Canonical serialisation**: `fast-json-stable-stringify(items)` (same library
+  used for all other receipt hashing in this project)
+- **Format**: `"blake3:<hex>"` — same as `rngCommit` and all other commitments
+
+### Opening
+
+The opening is `{ salt, items }`. It is held by the **player / account operator**
+via an out-of-band channel (e.g. a client-side escrow, a future `/v1/opening`
+endpoint). It is **not** in the receipt.
+
+### Verifier behaviour
+
+- **With opening** (`context.inventoryOpening = { salt, items }`): the verifier
+  recomputes the commitment and compares. If it matches it re-runs
+  `computeDeathDrops` with the opened items for `outcome_derivation: pass`.
+  Mismatch → `INVENTORY_COMMIT_MISMATCH` → `outcome_derivation: fail` →
+  `final_status: failed`.
+- **Without opening**: `outcome_derivation: 'unsupported'` +
+  `COMMITTED_NOT_OPENED`. This is **not** a failure — it honestly means "can't
+  verify without opening". `final_status` is capped at `rng_consistent` (when
+  the rng triple verifies) or `replay_consistent` (v1 deferred commit).
+
+### Seed boundary is unchanged
+
+`inventory_commit` is inside `rng_proof.derivation.inputs`, inside `rng_proof`,
+inside `inputs` — the **same nesting** as the previous `items` array. It is
+**not** part of `combatResolvedBase` (the seed preimage). The
+`drop_seed_hash` / `receipt_body_hash` computation is byte-identical; no
+gameplay outcome changes.
