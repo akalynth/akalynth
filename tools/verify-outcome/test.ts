@@ -297,6 +297,46 @@ const cases: Case[] = [
     expectFinal: 'failed',
     expectReasons: ['PRECOMMIT_COMMIT_MISMATCH', 'RECEIPT_SIGNATURE_NOT_CHECKED', 'SLICE_NOT_AUTHENTICATED'],
   },
+
+  // ---- #103: salted inventory commitment fixtures ----
+  // These use inventory_commit + inventory_size instead of plaintext items.
+  {
+    // Valid commitment, opening supplied → commitment verifies, outcome derives.
+    // v0 commit scheme → rng triple verifies → rng_consistent.
+    file: 'rng-v1-proof-commitment-valid-with-opening.json',
+    contextFile: 'rng-v1-proof-commitment-valid-with-opening.context.json',
+    expectFinal: 'rng_consistent',
+    expectReasons: [
+      'RECEIPT_SIGNATURE_NOT_CHECKED',
+      'CHRONICLE_INCLUSION_NOT_CHECKED',
+      'PRECOMMIT_NOT_PROVEN',
+    ],
+  },
+  {
+    // Valid commitment, NO opening → outcome_derivation: unsupported. NOT a failure.
+    // v0 commit scheme → rng triple verifies → rng_consistent (honest ceiling).
+    file: 'rng-v1-proof-commitment-no-opening.json',
+    expectFinal: 'rng_consistent',
+    expectReasons: [
+      'RECEIPT_SIGNATURE_NOT_CHECKED',
+      'CHRONICLE_INCLUSION_NOT_CHECKED',
+      'PRECOMMIT_NOT_PROVEN',
+      'COMMITTED_NOT_OPENED',
+    ],
+  },
+  {
+    // Tampered commitment: the stored inventory_commit does not match the opening.
+    // INVENTORY_COMMIT_MISMATCH → outcome_derivation: fail → final_status: failed.
+    file: 'rng-v1-proof-commitment-tampered-commit.json',
+    contextFile: 'rng-v1-proof-commitment-valid-with-opening.context.json',
+    expectFinal: 'failed',
+    expectReasons: [
+      'RECEIPT_SIGNATURE_NOT_CHECKED',
+      'CHRONICLE_INCLUSION_NOT_CHECKED',
+      'PRECOMMIT_NOT_PROVEN',
+      'INVENTORY_COMMIT_MISMATCH',
+    ],
+  },
 ];
 
 function sortedUnique(arr: string[]): string[] {
