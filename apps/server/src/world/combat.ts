@@ -13,7 +13,7 @@ import {
   setLegendaryHeat,
   type ItemForDrop,
 } from './drop-policy.js';
-import { rngCommit } from './rng.js';
+import { rngCommit, rngDeriveSeedV2 } from './rng.js';
 
 // ============================================================================
 // Constants
@@ -99,6 +99,43 @@ export interface ReceiptRngProof {
   };
 }
 
+/**
+ * Precommit-anchored RNG proof (v2, #101).
+ *
+ * Persisted on the FINAL combat_resolved receipt when AKALYNTH_RNG_V2 is ON and
+ * the session has a 'death_drop:v1' precommit. Unlike v1, the seed is derived
+ * from a reveal the server COMMITTED TO BEFORE the outcome (rng_commit chronicle
+ * event on spawn) and PUBLISHES ONLY AFTER (rng_reveal on disconnect).
+ *
+ * CRITICAL: this receipt MUST NOT carry the reveal secret — publishing it early
+ * would break hiding for later kills in the same session. The verifier obtains
+ * the reveal from the chronicle rng_reveal event instead. The receipt carries
+ * precommit_ref + rng_out + event_preimage_hash only.
+ */
+export interface ReceiptRngProofV2 {
+  version: 2;
+  scheme: 'precommit_reveal_v2';
+  outcome_type: 'loot_drop';
+  precommit_ref: {
+    chronicle_seq: number;
+    chronicle_hash: string;
+    commit: string;
+  };
+  event_preimage_hash: string; // === drop_seed_hash === computeReceiptHash(combatResolvedBase)
+  event_domain: 'death_drop:v1';
+  world_id: MapName;
+  rng_out: number[];
+  derivation: {
+    algorithm: 'rngDeriveSeedV2->rngDrawU32Legacy/selectItemsToDrop@v2';
+    inputs: {
+      items: ReceiptRngProofItem[];
+      reputation: number;
+      map: MapName;
+      protected_item_id: string | null;
+    };
+  };
+}
+
 export interface WorldItem {
   x: number;
   y: number;
@@ -125,6 +162,14 @@ export interface CombatContext {
   emitFirstOf?: (playerId: string, info: unknown) => void;
   getProtectedItemId: (playerId: string) => string | undefined; // Phase 3.2
   getRngCommitV1: (targetId: string) => string | undefined; // Seal 3.1
+  // #101: v2 precommit-anchored RNG (flag-gated, default OFF). When OFF, all of
+  // the below are unused and combat behavior + persisted proof are byte-identical
+  // to the #100 v1 path.
+  rngV2Enabled?: boolean;
+  getRngRevealV1?: (targetId: string) => string | undefined;
+  getRngCommitRefV1?: (
+    targetId: string
+  ) => { chronicle_seq: number; chronicle_hash: string } | undefined;
 }
 
 // ============================================================================
@@ -266,10 +311,26 @@ export function handleAttackIntent(ctx: CombatContext): AttackResult {
   };
   const seedHash = ctx.computeReceiptHash(combatResolvedBase);
 
+  // 2.1 #101: decide v2 vs v1 derivation. v2 is reachable ONLY when the flag is
+  // ON AND the session carries a 'death_drop:v1' reveal+commit+chronicle ref.
+  // When ANY of those is absent (flag OFF is the default), we fall back to the
+  // EXACT #100 v1 path — same seed (seedHash), same outcome, same proof shape.
+  const v2Reveal = ctx.rngV2Enabled ? ctx.getRngRevealV1?.(targetId) : undefined;
+  const v2CommitRef = ctx.rngV2Enabled ? ctx.getRngCommitRefV1?.(targetId) : undefined;
+  const v2Commit = ctx.rngV2Enabled ? ctx.getRngCommitV1(targetId) : undefined;
+  const useV2 = !!(v2Reveal && v2CommitRef && v2Commit);
+
+  // The seed fed to the drop PRF. v1: seedHash (receipt body hash). v2: a seed
+  // DERIVED from the pre-committed reveal + this event's preimage hash. This is
+  // the intended v2 outcome change — and it ONLY happens behind the flag.
+  const dropSeed = useV2
+    ? rngDeriveSeedV2(v2Reveal!, defenderMap, 'death_drop:v1', seedHash)
+    : seedHash;
+
   // 3. Compute which items to drop using weighted policy
   const reputation = ctx.getReputation(targetId);
   const rngOut: number[] = [];
-  const dropResult = computeDeathDrops(inventoryItems, defenderMap, reputation, seedHash, rngOut);
+  const dropResult = computeDeathDrops(inventoryItems, defenderMap, reputation, dropSeed, rngOut);
   const droppedItemIds = dropResult.droppedItemIds;
 
   // 3.1 Snapshot the EXACT inputs computeDeathDrops consumed so an offline
@@ -359,26 +420,55 @@ export function handleAttackIntent(ctx: CombatContext): AttackResult {
   // NOT part of combatResolvedBase, so the seed (drop_seed_hash) and the loot
   // selection are provably unchanged. It does NOT prove the server committed to
   // the reveal seed before the outcome; precommit anchoring is future work (#101).
-  const rngProof: ReceiptRngProof = {
-    version: 1,
-    scheme: 'receipt_hash_seeded_replay',
-    outcome_type: 'loot_drop',
-    rng_commit_scheme: dropRng.rng_domain === 'death_drop:v1' ? 'death_drop:v1' : 'death_drop:v0',
-    receipt_body_hash: seedHash,
-    rng_commit: dropRng.rng_commit,
-    reveal_seed: seedHash,
-    rng_out: rngOut,
-    derivation: {
-      algorithm: 'rngDrawU32Legacy/selectItemsToDrop@v0',
-      domain: 'pvp_loot_drop',
-      inputs: {
-        items: rngProofItems,
-        reputation,
-        map: defenderMap,
-        protected_item_id: defenderProtectedId ?? null,
-      },
-    },
-  };
+  //
+  // #101: when v2 is active, persist the precommit-anchored proof INSTEAD. It
+  // carries precommit_ref + rng_out + event_preimage_hash but NEVER the reveal
+  // secret (the verifier reads that from the chronicle rng_reveal event). When
+  // v2 is inactive (flag OFF), the v1 proof below is byte-identical to #100.
+  const rngProof: ReceiptRngProof | ReceiptRngProofV2 = useV2
+    ? {
+        version: 2,
+        scheme: 'precommit_reveal_v2',
+        outcome_type: 'loot_drop',
+        precommit_ref: {
+          chronicle_seq: v2CommitRef!.chronicle_seq,
+          chronicle_hash: v2CommitRef!.chronicle_hash,
+          commit: v2Commit!,
+        },
+        event_preimage_hash: seedHash,
+        event_domain: 'death_drop:v1',
+        world_id: defenderMap,
+        rng_out: rngOut,
+        derivation: {
+          algorithm: 'rngDeriveSeedV2->rngDrawU32Legacy/selectItemsToDrop@v2',
+          inputs: {
+            items: rngProofItems,
+            reputation,
+            map: defenderMap,
+            protected_item_id: defenderProtectedId ?? null,
+          },
+        },
+      }
+    : {
+        version: 1,
+        scheme: 'receipt_hash_seeded_replay',
+        outcome_type: 'loot_drop',
+        rng_commit_scheme: dropRng.rng_domain === 'death_drop:v1' ? 'death_drop:v1' : 'death_drop:v0',
+        receipt_body_hash: seedHash,
+        rng_commit: dropRng.rng_commit,
+        reveal_seed: seedHash,
+        rng_out: rngOut,
+        derivation: {
+          algorithm: 'rngDrawU32Legacy/selectItemsToDrop@v0',
+          domain: 'pvp_loot_drop',
+          inputs: {
+            items: rngProofItems,
+            reputation,
+            map: defenderMap,
+            protected_item_id: defenderProtectedId ?? null,
+          },
+        },
+      };
 
   // NOTE: rng_proof is persisted INSIDE inputs (the only field the audit logger
   // forwards), alongside the existing drop fields. It is NOT part of

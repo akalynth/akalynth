@@ -15,6 +15,8 @@ export {
   rngCommitV1,
   rngDrawU32Legacy,
   rngU32ToUnitFloat,
+  rngDeriveSeedV2,
+  RNG_DERIVE_DOMAIN_V2,
 } from '../../../../packages/shared/rng.js';
 
 /**

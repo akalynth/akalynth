@@ -49,3 +49,36 @@ export function rngU32ToUnitFloat(u32: number): number {
   const u = u32 / 0xffffffff;
   return u === 0 ? 1 / 0xffffffff : u;
 }
+
+// ---------------------------------------------------------------------------
+// v2 precommit-anchored seed derivation (#101)
+// ---------------------------------------------------------------------------
+//
+// Binds a loot-drop seed to a chronicle-ordered, pre-published commitment.
+// The reveal secret was committed BEFORE the outcome (rng_commit chronicle
+// event on spawn) and is published only AFTER the outcome (rng_reveal on
+// disconnect). The derived seed mixes the reveal with the event context so the
+// outcome is provably a function of the committed secret + the specific event.
+//
+// Domain-separated + versioned so it can never collide with the legacy v0/v1
+// receipt-hash seed (rngDrawU32Legacy still consumes the RESULT of this).
+//
+// Preimage layout (NUL-delimited domain tag, then raw string concatenation):
+//   "akalynth:rng:v2:derive\0" || reveal || worldId || eventDomain || eventPreimageHash
+//
+// IMPORTANT: this proves the server committed to the seed before the outcome
+// and derived the outcome from it. It does NOT prove the seed was unbiased,
+// that the server could not choose among multiple precommits, or that any
+// client entropy was mixed in. See docs/RNG_OUTCOME_VERIFICATION.md.
+export const RNG_DERIVE_DOMAIN_V2 = 'akalynth:rng:v2:derive\0';
+
+export function rngDeriveSeedV2(
+  reveal: string,
+  worldId: string,
+  eventDomain: string,
+  eventPreimageHash: string
+): string {
+  const preimage = RNG_DERIVE_DOMAIN_V2 + reveal + worldId + eventDomain + eventPreimageHash;
+  const hashBytes = blake3(new TextEncoder().encode(preimage));
+  return `blake3:${Buffer.from(hashBytes).toString('hex')}`;
+}
