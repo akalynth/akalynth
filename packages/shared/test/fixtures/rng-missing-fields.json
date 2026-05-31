@@ -1,0 +1,12 @@
+{
+  "sequence": 47,
+  "timestamp": "2026-05-31T12:05:00.000Z",
+  "actor_id": "did:akalynth:attacker-001",
+  "action": "combat_resolved",
+  "inputs": {
+    "target_player_id": "did:akalynth:victim-001",
+    "map": "rookbridge",
+    "outcome": "kill"
+  },
+  "result": "ok"
+}
