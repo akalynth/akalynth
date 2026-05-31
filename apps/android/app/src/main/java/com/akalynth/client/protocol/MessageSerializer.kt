@@ -209,15 +209,15 @@ object MessageSerializer {
             build()
         }
 
+    // The server protocol only accepts the 4 cardinals. Diagonals from the DPad
+    // are mapped to their vertical component (primary axis) so the wire message
+    // is always valid. The DPad layer sends two sequential intents for true
+    // diagonal movement if needed.
     private fun Direction.wire(): String = when (this) {
-        Direction.NORTH -> "north"
-        Direction.SOUTH -> "south"
+        Direction.NORTH, Direction.NORTHWEST, Direction.NORTHEAST -> "north"
+        Direction.SOUTH, Direction.SOUTHWEST, Direction.SOUTHEAST -> "south"
         Direction.EAST -> "east"
         Direction.WEST -> "west"
-        Direction.NORTHEAST -> "northeast"
-        Direction.NORTHWEST -> "northwest"
-        Direction.SOUTHEAST -> "southeast"
-        Direction.SOUTHWEST -> "southwest"
     }
 
     private fun WitnessResponse.wire(): String = when (this) {

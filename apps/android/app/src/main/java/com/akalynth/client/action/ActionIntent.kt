@@ -1,5 +1,6 @@
 package com.akalynth.client.action
 
+import com.akalynth.client.protocol.Direction
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.util.UUID
@@ -103,10 +104,6 @@ sealed class ActionIntent {
     }
 }
 
-// Direction is defined in com.akalynth.client.protocol.Direction (4 cardinals,
-// matches packages/shared/types.ts). Canonical definition lives there; this
-// file re-exports it as a typealias so action-layer code compiles unchanged.
-typealias Direction = com.akalynth.client.protocol.Direction
 
 /**
  * Chat channel enum.
