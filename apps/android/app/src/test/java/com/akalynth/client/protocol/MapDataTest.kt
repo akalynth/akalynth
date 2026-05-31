@@ -7,10 +7,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
 
-/**
- * Verifies the canonical map model parses the real bundled assets and that tile lookup matches the
- * row-major contract in `packages/shared/types.ts` / `maps/*.json`.
- */
+// Verifies the canonical map model parses the real bundled assets and that tile lookup matches the
+// row-major contract in `packages/shared/types.ts` / `maps/*.json`.
 class MapDataTest {
 
     private val json = Json { ignoreUnknownKeys = true }
