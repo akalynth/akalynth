@@ -218,6 +218,12 @@ export interface TransparencyResponse {
   identity: {
     auth_public_key_hex: string;
     key_derivation: string;
+    // Raw-seed Ed25519 public key that signs receipts AND chronicle events
+    // (distinct from auth_public_key_hex, the blake3-derived token key). Published
+    // so a third party can verify receipt + chronicle-line signatures offline
+    // (e.g. RNG outcome `verified`). See docs/RNG_OUTCOME_VERIFICATION.md.
+    signing_public_key_hex: string;
+    signing_key_derivation: string;
   };
   principles: string[];
   documentation: {
