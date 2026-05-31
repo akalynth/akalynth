@@ -8,16 +8,22 @@
  * Usage:
  *   npx tsx tools/verify-outcome/src/index.ts path/to/receipt.json
  *
- * Optional #101 chronicle/pubkey context (still fully offline):
- *   --context path/to/context.json   sidecar with commitEvent/revealEvent/
- *                                     outcomeSeq/authPublicKeyHex (see
- *                                     OutcomeVerificationContext).
+ * Optional #104 chronicle/pubkey context (still fully offline):
+ *   --context path/to/context.json   sidecar with { chronicle: ChronicleEntry[],
+ *                                     authPublicKeyHex? } — an ORDERED slice of
+ *                                     parsed chronicle.log entries (with their
+ *                                     Seal 2.3 global-chain fields) and an
+ *                                     optional receipt pubkey. The verifier
+ *                                     RE-CHECKS the global hash chain over the
+ *                                     slice and proves commit < death < reveal by
+ *                                     link-checked position.
  *   --pubkey <hex>                    raw 32-byte Ed25519 receipt pubkey
  *                                     (overrides authPublicKeyHex in --context).
  *
- * "verified" for a v2 proof is reachable ONLY with BOTH the chronicle context
- * (commit < outcome < reveal) AND a valid pubkey. Without them the CLI caps at
- * rng_consistent / replay_consistent — see docs/RNG_OUTCOME_VERIFICATION.md.
+ * "verified" for a v2 proof is reachable ONLY with BOTH a chain-verified slice
+ * (ordered commit < death < reveal) AND a valid pubkey. Without the slice the CLI
+ * caps at rng_consistent; without the pubkey it caps at rng_consistent
+ * (PRECOMMIT_ANCHORED) — see docs/RNG_OUTCOME_VERIFICATION.md.
  */
 
 import * as fs from 'node:fs';

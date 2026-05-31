@@ -20,22 +20,15 @@ import path from 'node:path';
 import stringify from 'fast-json-stable-stringify';
 import { blake3 } from '@noble/hashes/blake3';
 import { rngCommit, rngDrawU32Legacy, rngCommitV1 } from '../src/world/rng.js';
+import {
+  type ChronicleEntry as SharedChronicleEntry,
+  computePayloadHash as computePayloadHashShared,
+  computeEventHash as computeEventHashShared,
+  computeGlobalEventHash as computeGlobalEventHashShared,
+} from '../../../packages/shared/chronicleChain.js';
 
-type ChronicleEntry = {
-  v: number;
-  world_id: string;
-  rulebook_root: string;
-  tick: number;
-  event_type: string;
-  actor: string;
-  caps_hash: string;
-  caps?: string[];
-  payload: Record<string, unknown>;
-  rng: unknown | null;
-};
+type ChronicleEntry = SharedChronicleEntry & { rng: unknown | null };
 
-const DOMAIN_EVENT = 'akalynth:chronicle:event:v1\0';
-const DOMAIN_GLOBAL = 'akalynth:chronicle:global:v1\0';
 const RED = '\x1b[31m';
 const YELLOW = '\x1b[33m';
 const RESET = '\x1b[0m';
@@ -59,66 +52,15 @@ function asStringArray(value: unknown): string[] {
   return out;
 }
 
-function stripPayloadHashFields(payload: Record<string, unknown>): Record<string, unknown> {
-  // Payload hash was computed BEFORE embedding these.
-  const copy: Record<string, unknown> = { ...payload };
-  // Per-actor chain fields
-  delete copy.payload_hash;
-  delete copy.prev_event_hash;
-  delete copy.event_hash;
-  // Global chain fields (Seal 2.3)
-  delete copy.prev_global_hash;
-  delete copy.global_event_hash;
-  return copy;
-}
-
-function computePayloadHash(payload: Record<string, unknown>): string {
-  const stripped = stripPayloadHashFields(payload);
-  return `blake3:${blake3HexUtf8(stableJson(stripped))}`;
-}
+// Chain hashing delegates to packages/shared/chronicleChain.ts (single source of
+// truth) so the offline RNG outcome verifier proves ordering against the SAME
+// computation this tool uses.
+const computePayloadHash = computePayloadHashShared;
+const computeEventHash = computeEventHashShared;
+const computeGlobalEventHash = computeGlobalEventHashShared;
 
 function computeCapsHash(caps: string[]): string {
   return `blake3:${blake3HexUtf8(stableJson(caps ?? []))}`;
-}
-
-function computeEventHash(entry: ChronicleEntry, prevEventHash: string, payloadHash: string): string {
-  const preimage = {
-    v: entry.v,
-    world_id: entry.world_id,
-    rulebook_root: entry.rulebook_root,
-    event_type: entry.event_type,
-    actor: entry.actor,
-    tick: entry.tick,
-    caps_hash: entry.caps_hash,
-    payload_hash: payloadHash,
-    prev_event_hash: prevEventHash,
-  };
-  return `blake3:${blake3HexUtf8(DOMAIN_EVENT + stableJson(preimage))}`;
-}
-
-/**
- * Compute global_event_hash (Seal 2.3: whole-file tamper evidence)
- * The global chain commits to the per-actor event_hash, linking both chains.
- */
-function computeGlobalEventHash(
-  entry: ChronicleEntry,
-  payloadHash: string,
-  eventHash: string,
-  prevGlobalHash: string,
-): string {
-  const preimage = {
-    v: entry.v,
-    world_id: entry.world_id,
-    rulebook_root: entry.rulebook_root,
-    event_type: entry.event_type,
-    actor: entry.actor,
-    tick: entry.tick,
-    caps_hash: entry.caps_hash,
-    payload_hash: payloadHash,
-    event_hash: eventHash, // Commits global chain to per-actor chain
-    prev_global_hash: prevGlobalHash,
-  };
-  return `blake3:${blake3HexUtf8(DOMAIN_GLOBAL + stableJson(preimage))}`;
 }
 
 function getEmbeddedString(payload: Record<string, unknown>, key: string): string | null {

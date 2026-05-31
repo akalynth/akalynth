@@ -5,10 +5,13 @@
 // seed before the outcome unless the receipt or chronicle provides a prior
 // commitment anchor (see docs/RNG_OUTCOME_VERIFICATION.md, finding F1/F2).
 //
-// LABELING RULE: this module NEVER returns final_status="verified" for the
-// death-drop outcome. "verified" would require receipt authenticity +
-// rng_commit_reveal + outcome_derivation + precommit_anchoring to ALL pass,
-// which cannot happen with the current persisted receipt shape.
+// LABELING RULE: final_status="verified" is reachable for a v2 precommit-anchored
+// death-drop outcome ONLY when ALL of {receipt_authenticity, rng_commit_reveal,
+// outcome_derivation, precommit_anchoring, chronicle_inclusion} pass — which
+// requires a CHAIN-VERIFIED chronicle slice proving commit < death < reveal (#104)
+// AND a supplied auth pubkey. v1/legacy receipts NEVER reach "verified", and a
+// receipt-only / no-slice caller caps at rng_consistent (ORDERING_NOT_CHAIN_PROVEN).
+// "verified" never rests on caller-supplied ordinals — only on the verified slice.
 
 import { blake3 } from '@noble/hashes/blake3';
 import * as nodeCrypto from 'node:crypto';
@@ -16,6 +19,12 @@ import stableStringify from 'fast-json-stable-stringify';
 import { rngCommit, rngCommitV1, rngDrawU32Legacy, rngDeriveSeedV2 } from './rng.js';
 import { computeDeathDrops, type ItemForDrop } from './dropPolicy.js';
 import type { MapName } from './http.js';
+import {
+  verifyGlobalChainSlice,
+  type ChronicleEntry,
+} from './chronicleChain.js';
+
+export type { ChronicleEntry } from './chronicleChain.js';
 
 export type CheckStatus = 'pass' | 'fail' | 'not_checked' | 'unsupported';
 
@@ -38,31 +47,33 @@ export type OutcomeVerificationResult = {
 };
 
 // ---------------------------------------------------------------------------
-// Chronicle context (#101): optional out-of-band material the verifier needs to
+// Chronicle context (#104): optional out-of-band material the verifier needs to
 // reach "verified" for a v2 precommit-anchored proof. Supplied by the caller
 // (CLI/sidecar), NEVER read from live server state.
+//
+// Ordering is proven against the chronicle GLOBAL hash chain (Seal 2.3): the
+// caller supplies a verified-or-not slice of parsed chronicle entries and the
+// verifier RE-CHECKS the global chain over it (same computation as
+// verify-chronicle-chain.ts) before trusting any positions. The #101 loose
+// `commitEvent`/`revealEvent`/`outcomeSeq` ordinal path is REMOVED: caller
+// ordinals were not an independent ordering proof. Ordering now comes ONLY from
+// the verified slice's link-checked position.
 // ---------------------------------------------------------------------------
 
-export type ChronicleEventRef = {
-  // Position in the chronicle ordering space (commit < outcome < reveal).
-  seq: number;
-  // rng_commit event payload fields (commit binds domain+actor+reveal).
-  rng_commit?: string;
-  // rng_reveal event payload fields (the published secret).
-  rng_reveal?: string;
-  // actor DID the commit/reveal belong to (for rngCommitV1 recomputation).
-  actor?: string;
-};
-
 export type OutcomeVerificationContext = {
-  // The spawn rng_commit chronicle event.
-  commitEvent?: ChronicleEventRef;
-  // The disconnect rng_reveal chronicle event (absent until session ends).
-  revealEvent?: ChronicleEventRef;
-  // Ordering position of THIS outcome in the same chronicle space. Defaults to
-  // the receipt's own `sequence` field. See the seq-space caveat in
-  // docs/RNG_OUTCOME_VERIFICATION.md (#101).
-  outcomeSeq?: number;
+  // An ORDERED slice of parsed chronicle.log entries (with their global-chain
+  // fields embedded in `payload`: prev_event_hash/event_hash/payload_hash and
+  // Seal 2.3 prev_global_hash/global_event_hash). The verifier itself verifies
+  // the global chain over this slice; a broken link fails the proof. Position
+  // within the link-checked slice is the ONLY ordering signal used.
+  chronicle?: ChronicleEntry[];
+  // DEPRECATED, binding-only fallback (NO ordering): the revealed death_drop:v1
+  // secret, used to recompute the commit binding + outcome derivation when NO
+  // chronicle slice is supplied. This can lift a receipt-only caller to
+  // rng_consistent (ORDERING_NOT_CHAIN_PROVEN) but can NEVER reach "verified" —
+  // ordering rests solely on the verified slice. Ignored when `chronicle` is
+  // present (the slice's rng_reveal event is authoritative).
+  revealSeed?: string;
   // Raw 32-byte Ed25519 public key (hex) used to verify the receipt signature.
   // When absent, receipt_authenticity stays "not_checked".
   authPublicKeyHex?: string;
@@ -585,27 +596,77 @@ function verifyReceiptRngProof(
 }
 
 // ---------------------------------------------------------------------------
-// #101: v2 precommit-anchored proof verification (chronicle-aware)
+// #104: v2 precommit-anchored proof verification (chronicle-global-chain-aware)
 // ---------------------------------------------------------------------------
 //
-// What v2 proves: the server COMMITTED to the seed (rng_commit chronicle event)
-// BEFORE the outcome and DERIVED the outcome from it (rngDeriveSeedV2). The
-// reveal is published only later (rng_reveal on disconnect) and is supplied via
-// context — it is NEVER in the receipt.
+// What v2 proves (with a verified chronicle slice): the server COMMITTED to the
+// seed (rng_commit chronicle event) BEFORE the outcome (the death event) and
+// DERIVED the outcome from it (rngDeriveSeedV2), and later PUBLISHED the reveal
+// (rng_reveal). ORDERING is established by walking the chronicle GLOBAL hash
+// chain (Seal 2.3): the verifier re-checks the chain over the supplied slice
+// (same computation as verify-chronicle-chain.ts) and uses link-checked POSITION
+// to require commit < death(outcome) < reveal. Caller-supplied ordinals are NOT
+// trusted — ordering rests only on the recomputed chain.
 //
 // What v2 does NOT prove: that the seed was unbiased, that the server could not
 // choose among multiple precommits, that no trust in the server is required, or
-// that any client entropy was mixed in.
+// that any client entropy was mixed in. The death_drop:v1 precommit is
+// session-level (one reveal covers all kills in a session) — committed before
+// the outcome, but NOT per-event unpredictability.
 //
 // "verified" is reachable ONLY when ALL of {precommit_anchoring,
 // rng_commit_reveal, outcome_derivation, receipt_authenticity,
-// chronicle_inclusion} pass. Without a supplied auth pubkey, authenticity stays
-// "not_checked" → capped at "rng_consistent" (+ PRECOMMIT_ANCHORED). Without a
-// reveal event, precommit_anchoring is "not_checked" (+ REVEAL_NOT_PUBLISHED)
-// → "replay_consistent" (NOT failed). Genuine tamper/ordering → "failed".
+// chronicle_inclusion} pass — which needs a verified slice (ordered
+// commit<death<reveal) AND a supplied auth pubkey. Without a pubkey →
+// "rng_consistent" (+ PRECOMMIT_ANCHORED). With NO slice → "rng_consistent" (+
+// ORDERING_NOT_CHAIN_PROVEN, unchanged receipt-only ceiling). Reveal absent from
+// the slice → "replay_consistent" (+ REVEAL_NOT_PUBLISHED). Genuine
+// tamper/mis-order/broken-link → "failed".
 
 function isStringNonEmpty(v: unknown): v is string {
   return typeof v === 'string' && v.length > 0;
+}
+
+const V1_COMMIT_DOMAIN = 'death_drop:v1';
+
+// Locate the death event for THIS outcome in a chronicle slice: an event of type
+// 'death', whose payload.drop_seed_hash equals the proof's event_preimage_hash
+// (= the combat seed), recorded against the victim's actor DID.
+function findDeathEventIndex(
+  slice: ChronicleEntry[],
+  eventPreimageHash: string,
+  victimDid: string
+): number {
+  let found = -1;
+  for (let i = 0; i < slice.length; i++) {
+    const e = slice[i];
+    if (e.event_type !== 'death') continue;
+    if (e.actor !== victimDid) continue;
+    if (e.payload?.['drop_seed_hash'] !== eventPreimageHash) continue;
+    if (found !== -1) return -2; // ambiguous: more than one match
+    found = i;
+  }
+  return found;
+}
+
+// Locate the death_drop:v1 rng_commit / rng_reveal events for the victim actor.
+// Returns the FIRST matching index (commits/reveals for a session actor+domain
+// are unique by construction).
+function findRngEventIndex(
+  slice: ChronicleEntry[],
+  eventType: 'rng_commit' | 'rng_reveal',
+  victimDid: string,
+  field: 'rng_commit' | 'rng_reveal'
+): number {
+  for (let i = 0; i < slice.length; i++) {
+    const e = slice[i];
+    if (e.event_type !== eventType) continue;
+    if (e.actor !== victimDid) continue;
+    if (e.payload?.['rng_domain'] !== V1_COMMIT_DOMAIN) continue;
+    if (!isStringNonEmpty(e.payload?.[field] as unknown)) continue;
+    return i;
+  }
+  return -1;
 }
 
 function verifyReceiptRngProofV2(
@@ -633,8 +694,8 @@ function verifyReceiptRngProofV2(
   }
 
   const ctx = context ?? {};
-  const commitEvent = ctx.commitEvent;
-  const revealEvent = ctx.revealEvent;
+  const slice = ctx.chronicle;
+  const haveSlice = Array.isArray(slice) && slice.length > 0;
 
   const precommitRef = proof['precommit_ref'];
   const worldId = proof['world_id'];
@@ -642,6 +703,18 @@ function verifyReceiptRngProofV2(
   const eventPreimageHash = proof['event_preimage_hash'];
   const rngOut = proof['rng_out'];
   const derivation = proof['derivation'];
+
+  // The death_drop:v1 commit binds the VICTIM (the spawner): the death event,
+  // rng_commit, and rng_reveal all use the victim's DID. The receipt records the
+  // victim as inputs.target_player_id; the server's death event actor is
+  // `did:akalynth:<id>`, so normalize a bare id to that DID form (and accept an
+  // already-qualified DID).
+  const victimId = inp['target_player_id'];
+  const victimDid = !isStringNonEmpty(victimId)
+    ? null
+    : victimId.startsWith('did:akalynth:')
+      ? victimId
+      : `did:akalynth:${victimId}`;
 
   // ----- event_preimage_hash must equal the receipt's recorded drop_seed_hash
   //       AND the recomputed combatResolvedBase hash (seed boundary unchanged). -----
@@ -665,20 +738,6 @@ function verifyReceiptRngProofV2(
     if (!preimageOk) reason_codes.push('EVENT_PREIMAGE_HASH_MISMATCH');
   }
 
-  // ----- chronicle inclusion / ordering: NOT chain-proven yet -----
-  // The chronicle log and the receipt log use SEPARATE sequence spaces, so a
-  // cross-log "commit_seq < outcome_seq < reveal_seq" comparison is only as
-  // trustworthy as the caller-supplied ordinals — that is NOT an independent
-  // proof and is exactly the "unacceptable evidence" #101 names. Until ordering
-  // is verified against the chronicle GLOBAL hash chain (a follow-up coordinated
-  // with #94), we make NO ordering claim: chronicle_inclusion and
-  // precommit_anchoring stay "not_checked", and final_status can NEVER reach
-  // "verified" on this path. The cryptographic commit/reveal binding and the
-  // outcome derivation below still gate "rng_consistent".
-  const chronicle_inclusion: CheckStatus = 'not_checked';
-  const precommit_anchoring: CheckStatus = 'not_checked';
-  reason_codes.push('ORDERING_NOT_CHAIN_PROVEN');
-
   // precommit_ref must carry the commit value (used for the binding check below).
   let refCommit: unknown;
   if (isObject(precommitRef)) {
@@ -687,35 +746,142 @@ function verifyReceiptRngProofV2(
     reason_codes.push('PRECOMMIT_MISSING');
   }
 
-  const haveReveal = !!revealEvent && isStringNonEmpty(revealEvent.rng_reveal);
+  // ===========================================================================
+  // ORDERING via the chronicle GLOBAL hash chain (Seal 2.3).
+  // ===========================================================================
+  // The verifier itself re-checks the global chain over the supplied slice
+  // (same computation as verify-chronicle-chain.ts), then uses link-checked
+  // POSITION to require commit < death(outcome) < reveal. Caller ordinals are
+  // never trusted: ordering comes only from the recomputed chain.
+  let chronicle_inclusion: CheckStatus;
+  let precommit_anchoring: CheckStatus;
+  // The reveal secret used for binding + derivation comes from the verified
+  // slice's rng_reveal event (or stays null when no slice / no reveal).
+  let reveal: string | null = null;
+  // commit actor (for the rngCommitV1 binding) comes from the verified slice's
+  // rng_commit event when present.
+  let commitActorFromSlice: string | null = null;
+  let sliceCommitValue: string | null = null;
+  // Ordering bookkeeping for final_status.
+  let orderingProven = false; // commit < death < reveal all present + ordered
+  let revealPendingInSlice = false; // slice verified, but no reveal event yet
+  let chainBroken = false;
+
+  if (!haveSlice) {
+    // No chronicle slice supplied: receipt-only ceiling, unchanged from #101.
+    // Ordering is not chain-proven; the binding/derivation below may still run
+    // off a deprecated, caller-supplied reveal (rng_consistent at best — never
+    // "verified", which requires the verified slice).
+    chronicle_inclusion = 'not_checked';
+    precommit_anchoring = 'not_checked';
+    reason_codes.push('ORDERING_NOT_CHAIN_PROVEN');
+    if (isStringNonEmpty(ctx.revealSeed)) {
+      reveal = ctx.revealSeed;
+      commitActorFromSlice = victimDid; // binds rngCommitV1 to the victim DID
+    }
+  } else {
+    // 1) Verify the global chain over the slice (recompute every global hash +
+    //    check each prev_global_hash link). A broken link is fatal.
+    const chainRes = verifyGlobalChainSlice(slice as unknown[]);
+    if (!chainRes.ok) {
+      chainBroken = true;
+      chronicle_inclusion = 'fail';
+      precommit_anchoring = 'fail';
+      reason_codes.push('CHRONICLE_CHAIN_BROKEN');
+    } else if (!victimDid || !isStringNonEmpty(eventPreimageHash)) {
+      // Can't locate the outcome event without the victim DID + preimage.
+      chronicle_inclusion = 'fail';
+      precommit_anchoring = 'fail';
+      reason_codes.push('OUTCOME_EVENT_NOT_FOUND');
+    } else {
+      const entries = slice as ChronicleEntry[];
+      const deathPos = findDeathEventIndex(entries, eventPreimageHash, victimDid);
+      const commitPos = findRngEventIndex(entries, 'rng_commit', victimDid, 'rng_commit');
+      const revealPos = findRngEventIndex(entries, 'rng_reveal', victimDid, 'rng_reveal');
+
+      if (deathPos < 0) {
+        // Missing OR ambiguous death event for this outcome.
+        chronicle_inclusion = 'fail';
+        precommit_anchoring = 'fail';
+        reason_codes.push('OUTCOME_EVENT_NOT_FOUND');
+      } else if (commitPos < 0) {
+        chronicle_inclusion = 'fail';
+        precommit_anchoring = 'fail';
+        reason_codes.push('PRECOMMIT_NOT_FOUND');
+      } else {
+        // Pull commit value + reveal (if published) from the verified events.
+        sliceCommitValue =
+          (entries[commitPos].payload?.['rng_commit'] as string | undefined) ?? null;
+        commitActorFromSlice = entries[commitPos].actor;
+
+        if (revealPos < 0) {
+          // Commit + death present and (below) commit<death will be checked, but
+          // the reveal has not been published yet. NOT a failure.
+          if (!(commitPos < deathPos)) {
+            chronicle_inclusion = 'fail';
+            precommit_anchoring = 'fail';
+            reason_codes.push('PRECOMMIT_OUT_OF_ORDER');
+          } else {
+            revealPendingInSlice = true;
+            chronicle_inclusion = 'not_checked';
+            precommit_anchoring = 'not_checked';
+            reason_codes.push('REVEAL_NOT_PUBLISHED');
+          }
+        } else {
+          reveal = (entries[revealPos].payload?.['rng_reveal'] as string | undefined) ?? null;
+          // ORDERING: commit_pos < death_pos < reveal_pos.
+          if (!(commitPos < deathPos && deathPos < revealPos)) {
+            chronicle_inclusion = 'fail';
+            precommit_anchoring = 'fail';
+            reason_codes.push('PRECOMMIT_OUT_OF_ORDER');
+          } else {
+            orderingProven = true;
+            // chronicle_inclusion passes: chain verified + events found + ordered.
+            chronicle_inclusion = 'pass';
+            // precommit_anchoring is gated below on the binding + derivation.
+            precommit_anchoring = 'not_checked';
+          }
+        }
+      }
+    }
+  }
+
+  const haveReveal = isStringNonEmpty(reveal);
+  // When chronicle ordering itself already hard-failed (broken chain, missing
+  // outcome event, mis-order), the binding/derivation cannot add information —
+  // skip it so we don't pollute the failure with a spurious REVEAL_NOT_PUBLISHED.
+  const chronicleHardFailed = chronicle_inclusion === 'fail';
 
   // ----- precommit binding + derivation (need the reveal secret) -----
   let rng_commit_reveal: CheckStatus = 'pass';
   let outcome_derivation: CheckStatus = 'pass';
 
-  if (!haveReveal) {
+  if (chronicleHardFailed) {
+    rng_commit_reveal = 'not_checked';
+    outcome_derivation = 'not_checked';
+  } else if (!haveReveal) {
     reason_codes.push('REVEAL_NOT_PUBLISHED');
     rng_commit_reveal = 'not_checked';
     outcome_derivation = 'not_checked';
   } else {
-    const reveal = revealEvent!.rng_reveal as string;
+    const revealStr = reveal as string;
 
-    // commit binding: rngCommitV1(domain, actor, reveal) === precommit_ref.commit
-    //                 === commitEvent.rng_commit. The death_drop:v1 commit binds
-    // the session actor (the spawner), supplied as commitEvent.actor.
-    const commitActor = commitEvent?.actor;
+    // commit binding: rngCommitV1(domain, victimActor, reveal) === precommit_ref.commit
+    //                 === rng_commit event's commit. The death_drop:v1 commit binds
+    // the session actor (the victim/spawner), taken from the verified slice.
+    const commitActor = commitActorFromSlice ?? victimDid;
     if (!isStringNonEmpty(commitActor)) {
       reason_codes.push('PRECOMMIT_COMMIT_MISMATCH');
       rng_commit_reveal = 'fail';
     } else {
       const expectCommit = rngCommitV1(
-        isStringNonEmpty(eventDomain) ? eventDomain : 'death_drop:v1',
+        isStringNonEmpty(eventDomain) ? eventDomain : V1_COMMIT_DOMAIN,
         commitActor,
-        reveal
+        revealStr
       );
       const commitMatches =
         expectCommit === refCommit &&
-        (!isStringNonEmpty(commitEvent?.rng_commit) || expectCommit === commitEvent!.rng_commit);
+        (!isStringNonEmpty(sliceCommitValue) || expectCommit === sliceCommitValue);
       if (!commitMatches) {
         reason_codes.push('PRECOMMIT_COMMIT_MISMATCH');
         rng_commit_reveal = 'fail';
@@ -729,7 +895,7 @@ function verifyReceiptRngProofV2(
       isStringNonEmpty(eventDomain) &&
       isStringNonEmpty(eventPreimageHash)
     ) {
-      derivedSeed = rngDeriveSeedV2(reveal, worldId, eventDomain, eventPreimageHash);
+      derivedSeed = rngDeriveSeedV2(revealStr, worldId, eventDomain, eventPreimageHash);
     }
 
     if (!derivedSeed || !Array.isArray(rngOut)) {
@@ -814,25 +980,54 @@ function verifyReceiptRngProofV2(
     if (!ok) reason_codes.push('RECEIPT_SIGNATURE_INVALID');
   }
 
+  // ----- precommit_anchoring: passes ONLY when chronicle ordering proved AND the
+  //       commit binds the reveal AND the derivation/outcome checks pass. -----
+  const bindingAndDerivationOk =
+    rng_commit_reveal === 'pass' && outcome_derivation === 'pass';
+  if (orderingProven) {
+    if (chronicle_inclusion === 'pass' && bindingAndDerivationOk && preimageOk) {
+      precommit_anchoring = 'pass';
+      reason_codes.push('PRECOMMIT_ANCHORED');
+    } else {
+      // Ordering proven but the binding/derivation failed → not anchored. The
+      // hardFail below turns the binding/derivation failure into "failed".
+      precommit_anchoring = 'fail';
+    }
+  }
+
   // ----- final_status -----
-  // NOTE: "verified" is intentionally UNREACHABLE on the v2 path in this release.
-  // It requires precommit_anchoring === 'pass', which needs chronicle-global-hash
-  // ordering that is not yet implemented (ORDERING_NOT_CHAIN_PROVEN). The ceiling
-  // here is rng_consistent: the commit binds the revealed seed and the outcome
-  // derives from it, but the commit-before-outcome ordering is not chain-proven.
   const hardFail =
     rng_commit_reveal === 'fail' ||
     outcome_derivation === 'fail' ||
-    receipt_authenticity === 'fail';
+    receipt_authenticity === 'fail' ||
+    chronicle_inclusion === 'fail' ||
+    chainBroken ||
+    !preimageOk;
 
   let final_status: FinalStatus;
   if (hardFail) {
     final_status = 'failed';
-  } else if (!haveReveal) {
-    // Reveal pending: nothing to anchor offline yet. NOT a failure.
+  } else if (revealPendingInSlice || !haveReveal) {
+    // Reveal pending (in a verified slice) OR no slice/no reveal at all: nothing
+    // to anchor offline yet. NOT a failure.
     final_status = 'replay_consistent';
-  } else if (rng_commit_reveal === 'pass' && outcome_derivation === 'pass') {
-    // Commit/reveal binding + outcome derivation verified; ordering unproven.
+  } else if (
+    precommit_anchoring === 'pass' &&
+    rng_commit_reveal === 'pass' &&
+    outcome_derivation === 'pass' &&
+    chronicle_inclusion === 'pass' &&
+    receipt_authenticity === 'pass'
+  ) {
+    // ALL five gates pass: ordering chain-proven + binding/derivation +
+    // authenticated. "verified" is now reachable.
+    final_status = 'verified';
+  } else if (precommit_anchoring === 'pass') {
+    // Ordering + binding/derivation proven, but authenticity not checked (no
+    // pubkey): anchored, ceiling rng_consistent.
+    final_status = 'rng_consistent';
+  } else if (bindingAndDerivationOk) {
+    // Binding + derivation verified, ordering NOT chain-proven (no slice):
+    // unchanged receipt-only ceiling.
     final_status = 'rng_consistent';
   } else {
     final_status = 'replay_consistent';
