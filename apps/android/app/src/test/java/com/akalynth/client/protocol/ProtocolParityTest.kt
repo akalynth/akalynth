@@ -122,9 +122,16 @@ class ProtocolParityTest {
 
     @Test
     fun moveIntentEncodesLowercaseDirection() {
-        val frame = MessageSerializer.encodeClient(MoveIntentMessage(Direction.SOUTHEAST))
-        val obj = json.decodeFromString<JsonObject>(frame)
-        assertEquals("southeast", obj["direction"]!!.jsonPrimitive.content)
+        // Cardinals pass through unchanged on the wire.
+        val cardinalFrame = MessageSerializer.encodeClient(MoveIntentMessage(Direction.SOUTH))
+        val cardinalObj = json.decodeFromString<JsonObject>(cardinalFrame)
+        assertEquals("south", cardinalObj["direction"]!!.jsonPrimitive.content)
+
+        // Diagonals map to their vertical cardinal: the server protocol only accepts
+        // north/south/east/west so SOUTHEAST → "south" on the wire.
+        val diagFrame = MessageSerializer.encodeClient(MoveIntentMessage(Direction.SOUTHEAST))
+        val diagObj = json.decodeFromString<JsonObject>(diagFrame)
+        assertEquals("south", diagObj["direction"]!!.jsonPrimitive.content)
     }
 
     @Test
