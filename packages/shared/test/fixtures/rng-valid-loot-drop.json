@@ -1,0 +1,16 @@
+{
+  "sequence": 42,
+  "timestamp": "2026-05-31T12:00:00.000Z",
+  "actor_id": "did:akalynth:attacker-001",
+  "action": "combat_resolved",
+  "inputs": {
+    "target_player_id": "did:akalynth:victim-001",
+    "map": "rookbridge",
+    "position": { "x": 12, "y": 34 },
+    "outcome": "kill",
+    "dropped_item_ids": ["item-rusty-sword", "item-leather-cap"],
+    "drop_seed_hash": "blake3:e5921b1be8175ac093cc6a37ba285bbc49d191e6ce9866de2e15e83be3e0b11a",
+    "protected_item_id": null
+  },
+  "result": "ok"
+}
