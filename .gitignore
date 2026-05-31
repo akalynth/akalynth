@@ -72,3 +72,10 @@ packages/ci-cd-change-control/**/pass-test*.jsonl
 packages/ci-cd-change-control/**/final-test-receipts/
 packages/ci-cd-change-control/**/test-receipts/
 verify-out/
+
+# Secrets — never track local env files (e.g. tools/asset-gen/.env holds an API key)
+**/.env
+
+# asset-gen Python tooling and raw AI source dumps (local only, regenerable)
+tools/asset-gen/.venv/
+tools/asset-gen/**/_raw/
