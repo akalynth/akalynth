@@ -1,5 +1,5 @@
 /**
- * All Akalynth Verifiers (23 total + 3 prerequisites)
+ * All Akalynth Verifiers (24 total + 3 prerequisites)
  *
  * Dependency graph and registration for the verification spine.
  */
@@ -12,7 +12,7 @@ import { VerifierRegistry } from './registry.js';
 import { protocolDriftVerifier } from './verifiers/protocol-drift.js';
 
 /**
- * Create the default verifier registry with all 22 verifiers
+ * Create the default verifier registry with all 24 verifiers
  */
 export function createDefaultRegistry(): VerifierRegistry {
   const registry = new VerifierRegistry();
@@ -136,7 +136,7 @@ export function createDefaultRegistry(): VerifierRegistry {
   };
 
   // ============================================================================
-  // Phase 1: Core Guarantees (4 verifiers)
+  // Phase 1: Core Guarantees (5 verifiers)
   // ============================================================================
 
   const guaranteesVerifier: VerifierSpec = {
@@ -172,6 +172,18 @@ export function createDefaultRegistry(): VerifierRegistry {
     auditSafe: true,
     async run(ctx) {
       return runLegacyVerifier('apps/server/tools/verify-identity.ts', 'identity', ctx);
+    },
+  };
+
+  const receiptsChainVerifier: VerifierSpec = {
+    id: 'receipts-chain',
+    title: 'Receipts Chain Integrity',
+    description: 'Re-validates audit/receipts.jsonl: inputs/outputs/event hashes, genesis + chain linkage, and Ed25519 signatures (when a key is available)',
+    phase: 1,
+    dependsOn: ['receipts-exist'],
+    auditSafe: true,
+    async run(ctx) {
+      return runLegacyVerifier('apps/server/tools/verify-receipts-chain.ts', 'receipts-chain', ctx);
     },
   };
 
@@ -401,6 +413,7 @@ export function createDefaultRegistry(): VerifierRegistry {
   registry.register(doctrineVerifier);
   registry.register(protocolDriftVerifier);
   registry.register(identityVerifier);
+  registry.register(receiptsChainVerifier);
 
   // Phase 2
   registry.register(chronicleVerifier);
