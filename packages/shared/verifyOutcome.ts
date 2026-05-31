@@ -11,6 +11,7 @@
 // which cannot happen with the current persisted receipt shape.
 
 import { blake3 } from '@noble/hashes/blake3';
+import stableStringify from 'fast-json-stable-stringify';
 import { rngCommit, rngDrawU32Legacy } from './rng.js';
 
 export type CheckStatus = 'pass' | 'fail' | 'not_checked' | 'unsupported';
@@ -34,42 +35,18 @@ export type OutcomeVerificationResult = {
 };
 
 // ---------------------------------------------------------------------------
-// Canonical hashing — replicates apps/server/src/persist/hash.ts semantics
-// (blake3 over canonical JSON with recursively sorted keys, excluding
-// event_hash/signature). Implemented inline so packages/shared stays
-// dependency-light; semantics are unchanged.
+// Canonical hashing — MUST stay byte-identical to apps/server/src/persist/hash.ts.
+// We use the exact same library (fast-json-stable-stringify) + blake3 + the same
+// event_hash/signature exclusion, rather than reimplementing canonicalization,
+// so seed-binding cannot diverge from the server's drop_seed_hash.
 // ---------------------------------------------------------------------------
-
-function canonicalize(value: unknown): string {
-  // Matches fast-json-stable-stringify: recursive key sorting, arrays in order,
-  // non-finite/undefined handled by JSON semantics.
-  if (value === null || typeof value !== 'object') {
-    return JSON.stringify(value);
-  }
-  if (Array.isArray(value)) {
-    const items = value.map((v) => {
-      const s = canonicalize(v);
-      return s === undefined ? 'null' : s;
-    });
-    return `[${items.join(',')}]`;
-  }
-  const obj = value as Record<string, unknown>;
-  const keys = Object.keys(obj).sort();
-  const parts: string[] = [];
-  for (const key of keys) {
-    const s = canonicalize(obj[key]);
-    if (s === undefined) continue; // drop undefined-valued keys, like JSON.stringify
-    parts.push(`${JSON.stringify(key)}:${s}`);
-  }
-  return `{${parts.join(',')}}`;
-}
 
 function computeReceiptHash(receipt: object): string {
   const { event_hash: _eh, signature: _sig, ...contentFields } = receipt as Record<
     string,
     unknown
   >;
-  const canonical = canonicalize(contentFields);
+  const canonical = stableStringify(contentFields);
   const hashBytes = blake3(new TextEncoder().encode(canonical));
   const hex = Buffer.from(hashBytes).toString('hex');
   return `blake3:${hex}`;
