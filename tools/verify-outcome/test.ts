@@ -14,6 +14,8 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { blake3 } from '@noble/hashes/blake3';
+import stableStringify from 'fast-json-stable-stringify';
 import {
   verifyOutcomeFromReceipt,
   type FinalStatus,
@@ -107,6 +109,98 @@ const cases: Case[] = [
     expectFinal: 'unsupported',
     expectReasons: ['UNSUPPORTED_OUTCOME_TYPE'],
   },
+
+  // ---- F1/#100: receipt-contained RNG proof v1 fixtures ----
+  {
+    file: 'rng-v1-proof-valid-loot-drop.json',
+    expectFinal: 'rng_consistent',
+    expectReasons: [
+      'RECEIPT_SIGNATURE_NOT_CHECKED',
+      'CHRONICLE_INCLUSION_NOT_CHECKED',
+      'PRECOMMIT_NOT_PROVEN',
+    ],
+  },
+  {
+    file: 'rng-v1-proof-tampered-seed.json',
+    expectFinal: 'failed',
+    expectReasons: [
+      'RECEIPT_SIGNATURE_NOT_CHECKED',
+      'CHRONICLE_INCLUSION_NOT_CHECKED',
+      'PRECOMMIT_NOT_PROVEN',
+      'RECEIPT_BODY_HASH_MISMATCH',
+      'COMMIT_MISMATCH',
+      'RNG_OUTPUT_MISMATCH',
+      'OUTCOME_MISMATCH',
+    ],
+  },
+  {
+    // v0 commit tampered: rngCommit(reveal_seed) no longer matches → genuine
+    // tampering (COMMIT_MISMATCH). LEGACY_PRECOMMIT_UNBOUND is NOT emitted here —
+    // that code is reserved for legitimate, offline-unverifiable v1 commits.
+    file: 'rng-v1-proof-tampered-commit.json',
+    expectFinal: 'failed',
+    expectReasons: [
+      'RECEIPT_SIGNATURE_NOT_CHECKED',
+      'CHRONICLE_INCLUSION_NOT_CHECKED',
+      'PRECOMMIT_NOT_PROVEN',
+      'COMMIT_MISMATCH',
+    ],
+  },
+  {
+    file: 'rng-v1-proof-tampered-output.json',
+    expectFinal: 'failed',
+    expectReasons: [
+      'RECEIPT_SIGNATURE_NOT_CHECKED',
+      'CHRONICLE_INCLUSION_NOT_CHECKED',
+      'PRECOMMIT_NOT_PROVEN',
+      'RNG_OUTPUT_MISMATCH',
+    ],
+  },
+  {
+    file: 'rng-v1-proof-tampered-outcome.json',
+    expectFinal: 'failed',
+    expectReasons: [
+      'RECEIPT_SIGNATURE_NOT_CHECKED',
+      'CHRONICLE_INCLUSION_NOT_CHECKED',
+      'PRECOMMIT_NOT_PROVEN',
+      'OUTCOME_MISMATCH',
+    ],
+  },
+  {
+    file: 'rng-v1-proof-body-hash-mismatch.json',
+    expectFinal: 'failed',
+    expectReasons: [
+      'RECEIPT_SIGNATURE_NOT_CHECKED',
+      'CHRONICLE_INCLUSION_NOT_CHECKED',
+      'PRECOMMIT_NOT_PROVEN',
+      'RECEIPT_BODY_HASH_MISMATCH',
+    ],
+  },
+  {
+    file: 'rng-v1-proof-unsupported-outcome.json',
+    expectFinal: 'unsupported',
+    expectReasons: [
+      'RECEIPT_SIGNATURE_NOT_CHECKED',
+      'CHRONICLE_INCLUSION_NOT_CHECKED',
+      'PRECOMMIT_NOT_PROVEN',
+      'UNSUPPORTED_OUTCOME_TYPE',
+    ],
+  },
+  {
+    // LEGITIMATE v1-commit receipt (NOT tampered): the deferred precommit cannot
+    // be reproduced offline, so rng_commit_reveal is "unsupported"
+    // (LEGACY_PRECOMMIT_UNBOUND) while rng output + outcome derivation still
+    // verify. This must be replay_consistent, NOT failed. Real v1 commit
+    // verification is tracked in #101.
+    file: 'rng-v1-proof-v1commit-legacy.json',
+    expectFinal: 'replay_consistent',
+    expectReasons: [
+      'RECEIPT_SIGNATURE_NOT_CHECKED',
+      'CHRONICLE_INCLUSION_NOT_CHECKED',
+      'PRECOMMIT_NOT_PROVEN',
+      'LEGACY_PRECOMMIT_UNBOUND',
+    ],
+  },
 ];
 
 function sortedUnique(arr: string[]): string[] {
@@ -153,6 +247,75 @@ for (const c of cases) {
     failures++;
     console.error(`FAIL ${(err as Error).message}`);
   }
+}
+
+// ---------------------------------------------------------------------------
+// Step 1 invariant: "rng proof envelope does not alter receipt body hash seed"
+//
+// Adding inputs.rng_proof to the FINAL combat_resolved receipt MUST NOT change
+// the seed, which is computeReceiptHash(combatResolvedBase) — a NAMED SUBSET
+// hashed BEFORE drop fields. We hash the base, then build the full persisted
+// receipt (with inputs.rng_proof + drop fields), reconstruct the base from it
+// exactly as the verifier does, and assert the hash is byte-identical.
+// ---------------------------------------------------------------------------
+function computeReceiptHashLocal(receipt: object): string {
+  const { event_hash: _e, signature: _s, ...content } = receipt as Record<string, unknown>;
+  const canonical = stableStringify(content);
+  const hashBytes = blake3(new TextEncoder().encode(canonical));
+  return `blake3:${Buffer.from(hashBytes).toString('hex')}`;
+}
+
+try {
+  const combatResolvedBase = {
+    actor_id: 'did:akalynth:attacker-001',
+    action: 'combat_resolved',
+    inputs: {
+      target_player_id: 'did:akalynth:victim-001',
+      map: 'Azura',
+      position: { x: 12, y: 34 },
+      outcome: 'kill',
+    },
+    result: 'ok',
+  };
+  const seedBefore = computeReceiptHashLocal(combatResolvedBase);
+
+  // The valid fixture is the real persisted receipt WITH inputs.rng_proof.
+  const persisted = JSON.parse(
+    fs.readFileSync(path.join(FIXTURES, 'rng-v1-proof-valid-loot-drop.json'), 'utf8')
+  ) as Record<string, unknown>;
+  const inp = persisted.inputs as Record<string, unknown>;
+
+  // Reconstruct the base from the persisted receipt (named subset only).
+  const reconstructedBase = {
+    actor_id: persisted.actor_id,
+    action: 'combat_resolved',
+    inputs: {
+      target_player_id: inp.target_player_id,
+      map: inp.map,
+      position: inp.position,
+      outcome: inp.outcome,
+    },
+    result: 'ok',
+  };
+  const seedAfter = computeReceiptHashLocal(reconstructedBase);
+
+  if (seedBefore !== seedAfter) {
+    throw new Error(
+      `seed changed: before=${seedBefore} after=${seedAfter}`
+    );
+  }
+  // The persisted drop_seed_hash and rng_proof.receipt_body_hash must equal it.
+  const proof = inp.rng_proof as Record<string, unknown>;
+  if (inp.drop_seed_hash !== seedAfter) {
+    throw new Error(`drop_seed_hash != seed: ${String(inp.drop_seed_hash)}`);
+  }
+  if (proof.receipt_body_hash !== seedAfter) {
+    throw new Error(`rng_proof.receipt_body_hash != seed: ${String(proof.receipt_body_hash)}`);
+  }
+  console.log('OK  rng proof envelope does not alter receipt body hash seed');
+} catch (err) {
+  failures++;
+  console.error(`FAIL [seed-invariant] ${(err as Error).message}`);
 }
 
 if (failures > 0) {

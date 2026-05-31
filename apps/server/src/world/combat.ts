@@ -58,6 +58,47 @@ export interface DropRngProof {
   rng_out: number[];
 }
 
+/**
+ * Receipt-contained RNG proof (F1/#100).
+ *
+ * Persisted on the FINAL combat_resolved receipt (NOT in combatResolvedBase) so
+ * an offline verifier can recompute rng_out and the dropped_item_ids from the
+ * receipt artifact alone. `derivation.inputs` is EXACTLY what computeDeathDrops
+ * consumed (legendary heat folded into each item's meta at selection time).
+ */
+export interface ReceiptRngProofItem {
+  item_id: string;
+  item_type: string;
+  meta?: Record<string, unknown>;
+  slot?: string | null;
+}
+
+export interface ReceiptRngProof {
+  version: 1;
+  scheme: 'receipt_hash_seeded_replay';
+  outcome_type: 'loot_drop';
+  // Commit scheme of rng_commit. 'death_drop:v0' commits are rngCommit(reveal_seed)
+  // and are reproducible offline. 'death_drop:v1' commits are deferred,
+  // domain/actor-separated precommits that CANNOT be reproduced from the receipt
+  // alone — an offline verifier must treat them as unverifiable (not tampered),
+  // with real precommit verification deferred to #101.
+  rng_commit_scheme: 'death_drop:v0' | 'death_drop:v1';
+  receipt_body_hash: string; // === drop_seed_hash === computeReceiptHash(combatResolvedBase)
+  rng_commit: string;
+  reveal_seed: string; // === receipt_body_hash; the seed fed to the PRF
+  rng_out: number[];
+  derivation: {
+    algorithm: 'rngDrawU32Legacy/selectItemsToDrop@v0';
+    domain: 'pvp_loot_drop';
+    inputs: {
+      items: ReceiptRngProofItem[];
+      reputation: number;
+      map: MapName;
+      protected_item_id: string | null;
+    };
+  };
+}
+
 export interface WorldItem {
   x: number;
   y: number;
@@ -231,6 +272,30 @@ export function handleAttackIntent(ctx: CombatContext): AttackResult {
   const dropResult = computeDeathDrops(inventoryItems, defenderMap, reputation, seedHash, rngOut);
   const droppedItemIds = dropResult.droppedItemIds;
 
+  // 3.1 Snapshot the EXACT inputs computeDeathDrops consumed so an offline
+  // verifier can recompute dropped_item_ids from the receipt artifact alone.
+  // Legendary weighting depends on per-item heat, which lives in server memory;
+  // capture it now (at selection time) into each item's meta so the verifier
+  // never needs live server state. This snapshot does NOT feed combatResolvedBase
+  // and therefore cannot alter the seed or the loot outcome.
+  const rngProofItems = inventoryItems.map((item) => {
+    const isLegendary = !!item.meta?.legendary;
+    const meta: Record<string, unknown> | undefined = isLegendary
+      ? {
+          legendary: true,
+          legendary_tier:
+            typeof item.meta?.legendary_tier === 'number' ? item.meta.legendary_tier : 1,
+          heat: getLegendaryHeat(item.item_id),
+        }
+      : undefined;
+    return {
+      item_id: item.item_id,
+      item_type: item.item_type,
+      ...(meta ? { meta } : {}),
+      ...(item.slot != null ? { slot: item.slot } : {}),
+    };
+  });
+
   // Seal 3.1: Use session's v1 commit if available, else fallback to v0
   const v1Commit = ctx.getRngCommitV1(targetId);
   const dropRng: DropRngProof = v1Commit
@@ -287,6 +352,37 @@ export function handleAttackIntent(ctx: CombatContext): AttackResult {
   });
 
   // 6. Emit combat_resolved receipt (before applyDeath)
+  //
+  // F1/#100: persist a receipt-contained rng_proof so an OFFLINE verifier can
+  // recompute the recorded RNG output AND the final dropped_item_ids from the
+  // receipt artifact alone. This block is added to the FINAL receipt only — it is
+  // NOT part of combatResolvedBase, so the seed (drop_seed_hash) and the loot
+  // selection are provably unchanged. It does NOT prove the server committed to
+  // the reveal seed before the outcome; precommit anchoring is future work (#101).
+  const rngProof: ReceiptRngProof = {
+    version: 1,
+    scheme: 'receipt_hash_seeded_replay',
+    outcome_type: 'loot_drop',
+    rng_commit_scheme: dropRng.rng_domain === 'death_drop:v1' ? 'death_drop:v1' : 'death_drop:v0',
+    receipt_body_hash: seedHash,
+    rng_commit: dropRng.rng_commit,
+    reveal_seed: seedHash,
+    rng_out: rngOut,
+    derivation: {
+      algorithm: 'rngDrawU32Legacy/selectItemsToDrop@v0',
+      domain: 'pvp_loot_drop',
+      inputs: {
+        items: rngProofItems,
+        reputation,
+        map: defenderMap,
+        protected_item_id: defenderProtectedId ?? null,
+      },
+    },
+  };
+
+  // NOTE: rng_proof is persisted INSIDE inputs (the only field the audit logger
+  // forwards), alongside the existing drop fields. It is NOT part of
+  // combatResolvedBase, so the seed/drop_seed_hash and loot outcome are unchanged.
   audit.write({
     actor_id: attackerId,
     action: 'combat_resolved',
@@ -298,6 +394,7 @@ export function handleAttackIntent(ctx: CombatContext): AttackResult {
       dropped_item_ids: droppedItemIds,
       drop_seed_hash: seedHash, // For audit traceability
       protected_item_id: defenderProtectedId ?? null, // Phase 3.3: visible for audit
+      rng_proof: rngProof, // F1/#100: receipt-contained RNG proof (offline-verifiable)
     },
     result: 'ok',
   });
