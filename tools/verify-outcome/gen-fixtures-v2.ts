@@ -222,7 +222,18 @@ function computeCapsHash(caps: string[]): string {
   return blake3Hex(stableStringify(caps ?? []));
 }
 
-type ChainState = { lastByActor: Map<string, string>; lastGlobal: string };
+type ChainState = {
+  lastByActor: Map<string, string>;
+  lastGlobal: string;
+  // #107: line-level chain state — the whole previous log line.
+  prevLine: string | null;
+};
+
+// Raw blake3 hex (no `blake3:` prefix) — matches the Rust chronicle writer's
+// blake3_hex used for line_event_hash / line_prev_hash.
+function lineBlake3Hex(s: string): string {
+  return Buffer.from(blake3(Buffer.from(s, 'utf8'))).toString('hex');
+}
 
 function makeEntry(
   spec: { event_type: string; actor: string; tick: number; payload: Record<string, unknown> },
@@ -257,6 +268,24 @@ function makeEntry(
   entry.payload.global_event_hash = global_event_hash;
   state.lastByActor.set(entry.actor, event_hash);
   state.lastGlobal = global_event_hash;
+
+  // #107: line-level signed fields. The chronicle log line is
+  //   <line_prev_hash>|<line_event_hash>|<signature>|<canonical_json>
+  // line_event_hash = blake3_hex(canonical_json) (RAW hex), line_prev_hash =
+  // blake3_hex(previous whole line) or "genesis", signature = Ed25519 over
+  // `${line_prev_hash}|${line_event_hash}` with the SAME raw-seed key that signs
+  // receipts. We use the FULL entry (with embedded chain fields) as the canonical
+  // JSON payload — what the writer serializes per line.
+  const canonical_json = stableStringify(entry);
+  const line_event_hash = lineBlake3Hex(canonical_json);
+  const line_prev_hash =
+    state.prevLine === null ? 'genesis' : lineBlake3Hex(state.prevLine);
+  const signature = signEvent(line_prev_hash, line_event_hash);
+  entry.line_prev_hash = line_prev_hash;
+  entry.line_event_hash = line_event_hash;
+  entry.signature = signature;
+  entry.canonical_json = canonical_json;
+  state.prevLine = `${line_prev_hash}|${line_event_hash}|${signature}|${canonical_json}`;
   return entry;
 }
 
@@ -280,7 +309,7 @@ const deathPayload = () => ({
 });
 
 function buildSlice(order: Array<'commit' | 'death' | 'reveal' | 'noise'>): ChronicleEntry[] {
-  const state: ChainState = { lastByActor: new Map(), lastGlobal: 'genesis' };
+  const state: ChainState = { lastByActor: new Map(), lastGlobal: 'genesis', prevLine: null };
   const out: ChronicleEntry[] = [];
   let tick = 100;
   for (const ev of order) {
@@ -303,8 +332,31 @@ function buildSlice(order: Array<'commit' | 'death' | 'reveal' | 'noise'>): Chro
 
 // Valid ordered slice (commit < death < reveal), with unrelated noise.
 const validSlice = buildSlice(['commit', 'noise', 'death', 'noise', 'reveal']);
-write('rng-v2-slice-valid-pubkey.context.json', { chronicle: validSlice, authPublicKeyHex });
+// #107: the AUTHENTICATED case — signing pubkey present, so the slice's line
+// signatures verify → ordering trusted → "verified" (receipt is signed by the
+// SAME key). signingPublicKeyHex IS the raw-seed signing key (= authPublicKeyHex
+// here, since the fixture key signs both receipts AND chronicle events).
+write('rng-v2-slice-valid-pubkey.context.json', {
+  chronicle: validSlice,
+  signingPublicKeyHex: authPublicKeyHex,
+});
+// No signing pubkey → slice cannot be authenticated → rng_consistent.
 write('rng-v2-slice-valid-no-pubkey.context.json', { chronicle: validSlice });
+
+// #107: authentic ordering but one line signature is corrupted (PRESENT but
+// INVALID) → SLICE_SIGNATURE_INVALID → failed. Flip a byte of the death event's
+// signature; the global chain + ordering are untouched, isolating the line-auth
+// failure.
+const tamperedSigSlice = buildSlice(['commit', 'noise', 'death', 'noise', 'reveal']);
+const deathIdx = tamperedSigSlice.findIndex((e) => e.event_type === 'death');
+const origSig = tamperedSigSlice[deathIdx].signature as string;
+// Flip the first hex nibble so it stays valid hex but is the wrong signature.
+const flipped = (origSig[0] === '0' ? '1' : '0') + origSig.slice(1);
+tamperedSigSlice[deathIdx].signature = flipped;
+write('rng-v2-slice-invalid-signature.context.json', {
+  chronicle: tamperedSigSlice,
+  signingPublicKeyHex: authPublicKeyHex,
+});
 
 // Commit recorded AFTER the death (mis-order #101 could not catch).
 write('rng-v2-slice-commit-out-of-order.context.json', {

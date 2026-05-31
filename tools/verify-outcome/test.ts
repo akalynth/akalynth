@@ -205,28 +205,39 @@ const cases: Case[] = [
     ],
   },
 
-  // ---- #104: v2 precommit-anchored proof fixtures (chronicle-GLOBAL-CHAIN-aware) ----
+  // ---- #104/#107: v2 precommit-anchored proof fixtures (chronicle-GLOBAL-CHAIN +
+  // line-signature AUTHENTICATION). ----
   // Ordering is checked by the verifier RE-CHECKING the chronicle global hash
-  // chain (Seal 2.3) over a supplied slice (same computation as
-  // verify-chronicle-chain.ts) and requiring commit < death(outcome) < reveal by
-  // link-checked POSITION. BUT a hash-linked slice is forgeable on its own (the
-  // events are not signature-authenticated here), so a consistent slice yields
-  // SLICE_NOT_AUTHENTICATED and "verified" is UNREACHABLE — ceiling rng_consistent.
-  // Slice authentication (verifying chronicle-event signatures) is the follow-up.
+  // chain (Seal 2.3) over a supplied slice and requiring commit < death(outcome)
+  // < reveal by link-checked POSITION. #107: a hash-linked slice is forgeable on
+  // its own, so the verifier now AUTHENTICATES the slice — verifying each line's
+  // Ed25519 signature against the published signing_public_key_hex. Only an
+  // AUTHENTICATED slice (+ receipt signature verifying against the SAME key +
+  // binding/derivation) reaches "verified". No signing pubkey / unsigned →
+  // rng_consistent (SLICE_NOT_AUTHENTICATED). Invalid line signature → failed.
   {
-    // Valid ordered slice + valid pubkey: ordering consistent but slice
-    // UNAUTHENTICATED → rng_consistent, NOT verified.
+    // Authentic signed slice + signingPublicKeyHex + receipt signed by the same
+    // key → VERIFIED.
     file: 'rng-v2-anchored-verified.json',
     contextFile: 'rng-v2-slice-valid-pubkey.context.json',
-    expectFinal: 'rng_consistent',
-    expectReasons: ['SLICE_NOT_AUTHENTICATED'],
+    expectFinal: 'verified',
+    expectReasons: [],
   },
   {
-    // Valid ordered slice, NO pubkey → rng_consistent, slice unauthenticated.
+    // Authentic slice, NO signing pubkey → slice cannot be authenticated →
+    // rng_consistent (SLICE_NOT_AUTHENTICATED). Receipt also unchecked.
     file: 'rng-v2-anchored-verified.json',
     contextFile: 'rng-v2-slice-valid-no-pubkey.context.json',
     expectFinal: 'rng_consistent',
     expectReasons: ['SLICE_NOT_AUTHENTICATED', 'RECEIPT_SIGNATURE_NOT_CHECKED'],
+  },
+  {
+    // Slice with one INVALID line signature (present but wrong) → FAILED
+    // (SLICE_SIGNATURE_INVALID). Signing pubkey IS supplied; receipt verifies.
+    file: 'rng-v2-anchored-verified.json',
+    contextFile: 'rng-v2-slice-invalid-signature.context.json',
+    expectFinal: 'failed',
+    expectReasons: ['SLICE_SIGNATURE_INVALID'],
   },
   {
     // Commit recorded AFTER the death in the verified chain → FAILED. This is the
@@ -336,23 +347,30 @@ for (const c of cases) {
         );
       }
     } else {
-      // v2 invariant (this release): "verified" is UNREACHABLE. A hash-linked
-      // chronicle slice is forgeable; until each slice event's signature is
-      // verified (slice authentication — a follow-up), ordering is not trusted,
-      // chronicle_inclusion/precommit_anchoring never reach "pass", and the v2
-      // ceiling is rng_consistent.
-      if ((result.final_status as string) === 'verified') {
-        throw new Error(`[${label}] illegal "verified" — v2 slice is not authenticated yet`);
-      }
-      if (result.precommit_anchoring === 'pass') {
+      // v2 invariant (#107): "verified" IS reachable, but ONLY via a
+      // signature-AUTHENTICATED slice. Whenever final_status === "verified", ALL
+      // THREE of {receipt_authenticity, chronicle_inclusion, precommit_anchoring}
+      // MUST be "pass" — "verified" can NEVER rest on an unsigned/forged slice or
+      // an unchecked receipt. Conversely, if any of those is NOT "pass", the
+      // status must NOT be "verified".
+      const authChecksAllPass =
+        result.receipt_authenticity === 'pass' &&
+        result.chronicle_inclusion === 'pass' &&
+        result.precommit_anchoring === 'pass';
+      if ((result.final_status as string) === 'verified' && !authChecksAllPass) {
         throw new Error(
-          `[${label}] precommit_anchoring must not be "pass" (slice unauthenticated), got ${result.precommit_anchoring}`
+          `[${label}] illegal "verified" — requires receipt_authenticity+chronicle_inclusion+precommit_anchoring all "pass" ` +
+            `(got ${result.receipt_authenticity}/${result.chronicle_inclusion}/${result.precommit_anchoring})`
         );
       }
-      if (result.chronicle_inclusion === 'pass') {
-        throw new Error(
-          `[${label}] chronicle_inclusion must not be "pass" (slice unauthenticated), got ${result.chronicle_inclusion}`
-        );
+      if (authChecksAllPass && (result.final_status as string) !== 'verified') {
+        // Defensive: all three auth checks pass but binding/derivation failed →
+        // must be "failed", never silently downgraded.
+        if (result.final_status !== 'failed') {
+          throw new Error(
+            `[${label}] all auth checks pass but final_status is ${result.final_status} (expected verified or failed)`
+          );
+        }
       }
     }
 
