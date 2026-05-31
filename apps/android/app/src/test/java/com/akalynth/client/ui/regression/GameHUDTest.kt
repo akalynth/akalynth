@@ -21,6 +21,9 @@ import com.akalynth.client.ui.components.movement.DPad
 import org.junit.Rule
 import org.junit.Test
 import org.junit.Assert.*
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * Regression tests for GameHUD layout and stage gating.
@@ -31,6 +34,8 @@ import org.junit.Assert.*
  * - Section 4: U1 (Stage 0 layout)
  * - Section 5: X5 (Why button visibility)
  */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
 class GameHUDTest {
 
     @get:Rule

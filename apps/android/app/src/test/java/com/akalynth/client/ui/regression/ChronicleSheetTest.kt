@@ -15,6 +15,9 @@ import org.junit.Test
 import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * Regression tests for chronicle feed sheet.
@@ -25,6 +28,8 @@ import java.time.format.DateTimeFormatter
  *
  * Note: Day grouping tests use dynamic dates (today/yesterday) to avoid flakiness.
  */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
 class ChronicleSheetTest {
 
     @get:Rule

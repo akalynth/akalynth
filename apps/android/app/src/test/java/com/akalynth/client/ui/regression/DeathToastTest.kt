@@ -17,6 +17,9 @@ import com.akalynth.client.ui.state.DeathNotice
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * Regression tests for death toast notification.
@@ -28,6 +31,8 @@ import org.junit.Test
  *
  * Tests use Compose test clock via mainClock.advanceTimeBy() for deterministic timing.
  */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
 class DeathToastTest {
 
     @get:Rule

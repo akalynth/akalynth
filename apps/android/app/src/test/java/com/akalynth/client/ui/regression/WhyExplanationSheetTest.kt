@@ -16,6 +16,9 @@ import com.akalynth.client.ui.state.priority
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * Regression tests for Why explanation sheet and overlay contention.
@@ -26,6 +29,8 @@ import org.junit.Test
  * - M3: Lists recent events with explanations
  * - M4: Dismiss returns to None state
  */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
 class WhyExplanationSheetTest {
 
     @get:Rule
