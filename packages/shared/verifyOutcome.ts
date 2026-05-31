@@ -11,8 +11,9 @@
 // which cannot happen with the current persisted receipt shape.
 
 import { blake3 } from '@noble/hashes/blake3';
+import * as nodeCrypto from 'node:crypto';
 import stableStringify from 'fast-json-stable-stringify';
-import { rngCommit, rngDrawU32Legacy } from './rng.js';
+import { rngCommit, rngCommitV1, rngDrawU32Legacy, rngDeriveSeedV2 } from './rng.js';
 import { computeDeathDrops, type ItemForDrop } from './dropPolicy.js';
 import type { MapName } from './http.js';
 
@@ -37,6 +38,37 @@ export type OutcomeVerificationResult = {
 };
 
 // ---------------------------------------------------------------------------
+// Chronicle context (#101): optional out-of-band material the verifier needs to
+// reach "verified" for a v2 precommit-anchored proof. Supplied by the caller
+// (CLI/sidecar), NEVER read from live server state.
+// ---------------------------------------------------------------------------
+
+export type ChronicleEventRef = {
+  // Position in the chronicle ordering space (commit < outcome < reveal).
+  seq: number;
+  // rng_commit event payload fields (commit binds domain+actor+reveal).
+  rng_commit?: string;
+  // rng_reveal event payload fields (the published secret).
+  rng_reveal?: string;
+  // actor DID the commit/reveal belong to (for rngCommitV1 recomputation).
+  actor?: string;
+};
+
+export type OutcomeVerificationContext = {
+  // The spawn rng_commit chronicle event.
+  commitEvent?: ChronicleEventRef;
+  // The disconnect rng_reveal chronicle event (absent until session ends).
+  revealEvent?: ChronicleEventRef;
+  // Ordering position of THIS outcome in the same chronicle space. Defaults to
+  // the receipt's own `sequence` field. See the seq-space caveat in
+  // docs/RNG_OUTCOME_VERIFICATION.md (#101).
+  outcomeSeq?: number;
+  // Raw 32-byte Ed25519 public key (hex) used to verify the receipt signature.
+  // When absent, receipt_authenticity stays "not_checked".
+  authPublicKeyHex?: string;
+};
+
+// ---------------------------------------------------------------------------
 // Canonical hashing — MUST stay byte-identical to apps/server/src/persist/hash.ts.
 // We use the exact same library (fast-json-stable-stringify) + blake3 + the same
 // event_hash/signature exclusion, rather than reimplementing canonicalization,
@@ -52,6 +84,37 @@ function computeReceiptHash(receipt: object): string {
   const hashBytes = blake3(new TextEncoder().encode(canonical));
   const hex = Buffer.from(hashBytes).toString('hex');
   return `blake3:${hex}`;
+}
+
+// ---------------------------------------------------------------------------
+// Receipt signature verification (#101) — byte-identical to the coordination
+// kernel's verifyEventSignature: Ed25519 over the UTF-8 message
+// `${prev_hash}|${event_hash}`, with a raw 32-byte Ed25519 public key.
+//
+// We rebuild the SPKI DER wrapper for the raw key so node:crypto can verify it,
+// rather than depending on the kernel build (shared stays standalone). This is
+// the SAME verification the server applies when signing receipts.
+// ---------------------------------------------------------------------------
+
+const SPKI_ED25519_PREFIX = Buffer.from('302a300506032b6570032100', 'hex');
+
+function verifyReceiptSignature(
+  prevHash: string,
+  eventHash: string,
+  signatureHex: string,
+  publicKeyHex: string
+): boolean {
+  try {
+    const rawPub = Buffer.from(publicKeyHex, 'hex');
+    if (rawPub.length !== 32) return false;
+    const der = Buffer.concat([SPKI_ED25519_PREFIX, rawPub]);
+    const publicKey = nodeCrypto.createPublicKey({ key: der, format: 'der', type: 'spki' });
+    const message = Buffer.from(`${prevHash}|${eventHash}`);
+    const signatureBytes = Buffer.from(signatureHex, 'hex');
+    return nodeCrypto.verify(null, message, publicKey, signatureBytes);
+  } catch {
+    return false;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -111,7 +174,10 @@ function isObject(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
-export function verifyOutcomeFromReceipt(receipt: unknown): OutcomeVerificationResult {
+export function verifyOutcomeFromReceipt(
+  receipt: unknown,
+  context?: OutcomeVerificationContext
+): OutcomeVerificationResult {
   if (!isObject(receipt)) {
     return {
       receipt_shape_valid: false,
@@ -128,7 +194,7 @@ export function verifyOutcomeFromReceipt(receipt: unknown): OutcomeVerificationR
   const action = receipt['action'];
 
   if (action === 'combat_resolved') {
-    return verifyCombatResolved(receipt);
+    return verifyCombatResolved(receipt, context);
   }
 
   return {
@@ -143,7 +209,10 @@ export function verifyOutcomeFromReceipt(receipt: unknown): OutcomeVerificationR
   };
 }
 
-function verifyCombatResolved(receipt: Record<string, unknown>): OutcomeVerificationResult {
+function verifyCombatResolved(
+  receipt: Record<string, unknown>,
+  context?: OutcomeVerificationContext
+): OutcomeVerificationResult {
   const reason_codes: string[] = [];
 
   // ----- Static checks that always run -----
@@ -201,6 +270,11 @@ function verifyCombatResolved(receipt: Record<string, unknown>): OutcomeVerifica
   // precommit_anchoring stays "fail" because the receipt does not prove the
   // server committed to the reveal seed before the outcome (that is #101).
   if ('rng_proof' in inp) {
+    const proofMaybe = inp['rng_proof'];
+    // #101: v2 precommit-anchored proofs route to the chronicle-aware verifier.
+    if (isObject(proofMaybe) && proofMaybe['version'] === 2) {
+      return verifyReceiptRngProofV2(receipt, inp, proofMaybe, context);
+    }
     return verifyReceiptRngProof(receipt, inp);
   }
 
@@ -493,6 +567,272 @@ function verifyReceiptRngProof(
   if (hardFail) {
     final_status = 'failed';
   } else if (rng_commit_reveal === 'pass') {
+    final_status = 'rng_consistent';
+  } else {
+    final_status = 'replay_consistent';
+  }
+
+  return {
+    receipt_shape_valid,
+    receipt_authenticity,
+    chronicle_inclusion,
+    rng_commit_reveal,
+    outcome_derivation,
+    precommit_anchoring,
+    final_status,
+    reason_codes,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// #101: v2 precommit-anchored proof verification (chronicle-aware)
+// ---------------------------------------------------------------------------
+//
+// What v2 proves: the server COMMITTED to the seed (rng_commit chronicle event)
+// BEFORE the outcome and DERIVED the outcome from it (rngDeriveSeedV2). The
+// reveal is published only later (rng_reveal on disconnect) and is supplied via
+// context — it is NEVER in the receipt.
+//
+// What v2 does NOT prove: that the seed was unbiased, that the server could not
+// choose among multiple precommits, that no trust in the server is required, or
+// that any client entropy was mixed in.
+//
+// "verified" is reachable ONLY when ALL of {precommit_anchoring,
+// rng_commit_reveal, outcome_derivation, receipt_authenticity,
+// chronicle_inclusion} pass. Without a supplied auth pubkey, authenticity stays
+// "not_checked" → capped at "rng_consistent" (+ PRECOMMIT_ANCHORED). Without a
+// reveal event, precommit_anchoring is "not_checked" (+ REVEAL_NOT_PUBLISHED)
+// → "replay_consistent" (NOT failed). Genuine tamper/ordering → "failed".
+
+function isStringNonEmpty(v: unknown): v is string {
+  return typeof v === 'string' && v.length > 0;
+}
+
+function verifyReceiptRngProofV2(
+  receipt: Record<string, unknown>,
+  inp: Record<string, unknown>,
+  proof: Record<string, unknown>,
+  context?: OutcomeVerificationContext
+): OutcomeVerificationResult {
+  const reason_codes: string[] = [];
+  const receipt_shape_valid = true; // base shape validated by caller
+
+  // ----- unsupported outcome type -----
+  if (proof['outcome_type'] !== 'loot_drop') {
+    reason_codes.push('UNSUPPORTED_OUTCOME_TYPE');
+    return {
+      receipt_shape_valid,
+      receipt_authenticity: 'not_checked',
+      chronicle_inclusion: 'not_checked',
+      rng_commit_reveal: 'unsupported',
+      outcome_derivation: 'unsupported',
+      precommit_anchoring: 'not_checked',
+      final_status: 'unsupported',
+      reason_codes,
+    };
+  }
+
+  const ctx = context ?? {};
+  const commitEvent = ctx.commitEvent;
+  const revealEvent = ctx.revealEvent;
+
+  const precommitRef = proof['precommit_ref'];
+  const worldId = proof['world_id'];
+  const eventDomain = proof['event_domain'];
+  const eventPreimageHash = proof['event_preimage_hash'];
+  const rngOut = proof['rng_out'];
+  const derivation = proof['derivation'];
+
+  // ----- event_preimage_hash must equal the receipt's recorded drop_seed_hash
+  //       AND the recomputed combatResolvedBase hash (seed boundary unchanged). -----
+  let preimageOk = false;
+  if (!isStringNonEmpty(eventPreimageHash)) {
+    reason_codes.push('MISSING_EVENT_PREIMAGE_HASH');
+  } else {
+    const base = {
+      actor_id: receipt['actor_id'],
+      action: 'combat_resolved',
+      inputs: {
+        target_player_id: inp['target_player_id'],
+        map: inp['map'],
+        position: inp['position'],
+        outcome: inp['outcome'],
+      },
+      result: 'ok',
+    };
+    const recomputed = computeReceiptHash(base);
+    preimageOk = recomputed === eventPreimageHash && eventPreimageHash === inp['drop_seed_hash'];
+    if (!preimageOk) reason_codes.push('EVENT_PREIMAGE_HASH_MISMATCH');
+  }
+
+  // ----- chronicle inclusion / ordering: NOT chain-proven yet -----
+  // The chronicle log and the receipt log use SEPARATE sequence spaces, so a
+  // cross-log "commit_seq < outcome_seq < reveal_seq" comparison is only as
+  // trustworthy as the caller-supplied ordinals — that is NOT an independent
+  // proof and is exactly the "unacceptable evidence" #101 names. Until ordering
+  // is verified against the chronicle GLOBAL hash chain (a follow-up coordinated
+  // with #94), we make NO ordering claim: chronicle_inclusion and
+  // precommit_anchoring stay "not_checked", and final_status can NEVER reach
+  // "verified" on this path. The cryptographic commit/reveal binding and the
+  // outcome derivation below still gate "rng_consistent".
+  const chronicle_inclusion: CheckStatus = 'not_checked';
+  const precommit_anchoring: CheckStatus = 'not_checked';
+  reason_codes.push('ORDERING_NOT_CHAIN_PROVEN');
+
+  // precommit_ref must carry the commit value (used for the binding check below).
+  let refCommit: unknown;
+  if (isObject(precommitRef)) {
+    refCommit = precommitRef['commit'];
+  } else {
+    reason_codes.push('PRECOMMIT_MISSING');
+  }
+
+  const haveReveal = !!revealEvent && isStringNonEmpty(revealEvent.rng_reveal);
+
+  // ----- precommit binding + derivation (need the reveal secret) -----
+  let rng_commit_reveal: CheckStatus = 'pass';
+  let outcome_derivation: CheckStatus = 'pass';
+
+  if (!haveReveal) {
+    reason_codes.push('REVEAL_NOT_PUBLISHED');
+    rng_commit_reveal = 'not_checked';
+    outcome_derivation = 'not_checked';
+  } else {
+    const reveal = revealEvent!.rng_reveal as string;
+
+    // commit binding: rngCommitV1(domain, actor, reveal) === precommit_ref.commit
+    //                 === commitEvent.rng_commit. The death_drop:v1 commit binds
+    // the session actor (the spawner), supplied as commitEvent.actor.
+    const commitActor = commitEvent?.actor;
+    if (!isStringNonEmpty(commitActor)) {
+      reason_codes.push('PRECOMMIT_COMMIT_MISMATCH');
+      rng_commit_reveal = 'fail';
+    } else {
+      const expectCommit = rngCommitV1(
+        isStringNonEmpty(eventDomain) ? eventDomain : 'death_drop:v1',
+        commitActor,
+        reveal
+      );
+      const commitMatches =
+        expectCommit === refCommit &&
+        (!isStringNonEmpty(commitEvent?.rng_commit) || expectCommit === commitEvent!.rng_commit);
+      if (!commitMatches) {
+        reason_codes.push('PRECOMMIT_COMMIT_MISMATCH');
+        rng_commit_reveal = 'fail';
+      }
+    }
+
+    // derivation: derivedSeed = rngDeriveSeedV2(...); rng_out[i] === draw(seed,i).
+    let derivedSeed: string | null = null;
+    if (
+      isStringNonEmpty(worldId) &&
+      isStringNonEmpty(eventDomain) &&
+      isStringNonEmpty(eventPreimageHash)
+    ) {
+      derivedSeed = rngDeriveSeedV2(reveal, worldId, eventDomain, eventPreimageHash);
+    }
+
+    if (!derivedSeed || !Array.isArray(rngOut)) {
+      reason_codes.push('RNG_OUTPUT_MISMATCH');
+      rng_commit_reveal = 'fail';
+    } else {
+      for (let i = 0; i < rngOut.length; i++) {
+        if (rngOut[i] !== rngDrawU32Legacy(derivedSeed, i)) {
+          reason_codes.push('RNG_OUTPUT_MISMATCH');
+          rng_commit_reveal = 'fail';
+          break;
+        }
+      }
+    }
+
+    // outcome: recompute computeDeathDrops(... derivedSeed) === dropped_item_ids.
+    const dInputs = isObject(derivation) ? derivation['inputs'] : undefined;
+    if (!isObject(dInputs) || !derivedSeed) {
+      reason_codes.push('OUTCOME_MISMATCH');
+      outcome_derivation = 'fail';
+    } else {
+      const items = reconstructItemsForDrop(dInputs['items']);
+      const reputation = dInputs['reputation'];
+      const map = dInputs['map'];
+      const dropped = inp['dropped_item_ids'];
+      if (
+        items === null ||
+        typeof reputation !== 'number' ||
+        typeof map !== 'string' ||
+        !Array.isArray(dropped)
+      ) {
+        reason_codes.push('OUTCOME_MISMATCH');
+        outcome_derivation = 'fail';
+      } else {
+        const heatLookup = buildHeatLookup(items);
+        const recomputed = computeDeathDrops(
+          items,
+          map as MapName,
+          reputation,
+          derivedSeed,
+          [],
+          heatLookup
+        ).droppedItemIds;
+        const expected = dropped as unknown[];
+        const same =
+          recomputed.length === expected.length &&
+          recomputed.every((id, i) => id === expected[i]);
+        if (!same) {
+          reason_codes.push('OUTCOME_MISMATCH');
+          outcome_derivation = 'fail';
+        }
+      }
+    }
+  }
+
+  // event_preimage_hash divergence is fatal under any path.
+  if (!preimageOk) {
+    if (outcome_derivation === 'pass') outcome_derivation = 'fail';
+    if (rng_commit_reveal === 'pass') rng_commit_reveal = 'fail';
+  }
+
+  // ----- receipt authenticity (Ed25519 over prev_hash|event_hash) -----
+  let receipt_authenticity: CheckStatus;
+  if (!isStringNonEmpty(ctx.authPublicKeyHex)) {
+    receipt_authenticity = 'not_checked';
+    reason_codes.push('RECEIPT_SIGNATURE_NOT_CHECKED');
+  } else if (
+    !isStringNonEmpty(receipt['prev_hash']) ||
+    !isStringNonEmpty(receipt['event_hash']) ||
+    !isStringNonEmpty(receipt['signature'])
+  ) {
+    receipt_authenticity = 'fail';
+    reason_codes.push('RECEIPT_SIGNATURE_FIELDS_MISSING');
+  } else {
+    const ok = verifyReceiptSignature(
+      receipt['prev_hash'] as string,
+      receipt['event_hash'] as string,
+      receipt['signature'] as string,
+      ctx.authPublicKeyHex
+    );
+    receipt_authenticity = ok ? 'pass' : 'fail';
+    if (!ok) reason_codes.push('RECEIPT_SIGNATURE_INVALID');
+  }
+
+  // ----- final_status -----
+  // NOTE: "verified" is intentionally UNREACHABLE on the v2 path in this release.
+  // It requires precommit_anchoring === 'pass', which needs chronicle-global-hash
+  // ordering that is not yet implemented (ORDERING_NOT_CHAIN_PROVEN). The ceiling
+  // here is rng_consistent: the commit binds the revealed seed and the outcome
+  // derives from it, but the commit-before-outcome ordering is not chain-proven.
+  const hardFail =
+    rng_commit_reveal === 'fail' ||
+    outcome_derivation === 'fail' ||
+    receipt_authenticity === 'fail';
+
+  let final_status: FinalStatus;
+  if (hardFail) {
+    final_status = 'failed';
+  } else if (!haveReveal) {
+    // Reveal pending: nothing to anchor offline yet. NOT a failure.
+    final_status = 'replay_consistent';
+  } else if (rng_commit_reveal === 'pass' && outcome_derivation === 'pass') {
+    // Commit/reveal binding + outcome derivation verified; ordering unproven.
     final_status = 'rng_consistent';
   } else {
     final_status = 'replay_consistent';

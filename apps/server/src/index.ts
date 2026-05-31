@@ -258,6 +258,9 @@ const SOVEREIGN_ALLOW_NAME_MATCH = parseBoolEnv(process.env.SOVEREIGN_ALLOW_NAME
 
 // Capability Binding v0 (enforcement gates)
 const CAPS_ENABLED = parseBoolEnv(process.env.CAPS_ENABLED, false);
+// #101: precommit-anchored RNG v2 for loot drops. DEFAULT OFF. When unset/false,
+// combat RNG output AND the persisted receipt proof are byte-identical to #100.
+const RNG_V2_ENABLED = parseBoolEnv(process.env.AKALYNTH_RNG_V2, false);
 const CAPS_DEBUG_GRANT_SOVEREIGN = parseBoolEnv(process.env.CAPS_DEBUG_GRANT_SOVEREIGN, false) && DEBUG_MODE;
 
 // Plan B: Per-IP Rate Limiting (Anti-Bot Hardening)
@@ -690,6 +693,9 @@ type Session = {
   // Seal 3.1: RNG commit→reveal state
   rngRevealByDomain: Record<string, string>;
   rngCommitByDomain: Record<string, string>;
+  // #101: chronicle ordering ref of the spawn rng_commit event, per domain, so
+  // a v2 outcome receipt can point back at the precommit (commit < outcome).
+  rngCommitRefByDomain: Record<string, { chronicle_seq: number; chronicle_hash: string }>;
   // Plan B: Client IP for rate limiting
   clientIp: string | null;
   // Plan B: Attack spam tracking (for heat escalation)
@@ -789,6 +795,13 @@ const lastEventHashByActor = new Map<string, string>();
 // Global chain state (Seal 2.3: whole-file tamper evidence)
 let lastGlobalHash: string = 'genesis';
 
+// Monotonic chronicle sequence (#101): a per-run ordinal stamped onto every
+// chronicleEvent so commit/outcome/reveal can be ordered. Seeded from the
+// existing log line count on boot so it survives restarts. NOTE: this is the
+// chronicle ordering space; the audit-log `sequence` is a SEPARATE space — see
+// docs/RNG_OUTCOME_VERIFICATION.md (#101) for the seq-space caveat.
+let chronicleSeqCounter = 0;
+
 // ============================================================================
 // Seal 2.2/2.3: Restart continuity — rebuild chain heads from chronicle.log on boot
 // ============================================================================
@@ -862,6 +875,10 @@ function rebuildChronicleHeadsFromLog(logPath: string): void {
 
   // Set global head to last verified position
   lastGlobalHash = expectedPrevGlobal;
+
+  // #101: seed the chronicle ordinal from existing line count so post-restart
+  // commit/outcome/reveal sequences stay monotonic across runs.
+  chronicleSeqCounter = lines.length;
 
   const hasCorruption = bad > 0 || globalBad > 0;
   if (hasCorruption) {
@@ -969,6 +986,9 @@ function chronicleEvent(
 
   lastGlobalHash = global_event_hash;
 
+  // #101: stamp a monotonic chronicle ordinal (per-run, 1-indexed) for ordering.
+  const chronicle_seq = ++chronicleSeqCounter;
+
   chronicleAppend({
     v: 1,
     world_id: 'akalynth-mainnet',
@@ -988,6 +1008,10 @@ function chronicleEvent(
     },
     rng,
   });
+
+  // #101: return the ordering identifiers so callers (e.g. the spawn rng_commit)
+  // can thread chronicle_seq/event_hash onto the session for outcome binding.
+  return { chronicle_seq, event_hash, global_event_hash };
 }
 
 // Canonical path resolution (single source of truth)
@@ -2694,6 +2718,7 @@ wss.on('connection', (ws, req: IncomingMessage) => {
     connectedAtMs: now,
     rngRevealByDomain: {},
     rngCommitByDomain: {},
+    rngCommitRefByDomain: {},
     clientIp,
     attackFailures: [],
     skillCooldowns: new Map(),
@@ -3168,12 +3193,18 @@ function processSessionQueue(s: Session, now: number) {
           const commit = rngCommitV1(domain, actorDid, reveal);
           s.rngRevealByDomain[domain] = reveal;
           s.rngCommitByDomain[domain] = commit;
-          chronicleEvent('rng_commit', actorDid, s.player!.caps ?? [], {
+          const commitRef = chronicleEvent('rng_commit', actorDid, s.player!.caps ?? [], {
             rng_domain: domain,
             rng_commit: commit,
             commit_scope: 'session',
             commit_seq: 1,
           });
+          // #101: remember the chronicle ordering ref of THIS commit so a later
+          // v2 loot-drop receipt can prove commit < outcome.
+          s.rngCommitRefByDomain[domain] = {
+            chronicle_seq: commitRef.chronicle_seq,
+            chronicle_hash: commitRef.event_hash,
+          };
         }
 
         // Initial presence tracking for spawn position
@@ -4336,6 +4367,25 @@ function processSessionQueue(s: Session, now: number) {
             for (const sess of sessions.values()) {
               if (sess.player?.id === playerId) {
                 return sess.rngCommitByDomain['death_drop:v1'];
+              }
+            }
+            return undefined;
+          },
+          // #101: v2 precommit-anchored RNG (flag-gated). All three are no-ops
+          // for combat when RNG_V2_ENABLED is false.
+          rngV2Enabled: RNG_V2_ENABLED,
+          getRngRevealV1: (playerId: string) => {
+            for (const sess of sessions.values()) {
+              if (sess.player?.id === playerId) {
+                return sess.rngRevealByDomain['death_drop:v1'];
+              }
+            }
+            return undefined;
+          },
+          getRngCommitRefV1: (playerId: string) => {
+            for (const sess of sessions.values()) {
+              if (sess.player?.id === playerId) {
+                return sess.rngCommitRefByDomain['death_drop:v1'];
               }
             }
             return undefined;

@@ -1,0 +1,84 @@
+{
+  "sequence": 20,
+  "timestamp": "2026-05-31T12:00:00.000Z",
+  "prev_hash": "blake3:abababababababababababababababababababababababababababababababab",
+  "actor_id": "did:akalynth:attacker-001",
+  "action": "combat_resolved",
+  "inputs": {
+    "target_player_id": "did:akalynth:victim-001",
+    "map": "Azura",
+    "position": {
+      "x": 12,
+      "y": 34
+    },
+    "outcome": "kill",
+    "dropped_item_ids": [
+      "item-legendary-001",
+      "item-ration-001",
+      "item-torch-001",
+      "item-torch-002"
+    ],
+    "drop_seed_hash": "blake3:03797e01d4fcb3e2ac678799d4ff704d0aeec12ec92e7145d9e97e2b8616c159",
+    "protected_item_id": null,
+    "rng_proof": {
+      "version": 2,
+      "scheme": "precommit_reveal_v2",
+      "outcome_type": "loot_drop",
+      "precommit_ref": {
+        "chronicle_seq": 10,
+        "chronicle_hash": "blake3:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "commit": "blake3:daf236cc11f0b62ef5ae7dd4722ff37d6a192e7d5229886341bf0c81620bf272"
+      },
+      "event_preimage_hash": "blake3:03797e01d4fcb3e2ac678799d4ff704d0aeec12ec92e7145d9e97e2b8616c159",
+      "event_domain": "death_drop:v1",
+      "world_id": "Azura",
+      "rng_out": [
+        3803353942,
+        4026460166,
+        194969142,
+        3082347249,
+        2418343597
+      ],
+      "derivation": {
+        "algorithm": "rngDeriveSeedV2->rngDrawU32Legacy/selectItemsToDrop@v2",
+        "inputs": {
+          "items": [
+            {
+              "item_id": "item-torch-001",
+              "item_type": "torch"
+            },
+            {
+              "item_id": "item-ration-001",
+              "item_type": "ration"
+            },
+            {
+              "item_id": "item-mark-001",
+              "item_type": "mark_token"
+            },
+            {
+              "item_id": "item-legendary-001",
+              "item_type": "unknown",
+              "meta": {
+                "legendary": true,
+                "legendary_tier": 2,
+                "heat": 7.5
+              }
+            },
+            {
+              "item_id": "item-torch-002",
+              "item_type": "torch"
+            }
+          ],
+          "reputation": -4,
+          "map": "Azura",
+          "protected_item_id": null
+        }
+      }
+    }
+  },
+  "result": "ok",
+  "inputs_hash": "blake3:0b546b89e960a0893a50e9408448df34e25791513b22febd695f498f55bb1715",
+  "outputs_hash": "blake3:ae391d3e4b9f219c95df8bdeb48df88cc824dea9c8d71963cd93b8e61582c882",
+  "event_hash": "blake3:f68e44dd876dabeb183d5e3b675472ac8c0d0b02d1b8b3a78a9ba9e77f783bf5",
+  "signature": "fba7badb6fb30d182c3271e0780d23328d83e8058af021dd52ef25f6330903b40fd760b934ece5f15cb0c71d4112e8078e2c520478b9a0928b7b2c39ee9b9207"
+}
