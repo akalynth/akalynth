@@ -99,9 +99,36 @@ class GameStore(
             is TemWitnessRequestMessage -> msg.prompt.take(30)
             is ErrorMessage -> "${msg.code}: ${msg.message}"
             is DeathNoticeMessage -> msg.reason
+            is RunestoneResultMessage -> "${msg.caster.name}: ${msg.face}"
+            is RunestoneDeniedMessage -> msg.reason
             is CombatResolvedMessage -> "${msg.attackerId} killed ${msg.defenderId}"
             is CombatRejectedMessage -> msg.reason
-            is UnknownMessage -> msg.raw.take(50)
+            is DropItemResultMessage -> "drop ${msg.itemId} ok=${msg.ok}"
+            is PickupItemResultMessage -> "pickup ${msg.itemId} ok=${msg.ok}"
+            is InventorySnapshotMessage -> "${msg.items.size} items"
+            is WorldItemAddedMessage -> "${msg.itemType}@(${msg.x},${msg.y})"
+            is WorldItemRemovedMessage -> msg.itemId
+            is ProtectedSlotSetMessage -> "slot=${msg.itemId}"
+            is ChronicleSnapshotMessage -> "${msg.events.size} events"
+            is EvidenceSnapshotMessage -> "status=${msg.status}"
+            is PressureMetricsSnapshotMessage -> "status=${msg.status}"
+            is PlayerInspectMessage -> "${msg.name} (${msg.displayVocation ?: "—"})"
+            is WalletSnapshotMessage -> "gold=${msg.gold}"
+            is TitheResultMessage -> "ok=${msg.success}"
+            is WorkContractStartedMessage -> msg.contractId
+            is WorkProgressMessage -> "${msg.ticksObserved}/${msg.ticksRequired}"
+            is WorkContractResultMessage -> "ok=${msg.success}"
+            is NpcDialogueMessage -> "${msg.npcId}: ${msg.line.take(20)}"
+            is NpcDialogueErrorMessage -> "${msg.npcId}: ${msg.error}"
+            is SkillResultMessage -> "${msg.skillId} ok=${msg.success}"
+            is ModReportsSnapshotMessage -> "${msg.reports.size} reports"
+            is ModResolveResultMessage -> "${msg.caseId} ok=${msg.success}"
+            is PropertySnapshotMessage -> "${msg.properties.size} props"
+            is PropertyStateMessage -> msg.property.propertyId
+            is HouseSoldMessage -> "${msg.plotId} -> ${msg.buyerName}"
+            is PropertyResultMessage -> "${msg.action} ok=${msg.success}"
+            is PropertyLedgerMessage -> "${msg.propertyId}: ${msg.ownerHistory.size} entries"
+            is UnknownMessage -> (msg.type?.let { "$it " } ?: "") + msg.raw.take(50)
         }
         val entry = DebugLogEntry(
             timestamp = System.currentTimeMillis(),
@@ -233,7 +260,7 @@ class GameStore(
 
     private fun handleServerMessage(msg: ServerMessage) {
         when (msg) {
-            is WelcomeMessage -> {} // Version check could go here
+            is WelcomeMessage -> handleWelcome(msg)
             is LoginAckMessage -> handleLoginAck(msg)
             is WorldStateMessage -> handleWorldState(msg)
             is MoveResultMessage -> handleMoveResult(msg)
@@ -247,7 +274,71 @@ class GameStore(
             is DeathNoticeMessage -> handleDeath(msg)
             is CombatResolvedMessage -> handleCombatResolved(msg)
             is CombatRejectedMessage -> handleCombatRejected(msg)
+            // Phase 2+ message types are decoded and surfaced in the debug log for protocol parity.
+            // Gameplay handling for these is intentionally deferred (server stays authoritative).
+            is RunestoneResultMessage -> {}
+            is RunestoneDeniedMessage -> {}
+            is DropItemResultMessage -> {}
+            is PickupItemResultMessage -> {}
+            is InventorySnapshotMessage -> {}
+            is WorldItemAddedMessage -> {}
+            is WorldItemRemovedMessage -> {}
+            is ProtectedSlotSetMessage -> {}
+            is ChronicleSnapshotMessage -> {}
+            is EvidenceSnapshotMessage -> {}
+            is PressureMetricsSnapshotMessage -> {}
+            is PlayerInspectMessage -> {}
+            is WalletSnapshotMessage -> {}
+            is TitheResultMessage -> {}
+            is WorkContractStartedMessage -> {}
+            is WorkProgressMessage -> {}
+            is WorkContractResultMessage -> {}
+            is NpcDialogueMessage -> {}
+            is NpcDialogueErrorMessage -> {}
+            is SkillResultMessage -> {}
+            is ModReportsSnapshotMessage -> {}
+            is ModResolveResultMessage -> {}
+            is PropertySnapshotMessage -> {}
+            is PropertyStateMessage -> {}
+            is HouseSoldMessage -> {}
+            is PropertyResultMessage -> {}
+            is PropertyLedgerMessage -> {}
             is UnknownMessage -> {} // Ignore unknown
+        }
+    }
+
+    /**
+     * Validate the server's protocol version against the client's [Protocol.PROTOCOL_VERSION].
+     *
+     * A clear, user-visible mismatch is surfaced on incompatibility (different major version or an
+     * unparseable version string) rather than silently dropping the connection. A minor/patch skew
+     * is logged but tolerated so a forward-compatible server still works.
+     */
+    private fun handleWelcome(msg: WelcomeMessage) {
+        when (Protocol.versionCompatibility(msg.version)) {
+            Protocol.VersionCompatibility.MATCH -> {
+                logDebug("sys", "protocol v${msg.version} OK")
+            }
+            Protocol.VersionCompatibility.MINOR_MISMATCH -> {
+                logDebug(
+                    "sys",
+                    "protocol minor skew: server v${msg.version}, client v${Protocol.PROTOCOL_VERSION}"
+                )
+            }
+            Protocol.VersionCompatibility.INCOMPATIBLE -> {
+                logDebug(
+                    "sys",
+                    "protocol MISMATCH: server v${msg.version}, client v${Protocol.PROTOCOL_VERSION}"
+                )
+                _state.update {
+                    it.copy(
+                        ui = it.ui.copy(
+                            errorMessage = "Protocol mismatch: server v${msg.version}, " +
+                                "client v${Protocol.PROTOCOL_VERSION}. Update the app."
+                        )
+                    )
+                }
+            }
         }
     }
 

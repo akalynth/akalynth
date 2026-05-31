@@ -4,6 +4,17 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
+/**
+ * Server -> Client messages.
+ *
+ * Mirrors `packages/shared/protocol.ts` (PROTOCOL_VERSION 1.1.0). protocol.ts is the authoritative
+ * contract; this file follows it and must not diverge.
+ *
+ * Open-ended `reason` / `code` / `status` fields stay as plain [String] (known values catalogued in
+ * [ProtocolEnums]) so an unrecognised future value never crashes decode. Deeply nested, rarely
+ * consumed wire payloads (evidence bundles, drop explanations, metric internals) are kept as
+ * [JsonElement] to preserve fidelity without brittle over-typing.
+ */
 @Serializable
 sealed class ServerMessage
 
@@ -98,18 +109,97 @@ data class ErrorMessage(
 ) : ServerMessage()
 
 @Serializable
+data class SpawnPoint(val x: Int, val y: Int)
+
+@Serializable
+data class LostItemSummary(
+    val kind: String,
+    val qty: Int? = null,
+    val rarity: String? = null
+)
+
+@Serializable
 @SerialName("death_notice")
 data class DeathNoticeMessage(
     val ok: Boolean,
     @SerialName("respawn_in_ms") val respawnInMs: Long,
     val map: MapName,
     val spawn: SpawnPoint,
-    val reason: String
+    val reason: String,
+    // DeathNoticeExtras (optional)
+    @SerialName("chronicle_event_id") val chronicleEventId: Long? = null,
+    @SerialName("lost_items") val lostItems: List<LostItemSummary>? = null,
+    @SerialName("killer_name") val killerName: String? = null,
+    val zone: String? = null,
+    val x: Int? = null,
+    val y: Int? = null,
+    val time: String? = null
 ) : ServerMessage()
 
 @Serializable
-data class SpawnPoint(val x: Int, val y: Int)
+@SerialName("runestone_result")
+data class RunestoneResultMessage(
+    @SerialName("table_id") val tableId: String,
+    val caster: RunestoneCaster,
+    val face: Element,
+    val whisper: String
+) : ServerMessage()
 
+@Serializable
+data class RunestoneCaster(val id: String, val name: String)
+
+@Serializable
+@SerialName("runestone_denied")
+data class RunestoneDeniedMessage(
+    val reason: String
+) : ServerMessage()
+
+// Phase 2: Item response messages
+@Serializable
+data class ItemInfo(
+    @SerialName("item_id") val itemId: String,
+    @SerialName("item_type") val itemType: String,
+    val slot: String? = null
+)
+
+@Serializable
+@SerialName("drop_item_result")
+data class DropItemResultMessage(
+    val ok: Boolean,
+    @SerialName("item_id") val itemId: String,
+    val reason: String? = null
+) : ServerMessage()
+
+@Serializable
+@SerialName("pickup_item_result")
+data class PickupItemResultMessage(
+    val ok: Boolean,
+    @SerialName("item_id") val itemId: String,
+    val reason: String? = null
+) : ServerMessage()
+
+@Serializable
+@SerialName("inventory_snapshot")
+data class InventorySnapshotMessage(
+    val items: List<ItemInfo>
+) : ServerMessage()
+
+@Serializable
+@SerialName("world_item_added")
+data class WorldItemAddedMessage(
+    @SerialName("item_id") val itemId: String,
+    @SerialName("item_type") val itemType: String,
+    val x: Int,
+    val y: Int
+) : ServerMessage()
+
+@Serializable
+@SerialName("world_item_removed")
+data class WorldItemRemovedMessage(
+    @SerialName("item_id") val itemId: String
+) : ServerMessage()
+
+// Phase 3: Combat response messages
 @Serializable
 @SerialName("combat_resolved")
 data class CombatResolvedMessage(
@@ -127,5 +217,252 @@ data class CombatRejectedMessage(
     val reason: String
 ) : ServerMessage()
 
-// Fallback for unknown messages
-data class UnknownMessage(val raw: String = "") : ServerMessage()
+// Phase 3.2: Protected slots
+@Serializable
+@SerialName("protected_slot_set")
+data class ProtectedSlotSetMessage(
+    @SerialName("player_id") val playerId: String,
+    @SerialName("item_id") val itemId: String,
+    @SerialName("prev_item_id") val prevItemId: String? = null
+) : ServerMessage()
+
+// Phase 4: Chronicle
+@Serializable
+data class EvidenceRef(
+    @SerialName("chronicle_event_id") val chronicleEventId: Long,
+    @SerialName("receipt_hash") val receiptHash: String
+)
+
+@Serializable
+data class ChronicleEvent(
+    val kind: String,
+    val timestamp: String,
+    val zone: String? = null,
+    val x: Int? = null,
+    val y: Int? = null,
+    val details: JsonElement? = null,
+    @SerialName("evidence_ref") val evidenceRef: EvidenceRef? = null
+)
+
+@Serializable
+@SerialName("chronicle_snapshot")
+data class ChronicleSnapshotMessage(
+    @SerialName("player_id") val playerId: String,
+    val events: List<ChronicleEvent>,
+    @SerialName("has_more") val hasMore: Boolean
+) : ServerMessage()
+
+// Phase 4.4: Chronicle Evidence
+@Serializable
+@SerialName("evidence_snapshot")
+data class EvidenceSnapshotMessage(
+    val status: String,
+    @SerialName("player_id") val playerId: String,
+    @SerialName("chronicle_event_id") val chronicleEventId: Long? = null,
+    @SerialName("receipt_hash") val receiptHash: String? = null,
+    @SerialName("source_action") val sourceAction: String? = null,
+    val kind: String? = null,
+    // Present when status == "ok"; nested wire payload kept opaque.
+    val evidence: JsonElement? = null,
+    @SerialName("error_code") val errorCode: String? = null
+) : ServerMessage()
+
+// Phase 5: Pressure Metrics
+@Serializable
+@SerialName("pressure_metrics_snapshot")
+data class PressureMetricsSnapshotMessage(
+    @SerialName("player_id") val playerId: String,
+    val since: String,
+    val until: String,
+    val status: String,
+    // Full metrics object kept opaque; consumers project the fields they need.
+    val metrics: JsonElement? = null,
+    @SerialName("error_code") val errorCode: String? = null
+) : ServerMessage()
+
+// Sovereign Vocations: Player inspect response
+@Serializable
+@SerialName("player_inspect")
+data class PlayerInspectMessage(
+    @SerialName("player_id") val playerId: String,
+    val name: String,
+    val vocation: SovereignVocation? = null,
+    @SerialName("display_vocation") val displayVocation: String? = null,
+    val badges: List<String> = emptyList(),
+    val mark: String? = null,
+    val error: String? = null
+) : ServerMessage()
+
+// Treasury Kernel v0
+@Serializable
+@SerialName("wallet_snapshot")
+data class WalletSnapshotMessage(
+    val gold: Int
+) : ServerMessage()
+
+@Serializable
+@SerialName("tithe_result")
+data class TitheResultMessage(
+    val success: Boolean,
+    @SerialName("new_balance") val newBalance: Int? = null,
+    val error: String? = null
+) : ServerMessage()
+
+// Work Contract Faucet v0
+@Serializable
+@SerialName("work_contract_started")
+data class WorkContractStartedMessage(
+    @SerialName("contract_id") val contractId: String,
+    @SerialName("contract_type") val contractType: String,
+    @SerialName("payout_gold") val payoutGold: Int,
+    @SerialName("cooldown_seconds") val cooldownSeconds: Int,
+    @SerialName("min_duration_ms") val minDurationMs: Long
+) : ServerMessage()
+
+@Serializable
+@SerialName("work_progress")
+data class WorkProgressMessage(
+    @SerialName("contract_id") val contractId: String,
+    @SerialName("ticks_observed") val ticksObserved: Int,
+    @SerialName("ticks_required") val ticksRequired: Int,
+    @SerialName("remaining_ms") val remainingMs: Long
+) : ServerMessage()
+
+@Serializable
+@SerialName("work_contract_result")
+data class WorkContractResultMessage(
+    @SerialName("contract_id") val contractId: String,
+    val success: Boolean,
+    @SerialName("credited_gold") val creditedGold: Int? = null,
+    val error: String? = null
+) : ServerMessage()
+
+// NPC Recognition v0
+@Serializable
+@SerialName("npc_dialogue")
+data class NpcDialogueMessage(
+    @SerialName("npc_id") val npcId: String,
+    @SerialName("place_id") val placeId: String,
+    val tier: String,
+    val line: String
+) : ServerMessage()
+
+@Serializable
+@SerialName("npc_dialogue_error")
+data class NpcDialogueErrorMessage(
+    @SerialName("npc_id") val npcId: String,
+    val error: String
+) : ServerMessage()
+
+// Skills v0
+@Serializable
+@SerialName("skill_result")
+data class SkillResultMessage(
+    @SerialName("skill_id") val skillId: String,
+    val success: Boolean,
+    val reason: String? = null,
+    @SerialName("cooldown_until_ms") val cooldownUntilMs: Long? = null,
+    val payload: JsonElement? = null
+) : ServerMessage()
+
+// Moderation v1
+@Serializable
+data class ModerationReport(
+    @SerialName("case_id") val caseId: String,
+    @SerialName("receipt_hash") val receiptHash: String,
+    @SerialName("reporter_id") val reporterId: String,
+    @SerialName("target_id") val targetId: String,
+    @SerialName("reported_at") val reportedAt: String,
+    val status: String,
+    @SerialName("resolved_by") val resolvedBy: String? = null,
+    @SerialName("resolved_at") val resolvedAt: String? = null,
+    val resolution: String? = null,
+    val reason: String? = null,
+    @SerialName("resolution_receipt_hash") val resolutionReceiptHash: String? = null
+)
+
+@Serializable
+@SerialName("mod_reports_snapshot")
+data class ModReportsSnapshotMessage(
+    val reports: List<ModerationReport>,
+    @SerialName("has_more") val hasMore: Boolean
+) : ServerMessage()
+
+@Serializable
+@SerialName("mod_resolve_result")
+data class ModResolveResultMessage(
+    val success: Boolean,
+    @SerialName("case_id") val caseId: String,
+    val error: String? = null
+) : ServerMessage()
+
+// Property Ownership v0
+@Serializable
+data class PropertyPublic(
+    @SerialName("property_id") val propertyId: String,
+    val zone: String,
+    @SerialName("plot_id") val plotId: String,
+    val x: Int,
+    val y: Int,
+    val width: Int,
+    val height: Int,
+    val district: String? = null,
+    val status: String,
+    @SerialName("owner_name") val ownerName: String? = null,
+    @SerialName("primary_price_gold") val primaryPriceGold: Int,
+    @SerialName("listed_price_gold") val listedPriceGold: Int? = null,
+    @SerialName("sale_count") val saleCount: Int
+)
+
+@Serializable
+data class PropertyOwnerHistoryEntry(
+    @SerialName("from_name") val fromName: String? = null,
+    @SerialName("to_name") val toName: String,
+    val price: Int,
+    val action: String,
+    val timestamp: String
+)
+
+@Serializable
+@SerialName("property_snapshot")
+data class PropertySnapshotMessage(
+    val properties: List<PropertyPublic>
+) : ServerMessage()
+
+@Serializable
+@SerialName("property_state")
+data class PropertyStateMessage(
+    val property: PropertyPublic
+) : ServerMessage()
+
+@Serializable
+@SerialName("house_sold")
+data class HouseSoldMessage(
+    @SerialName("property_id") val propertyId: String,
+    @SerialName("plot_id") val plotId: String,
+    val zone: String,
+    @SerialName("buyer_name") val buyerName: String,
+    @SerialName("seller_name") val sellerName: String? = null,
+    val price: Int,
+    @SerialName("sale_count") val saleCount: Int
+) : ServerMessage()
+
+@Serializable
+@SerialName("property_result")
+data class PropertyResultMessage(
+    val action: String,
+    val success: Boolean,
+    @SerialName("property_id") val propertyId: String,
+    val reason: String? = null
+) : ServerMessage()
+
+@Serializable
+@SerialName("property_ledger")
+data class PropertyLedgerMessage(
+    @SerialName("property_id") val propertyId: String,
+    @SerialName("owner_history") val ownerHistory: List<PropertyOwnerHistoryEntry>,
+    @SerialName("sale_count") val saleCount: Int
+) : ServerMessage()
+
+// Fallback for unknown / unparseable messages (forward-compat, never crashes decode).
+data class UnknownMessage(val raw: String = "", val type: String? = null) : ServerMessage()

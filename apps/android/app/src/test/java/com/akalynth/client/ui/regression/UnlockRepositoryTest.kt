@@ -2,19 +2,20 @@ package com.akalynth.client.ui.regression
 
 import com.akalynth.client.progression.UnlockRepository
 import com.akalynth.client.progression.UnlockState
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import org.junit.Assert.*
 
-/**
- * Regression tests for UnlockRepository persistence.
- * Maps to UI_REGRESSION_MATRIX.md Section 4: U6 (DataStore write verification)
- */
+// Regression tests for UnlockRepository persistence.
+// Maps to UI_REGRESSION_MATRIX.md Section 4: U6 (DataStore write verification)
+@OptIn(ExperimentalCoroutinesApi::class)
 class UnlockRepositoryTest {
 
     private lateinit var fakeDataStore: FakeDataStore

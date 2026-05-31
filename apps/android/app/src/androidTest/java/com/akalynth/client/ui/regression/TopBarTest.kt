@@ -7,6 +7,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.dp
 import com.akalynth.client.ui.components.topbar.HP_BAR_HEIGHT
 import com.akalynth.client.ui.components.topbar.HP_BAR_WIDTH
 import com.akalynth.client.ui.components.topbar.MIN_TOUCH_TARGET
@@ -224,7 +225,7 @@ class TopBarTest {
     }
 
     @Test
-    fun `L4 - stage 3 shows nearby when count > 0`() {
+    fun `L4 - stage 3 shows nearby when count is positive`() {
         composeTestRule.setContent {
             TopBar(
                 stage = 3,
