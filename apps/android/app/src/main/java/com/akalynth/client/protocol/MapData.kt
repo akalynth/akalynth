@@ -50,7 +50,7 @@ enum class TileCode(val code: Int) {
     UNKNOWN(-1);
 
     companion object {
-        private val byCode = entries.associateBy(TileCode::code)
+        private val byCode = values().associateBy { it.code }
 
         /** Map a raw JSON tile value to a [TileCode], tolerating unknown future codes. */
         fun fromCode(code: Int): TileCode = byCode[code] ?: UNKNOWN
