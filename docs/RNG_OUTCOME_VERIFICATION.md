@@ -334,7 +334,7 @@ derivedSeed = rngDeriveSeedV2(reveal, worldId, eventDomain, eventPreimageHash)
 `derivedSeed` is domain-separated and versioned so it can never collide with the
 v0/v1 receipt-hash seed.
 
-### Ordering is NOT chain-proven yet (this release) — `verified` is unreachable
+### Ordering IS chain-proven (#104) — `verified` is reachable
 
 For the proof to mean "the server committed *before* the outcome," the commit must
 be provably ordered before the `combat_resolved` outcome, with the reveal after it:
@@ -349,50 +349,62 @@ be provably ordered before the `combat_resolved` outcome, with the reveal after 
   from this chronicle event, not from the receipt.
 
 The chronicle log records this order via its **global hash chain**
-(`prev_global_hash`/`global_event_hash`, Seal 2.3). **This release does not yet
-verify ordering against that chain.** The chronicle log and the audit-receipt log
-use separate sequence spaces, and a cross-log comparison of caller-supplied ordinals
-would only be as trustworthy as the caller — exactly the "unacceptable evidence"
-#101 names. So the verifier makes **no ordering claim**: `chronicle_inclusion` and
-`precommit_anchoring` are `not_checked` (reason `ORDERING_NOT_CHAIN_PROVEN`), and
-**`final_status` can never reach `verified`** on the v2 path. What v2 *does* verify
-is the cryptographic commit/reveal binding and the outcome derivation, which cap at
-`rng_consistent`. Independent ordering (walking the global hash chain to prove
-`rng_commit → death(outcome) → rng_reveal`) is tracked as **#104**, coordinated with
-#94 (receipts-chain integrity).
+(`prev_global_hash`/`global_event_hash`, Seal 2.3). **#104 verifies ordering against
+that chain.** The caller supplies a `chronicle: ChronicleEntry[]` slice — an ordered
+slice of parsed chronicle entries with their global-chain fields — and the verifier
+itself **re-checks the global chain over that slice** (recomputing every
+`payload_hash`/`event_hash`/`global_event_hash` and checking each `prev_global_hash`
+link), using the **same computation** as
+`apps/server/tools/verify-chronicle-chain.ts` (shared in
+`packages/shared/chronicleChain.ts`, the single source of truth). A broken link →
+`failed` (`CHRONICLE_CHAIN_BROKEN`). Caller-supplied ordinals are **never** trusted:
+ordering rests only on the link-checked **position** within the verified slice.
 
-### Verifier states (this release)
+The relevant events are matched as follows. The `death` outcome event is located by
+`event_type === 'death'` AND `payload.drop_seed_hash === proof.event_preimage_hash`
+(the combat seed) AND `actor === did:akalynth:<victim>` (the victim DID, derived from
+`inputs.target_player_id`). The `rng_commit` and `rng_reveal` are the same victim
+actor's `death_drop:v1` events. Ordering requires
+`commit_pos < death_pos < reveal_pos` within the verified slice; a violation (e.g. a
+commit recorded **after** the death) → `failed` (`PRECOMMIT_OUT_OF_ORDER`). This is
+the mis-order case that the #101 downgrade could **not** catch.
+
+### Verifier states (#104)
 
 `verifyOutcomeFromReceipt(receipt, context?)` with
-`context = { commitEvent?, revealEvent?, authPublicKeyHex? }`:
+`context = { chronicle?: ChronicleEntry[], revealSeed?, authPublicKeyHex? }`:
 
-| Situation | precommit_anchoring | final_status | reason code |
-|---|---|---|---|
-| commit + reveal, binding + derivation valid (with or without pubkey) | not_checked | **rng_consistent** | `ORDERING_NOT_CHAIN_PROVEN` |
-| commit present, reveal **not yet published** | not_checked | **replay_consistent** | `REVEAL_NOT_PUBLISHED` |
-| `rngCommitV1(...) != precommit_ref.commit` | not_checked | **failed** | `PRECOMMIT_COMMIT_MISMATCH` |
-| `rng_out[i]` not derived from `derivedSeed` | not_checked | **failed** | `RNG_OUTPUT_MISMATCH` |
-| recomputed drops != `dropped_item_ids` | not_checked | **failed** | `OUTCOME_MISMATCH` |
-| `event_preimage_hash` != recomputed seed | not_checked | **failed** | `EVENT_PREIMAGE_HASH_MISMATCH` |
-
-> A commit that is actually **mis-ordered** (recorded after the outcome) is **not
-> detected** in this release — it still verifies as `rng_consistent` with
-> `ORDERING_NOT_CHAIN_PROVEN` flagging that ordering was not checked. Catching it
-> requires #104.
+| Situation | chronicle_inclusion | precommit_anchoring | final_status | reason code |
+|---|---|---|---|---|
+| verified slice (commit<death<reveal) + binding/derivation + **pubkey** | pass | pass | **verified** | `PRECOMMIT_ANCHORED` |
+| verified slice + binding/derivation, **no pubkey** | pass | pass | **rng_consistent** | `PRECOMMIT_ANCHORED`, `RECEIPT_SIGNATURE_NOT_CHECKED` |
+| commit recorded **after** the death in the chain | fail | fail | **failed** | `PRECOMMIT_OUT_OF_ORDER` |
+| broken global-chain link in the slice | fail | fail | **failed** | `CHRONICLE_CHAIN_BROKEN` |
+| death event missing / `drop_seed_hash` mismatch | fail | fail | **failed** | `OUTCOME_EVENT_NOT_FOUND` |
+| commit<death present, reveal **not yet** in slice | not_checked | not_checked | **replay_consistent** | `REVEAL_NOT_PUBLISHED` |
+| **no** chronicle slice supplied | not_checked | not_checked | **rng_consistent** | `ORDERING_NOT_CHAIN_PROVEN` |
+| `rngCommitV1(...) != precommit_ref.commit` | (n/a) | fail | **failed** | `PRECOMMIT_COMMIT_MISMATCH` |
+| `rng_out[i]` not derived from `derivedSeed` | (n/a) | fail | **failed** | `RNG_OUTPUT_MISMATCH` |
+| recomputed drops != `dropped_item_ids` | (n/a) | fail | **failed** | `OUTCOME_MISMATCH` |
+| `event_preimage_hash` != recomputed seed | (n/a) | fail | **failed** | `EVENT_PREIMAGE_HASH_MISMATCH` |
 
 `receipt_authenticity` (Ed25519 over `prev_hash|event_hash`, supplied via
-`authPublicKeyHex` / CLI `--pubkey`) is still computed — a bad signature → `failed` —
-but a passing signature does **not** lift the ceiling above `rng_consistent` while
-ordering is unproven.
+`authPublicKeyHex` / CLI `--pubkey`) gates `verified`: a bad signature → `failed`, a
+missing pubkey caps a fully-anchored proof at `rng_consistent` (+ `PRECOMMIT_ANCHORED`).
 
-### When "verified" becomes reachable
+### When "verified" is reachable
 
-Not in this release. `verified` requires `precommit_anchoring` to pass, which needs
-the chronicle-global-hash ordering proof tracked in **#104**. Until then the v2
-ceiling is `rng_consistent`. v1/legacy receipts are **unchanged**: never `verified`,
-`precommit_anchoring` stays `fail`, replay/rng-consistent at best.
+`verified` requires **all five** of `{precommit_anchoring, rng_commit_reveal,
+outcome_derivation, receipt_authenticity, chronicle_inclusion}` to pass — i.e. a
+chain-verified slice (ordered `commit < death < reveal`), a commit that binds the
+reveal, a matching derivation/outcome, AND a supplied auth pubkey whose signature
+verifies. It can **never** rest on caller-supplied ordinals — only on the verified
+slice + supplied pubkey. **Receipt-only / no-slice callers still cap at
+`rng_consistent`** (`ORDERING_NOT_CHAIN_PROVEN`), so existing callers are unaffected.
+v1/legacy receipts are **unchanged**: never `verified`, `precommit_anchoring` stays
+`fail`, replay/rng-consistent at best.
 
-### What v2 proves — and does not
+### What v2 proves — and does not (honest residual)
 
 v2 proves: **the server committed to the seed before the outcome and derived the
 outcome from it.** v2 does **not** prove the seed was unbiased, that the server

@@ -1,0 +1,43 @@
+{
+  "chronicle": [
+    {
+      "v": 1,
+      "world_id": "Azura",
+      "rulebook_root": "blake3:rulebook-root-fixture",
+      "tick": 101,
+      "event_type": "rng_commit",
+      "actor": "did:akalynth:victim-001",
+      "caps_hash": "blake3:d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+      "caps": [],
+      "payload": {
+        "rng_domain": "death_drop:v1",
+        "rng_commit": "blake3:daf236cc11f0b62ef5ae7dd4722ff37d6a192e7d5229886341bf0c81620bf272",
+        "payload_hash": "blake3:45d9a1460fef59a689f991fce20f3d523b18ab0ed0f25e7a72c69f0e129ee7e9",
+        "prev_event_hash": "genesis",
+        "event_hash": "blake3:b6442b194a8f7b8ed698bacfdeee01a0d5cc52667d29142ad2768aa2214c0eb5",
+        "prev_global_hash": "genesis",
+        "global_event_hash": "blake3:507c2c304e701c13474154c27d62c7b03ec0f278722d52f97dfc12665f73c9b4"
+      }
+    },
+    {
+      "v": 1,
+      "world_id": "Azura",
+      "rulebook_root": "blake3:rulebook-root-fixture",
+      "tick": 102,
+      "event_type": "rng_reveal",
+      "actor": "did:akalynth:victim-001",
+      "caps_hash": "blake3:d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+      "caps": [],
+      "payload": {
+        "rng_domain": "death_drop:v1",
+        "rng_commit": "blake3:daf236cc11f0b62ef5ae7dd4722ff37d6a192e7d5229886341bf0c81620bf272",
+        "rng_reveal": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "payload_hash": "blake3:29c7837a2f388c08b19b6d6a0119dc8740a2a729fede23b147faac5f619894b9",
+        "prev_event_hash": "blake3:b6442b194a8f7b8ed698bacfdeee01a0d5cc52667d29142ad2768aa2214c0eb5",
+        "event_hash": "blake3:e809deeb2a1be14b84a82ba76494fc671ef4875989aa16f8f7614bf96e05ee7e",
+        "prev_global_hash": "blake3:507c2c304e701c13474154c27d62c7b03ec0f278722d52f97dfc12665f73c9b4",
+        "global_event_hash": "blake3:b2211d6cf8e6ea923dd24b4123fd60d8a06966420bf4054abcab29aeb9bef6c7"
+      }
+    }
+  ]
+}
