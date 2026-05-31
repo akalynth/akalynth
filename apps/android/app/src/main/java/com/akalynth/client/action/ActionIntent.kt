@@ -103,20 +103,10 @@ sealed class ActionIntent {
     }
 }
 
-/**
- * Movement direction enum.
- */
-@Serializable
-enum class Direction {
-    @SerialName("north") NORTH,
-    @SerialName("south") SOUTH,
-    @SerialName("east") EAST,
-    @SerialName("west") WEST,
-    @SerialName("northeast") NORTHEAST,
-    @SerialName("northwest") NORTHWEST,
-    @SerialName("southeast") SOUTHEAST,
-    @SerialName("southwest") SOUTHWEST
-}
+// Direction is defined in com.akalynth.client.protocol.Direction (4 cardinals,
+// matches packages/shared/types.ts). Canonical definition lives there; this
+// file re-exports it as a typealias so action-layer code compiles unchanged.
+typealias Direction = com.akalynth.client.protocol.Direction
 
 /**
  * Chat channel enum.
