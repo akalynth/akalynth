@@ -69,6 +69,7 @@ import {
   generateNonce,
   getAuthKeyDomain,
 } from '../../../packages/coordination-kernel/src/identity/index.js';
+import { loadVerifyingKeyHex } from '../../../packages/coordination-kernel/src/receipt/key.js';
 import { createAntiCheatRuntime, hydrateAntiCheatRuntime, onChat, onMoveApplied, onMoveIntent } from './anticheat/detector.js';
 import { createAntiCheatPriorStore } from './anticheat/priors.js';
 import { applyThrottle, checkTemTimeout, handleTemResponse, issueTemChallenge, isThrottled } from './anticheat/tem.js';
@@ -1102,11 +1103,17 @@ if (protectedSlotRows.length > 0) {
   console.log(`[persist] Loaded ${protectedSlotRows.length} protected slot entries`);
 }
 
+// Raw-seed Ed25519 signing pubkey (signs receipts + chronicle events). Computed
+// once at boot; published in /v1/transparency so signatures verify offline.
+let signingPublicKeyHex = '';
+const SIGNING_KEY_DERIVATION = 'ed25519(chronicle_seed) — signs receipts + chronicle events';
+
 // Identity v0.1: Load auth key pair for character token signing
 let authKeyPair: ReturnType<typeof loadAuthKeyPair> | null = null;
 try {
   if (chainPaths.keyPath) {
     authKeyPair = loadAuthKeyPair(chainPaths.keyPath);
+    signingPublicKeyHex = loadVerifyingKeyHex(chainPaths.keyPath);
     console.log(`[identity] Auth key pair loaded (public key: ${authKeyPair.publicKeyHex.slice(0, 16)}...)`);
   } else {
     console.warn('[identity] No key path configured, character creation disabled');
@@ -2094,6 +2101,8 @@ const httpServer = http.createServer((req, res) => {
       identity: {
         auth_public_key_hex: authKeyPair?.publicKeyHex ?? '',
         key_derivation: AUTH_KEY_DERIVATION,
+        signing_public_key_hex: signingPublicKeyHex,
+        signing_key_derivation: SIGNING_KEY_DERIVATION,
       },
       principles: [
         'Money cannot buy gameplay power',

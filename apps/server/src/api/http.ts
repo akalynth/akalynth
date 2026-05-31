@@ -166,6 +166,8 @@ export function handleHttp(
         identity: {
           auth_public_key_hex: '',
           key_derivation: 'blake3(akalynth/auth/v0 || chronicle_seed)',
+          signing_public_key_hex: '',
+          signing_key_derivation: 'ed25519(chronicle_seed) — signs receipts + chronicle events',
         },
         principles: [
           'Money cannot buy gameplay power',

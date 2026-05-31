@@ -71,6 +71,20 @@ export function loadVerifyingKey(keyPath: string) {
 }
 
 /**
+ * Raw 32-byte Ed25519 verifying-key hex for the signing key at keyPath.
+ * Matches ed25519-dalek `verifying_key().as_bytes()` hex (RFC 8032), i.e. the
+ * public key the chronicle_append binary and the receipt signer both use. Use
+ * this to publish the signing pubkey (transparency) and to verify chronicle/
+ * receipt signatures offline.
+ */
+export function loadVerifyingKeyHex(keyPath: string): string {
+  const pub = loadVerifyingKey(keyPath);
+  const der = pub.export({ format: 'der', type: 'spki' }) as Buffer;
+  // SPKI DER for Ed25519 ends with the raw 32-byte public key.
+  return Buffer.from(der.subarray(-32)).toString('hex');
+}
+
+/**
  * Resolve key path from config or environment.
  * For use in coordination-kernel (generic, not Akalynth-specific).
  *
