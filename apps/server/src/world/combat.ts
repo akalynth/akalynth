@@ -13,7 +13,7 @@ import {
   setLegendaryHeat,
   type ItemForDrop,
 } from './drop-policy.js';
-import { rngCommit, rngDeriveSeedV2 } from './rng.js';
+import { rngCommit, rngDeriveSeedV2, computeInventoryCommit, rngRevealHex32 } from './rng.js';
 
 // ============================================================================
 // Constants
@@ -91,7 +91,13 @@ export interface ReceiptRngProof {
     algorithm: 'rngDrawU32Legacy/selectItemsToDrop@v0';
     domain: 'pvp_loot_drop';
     inputs: {
-      items: ReceiptRngProofItem[];
+      // #103: plaintext items replaced with a salted commitment. The salt
+      // (16 bytes hex) is generated at kill time, used to compute the
+      // commitment, then discarded — it is NEVER persisted in the receipt.
+      // inventory_commit: blake3("akalynth:rng:inv:v1" || salt || canonical(items))
+      // inventory_size:   items.length (needed to compute drop count K, stays public)
+      inventory_commit: string;
+      inventory_size: number;
       reputation: number;
       map: MapName;
       protected_item_id: string | null;
@@ -128,7 +134,9 @@ export interface ReceiptRngProofV2 {
   derivation: {
     algorithm: 'rngDeriveSeedV2->rngDrawU32Legacy/selectItemsToDrop@v2';
     inputs: {
-      items: ReceiptRngProofItem[];
+      // #103: plaintext items replaced with a salted commitment (same as v1).
+      inventory_commit: string;
+      inventory_size: number;
       reputation: number;
       map: MapName;
       protected_item_id: string | null;
@@ -357,6 +365,19 @@ export function handleAttackIntent(ctx: CombatContext): AttackResult {
     };
   });
 
+  // #103: Replace plaintext items with a salted commitment so the public receipt
+  // no longer reveals the victim's full inventory. The salt is 16 random bytes
+  // (32 hex chars), generated here at kill time, used ONCE to compute the
+  // commitment, then DISCARDED — it is never logged or written to the receipt.
+  // The commitment is: blake3("akalynth:rng:inv:v1" || salt || canonical(items))
+  // The opening (salt + items) is held by the player/operator via an out-of-band
+  // channel; WITHOUT it the verifier produces outcome_derivation: 'unsupported'.
+  // inventory_size stays public because it is needed to compute drop count K.
+  const invSalt = rngRevealHex32().slice(0, 32); // 16 bytes → 32 hex chars
+  const inventoryCommit = computeInventoryCommit(invSalt, rngProofItems);
+  const inventorySize = rngProofItems.length;
+  // invSalt is intentionally not stored; it goes out of scope here.
+
   // Seal 3.1: Use session's v1 commit if available, else fallback to v0
   const v1Commit = ctx.getRngCommitV1(targetId);
   const dropRng: DropRngProof = v1Commit
@@ -442,7 +463,8 @@ export function handleAttackIntent(ctx: CombatContext): AttackResult {
         derivation: {
           algorithm: 'rngDeriveSeedV2->rngDrawU32Legacy/selectItemsToDrop@v2',
           inputs: {
-            items: rngProofItems,
+            inventory_commit: inventoryCommit,
+            inventory_size: inventorySize,
             reputation,
             map: defenderMap,
             protected_item_id: defenderProtectedId ?? null,
@@ -462,7 +484,8 @@ export function handleAttackIntent(ctx: CombatContext): AttackResult {
           algorithm: 'rngDrawU32Legacy/selectItemsToDrop@v0',
           domain: 'pvp_loot_drop',
           inputs: {
-            items: rngProofItems,
+            inventory_commit: inventoryCommit,
+            inventory_size: inventorySize,
             reputation,
             map: defenderMap,
             protected_item_id: defenderProtectedId ?? null,

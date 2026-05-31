@@ -7,6 +7,7 @@
 // Outputs MUST remain byte-identical to the server. Do NOT change semantics.
 
 import { blake3 } from '@noble/hashes/blake3';
+import stableStringify from 'fast-json-stable-stringify';
 
 // Domain separators
 export const RNG_COMMIT_DOMAIN_V0 = 'akalynth:rng:commit:v1\0';
@@ -71,6 +72,39 @@ export function rngU32ToUnitFloat(u32: number): number {
 // that the server could not choose among multiple precommits, or that any
 // client entropy was mixed in. See docs/RNG_OUTCOME_VERIFICATION.md.
 export const RNG_DERIVE_DOMAIN_V2 = 'akalynth:rng:v2:derive\0';
+
+// ---------------------------------------------------------------------------
+// Inventory commitment (#103)
+// ---------------------------------------------------------------------------
+//
+// Replaces the plaintext `items` array in `rng_proof.derivation.inputs` with a
+// salted BLAKE3 commitment so the public receipt no longer reveals the victim's
+// full inventory. The opening (salt + items) is held by the player / operator
+// and supplied to the verifier separately; WITHOUT the opening the verifier
+// produces `outcome_derivation: 'unsupported'` (reason COMMITTED_NOT_OPENED).
+//
+// Domain separator: "akalynth:rng:inv:v1" (no NUL — matches the convention of
+// a plain string prefix, same as rngCommit's domain separator).
+// Preimage:  domain || salt || stableStringify(items)
+// Output:    "blake3:<hex>"
+export const RNG_INV_COMMIT_DOMAIN = 'akalynth:rng:inv:v1';
+
+/**
+ * computeInventoryCommit — salted BLAKE3 commitment over a canonical item list.
+ *
+ * @param salt  16-byte random salt, hex-encoded (32 hex chars). Server-generated
+ *              at kill time; never persisted to the receipt.
+ * @param items Full ItemForDrop snapshot as passed to computeDeathDrops.
+ *              Using `object[]` to avoid a circular import (dropPolicy → rng → dropPolicy).
+ *              In practice callers pass `ItemForDrop[]`; the commitment is over
+ *              stableStringify(items), so any JSON-serializable array works.
+ * @returns     `"blake3:<hex>"` — the commitment stored in the receipt.
+ */
+export function computeInventoryCommit(salt: string, items: object[]): string {
+  const preimage = RNG_INV_COMMIT_DOMAIN + salt + stableStringify(items);
+  const hashBytes = blake3(new TextEncoder().encode(preimage));
+  return `blake3:${Buffer.from(hashBytes).toString('hex')}`;
+}
 
 export function rngDeriveSeedV2(
   reveal: string,

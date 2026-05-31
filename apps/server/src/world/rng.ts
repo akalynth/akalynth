@@ -17,6 +17,8 @@ export {
   rngU32ToUnitFloat,
   rngDeriveSeedV2,
   RNG_DERIVE_DOMAIN_V2,
+  computeInventoryCommit,
+  RNG_INV_COMMIT_DOMAIN,
 } from '../../../../packages/shared/rng.js';
 
 /**
