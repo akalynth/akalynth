@@ -11,6 +11,7 @@
 // change the canonicalization, domain separators, or preimage field order.
 
 import { blake3 } from '@noble/hashes/blake3';
+import * as nodeCrypto from 'node:crypto';
 import stringify from 'fast-json-stable-stringify';
 
 export const DOMAIN_EVENT = 'akalynth:chronicle:event:v1\0';
@@ -27,6 +28,18 @@ export type ChronicleEntry = {
   caps?: string[];
   payload: Record<string, unknown>;
   rng?: unknown;
+  // ---- Line-level fields (#107) ----
+  // The chronicle log line is `<line_prev_hash>|<line_event_hash>|<signature>|<canonical_json>`
+  // (crates/chronicle/src/lib.rs). These are the RAW (no `blake3:` prefix) hex
+  // hashes + Ed25519 signature that the chronicle writer emits. They are distinct
+  // from the per-actor/global chain fields embedded in `payload`. When present,
+  // they let the verifier AUTHENTICATE the slice (verify each event's signature
+  // against the published signing pubkey). Entries WITHOUT these fields are
+  // treated as unauthenticated (backward-compatible).
+  line_prev_hash?: string; // blake3 hex of the previous WHOLE line, or "genesis"
+  line_event_hash?: string; // blake3 hex of canonical_json
+  signature?: string; // Ed25519("{line_prev_hash}|{line_event_hash}") hex
+  canonical_json?: string; // the EXACT JSON string that was hashed for line_event_hash
 };
 
 function blake3HexBytes(bytes: Uint8Array): string {
@@ -222,4 +235,129 @@ export function verifyGlobalChainSlice(
   }
 
   return { ok: true, verified, head: lastGlobalHash ?? (startGlobalHash ?? 'genesis') };
+}
+
+// ---------------------------------------------------------------------------
+// #107: chronicle SLICE AUTHENTICATION via Ed25519 line signatures.
+// ---------------------------------------------------------------------------
+//
+// The global-chain check above proves a slice is internally hash-consistent, but
+// a hash chain is forgeable: anyone can build a self-consistent slice. To TRUST
+// the slice as the real, server-emitted chronicle we verify each line's Ed25519
+// signature against the published signing pubkey (signing_public_key_hex, the
+// raw-seed key that signs BOTH receipts and chronicle events).
+//
+// The chronicle log line is `<prev_hash>|<event_hash>|<signature>|<canonical_json>`
+// where (crates/chronicle/src/lib.rs):
+//   line_event_hash = blake3_hex(canonical_json)        (RAW hex, no `blake3:` prefix)
+//   line_prev_hash  = blake3_hex(previous WHOLE line)    ("genesis" for the first)
+//   signature       = Ed25519("{line_prev_hash}|{line_event_hash}") hex
+//
+// We reuse the SAME Ed25519 verification scheme as receipt_authenticity (raw
+// 32-byte pubkey hex → SPKI DER → node:crypto.verify over the UTF-8 message
+// `${prev}|${event}`), so chronicle-line auth cannot diverge from receipt auth.
+
+const SPKI_ED25519_PREFIX = Buffer.from('302a300506032b6570032100', 'hex');
+
+/** Raw blake3 hex (no `blake3:` prefix) of a UTF-8 string — matches the Rust
+ * chronicle writer's `blake3_hex` (.to_hex()) used for line_event_hash/line_prev_hash. */
+function lineBlake3Hex(s: string): string {
+  return Buffer.from(blake3(Buffer.from(s, 'utf8'))).toString('hex');
+}
+
+/** Ed25519 verify over `${prevHash}|${eventHash}` with a raw 32-byte pubkey hex.
+ * Byte-identical to verifyOutcome.ts#verifyReceiptSignature (same scheme). */
+export function verifyLineSignature(
+  prevHash: string,
+  eventHash: string,
+  signatureHex: string,
+  publicKeyHex: string
+): boolean {
+  try {
+    const rawPub = Buffer.from(publicKeyHex, 'hex');
+    if (rawPub.length !== 32) return false;
+    const der = Buffer.concat([SPKI_ED25519_PREFIX, rawPub]);
+    const publicKey = nodeCrypto.createPublicKey({ key: der, format: 'der', type: 'spki' });
+    const message = Buffer.from(`${prevHash}|${eventHash}`);
+    const signatureBytes = Buffer.from(signatureHex, 'hex');
+    return nodeCrypto.verify(null, message, publicKey, signatureBytes);
+  } catch {
+    return false;
+  }
+}
+
+export type SliceAuthResult = {
+  authenticated: boolean;
+  // Set only when authenticated === false:
+  //  - SLICE_NOT_AUTHENTICATED: line fields/signature absent → can't authenticate
+  //    (NOT a tamper signal; the honest unauthenticated floor).
+  //  - SLICE_SIGNATURE_INVALID: a signature/hash/line-chain link was PRESENT but
+  //    did NOT verify → tamper (a hard failure).
+  reason?: 'SLICE_NOT_AUTHENTICATED' | 'SLICE_SIGNATURE_INVALID';
+  // 0-based index of the failing entry (for diagnostics), when applicable.
+  index?: number;
+};
+
+/**
+ * Authenticate an ORDERED chronicle slice by verifying each line's Ed25519
+ * signature against `signingPublicKeyHex` (the published raw-seed signing key).
+ *
+ * For each entry:
+ *   1) line fields present (line_event_hash, line_prev_hash, signature,
+ *      canonical_json). If ANY are missing on ANY entry → SLICE_NOT_AUTHENTICATED
+ *      (the slice cannot be authenticated; honest floor, NOT a tamper signal).
+ *   2) line_event_hash === blake3_hex(canonical_json).
+ *   3) line chain link: line_prev_hash === blake3_hex(previous whole line)
+ *      (reconstructed as `${prev}|${event}|${signature}|${canonical_json}`), or
+ *      "genesis" for the first entry.
+ *   4) Ed25519("{line_prev_hash}|{line_event_hash}") verifies against the pubkey.
+ * Any of 2–4 failing on a PRESENT signature → SLICE_SIGNATURE_INVALID (tamper).
+ */
+export function verifySignedChainSlice(
+  entries: ChronicleEntry[],
+  signingPublicKeyHex: string
+): SliceAuthResult {
+  if (!signingPublicKeyHex || Buffer.from(signingPublicKeyHex, 'hex').length !== 32) {
+    return { authenticated: false, reason: 'SLICE_NOT_AUTHENTICATED' };
+  }
+
+  let prevLine: string | null = null; // the whole previous log line
+
+  for (let i = 0; i < entries.length; i++) {
+    const e = entries[i];
+    const hasFields =
+      typeof e.line_event_hash === 'string' &&
+      typeof e.line_prev_hash === 'string' &&
+      typeof e.signature === 'string' &&
+      typeof e.canonical_json === 'string';
+    if (!hasFields) {
+      // Missing line material → cannot authenticate. NOT a tamper failure.
+      return { authenticated: false, reason: 'SLICE_NOT_AUTHENTICATED', index: i };
+    }
+
+    const linePrev = e.line_prev_hash as string;
+    const lineEvent = e.line_event_hash as string;
+    const sig = e.signature as string;
+    const canonical = e.canonical_json as string;
+
+    // (2) event hash binds the canonical JSON.
+    if (lineEvent !== lineBlake3Hex(canonical)) {
+      return { authenticated: false, reason: 'SLICE_SIGNATURE_INVALID', index: i };
+    }
+
+    // (3) line chain link.
+    const expectedPrev: string = prevLine === null ? 'genesis' : lineBlake3Hex(prevLine);
+    if (linePrev !== expectedPrev) {
+      return { authenticated: false, reason: 'SLICE_SIGNATURE_INVALID', index: i };
+    }
+
+    // (4) signature over `${prev}|${event}`.
+    if (!verifyLineSignature(linePrev, lineEvent, sig, signingPublicKeyHex)) {
+      return { authenticated: false, reason: 'SLICE_SIGNATURE_INVALID', index: i };
+    }
+
+    prevLine = `${linePrev}|${lineEvent}|${sig}|${canonical}`;
+  }
+
+  return { authenticated: true };
 }

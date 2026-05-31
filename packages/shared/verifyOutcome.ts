@@ -8,10 +8,15 @@
 // LABELING RULE: final_status="verified" is reachable for a v2 precommit-anchored
 // death-drop outcome ONLY when ALL of {receipt_authenticity, rng_commit_reveal,
 // outcome_derivation, precommit_anchoring, chronicle_inclusion} pass — which
-// requires a CHAIN-VERIFIED chronicle slice proving commit < death < reveal (#104)
-// AND a supplied auth pubkey. v1/legacy receipts NEVER reach "verified", and a
-// receipt-only / no-slice caller caps at rng_consistent (ORDERING_NOT_CHAIN_PROVEN).
-// "verified" never rests on caller-supplied ordinals — only on the verified slice.
+// requires a chronicle slice that is BOTH chain-consistent (commit < death <
+// reveal, #104) AND signature-AUTHENTICATED against the published
+// signing_public_key_hex (#107), plus a receipt signature that verifies against
+// that SAME signing key. v1/legacy receipts NEVER reach "verified"; a receipt-only
+// / no-slice caller caps at rng_consistent (ORDERING_NOT_CHAIN_PROVEN); an
+// authentic slice with NO signing pubkey caps at rng_consistent
+// (SLICE_NOT_AUTHENTICATED). "verified" never rests on caller-supplied ordinals
+// or an unsigned/forgeable slice — only on the signature-authenticated slice +
+// the published signing key.
 
 import { blake3 } from '@noble/hashes/blake3';
 import * as nodeCrypto from 'node:crypto';
@@ -21,6 +26,7 @@ import { computeDeathDrops, type ItemForDrop } from './dropPolicy.js';
 import type { MapName } from './http.js';
 import {
   verifyGlobalChainSlice,
+  verifySignedChainSlice,
   type ChronicleEntry,
 } from './chronicleChain.js';
 
@@ -76,7 +82,21 @@ export type OutcomeVerificationContext = {
   revealSeed?: string;
   // Raw 32-byte Ed25519 public key (hex) used to verify the receipt signature.
   // When absent, receipt_authenticity stays "not_checked".
+  //
+  // NOTE (#107): receipts are signed by the raw-SEED Ed25519 key (the chronicle
+  // signing key), NOT the blake3-derived auth/token key. `authPublicKeyHex` is
+  // retained for legacy callers; prefer `signingPublicKeyHex` for both receipt
+  // AND chronicle-slice signature verification. When only `authPublicKeyHex` is
+  // supplied, the verifier still attempts it for receipt_authenticity.
   authPublicKeyHex?: string;
+  // Raw 32-byte Ed25519 signing public key (hex) — the published
+  // `signing_public_key_hex` (/v1/transparency). Signs BOTH receipts and
+  // chronicle events. Used to (a) AUTHENTICATE the chronicle slice
+  // (verifySignedChainSlice) and (b) verify receipt_authenticity (the CORRECT
+  // key for receipts). When absent, the slice stays unauthenticated
+  // (SLICE_NOT_AUTHENTICATED) and "verified" is unreachable (ceiling
+  // rng_consistent).
+  signingPublicKeyHex?: string;
 };
 
 // ---------------------------------------------------------------------------
@@ -616,12 +636,15 @@ function verifyReceiptRngProof(
 //
 // "verified" is reachable ONLY when ALL of {precommit_anchoring,
 // rng_commit_reveal, outcome_derivation, receipt_authenticity,
-// chronicle_inclusion} pass — which needs a verified slice (ordered
-// commit<death<reveal) AND a supplied auth pubkey. Without a pubkey →
-// "rng_consistent" (+ PRECOMMIT_ANCHORED). With NO slice → "rng_consistent" (+
-// ORDERING_NOT_CHAIN_PROVEN, unchanged receipt-only ceiling). Reveal absent from
-// the slice → "replay_consistent" (+ REVEAL_NOT_PUBLISHED). Genuine
-// tamper/mis-order/broken-link → "failed".
+// chronicle_inclusion} pass — which needs a slice that is ordered
+// (commit<death<reveal) AND signature-AUTHENTICATED against the supplied
+// signing_public_key_hex (#107), plus a receipt signature verifying against the
+// same key. Without a signing pubkey (or with unsigned slice entries) the slice
+// is unauthenticated → "rng_consistent" (+ SLICE_NOT_AUTHENTICATED). With NO
+// slice → "rng_consistent" (+ ORDERING_NOT_CHAIN_PROVEN, receipt-only ceiling).
+// Reveal absent from the slice → "replay_consistent" (+ REVEAL_NOT_PUBLISHED).
+// A PRESENT-but-INVALID line signature → "failed" (+ SLICE_SIGNATURE_INVALID).
+// Genuine tamper/mis-order/broken-link → "failed".
 
 function isStringNonEmpty(v: unknown): v is string {
   return typeof v === 'string' && v.length > 0;
@@ -766,6 +789,9 @@ function verifyReceiptRngProofV2(
   let orderingProven = false; // commit < death < reveal all present + ordered
   let revealPendingInSlice = false; // slice verified, but no reveal event yet
   let chainBroken = false;
+  // #107: set true when the ordered slice's line-signatures authenticate against
+  // ctx.signingPublicKeyHex. Required (with binding+derivation) for "verified".
+  let sliceAuthenticated = false;
 
   if (!haveSlice) {
     // No chronicle slice supplied: receipt-only ceiling, unchanged from #101.
@@ -836,20 +862,42 @@ function verifyReceiptRngProofV2(
             reason_codes.push('PRECOMMIT_OUT_OF_ORDER');
           } else {
             orderingProven = true;
-            // The slice's hash chain links and ordering are internally consistent,
-            // BUT the slice events are not signature-authenticated here: a hash
-            // chain is forgeable (anyone can build a self-consistent slice), so
-            // internal consistency does NOT prove this is the real, server-signed
-            // chronicle. Authenticating the slice (verifying each event's Ed25519
-            // signature against the chronicle-signing pubkey) is required before
-            // ordering can be trusted — tracked as a follow-up. Until then
-            // chronicle_inclusion stays "not_checked" (SLICE_NOT_AUTHENTICATED),
-            // precommit_anchoring cannot reach "pass", and "verified" is
-            // UNREACHABLE. Mis-order / broken-chain above still fail (they catch
-            // inconsistent input); only a fully-consistent slice lands here.
-            chronicle_inclusion = 'not_checked';
-            precommit_anchoring = 'not_checked';
-            reason_codes.push('SLICE_NOT_AUTHENTICATED');
+            // The slice's hash chain links and ordering are internally consistent.
+            // A hash chain alone is forgeable (anyone can build a self-consistent
+            // slice), so internal consistency does NOT prove this is the real,
+            // server-emitted chronicle. We AUTHENTICATE the slice (#107) by
+            // verifying each line's Ed25519 signature against the published
+            // signing pubkey. Three outcomes:
+            //   - authenticated → ordering is TRUSTED: chronicle_inclusion='pass';
+            //     precommit_anchoring becomes 'pass' below iff the binding +
+            //     derivation also pass (handled after the binding block).
+            //   - signatures PRESENT but INVALID → tamper: chronicle_inclusion
+            //     ='fail' + SLICE_SIGNATURE_INVALID → final_status failed.
+            //   - no signing pubkey / unsigned entries → unchanged honest floor:
+            //     chronicle_inclusion='not_checked' + SLICE_NOT_AUTHENTICATED →
+            //     caps at rng_consistent (NOT verified, NOT failed).
+            if (isStringNonEmpty(ctx.signingPublicKeyHex)) {
+              const auth = verifySignedChainSlice(entries, ctx.signingPublicKeyHex);
+              if (auth.authenticated) {
+                sliceAuthenticated = true;
+                chronicle_inclusion = 'pass';
+                // precommit_anchoring resolved after binding/derivation.
+                precommit_anchoring = 'not_checked';
+              } else if (auth.reason === 'SLICE_SIGNATURE_INVALID') {
+                chronicle_inclusion = 'fail';
+                precommit_anchoring = 'fail';
+                reason_codes.push('SLICE_SIGNATURE_INVALID');
+              } else {
+                chronicle_inclusion = 'not_checked';
+                precommit_anchoring = 'not_checked';
+                reason_codes.push('SLICE_NOT_AUTHENTICATED');
+              }
+            } else {
+              // No signing pubkey supplied: cannot authenticate the slice.
+              chronicle_inclusion = 'not_checked';
+              precommit_anchoring = 'not_checked';
+              reason_codes.push('SLICE_NOT_AUTHENTICATED');
+            }
           }
         }
       }
@@ -968,8 +1016,17 @@ function verifyReceiptRngProofV2(
   }
 
   // ----- receipt authenticity (Ed25519 over prev_hash|event_hash) -----
+  // KEY-BUG FIX (#107): receipts are signed by the raw-SEED signing key
+  // (signing_public_key_hex), NOT the blake3-derived auth/token key. Verify
+  // against signingPublicKeyHex; fall back to authPublicKeyHex only for legacy
+  // callers that supply just the auth key. No key at all → not_checked.
+  const receiptVerifyKey = isStringNonEmpty(ctx.signingPublicKeyHex)
+    ? ctx.signingPublicKeyHex
+    : isStringNonEmpty(ctx.authPublicKeyHex)
+      ? ctx.authPublicKeyHex
+      : null;
   let receipt_authenticity: CheckStatus;
-  if (!isStringNonEmpty(ctx.authPublicKeyHex)) {
+  if (receiptVerifyKey === null) {
     receipt_authenticity = 'not_checked';
     reason_codes.push('RECEIPT_SIGNATURE_NOT_CHECKED');
   } else if (
@@ -984,22 +1041,31 @@ function verifyReceiptRngProofV2(
       receipt['prev_hash'] as string,
       receipt['event_hash'] as string,
       receipt['signature'] as string,
-      ctx.authPublicKeyHex
+      receiptVerifyKey
     );
     receipt_authenticity = ok ? 'pass' : 'fail';
     if (!ok) reason_codes.push('RECEIPT_SIGNATURE_INVALID');
+    // Legacy note: only the (wrong-for-receipts) auth key was supplied.
+    if (!isStringNonEmpty(ctx.signingPublicKeyHex) && isStringNonEmpty(ctx.authPublicKeyHex)) {
+      reason_codes.push('RECEIPT_SIGNATURE_LEGACY_AUTH_KEY');
+    }
   }
 
   // ----- precommit_anchoring -----
-  // "pass" requires an AUTHENTICATED, chain-ordered slice. Authenticating the
-  // slice (verifying each chronicle event's Ed25519 signature against the
-  // chronicle-signing pubkey) is NOT implemented yet — a hash-linked slice is
-  // forgeable on its own — so anchoring stays "not_checked" (SLICE_NOT_AUTHENTICATED,
-  // set in the slice block) even for a consistent, correctly ordered slice, and
-  // "verified" is UNREACHABLE. precommit_anchoring keeps the value set by the slice
-  // block: "not_checked" on the consistent path, "fail" on mis-order / broken chain.
+  // "pass" requires an AUTHENTICATED, chain-ordered slice (#107): the ordered
+  // slice's line-signatures verified against the published signing pubkey AND the
+  // commit binding + outcome derivation pass. Only then is the commit-before-
+  // outcome ordering TRUSTED (not merely self-consistent). An unauthenticated
+  // slice keeps the "not_checked" set in the slice block (caps at rng_consistent);
+  // mis-order / broken chain / invalid signature keep "fail".
   const bindingAndDerivationOk =
     rng_commit_reveal === 'pass' && outcome_derivation === 'pass';
+
+  if (sliceAuthenticated && bindingAndDerivationOk && haveReveal && preimageOk) {
+    // Authenticated slice proves commit<death<reveal; binding+derivation prove
+    // the outcome was derived from that committed reveal. Anchoring is PROVEN.
+    precommit_anchoring = 'pass';
+  }
 
   // ----- final_status -----
   const hardFail =
@@ -1010,17 +1076,29 @@ function verifyReceiptRngProofV2(
     chainBroken ||
     !preimageOk;
 
+  // "verified" is reachable ONLY when ALL five checks pass — which requires an
+  // AUTHENTICATED slice (against the published signing key) + receipt
+  // authenticity (also against the signing key) + binding/derivation. It NEVER
+  // rests on a caller-asserted ordinal or an unsigned/forgeable slice.
+  const allPass =
+    precommit_anchoring === 'pass' &&
+    rng_commit_reveal === 'pass' &&
+    outcome_derivation === 'pass' &&
+    receipt_authenticity === 'pass' &&
+    chronicle_inclusion === 'pass';
+
   let final_status: FinalStatus;
   if (hardFail) {
     final_status = 'failed';
+  } else if (allPass) {
+    final_status = 'verified';
   } else if (revealPendingInSlice || !haveReveal) {
     // Reveal pending or absent: nothing to anchor offline yet. NOT a failure.
     final_status = 'replay_consistent';
   } else if (bindingAndDerivationOk) {
-    // Commit/reveal binding + outcome derivation verified. Ordering, when a slice
-    // is supplied, is at best consistent-but-UNAUTHENTICATED → caps at
-    // rng_consistent. "verified" is not reachable until the slice is authenticated
-    // (chronicle-event signatures verified). Receipt-only callers also cap here.
+    // Commit/reveal binding + outcome derivation verified, but the slice is
+    // unauthenticated (no signing pubkey / unsigned) or receipt authenticity is
+    // not checked → caps at rng_consistent. Receipt-only callers also cap here.
     final_status = 'rng_consistent';
   } else {
     final_status = 'replay_consistent';
