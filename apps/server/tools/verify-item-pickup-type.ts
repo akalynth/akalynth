@@ -1,16 +1,21 @@
-// Verify Item Pickup Type — mob-loot item_type survives materialization
+// Verify Item Pickup Type — item_type survives materialization at pickup
 //
-// Guards the fix that mob loot (`*_goo`, `slime`), which is never `item_minted`,
-// persists with its real item_type instead of 'unknown'. The type is carried on
-// the `item_added_to_inventory` pickup receipt and recorded by the materializer.
+// Since #82, mob loot (`*_goo`, `slime`) is now emitted as `item_minted` at
+// spawn time, so each item has a durable `items` row before pickup — the same
+// as shop and legendary items. The `item_added_to_inventory` handler still
+// carries item_type for backward-compat with any old `mob_loot_spawned`
+// receipts on existing chains (those have no materializer, so items row is
+// created at pickup via the type carried on the pickup receipt).
 //
 // Drives the REAL materializer against a real (in-memory) SQLite schema. Checks:
-//   1. A pickup receipt carrying item_type creates an items row with that type.
+//   1. A pickup receipt carrying item_type creates an items row with that type
+//      (backward-compat path for old mob_loot_spawned receipts).
 //   2. Backward-compat: a pickup receipt WITHOUT item_type falls back to 'unknown'
 //      (so replay of older chains is unchanged).
 //   3. The fallback never clobbers a minted item: when the real item_minted row
-//      already exists, a later item_added_to_inventory without item_type is a
-//      no-op (INSERT OR IGNORE) and the real type is preserved.
+//      already exists (as all mob loot now has at spawn), a later
+//      item_added_to_inventory without item_type is a no-op (INSERT OR IGNORE)
+//      and the real type is preserved.
 
 import Database from 'better-sqlite3';
 import { initSchema } from '../src/persist/schema.js';

@@ -164,7 +164,7 @@ export function tickMobRespawns(): MobState[] {
 export interface MobLootWriteInput {
   player_id?: string;
   actor_id?: string;
-  action: 'mob_loot_spawned';
+  action: 'item_minted';
   inputs: Record<string, unknown>;
   result: 'ok';
 }
@@ -174,6 +174,8 @@ export interface MobLootDeps {
   writeReceipt: (input: MobLootWriteInput) => AuditReceipt;
   computeReceiptHash: (receipt: object) => string;
   generateItemId: (receiptHash: string) => string;
+  /** Optional meta payload forwarded into the item_minted receipt. */
+  meta?: Record<string, unknown>;
 }
 
 export interface MobLootSpawn {
@@ -182,16 +184,24 @@ export interface MobLootSpawn {
   map: MapName;
   x: number;
   y: number;
+  /** Optional meta payload forwarded from MobLootDeps. */
+  meta?: Record<string, unknown>;
 }
 
 /**
- * Spawn one mob-loot world item and emit its `mob_loot_spawned` receipt.
+ * Spawn one mob-loot world item and emit its `item_minted` receipt.
+ *
+ * Emitting `item_minted` (instead of the old `mob_loot_spawned`) triggers the
+ * existing `handleItemMinted` materializer, which runs
+ * `INSERT OR IGNORE INTO items (item_id, item_type, created_at, genesis_receipt, meta_json)`.
+ * This means mob-loot items gain a durable `items` DB row at spawn time — before
+ * any pickup — matching how shop and legendary items work.
  *
  * The item_id is DERIVED from the receipt hash (the same convention as
- * `item_minted`, see persist/materializers `generateItemId`) — NOT from
- * wall-clock time. This makes the id deterministic, replay-safe, and unique
- * per spawn (each receipt's content differs, so each hash differs). Because the
- * id is derived from the hash, the receipt body must NOT carry `item_id`
+ * `item_minted` shop/legendary mints, see persist/materializers `generateItemId`)
+ * — NOT from wall-clock time. This makes the id deterministic, replay-safe, and
+ * unique per spawn (each receipt's content differs, so each hash differs). Because
+ * the id is derived from the hash, the receipt body must NOT carry `item_id`
  * (that would be a hash cycle).
  *
  * Pure: it writes a receipt and returns the derived loot; the caller is
@@ -205,12 +215,13 @@ export function spawnMobLoot(
   y: number,
   deps: MobLootDeps
 ): MobLootSpawn {
+  const meta = deps.meta ?? null;
   const receipt = deps.writeReceipt({
     player_id: attackerId,
-    action: 'mob_loot_spawned',
-    inputs: { item_type: itemType, map, x, y },
+    action: 'item_minted',
+    inputs: { item_type: itemType, meta, map, x, y },
     result: 'ok',
   });
   const itemId = deps.generateItemId(deps.computeReceiptHash(receipt));
-  return { itemId, itemType, map, x, y };
+  return { itemId, itemType, map, x, y, meta: meta ?? undefined };
 }

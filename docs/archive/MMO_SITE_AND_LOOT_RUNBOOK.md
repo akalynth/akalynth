@@ -85,36 +85,40 @@ Committed on branch **`feat/mmo-site-shop`** as `ea8226b` (`feat(mmo-site): Akal
 
 Mob loot (the per-kill `<mob>_goo` and the guaranteed `training_slime` `slime` trophy) previously generated item ids from wall-clock time (`loot:<type>:${Date.now()}`) and **stored `item_id` in the `mob_loot_spawned` receipt body** — inconsistent with the receipt-derivation convention used by `item_minted`/shop/legendary mints (`generateItemId(computeReceiptHash(receipt))`, see `apps/server/src/persist/materializers.ts`).
 
-The fix derives the id from the receipt hash instead. This makes ids **deterministic, replay-safe, and unique per spawn** (eliminating the theoretical same-tile/same-ms collision), and removes `item_id` from the receipt body (it would otherwise be a hash cycle).
+PR #81 fixed the id derivation: ids are now `generateItemId(computeReceiptHash(receipt))` — deterministic, replay-safe, no `item_id` in the receipt body (hash-cycle guard). That PR still used `mob_loot_spawned`, which had **no materializer**, so no `items` DB row was created until pickup.
 
-Files:
+**PR #82 (this change)** replaces `mob_loot_spawned` with `item_minted` in `spawnMobLoot`. The existing `handleItemMinted` materializer now fires at spawn time, running `INSERT OR IGNORE INTO items (item_id, item_type, created_at, genesis_receipt, meta_json)`. This gives mob-loot items a durable `items` row **before** any pickup — matching how shop and legendary items work.
 
-- `apps/server/src/world/mobs.ts` — new pure helper `spawnMobLoot(...)` (single source of truth for goo + slime; dependencies injected for testability).
-- `apps/server/src/index.ts` — both loot call sites now use `spawnMobLoot`.
-- `apps/server/tools/verify-mob-loot.ts` — focused spawn-path test (new).
-- `apps/server/package.json` — `verify:mob-loot` script.
+Files changed in #82:
 
-**Replay safety:** `mob_loot_spawned` has **no materializer** — the persisted `items` row is created at pickup from the id stored in `item_added_to_inventory`'s body, so replay is unaffected. Nothing keys off the old `loot:` id prefix (verified).
+- `apps/server/src/world/mobs.ts` — `spawnMobLoot` now emits `action: 'item_minted'`; `MobLootWriteInput.action` typed as `'item_minted'`; optional `meta` added to `MobLootDeps` and `MobLootSpawn`.
+- `apps/server/src/index.ts` — inline comments updated; pickup-path comment updated for backward-compat note.
+- `apps/server/tools/verify-mob-loot.ts` — action assertion updated to `item_minted`; materializer integration test added.
+- `apps/server/tools/verify-item-pickup-type.ts` — header comment updated to reflect new design.
+
+**Replay safety:** Old `mob_loot_spawned` receipts on existing chains have **no materializer** (they were always a no-op for DB state). They continue to replay without error; the `items` row for those items is still created at pickup via `item_added_to_inventory` carrying `item_type`. New receipts create the row at spawn. No migration needed.
 
 ### Receipt / economy / protocol impact
 
-- **Receipt schema:** `mob_loot_spawned.inputs` no longer carries `item_id` (now hash-derived). No materializer change.
-- **Economy:** none — ids only.
+- **Receipt schema:** `spawnMobLoot` now writes `action: 'item_minted'` instead of `mob_loot_spawned`. The `inputs` carry `item_type`, `meta`, `map`, `x`, `y`. No `item_id` in the body (hash-cycle guard preserved).
+- **Economy:** none — drop rates, quantities, gold values, and item types are unchanged.
 - **Anti-cheat / protocol:** none — `worldItemAdded` still carries the id as an opaque string.
 
 ### Step B1: Verify
 
 ```bash
 cd apps/server
-npx tsc --noEmit -p tsconfig.json   # type-check (expect exit 0)
-npm run verify:mob-loot             # focused spawn-path test (6 checks)
+npx tsc --noEmit -p tsconfig.json       # type-check (expect exit 0)
+npm run verify:mob-loot                 # spawn-path + materializer tests (8 checks)
+npm run verify:item-pickup-type         # pickup backward-compat tests (3 checks)
+npm run verify:quick                    # spine/chain integrity
 ```
 
-`verify:mob-loot` asserts: receipt body omits `item_id`; `itemId === generateItemId(computeReceiptHash(receipt))` (real functions); 32-char hex format; distinct ids for identical loot at the same tile; deterministic/replay-safe id sequence; returned loot mirrors requested type/position.
+`verify:mob-loot` asserts: receipt body omits `item_id`; action is `item_minted`; `itemId === generateItemId(computeReceiptHash(receipt))` (real functions); 32-char hex format; distinct ids for identical loot at the same tile; deterministic/replay-safe id sequence; returned loot mirrors requested type/position; materializer creates `items` row at spawn with correct `item_type`.
 
 ### Git state
 
-These changes are **unstaged** in the working tree (the new test file is untracked), alongside other pre-existing edits. Not committed, not pushed.
+Committed on branch `codex/issue-82-mint-mob-loot-via-item-minted`. Not pushed.
 
 ---
 
