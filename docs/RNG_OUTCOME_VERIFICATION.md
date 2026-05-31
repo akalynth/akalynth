@@ -334,7 +334,7 @@ derivedSeed = rngDeriveSeedV2(reveal, worldId, eventDomain, eventPreimageHash)
 `derivedSeed` is domain-separated and versioned so it can never collide with the
 v0/v1 receipt-hash seed.
 
-### Ordering IS chain-proven (#104) — `verified` is reachable
+### Ordering is chain-CHECKED, but the slice is not authenticated — `verified` is NOT reachable yet
 
 For the proof to mean "the server committed *before* the outcome," the commit must
 be provably ordered before the `combat_resolved` outcome, with the reveal after it:
@@ -365,19 +365,31 @@ The relevant events are matched as follows. The `death` outcome event is located
 (the combat seed) AND `actor === did:akalynth:<victim>` (the victim DID, derived from
 `inputs.target_player_id`). The `rng_commit` and `rng_reveal` are the same victim
 actor's `death_drop:v1` events. Ordering requires
-`commit_pos < death_pos < reveal_pos` within the verified slice; a violation (e.g. a
-commit recorded **after** the death) → `failed` (`PRECOMMIT_OUT_OF_ORDER`). This is
-the mis-order case that the #101 downgrade could **not** catch.
+`commit_pos < death_pos < reveal_pos` within the slice; a violation (e.g. a commit
+recorded **after** the death) → `failed` (`PRECOMMIT_OUT_OF_ORDER`), and a broken
+chain link → `failed` (`CHRONICLE_CHAIN_BROKEN`). These catch *inconsistent* input.
 
-### Verifier states (#104)
+**The catch — slice authentication.** Re-checking the global hash chain proves the
+slice is *internally consistent*, but a hash chain is **forgeable**: anyone can
+construct a self-consistent slice with any ordering. The chronicle events are signed
+by the server (`chronicle_append`), but this verifier does **not yet verify those
+signatures**. So a consistent, correctly-ordered slice is only
+*consistent-but-unauthenticated* — it does **not** prove the slice is the real,
+server-signed chronicle. Accordingly the verifier sets `chronicle_inclusion` and
+`precommit_anchoring` to **`not_checked`** (`SLICE_NOT_AUTHENTICATED`), and
+**`final_status` can NEVER reach `verified`** — the ceiling is `rng_consistent`.
+Authenticating the slice (verifying each chronicle event's Ed25519 signature against
+the chronicle-signing pubkey, and exposing that pubkey) is the remaining gate — see
+the follow-up #107. Mis-order / broken-chain / missing-death still `failed`.
+
+### Verifier states (this release)
 
 `verifyOutcomeFromReceipt(receipt, context?)` with
 `context = { chronicle?: ChronicleEntry[], revealSeed?, authPublicKeyHex? }`:
 
 | Situation | chronicle_inclusion | precommit_anchoring | final_status | reason code |
 |---|---|---|---|---|
-| verified slice (commit<death<reveal) + binding/derivation + **pubkey** | pass | pass | **verified** | `PRECOMMIT_ANCHORED` |
-| verified slice + binding/derivation, **no pubkey** | pass | pass | **rng_consistent** | `PRECOMMIT_ANCHORED`, `RECEIPT_SIGNATURE_NOT_CHECKED` |
+| consistent ordered slice + binding/derivation (± pubkey) | not_checked | not_checked | **rng_consistent** | `SLICE_NOT_AUTHENTICATED` |
 | commit recorded **after** the death in the chain | fail | fail | **failed** | `PRECOMMIT_OUT_OF_ORDER` |
 | broken global-chain link in the slice | fail | fail | **failed** | `CHRONICLE_CHAIN_BROKEN` |
 | death event missing / `drop_seed_hash` mismatch | fail | fail | **failed** | `OUTCOME_EVENT_NOT_FOUND` |
@@ -389,20 +401,18 @@ the mis-order case that the #101 downgrade could **not** catch.
 | `event_preimage_hash` != recomputed seed | (n/a) | fail | **failed** | `EVENT_PREIMAGE_HASH_MISMATCH` |
 
 `receipt_authenticity` (Ed25519 over `prev_hash|event_hash`, supplied via
-`authPublicKeyHex` / CLI `--pubkey`) gates `verified`: a bad signature → `failed`, a
-missing pubkey caps a fully-anchored proof at `rng_consistent` (+ `PRECOMMIT_ANCHORED`).
+`authPublicKeyHex` / CLI `--pubkey`) is still computed — a bad signature → `failed` —
+but a passing signature does **not** lift the ceiling above `rng_consistent` while the
+slice is unauthenticated.
 
-### When "verified" is reachable
+### When "verified" becomes reachable
 
-`verified` requires **all five** of `{precommit_anchoring, rng_commit_reveal,
-outcome_derivation, receipt_authenticity, chronicle_inclusion}` to pass — i.e. a
-chain-verified slice (ordered `commit < death < reveal`), a commit that binds the
-reveal, a matching derivation/outcome, AND a supplied auth pubkey whose signature
-verifies. It can **never** rest on caller-supplied ordinals — only on the verified
-slice + supplied pubkey. **Receipt-only / no-slice callers still cap at
-`rng_consistent`** (`ORDERING_NOT_CHAIN_PROVEN`), so existing callers are unaffected.
-v1/legacy receipts are **unchanged**: never `verified`, `precommit_anchoring` stays
-`fail`, replay/rng-consistent at best.
+Not in this release. `verified` requires `precommit_anchoring` + `chronicle_inclusion`
+to pass, which requires an **authenticated** chain-ordered slice (chronicle-event
+signatures verified) — follow-up #107 (completes #104). Until then the v2 ceiling is
+`rng_consistent`, and receipt-only / no-slice callers are unaffected
+(`ORDERING_NOT_CHAIN_PROVEN`). v1/legacy receipts are **unchanged**: never `verified`,
+`precommit_anchoring` stays `fail`, replay/rng-consistent at best.
 
 ### What v2 proves — and does not (honest residual)
 

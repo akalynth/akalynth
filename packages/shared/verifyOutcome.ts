@@ -836,10 +836,20 @@ function verifyReceiptRngProofV2(
             reason_codes.push('PRECOMMIT_OUT_OF_ORDER');
           } else {
             orderingProven = true;
-            // chronicle_inclusion passes: chain verified + events found + ordered.
-            chronicle_inclusion = 'pass';
-            // precommit_anchoring is gated below on the binding + derivation.
+            // The slice's hash chain links and ordering are internally consistent,
+            // BUT the slice events are not signature-authenticated here: a hash
+            // chain is forgeable (anyone can build a self-consistent slice), so
+            // internal consistency does NOT prove this is the real, server-signed
+            // chronicle. Authenticating the slice (verifying each event's Ed25519
+            // signature against the chronicle-signing pubkey) is required before
+            // ordering can be trusted — tracked as a follow-up. Until then
+            // chronicle_inclusion stays "not_checked" (SLICE_NOT_AUTHENTICATED),
+            // precommit_anchoring cannot reach "pass", and "verified" is
+            // UNREACHABLE. Mis-order / broken-chain above still fail (they catch
+            // inconsistent input); only a fully-consistent slice lands here.
+            chronicle_inclusion = 'not_checked';
             precommit_anchoring = 'not_checked';
+            reason_codes.push('SLICE_NOT_AUTHENTICATED');
           }
         }
       }
@@ -980,20 +990,16 @@ function verifyReceiptRngProofV2(
     if (!ok) reason_codes.push('RECEIPT_SIGNATURE_INVALID');
   }
 
-  // ----- precommit_anchoring: passes ONLY when chronicle ordering proved AND the
-  //       commit binds the reveal AND the derivation/outcome checks pass. -----
+  // ----- precommit_anchoring -----
+  // "pass" requires an AUTHENTICATED, chain-ordered slice. Authenticating the
+  // slice (verifying each chronicle event's Ed25519 signature against the
+  // chronicle-signing pubkey) is NOT implemented yet — a hash-linked slice is
+  // forgeable on its own — so anchoring stays "not_checked" (SLICE_NOT_AUTHENTICATED,
+  // set in the slice block) even for a consistent, correctly ordered slice, and
+  // "verified" is UNREACHABLE. precommit_anchoring keeps the value set by the slice
+  // block: "not_checked" on the consistent path, "fail" on mis-order / broken chain.
   const bindingAndDerivationOk =
     rng_commit_reveal === 'pass' && outcome_derivation === 'pass';
-  if (orderingProven) {
-    if (chronicle_inclusion === 'pass' && bindingAndDerivationOk && preimageOk) {
-      precommit_anchoring = 'pass';
-      reason_codes.push('PRECOMMIT_ANCHORED');
-    } else {
-      // Ordering proven but the binding/derivation failed → not anchored. The
-      // hardFail below turns the binding/derivation failure into "failed".
-      precommit_anchoring = 'fail';
-    }
-  }
 
   // ----- final_status -----
   const hardFail =
@@ -1008,30 +1014,18 @@ function verifyReceiptRngProofV2(
   if (hardFail) {
     final_status = 'failed';
   } else if (revealPendingInSlice || !haveReveal) {
-    // Reveal pending (in a verified slice) OR no slice/no reveal at all: nothing
-    // to anchor offline yet. NOT a failure.
+    // Reveal pending or absent: nothing to anchor offline yet. NOT a failure.
     final_status = 'replay_consistent';
-  } else if (
-    precommit_anchoring === 'pass' &&
-    rng_commit_reveal === 'pass' &&
-    outcome_derivation === 'pass' &&
-    chronicle_inclusion === 'pass' &&
-    receipt_authenticity === 'pass'
-  ) {
-    // ALL five gates pass: ordering chain-proven + binding/derivation +
-    // authenticated. "verified" is now reachable.
-    final_status = 'verified';
-  } else if (precommit_anchoring === 'pass') {
-    // Ordering + binding/derivation proven, but authenticity not checked (no
-    // pubkey): anchored, ceiling rng_consistent.
-    final_status = 'rng_consistent';
   } else if (bindingAndDerivationOk) {
-    // Binding + derivation verified, ordering NOT chain-proven (no slice):
-    // unchanged receipt-only ceiling.
+    // Commit/reveal binding + outcome derivation verified. Ordering, when a slice
+    // is supplied, is at best consistent-but-UNAUTHENTICATED → caps at
+    // rng_consistent. "verified" is not reachable until the slice is authenticated
+    // (chronicle-event signatures verified). Receipt-only callers also cap here.
     final_status = 'rng_consistent';
   } else {
     final_status = 'replay_consistent';
   }
+  void orderingProven; // retained as a slice-consistency signal; no longer lifts status
 
   return {
     receipt_shape_valid,

@@ -206,23 +206,27 @@ const cases: Case[] = [
   },
 
   // ---- #104: v2 precommit-anchored proof fixtures (chronicle-GLOBAL-CHAIN-aware) ----
-  // Ordering is now proven by the verifier RE-CHECKING the chronicle global hash
+  // Ordering is checked by the verifier RE-CHECKING the chronicle global hash
   // chain (Seal 2.3) over a supplied slice (same computation as
   // verify-chronicle-chain.ts) and requiring commit < death(outcome) < reveal by
-  // link-checked POSITION. "verified" is reachable with a valid slice + pubkey.
+  // link-checked POSITION. BUT a hash-linked slice is forgeable on its own (the
+  // events are not signature-authenticated here), so a consistent slice yields
+  // SLICE_NOT_AUTHENTICATED and "verified" is UNREACHABLE — ceiling rng_consistent.
+  // Slice authentication (verifying chronicle-event signatures) is the follow-up.
   {
-    // Valid ordered slice (commit<death<reveal) + valid pubkey → VERIFIED.
+    // Valid ordered slice + valid pubkey: ordering consistent but slice
+    // UNAUTHENTICATED → rng_consistent, NOT verified.
     file: 'rng-v2-anchored-verified.json',
     contextFile: 'rng-v2-slice-valid-pubkey.context.json',
-    expectFinal: 'verified',
-    expectReasons: ['PRECOMMIT_ANCHORED'],
+    expectFinal: 'rng_consistent',
+    expectReasons: ['SLICE_NOT_AUTHENTICATED'],
   },
   {
-    // Valid ordered slice, NO pubkey → rng_consistent + PRECOMMIT_ANCHORED.
+    // Valid ordered slice, NO pubkey → rng_consistent, slice unauthenticated.
     file: 'rng-v2-anchored-verified.json',
     contextFile: 'rng-v2-slice-valid-no-pubkey.context.json',
     expectFinal: 'rng_consistent',
-    expectReasons: ['PRECOMMIT_ANCHORED', 'RECEIPT_SIGNATURE_NOT_CHECKED'],
+    expectReasons: ['SLICE_NOT_AUTHENTICATED', 'RECEIPT_SIGNATURE_NOT_CHECKED'],
   },
   {
     // Commit recorded AFTER the death in the verified chain → FAILED. This is the
@@ -268,19 +272,19 @@ const cases: Case[] = [
     file: 'rng-v2-tampered-rng-out.json',
     contextFile: 'rng-v2-slice-valid-no-pubkey.context.json',
     expectFinal: 'failed',
-    expectReasons: ['RNG_OUTPUT_MISMATCH', 'RECEIPT_SIGNATURE_NOT_CHECKED'],
+    expectReasons: ['RNG_OUTPUT_MISMATCH', 'RECEIPT_SIGNATURE_NOT_CHECKED', 'SLICE_NOT_AUTHENTICATED'],
   },
   {
     file: 'rng-v2-tampered-outcome.json',
     contextFile: 'rng-v2-slice-valid-no-pubkey.context.json',
     expectFinal: 'failed',
-    expectReasons: ['OUTCOME_MISMATCH', 'RECEIPT_SIGNATURE_NOT_CHECKED'],
+    expectReasons: ['OUTCOME_MISMATCH', 'RECEIPT_SIGNATURE_NOT_CHECKED', 'SLICE_NOT_AUTHENTICATED'],
   },
   {
     file: 'rng-v2-precommit-mismatch.json',
     contextFile: 'rng-v2-slice-valid-no-pubkey.context.json',
     expectFinal: 'failed',
-    expectReasons: ['PRECOMMIT_COMMIT_MISMATCH', 'RECEIPT_SIGNATURE_NOT_CHECKED'],
+    expectReasons: ['PRECOMMIT_COMMIT_MISMATCH', 'RECEIPT_SIGNATURE_NOT_CHECKED', 'SLICE_NOT_AUTHENTICATED'],
   },
 ];
 
@@ -332,33 +336,22 @@ for (const c of cases) {
         );
       }
     } else {
-      // v2 invariant (#104): "verified" is reachable ONLY when ALL five gates
-      // pass — which requires a chain-verified slice (ordered commit<death<reveal)
-      // AND a supplied auth pubkey. It can NEVER rest on caller ordinals.
+      // v2 invariant (this release): "verified" is UNREACHABLE. A hash-linked
+      // chronicle slice is forgeable; until each slice event's signature is
+      // verified (slice authentication — a follow-up), ordering is not trusted,
+      // chronicle_inclusion/precommit_anchoring never reach "pass", and the v2
+      // ceiling is rng_consistent.
       if ((result.final_status as string) === 'verified') {
-        const allPass =
-          result.precommit_anchoring === 'pass' &&
-          result.chronicle_inclusion === 'pass' &&
-          result.rng_commit_reveal === 'pass' &&
-          result.outcome_derivation === 'pass' &&
-          result.receipt_authenticity === 'pass';
-        if (!allPass) {
-          throw new Error(
-            `[${label}] "verified" without all five gates passing: ${JSON.stringify({
-              precommit_anchoring: result.precommit_anchoring,
-              chronicle_inclusion: result.chronicle_inclusion,
-              rng_commit_reveal: result.rng_commit_reveal,
-              outcome_derivation: result.outcome_derivation,
-              receipt_authenticity: result.receipt_authenticity,
-            })}`
-          );
-        }
+        throw new Error(`[${label}] illegal "verified" — v2 slice is not authenticated yet`);
       }
-      // precommit_anchoring may only be "pass" when chronicle ordering was
-      // chain-proven (chronicle_inclusion === "pass").
-      if (result.precommit_anchoring === 'pass' && result.chronicle_inclusion !== 'pass') {
+      if (result.precommit_anchoring === 'pass') {
         throw new Error(
-          `[${label}] precommit_anchoring "pass" without chronicle_inclusion "pass"`
+          `[${label}] precommit_anchoring must not be "pass" (slice unauthenticated), got ${result.precommit_anchoring}`
+        );
+      }
+      if (result.chronicle_inclusion === 'pass') {
+        throw new Error(
+          `[${label}] chronicle_inclusion must not be "pass" (slice unauthenticated), got ${result.chronicle_inclusion}`
         );
       }
     }
