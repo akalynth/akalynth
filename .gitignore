@@ -79,3 +79,10 @@ verify-out/
 # asset-gen Python tooling and raw AI source dumps (local only, regenerable)
 tools/asset-gen/.venv/
 tools/asset-gen/**/_raw/
+
+# Raw high-res AI source dumps under assets-src (regenerable; processed 32px sprites are tracked)
+data/assets-src/**/_raw/
+
+# Compiled JS build artifacts of tracked .ts sources (regenerate via tsc/tsx)
+packages/shared/scripts/*.js
+packages/verification-spine/src/**/*.js
