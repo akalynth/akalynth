@@ -441,6 +441,17 @@ key. Without a signing pubkey (or with unsigned slice entries), the ceiling is
 caller-asserted ordinal or an unsigned/forgeable slice. v1/legacy receipts are
 **unchanged**: never `verified`, `precommit_anchoring` stays `fail`.
 
+**Trust model (read this).** The verifier authenticates against the
+`signing_public_key_hex` the **caller supplies** in `context` — it cannot, and does
+not, distinguish the genuine server key from any other key handed to it. So
+`verified` means precisely *"signed by the key you supplied"*, and is only
+meaningful when you supply the **authentic** key obtained from the authoritative
+`/v1/transparency` (`identity.signing_public_key_hex`). Supplying an attacker's key
+verifies an attacker's artifacts — that is the caller's responsibility, exactly as
+with any public-key signature check. The improvement #107 delivers is that
+`verified` is now anchored to a **cryptographic signature** against that key, not to
+forgeable hash-chain consistency.
+
 ### What v2 proves — and does not (honest residual)
 
 v2 proves: **the server committed to the seed before the outcome and derived the
