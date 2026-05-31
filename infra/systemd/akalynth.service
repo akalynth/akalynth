@@ -38,6 +38,9 @@ RuntimeDirectoryMode=0750
 ExecStartPre=/usr/bin/node -v
 ExecStartPre=/usr/bin/npm -v
 ExecStartPre=/usr/bin/test -f /opt/akalynth/dist/server/apps/server/src/index.js
+# Fail fast (not silently) if the chronicle signing key is missing.
+ExecStartPre=/usr/bin/test -f /etc/akalynth/chronicle.key
+ExecStartPre=/usr/bin/bash -c 'test -f /etc/akalynth/chronicle.key || { echo "FATAL: chronicle key missing at /etc/akalynth/chronicle.key; refusing to start" >&2; exit 1; }'
 ExecStartPre=/usr/bin/bash -c 'mkdir -p /var/lib/akalynth/{data,audit} && touch /var/lib/akalynth/audit/receipts.jsonl'
 
 ExecStart=/usr/bin/node /opt/akalynth/dist/server/apps/server/src/index.js

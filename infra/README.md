@@ -29,6 +29,13 @@ The Compose example in `infra/docker/compose.server.example.yml` keeps the
 container port bound to `127.0.0.1:3000` for a host-local reverse proxy. It
 does not publish the game server directly to the public network.
 
+The example sets `HOST=127.0.0.1` so the in-container bind matches the loopback
+port map. Note that the `127.0.0.1:3000:3000` port mapping is what actually
+keeps the server host-local: even with `HOST=0.0.0.0` (bind all container
+interfaces), the loopback port map negates the wider bind and the server stays
+reachable only from the host's loopback. `HOST=127.0.0.1` is the explicit,
+defense-in-depth choice and does not change the exposed surface.
+
 Useful checks:
 
 ```bash
