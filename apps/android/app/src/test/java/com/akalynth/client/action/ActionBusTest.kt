@@ -1,5 +1,6 @@
 package com.akalynth.client.action
 
+import com.akalynth.client.protocol.Direction
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
