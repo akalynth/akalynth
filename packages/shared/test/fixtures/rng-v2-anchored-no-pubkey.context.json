@@ -1,0 +1,13 @@
+{
+  "commitEvent": {
+    "seq": 10,
+    "rng_commit": "blake3:daf236cc11f0b62ef5ae7dd4722ff37d6a192e7d5229886341bf0c81620bf272",
+    "actor": "did:akalynth:victim-001"
+  },
+  "revealEvent": {
+    "seq": 30,
+    "rng_reveal": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "actor": "did:akalynth:victim-001"
+  },
+  "outcomeSeq": 20
+}

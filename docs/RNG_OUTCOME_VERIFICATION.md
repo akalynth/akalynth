@@ -300,3 +300,100 @@ derivation**: the drop seed is still the receipt-content hash described above, n
 the v1 reveal. Until a prior commitment anchor is bound to the outcome and carried
 in the receipt or chronicle, `precommit_anchoring` cannot move off `fail`, and the
 verifier cannot reach `verified`.
+
+## Precommit-anchored RNG proof v2 (#101)
+
+F2 (above) is addressed by an **opt-in** v2 scheme that binds the loot-drop seed to
+a chronicle-ordered precommit.
+
+### Feature flag (default OFF)
+
+`AKALYNTH_RNG_V2` (`parseBoolEnv`, default **false**). When unset/false, combat RNG
+output **and** the persisted receipt proof are **byte-identical** to the #100 v1
+path — proven by `cd apps/server && npm run verify:heat` (flag unset) and the
+unchanged #99/#100 fixtures in `tools/verify-outcome/test.ts`. v2 activates only
+when the flag is ON **and** the session carries a `death_drop:v1` reveal + commit +
+chronicle ref; otherwise it transparently falls back to v1.
+
+### Derivation
+
+```
+derivedSeed = rngDeriveSeedV2(reveal, worldId, eventDomain, eventPreimageHash)
+            = blake3("akalynth:rng:v2:derive\0" || reveal || worldId
+                       || eventDomain || eventPreimageHash)         -> blake3:<hex>
+```
+
+- `reveal` — the 32-byte secret the server committed to **on spawn** (`rng_commit`
+  chronicle event, `commit = rngCommitV1('death_drop:v1', actorDid, reveal)`).
+- `eventPreimageHash` — `computeReceiptHash(combatResolvedBase)`, the **same** seed
+  preimage as v1. The seed *preimage boundary* is unchanged; only the seed *value*
+  fed to `rngDrawU32Legacy` / `selectItemsToDrop` differs. A v2 seed-invariant test
+  asserts `combatResolvedBase`'s hash is byte-identical with and without the v2
+  envelope.
+
+`derivedSeed` is domain-separated and versioned so it can never collide with the
+v0/v1 receipt-hash seed.
+
+### Chronicle ordering requirement (commit < outcome < reveal)
+
+The proof is honest **only** because the commitment precedes the outcome and the
+reveal follows it, in chronicle order:
+
+- `rng_commit` (spawn) — **seq < outcome**.
+- `combat_resolved` (the loot outcome) — carries `inputs.rng_proof` v2 with
+  `precommit_ref:{ chronicle_seq, chronicle_hash, commit }`, `event_preimage_hash`,
+  `event_domain`, `world_id`, `rng_out`, and `derivation`. **It does NOT carry the
+  reveal secret** — publishing it early would break hiding for later kills in the
+  same session.
+- `rng_reveal` (disconnect) — **seq > outcome**; the verifier reads the reveal from
+  this chronicle event, not from the receipt.
+
+> **Seq-space caveat.** The chronicle log and the audit receipt log are separate
+> sequence spaces. The verifier orders against a single supplied ordinal space:
+> `context.commitEvent.seq`, `context.outcomeSeq` (defaults to the receipt's own
+> `sequence`), and `context.revealEvent.seq`. The server stamps a per-run monotonic
+> `chronicle_seq` onto each chronicle event for this purpose. Callers supplying
+> context are responsible for placing commit/outcome/reveal in one consistent
+> ordering.
+
+### Verifier states
+
+`verifyOutcomeFromReceipt(receipt, context?)` with
+`context = { commitEvent?, revealEvent?, outcomeSeq?, authPublicKeyHex? }`:
+
+| Situation | precommit_anchoring | receipt_authenticity | final_status | reason code |
+|---|---|---|---|---|
+| commit+reveal+valid pubkey, all checks pass | pass | pass | **verified** | — |
+| commit+reveal, no pubkey | pass | not_checked | **rng_consistent** | `PRECOMMIT_ANCHORED` |
+| commit present, reveal **not yet published** | not_checked | (either) | **replay_consistent** | `REVEAL_NOT_PUBLISHED` |
+| commit ordered after outcome / missing | fail | (either) | **failed** | `PRECOMMIT_OUT_OF_ORDER` / `PRECOMMIT_MISSING` |
+| `rngCommitV1(...) != precommit_ref.commit` | (fail) | (either) | **failed** | `PRECOMMIT_COMMIT_MISMATCH` |
+| `rng_out[i]` not derived from `derivedSeed` | — | — | **failed** | `RNG_OUTPUT_MISMATCH` |
+| recomputed drops != `dropped_item_ids` | — | — | **failed** | `OUTCOME_MISMATCH` |
+
+`receipt_authenticity` reuses the coordination-kernel signature scheme: Ed25519
+over `prev_hash|event_hash` with a raw 32-byte public key (supplied via
+`authPublicKeyHex` / the CLI `--pubkey`).
+
+### When "verified" is reachable
+
+`verified` requires **all** of `{precommit_anchoring, rng_commit_reveal,
+outcome_derivation, receipt_authenticity, chronicle_inclusion}` to pass — i.e. a
+supplied **auth pubkey** *and* the chronicle **commit + reveal** in order. Offline
+**without** a pubkey, `receipt_authenticity` stays `not_checked` and the result is
+capped at `rng_consistent` (+ `PRECOMMIT_ANCHORED`). It never trusts live server
+state — only the supplied pubkey + chronicle events.
+
+v1/legacy receipts are **unchanged**: they never reach `verified`,
+`precommit_anchoring` stays `fail`, and they remain replay/rng-consistent at best.
+
+### What v2 proves — and does not
+
+v2 proves: **the server committed to the seed before the outcome and derived the
+outcome from it.** v2 does **not** prove the seed was unbiased, that the server
+could not choose among multiple precommits, that no trust in the server is
+required, or that any client entropy was mixed in. In particular, the
+`death_drop:v1` precommit is **session-level**: a single reveal covers **all** kills
+in a session. That is an honest precommit-before-outcome, but it is **not**
+per-event unpredictability — knowing the reveal (after disconnect) lets anyone
+recompute every drop in that session.
