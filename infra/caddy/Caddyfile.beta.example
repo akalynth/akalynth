@@ -1,18 +1,16 @@
 # Akalynth reverse proxy — DEV box (ops-dev-01, 194.147.221.89)
 #
 # Provides a named public entry point for the development / staging game server.
-# Both names proxy to the same loopback port so the browser and API clients
-# use the same TLS-terminating host.
+# Both names proxy to the same loopback port. This dev lane is intentionally
+# plain HTTP so DNS can stay grey-cloud / DNS-only during early iteration.
 #
 # DNS prerequisites (Cloudflare, before caddy reload):
 #   A  beta.akalynth.com      →  194.147.221.89
 #   A  beta-api.akalynth.com  →  194.147.221.89
-# Cloudflare proxy mode: Full (strict) — chain is CF → Caddy → Node.
+# Cloudflare proxy mode: DNS-only — chain is browser/client → Caddy → Node.
 #
-# Firewall: 80 and 443 must be open on this host before Caddy can issue TLS.
-#   sudo ufw allow 80/tcp comment 'Caddy ACME'
-#   sudo ufw allow 443/tcp comment 'Caddy TLS'
-#   sudo ufw allow 443/udp comment 'Caddy QUIC/HTTP3'
+# Firewall: 80 must be open on this host.
+#   sudo ufw allow 80/tcp comment 'Caddy beta HTTP'
 #
 # Install Caddy on ops-dev-01 if not present:
 #   https://caddyserver.com/docs/install#debian-ubuntu-raspbian
@@ -22,13 +20,13 @@
 #   sudo systemctl reload caddy
 #
 # Health check:
-#   curl -sf https://beta-api.akalynth.com/v1/health | grep '"ok":true'
+#   curl -sf http://beta-api.akalynth.com/v1/health | grep '"ok":true'
 #
 # Use with deploy_dev.sh:
-#   AKALYNTH_HEALTH_URL is pre-set to https://beta-api.akalynth.com/v1/health
+#   AKALYNTH_HEALTH_URL is pre-set to http://beta-api.akalynth.com/v1/health
 
 # ── Dev / staging game server ─────────────────────────────────────────────────
-beta.akalynth.com, beta-api.akalynth.com {
+http://beta.akalynth.com, http://beta-api.akalynth.com {
 	encode zstd gzip
 
 	# Loopback bind owned by the dev game server process.
