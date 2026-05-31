@@ -1887,9 +1887,10 @@ function handlePickupItem(
     player_id: playerId,
     inputs: {
       item_id: itemId,
-      // Carry the world item's type so the materializer can record it. Mob loot
-      // (`*_goo`, `slime`) is never `item_minted`, so pickup is the only place the
-      // type is known; without this it would persist/display as 'unknown'.
+      // Carry the world item's type so the materializer can record it. Since #82,
+      // mob loot (`*_goo`, `slime`) is now `item_minted` at spawn, so the items row
+      // already exists with the correct type; this field is kept for backward-compat
+      // with any old `mob_loot_spawned` receipts on existing chains.
       item_type: item.itemType,
       slot: null,
       source: 'pickup',
@@ -4300,9 +4301,10 @@ function processSessionQueue(s: Session, now: number) {
             // Leave a corpse with a respawn countdown (status 'dead', not attackable)
             broadcastToMap(s.currentMap, ServerMessages.playerJoined(mobToPublicPlayer(hit.mob)));
 
-            // Spawn loot at mob position. spawnMobLoot derives the item_id from the
-            // mob_loot_spawned receipt hash (same convention as item_minted) — deterministic,
-            // replay-safe, and unique per spawn; the receipt body carries no item_id.
+            // Spawn loot at mob position. spawnMobLoot emits an item_minted receipt,
+            // creating a durable items DB row at spawn time (before pickup) — same as
+            // shop and legendary items. item_id is derived from the receipt hash —
+            // deterministic, replay-safe, unique per spawn; the receipt body carries no item_id.
             const lootType = `${mob.def.mob_type}_goo`;
             const decayAt = new Date(Date.now() + 3 * 60_000).toISOString(); // 3 min decay
             const goo = spawnMobLoot(attackerId, lootType, s.currentMap, mob.def.x, mob.def.y, {
@@ -4320,7 +4322,7 @@ function processSessionQueue(s: Session, now: number) {
             broadcastToMap(s.currentMap, ServerMessages.worldItemAdded(goo.itemId, goo.itemType, mob.def.x, mob.def.y));
 
             // Training Slime additionally drops a 'slime' trophy (guaranteed, plain item).
-            // Mirrors the goo loot path: in-memory world item, mob_loot_spawned receipt,
+            // Mirrors the goo loot path: in-memory world item, item_minted receipt,
             // 3-min decay. The receipt-derived id is unique per spawn (no tile/ms collision).
             if (mob.def.mob_type === 'training_slime') {
               const slime = spawnMobLoot(attackerId, 'slime', s.currentMap, mob.def.x, mob.def.y, {
