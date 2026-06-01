@@ -91,6 +91,99 @@
     byId[item.id] = item;
   });
 
+  // ---- Game worlds ---------------------------------------------------------
+  // Preview game worlds (separate servers). Flavor only while pre-alpha.
+  var WORLDS = [
+    { id: "azura", name: "Azura", type: "Open", region: "EU", stage: "Pre-alpha" },
+    { id: "rookhold", name: "Rookhold", type: "Open", region: "NA", stage: "Pre-alpha" },
+    { id: "emberfell", name: "Emberfell", type: "Hardcore", region: "EU", stage: "Planned" },
+  ];
+  var worldById = {};
+  WORLDS.forEach(function (w) {
+    worldById[w.id] = w;
+  });
+
+  // ---- House preview auctions ----------------------------------------------
+  // Houses use PREVIEW GOLD, distinct from the shop's premium Azura coins.
+  // Plots are grounded in docs/WORLD_AZURA.md (the Azura residential row, plots
+  // H1-H3, just below the Guild Hall). INVARIANT: gold and bids are local
+  // preview state only -- they do not prove ownership, reserve a house, spend
+  // real account currency, or affect live game state. No settlement, no proof.
+  var ACCOUNT_KEY = "akalynth.account.v1";
+  var BIDS_KEY = "akalynth.bids.v1";
+  var BID_INCREMENT = 1000; // minimum gold step over the current top bid
+  var START_GOLD = 50000; // preview starting balance for a new character
+
+  // endsAt is set relative to load (no backend to anchor a real clock).
+  var HOUR = 3600 * 1000;
+  var now = Date.now();
+  var HOUSES = [
+    {
+      id: "azura-h1",
+      name: "Plaza Row Cottage",
+      world: "Azura",
+      district: "Residential Row",
+      coords: "(10, 32)",
+      sizeTiles: 4,
+      rentGold: 800,
+      topBidGold: 22000,
+      topBidder: "Brannic",
+      endsAt: now + 48 * HOUR,
+    },
+    {
+      id: "azura-h2",
+      name: "Guildside House",
+      world: "Azura",
+      district: "Residential Row",
+      coords: "(14, 32)",
+      sizeTiles: 4,
+      rentGold: 950,
+      topBidGold: 31000,
+      topBidder: "Sera of the Vale",
+      endsAt: now + 18 * HOUR,
+    },
+    {
+      id: "azura-h3",
+      name: "Lantern Walk Home",
+      world: "Azura",
+      district: "Residential Row",
+      coords: "(18, 32)",
+      sizeTiles: 4,
+      rentGold: 1100,
+      topBidder: "Olwin Reed",
+      topBidGold: 28000,
+      endsAt: now + 5 * HOUR,
+    },
+    {
+      id: "azura-h4",
+      name: "Plaza Overlook",
+      world: "Azura",
+      district: "Central Plaza edge",
+      coords: "(24, 46)",
+      sizeTiles: 9,
+      rentGold: 1800,
+      topBidGold: 45000,
+      topBidder: "Maren Dusk",
+      endsAt: now + 30 * HOUR,
+    },
+    {
+      id: "azura-h5",
+      name: "Old Gatehouse Flat",
+      world: "Azura",
+      district: "Northern Wall",
+      coords: "(8, 14)",
+      sizeTiles: 6,
+      rentGold: 1300,
+      topBidder: "—",
+      topBidGold: 19000,
+      endsAt: now - 2 * HOUR, // already closed: demonstrates the ended state
+    },
+  ];
+  var houseById = {};
+  HOUSES.forEach(function (h) {
+    houseById[h.id] = h;
+  });
+
   // ---- DOM helpers ---------------------------------------------------------
   function $(sel, root) {
     return (root || document).querySelector(sel);
@@ -327,17 +420,35 @@
     if (checkout) {
       checkout.addEventListener("click", function () {
         var totals = cartTotals();
-        alert(
+        var msg =
           "Preview checkout — no payment is processed.\n\n" +
-            totals.count +
-            " item(s) · " +
-            fmt(totals.coins) +
-            " coins (≈ $" +
-            estimateUsd().toFixed(2) +
-            ").\n\nReal purchases open with the Akalynth beta."
-        );
+          totals.count +
+          " item(s) · " +
+          fmt(totals.coins) +
+          " coins (≈ $" +
+          estimateUsd().toFixed(2) +
+          ").\n\nReal purchases open with the Akalynth beta.";
+        // Buying Premium Time grants preview premium, which unlocks house
+        // bidding. Preview only — no real entitlement is created.
+        if (cartHasPremium()) {
+          if (account) {
+            account.premium = true;
+            saveAccount(account);
+            renderHoldings();
+            msg += "\n\nPreview Premium activated — you can now bid on houses.";
+          } else {
+            msg += "\n\nCreate a character to apply preview Premium.";
+          }
+        }
+        alert(msg);
       });
     }
+  }
+
+  function cartHasPremium() {
+    return Object.keys(cart).some(function (id) {
+      return byId[id] && byId[id].tag === "Premium";
+    });
   }
 
   function estimateUsd() {
@@ -346,6 +457,402 @@
       usd += byId[id].usd * cart[id];
     });
     return usd;
+  }
+
+  function setText(sel, txt) {
+    var el = $(sel);
+    if (el) el.textContent = txt;
+  }
+  function setErr(id, msg) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = msg;
+  }
+
+  // ---- Account (local preview character) -----------------------------------
+  // Stored locally only. INVARIANT: this is not a real account; no server
+  // identity, world transfer, or game data is created.
+  function loadAccount() {
+    try {
+      var raw = localStorage.getItem(ACCOUNT_KEY);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" && parsed.name ? parsed : null;
+    } catch (err) {
+      return null;
+    }
+  }
+  function saveAccount(acct) {
+    try {
+      localStorage.setItem(ACCOUNT_KEY, JSON.stringify(acct));
+    } catch (err) {
+      /* storage unavailable — character stays in memory for the session */
+    }
+  }
+  function clearAccount() {
+    try {
+      localStorage.removeItem(ACCOUNT_KEY);
+    } catch (err) {
+      /* ignore */
+    }
+  }
+
+  var account = loadAccount();
+
+  // ---- Preview bids --------------------------------------------------------
+  function loadBids() {
+    try {
+      var raw = localStorage.getItem(BIDS_KEY);
+      if (!raw) return {};
+      var parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (err) {
+      return {};
+    }
+  }
+  function saveBids(b) {
+    try {
+      localStorage.setItem(BIDS_KEY, JSON.stringify(b));
+    } catch (err) {
+      /* ignore */
+    }
+  }
+
+  var bids = loadBids();
+  // Drop bids for houses no longer listed.
+  Object.keys(bids).forEach(function (id) {
+    if (!houseById[id]) delete bids[id];
+  });
+
+  // ---- Auction helpers -----------------------------------------------------
+  function currentTop(house) {
+    return Math.max(house.topBidGold, bids[house.id] || 0);
+  }
+  function minNextBid(house) {
+    return currentTop(house) + BID_INCREMENT;
+  }
+  function isMine(house) {
+    var mine = bids[house.id] || 0;
+    return mine > 0 && mine >= house.topBidGold;
+  }
+  function isEnded(house) {
+    return Date.now() >= house.endsAt;
+  }
+  function fmtCountdown(ms) {
+    if (ms <= 0) return "Auction ended";
+    var s = Math.floor(ms / 1000);
+    var d = Math.floor(s / 86400);
+    s -= d * 86400;
+    var h = Math.floor(s / 3600);
+    s -= h * 3600;
+    var m = Math.floor(s / 60);
+    var parts = [];
+    if (d) parts.push(d + "d");
+    parts.push(h + "h");
+    parts.push(m + "m");
+    return parts.join(" ") + " left";
+  }
+
+  // ---- Account form (account.html) -----------------------------------------
+  function populateWorldSelect() {
+    var sel = $("#char-world");
+    if (!sel || sel.dataset.built === "1") return;
+    WORLDS.forEach(function (w) {
+      var opt = document.createElement("option");
+      opt.value = w.id;
+      opt.textContent = w.name + " — " + w.type + " · " + w.region + " · " + w.stage;
+      if (w.stage === "Planned") opt.disabled = true;
+      sel.appendChild(opt);
+    });
+    sel.dataset.built = "1";
+  }
+
+  function renderAccountView() {
+    var wrap = $("#account-form-wrap");
+    var summary = $("#account-summary");
+    if (account) {
+      if (wrap) wrap.hidden = true;
+      if (summary) {
+        summary.hidden = false;
+        var w = worldById[account.world];
+        setText("#summary-name", account.name);
+        setText("#summary-sex", account.sex === "female" ? "Female" : "Male");
+        setText("#summary-world", w ? w.name : account.world);
+        setText("#summary-gold", fmt(account.goldBalance));
+        setText("#summary-premium", account.premium ? "Active" : "Standard");
+      }
+    } else {
+      if (wrap) wrap.hidden = false;
+      if (summary) summary.hidden = true;
+    }
+  }
+
+  function onAccountSubmit(e) {
+    e.preventDefault();
+    var nameEl = $("#char-name");
+    var worldEl = $("#char-world");
+    var sexEl = document.querySelector('input[name="sex"]:checked');
+    var ok = true;
+
+    var name = nameEl ? nameEl.value.trim() : "";
+    if (!/^[A-Za-z][A-Za-z '\-]{1,19}$/.test(name)) {
+      setErr("err-name", "Use 2–20 letters (spaces, apostrophe and hyphen allowed).");
+      ok = false;
+    } else {
+      setErr("err-name", "");
+    }
+
+    if (!sexEl) {
+      setErr("err-sex", "Choose a sex.");
+      ok = false;
+    } else {
+      setErr("err-sex", "");
+    }
+
+    var worldId = worldEl ? worldEl.value : "";
+    if (!worldId || !worldById[worldId]) {
+      setErr("err-world", "Choose a world.");
+      ok = false;
+    } else if (worldById[worldId].stage === "Planned") {
+      setErr("err-world", "That world isn't open yet.");
+      ok = false;
+    } else {
+      setErr("err-world", "");
+    }
+
+    if (!ok) return;
+
+    account = {
+      name: name,
+      sex: sexEl.value,
+      world: worldId,
+      goldBalance: START_GOLD,
+      premium: false,
+      createdAt: new Date().toISOString(),
+    };
+    saveAccount(account);
+    renderAccountView();
+    renderHoldings();
+    renderHouses();
+    alert(
+      "Preview character created — " +
+        name +
+        " on " +
+        worldById[worldId].name +
+        ".\n\nThis is a local preview only. No real account, world transfer, " +
+        "or game data is created."
+    );
+  }
+
+  function initAccount() {
+    var form = $("#account-form");
+    var summary = $("#account-summary");
+    if (!form && !summary) return; // not the account page
+    populateWorldSelect();
+    renderAccountView();
+    if (form) form.addEventListener("submit", onAccountSubmit);
+    var reset = $("#account-reset");
+    if (reset) {
+      reset.addEventListener("click", function () {
+        if (confirm("Start over? This clears your local preview character.")) {
+          clearAccount();
+          account = null;
+          renderAccountView();
+          renderHoldings();
+        }
+      });
+    }
+  }
+
+  // ---- Sidebar holdings (all pages) ----------------------------------------
+  function renderHoldings() {
+    var panel = $("#holdings-panel");
+    if (!panel) return;
+    var empty = $("#holdings-empty");
+    var body = $("#holdings-body");
+    if (account) {
+      if (empty) empty.hidden = true;
+      if (body) body.hidden = false;
+      var w = worldById[account.world];
+      setText("#holdings-name", account.name);
+      setText("#holdings-world", w ? w.name : account.world);
+      setText("#holdings-gold", fmt(account.goldBalance));
+      setText("#holdings-premium", account.premium ? "Active" : "Standard");
+    } else {
+      if (empty) empty.hidden = false;
+      if (body) body.hidden = true;
+    }
+  }
+
+  // ---- House preview auctions (houses.html) --------------------------------
+  function houseCardHtml(h, hasAccount) {
+    var top = currentTop(h);
+    var ended = isEnded(h);
+    var mine = isMine(h);
+
+    var statusHtml = "";
+    if (ended) {
+      statusHtml = mine
+        ? '<p class="house-status is-won">Auction ended — you held the top preview bid.</p>'
+        : '<p class="house-status is-ended">Auction ended.</p>';
+    } else if (mine) {
+      statusHtml = '<p class="house-status is-high">You hold the top preview bid.</p>';
+    }
+
+    var action;
+    if (ended) {
+      action = '<button class="btn btn-ghost btn-block" disabled>Bidding closed</button>';
+    } else if (!hasAccount) {
+      action =
+        '<a class="btn btn-ghost btn-block" href="account.html">Create a character to bid</a>';
+    } else if (!account.premium) {
+      action =
+        '<a class="btn btn-ghost btn-block" href="shop.html">Premium required to bid</a>';
+    } else {
+      var min = minNextBid(h);
+      action =
+        '<form class="bid-row" data-bid="' + h.id + '" novalidate>' +
+        '<label class="bid-input-label" for="bid-' + h.id + '">Your preview bid (gold)</label>' +
+        '<div class="bid-controls">' +
+        '<input class="bid-input" type="number" id="bid-' + h.id + '" name="bid" min="' + min +
+        '" step="' + BID_INCREMENT + '" inputmode="numeric" placeholder="' + min + '" />' +
+        '<button class="btn btn-gold" type="submit">Place bid</button>' +
+        "</div>" +
+        '<p class="field-error" id="bid-error-' + h.id + '" aria-live="polite"></p>' +
+        '<p class="bid-hint">Min next bid <span class="gold">' + fmt(min) +
+        '</span> gold · your preview balance <span class="gold">' +
+        fmt(account ? account.goldBalance : 0) + "</span> gold</p>" +
+        "</form>";
+    }
+
+    return (
+      '<header class="house-head">' +
+      '<h3 class="house-name">' + h.name + "</h3>" +
+      '<span class="house-world">' + h.world + " · " + h.district + "</span>" +
+      "</header>" +
+      '<dl class="house-meta">' +
+      "<div><dt>Plot</dt><dd class=\"house-coords\">" + h.coords + "</dd></div>" +
+      "<div><dt>Size</dt><dd>" + h.sizeTiles + " tiles</dd></div>" +
+      '<div><dt>Rent</dt><dd><span class="gold">' + fmt(h.rentGold) + "</span> gold/mo</dd></div>" +
+      "</dl>" +
+      '<div class="house-bid">' +
+      '<div class="bid-line">' +
+      '<span class="bid-label">Top preview bid</span>' +
+      '<span class="bid-amount"><span class="gold">' + fmt(top) + "</span> gold</span>" +
+      "</div>" +
+      '<p class="countdown" data-ends="' + h.endsAt + '"' + (ended ? ' data-ended="1"' : "") +
+      ' aria-live="polite">' + fmtCountdown(h.endsAt - Date.now()) + "</p>" +
+      statusHtml +
+      action +
+      "</div>"
+    );
+  }
+
+  function renderOneHouse(h) {
+    var grid = $("#houses-grid");
+    if (!grid) return;
+    var card = grid.querySelector('[data-house="' + h.id + '"]');
+    if (card) card.innerHTML = houseCardHtml(h, !!account);
+  }
+
+  function onBidSubmit(e) {
+    var form = e.target.closest ? e.target.closest("[data-bid]") : null;
+    if (!form) return;
+    e.preventDefault();
+    var id = form.getAttribute("data-bid");
+    var h = houseById[id];
+    if (!h) return;
+    var errId = "bid-error-" + id;
+
+    if (!account) {
+      setErr(errId, "Create a character to place a preview bid.");
+      return;
+    }
+    if (!account.premium) {
+      setErr(errId, "Premium required to bid — get Premium Time in the Shop.");
+      return;
+    }
+    if (isEnded(h)) {
+      setErr(errId, "This auction has ended.");
+      return;
+    }
+    var input = form.querySelector(".bid-input");
+    var raw = input ? input.value.trim() : "";
+    var amount = parseInt(raw, 10);
+    if (!raw || isNaN(amount)) {
+      setErr(errId, "Enter a bid amount in gold.");
+      return;
+    }
+    var min = minNextBid(h);
+    if (amount < min) {
+      setErr(errId, "Bid must be at least " + fmt(min) + " gold.");
+      return;
+    }
+    if (amount > account.goldBalance) {
+      setErr(errId, "That exceeds your preview gold balance (" + fmt(account.goldBalance) + ").");
+      return;
+    }
+    bids[id] = amount;
+    saveBids(bids);
+    renderOneHouse(h);
+  }
+
+  function renderHousesGate() {
+    var gate = $("#houses-gate");
+    if (!gate) return;
+    if (!account) {
+      gate.hidden = false;
+      gate.innerHTML =
+        "<p><strong>Create a character first.</strong> You can browse the plots " +
+        "below, but placing a preview bid needs a local character. " +
+        '<a href="account.html">Create your character →</a></p>';
+    } else if (!account.premium) {
+      gate.hidden = false;
+      gate.innerHTML =
+        "<p><strong>Premium required.</strong> Only Premium adventurers can bid on " +
+        "houses. Get <strong>Premium Time</strong> in the " +
+        '<a href="shop.html">Shop</a> (preview) to unlock bidding.</p>';
+    } else {
+      gate.hidden = true;
+    }
+  }
+
+  function renderHouses() {
+    var grid = $("#houses-grid");
+    if (!grid) return;
+    renderHousesGate();
+    if (grid.dataset.wired !== "1") {
+      grid.addEventListener("submit", onBidSubmit);
+      grid.dataset.wired = "1";
+    }
+    grid.innerHTML = "";
+    HOUSES.forEach(function (h) {
+      var card = document.createElement("article");
+      card.className = "house-card";
+      card.setAttribute("data-house", h.id);
+      card.innerHTML = houseCardHtml(h, !!account);
+      grid.appendChild(card);
+    });
+  }
+
+  function tickCountdowns() {
+    $all(".countdown[data-ends]").forEach(function (el) {
+      var ends = parseInt(el.getAttribute("data-ends"), 10);
+      var left = ends - Date.now();
+      el.textContent = fmtCountdown(left);
+      if (left <= 0 && el.getAttribute("data-ended") !== "1") {
+        var card = el.closest(".house-card");
+        var id = card ? card.getAttribute("data-house") : null;
+        if (id && houseById[id]) renderOneHouse(houseById[id]);
+      }
+    });
+  }
+
+  function initHouses() {
+    var grid = $("#houses-grid");
+    if (!grid) return; // not the houses page
+    renderHouses();
+    tickCountdowns();
+    setInterval(tickCountdowns, 30000);
   }
 
   // ---- Year + boot ---------------------------------------------------------
@@ -357,6 +864,9 @@
   function boot() {
     initTabs();
     initCart();
+    initAccount();
+    initHouses();
+    renderHoldings();
     initMisc();
     render();
   }

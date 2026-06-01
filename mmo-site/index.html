@@ -8,7 +8,18 @@
       name="description"
       content="Akalynth is a server-authoritative, anti-bot-first MMO set in the world of Azura. Explore, trade, and survive in a living top-down realm."
     />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%231f1a13'/%3E%3Cpath d='M16 5l7 11-7 11-7-11z' fill='%23d9b25a'/%3E%3C/svg%3E"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Akalynth" />
+    <meta property="og:title" content="Akalynth — The World of Azura" />
+    <meta
+      property="og:description"
+      content="A server-authoritative, anti-bot-first MMO set in the world of Azura. Explore, trade, and survive in a living top-down realm."
+    />
+    <meta name="twitter:card" content="summary" />
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
@@ -33,8 +44,9 @@
           <ul>
             <li><a class="tab-btn is-active" href="index.html#home" data-nav="home" aria-current="page">Home</a></li>
             <li><a class="tab-btn" href="index.html#world" data-nav="world">World</a></li>
+            <li><a class="tab-btn" href="houses.html" data-nav="houses">Houses</a></li>
             <li><a class="tab-btn" href="shop.html" data-nav="shop">Shop</a></li>
-            <li><a class="tab-btn" href="index.html#account" data-nav="account">Account</a></li>
+            <li><a class="tab-btn" href="account.html" data-nav="account">Account</a></li>
           </ul>
         </nav>
       </div>
@@ -61,6 +73,24 @@
             <p class="muted">Online now</p>
             <p class="big-number" id="online-count">—</p>
             <p class="muted small">Live counts arrive with open beta.</p>
+          </div>
+        </section>
+
+        <section class="panel" id="holdings-panel">
+          <h2 class="panel-title">Your Holdings</h2>
+          <div class="panel-body">
+            <div id="holdings-empty">
+              <p class="muted small">No character yet.</p>
+              <a class="btn btn-ghost btn-block" href="account.html">Create character</a>
+            </div>
+            <div id="holdings-body" hidden>
+              <p class="holdings-name"><strong id="holdings-name">—</strong></p>
+              <p class="muted small">World: <span id="holdings-world">—</span></p>
+              <p class="holdings-gold">
+                <span class="gold" id="holdings-gold">0</span> preview gold
+              </p>
+              <p class="muted small">Premium: <strong id="holdings-premium">—</strong></p>
+            </div>
           </div>
         </section>
 
@@ -145,20 +175,6 @@
           </article>
         </section>
 
-        <!-- ACCOUNT -->
-        <section class="tab-panel" id="account" role="tabpanel" hidden>
-          <h1 class="page-title">Adventurer's Ledger</h1>
-          <article class="parchment">
-            <p class="lede">Account features open with the beta. For now, here's what awaits.</p>
-            <ul class="check-list">
-              <li>Identity-based login backed by the coordination kernel.</li>
-              <li>Character roster bound to your verified identity.</li>
-              <li>Receipt history — see your own chronicle.</li>
-              <li>Premium time and cosmetic inventory.</li>
-            </ul>
-            <button class="btn btn-gold" disabled>Sign in (coming soon)</button>
-          </article>
-        </section>
       </main>
     </div>
 

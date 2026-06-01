@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Shop — Akalynth: The Coin Exchange</title>
+    <title>House Auctions — Akalynth: The House Plots</title>
     <meta
       name="description"
-      content="The Coin Exchange — coin packs, premium time, and cosmetic bundles for Akalynth, the world of Azura. Preview storefront (pre-alpha)."
+      content="Preview house auctions in Azura — bid preview gold on residential plots. Pre-alpha preview only; bids are local and grant no real ownership."
     />
     <link
       rel="icon"
@@ -14,18 +14,19 @@
     />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Akalynth" />
-    <meta property="og:title" content="The Coin Exchange — Akalynth Shop" />
+    <meta property="og:title" content="House Auctions — Akalynth" />
     <meta
       property="og:description"
-      content="Coin packs, premium time, and cosmetic bundles for Akalynth. Preview storefront (pre-alpha) — no real payments processed."
+      content="Preview house auctions in Azura — bid preview gold on residential plots. Pre-alpha preview, no real ownership."
     />
     <meta name="twitter:card" content="summary" />
     <link rel="stylesheet" href="css/style.css" />
   </head>
-  <body data-page="shop">
+  <body data-page="houses">
     <!--
-      Akalynth shop page. Shares chrome and the localStorage cart with index.html.
-      Preview storefront only — no real payments are processed (pre-alpha).
+      Akalynth house auctions page. Shares chrome with index.html / shop.html.
+      Preview only: bids use preview gold (distinct from the shop's Azura coins),
+      are stored locally, and grant no real ownership, settlement, or game state.
       Classic-MMO look recreated with original CSS and Akalynth branding.
     -->
     <a class="skip-link" href="#main">Skip to content</a>
@@ -43,8 +44,8 @@
           <ul>
             <li><a class="tab-btn" href="index.html#home" data-nav="home">Home</a></li>
             <li><a class="tab-btn" href="index.html#world" data-nav="world">World</a></li>
-            <li><a class="tab-btn" href="houses.html" data-nav="houses">Houses</a></li>
-            <li><a class="tab-btn is-active" href="shop.html" data-nav="shop" aria-current="page">Shop</a></li>
+            <li><a class="tab-btn is-active" href="houses.html" data-nav="houses" aria-current="page">Houses</a></li>
+            <li><a class="tab-btn" href="shop.html" data-nav="shop">Shop</a></li>
             <li><a class="tab-btn" href="account.html" data-nav="account">Account</a></li>
           </ul>
         </nav>
@@ -66,15 +67,6 @@
           </div>
         </section>
 
-        <section class="panel">
-          <h2 class="panel-title">Adventurers</h2>
-          <div class="panel-body">
-            <p class="muted">Online now</p>
-            <p class="big-number" id="online-count">—</p>
-            <p class="muted small">Live counts arrive with open beta.</p>
-          </div>
-        </section>
-
         <section class="panel" id="holdings-panel">
           <h2 class="panel-title">Your Holdings</h2>
           <div class="panel-body">
@@ -92,49 +84,41 @@
             </div>
           </div>
         </section>
-
-        <section class="panel">
-          <h2 class="panel-title">Your Pack</h2>
-          <div class="panel-body">
-            <p class="cart-summary">
-              <span id="cart-count">0</span> item(s) ·
-              <span id="cart-total">0</span> coins
-            </p>
-            <a class="btn btn-ghost btn-block" href="index.html#home">← Back to the Realm</a>
-          </div>
-        </section>
       </aside>
 
       <!-- Parchment content column -->
       <main class="content" id="main" role="main" tabindex="-1">
-        <h1 class="page-title">The Coin Exchange</h1>
+        <h1 class="page-title">The House Plots</h1>
         <article class="parchment">
           <p class="lede">
-            Support Akalynth and outfit your adventurer. Cosmetic bundles change how you
-            look, never how you win — the realm stays fair.
+            Bid on plots along Azura's residential row, just below the Guild Hall.
+            Houses are won with <strong>preview gold</strong> — separate from the
+            shop's premium <strong>Azura coins</strong>. Bidding is
+            <strong>Premium-only</strong>.
+          </p>
+          <p class="muted small">
+            Housing is in the city of <strong>Azura</strong>. Rookguard — the
+            training zone — has no houses.
           </p>
           <p class="notice">
-            ⚠ Preview storefront. Akalynth is pre-alpha; <strong>no real payments are
-            processed</strong> and items are illustrative. The cart is a demonstration only.
+            ⚠ Preview auctions. Akalynth is pre-alpha. Only Premium adventurers
+            can bid; bids use <strong>preview gold</strong> and are stored locally
+            only — they do not reserve a plot, transfer ownership, spend real
+            currency, or affect live game state. Real housing opens with the beta.
           </p>
         </article>
 
-        <div class="shop-grid" id="shop-grid">
-          <!-- Cards injected by app.js -->
-        </div>
+        <article class="parchment" id="houses-gate" hidden>
+          <p>
+            <strong>Create a character first.</strong> You can browse the plots
+            below, but placing a preview bid needs a local character.
+            <a href="account.html">Create your character →</a>
+          </p>
+        </article>
 
-        <aside class="cart-panel parchment" aria-label="Cart">
-          <h2 class="section-title">Your Cart</h2>
-          <ul class="cart-items" id="cart-items">
-            <li class="cart-empty">Your cart is empty.</li>
-          </ul>
-          <div class="cart-foot">
-            <span class="cart-foot-label">Total</span>
-            <span class="cart-foot-total"><span id="cart-total-2">0</span> coins</span>
-          </div>
-          <button class="btn btn-gold btn-block" id="checkout-btn" disabled>Checkout (preview)</button>
-          <button class="btn btn-ghost btn-block" id="clear-cart-btn">Clear cart</button>
-        </aside>
+        <div class="houses-grid" id="houses-grid">
+          <!-- House cards injected by app.js -->
+        </div>
       </main>
     </div>
 
