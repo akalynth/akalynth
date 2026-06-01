@@ -71,6 +71,10 @@ cleaned PNG has a schema-valid sidecar; lifecycle `status` is valid; dimensions 
 `sha256` matches the cleaned PNG once `status` is past `cleaned_png`; referenced
 prompt files exist. See `MANIFEST_SCHEMA.md`.
 
+This gate runs in **CI**: the `assets` verifier is registered in the verification
+spine and included in the `quick` profile that CI executes, so the manifest/lineage
+rules are enforced before merge — not only locally.
+
 ## Current state
 
 - The **12 original sprites** are `legacy`/`promoted` (predate the factory); their
