@@ -103,7 +103,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version-file: .nvmrc
           cache: "npm"
 
       - name: Install dependencies
@@ -183,9 +183,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version-file: .nvmrc
           cache: "npm"
           cache-dependency-path: apps/server/package-lock.json
+
+      - name: Verify Docker runtime artifacts
+        run: npm run verify:docker-runtime
 
       - name: Docs audit (deterministic)
         run: node tools/doc_audit.js --ci --out artifacts/akalynth-doc-audit.json --summary artifacts/akalynth-doc-audit-summary.md
@@ -230,6 +233,17 @@ jobs:
           cd apps/server
           node tools/generate-chronicle-log.js fixtures/ci-chronicle/chronicle.log
 
+      - name: Materialize DB from fixture receipts
+        # Replays the signed fixture receipts into data/akalynth.db so the
+        # DB-backed verifiers (heat/protected/chronicle/evidence) have the
+        # SQLite projection they read. Same path resolver the verifiers use.
+        env:
+          CHRONICLE_KEY_PATH: ${{ github.workspace }}/.secrets/chronicle.key
+          AKALYNTH_RECEIPT_CHAIN_PATH: ${{ github.workspace }}/apps/server/fixtures/ci-receipts/receipts.jsonl
+        run: |
+          cd apps/server
+          npm run materialize-db
+
       - name: Receipt + chronicle hygiene (audit)
         env:
           ENABLE_CHRONICLE: "1"
@@ -247,6 +261,35 @@ jobs:
           npm run verify:monetization
           npm run verify:work-contracts
           npm run verify:treasury
+
+      - name: Self-contained unit verifiers (Phase 2)
+        # These verifiers build their own mock/temp state (no live DB or running
+        # server required), so they gate on every full CI run. DB-dependent
+        # verifiers (heat/protected/chronicle/evidence) and the server-dependent
+        # rate-limits verifier are intentionally excluded here.
+        run: |
+          cd apps/server
+          npm run verify:npc-recognition
+          npm run verify:npc-dialogue
+          npm run verify:presence
+          npm run verify:costed-actions
+          npm run verify:mob-loot
+          npm run verify:item-pickup-type
+          npm run verify:anticheat-persistence
+
+      - name: DB-backed verifiers (Phase 2)
+        # Verify the SQLite projection (materialized above) matches the
+        # canonical receipts. rate-limits is excluded here: it is an
+        # integration test that needs a running server (see loadtest-smoke).
+        env:
+          CHRONICLE_KEY_PATH: ${{ github.workspace }}/.secrets/chronicle.key
+          AKALYNTH_RECEIPT_CHAIN_PATH: ${{ github.workspace }}/apps/server/fixtures/ci-receipts/receipts.jsonl
+        run: |
+          cd apps/server
+          npm run verify:heat
+          npm run verify:protected
+          npm run verify:chronicle
+          npm run verify:evidence
 
       - name: Write showcase summary
         if: always()
@@ -288,7 +331,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version-file: .nvmrc
 
       - name: Install server dependencies
         run: npm ci
@@ -336,10 +379,112 @@ jobs:
           cd tools/loadtest
           npm run loadtest -- run --scenario movement-heavy --clients 2 --duration 5s --seed 12345
 
+      - name: Verify rate limits (isolated scenarios)
+        # Each scenario runs against its OWN fresh server on a separate port, so
+        # the per-IP connection budget can't bleed between scenarios (on a shared
+        # server the next connect hits the limit ip_flood just consumed). The
+        # smoke server on :3000 keeps running here; these use :3001+ to avoid it.
+        env:
+          NODE_ENV: development
+        run: |
+          KEY_DIR="$(mktemp -d)"
+          node --input-type=module -e "
+            import fs from 'node:fs';
+            import crypto from 'node:crypto';
+            const keyPath = process.argv[1];
+            const seed = crypto.createHash('sha256').update('akalynth-ratelimit-key-v1').digest();
+            fs.writeFileSync(keyPath, seed.subarray(0, 32));
+            fs.chmodSync(keyPath, 0o600);
+          " "$KEY_DIR/chronicle.key"
+          cd apps/server
+          npm run rulebook:genesis
+          port=3001
+          for scen in ip_flood move_spam chat_spam attack_spam; do
+            RUN_DIR="$(mktemp -d)"
+            mkdir -p "$RUN_DIR/audit" "$RUN_DIR/data"
+            touch "$RUN_DIR/audit/receipts.jsonl"
+            DEBUG=1 \
+            ALLOW_INSECURE_LOCAL=1 \
+            AKALYNTH_LIFECYCLE_VERIFY=0 \
+            PORT=$port \
+            AKALYNTH_RECEIPT_CHAIN_PATH="$RUN_DIR/audit/receipts.jsonl" \
+            AKALYNTH_DB_PATH="$RUN_DIR/data/akalynth.db" \
+            AKALYNTH_REPLAY_MARKER_PATH="$RUN_DIR/data/replay_marker.json" \
+            CHRONICLE_KEY_PATH="$KEY_DIR/chronicle.key" \
+            npm start >"$RUN_DIR/server.log" 2>&1 &
+            ok=0
+            for i in $(seq 1 30); do
+              curl -sf "http://127.0.0.1:$port/v1/health" >/dev/null && { ok=1; break; }
+              sleep 0.5
+            done
+            if [ "$ok" != 1 ]; then
+              echo "rate-limit server failed to start for $scen"
+              cat "$RUN_DIR/server.log"
+              exit 1
+            fi
+            WS_URL="ws://127.0.0.1:$port" npm run verify:rate-limits -- --scenario=$scen || exit 1
+            port=$((port + 1))
+          done
+
       - name: Upload load test artifacts
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: loadtest-smoke-results
           path: tools/loadtest/runs/
+          retention-days: 7
+
+  android-instrumented:
+    name: Android instrumented tests (Compose UI)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    needs: [changes]
+    if: github.event_name == 'push' || needs.changes.outputs.full_ci_required == 'true'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+
+      - name: Enable KVM (for hardware-accelerated emulator)
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('apps/android/**/*.gradle.kts', 'apps/android/gradle/libs.versions.toml') }}
+
+      - name: Run instrumented Compose UI tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          profile: Nexus 6
+          avd-name: akalynth-ci
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          working-directory: apps/android
+          script: |
+            echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+            ./gradlew connectedDebugAndroidTest --no-daemon 2>&1 | tail -20
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-instrumented-results
+          path: apps/android/app/build/reports/androidTests/
           retention-days: 7

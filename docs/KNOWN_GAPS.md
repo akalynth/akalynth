@@ -1,5 +1,7 @@
 # Akalynth Known Gaps
 
+> Last reviewed against `main` on 2026-05-30.
+
 ## Purpose
 
 This file prevents showcase language from outrunning the repository's current proof surface.
@@ -11,7 +13,7 @@ A gap is not a failure by itself. A hidden or overstated gap is a failure of pre
 - No documented two-green-main proof run is recorded in this repo packet.
 - No production deployment proof is included.
 - Android release path is not proved.
-- Some runtime state resets on process restart.
+- Some runtime state resets on process restart. Anti-cheat enforcement (heat score, penalty window, Tem cooldown, throttle/kick/warn counts) is the exception: it is receipt-backed, materialized to SQLite, restored on reconnect, and gated by `verify:anticheat-persistence` in CI. Remaining resets (witness pending requests/cooldowns) are intentionally ephemeral given their 12s/60s lifetimes; caps and sovereign session remain in-memory but are debug-gated, not release features.
 - Scope docs require ongoing alignment with implemented systems.
 - Some verifier coverage depends on fixture state rather than full live-world execution.
 
@@ -20,7 +22,7 @@ A gap is not a failure by itself. A hidden or overstated gap is a failure of pre
 - Large server entrypoint concentrates many concerns in one file.
 - Multiple systems are debug-only or environment-gated.
 - Verifier coverage is uneven across newer gameplay systems.
-- Persistence boundaries are classified in `docs/PERSISTENCE_MATRIX.md`, but not yet implemented as restore guarantees.
+- Persistence boundaries are classified in `docs/PERSISTENCE_MATRIX.md`. Anti-cheat enforcement and property ownership have implemented, CI-verified restore guarantees; most other rows remain classification-only and are not yet release-claimed durable.
 - Content loop is not deep enough for content-alpha.
 - CI artifact packaging should be made easier to inspect.
 

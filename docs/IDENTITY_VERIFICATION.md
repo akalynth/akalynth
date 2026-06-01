@@ -20,7 +20,7 @@ The auth signing key is **derived** from the chronicle key. The chronicle key it
 
 ### Derivation Formula
 
-```
+```text
 auth_seed = BLAKE3("akalynth/auth/v0" || chronicle_key_bytes)
 ```
 
@@ -286,7 +286,7 @@ The public key is derived from the chronicle key and does not change during serv
 
 Language-agnostic verification implementation:
 
-```
+```text
 function verify_token(token_string, auth_public_key_hex):
     // Step 1: Parse
     dot = index_of(token_string, ".")

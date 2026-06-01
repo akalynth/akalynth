@@ -9,7 +9,9 @@
   ],
   "scripts": {
     "install:all": "npm install && cd apps/server && npm install && cd ../debug-client && npm install",
+    "dev:bootstrap": "node scripts/dev-bootstrap.mjs",
     "dev:server": "cd apps/server && npm run dev",
+    "dev:server:fresh": "node scripts/dev-bootstrap.mjs && cd apps/server && AKALYNTH_BOOTSTRAP=1 CHRONICLE_KEY_PATH=chronicle.key ALLOW_INSECURE_LOCAL=1 npm run dev",
     "dev:client": "cd apps/debug-client && npm run dev",
     "build:server": "cd apps/server && npm run build",
     "build:client": "cd apps/debug-client && npm run build",
@@ -22,9 +24,14 @@
     "verify:full": "npm run build:packages && node packages/verification-spine/bin/akalynth-verify.js --profile full",
     "verify:audit": "npm run build:packages && node packages/verification-spine/bin/akalynth-verify.js --profile audit",
     "verify:showcase": "bash scripts/showcase_local.sh",
+    "verify:docker-runtime": "bash scripts/verify-docker-runtime.sh",
+    "smoke:docker-runtime": "bash scripts/smoke-docker-runtime.sh",
+    "render:docker-runtime": "bash scripts/render-docker-runtime.sh",
     "validate:codex-plugin": "node tools/validate-codex-plugin.mjs",
     "verify:lifecycle": "npm -w apps/server run verify:lifecycle",
-    "verify:receipt-hygiene": "npm -w apps/server run verify:receipt-hygiene"
+    "verify:receipt-hygiene": "npm -w apps/server run verify:receipt-hygiene",
+    "verify:outcome": "tsx tools/verify-outcome/src/index.ts",
+    "verify:outcome:test": "tsx tools/verify-outcome/test.ts"
   },
   "keywords": ["mmo", "game", "akalynth", "multiplayer"],
   "author": "",

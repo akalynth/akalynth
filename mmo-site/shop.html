@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shop — Akalynth: The Coin Exchange</title>
+    <meta
+      name="description"
+      content="The Coin Exchange — coin packs, premium time, and cosmetic bundles for Akalynth, the world of Azura. Preview storefront (pre-alpha)."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body data-page="shop">
+    <!--
+      Akalynth shop page. Shares chrome and the localStorage cart with index.html.
+      Preview storefront only — no real payments are processed (pre-alpha).
+      Classic-MMO look recreated with original CSS and Akalynth branding.
+    -->
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header" role="banner">
+      <div class="header-inner">
+        <a class="brand" href="index.html#home" data-nav="home">
+          <span class="brand-mark" aria-hidden="true">⚔</span>
+          <span class="brand-text">
+            <span class="brand-name">Akalynth</span>
+            <span class="brand-tag">The World of Azura</span>
+          </span>
+        </a>
+        <nav class="top-nav" aria-label="Primary">
+          <ul>
+            <li><a class="tab-btn" href="index.html#home" data-nav="home">Home</a></li>
+            <li><a class="tab-btn" href="index.html#world" data-nav="world">World</a></li>
+            <li><a class="tab-btn is-active" href="shop.html" data-nav="shop" aria-current="page">Shop</a></li>
+            <li><a class="tab-btn" href="index.html#account" data-nav="account">Account</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <div class="layout">
+      <!-- Ornate sidebar -->
+      <aside class="sidebar" aria-label="Sidebar">
+        <section class="panel">
+          <h2 class="panel-title">Realm Status</h2>
+          <div class="panel-body">
+            <ul class="status-list">
+              <li><span class="dot dot-amber"></span> Stage: <strong>Pre-alpha</strong></li>
+              <li><span class="dot dot-green"></span> World: <strong>Azura</strong></li>
+              <li><span class="dot dot-green"></span> Authority: <strong>Server-side</strong></li>
+              <li><span class="dot dot-blue"></span> Guardian: <strong>Tem (anti-bot)</strong></li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2 class="panel-title">Adventurers</h2>
+          <div class="panel-body">
+            <p class="muted">Online now</p>
+            <p class="big-number" id="online-count">—</p>
+            <p class="muted small">Live counts arrive with open beta.</p>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2 class="panel-title">Your Pack</h2>
+          <div class="panel-body">
+            <p class="cart-summary">
+              <span id="cart-count">0</span> item(s) ·
+              <span id="cart-total">0</span> coins
+            </p>
+            <a class="btn btn-ghost btn-block" href="index.html#home">← Back to the Realm</a>
+          </div>
+        </section>
+      </aside>
+
+      <!-- Parchment content column -->
+      <main class="content" id="main" role="main" tabindex="-1">
+        <h1 class="page-title">The Coin Exchange</h1>
+        <article class="parchment">
+          <p class="lede">
+            Support Akalynth and outfit your adventurer. Cosmetic bundles change how you
+            look, never how you win — the realm stays fair.
+          </p>
+          <p class="notice">
+            ⚠ Preview storefront. Akalynth is pre-alpha; <strong>no real payments are
+            processed</strong> and items are illustrative. The cart is a demonstration only.
+          </p>
+        </article>
+
+        <div class="shop-grid" id="shop-grid">
+          <!-- Cards injected by app.js -->
+        </div>
+
+        <aside class="cart-panel parchment" aria-label="Cart">
+          <h2 class="section-title">Your Cart</h2>
+          <ul class="cart-items" id="cart-items">
+            <li class="cart-empty">Your cart is empty.</li>
+          </ul>
+          <div class="cart-foot">
+            <span class="cart-foot-label">Total</span>
+            <span class="cart-foot-total"><span id="cart-total-2">0</span> coins</span>
+          </div>
+          <button class="btn btn-gold btn-block" id="checkout-btn" disabled>Checkout (preview)</button>
+          <button class="btn btn-ghost btn-block" id="clear-cart-btn">Clear cart</button>
+        </aside>
+      </main>
+    </div>
+
+    <footer class="site-footer" role="contentinfo">
+      <div class="footer-inner">
+        <p>© <span id="year"></span> Akalynth · The World of Azura — a pre-alpha, proof-native MMO.</p>
+        <p class="small muted">
+          Linux server + Android client. Classic-MMO aesthetic recreated with original art and copy.
+        </p>
+      </div>
+    </footer>
+
+    <script src="js/app.js" defer></script>
+  </body>
+</html>

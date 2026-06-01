@@ -1,5 +1,9 @@
 # Akalynth Current Stage
 
+> **Purpose:** The repo-local boundary on what may be claimed/shown about Akalynth's maturity. If code and this doc disagree, treat the more conservative statement as binding until a verifier or proof run says otherwise.
+>
+> **Repo version:** `0.1.0` (see `package.json`). Last reviewed against `main` on 2026-05-30.
+
 ## Stage Label
 
 Akalynth v0.1 is a **pre-alpha, proof-native MMO vertical slice**.
@@ -47,6 +51,7 @@ Implemented-but-not-release-claimed systems include:
 - Android observe/play client
 - Load-test harness
 - Public/private receipt and rumor surfaces
+- Property ownership v0 (house buy / list / resale) — receipt-sourced, durable (SQLite schema v13), covered by `apps/server` `npm run verify:property`. Server + proof only; debug-client/site/Android views and a production proof run are not yet claimed.
 
 ## Debug-Only Or Environment-Gated
 

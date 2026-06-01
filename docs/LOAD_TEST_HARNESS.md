@@ -251,13 +251,25 @@ Purpose: Detect slow leaks, drift, receipt growth stability
 
 ### One-Command Run
 
+Run from `tools/loadtest/`. When passing flags, include the `run` subcommand
+explicitly (the CLI only auto-inserts `run` when the first argument is a bare
+scenario name, not a flag):
+
 ```bash
-npm run loadtest -- \
+cd tools/loadtest
+npm run loadtest -- run \
   --scenario movement-heavy \
   --clients 50 \
   --duration 120s \
   --seed 42 \
   --server ws://localhost:3000
+```
+
+Other subcommands:
+
+```bash
+npm run loadtest -- scenarios        # list available scenarios
+npm run loadtest -- validate -s movement-heavy   # pre-flight config check
 ```
 
 ### Output Bundle Structure
@@ -336,16 +348,20 @@ interface PlateauResult {
 
 ```typescript
 interface AuditHashes {
-  run_json_hash: string;       // BLAKE3
-  results_json_hash: string;   // BLAKE3
-  metrics_jsonl_hash: string;  // BLAKE3
+  run_json_hash: string;       // SHA-256 (hex)
+  results_json_hash: string;   // SHA-256 (hex)
+  metrics_jsonl_hash: string;  // SHA-256 (hex)
   server_receipts_hash?: string; // If accessible
 }
 ```
 
+> Implementation note: hashes are computed with SHA-256 for portability (no
+> native binding required). The `blake3` dependency is present but not used for
+> these artifacts.
+
 ### ROOT.txt
 
-Single line containing BLAKE3 hash over `AUDIT_HASHES.json`.
+Single line containing the SHA-256 hash over the serialized `AUDIT_HASHES.json`.
 
 ---
 
@@ -356,19 +372,17 @@ tools/loadtest/
 ├── package.json
 ├── tsconfig.json
 ├── src/
-│   ├── index.ts           # CLI entry point
-│   ├── config.ts          # Configuration types and validation
+│   ├── index.ts           # CLI entry point (run / scenarios / validate)
+│   ├── compare.ts         # Run comparison CLI (loadtest:compare)
+│   ├── config.ts          # Configuration types, safety validation, defaults
 │   ├── client.ts          # WebSocket client with think-time
 │   ├── runner.ts          # Step test orchestrator
 │   ├── metrics.ts         # Metrics collection and percentiles
-│   ├── artifacts.ts       # Run bundle generation
+│   ├── artifacts.ts       # Run bundle generation + hashing (SHA-256)
 │   └── scenarios/
-│       ├── index.ts       # Scenario registry
-│       ├── movement.ts    # Movement-heavy scenario
-│       ├── chatty.ts      # Chatty scenario
-│       ├── edge-path.ts   # Lifecycle scenario
-│       └── tem-path.ts    # Anti-cheat verification
-└── runs/                  # Output directory (gitignored)
+│       └── index.ts       # Scenario registry + all four scenario impls
+│                          # (movement-heavy, chatty, edge-path, tem-path)
+└── runs/                  # Output directory, created at runtime (gitignored)
 ```
 
 ---
@@ -397,7 +411,7 @@ loadtest-smoke:
     - name: Run smoke test
       run: |
         cd tools/loadtest
-        npm run loadtest -- \
+        npm run loadtest -- run \
           --scenario movement-heavy \
           --clients 5 \
           --duration 30s \
@@ -413,7 +427,7 @@ schedule:
 steps:
   - name: Full capacity test
     run: |
-      npm run loadtest -- \
+      npm run loadtest -- run \
         --scenario movement-heavy \
         --step-test \
         --max-clients 100
@@ -428,11 +442,13 @@ steps:
 
 ## 8. Usage Examples
 
+All examples below run from `tools/loadtest/`.
+
 ### Find Breaking Point
 
 ```bash
 cd tools/loadtest
-npm run loadtest -- \
+npm run loadtest -- run \
   --step-test \
   --scenario movement-heavy \
   --max-clients 100 \
@@ -443,7 +459,7 @@ npm run loadtest -- \
 ### Soak Test at Safe Ceiling
 
 ```bash
-npm run loadtest -- \
+npm run loadtest -- run \
   --scenario movement-heavy \
   --clients 40 \
   --duration 1800s \
@@ -453,7 +469,7 @@ npm run loadtest -- \
 ### Verify Tem Path
 
 ```bash
-npm run loadtest -- \
+npm run loadtest -- run \
   --scenario tem-path \
   --clients 10 \
   --duration 60s \
@@ -465,14 +481,14 @@ npm run loadtest -- \
 ```bash
 # Run on commit A
 git checkout abc123
-npm run loadtest -- --scenario movement-heavy --step-test
+npm run loadtest -- run --scenario movement-heavy --step-test
 
 # Run on commit B
 git checkout def456
-npm run loadtest -- --scenario movement-heavy --step-test
+npm run loadtest -- run --scenario movement-heavy --step-test
 
-# Compare
-npm run loadtest:compare -- runs/run-abc123 runs/run-def456
+# Compare two run bundles by directory
+npm run loadtest:compare -- runs/<run_id_A> runs/<run_id_B>
 ```
 
 ---
@@ -564,7 +580,7 @@ When using `loadtest:compare`, look for:
 
 ## 11. Related Documents
 
-- [MVP Verification Report](./MVP_VERIFICATION_REPORT_v1.md) - Current verification scope
+- [MVP Verification Report](./archive/MVP_VERIFICATION_REPORT_v1.md) - archived point-in-time verification record
 - [Architecture](./ARCHITECTURE.md) - Server design
 - [Protocol](./PROTOCOL.md) - Message specifications
 - [Anti-Cheat](./ANTICHEAT.md) - Tem and heat system

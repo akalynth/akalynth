@@ -1,9 +1,18 @@
 # Verification Spine API v1
 
-**Status:** Design (Implementation Pending)
+**Status:** Implemented (this document is the original design; see "Implementation Notes" below for how the shipped spine differs)
 **Effective:** 2026-01-22
 **Leverage Score:** 9 (Critical)
-**Purpose:** Unify 18 scattered verification tools into a single, fail-closed spine
+**Purpose:** Unify the scattered verification tools into a single, fail-closed spine
+
+> **Implementation Notes (current code, kept in sync with this design):**
+> The spine ships in `packages/verification-spine/`. A few names and flags evolved from this design doc:
+> - The execution engine lives in `src/runner.ts` (`runSpine`), not `src/orchestrator.ts`.
+> - Verifiers are defined in `src/verifiers.ts` (and `src/verifiers/`) and registered via `createDefaultRegistry()`; there is no `src/adapters/` directory of one-file-per-tool adapters as sketched below.
+> - JSON output uses `--format json` (the `--json` flag in older examples is not implemented).
+> - The CLI adds `--mode <dev|ci|audit>`, named `--profile <quick|full|audit>`, audit-bundle flags (`--bundle`, `--bundle-verify`, `--bundle-strict`, `--bundle-manifest`), and `--out <dir>`. Run `node packages/verification-spine/bin/akalynth-verify.js --help` for the authoritative flag list.
+> - Exit codes: `0` pass, `1` fail, `2` infrastructure error, `3` invalid usage.
+> - The catalog below is reconciled against the registered verifier set in `verifiers.ts`. Treat the running CLI (`npm run verify -- --list`) as ground truth if they ever diverge again.
 
 ---
 
@@ -97,7 +106,7 @@ These invariants are enforced by:
 1. **CI Pipeline** (`.github/workflows/ci.yml`)
    ```yaml
    - name: Verification Spine (Mandatory)
-     run: npm run verify -- --json > verification-report.json
+     run: npm run verify -- --format json > verification-report.json
      # This step MUST NOT have `continue-on-error: true`
    ```
 
@@ -284,7 +293,7 @@ const VERIFIERS: Verifier[] = [
     },
   },
 
-  // ... register all 18 verifiers
+  // ... register all verifiers
 ];
 ```
 
@@ -292,7 +301,8 @@ const VERIFIERS: Verifier[] = [
 
 ### 3. Orchestrator
 
-**Location:** `packages/verification-spine/src/orchestrator.ts`
+**Location (as designed):** `packages/verification-spine/src/orchestrator.ts`
+**Location (as shipped):** `packages/verification-spine/src/runner.ts` (exports `runSpine`)
 
 **Responsibilities:**
 - Runs verifiers in dependency order
@@ -398,37 +408,37 @@ Next steps:
 
 ```json
 {
-  "version": 1,
-  "timestamp": "2026-01-22T10:30:00.000Z",
-  "passed": false,
-  "totalVerifiers": 15,
-  "passed": 13,
-  "failed": 1,
-  "skipped": 1,
+  "ok": false,
+  "mode": "full",
+  "startedAt": "2026-01-22T10:30:00.000Z",
+  "finishedAt": "2026-01-22T10:30:07.200Z",
   "durationMs": 7200,
   "results": [
     {
-      "verifier": "build",
-      "name": "TypeScript Build",
-      "status": "pass",
-      "exitCode": 0,
-      "durationMs": 1200
+      "ok": true,
+      "verifierId": "build",
+      "startedAt": "2026-01-22T10:30:00.000Z",
+      "finishedAt": "2026-01-22T10:30:01.200Z",
+      "findings": []
     },
     {
-      "verifier": "protected",
-      "name": "Protected Slots",
-      "status": "fail",
-      "exitCode": 1,
-      "message": "Found 2 violations in receipts.jsonl",
-      "details": {
-        "violations": [
-          { "line": 1234, "reason": "Item lost from protected slot" },
-          { "line": 5678, "reason": "Protected slot override without receipt" }
-        ]
-      },
-      "durationMs": 400
+      "ok": false,
+      "verifierId": "protected",
+      "startedAt": "2026-01-22T10:30:06.800Z",
+      "finishedAt": "2026-01-22T10:30:07.200Z",
+      "findings": [
+        { "code": "protected_slot_loss", "severity": "error", "message": "Item lost from protected slot (receipts.jsonl:1234)" },
+        { "code": "protected_slot_override", "severity": "error", "message": "Protected slot override without receipt (receipts.jsonl:5678)" }
+      ],
+      "metrics": { "violations": 2 }
     }
-  ]
+  ],
+  "summary": {
+    "total": 15,
+    "passed": 13,
+    "failed": 1,
+    "skipped": 1
+  }
 }
 ```
 
@@ -466,8 +476,8 @@ npm run verify -- --phase 2
 # Continue on failure (don't stop at first fail)
 npm run verify -- --no-fail-fast
 
-# Output as JSON
-npm run verify -- --json
+# Output as JSON (shipped flag is --format json; the older --json is not implemented)
+npm run verify -- --format json
 
 # Dry run (show what would run, don't execute)
 npm run verify -- --dry-run
@@ -486,8 +496,9 @@ npm run verify -- --skip-build --phase 1
 
 **Full CI check:**
 ```bash
-npm run verify -- --json > verification-report.json
+npm run verify -- --format json > verification-report.json
 # Runs all phases, outputs JSON for CI parsing
+# (the spine also writes verification-report.json into its --out dir, default ./verify-out)
 ```
 
 **Debug specific verifier:**
@@ -546,8 +557,7 @@ npm run verify -- --only chronicle-chain --verbose
 # .github/workflows/ci.yml
 - name: Run Verification Spine
   run: |
-    cd apps/server
-    npm run verify -- --json > ../../verification-report.json
+    npm run verify -- --format json > verification-report.json
 
 - name: Upload Report
   uses: actions/upload-artifact@v3
@@ -558,45 +568,51 @@ npm run verify -- --only chronicle-chain --verbose
 
 ---
 
-## Verifier Catalog (18 Tools)
+## Verifier Catalog (22 Tools)
+
+> Source of truth: `packages/verification-spine/src/verifiers.ts` (`createDefaultRegistry()`), plus `src/verifiers/protocol-drift.ts`. Run `npm run verify -- --list` to print the live set.
 
 ### Phase 0: Prerequisites (3 verifiers)
 
-| ID | Name | What It Checks |
-|----|------|----------------|
-| `build` | TypeScript Build | No compilation errors |
-| `db-exists` | Database Exists | SQLite DB file present |
-| `receipts-exist` | Receipt Chain Exists | JSONL file present |
+| ID | What It Checks |
+|----|----------------|
+| `build` | Compiles TypeScript code (can be skipped with `--skip-build`) |
+| `db-exists` | Checks if SQLite database exists (may be skipped for fresh install) |
+| `receipts-exist` | Checks if `receipts.jsonl` exists |
 
 ### Phase 1: Core Guarantees (4 verifiers)
 
-| ID | Name | What It Checks |
-|----|------|----------------|
-| `guarantees` | Civil Guarantees (G1-G15) | All constitutional guarantees hold |
-| `protocol` | Protocol Sync | protocol.ts ↔ PROTOCOL.md match |
-| `doctrine` | Doctrine Consistency | No conflicting constitutional rules |
-| `identity` | Identity System | Sovereign/caps/roles integrity |
+| ID | What It Checks |
+|----|----------------|
+| `guarantees` | Enforces all constitutional guarantees (G1–G15) mechanically |
+| `doctrine` | Verifies doctrine documents exist and are linked correctly |
+| `protocol-drift` | Detects semantic drift in `protocol.ts` and enforces versioning discipline |
+| `identity` | Verifies sovereign/caps/roles integrity |
 
-### Phase 2: Domain Checks (9 verifiers)
+### Phase 2: Domain Checks (14 verifiers)
 
-| ID | Name | What It Checks |
-|----|------|----------------|
-| `treasury` | Treasury Integrity | Gold/item accounting consistent |
-| `heat` | Heat System | Deterministic heat computation |
-| `chronicle` | Chronicle Events | Event schema validation |
-| `chronicle-chain` | Chronicle Chain | Hash chain integrity |
-| `protected` | Protected Slots | Item drop policy enforcement |
-| `evidence` | Evidence System | Forensic data completeness |
-| `lifecycle` | Player Lifecycle | Session/death/respawn receipts |
-| `monetization` | Monetization Rules | Pay-to-win violations |
-| `work-contracts` | Work Contracts | Payout ordering |
+| ID | What It Checks |
+|----|----------------|
+| `chronicle` | Validates chronicle event schema |
+| `chronicle-chain` | Verifies hash chain integrity (`caps_hash`, `payload_hash`, `event_hash`) |
+| `costed-actions` | Verifies costed action receipts |
+| `evidence` | Verifies forensic evidence completeness |
+| `heat` | Verifies legendary heat integrity (DB matches receipts) |
+| `lifecycle` | Verifies session/death/respawn receipts |
+| `metrics` | Verifies metrics collection integrity |
+| `monetization` | Verifies no pay-to-win violations |
+| `npc-recognition` | Verifies NPC system integrity |
+| `presence` | Verifies player presence tracking |
+| `protected` | Verifies item drop policy enforcement (protected slots) |
+| `rate-limits` | Verifies rate limit enforcement |
+| `treasury` | Verifies gold/item accounting consistency |
+| `work-contracts` | Verifies payout ordering and contract integrity |
 
-### Phase 3: Integration Tests (2 verifiers)
+### Phase 3: Integration Tests (1 verifier)
 
-| ID | Name | What It Checks |
-|----|------|----------------|
-| `mvp` | MVP Verification | Full scenario harness (verify_mvp.sh) |
-| `ops` | Operational Readiness | Deployment prerequisites |
+| ID | What It Checks |
+|----|----------------|
+| `ops` | Verifies deployment prerequisites |
 
 ---
 
@@ -605,7 +621,7 @@ npm run verify -- --only chronicle-chain --verbose
 ### Before Spine
 
 **Pain Points:**
-- 18 scattered tools
+- ~20 scattered tools
 - No central entry point
 - Inconsistent output
 - Unclear which verifiers to run
@@ -632,7 +648,7 @@ npm run verify -- --only chronicle-chain --verbose
 - False positives: Low (consistent error handling)
 
 **Success Criteria:**
-1. All 18 verifiers callable via spine
+1. All 22 verifiers callable via spine
 2. CI uses spine exclusively (no direct tool calls)
 3. New features include verifiers automatically (force multiplier)
 4. Zero "I didn't know to run verifier X" incidents
@@ -665,7 +681,7 @@ packages/verification-spine/
 │   └── adapters/
 │       ├── guarantees.ts         # Wraps verify-guarantees.ts
 │       ├── chronicle-chain.ts    # Wraps verify-chronicle-chain.ts
-│       └── ... (18 adapters)
+│       └── ... (one per verifier)
 ├── bin/
 │   └── akalynth-verify           # Executable script
 └── README.md
@@ -675,7 +691,7 @@ packages/verification-spine/
 
 ### Step 2: Adapt Existing Tools (Incremental)
 
-**For each of 18 tools:**
+**For each verifier:**
 
 1. Create adapter in `src/adapters/`
 2. Implement `Verifier` interface
@@ -779,7 +795,7 @@ main();
 - name: Run Verification Spine
   run: |
     npm install
-    npm run verify -- --json > verification-report.json
+    npm run verify -- --format json > verification-report.json
 ```
 
 ---
@@ -906,5 +922,5 @@ No other changes needed.
 
 - [HIGH_LEVERAGE_DECISION_CHECKLIST.md](HIGH_LEVERAGE_DECISION_CHECKLIST.md) - Decision engine (scored this 9/9)
 - [LEVERAGE_TIER_MAPPING.md](LEVERAGE_TIER_MAPPING.md) - Current state audit
-- [CIVIL_GUARANTEES.md](apps/server/docs/CIVIL_GUARANTEES.md) - Constitutional law
+- [CIVIL_GUARANTEES.md](../apps/server/docs/CIVIL_GUARANTEES.md) - Constitutional law
 - [V1_SCOPE.md](V1_SCOPE.md) - Release boundaries

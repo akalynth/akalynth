@@ -1,5 +1,7 @@
 # World: Azura
 
+> **Purpose:** Reference for the Azura city map — the first major destination after onboarding. Source of truth is `packages/shared/maps/azura.json`; this doc must stay consistent with it.
+
 Azura is the **first major city** after players complete the Rookguard onboarding zone. All guests must clear the tutorial checklist in Rookguard before the server transfers them here.
 
 ## Map Specifications
@@ -62,6 +64,30 @@ Azura is the **first major city** after players complete the Rookguard onboardin
 - **Coordinates**: (26, 48) to (38, 56)
 - **Description**: Open area for gathering and chat
 - **Features**: All walkable tiles
+
+## Lore & Flavor (Player-Facing)
+
+> Narrative framing only. The coordinates, tile codes, spawn, and landmark statuses above are the source of truth; nothing in this section changes movement, spawns, zones, access control, or any mechanic. Placeholder buildings remain placeholders until enter-logic is built and routed through server + verification work.
+
+Azura is the first city a player reaches after the keep at Rookguard opens its gate. After the closed quiet of onboarding, the world widens: walls give way to open ground and the city receives newcomers at its center.
+
+### The Central Plaza — `(26, 48)` to `(38, 56)`
+
+The heart of the city and its designated gathering ground. All tiles here are walkable; it is built for standing still — for chat, meeting, and waiting — rather than for passing through. If Akalynth's culture forms before its content (see `docs/WORLD_EVOLUTION.md`), this is the floor it forms on.
+
+### The Guild Hall — `(16, 10)` to `(24, 18)`
+
+A hall raised before there were guilds to fill it. The doors do not open yet.
+
+- **Status:** placeholder — the building exists in the map but has no enter logic. Documented as flavor; claiming and customization are future, server-authoritative features.
+
+### The House Plots — `H1`–`H3`
+
+Three marked plots along the central residential row, just below the Guild Hall, waiting for owners.
+
+- **Status:** placeholders. No buy, enter, or ownership mechanic exists yet. Reserved coordinates only.
+
+Azura is intentionally unfinished. Its empty plots and silent hall are not gaps to apologize for — they are room left for players to become the reason a hall has a guild and a plot has a name.
 
 ## Tile Types
 

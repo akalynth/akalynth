@@ -1,6 +1,6 @@
 # Monetization Blueprint — What Money May Purchase (and What It Never Can)
 
-> **Status:** Future design intent (non-binding for v1).
+> **Status:** Superseded design sketch (non-binding for v1). This is the pre-formalization draft; its rules were hardened into the binding [`MONETIZATION_CONSTITUTION.md`](./MONETIZATION_CONSTITUTION.md) (the authoritative source). Kept for design history — do not cite it for guidance; cite the Constitution.
 
 > Alright. I’ll design this as a future-proof blueprint, not a commitment. Think of it as a sealed scroll you can open later.
 
@@ -84,11 +84,16 @@ This is the most dangerous layer — so it’s tightly constrained.
 
 Allowed:
 
-- Queue convenience (cosmetic priority, not faster completion)
 - Offline notifications / logs
 - Inventory organization tools
 - Replay tools (combat logs, heat graphs, receipts UI)
 - Cosmetic fast-travel visuals (not shorter routes)
+
+Proposed, **not yet ratified** into the binding constitution (the items above
+mirror `MONETIZATION_CONSTITUTION.md` Article IV.3; this one does not appear there yet):
+
+- Queue convenience (cosmetic priority, not faster completion) — requires a
+  constitutional amendment before it is permitted. Until ratified, treat as not allowed.
 
 Explicitly Not Allowed:
 
@@ -142,7 +147,7 @@ It should:
 
 Ideal abstraction:
 
-```
+```text
 Money → Support Tokens → Non-competitive uses only
 ```
 

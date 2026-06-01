@@ -4,9 +4,16 @@ import type {
   EnterWorldMessage,
   MoveIntentMessage,
   AttackIntentMessage,
+  RunestoneCastMessage,
+  TalkToNpcMessage,
+  UseSkillMessage,
+  PickupItemMessage,
+  StartWorkContractMessage,
+  WorkTickMessage,
   ChatMessage,
   GetChronicleMessage,
   ChronicleEvent,
+  PropertyPublic,
 } from '@shared/protocol';
 import type { MapName } from '@shared/http';
 import {
@@ -36,6 +43,7 @@ import { loadConfig } from '../config';
 const MOVE_REPEAT_MS = 130;
 const MOVE_TOKENS_PER_SEC_MAX = 10;
 const ATTACK_COOLDOWN_MS = 1200;
+const RUNESTONE_TABLE_ID = 'rookguard_runestone_table_01';
 const MAX_CHAT = 50;
 const DEFAULT_RESPAWN_MS = 15_000;
 
@@ -65,6 +73,11 @@ function initialState(mapName: MapName): GameClientState {
     chronicleOpen: false,
     chronicle: null,
     combat: { targetId: null, fx: [] },
+    groundItems: new Map(),
+    workContract: null,
+    inventory: [],
+    gold: 0,
+    properties: new Map(),
   };
 }
 
@@ -115,6 +128,21 @@ function findOldestTimestamp(events: ChronicleEvent[]): string | null {
     }
   }
   return oldest?.timestamp ?? null;
+}
+
+function runestoneDenialText(reason: unknown): string {
+  switch (reason) {
+    case 'cooldown':
+      return 'The runestone is cooling down';
+    case 'not_near_table':
+      return 'No runestone nearby';
+    case 'not_authorized':
+      return 'Ritual disabled on this server';
+    case 'rate_limited':
+      return 'Ritual rate limited';
+    default:
+      return 'Ritual refused';
+  }
 }
 
 function getEventGroupId(event: ChronicleEvent): number | null {
@@ -293,6 +321,11 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
         chronicleOpen: false,
         chronicle: null,
         combat: { targetId: null, fx: [] },
+        groundItems: new Map(),
+        workContract: null,
+        inventory: [],
+        gold: 0,
+        properties: new Map(),
       };
     },
     [clearMoveTimer]
@@ -508,6 +541,56 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     if (navigator.vibrate) navigator.vibrate(30);
   }, [send]);
 
+  const castRunestone = useCallback(() => {
+    const payload: RunestoneCastMessage = {
+      type: 'runestone_cast',
+      table_id: RUNESTONE_TABLE_ID,
+      guess: null,
+    };
+    send(payload);
+  }, [send]);
+
+  const talkToNpc = useCallback((npcId: string) => {
+    const payload: TalkToNpcMessage = { type: 'talk_to_npc', npc_id: npcId };
+    send(payload);
+  }, [send]);
+
+  const useSkill = useCallback((skillId: string) => {
+    const payload: UseSkillMessage = { type: 'use_skill', skill_id: skillId };
+    send(payload);
+  }, [send]);
+
+  const pickupItem = useCallback((itemId: string) => {
+    const payload: PickupItemMessage = { type: 'pickup_item', item_id: itemId };
+    send(payload);
+  }, [send]);
+
+  const startWork = useCallback(() => {
+    const payload: StartWorkContractMessage = { type: 'start_work_contract', contract_type: 'temple_sweep' };
+    send(payload);
+  }, [send]);
+
+  const buyHouse = useCallback((propertyId: string) => {
+    send({ type: 'buy_house', property_id: propertyId });
+  }, [send]);
+
+  const listHouse = useCallback((propertyId: string, price: number) => {
+    send({ type: 'list_house', property_id: propertyId, price });
+  }, [send]);
+
+  const unlistHouse = useCallback((propertyId: string) => {
+    send({ type: 'unlist_house', property_id: propertyId });
+  }, [send]);
+
+  const tickWork = useCallback(() => {
+    setState(s => {
+      if (!s.workContract) return s;
+      const payload: WorkTickMessage = { type: 'work_tick', contract_id: s.workContract.contract_id };
+      send(payload);
+      return s;
+    });
+  }, [send]);
+
   const sendChat = useCallback(
     (message: string) => {
       if (!message.trim()) return;
@@ -660,12 +743,35 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
                 : s;
               const others = new Map<string, PlayerPublic>();
               for (const p of data.nearby_players || []) others.set(p.id, p);
-              return {
+
+              // Detect HP loss on self (same map only) → damage feedback
+              const prevHp = s.world.me?.hp;
+              const newHp = (data.player as PlayerPublic | undefined)?.hp;
+              const sameMap = !nextMap || nextMap === s.world.map.name;
+              let next: GameClientState = {
                 ...base,
                 conn,
                 loop,
                 world: { map: runtimeMap ?? base.world.map, me: data.player, others },
               };
+              if (
+                sameMap &&
+                typeof prevHp === 'number' &&
+                typeof newHp === 'number' &&
+                newHp < prevHp &&
+                data.player
+              ) {
+                const dmg = prevHp - newHp;
+                next = addFx(next, {
+                  x: data.player.x,
+                  y: data.player.y,
+                  text: `-${dmg}`,
+                  at: Date.now(),
+                  ttlMs: 900,
+                });
+                next = pushToast(next, 'combat', `Took ${dmg} damage — ${newHp} HP left`, 'HIT');
+              }
+              return next;
             }
             case 'player_moved': {
               const { player_id, x, y } = data;
@@ -779,6 +885,158 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
               return { ...next, conn, cooldowns: { ...next.cooldowns, attackEndsAt: cooldownEndsAt } };
             }
 
+            case 'runestone_result': {
+              const face = typeof data.face === 'string' ? data.face : 'unknown';
+              const whisper = typeof data.whisper === 'string' ? data.whisper : 'The stone answers.';
+              const casterName =
+                data.caster && typeof data.caster === 'object' && typeof data.caster.name === 'string'
+                  ? data.caster.name
+                  : 'someone';
+              const line = `${casterName} cast the runestone: ${face}. ${whisper}`;
+              return pushToast(s, 'runestone', line, String(face).toUpperCase());
+            }
+
+            case 'runestone_denied': {
+              const line = runestoneDenialText(data.reason);
+              return pushToast(s, 'runestone', line, 'RITUAL');
+            }
+
+            case 'npc_dialogue': {
+              const npcLabel = typeof data.npc_id === 'string'
+                ? data.npc_id.replace(/_/g, ' ')
+                : 'NPC';
+              const line = typeof data.line === 'string' ? data.line : '...';
+              return pushToast(s, 'npc', line, npcLabel.toUpperCase());
+            }
+
+            case 'npc_dialogue_error': {
+              const msg = data.error === 'not_in_place'
+                ? 'Not close enough to speak'
+                : 'Unknown NPC';
+              return pushToast(s, 'npc', msg, 'NPC');
+            }
+
+            case 'skill_result': {
+              const skillId = typeof data.skill_id === 'string' ? data.skill_id : '';
+              const success = data.success === true;
+              const payload = data.payload as Record<string, unknown> | undefined;
+              if (skillId.startsWith('item:use:')) {
+                const effect = typeof payload?.effect === 'string' ? payload.effect : 'Used.';
+                const line = success ? effect : 'Cannot use that item here.';
+                return pushToast(s, 'npc', line, 'USE');
+              }
+              if (skillId.startsWith('shop:')) {
+                const itemType = payload?.item_type;
+                const label = typeof itemType === 'string'
+                  ? itemType.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+                  : skillId.slice(5).replace(/_/g, ' ');
+                const errorHint = payload?.error;
+                const line = success
+                  ? `Purchased: ${label}`
+                  : errorHint === 'insufficient_gold'
+                    ? 'Not enough gold'
+                    : data.reason === 'invalid_target'
+                      ? 'Must be in the guild hall'
+                      : 'Purchase failed';
+                return pushToast(s, 'npc', line, 'SHOP');
+              }
+              return { ...s, conn };
+            }
+
+            case 'world_item_added': {
+              if (typeof data.item_id !== 'string') return { ...s, conn };
+              const nextItems = new Map(s.groundItems);
+              nextItems.set(data.item_id, {
+                item_id: data.item_id,
+                item_type: typeof data.item_type === 'string' ? data.item_type : 'item',
+                x: typeof data.x === 'number' ? data.x : 0,
+                y: typeof data.y === 'number' ? data.y : 0,
+              });
+              return { ...s, conn, groundItems: nextItems };
+            }
+
+            case 'world_item_removed': {
+              if (typeof data.item_id !== 'string') return { ...s, conn };
+              const nextItems = new Map(s.groundItems);
+              nextItems.delete(data.item_id);
+              return { ...s, conn, groundItems: nextItems };
+            }
+
+            case 'work_contract_started': {
+              const contract_id = typeof data.contract_id === 'string' ? data.contract_id : '';
+              const payout_gold = typeof data.payout_gold === 'number' ? data.payout_gold : 0;
+              const ticks_required = typeof data.ticks_required === 'number' ? data.ticks_required : 0;
+              const min_duration_ms = typeof data.min_duration_ms === 'number' ? data.min_duration_ms : 0;
+              return {
+                ...s, conn,
+                workContract: { contract_id, payout_gold, ticks_observed: 0, ticks_required, remaining_ms: min_duration_ms },
+              };
+            }
+
+            case 'work_progress': {
+              if (!s.workContract) return { ...s, conn };
+              const ticks_observed = typeof data.ticks_observed === 'number' ? data.ticks_observed : s.workContract.ticks_observed;
+              const ticks_required = typeof data.ticks_required === 'number' ? data.ticks_required : s.workContract.ticks_required;
+              const remaining_ms = typeof data.remaining_ms === 'number' ? data.remaining_ms : s.workContract.remaining_ms;
+              return { ...s, conn, workContract: { ...s.workContract, ticks_observed, ticks_required, remaining_ms } };
+            }
+
+            case 'work_contract_result': {
+              const success = data.success === true;
+              const goldEarned = typeof data.credited_gold === 'number' ? data.credited_gold : 0;
+              const errMsg = typeof data.error === 'string' ? data.error.replace(/_/g, ' ') : null;
+              const line = success ? `Sweep done — ${goldEarned} gold earned` : `Sweep failed: ${errMsg ?? 'unknown'}`;
+              const next = pushToast(s, 'npc', line, 'SWEEP');
+              return { ...next, workContract: null };
+            }
+
+            case 'inventory_snapshot': {
+              const items = Array.isArray(data.items)
+                ? (data.items as { item_id: string; item_type: string; slot?: string | null }[])
+                    .filter(i => typeof i.item_id === 'string' && typeof i.item_type === 'string')
+                : [];
+              return { ...s, conn, inventory: items };
+            }
+
+            case 'wallet_snapshot': {
+              const gold = typeof data.gold === 'number' ? data.gold : s.gold;
+              return { ...s, conn, gold };
+            }
+
+            // Property Ownership v0
+            case 'property_snapshot': {
+              const list = Array.isArray(data.properties) ? (data.properties as PropertyPublic[]) : [];
+              const properties = new Map<string, PropertyPublic>();
+              for (const p of list) properties.set(p.property_id, p);
+              return { ...s, conn, properties };
+            }
+
+            case 'property_state': {
+              const p = data.property as PropertyPublic | undefined;
+              if (!p || typeof p.property_id !== 'string') return { ...s, conn };
+              const properties = new Map(s.properties);
+              properties.set(p.property_id, p);
+              return { ...s, conn, properties };
+            }
+
+            case 'house_sold': {
+              const buyer = typeof data.buyer_name === 'string' ? data.buyer_name : 'someone';
+              const plot = typeof data.plot_id === 'string' ? data.plot_id : '';
+              const price = typeof data.price === 'number' ? data.price : 0;
+              return pushToast({ ...s, conn }, 'system', `${plot} sold to ${buyer} for ${price}g`, 'SOLD');
+            }
+
+            case 'property_result': {
+              if (data.success === true) return { ...s, conn };
+              const reason = typeof data.reason === 'string' ? data.reason : 'denied';
+              return pushToast({ ...s, conn }, 'system', `House action failed: ${reason}`, 'DENIED');
+            }
+
+            case 'pickup_item_result': {
+              if (data.ok !== true) return { ...s, conn };
+              return pushToast(s, 'npc', 'Item picked up', 'LOOT');
+            }
+
             case 'chronicle_snapshot': {
               const events = Array.isArray(data.events) ? data.events as ChronicleEvent[] : [];
               const hasMore = typeof data.has_more === 'boolean' ? data.has_more : false;
@@ -829,7 +1087,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
                 data.respawn_in_ms >= 0
                   ? data.respawn_in_ms
                   : DEFAULT_RESPAWN_MS;
-              const me = { ...s.world.me, status: 'dead', dead_until_ms: Date.now() + respawnMs };
+              const me = { ...s.world.me, status: 'dead' as const, dead_until_ms: Date.now() + respawnMs };
               const hasLostItems = Object.prototype.hasOwnProperty.call(data, 'lost_items');
               const detail = hasLostItems ? formatLostItems((data as { lost_items?: unknown }).lost_items) : undefined;
               const toast: ToastNotice = {
@@ -934,6 +1192,16 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     [boot, resetSessionState]
   );
 
+  // Log out and sign back in with a fresh session (character-select flow).
+  const relog = useCallback(() => {
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+    resetSessionState(mapName);
+    boot(mapName);
+  }, [boot, mapName, resetSessionState]);
+
   useEffect(() => {
     resetSessionState(mapName);
     boot(mapName);
@@ -948,6 +1216,12 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     releaseMove,
     stopMoves,
     sendAttack,
+    castRunestone,
+    talkToNpc,
+    useSkill,
+    pickupItem,
+    startWork,
+    tickWork,
     sendChat,
     requestChronicle,
     openChronicle,
@@ -958,8 +1232,12 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     setTarget,
     setStage,
     toggleMap,
+    relog,
     openChat,
     closeChat,
+    buyHouse,
+    listHouse,
+    unlistHouse,
   };
 
   return [state, api];

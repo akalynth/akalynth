@@ -3,17 +3,22 @@ package com.akalynth.client.ui.components
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.akalynth.client.game.MapRepository
+import com.akalynth.client.protocol.MapData
 import com.akalynth.client.protocol.MapName
 import com.akalynth.client.protocol.PlayerPublic
 import com.akalynth.client.protocol.PlayerStatus
+import com.akalynth.client.protocol.TileCode
 
-// Tile colors for MVP (simple colored rectangles)
+// Tile colors keyed by the canonical TileCode (mirrors packages/shared/types.ts TileCode).
 private val TILE_GRASS = Color(0xFF2D5A27)
 private val TILE_STONE = Color(0xFF6B6B6B)
 private val TILE_WALL = Color(0xFF3D3D3D)
@@ -21,11 +26,32 @@ private val TILE_WATER = Color(0xFF1E5F8A)
 private val TILE_DOOR = Color(0xFF8B4513)
 private val TILE_TUTORIAL = Color(0xFF4A6741)
 private val TILE_GATE = Color(0xFFD4AF37)
+private val TILE_UNKNOWN = Color(0xFF222222)
 
 private val PLAYER_SELF = Color(0xFF4CAF50)
 private val PLAYER_OTHER = Color(0xFF2196F3)
 private val PLAYER_DEAD = Color(0xFF9E9E9E)
 
+private fun colorFor(tile: TileCode): Color = when (tile) {
+    TileCode.GRASS -> TILE_GRASS
+    TileCode.STONE -> TILE_STONE
+    TileCode.WALL -> TILE_WALL
+    TileCode.WATER -> TILE_WATER
+    TileCode.DOOR -> TILE_DOOR
+    TileCode.TUTORIAL_MOVE,
+    TileCode.TUTORIAL_CHAT,
+    TileCode.TUTORIAL_TEM -> TILE_TUTORIAL
+    TileCode.GATE_TO_AZURA -> TILE_GATE
+    TileCode.UNKNOWN -> TILE_UNKNOWN
+}
+
+/**
+ * Renders the world around the player using the real canonical map tile grid
+ * (see [MapRepository] / `packages/shared/maps`). Out-of-bounds cells render as wall.
+ *
+ * Display-only: the server remains authoritative for walkability and collision. Tiles are read
+ * solely to draw, never to gate movement.
+ */
 @Composable
 fun GameCanvas(
     map: MapName,
@@ -33,6 +59,10 @@ fun GameCanvas(
     others: List<PlayerPublic>,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    // Loaded once per map; MapRepository caches across recompositions.
+    val mapData: MapData? = remember(map) { MapRepository.load(context, map) }
+
     Canvas(
         modifier = modifier.background(Color(0xFF1A1A1A))
     ) {
@@ -41,11 +71,9 @@ fun GameCanvas(
         val centerY = size.height / 2
 
         me?.let { player ->
-            // Calculate visible range
             val visibleTilesX = (size.width / tileSize / 2).toInt() + 2
             val visibleTilesY = (size.height / tileSize / 2).toInt() + 2
 
-            // Draw tiles (simple grid for MVP)
             for (dy in -visibleTilesY..visibleTilesY) {
                 for (dx in -visibleTilesX..visibleTilesX) {
                     val tileX = player.x + dx
@@ -54,11 +82,12 @@ fun GameCanvas(
                     val screenX = centerX + (dx * tileSize) - tileSize / 2
                     val screenY = centerY + (dy * tileSize) - tileSize / 2
 
-                    // Simple tile coloring based on position (real tiles would come from map data)
-                    val tileColor = getTileColor(tileX, tileY, map)
+                    // Real tile from canonical map data; wall outside bounds. If the asset failed to
+                    // load, fall back to a neutral void rather than fabricating terrain.
+                    val tile = mapData?.tileAt(tileX, tileY) ?: TileCode.UNKNOWN
 
                     drawRect(
-                        color = tileColor,
+                        color = colorFor(tile),
                         topLeft = Offset(screenX, screenY),
                         size = Size(tileSize - 1, tileSize - 1)
                     )
@@ -124,33 +153,4 @@ private fun DrawScope.drawPlayer(
         radius = radius * 0.4f,
         center = Offset(x - radius * 0.2f, y - radius * 0.2f)
     )
-}
-
-private fun getTileColor(x: Int, y: Int, map: MapName): Color {
-    // Simple procedural tile coloring for MVP
-    // Real implementation would read from map data
-    val mapSize = if (map == MapName.ROOKGUARD) 32 else 64
-
-    // Border walls
-    if (x < 0 || y < 0 || x >= mapSize || y >= mapSize) {
-        return TILE_WALL
-    }
-
-    // Gate position (simplified)
-    if (map == MapName.ROOKGUARD && x == mapSize - 1 && y == mapSize / 2) {
-        return TILE_GATE
-    }
-
-    // Water bodies (decorative)
-    if ((x + y) % 17 == 0 && x > 5 && y > 5) {
-        return TILE_WATER
-    }
-
-    // Stone paths
-    if (x % 8 < 2 || y % 8 < 2) {
-        return TILE_STONE
-    }
-
-    // Default grass
-    return TILE_GRASS
 }

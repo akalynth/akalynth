@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -sS *)",
+      "Bash(dig *)",
+      "Bash(nmap *)",
+      "Bash(shasum *)",
+      "Bash(apt-cache *)",
+      "Bash(npm -w apps/server run build)",
+      "Bash(npm -w apps/debug-client run build)",
+      "Bash(host *)",
+      "Bash(whois *)"
+    ]
+  }
+}

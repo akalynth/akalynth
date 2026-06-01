@@ -63,6 +63,8 @@ export interface Player {
   state: PlayerState;
   status: PlayerStatus;
   dead_until_ms?: number | null;
+  hp?: number;
+  max_hp?: number;
   reputation?: number;
   // Sovereign presence (cosmetic only)
   title?: string | null;
@@ -97,6 +99,8 @@ export interface PlayerPublic {
   y: number;
   status: PlayerStatus;
   dead_until_ms?: number | null;
+  hp?: number;
+  max_hp?: number;
   reputation?: number;
   // Sovereign presence (cosmetic only)
   title?: string | null;
@@ -140,6 +144,9 @@ export type LandmarksWire = Record<string, LandmarkWire | LandmarkGroupWire | La
 
 export interface HousePlot extends Landmark {
   id: string;
+  // Property Ownership v0: addressable district label + primary (treasury) sale price.
+  district?: string;
+  primary_price_gold?: number;
 }
 
 export interface MapData {
@@ -391,13 +398,39 @@ export const MAX_GOLD_AMOUNT = 1_000_000;
 
 // Credit/debit reasons (audit trail)
 export type WalletCreditReason =
-  | 'work_contract'  // Faucet: earned through labor (future)
-  | 'debug_grant';   // Debug-only: admin grant
+  | 'work_contract'              // Faucet: earned through labor (future)
+  | 'debug_grant'                // Debug-only: admin grant
+  | `property_sale:${string}`;   // Resale: seller credited (property_sale:<property_id>)
 
 export type WalletDebitReason =
-  | 'temple_tithe'            // Sink: voluntary tithe
-  | 'debug_burn'              // Debug-only: admin burn
-  | `action_cost:${string}`;  // Costed action: action_cost:<action_type>
+  | 'temple_tithe'                  // Sink: voluntary tithe
+  | 'debug_burn'                    // Debug-only: admin burn
+  | `action_cost:${string}`         // Costed action: action_cost:<action_type>
+  | `property_purchase:${string}`   // Primary sale sink (property_purchase:<property_id>)
+  | `property_transfer:${string}`;  // Resale buyer debit (property_transfer:<property_id>)
+
+// ============================================================================
+// Property Registry v0 (House Ownership)
+// ============================================================================
+
+// Receipt actions. property_created is system-emitted at boot (seed); the rest
+// carry player ids and are surfaced publicly only via anonymized endpoints.
+export const PROPERTY_CREATED_ACTION = 'property_created';
+export const PROPERTY_LISTED_ACTION = 'property_listed';
+export const PROPERTY_UNLISTED_ACTION = 'property_unlisted';
+export const PROPERTY_PURCHASED_ACTION = 'property_purchased';     // primary sale (treasury → player, gold sink)
+export const PROPERTY_TRANSFERRED_ACTION = 'property_transferred'; // resale (player → player, conserved)
+
+export type PropertyStatus = 'unowned' | 'owned' | 'listed';
+
+export type PropertyDenialReason =
+  | 'unknown_plot'
+  | 'not_for_sale'
+  | 'already_owned'
+  | 'cannot_buy_own'
+  | 'insufficient_gold'
+  | 'not_owner'
+  | 'invalid_price';
 
 // ============================================================================
 // Monetization (Support Credits) — Policy-Governed

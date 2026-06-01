@@ -1,10 +1,14 @@
 # Copilot Delegation
 
+> **Purpose:** Explain the delegation pattern Akalynth uses to keep architecture-critical work inside guardrails, and how it is realized today via `.claude/skills/`.
+>
+> **Current implementation note:** This document was written when delegation targets lived in `.claude/agents/` and `.claude/commands/`, with a root `CLAUDE.md`. The repository has since consolidated on **`.claude/skills/`** (each skill is a `SKILL.md` with `name` + `description` frontmatter). There is no `.claude/agents/`, no `.claude/commands/`, and no root `CLAUDE.md` today. Concrete paths below have been updated to match the current layout; the conceptual sections still use "custom agent" language generically. See **[FLAGGED FOR HUMAN]** at the end for a recommended deeper reconciliation.
+
 ## What is Copilot Delegation?
 
-**Copilot delegation** is a development pattern where a general-purpose AI coding assistant (like GitHub Copilot) delegates specialized tasks to **custom agents**—focused AI experts with domain-specific knowledge, tools, and constraints.
+**Copilot delegation** is a development pattern where a general-purpose AI coding assistant (like GitHub Copilot) delegates specialized tasks to **focused skills (custom agents)**—domain experts with specific knowledge, tools, and constraints.
 
-Think of it as a senior engineer (the general Copilot) managing a team of specialized engineers (custom agents), where each specialist has deep expertise in one area.
+Think of it as a senior engineer (the general Copilot) managing a team of specialized engineers (the skills under `.claude/skills/`), where each specialist has deep expertise in one area.
 
 ## Core Concept
 
@@ -16,14 +20,17 @@ Think of it as a senior engineer (the general Copilot) managing a team of specia
 │  • Validates overall integration                        │
 └────────────┬────────────────────────────────────────────┘
              │
-             ├─► Custom Agent: chronicle-evidence-engineer
-             │   └─ Expertise: Forensic evidence, receipts
+             ├─► Skill: protocol-guardian
+             │   └─ Expertise: WebSocket protocol / client-server contract
              │
-             ├─► Custom Agent: protocol-engineer (future)
-             │   └─ Expertise: WebSocket protocol changes
+             ├─► Skill: anti-cheat-steward
+             │   └─ Expertise: Detection, heat, Tem, enforcement
              │
-             └─► Custom Agent: anticheat-engineer (future)
-                 └─ Expertise: Detection patterns, Tem logic
+             ├─► Skill: server-cartographer
+             │   └─ Expertise: Server world / map authority
+             │
+             └─► Skill: receipt-chain-steward
+                 └─ Expertise: Append-only receipts, evidence chain
 ```
 
 ## Why Delegation Matters for Akalynth
@@ -62,11 +69,11 @@ Result: May violate receipts-first, forget audit trail,
 ```
 User: "Add item drop evidence for players"
      ↓
-Copilot: *recognizes this is Phase 4.4 Chronicle Evidence*
+Copilot: *recognizes this is chronicle/receipt evidence work*
      ↓
-Copilot: *delegates to chronicle-evidence-engineer agent*
+Copilot: *delegates to receipt-chain-steward skill*
      ↓
-Custom Agent:
+Skill (Custom Agent):
   - Validates against Civil Guarantees
   - Ensures receipt-driven design
   - Uses existing explainDeathDrops() function
@@ -76,52 +83,61 @@ Custom Agent:
 Result: Architecturally sound implementation
 ```
 
-## Akalynth's Custom Agent System
+## Akalynth's Skill (Custom Agent) System
 
 ### Directory Structure
 
-```
+Delegation targets live under `.claude/skills/`, one directory per skill, each containing a `SKILL.md`:
+
+```text
 .claude/
-├── agents/
-│   └── chronicle-evidence-engineer.md  # Phase 4.4 specialist
-├── commands/
-│   ├── anticheat.md       # Quick anticheat review
-│   ├── atomic.md          # Commit discipline check
-│   ├── bootstrap.md       # Environment setup
-│   ├── protocol.md        # Protocol validation
-│   └── verify.md          # MVP verification
-└── settings.json          # Permissions, hooks, plugins
+├── skills/
+│   ├── anti-cheat-steward/SKILL.md          # Heat, Tem, enforcement
+│   ├── protocol-guardian/SKILL.md           # WebSocket protocol / contract
+│   ├── server-cartographer/SKILL.md         # Server world / map authority
+│   ├── receipt-chain-steward/SKILL.md       # Append-only receipt chain
+│   ├── coordination-kernel-steward/SKILL.md
+│   ├── gameplay-loop-designer/SKILL.md
+│   ├── content-designer/SKILL.md
+│   ├── map-and-lore-builder/SKILL.md
+│   ├── debug-client/SKILL.md
+│   ├── android-client/SKILL.md
+│   ├── ci-steward/SKILL.md
+│   ├── deploy-steward/SKILL.md
+│   ├── test-runner/SKILL.md
+│   ├── delegation-steward/SKILL.md          # Turns requests into delegated tasks/issues
+│   └── akalynth-system-audit/SKILL.md
+└── settings.json                            # Permissions
 ```
 
-### Custom Agent Anatomy
+> The full, authoritative list of skills is whatever exists under `.claude/skills/`. The set above reflects the current tree and may change.
 
-Each agent is a markdown file with:
+### Skill Anatomy
 
-1. **Frontmatter** - Name, description, model selection
-2. **Role Statement** - What the agent does
-3. **Hard Constraints** - Non-negotiable rules
-4. **Scope** - What's in/out of scope
-5. **Operating Principles** - How to approach tasks
-6. **Project Context** - Akalynth-specific knowledge
+Each skill is a `SKILL.md` file with:
 
-Example from `chronicle-evidence-engineer.md`:
+1. **Frontmatter** — `name` and `description` (the description states when to use the skill)
+2. **Role Statement** — what the skill does
+3. **Hard Constraints** — non-negotiable rules
+4. **Scope** — what's in/out of scope
+5. **Operating Principles** — how to approach tasks
+6. **Project Context** — Akalynth-specific knowledge
+
+Example (abridged) from `.claude/skills/anti-cheat-steward/SKILL.md`:
 
 ```markdown
 ---
-name: chronicle-evidence-engineer
-description: "Use this agent when working on Phase 4.4..."
-model: opus
+name: anti-cheat-steward
+description: Use when modifying Akalynth anti-cheat detection, heat, Tem challenges, enforcement, penalties, evidence, or player-facing anti-bot feedback.
 ---
 
-You are the Chronicle Evidence Engineer for Akalynth.
+# Anti-Cheat Steward
 
-Hard constraints (non-negotiable):
-1. Receipts are canonical. SQLite is a projection only.
-2. You may NOT introduce new gameplay rules, randomness, or state mutation.
-3. All explanations must be reproducible from:
-   - receipt_hash
-   - drop-policy inputs
-   - deterministic functions already present in code.
+Keep enforcement deterministic, evidenced, and explainable.
+
+Separate these concerns:
+- Detection: signals, cadence, movement anomalies, chat rate, priors.
+...
 ```
 
 ## When to Use Delegation
@@ -134,7 +150,7 @@ Hard constraints (non-negotiable):
    - Anti-cheat detector patterns
 
 2. **Domain-Specific Features**
-   - Chronicle evidence (use `chronicle-evidence-engineer`)
+   - Chronicle evidence (use `receipt-chain-steward`)
    - Tem challenge logic (future `anticheat-engineer`)
    - World state updates (future `world-engineer`)
 
@@ -264,9 +280,8 @@ Project context:
 
 ```markdown
 ---
-name: [agent-name]
-description: "Use this agent when working on [feature area]..."
-model: opus  # or sonnet for faster/cheaper tasks
+name: [skill-name]
+description: Use when working on [feature area]...
 ---
 
 You are the [Role] for Akalynth.
@@ -353,17 +368,17 @@ interface MoveResult {
 // 6. Update verification scenario
 ```
 
-### Example 3: Evidence Feature (Real Agent)
+### Example 3: Evidence Feature
 
 **Task:** "Show players why their item dropped on death"
 
 **Delegation flow:**
 ```
-Copilot recognizes: Phase 4.4 Chronicle Evidence
+Copilot recognizes: chronicle/receipt evidence work
     ↓
-Delegates to: chronicle-evidence-engineer
+Delegates to: receipt-chain-steward
     ↓
-Agent implements:
+Skill implements:
   ✅ Read-only WS endpoint (get_evidence)
   ✅ Validates player ownership
   ✅ Reuses explainDeathDrops()
@@ -372,20 +387,20 @@ Agent implements:
   ✅ Preserves Civil Guarantees
 ```
 
-## Integration with CLAUDE.md
+## Integration with General Guidance
 
-The main `CLAUDE.md` file provides general guidance for **all** tasks. Custom agents are **specialists** that operate within those guidelines but add domain-specific knowledge.
+General, project-wide guidance (project overview, build/test commands, commit discipline, MVP scope) lives in the top-level docs — primarily `README.md`, `docs/ARCHITECTURE.md`, and `docs/CURRENT_STAGE.md`. (There is no root `CLAUDE.md` in this repository today.) Skills are **specialists** that operate within that guidance but add domain-specific knowledge.
 
 ### Division of Responsibility
 
-**CLAUDE.md** (General Guidelines):
+**General guidance** (`README.md`, `docs/ARCHITECTURE.md`, `docs/CURRENT_STAGE.md`):
 - Project overview
 - Build/test commands
 - File structure
 - Commit discipline
 - MVP scope
 
-**Custom Agents** (Domain Specialists):
+**Skills / Custom Agents** (Domain Specialists):
 - Specific feature constraints
 - Domain-specific patterns
 - Technical decision rationale
@@ -396,11 +411,11 @@ The main `CLAUDE.md` file provides general guidance for **all** tasks. Custom ag
 ```
 User: "Add Tem challenge for chat spam"
     ↓
-CLAUDE.md: Provides context about Tem system, anticheat pipeline
+General docs (ARCHITECTURE.md / ANTICHEAT.md): Context on Tem + anticheat pipeline
     ↓
 Copilot: Recognizes this is anticheat work
     ↓
-Custom Agent (anticheat-engineer): Implements with proper:
+Skill (anti-cheat-steward): Implements with proper:
   - Heat scoring
   - Threshold checks
   - Challenge issuance
@@ -408,27 +423,23 @@ Custom Agent (anticheat-engineer): Implements with proper:
   - Audit trail
 ```
 
-## Commands vs Agents
+## Skills and Validation
 
-### Commands (`.claude/commands/*.md`)
+### Skills (`.claude/skills/*/SKILL.md`)
 
-**Purpose:** Quick validations, one-off checks
-
-**Examples:**
-- `anticheat.md` - Review anticheat logic
-- `atomic.md` - Check commit atomicity
-- `verify.md` - Run MVP verification
-
-**When to use:** Quick checks during development
-
-### Agents (`.claude/agents/*.md`)
-
-**Purpose:** Full implementation with domain expertise
+**Purpose:** Domain expertise for both quick checks and full implementation
 
 **Examples:**
-- `chronicle-evidence-engineer` - Implement evidence features
+- `anti-cheat-steward` — anti-cheat detection, heat, Tem, enforcement
+- `protocol-guardian` — WebSocket protocol / client-server contract
+- `server-cartographer` — server world / map authority
+- `receipt-chain-steward` — append-only receipt chain
+- `ci-steward` — CI gates and verification workflow
+- `test-runner` — running and triaging tests
 
-**When to use:** Building features, refactoring domains
+**When to use:** Building features, refactoring domains, or running a focused review within a domain's constraints.
+
+> Historical note: earlier revisions of this doc split delegation into `.claude/commands/*.md` (quick checks) and `.claude/agents/*.md` (full implementation). Those directories no longer exist; both roles are now served by skills under `.claude/skills/`.
 
 ## Best Practices
 
@@ -543,8 +554,24 @@ As the project grows, custom agents become increasingly valuable—they're livin
 
 ## Further Reading
 
-- `CLAUDE.md` - General development guidance
-- `docs/ARCHITECTURE.md` - System architecture
-- `docs/PROTOCOL.md` - WebSocket protocol
-- `docs/ANTICHEAT.md` - Anti-cheat system
-- `.claude/agents/chronicle-evidence-engineer.md` - Example custom agent
+- `docs/ARCHITECTURE.md` — System architecture
+- `docs/PROTOCOL.md` — WebSocket protocol
+- `docs/ANTICHEAT.md` — Anti-cheat system
+- `.claude/skills/delegation-steward/SKILL.md` — How requests become delegated tasks
+- `.claude/skills/anti-cheat-steward/SKILL.md` — Example domain skill
+- `.claude/skills/` — All available skills (the authoritative list)
+
+---
+
+## Maintainer note
+
+Concrete paths and examples in this guide have been updated to the current
+`.claude/skills/` layout (there is no `.claude/agents/`, `.claude/commands/`, or root
+`CLAUDE.md`). The named specialists referenced throughout — `protocol-engineer`,
+`anticheat-engineer`, `world-engineer`, `chronicle-evidence-engineer` — are
+**illustrative future skills**, not skills that exist today; the authoritative list is
+whatever lives under `.claude/skills/`.
+
+Open decision for maintainers: whether to keep this conceptual guide (which still uses
+the older "custom agents vs commands" framing generically) or retire it in favor of the
+per-skill `SKILL.md` files. This is a documentation-strategy choice, not a factual fix.

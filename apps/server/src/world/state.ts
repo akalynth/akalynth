@@ -25,6 +25,8 @@ export function toPublicPlayer(p: Player, includeDeadUntil = false): PlayerPubli
     y: p.y,
     status: p.status ?? 'alive',
     dead_until_ms: includeDeadUntil ? p.dead_until_ms : undefined,
+    hp: p.hp,
+    max_hp: p.max_hp,
     reputation: p.reputation,
     // Sovereign presence (cosmetic only)
     title: p.title ?? null,

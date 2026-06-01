@@ -164,10 +164,12 @@ Choose exactly one outcome based on evidence:
 
 ### Server Side
 
+```text
+apps/server/audit/receipts.jsonl    # All receipts (canonical append-only chain)
+apps/server/data/akalynth.db        # SQLite projection of persisted state
 ```
-apps/server/data/receipts.jsonl     # All receipts
-apps/server/data/akalynth.db        # Persisted state
-```
+
+> Paths shown are the defaults when the server is launched from `apps/server/` (the runbook convention). They can be overridden via `AKALYNTH_RECEIPT_CHAIN_PATH` and `AKALYNTH_DB_PATH`. See `packages/shared/paths.ts` (`resolveChainPaths`).
 
 ### Client Side (Android)
 

@@ -1,67 +1,242 @@
-// NPC Recognition v0
-// Read-only interpretation layer over World Presence projection
+// NPC Recognition v0 → Dialogue Contract v1
+// Read-only interpretation layer over World Presence projection.
 // NPCs may speak — they may not change the world.
+//
+// Dialogue Contract v1 (Path A — seeded variation):
+//   Each recognition tier declares a *stable intent* plus pools of opener
+//   phrasings and facts. The line a player hears is assembled
+//   deterministically from a seed of (npc_id, tier, player_id, nonce)
+//   using the same blake3 RNG the world uses for drops/runestones.
+//
+//   So an NPC says the SAME THING (intent + must_convey facts are
+//   invariant) but DIFFERENTLY each time (the opener wording rotates and
+//   the may_convey facts surface in varying subsets) — and because the
+//   variation is seeded, it stays fully replayable and auditable. No live
+//   model call, no non-determinism injected into the verification spine.
 
 import type { PlaceId } from '../../../../packages/shared/types.js';
 import type { NpcRecognitionTier } from '../../../../packages/shared/protocol.js';
 import { hasLingered, hasBeenObserved } from './presence.js';
+import { rngDrawU32Legacy } from './rng.js';
 
 // ============================================================================
-// NPC Definition
+// Dialogue Contract
 // ============================================================================
 
-interface NpcDef {
+/** A single conveyable fact. `text` is the rendered sentence. */
+export interface NpcFact {
+  fact_id: string;
+  text: string;
+}
+
+export interface NpcTierContract {
+  /** Stable semantic intent of this tier — the "same thing" said every time. */
+  intent_id: string;
+  /** Varied opener phrasings; the seed picks exactly one. Must be non-empty. */
+  openers: string[];
+  /** Facts that ALWAYS surface at this tier (instructions, prices, gating). */
+  must_convey: NpcFact[];
+  /** Optional flavor facts; the seed surfaces a varying subset (0..all). */
+  may_convey: NpcFact[];
+}
+
+export interface NpcDef {
   npc_id: string;
   place_id: PlaceId;
-  lines: {
-    stranger: string;
-    seen: string;
-    recognized: string;
-  };
+  tiers: Record<NpcRecognitionTier, NpcTierContract>;
+}
+
+/**
+ * Per-utterance variation key.
+ * `nonce` must be a deterministic, replayable value the caller already owns
+ * (e.g. a per-session talk counter) so the same utterance replays identically.
+ */
+export interface NpcDialogueVariation {
+  playerId: string;
+  nonce?: number | string;
 }
 
 // ============================================================================
-// Static NPC Registry (v0)
+// Static NPC Registry (Dialogue Contract v1)
 // ============================================================================
 
 const NPC_REGISTRY: NpcDef[] = [
   {
+    npc_id: 'rookguard_guide',
+    place_id: 'rookguard',
+    tiers: {
+      stranger: {
+        intent_id: 'guide_gate_steps',
+        openers: ['Welcome, traveler.', 'Well met, traveler.', 'Ah, a new face — welcome.'],
+        must_convey: [
+          {
+            fact_id: 'gate_steps',
+            text: "Step onto the glowing rune ahead, then send a chat signal, then answer Tem's challenge.",
+          },
+          { fact_id: 'gate_opens', text: 'The gate to Azura opens when all three are done.' },
+        ],
+        may_convey: [
+          { fact_id: 'no_rush', text: 'Many pass through here; none need rush it.' },
+        ],
+      },
+      seen: {
+        intent_id: 'guide_gate_reminder',
+        openers: ['Still finding your way?', 'Need another pass?', 'Back at the gate?'],
+        must_convey: [
+          { fact_id: 'gate_steps_short', text: 'Move rune, then chat, then answer Tem — the gate will open.' },
+        ],
+        may_convey: [],
+      },
+      recognized: {
+        intent_id: 'guide_gate_remembers',
+        openers: ["You've done this before.", 'I know your step now.', 'Familiar feet on these stones.'],
+        must_convey: [{ fact_id: 'gate_remembers', text: 'The gate remembers you.' }],
+        may_convey: [],
+      },
+    },
+  },
+  {
     npc_id: 'rookguard_herald',
     place_id: 'rookguard:plaza',
-    lines: {
-      stranger: "Welcome to Rookguard, traveler. I don't believe we've met.",
-      seen: "I've noticed you around the plaza. Settling in?",
-      recognized: "Ah, a familiar face! The plaza feels livelier with you here.",
+    tiers: {
+      stranger: {
+        intent_id: 'herald_greet_unmet',
+        openers: [
+          'Welcome to Rookguard, traveler.',
+          'New to Rookguard? Welcome.',
+          'Greetings, traveler, and welcome to Rookguard.',
+        ],
+        must_convey: [],
+        may_convey: [{ fact_id: 'unmet', text: "I don't believe we've met." }],
+      },
+      seen: {
+        intent_id: 'herald_greet_seen',
+        openers: [
+          "I've noticed you around the plaza.",
+          "You've been about the plaza, haven't you?",
+          'A face I am starting to know.',
+        ],
+        must_convey: [],
+        may_convey: [{ fact_id: 'settling', text: 'Settling in?' }],
+      },
+      recognized: {
+        intent_id: 'herald_greet_recognized',
+        openers: ['Ah, a familiar face!', 'There you are again!', 'Good to see you back.'],
+        must_convey: [],
+        may_convey: [{ fact_id: 'livelier', text: 'The plaza feels livelier with you here.' }],
+      },
     },
   },
   {
     npc_id: 'rookguard_steward',
     place_id: 'rookguard:guild_hall',
-    lines: {
-      stranger: "The guild hall is open to all. How may I assist you?",
-      seen: "Back again? The hall remembers those who visit.",
-      recognized: "You've spent considerable time here. The guild takes note.",
+    tiers: {
+      stranger: {
+        intent_id: 'steward_open_hall',
+        openers: ['The guild hall is open to all.', 'Welcome to the guild hall.', 'The hall doors are open to any.'],
+        must_convey: [],
+        may_convey: [{ fact_id: 'offer_help', text: 'How may I assist you?' }],
+      },
+      seen: {
+        intent_id: 'steward_returning',
+        openers: ['Back again?', 'Returning so soon?', 'You again — good.'],
+        must_convey: [{ fact_id: 'hall_remembers', text: 'The hall remembers those who visit.' }],
+        may_convey: [],
+      },
+      recognized: {
+        intent_id: 'steward_noted',
+        openers: ["You've spent considerable time here.", 'You are no stranger to these walls.', 'The hall knows your footsteps.'],
+        must_convey: [{ fact_id: 'guild_notes', text: 'The guild takes note.' }],
+        may_convey: [],
+      },
     },
   },
   {
     npc_id: 'azura_herald',
     place_id: 'azura:plaza',
-    lines: {
-      stranger: "Azura welcomes all who seek its streets.",
-      seen: "The city has seen you before. Walk carefully.",
-      recognized: "You know these streets well. Azura remembers.",
+    tiers: {
+      stranger: {
+        intent_id: 'azura_herald_arrival',
+        openers: [
+          'You made it through Rookguard — not everyone does.',
+          'Through Rookguard and still standing — good.',
+          'So you cleared Rookguard. Few do.',
+        ],
+        must_convey: [
+          { fact_id: 'guild_north', text: 'The guild hall is north of the plaza if you want work.' },
+        ],
+        may_convey: [
+          { fact_id: 'drawn', text: 'And if you feel drawn toward something you cannot name, that is normal.' },
+          { fact_id: 'careful', text: 'Walk carefully.' },
+        ],
+      },
+      seen: {
+        intent_id: 'azura_herald_tasks',
+        openers: ['Back again.', 'You have returned.', 'The plaza sees you once more.'],
+        must_convey: [
+          { fact_id: 'steward_tasks', text: 'The steward at the guild hall has tasks for those willing to stay.' },
+        ],
+        may_convey: [{ fact_id: 'plaza_remembers', text: 'The plaza remembers those who linger.' }],
+      },
+      recognized: {
+        intent_id: 'azura_herald_sweep',
+        openers: ['You know these streets now.', 'These streets are yours now.', 'No map needed for you anymore.'],
+        must_convey: [
+          { fact_id: 'ask_sweep', text: 'Ask the steward about the sweep if you want to be useful.' },
+        ],
+        may_convey: [{ fact_id: 'deeper', text: 'The city runs deeper than the plaza.' }],
+      },
     },
   },
   {
     npc_id: 'azura_steward',
     place_id: 'azura:guild_hall',
-    lines: {
-      stranger: "State your business with the Azura guild.",
-      seen: "Your presence has been noted. Speak.",
-      recognized: "A regular. The guild acknowledges your dedication.",
+    tiers: {
+      stranger: {
+        intent_id: 'azura_steward_intro',
+        openers: [
+          'The guild offers work and trade.',
+          'Work and trade, both, here at the guild.',
+          'Welcome — the guild deals in work and trade.',
+        ],
+        must_convey: [
+          { fact_id: 'sweep_pays', text: 'The temple sweep pays in gold.' },
+          {
+            fact_id: 'stores',
+            text: 'With gold, you may purchase a Pilgrim Mark (10g) or a Healing Herb (5g) from the guild stores.',
+          },
+        ],
+        may_convey: [],
+      },
+      seen: {
+        intent_id: 'azura_steward_open',
+        openers: ['Back again.', 'You have returned to the hall.', 'Once more at the guild.'],
+        must_convey: [
+          { fact_id: 'sweep_open', text: 'The sweep is always open.' },
+          { fact_id: 'stores_remain', text: 'The guild stores remain: Pilgrim Mark (10g), Healing Herb (5g).' },
+        ],
+        may_convey: [],
+      },
+      recognized: {
+        intent_id: 'azura_steward_ledger',
+        openers: ['The guild knows your name.', 'Your name is known here.', 'The ledger knows you well.'],
+        must_convey: [{ fact_id: 'stores_open', text: 'The stores are open — buy what you need.' }],
+        may_convey: [{ fact_id: 'receipts', text: 'Your receipts are in the ledger.' }],
+      },
     },
   },
 ];
+
+// ============================================================================
+// Seeded assembly (deterministic, replayable)
+// ============================================================================
+
+/** Static fallback used when no variation context is supplied. */
+const STATIC_VARIATION: NpcDialogueVariation = { playerId: '__static__', nonce: 0 };
+
+function seedFor(npcId: string, tier: NpcRecognitionTier, v: NpcDialogueVariation): string {
+  return `npc:dialogue:v1:${npcId}:${tier}:${v.playerId}:${v.nonce ?? 0}`;
+}
 
 // ============================================================================
 // Exports
@@ -92,8 +267,47 @@ export function resolveDialogueTier(playerId: string, placeId: PlaceId): NpcReco
 }
 
 /**
- * Build NPC dialogue line for a tier.
+ * Stable intent for a tier — the invariant "same thing" the NPC always means.
+ * Useful for tests/QA that must not depend on the varying surface text.
  */
-export function buildNpcDialogue(npc: NpcDef, tier: NpcRecognitionTier): string {
-  return npc.lines[tier];
+export function getNpcIntent(npc: NpcDef, tier: NpcRecognitionTier): string {
+  return npc.tiers[tier].intent_id;
+}
+
+/**
+ * Build an NPC dialogue line for a tier.
+ *
+ * Deterministic in (npc, tier, variation): the same seed always yields the
+ * exact same line. Omitting `variation` yields a stable canonical line
+ * (first opener, must_convey only) — handy for snapshots and golden tests.
+ *
+ * The opener wording rotates with the seed, and each may_convey fact surfaces
+ * on an independent seeded coin — so repeat visits vary in both wording and
+ * which optional facts appear, while must_convey is always present.
+ */
+export function buildNpcDialogue(
+  npc: NpcDef,
+  tier: NpcRecognitionTier,
+  variation: NpcDialogueVariation = STATIC_VARIATION,
+): string {
+  const contract = npc.tiers[tier];
+  const seed = seedFor(npc.npc_id, tier, variation);
+
+  // 1. Wording variation: pick exactly one opener.
+  const opener =
+    contract.openers.length > 0
+      ? contract.openers[rngDrawU32Legacy(seed, 0) % contract.openers.length]
+      : '';
+
+  // 2. Always convey the mandatory facts, in registry order.
+  const surfaced: string[] = contract.must_convey.map(f => f.text);
+
+  // 3. Fact-surfacing variation: independent seeded coin per optional fact.
+  contract.may_convey.forEach((fact, i) => {
+    if (rngDrawU32Legacy(seed, 1 + i) % 2 === 0) {
+      surfaced.push(fact.text);
+    }
+  });
+
+  return [opener, ...surfaced].filter(part => part.length > 0).join(' ');
 }

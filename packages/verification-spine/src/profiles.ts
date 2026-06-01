@@ -35,6 +35,7 @@ export const PROFILES: Record<ProfileName, Profile> = {
       'guarantees',
       'doctrine',
       'identity',
+      'receipts-chain',
     ],
   },
 

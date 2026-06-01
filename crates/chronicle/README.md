@@ -34,8 +34,8 @@ Each line in the chronicle log:
 ```
 
 Where:
-- `prev_hash`: BLAKE3 hash of previous entry's `event_hash` (or `genesis` for first)
-- `event_hash`: BLAKE3 hash of the canonical JSON
+- `prev_hash`: previous entry's `event_hash` (or `genesis` for the first entry)
+- `event_hash`: BLAKE3 hash of the canonical JSON, prefixed `blake3:` (e.g. `blake3:a1b2…`)
 - `signature`: Ed25519 signature of `prev_hash|event_hash` (hex)
 - `canonical_json`: Event data with sorted keys, no whitespace
 

@@ -21,6 +21,8 @@ import type {
   WorldPlayersQuery,
   TransparencyResponse,
   AntiCheatPriorResponse,
+  PropertyMarketResponse,
+  PropertyLedgerResponse,
 } from '../../../../packages/shared/http.js';
 
 type GuestSessionMintResult = GuestSessionResponse | { error: string; status?: number };
@@ -51,6 +53,9 @@ export interface ApiDeps {
   queryAntiCheatPrior?: (playerId: string) => AntiCheatPriorResult;
   // Identity v0.1: Character creation
   createCharacter?: (name: string) => CharacterCreateResult;
+  // Property Ownership v0 (public, anonymized)
+  getPropertyMarket?: () => PropertyMarketResponse;
+  getPropertyLedger?: (property_id: string) => PropertyLedgerResponse | null;
 }
 
 function json(res: ServerResponse, status: number, body: unknown) {
@@ -154,36 +159,16 @@ export function handleHttp(
 
   // Transparency (public proof of fairness)
   if (method === 'GET' && path === '/v1/transparency') {
-    if (!deps.getTransparency) {
-      const defaultResponse: TransparencyResponse = {
-        version: deps.getVersion(),
-        server_version: deps.getVersion(),
-        identity: {
-          auth_public_key_hex: '',
-          key_derivation: 'blake3(akalynth/auth/v0 || chronicle_seed)',
-        },
-        principles: [
-          'Money cannot buy gameplay power',
-          'Every state change is receipted',
-          'Receipts are cryptographically signed and chain-linked',
-          'Enforcement is deterministic and replayable',
-        ],
-        documentation: {
-          monetization_constitution: '/docs/MONETIZATION_CONSTITUTION.md',
-          architecture: '/docs/ARCHITECTURE.md',
-          anticheat: '/docs/ANTICHEAT.md',
-        },
-        public_receipts_endpoint: '/v1/receipts/public',
-        verification: {
-          chain_integrity: 'npm run verify:lifecycle',
-          monetization_policy: 'npm run verify:monetization',
-          work_contracts: 'npm run verify:work-contracts',
-        },
-      };
-      json(res, 200, defaultResponse);
+    const transparency = deps.getTransparency?.();
+    // Refuse rather than advertise an empty identity: a server with no auth
+    // key is unbootstrapped/misconfigured and must not publish a fairness
+    // proof it cannot back. Serving auth_public_key_hex: '' would be a false
+    // claim of transparency.
+    if (!transparency || !transparency.identity.auth_public_key_hex) {
+      json(res, 503, { error: 'transparency_unavailable' });
       return true;
     }
-    json(res, 200, deps.getTransparency());
+    json(res, 200, transparency);
     return true;
   }
 
@@ -475,6 +460,30 @@ export function handleHttp(
 
     const result = deps.queryPublicRumors(params);
     json(res, 200, result);
+    return true;
+  }
+
+  // Property Ownership v0: public, anonymized house market
+  if (method === 'GET' && path === '/v1/property/market') {
+    if (!deps.getPropertyMarket) return false;
+    json(res, 200, deps.getPropertyMarket());
+    return true;
+  }
+
+  // Property Ownership v0: public ownership ledger for one property
+  if (method === 'GET' && path === '/v1/property/ledger') {
+    if (!deps.getPropertyLedger) return false;
+    const propertyId = url.searchParams.get('property_id');
+    if (!propertyId) {
+      json(res, 400, { error: 'property_id required' });
+      return true;
+    }
+    const ledger = deps.getPropertyLedger(propertyId);
+    if (!ledger) {
+      notFound(res);
+      return true;
+    }
+    json(res, 200, ledger);
     return true;
   }
 

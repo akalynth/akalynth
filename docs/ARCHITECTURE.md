@@ -1,5 +1,7 @@
 # Architecture
 
+How the Akalynth server stays authoritative over an untrusted client: the tick loop, transport posture, anti-cheat and enforcement systems, the receipt/audit chain, and the networking choices behind the MVP.
+
 ## Core Principle
 
 **Server authoritative simulation.**
@@ -19,7 +21,7 @@ The client is never trusted. It sends *intent*, and the server decides truth.
 
 ## Server Loop
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                    GAME TICK (100ms)                        │
 ├─────────────────────────────────────────────────────────────┤
@@ -53,7 +55,7 @@ The client is never trusted. It sends *intent*, and the server decides truth.
 
 ### Anti-Cheat Pipeline (`apps/server/src/anticheat/`)
 
-```
+```text
 Intent → Detector → Decision → Enforcement → Audit
 ```
 
@@ -68,7 +70,7 @@ Intent → Detector → Decision → Enforcement → Audit
 - Thresholds: Tem challenge at 30, movement throttle at 60 (default values).
 - Heat receipts (`heat_changed`, `heat_tem_escalation`, `heat_penalty_applied`) are private only and never public.
 - When a penalty is applied, the Ledger marks the actor (`ledger_marked`, mark=`watched`) as a private historical signal (no UI, no public feed).
-- In-memory state only; process restart resets heat.
+- Heat is receipt-backed and durable across restart: `heat_changed` / `heat_tem_escalation` / `heat_penalty_applied` receipts materialize into the `player_heat` SQLite projection, the live score is hydrated on (re)connect, and the projection is rebuilt from the receipt chain on replay if the DB is lost. The active penalty window and Tem cooldown survive restart (and correctly expire by wall-clock). Proven by `verify:anticheat-persistence` in CI.
 
 ### Witness Check v0 (Tem Social Witness)
 
@@ -79,7 +81,7 @@ Intent → Detector → Decision → Enforcement → Audit
 - Privacy: witness request messages contain only redacted `target_actor` (using same mode as public receipts: `anon` or `daily_hash`); **never** raw `player_id`. No coordinates exposed.
 - Anti-abuse: request TTL (`WITNESS_TTL_MS`, default 12s) ensures timely responses; cooldowns (`WITNESS_COOLDOWN_MS`, default 60s) prevent spam per-target and per-witness.
 - Receipts: `witness_requested` and `witness_response` are **private only**; not allowed into `/v1/receipts/public` nor `/v1/rumors/public`.
-- MVP: in-memory state only; process restart resets pending requests and cooldowns.
+- Pending requests and cooldowns are intentionally in-memory only. Given the 12s request TTL and 60s cooldowns, restart-reset is acceptable: a restart outlives any in-flight request, and the quorum *outcome* (the durable consequence) is receipt-backed via `witness_quorum_resolved`. The enforcement consequence that must persist — heat/penalty — does, independently (see Heat above).
 - Enabled by default in DEBUG mode; set `WITNESS_ENABLED=1` explicitly for production use.
 
 #### Witness Quorum v0
@@ -208,7 +210,7 @@ A social gambling/ritual artifact inspired by Tibia's dice system, but with Akal
 
 ## Data Flow
 
-```
+```text
 Client                          Server
   │                               │
   ├──── move_intent ─────────────►│

@@ -1,0 +1,30 @@
+[Unit]
+Description=Akalynth Server (Docker Compose)
+Documentation=file:/opt/akalynth/infra/README.md
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/akalynth
+Environment=AKALYNTH_COMPOSE_FILE=/etc/akalynth/compose.yml
+Environment=AKALYNTH_ENV_FILE=/etc/akalynth/server.env
+Environment=AKALYNTH_CHRONICLE_KEY_FILE=/etc/akalynth/chronicle.key
+EnvironmentFile=-/etc/akalynth/docker.env
+TimeoutStartSec=120
+TimeoutStopSec=45
+
+ExecStartPre=/usr/bin/test -f ${AKALYNTH_COMPOSE_FILE}
+ExecStartPre=/usr/bin/test -f ${AKALYNTH_ENV_FILE}
+ExecStartPre=/usr/bin/test -f ${AKALYNTH_CHRONICLE_KEY_FILE}
+ExecStartPre=/usr/bin/docker compose --env-file ${AKALYNTH_ENV_FILE} -f ${AKALYNTH_COMPOSE_FILE} config --quiet
+ExecStart=/usr/bin/docker compose --env-file ${AKALYNTH_ENV_FILE} -f ${AKALYNTH_COMPOSE_FILE} up --detach --remove-orphans
+ExecReload=/usr/bin/docker compose --env-file ${AKALYNTH_ENV_FILE} -f ${AKALYNTH_COMPOSE_FILE} up --detach --remove-orphans
+ExecStop=/usr/bin/docker compose --env-file ${AKALYNTH_ENV_FILE} -f ${AKALYNTH_COMPOSE_FILE} down --timeout 20
+
+[Install]
+WantedBy=multi-user.target

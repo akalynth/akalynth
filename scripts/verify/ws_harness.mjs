@@ -17,12 +17,13 @@ function parseArgs(argv) {
     else if (arg === '--guest-token') out.guestToken = argv[++i];
     else if (arg === '--scenario') out.scenarioPath = argv[++i];
     else if (arg === '--timeout-ms') out.timeoutMs = Number(argv[++i]);
+    else if (arg === '--ready-file') out.readyFile = argv[++i];
   }
   return out;
 }
 
 function usage() {
-  return 'Usage: node ws_harness.mjs --ws-url <ws> --guest-token <token> --scenario <file> [--timeout-ms <ms>]';
+  return 'Usage: node ws_harness.mjs --ws-url <ws> --guest-token <token> --scenario <file> [--timeout-ms <ms>] [--ready-file <path>]';
 }
 
 function sleep(ms) {
@@ -60,6 +61,13 @@ function replacePlaceholders(value, replacements) {
   return value;
 }
 
+function writeReadyFile(filePath, scenarioName) {
+  if (!filePath) return;
+  const resolved = path.resolve(filePath);
+  fs.mkdirSync(path.dirname(resolved), { recursive: true });
+  fs.writeFileSync(resolved, `${JSON.stringify({ ready: true, scenario: scenarioName, at_ms: Date.now() })}\n`);
+}
+
 function estimateDuration(events, hooks, bootstrapDelayMs) {
   let total = bootstrapDelayMs * 3;
   for (const event of events) {
@@ -95,6 +103,7 @@ async function run() {
   const firedHooks = new Array(hooks.length).fill(false);
   let temAnswered = false;
   let lastWitnessRequestId = null;
+  let readyWritten = false;
 
   const ws = new WebSocket(args.wsUrl);
 
@@ -117,6 +126,15 @@ async function run() {
       return;
     }
     messages.push(parsed);
+
+    if (!readyWritten && parsed.type === 'world_state') {
+      readyWritten = true;
+      try {
+        writeReadyFile(args.readyFile, scenario.name ?? path.basename(args.scenarioPath));
+      } catch (err) {
+        failures.push(`ready_file_failed:${err?.message ?? err}`);
+      }
+    }
 
     if (autoTem && parsed.type === 'tem_challenge' && !temAnswered) {
       temAnswered = true;

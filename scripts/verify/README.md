@@ -15,9 +15,7 @@ PORT=3101 ./scripts/verify_mvp.sh
 ## Run a single scenario manually
 
 ```bash
-# Preferred (monorepo)
 PORT=3101 npm --prefix apps/server run dev
-
 ```
 
 In a second shell:
@@ -36,6 +34,15 @@ Optional timeout override:
 node scripts/verify/ws_harness.mjs --ws-url ws://localhost:3101 --guest-token "$TOKEN" \
   --scenario scripts/verify/scenarios/stone.json --timeout-ms 6000
 ```
+
+Flags:
+
+- `--ws-url <ws>` (required): server WebSocket URL.
+- `--guest-token <token>` (required): guest session token.
+- `--scenario <file>` (required): scenario JSON path.
+- `--timeout-ms <ms>` (optional): overrides the scenario `duration_ms` bound.
+- `--ready-file <path>` (optional): writes a `{ ready: true, scenario, at_ms }`
+  marker once bootstrap completes (used to synchronize multi-client runs).
 
 ## Scenario schema (summary)
 
@@ -78,15 +85,20 @@ The harness writes a JSON report to stdout:
 ```json
 {
   "ok": true,
+  "scenario": "stone",
   "messages": [],
   "events": [],
   "failures": []
 }
 ```
 
+- `ok`: `true` when there are no failures.
+- `scenario`: the scenario `name` (or the scenario file basename if unnamed).
 - `messages`: all inbound WS messages.
 - `events`: sent messages with timestamps.
 - `failures`: missing expectations or runtime errors.
+
+The process exits `0` when `ok` is `true` and `2` otherwise.
 
 ## Determinism knobs
 

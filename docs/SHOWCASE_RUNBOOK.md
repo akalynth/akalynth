@@ -1,5 +1,7 @@
 # Akalynth Showcase Runbook
 
+> **Purpose:** Step-by-step instructions to run a local pre-alpha proof showcase from a fresh clone, and the exact claim you may make afterward.
+
 ## Scope
 
 This runbook demonstrates a local pre-alpha proof run.
@@ -17,11 +19,23 @@ Windows is intentionally unsupported for this repository.
 
 ## Step 1: Bootstrap
 
+Run from the repository root. `bootstrap_linux.sh` installs system dependencies (it is dev-only and refuses to run in CI):
+
 ```bash
 sudo ./scripts/bootstrap_linux.sh
+```
+
+Then install all workspace dependencies. The repo provides a convenience script that installs the root, server, and debug-client packages in order:
+
+```bash
+npm run install:all
+```
+
+Equivalent manual steps (run as a single shell session so the `cd`s chain):
+
+```bash
 npm install
-cd apps/server && npm install
-cd ../debug-client && npm install
+cd apps/server && npm install && cd ../debug-client && npm install && cd ../..
 ```
 
 ## Step 2: Run Preflight Verification
@@ -89,7 +103,7 @@ Capture these artifacts before claiming a successful showcase:
 - command transcript,
 - server logs,
 - verifier outputs,
-- receipt file path,
+- receipt file path (default when the server is run from `apps/server/`: `apps/server/audit/receipts.jsonl`; SQLite projection at `apps/server/data/akalynth.db`),
 - debug-client build result,
 - any failed command output.
 

@@ -16,7 +16,7 @@ This document describes intended primitives and guarantees that are **not yet en
 
 ## CONSTITUTIONAL STATUS
 
-The coordination-kernel package constitutes the **CONSTITUTIONAL INFRASTRUCTURE** of the proof-native governance system. The interfaces defined in this document are FROZEN and may not be modified without following the constitutional amendment process.
+The coordination-kernel package is intended to constitute the **CONSTITUTIONAL INFRASTRUCTURE** of the proof-native governance system. The interfaces defined in this document are *proposed to be frozen*: this is a non-binding draft for v1 (see Status above), and the freeze/amendment process described here is not yet in force.
 
 **Legal Principle**: These 4 primitives form the mathematical foundation of post-bureaucratic coordination. Changes to these primitives constitute constitutional amendments, not software updates.
 
@@ -165,9 +165,9 @@ Any system claiming constitutional compliance MUST:
 4. **Deterministic Replay**: Produce identical results from identical inputs
 5. **Capability Enforcement**: Block unauthorized actions before execution
 
-**Verification Command**:
+**Verification Command** (proposed; `constitutional-verify` is not yet implemented):
 ```bash
-constitutional-verify --api-compliance @akalynth/coordination-kernel@1.0.0
+constitutional-verify --api-compliance @akalynth/coordination-kernel@0.1.0
 ```
 
 ---
@@ -189,7 +189,7 @@ Changes to this constitutional API require:
 ## IMPLEMENTATION CONSTRAINTS
 
 ### Mandatory Features
-- Cryptographic hash generation (SHA-256 minimum)
+- Cryptographic hash generation (BLAKE3, as implemented in `src/receipt/hasher.ts`)
 - Persistent storage with durability guarantees
 - Atomic operations for receipt generation
 - Deterministic ordering and replay
@@ -238,12 +238,12 @@ Changes to this constitutional API require:
 
 ---
 
-**CONSTITUTIONAL AUTHORITY**: This document establishes immutable law for proof-native coordination.
-**EFFECTIVE IMMEDIATELY**
-**NO HUMAN DISCRETION IN ENFORCEMENT**
+**CONSTITUTIONAL AUTHORITY** (proposed): This document describes intended immutable law for proof-native coordination.
+**NOT YET EFFECTIVE** — draft / future design intent for v1 (see Status at top).
+**INTENDED ENFORCEMENT**: No human discretion, once in force.
 
 ---
 
 **Governance Philosophy**: Post-bureaucratic. Post-discretionary. Post-trust. Proof-native.
 
-**Implementation Status**: CONSTITUTIONALLY FROZEN - Changes require amendment process
+**Implementation Status**: Draft / proposed freeze — not enforced in v1. Once ratified, changes would require the amendment process.

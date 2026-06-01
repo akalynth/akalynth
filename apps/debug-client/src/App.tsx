@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { MapName } from '@shared/http';
 import type { ChronicleEvent } from '@shared/protocol';
+import type { MapData, PlayerPublic } from '@shared/types';
 import { useGameClient } from './hooks/useGameClient';
 import { useExistenceMode } from './hooks/useExistenceMode';
 import { MapCanvas } from './components/MapCanvas';
 import { DPad } from './components/DPad';
 import { ActionsPanel } from './components/ActionsPanel';
+import { PropertyLedger } from './components/PropertyLedger';
 import { ChatSheet } from './components/ChatSheet';
 import { TopBar } from './components/TopBar';
 import { NearbyList } from './components/NearbyList';
@@ -53,6 +55,53 @@ function groupChronicleByDay(events: ChronicleEvent[]): ChronicleGroup[] {
 }
 
 type ChronicleRender = { icon: string; text: string };
+
+type LandmarkBox = { x: number; y: number; width: number; height: number };
+
+function landmarkBox(value: unknown): LandmarkBox | null {
+  if (!value || typeof value !== 'object') return null;
+  const raw = value as Record<string, unknown>;
+  const x = typeof raw.x === 'number' ? raw.x : null;
+  const y = typeof raw.y === 'number' ? raw.y : null;
+  if (x === null || y === null) return null;
+  return {
+    x,
+    y,
+    width: typeof raw.width === 'number' ? raw.width : 1,
+    height: typeof raw.height === 'number' ? raw.height : 1,
+  };
+}
+
+function isNearLandmark(player: PlayerPublic | null, map: MapData, key: string, radius = 1): boolean {
+  if (!player) return false;
+  const mark = landmarkBox((map.landmarks as Record<string, unknown>)[key]);
+  if (!mark) return false;
+  const minX = mark.x - radius;
+  const maxX = mark.x + mark.width - 1 + radius;
+  const minY = mark.y - radius;
+  const maxY = mark.y + mark.height - 1 + radius;
+  return player.x >= minX && player.x <= maxX && player.y >= minY && player.y <= maxY;
+}
+
+const NPC_DEFS = [
+  { npc_id: 'rookguard_guide', place_id: 'rookguard', label: 'Guide' },
+  { npc_id: 'azura_herald',   place_id: 'azura:plaza',      label: 'Herald' },
+  { npc_id: 'azura_steward',  place_id: 'azura:guild_hall', label: 'Steward' },
+] as const;
+
+function isInPlace(player: PlayerPublic | null, map: MapData, mapName: string, placeId: string): boolean {
+  if (!player) return false;
+  const colonIdx = placeId.indexOf(':');
+  const mapPart = colonIdx === -1 ? placeId : placeId.slice(0, colonIdx);
+  const subPlace = colonIdx === -1 ? null : placeId.slice(colonIdx + 1);
+  if (mapName.toLowerCase() !== mapPart) return false;
+  if (!subPlace) return true;
+  const lm = (map.landmarks as Record<string, unknown>)[subPlace];
+  const box = landmarkBox(lm);
+  if (!box) return false;
+  return player.x >= box.x && player.x < box.x + box.width &&
+         player.y >= box.y && player.y < box.y + box.height;
+}
 
 function renderChronicleEvent(ev: ChronicleEvent): ChronicleRender {
   const details = (ev.details ?? {}) as Record<string, unknown>;
@@ -106,16 +155,34 @@ export default function App() {
 function DebugApp() {
   const initialMap: MapName = 'Rookguard';
   const config = useMemo(() => loadConfig(), []);
+  const studioProofEnabled = import.meta.env.VITE_ENABLE_STUDIO_PROOF === '1';
   const [state, api] = useGameClient(initialMap);
   const [chatOpen, setChatOpen] = useState(false);
   const [proof, setProof] = useState<StudioProofState | null>(null);
   const [proofRunning, setProofRunning] = useState(false);
   const [proofError, setProofError] = useState<string | null>(null);
+  const [deathModalOpen, setDeathModalOpen] = useState(false);
   const now = useNow();
   const toast = state.toast && now < state.toast.expiresAt ? state.toast : null;
   const activePlaytestLabel = proof?.activeId ?? 'canonical';
   const objectiveLabel = state.loop?.objective ?? 'Enter Rookguard';
-  const healthLabel = state.world.me?.status === 'dead' ? 'Down' : 'Alive';
+  const meHp = state.world.me?.hp;
+  const meMaxHp = state.world.me?.max_hp;
+  const healthLabel =
+    state.world.me?.status === 'dead'
+      ? 'Down'
+      : typeof meHp === 'number' && typeof meMaxHp === 'number'
+        ? `${meHp}/${meMaxHp}`
+        : 'Alive';
+  const healthPct =
+    typeof meHp === 'number' && typeof meMaxHp === 'number' && meMaxHp > 0
+      ? Math.max(0, Math.min(100, Math.round((meHp / meMaxHp) * 100)))
+      : 100;
+  const isDead = state.world.me?.status === 'dead';
+  // Latch a blocking death popup; only the player dismisses it by signing back in.
+  useEffect(() => {
+    if (isDead) setDeathModalOpen(true);
+  }, [isDead]);
   const smokeState = proof?.lastSmoke?.ok ? 'pass' : proof?.lastSmoke ? 'fail' : proofError ? 'offline' : 'idle';
   const smokeLabel =
     smokeState === 'pass' ? 'passed' :
@@ -135,7 +202,30 @@ function DebugApp() {
     !!state.world.me &&
     now >= state.cooldowns.attackEndsAt &&
     (state.combat.targetId ? true : hasAutoTarget);
+  const ritualReady = isNearLandmark(state.world.me, state.world.map, 'runestone_table');
+  const ritualHint = ritualReady ? 'Runestone nearby' : 'No runestone nearby';
+  const nearLegendStone = isNearLandmark(state.world.me, state.world.map, 'legend_stone', 2);
+  const currentMapName = state.world.map.name;
+  const nearbyNpc = NPC_DEFS.find(n =>
+    isInPlace(state.world.me, state.world.map, currentMapName, n.place_id)
+  ) ?? null;
+  const groundItemHere = useMemo(() => {
+    if (!state.world.me) return null;
+    const { x, y } = state.world.me;
+    for (const item of state.groundItems.values()) {
+      if (item.x === x && item.y === y) return item;
+    }
+    return null;
+  }, [state.world.me, state.groundItems]);
   const others = useMemo(() => Array.from(state.world.others.values()), [state.world.others]);
+  const propertyList = useMemo(() => Array.from(state.properties.values()), [state.properties]);
+  const propertyByPlot = useMemo(() => {
+    const m = new Map<string, { status: string; owner_name: string | null; listed_price_gold: number | null }>();
+    for (const p of propertyList) {
+      m.set(p.plot_id, { status: p.status, owner_name: p.owner_name, listed_price_gold: p.listed_price_gold });
+    }
+    return m;
+  }, [propertyList]);
   const roster = useMemo(() => others.slice().sort((a, b) => a.name.localeCompare(b.name)), [others]);
   const targetName = useMemo(() => {
     if (!state.combat.targetId) return null;
@@ -182,6 +272,12 @@ function DebugApp() {
   }, [eventId]);
 
   useEffect(() => {
+    if (!studioProofEnabled) {
+      setProof(null);
+      setProofError(null);
+      return;
+    }
+
     let cancelled = false;
     async function refreshProof() {
       try {
@@ -210,9 +306,10 @@ function DebugApp() {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [config.httpBase]);
+  }, [config.httpBase, studioProofEnabled]);
 
   async function runProofSmoke() {
+    if (!studioProofEnabled) return;
     setProofRunning(true);
     try {
       const response = await fetch(`${config.httpBase}/v1/studio/smoke`, { method: 'POST' });
@@ -369,8 +466,34 @@ function DebugApp() {
             targetId={state.combat.targetId}
             fx={state.combat.fx}
             onSelectTarget={api.setTarget}
+            groundItems={state.groundItems}
+            propertyByPlot={propertyByPlot}
           />
           <div className="scene-vignette" />
+          {!isDead && healthPct <= 30 && (
+            <div className="low-hp-vignette" aria-hidden="true" />
+          )}
+          {deathModalOpen && (
+            <div className="death-overlay" role="dialog" aria-modal="true">
+              <div className="death-modal">
+                <div className="death-overlay-title">You died</div>
+                <div className="death-overlay-sub">
+                  Your run has ended. Sign back in to return to character select.
+                </div>
+                <div className="death-modal-actions">
+                  <button
+                    className="action-btn death-relog-btn"
+                    onClick={() => {
+                      setDeathModalOpen(false);
+                      api.relog();
+                    }}
+                  >
+                    Sign in again
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="hud hud-primary" aria-label="play status">
             <div className="hud-card hud-card--identity">
               <span className="hud-kicker">Akalynth</span>
@@ -385,6 +508,12 @@ function DebugApp() {
               <div>
                 <span>Health</span>
                 <strong>{healthLabel}</strong>
+                <div className="hp-bar" aria-hidden="true">
+                  <div
+                    className={`hp-bar-fill ${healthPct <= 30 ? 'low' : ''}`}
+                    style={{ width: `${state.world.me?.status === 'dead' ? 0 : healthPct}%` }}
+                  />
+                </div>
               </div>
               <div>
                 <span>Link</span>
@@ -407,6 +536,16 @@ function DebugApp() {
             </div>
           </div>
           {state.ui.stage >= 3 && <NearbyList players={roster} />}
+          {state.ui.stage >= 3 && propertyList.length > 0 && (
+            <PropertyLedger
+              properties={propertyList}
+              myName={state.session.name}
+              gold={state.gold}
+              onBuy={api.buyHouse}
+              onList={api.listHouse}
+              onUnlist={api.unlistHouse}
+            />
+          )}
           <div
             className="dead-zone"
             onPointerDown={(e) => {
@@ -424,9 +563,24 @@ function DebugApp() {
             <ActionsPanel
               stage={state.ui.stage}
               onAttack={api.sendAttack}
+              onRitual={api.castRunestone}
+              onTalk={api.talkToNpc}
+              onPickup={api.pickupItem}
+              onStartWork={api.startWork}
+              onTickWork={api.tickWork}
+              onBuy={api.useSkill}
+              onUseItem={(itemId) => api.useSkill('item:use:' + itemId)}
               attackReady={attackReady}
+              ritualReady={ritualReady}
+              ritualHint={ritualHint}
+              nearLegendStone={nearLegendStone}
+              nearbyNpc={nearbyNpc}
+              groundItemHere={groundItemHere}
+              workContract={state.workContract}
               targetName={targetName}
               loop={state.loop}
+              inventory={state.inventory}
+              gold={state.gold}
             />
           </div>
         </section>
@@ -472,7 +626,7 @@ function DebugApp() {
               aria-label={proofRunning ? 'Running proof' : 'Run proof'}
               style={{ minWidth: 0, width: '100%' }}
               onClick={() => void runProofSmoke()}
-              disabled={proofRunning}
+              disabled={proofRunning || !studioProofEnabled}
             >
               {proofRunning ? 'Running' : 'Proof'}
             </button>

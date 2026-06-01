@@ -35,6 +35,22 @@ Test with:
 wscat -c ws://localhost:3000
 ```
 
+## Docker Runtime
+
+The production-shaped server container lives under `infra/docker/`.
+
+```bash
+npm run verify:docker-runtime
+npm run render:docker-runtime
+npm run smoke:docker-runtime
+```
+
+The smoke command builds `akalynth/server:local`, boots a disposable container
+with a temporary chronicle key and runtime volume, checks internal health, and
+cleans up after itself. The render command writes reviewable host runtime files
+to `.tmp/akalynth-docker-runtime` by default. For host-managed Docker Compose
+and systemd notes, see `infra/README.md`.
+
 ## Typical Dev Flow (Linux + Android)
 
 1) Fresh setup
@@ -45,19 +61,34 @@ npm install
 ```
 
 2) Run local dev
-- Terminal A: `cd apps/server && ALLOW_INSECURE_LOCAL=1 npm run dev`
+- Terminal A: `npm run dev:server:fresh` (from repo root)
 - Terminal B: `cd apps/debug-client && npm install && npm run dev`
 - Health: `curl -s http://127.0.0.1:3000/v1/health`
 - Client: http://127.0.0.1:5173/
+
+`dev:server:fresh` runs `dev:bootstrap` (generates a local-only chronicle signing
+key at `apps/server/chronicle.key` if absent — see step below), then starts the
+server with `AKALYNTH_BOOTSTRAP=1` (creates the genesis receipt chain on first
+run), `CHRONICLE_KEY_PATH=chronicle.key` (enables character creation/identity),
+and `ALLOW_INSECURE_LOCAL=1` (accepts loopback over plain HTTP/WS). Without the
+signing key the server exits with `Signing key not found`.
+
+The dev key is a random 32-byte seed, gitignored, and **local-only** — never
+reuse it for a deployment. Production keys are minted out-of-band; see
+`docs/NEW_BOX_PROVISIONING.md`. Use `dev:server:fresh` for everyday local
+development — it is idempotent (the key generates once, `AKALYNTH_BOOTSTRAP=1`
+only matters before the chain exists). Plain `npm run dev:server` starts the
+bare server **without** the dev key/identity/loopback env, for when you set
+those yourself.
 
 3) Protocol edits: `./scripts/verify_protocol_sync.sh`
 
 4) Runtime/API edits: `./scripts/verify_mvp.sh`
 
-5) Focused persistence/receipt checks (from apps/server):
+5) Focused persistence/receipt/anti-cheat checks (from apps/server):
 - `npm run verify:receipt-hygiene`
-- `npx tsx ../../scripts/heat_out_of_order_smoke.ts`
-- `npx tsx ../../scripts/heat_pr2_out_of_order_smoke.ts`
+- `npm run verify:heat`
+- `npm run verify:anticheat-persistence`
 
 ## Showcase Preflight
 
@@ -73,10 +104,17 @@ This script checks protocol sync, server build, MVP verification, and debug-clie
 
 **All contributions must pass the Verification Spine before merge.**
 
+Run the spine from the repository root:
+
 ```bash
-cd apps/server
 npm run verify
 ```
+
+This builds the verification packages and runs `packages/verification-spine/bin/akalynth-verify.js`.
+Profile variants are also available: `npm run verify:quick`, `npm run verify:full`, and `npm run verify:audit`.
+
+> Note: `npm run verify` inside `apps/server` is a different, server-scoped check
+> (`tsx tools/verify-guarantees.ts`), not the full spine.
 
 The Verification Spine is **not optional tooling** — it is **civilizational law enforcement**.
 

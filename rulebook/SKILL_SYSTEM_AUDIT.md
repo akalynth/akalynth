@@ -29,8 +29,8 @@ Produce an evidence-backed audit of:
 - No evidence, no claim.
 
 ## Commands (Ops)
-- AKALYNTH_AUDIT_BASE_URL="${AKALYNTH_AUDIT_BASE_URL:-https://api.akalynth.com}"
-- AKALYNTH_AUDIT_WS_URL="${AKALYNTH_AUDIT_WS_URL:-wss://api.akalynth.com}"
+- `AKALYNTH_AUDIT_BASE_URL="${AKALYNTH_AUDIT_BASE_URL:-https://api.akalynth.com}"`
+- `AKALYNTH_AUDIT_WS_URL="${AKALYNTH_AUDIT_WS_URL:-wss://api.akalynth.com}"`
 - `sudo ss -ltnp | rg ":(80|443|3000)\\b"`
 - `sudo ufw status verbose`
 - `curl -s "$AKALYNTH_AUDIT_BASE_URL/v1/health"`

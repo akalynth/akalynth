@@ -2,6 +2,28 @@
 
 This document captures the current direction for Akalynth's old-school 2D world art and mobile UI. It is a design and production note, not a release claim.
 
+## Contents
+
+- [Goal](#goal)
+- [Research Summary](#research-summary)
+- [Version Target](#version-target)
+- [Visual Target Reference](#visual-target-reference)
+- [Legal And Creative Boundary](#legal-and-creative-boundary)
+- [OpenAI Asset Pipeline](#openai-asset-pipeline)
+- [Prompt Pattern](#prompt-pattern)
+- [Production Rules](#production-rules)
+- [Tileset State System](#tileset-state-system)
+- [First Asset Set](#first-asset-set)
+- [Mobile UI Direction](#mobile-ui-direction)
+- [Mobile Controls](#mobile-controls)
+- [Action Ring](#action-ring)
+- [Inventory And Chat](#inventory-and-chat)
+- [Combat Targeting](#combat-targeting)
+- [Visual UI Style](#visual-ui-style)
+- [Mobile MVP UI Scope](#mobile-mvp-ui-scope)
+- [Open Questions](#open-questions)
+- [Sources](#sources)
+
 ## Goal
 
 Build an original Akalynth visual language that preserves the readability and social feel of early 2000s top-down MMOs without copying Tibia assets, maps, item silhouettes, names, or proprietary client data.
@@ -52,6 +74,25 @@ Useful distinctions:
 - 7.1: rougher, flatter, more primitive.
 - 7.4-7.6: strongest old-school target, with richer decorations and improved graphics.
 - 8.0: still old-school, but denser and more polished.
+
+## Visual Target Reference
+
+This section pins what the 7.4-7.6-era look actually *is* in production terms, so art can be reviewed against shared criteria. It describes the constraints that produce the look, not any specific source artwork.
+
+Important: we replicate the **constraints and readability** of that era. We do not trace, seed image generation from, or reproduce CipSoft/Tibia screenshots, tiles, maps, item silhouettes, or creature designs. See [Legal And Creative Boundary](#legal-and-creative-boundary). When someone points at an old-school MMO screenshot and says "this style," it means "match these levers with original art" — never "copy that image."
+
+The look is the sum of these levers:
+
+- **Grid and camera.** 32x32 tile atoms on a square grid. Top-down or slight oblique, never true isometric.
+- **Palette.** Muted earthy base (greens, browns, greys) at 32-64 working colors per biome. Saturated color is reserved as an accent for magic, fire, water, light, and equipment, never spread across the whole scene.
+- **Shading.** Flat, hand-pixelled, nearest-neighbor. Hard color ramps, not soft gradients. Painterly rendering, blur, and ambient-occlusion gradients are out of style by definition.
+- **Outline.** Usually a 1px dark edge pixel on objects, props, and creatures to hold silhouettes against the ground.
+- **Borders.** Explicit transition tiles (grass to dirt, grass to stone, water edge, cave wall edge), not engine-blended seams.
+- **Density.** Small, readable objects with limited internal detail. Legible at 1x before any zoom.
+
+Acceptance check for a new tile or sprite: it reads correctly at 1x, sits cleanly on the square grid, uses the biome palette with restrained accents, holds a dark-edged silhouette, and shows no soft-gradient or painterly shading.
+
+Anything beyond visual style — place names, factions, history, creature canon — is world content and belongs in a `WORLD_*.md` document, not here.
 
 ## Legal And Creative Boundary
 
@@ -142,6 +183,99 @@ Metadata rules:
 - Collision, blocking, interactability, zone, heat, spawn, and receipt behavior must live in map/server metadata.
 - Any visual tile that implies mechanics must have an explicit mechanical definition.
 - Server authority remains non-negotiable: clients send intent, never truth.
+
+## Tileset State System
+
+Akalynth should treat classic 32px tiles as reusable base units with explicit visual states, not as one-off art pieces. The goal is to make repeated tiles feel authored while keeping art production small, readable, and compatible with server-authoritative map metadata.
+
+### Principles
+
+**Micro-variation.**
+A tile may reuse the same base geometry while changing small visual layers such as cracks, moss, stains, dust, water marks, soot, or edge wear. These variants should imply age, use, climate, ownership, or recent damage without requiring a new full tile.
+
+**Rhythm break.**
+A familiar repeated tile should occasionally appear in a visibly altered state to signal that something happened there. Examples: a normal flagstone appears cracked near a shrine, a standard threshold appears scorched after an event, or a clean wall tile appears damp near an underground passage.
+
+**Diegetic signage.**
+Repeated props and tile overlays can communicate world state without UI labels. Banners, lanterns, door marks, shrine trims, floor inlays, warning paint, and wall scratches should be used as in-world signs that players can learn to read.
+
+**Mechanical meaning.**
+A tile variant may carry a light gameplay rule when the visual state is clear and consistent. Examples: slick stone affects movement, soft moss muffles footsteps, unstable planks can break, and glowing inlays mark interaction zones. Any mechanical tile variant must be mirrored by map metadata so the server remains authoritative.
+
+### Naming Convention
+
+Tile and prop variants should be named by function and state rather than by visual description alone.
+
+Preferred pattern:
+
+```text
+<base>.<surface_or_part>.<state>
+```
+
+Examples:
+
+- `flagstone.surface.cracked`
+- `flagstone.surface.slick`
+- `flagstone.edge.moss`
+- `wall.stone.smoke_stained`
+- `door.threshold.scorched`
+- `lantern.glass.warning`
+- `gate.keystone.inverted`
+- `shrine.trim.active`
+- `bridge.plank.unstable`
+
+Avoid names that only describe art appearance without gameplay or placement meaning, such as:
+
+- `pretty_blue_tile`
+- `cool_wall_03`
+- `dark_floor_alt`
+- `random_crack`
+
+A variant name should help both artists and implementers understand what the tile means in the world.
+
+### Overlay Layers
+
+Where practical, state changes should be authored as separate overlays or decals instead of fully duplicated tiles.
+
+Common overlay classes:
+
+- `moss`
+- `crack`
+- `soot`
+- `dust`
+- `waterline`
+- `blood`
+- `scratch_mark`
+- `paint_mark`
+- `glow_inlay`
+- `faction_mark`
+- `warning_mark`
+
+This allows the same base tile to support multiple states while keeping the asset set small. It also lets map authors apply state changes locally without creating a new bespoke tile for every room.
+
+### Server Metadata Lockstep
+
+Any visual state that affects gameplay must have a matching server-readable map property.
+
+Examples:
+
+- `flagstone.surface.slick` → movement modifier
+- `bridge.plank.unstable` → break or hazard rule
+- `shrine.trim.active` → interaction or quest state
+- `door.threshold.scorched` → event/history marker only unless given a rule
+- `lantern.glass.warning` → navigation/signage only unless given a rule
+
+Visual-only variants may remain art-side metadata, but mechanical variants must not rely on the client interpreting pixels. The server decides movement, collision, interaction, ownership, hazard, and state transitions.
+
+### Production Rule
+
+When adding a new tile variant, record three things:
+
+1. **Base tile** — what reusable tile or prop it derives from.
+2. **State meaning** — what the variant communicates to the player.
+3. **Mechanical effect** — none, cosmetic only, or the exact server-side rule it maps to.
+
+If the state introduces lore, faction identity, historical events, or new world canon, it belongs in a `WORLD_*.md` document first and should be referenced from this art-direction document rather than silently introduced here.
 
 ## First Asset Set
 

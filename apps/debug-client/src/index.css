@@ -126,6 +126,31 @@ body {
   display: block;
 }
 
+.map-tooltip {
+  position: fixed;
+  z-index: 50;
+  max-width: 16rem;
+  padding: 0.45rem 0.6rem;
+  background: rgba(13, 17, 23, 0.96);
+  border: 1px solid #2b3647;
+  border-radius: 0.5rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+.map-tooltip-title {
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: #f7e9a7;
+  margin-bottom: 0.15rem;
+}
+
+.map-tooltip-body {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: #c8d0dc;
+}
+
 .hud {
   position: absolute;
   top: 0.75rem;
@@ -266,6 +291,19 @@ body {
   font-size: 0.85rem;
 }
 
+.ritual-line {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.legend-stone-hint {
+  color: #a78bfa;
+  font-size: 0.8rem;
+  font-style: italic;
+  text-align: center;
+  padding: 0.25rem 0;
+}
+
 .action-btn {
   padding: 1rem;
   border-radius: 0.75rem;
@@ -278,6 +316,66 @@ body {
 
 .action-btn.cooling {
   opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ritual-btn:not(.cooling) {
+  border-color: rgba(240, 200, 60, 0.42);
+  color: var(--accent-strong);
+}
+
+.npc-line {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.talk-btn {
+  border-color: rgba(97, 216, 198, 0.42);
+  color: #61d8c6;
+}
+
+.pickup-btn {
+  border-color: rgba(251, 191, 36, 0.5);
+  color: #fbbf24;
+}
+
+.sweep-line {
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.sweep-btn {
+  border-color: rgba(167, 139, 250, 0.45);
+  color: #a78bfa;
+}
+
+.shop-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #1f2937;
+}
+
+.shop-header {
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-align: center;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.shop-btn {
+  border-color: rgba(52, 211, 153, 0.4);
+  color: #34d399;
+  font-size: 0.85rem;
+}
+
+.shop-btn:disabled {
+  border-color: #1f2937;
+  color: var(--muted);
   cursor: not-allowed;
 }
 
@@ -298,6 +396,64 @@ body {
 
 .hotbar-slot.disabled {
   color: var(--muted);
+}
+
+.hotbar-slot.active {
+  border-style: solid;
+  border-color: rgba(240, 200, 60, 0.35);
+  font-size: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hotbar-slot.active.protected {
+  border-color: rgba(167, 139, 250, 0.55);
+}
+
+.hotbar-slot.active.usable {
+  cursor: pointer;
+  border-color: rgba(52, 211, 153, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.hotbar-slot.active.usable:hover {
+  background: #0d2420;
+}
+
+.use-hint {
+  font-size: 0.6rem;
+  color: #34d399;
+  opacity: 0.7;
+}
+
+.gold-display {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #f0c83c;
+  letter-spacing: 0.03em;
+}
+
+.hp-bar {
+  margin-top: 0.25rem;
+  width: 100%;
+  height: 5px;
+  border-radius: 3px;
+  background: #1f2937;
+  overflow: hidden;
+}
+
+.hp-bar-fill {
+  height: 100%;
+  background: #34d399;
+  transition: width 0.25s ease;
+}
+
+.hp-bar-fill.low {
+  background: var(--danger);
 }
 
 .stage-bottom {
@@ -670,6 +826,59 @@ body {
   gap: 0.25rem;
 }
 
+/* Property Ownership v0 — Property Ledger panel */
+.property-ledger {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  background: rgba(13, 17, 23, 0.78);
+  border: 1px solid rgba(126, 231, 135, 0.25);
+  border-radius: 6px;
+  font-size: 0.72rem;
+}
+.property-ledger-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #f7e9a7;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+}
+.property-ledger-stat { color: #8b949e; font-weight: 600; }
+.property-ledger-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+.property-ledger-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.3rem 0.4rem;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 3px solid #30363d;
+}
+.property-ledger-row.for-sale { border-left-color: #fbbf24; }
+.property-ledger-row.owned { border-left-color: #7ee787; }
+.property-ledger-row.available { border-left-color: #58a6ff; }
+.property-ledger-row-main { display: flex; justify-content: space-between; align-items: baseline; }
+.property-house { font-weight: 700; color: #e6edf3; }
+.property-district { color: #8b949e; font-size: 0.68rem; }
+.property-ledger-row-meta { display: flex; gap: 0.6rem; color: #adbac7; font-size: 0.68rem; }
+.property-price { color: #f7e9a7; font-weight: 600; }
+.property-ledger-row-actions { display: flex; gap: 0.3rem; margin-top: 0.15rem; }
+.property-ledger-row-actions button {
+  font-size: 0.68rem;
+  padding: 0.18rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid rgba(126, 231, 135, 0.4);
+  background: rgba(126, 231, 135, 0.12);
+  color: #e6edf3;
+  cursor: pointer;
+}
+.property-ledger-row-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+
 .nearby-row {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -825,6 +1034,73 @@ body,
     linear-gradient(180deg, rgba(5, 8, 14, 0.48), transparent 28%, transparent 62%, rgba(5, 8, 14, 0.68)),
     radial-gradient(circle at center, transparent 35%, rgba(0, 0, 0, 0.22) 100%);
   z-index: 2;
+}
+
+.low-hp-vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  background: radial-gradient(circle at center, transparent 55%, rgba(239, 68, 68, 0.28) 100%);
+  animation: low-hp-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes low-hp-pulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.9; }
+}
+
+.death-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Freezes the screen: blocks all interaction beneath. */
+  pointer-events: auto;
+  background: rgba(5, 8, 14, 0.78);
+  backdrop-filter: blur(3px);
+}
+
+.death-modal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 1.6rem 2rem;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 14px;
+  background: rgba(13, 18, 30, 0.96);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.55);
+  max-width: 320px;
+  text-align: center;
+}
+
+.death-overlay-title {
+  font-size: 1.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--danger);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.death-overlay-sub {
+  font-size: 0.9rem;
+  color: var(--text);
+  opacity: 0.85;
+  line-height: 1.4;
+}
+
+.death-modal-actions {
+  margin-top: 0.4rem;
+  width: 100%;
+}
+
+.death-relog-btn {
+  width: 100%;
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
 }
 
 .hud {
@@ -985,6 +1261,8 @@ body,
 
 .action-hint,
 .target-line,
+.ritual-line,
+.npc-line,
 .action-locked {
   color: var(--muted);
 }
@@ -1136,7 +1414,9 @@ body,
   }
 
   .action-hint,
-  .target-line {
+  .target-line,
+  .ritual-line,
+  .npc-line {
     display: none;
   }
 

@@ -1,5 +1,7 @@
 # Proof Bundles
 
+> **Status: design sketch — NOT implemented (2026-05-30).** This describes a portable, player-facing proof-export format. The repo does not emit `ProofBundle` packets for game actions today (the server emits chronicle events + receipts; the only `ProofBundle` symbol in code is an unrelated attestation interface in `packages/coordination-kernel`). Treat this as post-MVP roadmap, not a current capability. For the live proof process see [`PROOF_RUN_TEMPLATE.md`](./PROOF_RUN_TEMPLATE.md) and [`VERIFICATION_SPINE_API.md`](./VERIFICATION_SPINE_API.md).
+
 A **Proof Bundle** is a portable, immutable, self-contained packet that proves what happened and why. It can be exported, shared, stored, and verified independently of the system that created it.
 
 ## Core Properties
@@ -134,7 +136,7 @@ val text = bundle.toText()
 ```
 
 Output:
-```
+```text
 ═══════════════════════════════════════════════════════════════
   PROOF BUNDLE: DEATH_PROOF
 ═══════════════════════════════════════════════════════════════

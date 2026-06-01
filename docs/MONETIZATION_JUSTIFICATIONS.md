@@ -1,6 +1,8 @@
-# Monetization “Not Power” Justifications (Registry)
+# Monetization "Not Power" Justifications (Registry)
 
-This registry assigns stable IDs to “why this is not power” arguments for each SKU/category. Receipts reference these IDs via `not_power_justification_id`.
+> See also: `docs/MONETIZATION_CONSTITUTION.md` and `docs/MONETIZATION_RECEIPTS.md`.
+
+This registry assigns stable IDs to "why this is not power" arguments for each SKU/category. Receipts reference these IDs via `not_power_justification_id`.
 
 ## Format
 

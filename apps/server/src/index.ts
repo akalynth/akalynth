@@ -8,10 +8,15 @@ import type { Duplex } from 'node:stream';
 import { WebSocketServer, WebSocket } from 'ws';
 import { createHash, randomUUID } from 'node:crypto';
 
-import type { ClientMessage, LostItemSummary, ServerMessage } from '../../../packages/shared/protocol.js';
+import type { ClientMessage, LostItemSummary, ServerMessage, PropertyPublic, PropertyOwnerHistoryEntry } from '../../../packages/shared/protocol.js';
 import { ServerMessages, parseClientMessage } from '../../../packages/shared/protocol.js';
 import type { Player, TutorialProgress } from '../../../packages/shared/types.js';
 import {
+  PROPERTY_CREATED_ACTION,
+  PROPERTY_LISTED_ACTION,
+  PROPERTY_UNLISTED_ACTION,
+  PROPERTY_PURCHASED_ACTION,
+  PROPERTY_TRANSFERRED_ACTION,
   FIRST_ATTEMPT_STONE_ACTION,
   HEAT_CHANGED_ACTION,
   LEDGER_MARKED_ACTION,
@@ -64,6 +69,7 @@ import {
   generateNonce,
   getAuthKeyDomain,
 } from '../../../packages/coordination-kernel/src/identity/index.js';
+import { loadVerifyingKeyHex } from '../../../packages/coordination-kernel/src/receipt/key.js';
 import { createAntiCheatRuntime, hydrateAntiCheatRuntime, onChat, onMoveApplied, onMoveIntent } from './anticheat/detector.js';
 import { createAntiCheatPriorStore } from './anticheat/priors.js';
 import { applyThrottle, checkTemTimeout, handleTemResponse, issueTemChallenge, isThrottled } from './anticheat/tem.js';
@@ -79,7 +85,7 @@ import {
 } from './world/presence.js';
 import { getNpcDef, resolveDialogueTier, buildNpcDialogue } from './world/npcs.js';
 import { applyDeath, applyRespawn } from './world/death.js';
-import { handleAttackIntent, type CombatContext, type WorldItem as CombatWorldItem } from './world/combat.js';
+import { handleAttackIntent, COMBAT_COOLDOWN_MS, type CombatContext, type WorldItem as CombatWorldItem } from './world/combat.js';
 import { getLegendaryHeat, setLegendaryHeat } from './world/drop-policy.js';
 import { rngCommitV1, rngRevealHex32 } from './world/rng.js';
 import {
@@ -143,12 +149,31 @@ import {
   hasActiveEcho,
   echoToPublicPlayer,
 } from './world/echo.js';
+import {
+  initMobs,
+  getMobsForMap,
+  getMobById,
+  hitMob,
+  mobToPublicPlayer,
+  tickMobRespawns,
+  spawnMobLoot,
+} from './world/mobs.js';
 import { CAP_ECHO_SPAWN } from '../../../packages/shared/types.js';
 import { getEvidence, type EvidenceContext, type EvidenceRequest } from './evidence/handler.js';
 import { computePressureMetrics } from './metrics/pressure.js';
 import type { ItemForDrop } from './world/drop-policy.js';
 import { getIdentity } from './world/identity.js';
 import { getGoldBalance, canAfford, withTreasuryLock, debitForAction } from './world/treasury.js';
+import {
+  ensurePropertiesSeeded,
+  hydrateProperty,
+  getProperty,
+  getAllProperties,
+  getMarketListings,
+  isValidPrice,
+  makePropertyId,
+  type PropertyProjection,
+} from './world/property.js';
 import { maybeSealOriginFromReceipt } from './world/origin.js';
 import {
   startContract,
@@ -180,6 +205,18 @@ const DEFAULT_GUEST_SESSION_TTL_MS = 10 * 60 * 1000;
 const DEFAULT_GUEST_SESSION_CLEANUP_MS = 60 * 1000;
 const MAX_GUEST_SESSIONS = 10_000;
 const DEBUG_MODE = process.env.DEBUG === '1';
+
+const SHOP_ITEMS: Record<string, { item_type: string; price: number }> = {
+  'pilgrim_mark': { item_type: 'pilgrim_mark', price: 10 },
+  'healing_herb': { item_type: 'healing_herb', price: 5 },
+};
+
+// PvE player health (PvP combat remains the instant-kill weighted generator)
+const PLAYER_MAX_HP = 10;
+const HEALING_HERB_AMOUNT = 5;
+const MOB_AGGRO_DAMAGE = 1;
+const MOB_AGGRO_TICK_MS = 2000;
+const AGGRESSIVE_MOB_TYPES = new Set(['city_rat']);
 const ANTICHEAT_PRIORS_PATH = process.env.AKALYNTH_ANTICHEAT_PRIORS_PATH;
 const DEV_MINT_ENABLED = parseBoolEnv(process.env.AKALYNTH_DEV_MINT, false);
 const REQUIRE_TLS = parseBoolEnv(process.env.REQUIRE_TLS, true);
@@ -222,6 +259,9 @@ const SOVEREIGN_ALLOW_NAME_MATCH = parseBoolEnv(process.env.SOVEREIGN_ALLOW_NAME
 
 // Capability Binding v0 (enforcement gates)
 const CAPS_ENABLED = parseBoolEnv(process.env.CAPS_ENABLED, false);
+// #101: precommit-anchored RNG v2 for loot drops. DEFAULT OFF. When unset/false,
+// combat RNG output AND the persisted receipt proof are byte-identical to #100.
+const RNG_V2_ENABLED = parseBoolEnv(process.env.AKALYNTH_RNG_V2, false);
 const CAPS_DEBUG_GRANT_SOVEREIGN = parseBoolEnv(process.env.CAPS_DEBUG_GRANT_SOVEREIGN, false) && DEBUG_MODE;
 
 // Plan B: Per-IP Rate Limiting (Anti-Bot Hardening)
@@ -654,11 +694,15 @@ type Session = {
   // Seal 3.1: RNG commit→reveal state
   rngRevealByDomain: Record<string, string>;
   rngCommitByDomain: Record<string, string>;
+  // #101: chronicle ordering ref of the spawn rng_commit event, per domain, so
+  // a v2 outcome receipt can point back at the precommit (commit < outcome).
+  rngCommitRefByDomain: Record<string, { chronicle_seq: number; chronicle_hash: string }>;
   // Plan B: Client IP for rate limiting
   clientIp: string | null;
   // Plan B: Attack spam tracking (for heat escalation)
   attackFailures: number[]; // timestamps of failed attacks
   skillCooldowns: Map<string, number>;
+  heraldMet: boolean;
 };
 
 const sessions = new Map<string, Session>();
@@ -752,6 +796,13 @@ const lastEventHashByActor = new Map<string, string>();
 // Global chain state (Seal 2.3: whole-file tamper evidence)
 let lastGlobalHash: string = 'genesis';
 
+// Monotonic chronicle sequence (#101): a per-run ordinal stamped onto every
+// chronicleEvent so commit/outcome/reveal can be ordered. Seeded from the
+// existing log line count on boot so it survives restarts. NOTE: this is the
+// chronicle ordering space; the audit-log `sequence` is a SEPARATE space — see
+// docs/RNG_OUTCOME_VERIFICATION.md (#101) for the seq-space caveat.
+let chronicleSeqCounter = 0;
+
 // ============================================================================
 // Seal 2.2/2.3: Restart continuity — rebuild chain heads from chronicle.log on boot
 // ============================================================================
@@ -825,6 +876,10 @@ function rebuildChronicleHeadsFromLog(logPath: string): void {
 
   // Set global head to last verified position
   lastGlobalHash = expectedPrevGlobal;
+
+  // #101: seed the chronicle ordinal from existing line count so post-restart
+  // commit/outcome/reveal sequences stay monotonic across runs.
+  chronicleSeqCounter = lines.length;
 
   const hasCorruption = bad > 0 || globalBad > 0;
   if (hasCorruption) {
@@ -932,6 +987,9 @@ function chronicleEvent(
 
   lastGlobalHash = global_event_hash;
 
+  // #101: stamp a monotonic chronicle ordinal (per-run, 1-indexed) for ordering.
+  const chronicle_seq = ++chronicleSeqCounter;
+
   chronicleAppend({
     v: 1,
     world_id: 'akalynth-mainnet',
@@ -951,6 +1009,10 @@ function chronicleEvent(
     },
     rng,
   });
+
+  // #101: return the ordering identifiers so callers (e.g. the spawn rng_commit)
+  // can thread chronicle_seq/event_hash onto the session for outcome binding.
+  return { chronicle_seq, event_hash, global_event_hash };
 }
 
 // Canonical path resolution (single source of truth)
@@ -1041,11 +1103,17 @@ if (protectedSlotRows.length > 0) {
   console.log(`[persist] Loaded ${protectedSlotRows.length} protected slot entries`);
 }
 
+// Raw-seed Ed25519 signing pubkey (signs receipts + chronicle events). Computed
+// once at boot; published in /v1/transparency so signatures verify offline.
+let signingPublicKeyHex = '';
+const SIGNING_KEY_DERIVATION = 'ed25519(chronicle_seed) — signs receipts + chronicle events';
+
 // Identity v0.1: Load auth key pair for character token signing
 let authKeyPair: ReturnType<typeof loadAuthKeyPair> | null = null;
 try {
   if (chainPaths.keyPath) {
     authKeyPair = loadAuthKeyPair(chainPaths.keyPath);
+    signingPublicKeyHex = loadVerifyingKeyHex(chainPaths.keyPath);
     console.log(`[identity] Auth key pair loaded (public key: ${authKeyPair.publicKeyHex.slice(0, 16)}...)`);
   } else {
     console.warn('[identity] No key path configured, character creation disabled');
@@ -1107,6 +1175,13 @@ function emitShutdown(signal: string) {
     clearInterval(heartbeatInterval);
     heartbeatInterval = null;
   }
+  // Never block exit indefinitely: force-exit if graceful shutdown stalls
+  // (e.g. lifecycle verification or audit flush hangs).
+  const forceExit = setTimeout(() => {
+    console.error(`[audit] Graceful shutdown timed out (${signal}); forcing exit`);
+    process.exit(0);
+  }, 5_000);
+  forceExit.unref();
   try {
     audit.write({
       actor_id: 'server',
@@ -1119,6 +1194,7 @@ function emitShutdown(signal: string) {
   } catch (error) {
     console.error(`[audit] Failed to write server_shutdown receipt: ${String(error)}`);
   } finally {
+    clearTimeout(forceExit);
     audit.close();
     process.exit(0);
   }
@@ -1473,6 +1549,7 @@ registerMapPlaces(worlds.Azura.map, 'Azura');
 // Load item system state from SQLite (Phase 2) - after worlds is declared
 loadInventories();
 loadWorldItems();
+loadPropertiesAndSeed();
 
 // ============================================================================
 // Item System Functions (Phase 2)
@@ -1520,6 +1597,86 @@ function loadWorldItems(): void {
       console.log(`[items] Loaded ${rows.length} world items in ${zone}`);
     }
   }
+}
+
+// ============================================================================
+// Property Ownership v0
+// ============================================================================
+
+// Hydrate the in-memory property projection from SQLite, then emit a
+// property_created receipt for any map house plot not yet registered.
+// Idempotent: warm boots hydrate-then-skip; fresh boots seed once.
+function loadPropertiesAndSeed(): void {
+  const rows = persist.getProperties();
+  for (const row of rows) {
+    let history: PropertyProjection['owner_history'] = [];
+    try {
+      history = JSON.parse(row.owner_history);
+    } catch {
+      history = [];
+    }
+    hydrateProperty({
+      property_id: row.property_id,
+      zone: row.zone,
+      plot_id: row.plot_id,
+      x: row.x,
+      y: row.y,
+      width: row.width,
+      height: row.height,
+      district: row.district,
+      owner_player_id: row.owner_player_id,
+      status: row.status as PropertyProjection['status'],
+      listed_price_gold: row.listed_price_gold,
+      primary_price_gold: row.primary_price_gold,
+      purchased_at: row.purchased_at,
+      sale_count: row.sale_count,
+      owner_history: history,
+      genesis_receipt: row.genesis_receipt,
+      last_receipt: row.last_receipt,
+    });
+  }
+
+  // Seed any plots defined on the Azura map but not yet in the registry.
+  const plots = worlds.Azura.map.landmarks.house_plots ?? [];
+  ensurePropertiesSeeded(plots, 'Azura', (r) => audit.write(r));
+  console.log(`[property] Loaded ${rows.length} properties; ensured ${plots.length} Azura plots seeded`);
+}
+
+// Resolve a player id to a display name (durable lookup; null = treasury/unowned).
+function resolvePlayerName(playerId: string | null): string | null {
+  if (!playerId) return null;
+  const online = findPlayerByIdOnline(playerId);
+  if (online) return online.name;
+  return persist.getPlayer(playerId)?.name ?? playerId;
+}
+
+// Project a property to its anonymized public wire form (owner_name, never id).
+function propertyToPublic(p: PropertyProjection): PropertyPublic {
+  return {
+    property_id: p.property_id,
+    zone: p.zone,
+    plot_id: p.plot_id,
+    x: p.x,
+    y: p.y,
+    width: p.width,
+    height: p.height,
+    district: p.district,
+    status: p.status,
+    owner_name: resolvePlayerName(p.owner_player_id),
+    primary_price_gold: p.primary_price_gold,
+    listed_price_gold: p.listed_price_gold,
+    sale_count: p.sale_count,
+  };
+}
+
+function ownerHistoryToPublic(p: PropertyProjection): PropertyOwnerHistoryEntry[] {
+  return p.owner_history.map((h) => ({
+    from_name: resolvePlayerName(h.from),
+    to_name: resolvePlayerName(h.to) ?? h.to,
+    price: h.price,
+    action: h.action,
+    timestamp: h.timestamp,
+  }));
 }
 
 /**
@@ -1730,6 +1887,11 @@ function handlePickupItem(
     player_id: playerId,
     inputs: {
       item_id: itemId,
+      // Carry the world item's type so the materializer can record it. Since #82,
+      // mob loot (`*_goo`, `slime`) is now `item_minted` at spawn, so the items row
+      // already exists with the correct type; this field is kept for backward-compat
+      // with any old `mob_loot_spawned` receipts on existing chains.
+      item_type: item.itemType,
       slot: null,
       source: 'pickup',
     },
@@ -1762,6 +1924,7 @@ function decayTick(now: Date): void {
           result: 'ok',
         });
         items.delete(itemId);
+        broadcastToMap(zone as 'Rookguard' | 'Azura', ServerMessages.worldItemRemoved(itemId));
       }
     }
   }
@@ -1901,6 +2064,13 @@ function createCharacterHandler(name: string): CharacterCreateResult {
 
 // HTTP control plane
 const httpServer = http.createServer((req, res) => {
+  const devCors = applyDevCors(req, res);
+  if ((req.method ?? '').toUpperCase() === 'OPTIONS' && devCors) {
+    res.statusCode = 204;
+    res.end();
+    return;
+  }
+
   const gate = tlsGate(req);
   if (!gate.ok) {
     rejectInsecureHttp(res);
@@ -1932,6 +2102,8 @@ const httpServer = http.createServer((req, res) => {
       identity: {
         auth_public_key_hex: authKeyPair?.publicKeyHex ?? '',
         key_derivation: AUTH_KEY_DERIVATION,
+        signing_public_key_hex: signingPublicKeyHex,
+        signing_key_derivation: SIGNING_KEY_DERIVATION,
       },
       principles: [
         'Money cannot buy gameplay power',
@@ -2177,6 +2349,39 @@ const httpServer = http.createServer((req, res) => {
       }
       return base;
     },
+    // Property Ownership v0 (public, anonymized)
+    getPropertyMarket: () => {
+      const listings = getMarketListings().map((p) => ({
+        property_id: p.property_id,
+        zone: p.zone,
+        plot_id: p.plot_id,
+        district: p.district,
+        status: p.status,
+        owner_name: resolvePlayerName(p.owner_player_id),
+        primary_price_gold: p.primary_price_gold,
+        listed_price_gold: p.listed_price_gold,
+      }));
+      return { listings, total: listings.length };
+    },
+    getPropertyLedger: (property_id: string) => {
+      const p = getProperty(property_id);
+      if (!p) return null;
+      const history = ownerHistoryToPublic(p);
+      const owners = new Set<string>();
+      for (const h of p.owner_history) owners.add(h.to);
+      const last = history.length > 0 ? history[history.length - 1] : null;
+      return {
+        property_id: p.property_id,
+        district: p.district,
+        owner_name: resolvePlayerName(p.owner_player_id),
+        sale_count: p.sale_count,
+        owner_count: owners.size,
+        last_sale: last
+          ? { from_name: last.from_name, to_name: last.to_name, price: last.price, timestamp: last.timestamp }
+          : null,
+        owner_history: history,
+      };
+    },
   });
 
   // Handle both sync and async responses from handleHttp
@@ -2268,6 +2473,58 @@ function send(ws: WebSocket, message: ServerMessage) {
   if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(message));
 }
 
+function isLocalDevOrigin(origin: string): boolean {
+  try {
+    const url = new URL(origin);
+    return (
+      (url.protocol === 'http:' || url.protocol === 'https:') &&
+      (url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname === '::1')
+    );
+  } catch {
+    return false;
+  }
+}
+
+function applyDevCors(req: IncomingMessage, res: ServerResponse): boolean {
+  if (!DEBUG_MODE && !ALLOW_INSECURE_LOCAL) return false;
+  const origin = req.headers.origin;
+  if (typeof origin !== 'string' || !isLocalDevOrigin(origin)) return false;
+
+  res.setHeader('access-control-allow-origin', origin);
+  res.setHeader('access-control-allow-methods', 'GET,POST,OPTIONS');
+  res.setHeader('access-control-allow-headers', 'authorization,content-type');
+  res.setHeader('access-control-max-age', '600');
+  res.setHeader('vary', 'Origin');
+  return true;
+}
+
+function playLoopFor(s: Session) {
+  const gateOpen = s.tutorial.move && s.tutorial.chat && s.tutorial.tem;
+  let objective = 'Step onto the move rune';
+
+  if (!s.tutorial.move) objective = 'Step onto the move rune';
+  else if (!s.tutorial.chat) objective = 'Send a signal in chat';
+  else if (!s.tutorial.tem) objective = 'Answer Tem: AZURA';
+  else if (!s.tutorial.gate) objective = 'Enter the Azura gate';
+  else if (!s.heraldMet) objective = 'Seek the Azura herald in the southern plaza';
+  else objective = 'Talk to the steward at guild hall';
+
+  return {
+    ...s.tutorial,
+    gateOpen,
+    objective,
+  };
+}
+
+function sendLoopUpdate(s: Session, event: string) {
+  if (!s.player || s.ws.readyState !== WebSocket.OPEN) return;
+  s.ws.send(JSON.stringify({
+    type: 'loop_update',
+    event,
+    loop: playLoopFor(s),
+  }));
+}
+
 function broadcastToMap(map: 'Rookguard' | 'Azura', message: ServerMessage, excludeConnId?: string) {
   const data = JSON.stringify(message);
   for (const [connId, s] of sessions) {
@@ -2293,6 +2550,8 @@ function applyRespawnNow(s: Session, now: number) {
     setAlive: (pos) => {
       s.player!.status = 'alive';
       s.player!.dead_until_ms = null;
+      s.player!.hp = PLAYER_MAX_HP;
+      s.player!.max_hp = PLAYER_MAX_HP;
       s.player!.x = pos.x;
       s.player!.y = pos.y;
     },
@@ -2313,8 +2572,87 @@ function applyRespawnNow(s: Session, now: number) {
     nearby.push(echoToPublicPlayer(respawnEcho));
   }
 
+  // Include alive mobs
+  for (const mob of getMobsForMap(s.currentMap)) {
+    nearby.push(mobToPublicPlayer(mob));
+  }
+
   send(s.ws, ServerMessages.worldState(s.currentMap, toPublicPlayer(s.player!, true), nearby));
   s.respawnTimer = null;
+}
+
+// Re-send the authoritative world snapshot to one player (used after HP changes).
+function sendWorldStateRefresh(s: Session): void {
+  if (!s.player || s.ws.readyState !== WebSocket.OPEN) return;
+  const w = worlds[s.currentMap];
+  if (!w) return;
+  const nearby = Array.from(w.players.values())
+    .filter((p) => p.id !== s.player!.id)
+    .map((p) => toPublicPlayer(p));
+  const echo = getEchoForMap(s.currentMap);
+  if (echo) nearby.push(echoToPublicPlayer(echo));
+  for (const mob of getMobsForMap(s.currentMap)) nearby.push(mobToPublicPlayer(mob));
+  send(s.ws, ServerMessages.worldState(s.currentMap, toPublicPlayer(s.player!, true), nearby));
+}
+
+// Apply death to a player slain by a mob (HP hit 0). Mirrors the kill_self path.
+function applyMobDeath(s: Session, mobType: string, now: number): void {
+  if (!s.player) return;
+  const w = worlds[s.currentMap];
+  if (!w) return;
+
+  if (s.respawnTimer) {
+    clearTimeout(s.respawnTimer);
+    s.respawnTimer = null;
+  }
+
+  const deathResult = applyDeath({
+    now,
+    player_id: s.player.id,
+    map: s.currentMap,
+    position: { x: s.player.x, y: s.player.y },
+    cause: 'npc',
+    killer_id: null,
+    respawn_delay_ms: DEATH_RESPAWN_DELAY_MS,
+    current_status: s.player.status,
+    current_dead_until_ms: s.player.dead_until_ms,
+    lastDamage: { at_ms: now, source_type: 'unknown', source_id: mobType },
+    gateUnlocked: s.tutorial.complete,
+    emitFirstOf: () => {},
+    audit,
+    setDead: (dead_until_ms) => {
+      if (!s.player) return;
+      s.player.status = 'dead';
+      s.player.dead_until_ms = dead_until_ms;
+    },
+    adjustReputation: (delta) => {
+      if (!s.player) return;
+      s.player.reputation = (s.player.reputation ?? 0) + delta;
+    },
+  });
+
+  if (deathResult.changed) {
+    const deathTs = new Date().toISOString();
+    recordLedgerDeath(s.player.id, s.currentMap, deathTs);
+    s.ledgerHesitationArmed = false;
+    s.ledgerHesitationDeathTs = null;
+    chronicleEvent('death', `did:akalynth:${s.player.id}`, s.player.caps ?? [], {
+      player_id: s.player.id,
+      map: s.currentMap,
+      x: s.player.x,
+      y: s.player.y,
+      cause: 'npc',
+      killer_id: null,
+    });
+  }
+
+  scheduleRespawnIfNeeded(s, now);
+  send(s.ws, ServerMessages.deathNotice(
+    deathResult.respawn_in_ms,
+    s.currentMap,
+    w.map.spawn,
+    deathResult.changed ? 'npc' : 'already_dead'
+  ));
 }
 
 function scheduleRespawnIfNeeded(s: Session, now: number) {
@@ -2398,9 +2736,11 @@ wss.on('connection', (ws, req: IncomingMessage) => {
     connectedAtMs: now,
     rngRevealByDomain: {},
     rngCommitByDomain: {},
+    rngCommitRefByDomain: {},
     clientIp,
     attackFailures: [],
     skillCooldowns: new Map(),
+    heraldMet: false,
   };
 
   sessions.set(connId, s);
@@ -2692,6 +3032,8 @@ function processSessionQueue(s: Session, now: number) {
           state: 'authenticated',
           status: 'alive',
           dead_until_ms: null,
+          hp: PLAYER_MAX_HP,
+          max_hp: PLAYER_MAX_HP,
           reputation: 0,
           caps: [],
         };
@@ -2830,6 +3172,11 @@ function processSessionQueue(s: Session, now: number) {
           nearby.push(echoToPublicPlayer(echo));
         }
 
+        // Include alive mobs
+        for (const mob of getMobsForMap(s.currentMap)) {
+          nearby.push(mobToPublicPlayer(mob));
+        }
+
         audit.write({ player_id: s.player!.id, action: 'enter_world', inputs: {}, result: 'ok' });
 
         send(s.ws, ServerMessages.worldState(s.currentMap, toPublicPlayer(s.player!, true), nearby));
@@ -2841,6 +3188,10 @@ function processSessionQueue(s: Session, now: number) {
           return { item_id: itemId, item_type: item?.item_type ?? 'unknown' };
         });
         send(s.ws, ServerMessages.inventorySnapshot(itemInfos));
+
+        // Send property snapshot (Property Ownership v0) so the client can
+        // render ownership/market state immediately.
+        send(s.ws, ServerMessages.propertySnapshot(getAllProperties().map(propertyToPublic)));
 
         broadcastToMap(s.currentMap, ServerMessages.playerJoined(toPublicPlayer(s.player!)), s.connId);
 
@@ -2860,12 +3211,18 @@ function processSessionQueue(s: Session, now: number) {
           const commit = rngCommitV1(domain, actorDid, reveal);
           s.rngRevealByDomain[domain] = reveal;
           s.rngCommitByDomain[domain] = commit;
-          chronicleEvent('rng_commit', actorDid, s.player!.caps ?? [], {
+          const commitRef = chronicleEvent('rng_commit', actorDid, s.player!.caps ?? [], {
             rng_domain: domain,
             rng_commit: commit,
             commit_scope: 'session',
             commit_seq: 1,
           });
+          // #101: remember the chronicle ordering ref of THIS commit so a later
+          // v2 loot-drop receipt can prove commit < outcome.
+          s.rngCommitRefByDomain[domain] = {
+            chronicle_seq: commitRef.chronicle_seq,
+            chronicle_hash: commitRef.event_hash,
+          };
         }
 
         // Initial presence tracking for spawn position
@@ -3489,6 +3846,11 @@ function processSessionQueue(s: Session, now: number) {
                   nearbyAzura.push(echoToPublicPlayer(azuraEcho));
                 }
 
+                // Include alive mobs
+                for (const mob of getMobsForMap('Azura')) {
+                  nearbyAzura.push(mobToPublicPlayer(mob));
+                }
+
                 send(s.ws, ServerMessages.worldState(s.currentMap, toPublicPlayer(s.player!, true), nearbyAzura));
                 broadcastToMap('Azura', ServerMessages.playerJoined(toPublicPlayer(s.player!)), s.connId);
 
@@ -3852,6 +4214,14 @@ function processSessionQueue(s: Session, now: number) {
           // Broadcast to zone: item removed from world
           broadcastToMap(s.currentMap, ServerMessages.worldItemRemoved(msg.item_id));
 
+          // Sync inventory to client
+          const invIds = getPlayerInventoryIds(s.player!.id);
+          const invItems = invIds.map(id => {
+            const item = persist.getItem(id);
+            return { item_id: id, item_type: item?.item_type ?? 'unknown', slot: null };
+          });
+          send(s.ws, ServerMessages.inventorySnapshot(invItems));
+
           audit.write({
             player_id: s.player!.id,
             action: 'pickup_item',
@@ -3878,6 +4248,99 @@ function processSessionQueue(s: Session, now: number) {
         const attackerId = s.player!.id;
         const targetId = msg.target_id;
         const msgNow = Date.now();
+
+        // Mob attack path — intercept before PvP handler
+        if (targetId.startsWith('mob:')) {
+          const mob = getMobById(targetId);
+          if (!mob || mob.dead_until_ms !== null) {
+            send(s.ws, ServerMessages.combatRejected('defender_dead'));
+            break;
+          }
+
+          // Cooldown check (reuse PvP cooldown)
+          const lastAttack = lastAttackAt.get(attackerId) ?? 0;
+          if (msgNow - lastAttack < COMBAT_COOLDOWN_MS) {
+            send(s.ws, ServerMessages.combatRejected('cooldown'));
+            break;
+          }
+
+          // Adjacency check
+          const ax = s.player!.x;
+          const ay = s.player!.y;
+          if (Math.abs(ax - mob.def.x) > 1 || Math.abs(ay - mob.def.y) > 1) {
+            send(s.ws, ServerMessages.combatRejected('not_adjacent'));
+            break;
+          }
+
+          lastAttackAt.set(attackerId, msgNow);
+
+          const hit = hitMob(targetId, 1);
+          if (!hit) break;
+
+          if (!hit.dead) {
+            // Broadcast updated mob (with HP reflected in name) to all players on map
+            broadcastToMap(s.currentMap, ServerMessages.playerJoined(mobToPublicPlayer(hit.mob)));
+          }
+
+          if (hit.dead) {
+            audit.write({
+              player_id: attackerId,
+              action: 'mob_kill',
+              inputs: {
+                mob_id: targetId,
+                mob_type: mob.def.mob_type,
+                map: s.currentMap,
+                position: { x: mob.def.x, y: mob.def.y },
+              },
+              result: 'ok',
+            });
+            broadcastToMap(
+              s.currentMap,
+              ServerMessages.combatResolved(attackerId, targetId, 'kill', s.currentMap, mob.def.x, mob.def.y)
+            );
+            // Leave a corpse with a respawn countdown (status 'dead', not attackable)
+            broadcastToMap(s.currentMap, ServerMessages.playerJoined(mobToPublicPlayer(hit.mob)));
+
+            // Spawn loot at mob position. spawnMobLoot emits an item_minted receipt,
+            // creating a durable items DB row at spawn time (before pickup) — same as
+            // shop and legendary items. item_id is derived from the receipt hash —
+            // deterministic, replay-safe, unique per spawn; the receipt body carries no item_id.
+            const lootType = `${mob.def.mob_type}_goo`;
+            const decayAt = new Date(Date.now() + 3 * 60_000).toISOString(); // 3 min decay
+            const goo = spawnMobLoot(attackerId, lootType, s.currentMap, mob.def.x, mob.def.y, {
+              writeReceipt: (r) => audit.write(r),
+              computeReceiptHash,
+              generateItemId,
+            });
+            if (!worldItems.has(s.currentMap)) worldItems.set(s.currentMap, new Map());
+            worldItems.get(s.currentMap)!.set(goo.itemId, {
+              x: goo.x,
+              y: goo.y,
+              decayAt,
+              itemType: goo.itemType,
+            });
+            broadcastToMap(s.currentMap, ServerMessages.worldItemAdded(goo.itemId, goo.itemType, mob.def.x, mob.def.y));
+
+            // Training Slime additionally drops a 'slime' trophy (guaranteed, plain item).
+            // Mirrors the goo loot path: in-memory world item, item_minted receipt,
+            // 3-min decay. The receipt-derived id is unique per spawn (no tile/ms collision).
+            if (mob.def.mob_type === 'training_slime') {
+              const slime = spawnMobLoot(attackerId, 'slime', s.currentMap, mob.def.x, mob.def.y, {
+                writeReceipt: (r) => audit.write(r),
+                computeReceiptHash,
+                generateItemId,
+              });
+              worldItems.get(s.currentMap)!.set(slime.itemId, {
+                x: slime.x,
+                y: slime.y,
+                decayAt,
+                itemType: slime.itemType,
+              });
+              broadcastToMap(s.currentMap, ServerMessages.worldItemAdded(slime.itemId, slime.itemType, mob.def.x, mob.def.y));
+            }
+          }
+          break;
+        }
 
         // Build combat context
         const ctx: CombatContext = {
@@ -3923,6 +4386,25 @@ function processSessionQueue(s: Session, now: number) {
             for (const sess of sessions.values()) {
               if (sess.player?.id === playerId) {
                 return sess.rngCommitByDomain['death_drop:v1'];
+              }
+            }
+            return undefined;
+          },
+          // #101: v2 precommit-anchored RNG (flag-gated). All three are no-ops
+          // for combat when RNG_V2_ENABLED is false.
+          rngV2Enabled: RNG_V2_ENABLED,
+          getRngRevealV1: (playerId: string) => {
+            for (const sess of sessions.values()) {
+              if (sess.player?.id === playerId) {
+                return sess.rngRevealByDomain['death_drop:v1'];
+              }
+            }
+            return undefined;
+          },
+          getRngCommitRefV1: (playerId: string) => {
+            for (const sess of sessions.values()) {
+              if (sess.player?.id === playerId) {
+                return sess.rngCommitRefByDomain['death_drop:v1'];
               }
             }
             return undefined;
@@ -4548,9 +5030,166 @@ function processSessionQueue(s: Session, now: number) {
               completeResult.ok ? completeResult.credited_gold : undefined,
               completeResult.ok ? undefined : completeResult.error
             ));
+            if (completeResult.ok) {
+              send(s.ws, ServerMessages.walletSnapshot(getGoldBalance(s.player.id)));
+            }
           }
         }
         // Silent drop for invalid ticks (anti-spam)
+        break;
+      }
+
+      // ========================================================================
+      // Property Ownership v0 (House Market)
+      // Handlers are fully synchronous: per-session sequential processing +
+      // synchronous audit.write make the read→validate→emit sequence atomic on
+      // the event loop (same guarantee pay_tithe relies on). The materializer's
+      // owner-predicate WHERE clause is the durable backstop.
+      // ========================================================================
+
+      case 'buy_house': {
+        if (!requireAuth(s) || !s.player) break;
+        const buyer = s.player.id;
+        const prop = getProperty(msg.property_id);
+        if (!prop) {
+          send(s.ws, ServerMessages.propertyResult('buy_house', false, msg.property_id, 'unknown_plot'));
+          break;
+        }
+        if (prop.owner_player_id === buyer) {
+          send(s.ws, ServerMessages.propertyResult('buy_house', false, msg.property_id, 'cannot_buy_own'));
+          break;
+        }
+
+        if (prop.status === 'unowned') {
+          // Primary sale: treasury → buyer (pure gold sink).
+          const price = prop.primary_price_gold;
+          if (!canAfford(buyer, price)) {
+            send(s.ws, ServerMessages.propertyResult('buy_house', false, msg.property_id, 'insufficient_gold'));
+            break;
+          }
+          audit.write({
+            player_id: buyer,
+            action: WALLET_DEBIT_ACTION,
+            inputs: { amount: price, reason: `property_purchase:${prop.property_id}` as WalletDebitReason },
+            result: 'ok',
+          });
+          audit.write({
+            player_id: buyer,
+            action: PROPERTY_PURCHASED_ACTION,
+            inputs: { property_id: prop.property_id, price },
+            result: 'ok',
+          });
+        } else if (prop.status === 'listed' && prop.listed_price_gold != null && prop.owner_player_id) {
+          // Resale: seller → buyer (conserved). Price read server-side.
+          const price = prop.listed_price_gold;
+          const seller = prop.owner_player_id;
+          if (!canAfford(buyer, price)) {
+            send(s.ws, ServerMessages.propertyResult('buy_house', false, msg.property_id, 'insufficient_gold'));
+            break;
+          }
+          audit.write({
+            player_id: buyer,
+            action: WALLET_DEBIT_ACTION,
+            inputs: { amount: price, reason: `property_transfer:${prop.property_id}` as WalletDebitReason },
+            result: 'ok',
+          });
+          audit.write({
+            player_id: seller,
+            action: WALLET_CREDIT_ACTION,
+            inputs: { amount: price, reason: `property_sale:${prop.property_id}` as WalletCreditReason },
+            result: 'ok',
+          });
+          audit.write({
+            player_id: buyer,
+            action: PROPERTY_TRANSFERRED_ACTION,
+            inputs: { property_id: prop.property_id, seller_id: seller, price },
+            result: 'ok',
+          });
+        } else {
+          send(s.ws, ServerMessages.propertyResult('buy_house', false, msg.property_id, 'not_for_sale'));
+          break;
+        }
+
+        // Success: projection updated synchronously via the audit reducer hook.
+        const updated = getProperty(msg.property_id)!;
+        const sellerName = updated.owner_history.length >= 2
+          ? resolvePlayerName(updated.owner_history[updated.owner_history.length - 1].from)
+          : null;
+        send(s.ws, ServerMessages.propertyResult('buy_house', true, msg.property_id));
+        send(s.ws, ServerMessages.propertyState(propertyToPublic(updated)));
+        send(s.ws, ServerMessages.walletSnapshot(getGoldBalance(buyer)));
+        broadcastToMap(
+          updated.zone as 'Rookguard' | 'Azura',
+          ServerMessages.houseSold(
+            updated.property_id,
+            updated.plot_id,
+            updated.zone,
+            s.player.name,
+            sellerName,
+            updated.owner_history[updated.owner_history.length - 1]?.price ?? 0,
+            updated.sale_count
+          )
+        );
+        break;
+      }
+
+      case 'list_house': {
+        if (!requireAuth(s) || !s.player) break;
+        const prop = getProperty(msg.property_id);
+        if (!prop) {
+          send(s.ws, ServerMessages.propertyResult('list_house', false, msg.property_id, 'unknown_plot'));
+          break;
+        }
+        if (prop.owner_player_id !== s.player.id) {
+          send(s.ws, ServerMessages.propertyResult('list_house', false, msg.property_id, 'not_owner'));
+          break;
+        }
+        if (!isValidPrice(msg.price)) {
+          send(s.ws, ServerMessages.propertyResult('list_house', false, msg.property_id, 'invalid_price'));
+          break;
+        }
+        audit.write({
+          player_id: s.player.id,
+          action: PROPERTY_LISTED_ACTION,
+          inputs: { property_id: prop.property_id, price: msg.price },
+          result: 'ok',
+        });
+        const updated = getProperty(msg.property_id)!;
+        send(s.ws, ServerMessages.propertyResult('list_house', true, msg.property_id));
+        send(s.ws, ServerMessages.propertyState(propertyToPublic(updated)));
+        broadcastToMap(updated.zone as 'Rookguard' | 'Azura', ServerMessages.propertyState(propertyToPublic(updated)), s.connId);
+        break;
+      }
+
+      case 'unlist_house': {
+        if (!requireAuth(s) || !s.player) break;
+        const prop = getProperty(msg.property_id);
+        if (!prop) {
+          send(s.ws, ServerMessages.propertyResult('unlist_house', false, msg.property_id, 'unknown_plot'));
+          break;
+        }
+        if (prop.owner_player_id !== s.player.id) {
+          send(s.ws, ServerMessages.propertyResult('unlist_house', false, msg.property_id, 'not_owner'));
+          break;
+        }
+        audit.write({
+          player_id: s.player.id,
+          action: PROPERTY_UNLISTED_ACTION,
+          inputs: { property_id: prop.property_id },
+          result: 'ok',
+        });
+        const updated = getProperty(msg.property_id)!;
+        send(s.ws, ServerMessages.propertyResult('unlist_house', true, msg.property_id));
+        send(s.ws, ServerMessages.propertyState(propertyToPublic(updated)));
+        broadcastToMap(updated.zone as 'Rookguard' | 'Azura', ServerMessages.propertyState(propertyToPublic(updated)), s.connId);
+        break;
+      }
+
+      case 'get_property_ledger': {
+        if (!requireAuth(s) || !s.player) break;
+        const prop = getProperty(msg.property_id);
+        if (!prop) break;
+        send(s.ws, ServerMessages.propertyLedger(prop.property_id, ownerHistoryToPublic(prop), prop.sale_count));
         break;
       }
 
@@ -4571,9 +5210,31 @@ function processSessionQueue(s: Session, now: number) {
         }
 
         const tier = resolveDialogueTier(s.player!.id, npc.place_id);
-        const line = buildNpcDialogue(npc, tier);
+
+        // Dialogue Contract v1: seed varied-but-deterministic phrasing on a
+        // DURABLE per-(player,npc,tier) talk counter. The nonce is the number
+        // of prior talks, read from the receipt-sourced projection — so it
+        // survives reconnects AND is reconstructed identically on replay.
+        const nonce = persist.getNpcTalkCount(s.player!.id, msg.npc_id, tier);
+        const line = buildNpcDialogue(npc, tier, { playerId: s.player!.id, nonce });
+
+        // Record the talk so the next visit's nonce advances. The onWrite hook
+        // materializes this into npc_talk_events synchronously (canon source).
+        // Dialogue is read-only flavor: this receipt records that the player
+        // spoke, not any world mutation.
+        audit.write({
+          player_id: s.player!.id,
+          action: 'npc_talked',
+          inputs: { npc_id: msg.npc_id, tier },
+          result: 'ok',
+        });
 
         send(s.ws, ServerMessages.npcDialogue(msg.npc_id, npc.place_id, tier, line));
+
+        if (msg.npc_id === 'azura_herald' && !s.heraldMet) {
+          s.heraldMet = true;
+          sendLoopUpdate(s, 'herald_met');
+        }
         break;
       }
 
@@ -4581,6 +5242,121 @@ function processSessionQueue(s: Session, now: number) {
       case 'use_skill': {
         if (!requireAuth(s)) break;
         if (!s.player) break;
+
+        // Shop purchase intercept
+        if (msg.skill_id.startsWith('shop:')) {
+          const shopKey = msg.skill_id.slice(5);
+          const shopItem = SHOP_ITEMS[shopKey];
+
+          if (!shopItem) {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_skill' }));
+            break;
+          }
+
+          const playerPlace = getCurrentPlace(s.player.id);
+          if (playerPlace !== 'azura:guild_hall') {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_target' }));
+            break;
+          }
+
+          if (!canAfford(s.player.id, shopItem.price)) {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_skill', payload: { error: 'insufficient_gold' } }));
+            break;
+          }
+
+          // Debit gold
+          audit.write({
+            player_id: s.player.id,
+            action: WALLET_DEBIT_ACTION,
+            inputs: { amount: shopItem.price, reason: 'action_cost:shop_purchase' as WalletDebitReason },
+            result: 'ok',
+          });
+
+          // Mint item using receipt chain
+          const mintReceipt = audit.write({
+            action: 'item_minted',
+            player_id: s.player.id,
+            inputs: { item_type: shopItem.item_type, meta: { source: 'shop', shop_key: shopKey }, reason: 'shop_purchase' },
+            result: 'ok',
+          });
+          const mintHash = computeReceiptHash(mintReceipt);
+          const shopItemId = generateItemId(mintHash);
+
+          audit.write({
+            action: 'item_added_to_inventory',
+            player_id: s.player.id,
+            inputs: { item_id: shopItemId, slot: null, source: 'shop' },
+            result: 'ok',
+          });
+
+          if (!inventory.has(s.player.id)) inventory.set(s.player.id, new Set());
+          inventory.get(s.player.id)!.add(shopItemId);
+
+          // Sync inventory (use known type for newly minted item)
+          const shopInvIds = getPlayerInventoryIds(s.player.id);
+          const shopInvItems = shopInvIds.map(id => ({
+            item_id: id,
+            item_type: persist.getItem(id)?.item_type ?? (id === shopItemId ? shopItem.item_type : 'unknown'),
+            slot: null,
+          }));
+          send(s.ws, ServerMessages.inventorySnapshot(shopInvItems));
+          send(s.ws, ServerMessages.walletSnapshot(getGoldBalance(s.player.id)));
+          send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { item_id: shopItemId, item_type: shopItem.item_type } }));
+          break;
+        }
+
+        // Item use intercept
+        if (msg.skill_id.startsWith('item:use:')) {
+          const itemId = msg.skill_id.slice(9);
+          const playerInv = inventory.get(s.player.id);
+          if (!playerInv || !playerInv.has(itemId)) {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_target' }));
+            break;
+          }
+
+          const item = persist.getItem(itemId);
+          const itemType = item?.item_type ?? 'unknown';
+
+          let effectMsg = 'Used.';
+          let hpChanged = false;
+          if (itemType === 'healing_herb') {
+            if (s.player.status === 'dead' && s.player.dead_until_ms != null) {
+              s.player.dead_until_ms = Math.max(Date.now(), s.player.dead_until_ms - 10_000);
+              effectMsg = 'The herb restores vitality. Respawn hastened by 10 seconds.';
+            } else {
+              const before = s.player.hp ?? PLAYER_MAX_HP;
+              const max = s.player.max_hp ?? PLAYER_MAX_HP;
+              const after = Math.min(max, before + HEALING_HERB_AMOUNT);
+              s.player.hp = after;
+              hpChanged = after !== before;
+              effectMsg = hpChanged
+                ? `The herb knits your wounds. +${after - before} HP (${after}/${max}).`
+                : 'You are already at full health.';
+            }
+          } else if (itemType.endsWith('_goo')) {
+            effectMsg = 'The goo dissolves. Something in the air shifts.';
+          }
+
+          playerInv.delete(itemId);
+
+          audit.write({
+            player_id: s.player.id,
+            action: 'item_used',
+            inputs: { item_id: itemId, item_type: itemType, effect: effectMsg },
+            result: 'ok',
+          });
+
+          const invIds = getPlayerInventoryIds(s.player.id);
+          const invItems = invIds.map(id => ({
+            item_id: id,
+            item_type: persist.getItem(id)?.item_type ?? 'unknown',
+            slot: null,
+          }));
+          send(s.ws, ServerMessages.inventorySnapshot(invItems));
+          if (hpChanged) sendWorldStateRefresh(s);
+          send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { effect: effectMsg, item_type: itemType } }));
+          break;
+        }
 
         const skillCtx: SkillContext = {
           playerId: s.player.id,
@@ -4723,6 +5499,54 @@ setInterval(() => {
     }
   }
 }, HEAT_DECAY_TICK_MS);
+
+// Mob system init
+initMobs();
+
+// Mob respawn tick — revive due mobs, refresh corpse countdowns
+setInterval(() => {
+  tickMobRespawns();
+  // Re-broadcast every mob (alive HP / dead countdown) so clients update
+  for (const map of ['Rookguard', 'Azura'] as const) {
+    for (const mob of getMobsForMap(map)) {
+      broadcastToMap(map, ServerMessages.playerJoined(mobToPublicPlayer(mob)));
+    }
+  }
+}, 1_000);
+
+// Mob aggression tick — aggressive mobs damage adjacent in-world players (PvE)
+setInterval(() => {
+  const now = Date.now();
+  for (const map of ['Rookguard', 'Azura'] as const) {
+    const aggressors = getMobsForMap(map).filter(
+      (m) => m.dead_until_ms === null && AGGRESSIVE_MOB_TYPES.has(m.def.mob_type)
+    );
+    if (aggressors.length === 0) continue;
+    for (const s of sessions.values()) {
+      if (!s.player || !s.inWorld || s.currentMap !== map) continue;
+      if (s.player.status === 'dead') continue;
+      for (const mob of aggressors) {
+        if (Math.abs(s.player.x - mob.def.x) <= 1 && Math.abs(s.player.y - mob.def.y) <= 1) {
+          const hp = Math.max(0, (s.player.hp ?? PLAYER_MAX_HP) - MOB_AGGRO_DAMAGE);
+          s.player.hp = hp;
+          s.lastDamage = { at_ms: now, source_type: 'unknown', source_id: mob.def.mob_type };
+          audit.write({
+            player_id: s.player.id,
+            action: 'mob_attack',
+            inputs: { mob_id: mob.mob_id, mob_type: mob.def.mob_type, damage: MOB_AGGRO_DAMAGE, hp_remaining: hp, map },
+            result: 'ok',
+          });
+          if (hp <= 0) {
+            applyMobDeath(s, mob.def.mob_type, now);
+          } else {
+            sendWorldStateRefresh(s);
+          }
+          break; // at most one aggressor hit per tick
+        }
+      }
+    }
+  }
+}, MOB_AGGRO_TICK_MS);
 
 httpServer.listen(PORT, HOST, () => {
   console.log(`HTTP+WS listening on ${HOST}:${PORT}`);

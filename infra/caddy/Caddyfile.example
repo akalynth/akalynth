@@ -1,0 +1,44 @@
+# Akalynth reverse proxy — PROD box (akalynth-prod-01, 194.147.221.85)
+#
+# Caddy terminates TLS and proxies to the Node server bound on loopback.
+# The game server NEVER binds a public interface (HOST=127.0.0.1 in
+# infra/systemd/akalynth.service). Copy this to /etc/caddy/Caddyfile and
+# reload with: sudo systemctl reload caddy
+#
+# DNS prerequisites (Cloudflare, before caddy reload):
+#   A  akalynth.com      →  194.147.221.85
+#   A  api.akalynth.com  →  194.147.221.85
+# Cloudflare proxy mode: Full (strict) — chain is CF → Caddy → Node.
+#
+# Static site (akalynth.com):
+#   Build mmo-site/ and deploy to /var/www/akalynth before enabling this block.
+#   sudo mkdir -p /var/www/akalynth && sudo chown caddy:caddy /var/www/akalynth
+#   (cd mmo-site && npm run build && rsync -a dist/ /var/www/akalynth/)
+
+# ── Marketing / landing site ──────────────────────────────────────────────────
+akalynth.com {
+	root * /var/www/akalynth
+	file_server
+
+	encode zstd gzip
+
+	log {
+		output file /var/log/caddy/akalynth-site.log
+		format json
+	}
+}
+
+# ── Game API / WebSocket (live game server) ───────────────────────────────────
+api.akalynth.com {
+	encode zstd gzip
+
+	# Loopback bind owned by akalynth.service
+	reverse_proxy 127.0.0.1:3000
+
+	# GET /v1/health and /v1/transparency are public by design; no special rules needed.
+
+	log {
+		output file /var/log/caddy/akalynth-api.log
+		format json
+	}
+}
