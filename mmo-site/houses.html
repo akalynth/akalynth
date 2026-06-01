@@ -22,7 +22,7 @@
     <meta name="twitter:card" content="summary" />
     <link rel="stylesheet" href="css/style.css" />
   </head>
-  <body data-page="houses">
+  <body data-page="houses" data-requires-account>
     <!--
       Akalynth house auctions page. Shares chrome with index.html / shop.html.
       Preview only: bids use preview gold (distinct from the shop's Azura coins),
@@ -44,8 +44,8 @@
           <ul>
             <li><a class="tab-btn" href="index.html#home" data-nav="home">Home</a></li>
             <li><a class="tab-btn" href="index.html#world" data-nav="world">World</a></li>
-            <li><a class="tab-btn is-active" href="houses.html" data-nav="houses" aria-current="page">Houses</a></li>
-            <li><a class="tab-btn" href="shop.html" data-nav="shop">Shop</a></li>
+            <li class="requires-account"><a class="tab-btn is-active" href="houses.html" data-nav="houses" aria-current="page">Houses</a></li>
+            <li class="requires-account"><a class="tab-btn" href="shop.html" data-nav="shop">Shop</a></li>
             <li><a class="tab-btn" href="account.html" data-nav="account">Account</a></li>
           </ul>
         </nav>
@@ -88,6 +88,14 @@
 
       <!-- Parchment content column -->
       <main class="content" id="main" role="main" tabindex="-1">
+        <article class="parchment" id="account-required" hidden>
+          <p class="lede">Create a character to enter the House Plots.</p>
+          <p>
+            House auctions are open to logged-in characters only.
+            <a href="account.html">Create your character →</a>
+          </p>
+        </article>
+        <div id="gated-content">
         <h1 class="page-title">The House Plots</h1>
         <article class="parchment">
           <p class="lede">
@@ -118,6 +126,7 @@
 
         <div class="houses-grid" id="houses-grid">
           <!-- House cards injected by app.js -->
+        </div>
         </div>
       </main>
     </div>

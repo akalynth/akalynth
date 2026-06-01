@@ -22,7 +22,7 @@
     <meta name="twitter:card" content="summary" />
     <link rel="stylesheet" href="css/style.css" />
   </head>
-  <body data-page="shop">
+  <body data-page="shop" data-requires-account>
     <!--
       Akalynth shop page. Shares chrome and the localStorage cart with index.html.
       Preview storefront only — no real payments are processed (pre-alpha).
@@ -43,8 +43,8 @@
           <ul>
             <li><a class="tab-btn" href="index.html#home" data-nav="home">Home</a></li>
             <li><a class="tab-btn" href="index.html#world" data-nav="world">World</a></li>
-            <li><a class="tab-btn" href="houses.html" data-nav="houses">Houses</a></li>
-            <li><a class="tab-btn is-active" href="shop.html" data-nav="shop" aria-current="page">Shop</a></li>
+            <li class="requires-account"><a class="tab-btn" href="houses.html" data-nav="houses">Houses</a></li>
+            <li class="requires-account"><a class="tab-btn is-active" href="shop.html" data-nav="shop" aria-current="page">Shop</a></li>
             <li><a class="tab-btn" href="account.html" data-nav="account">Account</a></li>
           </ul>
         </nav>
@@ -107,6 +107,14 @@
 
       <!-- Parchment content column -->
       <main class="content" id="main" role="main" tabindex="-1">
+        <article class="parchment" id="account-required" hidden>
+          <p class="lede">Create a character to enter the Coin Exchange.</p>
+          <p>
+            The shop is open to logged-in characters only.
+            <a href="account.html">Create your character →</a>
+          </p>
+        </article>
+        <div id="gated-content">
         <h1 class="page-title">The Coin Exchange</h1>
         <article class="parchment">
           <p class="lede">
@@ -135,6 +143,7 @@
           <button class="btn btn-gold btn-block" id="checkout-btn" disabled>Checkout (preview)</button>
           <button class="btn btn-ghost btn-block" id="clear-cart-btn">Clear cart</button>
         </aside>
+        </div>
       </main>
     </div>
 

@@ -632,6 +632,7 @@
     saveAccount(account);
     renderAccountView();
     renderHoldings();
+    applyAccountGates();
     renderHouses();
     alert(
       "Preview character created — " +
@@ -658,6 +659,7 @@
           account = null;
           renderAccountView();
           renderHoldings();
+          applyAccountGates();
         }
       });
     }
@@ -680,6 +682,22 @@
     } else {
       if (empty) empty.hidden = false;
       if (body) body.hidden = true;
+    }
+  }
+
+  // ---- Account gating (Houses & Shop require a character) ------------------
+  // Preview only: a "logged-in character" is a local account in localStorage.
+  // Hides gated nav links and gated page content when no character exists.
+  function applyAccountGates() {
+    var loggedIn = !!account;
+    $all(".requires-account").forEach(function (el) {
+      el.hidden = !loggedIn;
+    });
+    if (document.body && document.body.hasAttribute("data-requires-account")) {
+      var gate = $("#account-required");
+      var content = $("#gated-content");
+      if (gate) gate.hidden = loggedIn;
+      if (content) content.hidden = !loggedIn;
     }
   }
 
@@ -867,6 +885,7 @@
     initAccount();
     initHouses();
     renderHoldings();
+    applyAccountGates();
     initMisc();
     render();
   }
