@@ -33,6 +33,7 @@
     "verify:work-contracts": "tsx tools/verify-work-contracts.ts",
     "verify:property": "tsx tools/verify-property.ts",
     "verify:property-auction": "tsx tools/verify-property-auction.ts",
+    "verify:property-auction-wallet-escrow": "tsx tools/verify-property-auction-wallet-escrow.ts",
     "verify:ops": "tsx tools/verify-ops.ts",
     "fixture:generate": "tsx tools/generate-ci-fixture.ts",
     "materialize-db": "tsx tools/materialize-db.ts",
