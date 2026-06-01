@@ -12,7 +12,7 @@ each asset lineage (prompt + raw + cleaned + hash), a lifecycle gate, and a hard
 |---|---|---|
 | `asset_id` | string | `akalynth_<asset_type>_<name>_NNN` (e.g. `akalynth_prop_wooden_chest_001`). |
 | `game` | string | Always `"Akalynth"`. |
-| `asset_type` | enum | `ground` \| `border` \| `structure` \| `prop` \| `creature` \| `character` \| `npc` \| `building` \| `effect` \| `ui` \| `tile`. |
+| `asset_type` | enum | `ground` \| `border` \| `structure` \| `prop` \| `creature` \| `character` \| `npc` \| `building` \| `effect` \| `ui` \| `tile` \| `item`. (`item` = inventory/equipment/consumable/loot icons.) |
 | `biome` | string \| null | Optional grouping (`town`, `swamp`, …); `null` if none. |
 | `status` | enum | Lifecycle: `prompt_written` \| `raw_generated` \| `cleaned_png` \| `manifest_recorded` \| `tilemap_tested` \| `human_reviewed` \| `promoted` \| `legacy`. |
 | `dimensions_px` | [int,int] \| null | Actual cleaned-PNG size; `null` before a cleaned PNG exists. Each value a multiple of 32. |

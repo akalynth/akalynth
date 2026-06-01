@@ -101,6 +101,13 @@ constraints — never copy any existing game's art, sprites, layouts, or UI**):
   abstract Akalynth sigils, wells, carts, barrels, sacks, flower planters, and
   fences; simple interiors (bed, fireplace/hearth) for enterable buildings. These
   are the recurring props that make a square feel inhabited.
+- **Inventory / item icons (`item` / `ui`):** a separate class of small square
+  icons that must read at inventory size — equipment (helmets, body/leg armor,
+  boots), **heraldic shields**, weapons (sword/axe/mace/staff/bow/wand), rings and
+  amulets, **color-coded potions**, runes, spellbooks/scrolls, keys, food,
+  gold/gems/ingots, treasure chests, and containers (backpacks, quivers). Original
+  Akalynth designs; consistent icon framing and lighting; no copied item shapes.
+  Mechanics (stats/effects) live server-side — the icon is display-only.
 
 ### Akalynth signature motifs
 

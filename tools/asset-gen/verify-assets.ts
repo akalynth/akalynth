@@ -23,7 +23,7 @@ const PROMPTS = path.join(REPO_ROOT, 'data/assets-src/prompts');
 const PACKS = path.join(REPO_ROOT, 'data/assets-src/packs');
 
 const STYLE_CONTRACT = 'nostalgic_top_down_mmo_readability_original_akalynth_assets_v1';
-const ASSET_TYPES = new Set(['ground', 'border', 'structure', 'prop', 'creature', 'character', 'npc', 'building', 'effect', 'ui', 'tile']);
+const ASSET_TYPES = new Set(['ground', 'border', 'structure', 'prop', 'creature', 'character', 'npc', 'building', 'effect', 'ui', 'tile', 'item']);
 const LIFECYCLE = ['prompt_written', 'raw_generated', 'cleaned_png', 'manifest_recorded', 'tilemap_tested', 'human_reviewed', 'promoted', 'legacy'];
 const HAS_PNG_STATUS = new Set(['cleaned_png', 'manifest_recorded', 'tilemap_tested', 'human_reviewed', 'promoted', 'legacy']);
 
