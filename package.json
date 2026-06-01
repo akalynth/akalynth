@@ -9,7 +9,9 @@
   ],
   "scripts": {
     "install:all": "npm install && cd apps/server && npm install && cd ../debug-client && npm install",
+    "dev:bootstrap": "node scripts/dev-bootstrap.mjs",
     "dev:server": "cd apps/server && npm run dev",
+    "dev:server:fresh": "node scripts/dev-bootstrap.mjs && cd apps/server && AKALYNTH_BOOTSTRAP=1 CHRONICLE_KEY_PATH=chronicle.key ALLOW_INSECURE_LOCAL=1 npm run dev",
     "dev:client": "cd apps/debug-client && npm run dev",
     "build:server": "cd apps/server && npm run build",
     "build:client": "cd apps/debug-client && npm run build",

@@ -61,10 +61,25 @@ npm install
 ```
 
 2) Run local dev
-- Terminal A: `cd apps/server && ALLOW_INSECURE_LOCAL=1 npm run dev`
+- Terminal A: `npm run dev:server:fresh` (from repo root)
 - Terminal B: `cd apps/debug-client && npm install && npm run dev`
 - Health: `curl -s http://127.0.0.1:3000/v1/health`
 - Client: http://127.0.0.1:5173/
+
+`dev:server:fresh` runs `dev:bootstrap` (generates a local-only chronicle signing
+key at `apps/server/chronicle.key` if absent — see step below), then starts the
+server with `AKALYNTH_BOOTSTRAP=1` (creates the genesis receipt chain on first
+run), `CHRONICLE_KEY_PATH=chronicle.key` (enables character creation/identity),
+and `ALLOW_INSECURE_LOCAL=1` (accepts loopback over plain HTTP/WS). Without the
+signing key the server exits with `Signing key not found`.
+
+The dev key is a random 32-byte seed, gitignored, and **local-only** — never
+reuse it for a deployment. Production keys are minted out-of-band; see
+`docs/NEW_BOX_PROVISIONING.md`. Use `dev:server:fresh` for everyday local
+development — it is idempotent (the key generates once, `AKALYNTH_BOOTSTRAP=1`
+only matters before the chain exists). Plain `npm run dev:server` starts the
+bare server **without** the dev key/identity/loopback env, for when you set
+those yourself.
 
 3) Protocol edits: `./scripts/verify_protocol_sync.sh`
 
