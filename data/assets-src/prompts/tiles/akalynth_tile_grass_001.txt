@@ -1,0 +1,3 @@
+Create a single original SEAMLESS terrain tile for Akalynth. Nostalgic top-down fantasy MMO readability; original Akalynth world tile, not copied from any existing game. Hand-pixelled 32x32 seamless tile, top-down view, dense readable texture. Must tile cleanly in all directions. No objects, no characters, no text, no shadows at the tile edges. Dark fantasy medieval palette, warm hand-pixelled detail.
+
+Tile: rich green meadow grass with layered blade detail, small moss patches, scattered dirt flecks and a few tiny blue wildflowers. Lush but readable.

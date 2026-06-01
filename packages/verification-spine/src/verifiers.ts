@@ -414,6 +414,22 @@ export function createDefaultRegistry(): VerifierRegistry {
     },
   };
 
+  // Asset Factory manifests (pure; no DB/runtime). Proves the asset gate:
+  // PNG<->sidecar pairing, schema, 32-multiple dims, sha256==cleaned PNG,
+  // mechanics:null (server-metadata lockstep), prompt refs, and pack specs.
+  const assetsVerifier: VerifierSpec = {
+    id: 'assets',
+    title: 'Asset Factory Manifests (Factory v1)',
+    description:
+      'Asset manifest/lineage gate: PNG<->sidecar pairing, schema, 32-multiple dims, sha256 binding, mechanics:null lockstep, prompt refs, pack specs',
+    phase: 1,
+    dependsOn: ['build'],
+    auditSafe: true,
+    async run(ctx) {
+      return runLegacyVerifier('tools/asset-gen/verify-assets.ts', 'assets', ctx);
+    },
+  };
+
   // ============================================================================
   // Register all verifiers
   // ============================================================================
@@ -430,6 +446,7 @@ export function createDefaultRegistry(): VerifierRegistry {
   registry.register(identityVerifier);
   registry.register(receiptsChainVerifier);
   registry.register(mapgenVerifier);
+  registry.register(assetsVerifier);
 
   // Phase 2
   registry.register(chronicleVerifier);

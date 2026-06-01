@@ -1,0 +1,29 @@
+{
+  "asset_id": "akalynth_structure_stone_wall_001",
+  "game": "Akalynth",
+  "asset_type": "structure",
+  "biome": null,
+  "status": "legacy",
+  "dimensions_px": [
+    32,
+    64
+  ],
+  "dimensions_target_px": [
+    32,
+    64
+  ],
+  "camera": "top_down_slight_isometric",
+  "background": "transparent",
+  "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+  "prompt_file": null,
+  "raw_file": null,
+  "cleaned_file": "data/assets-src/sprites/structures__stone_wall.png",
+  "sha256": "f05d188f61b3f90972a5a94b3a1f7fb402b31c00dd8fed8a03172f3f319b81ad",
+  "tilemap_test": null,
+  "license_status": "hand_authored",
+  "review_status": "legacy",
+  "tile_code": 2,
+  "mechanics": null,
+  "copyright_boundary": "original hand-authored asset; no copied third-party sprite, UI, logo, or map layout",
+  "notes": "Predates the Asset Factory; backfilled lineage. Original Akalynth art."
+}
