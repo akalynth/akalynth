@@ -91,6 +91,41 @@
     byId[item.id] = item;
   });
 
+  // ---- Game worlds ---------------------------------------------------------
+  // Preview game worlds (separate servers). Flavor only while pre-alpha.
+  var WORLDS = [
+    { id: "azura", name: "Azura", type: "Open", region: "EU", stage: "Pre-alpha" },
+    { id: "rookhold", name: "Rookhold", type: "Open", region: "NA", stage: "Pre-alpha" },
+    { id: "emberfell", name: "Emberfell", type: "Hardcore", region: "EU", stage: "Planned" },
+  ];
+  var worldById = {};
+  WORLDS.forEach(function (w) {
+    worldById[w.id] = w;
+  });
+
+  // ---- House preview (fixed-price + resale) --------------------------------
+  // Mirrors the CURRENTLY SUPPORTED server property model: fixed-price primary
+  // purchase (a gold sink) + owner resale via list/unlist
+  // (apps/server/src/world/property.ts, docs/V1_SCOPE.md). Plots and prices are
+  // taken from packages/shared/maps/azura.json (H1/H2/H3).
+  // INVARIANT: LOCAL PREVIEW ONLY — it does not prove ownership, spend real
+  // currency, or affect live game state. Auctions are PLANNED and NOT yet
+  // implemented server-side, so they are shown here as non-interactive only
+  // (no bidding, no countdown, no settlement).
+  var ACCOUNT_KEY = "akalynth.account.v1";
+  var HOUSES_KEY = "akalynth.houses.v1"; // preview ownership state
+  var START_GOLD = 50000; // preview starting balance for a new character
+
+  var HOUSES = [
+    { id: "H1", name: "Harbor Edge Plot", world: "Azura", district: "Harbor Edge", coords: "(10, 32)", priceGold: 500 },
+    { id: "H2", name: "Market Quarter Plot", world: "Azura", district: "Market Quarter", coords: "(14, 32)", priceGold: 1000 },
+    { id: "H3", name: "South Gate Plot", world: "Azura", district: "South Gate", coords: "(18, 32)", priceGold: 2000 },
+  ];
+  var houseById = {};
+  HOUSES.forEach(function (h) {
+    houseById[h.id] = h;
+  });
+
   // ---- DOM helpers ---------------------------------------------------------
   function $(sel, root) {
     return (root || document).querySelector(sel);
@@ -327,17 +362,36 @@
     if (checkout) {
       checkout.addEventListener("click", function () {
         var totals = cartTotals();
-        alert(
+        var msg =
           "Preview checkout — no payment is processed.\n\n" +
-            totals.count +
-            " item(s) · " +
-            fmt(totals.coins) +
-            " coins (≈ $" +
-            estimateUsd().toFixed(2) +
-            ").\n\nReal purchases open with the Akalynth beta."
-        );
+          totals.count +
+          " item(s) · " +
+          fmt(totals.coins) +
+          " coins (≈ $" +
+          estimateUsd().toFixed(2) +
+          ").\n\nReal purchases open with the Akalynth beta.";
+        // Buying Premium Time marks the preview character as Premium. Preview
+        // only — no real entitlement is created. (Houses do not require
+        // Premium: standard plots are buyable by any character.)
+        if (cartHasPremium()) {
+          if (account) {
+            account.premium = true;
+            saveAccount(account);
+            renderHoldings();
+            msg += "\n\nPreview Premium activated.";
+          } else {
+            msg += "\n\nCreate a character to apply preview Premium.";
+          }
+        }
+        alert(msg);
       });
     }
+  }
+
+  function cartHasPremium() {
+    return Object.keys(cart).some(function (id) {
+      return byId[id] && byId[id].tag === "Premium";
+    });
   }
 
   function estimateUsd() {
@@ -346,6 +400,380 @@
       usd += byId[id].usd * cart[id];
     });
     return usd;
+  }
+
+  function setText(sel, txt) {
+    var el = $(sel);
+    if (el) el.textContent = txt;
+  }
+  function setErr(id, msg) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = msg;
+  }
+
+  // ---- Account (local preview character) -----------------------------------
+  // Stored locally only. INVARIANT: this is not a real account; no server
+  // identity, world transfer, or game data is created.
+  function loadAccount() {
+    try {
+      var raw = localStorage.getItem(ACCOUNT_KEY);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" && parsed.name ? parsed : null;
+    } catch (err) {
+      return null;
+    }
+  }
+  function saveAccount(acct) {
+    try {
+      localStorage.setItem(ACCOUNT_KEY, JSON.stringify(acct));
+    } catch (err) {
+      /* storage unavailable — character stays in memory for the session */
+    }
+  }
+  function clearAccount() {
+    try {
+      localStorage.removeItem(ACCOUNT_KEY);
+    } catch (err) {
+      /* ignore */
+    }
+  }
+
+  var account = loadAccount();
+
+  // ---- House preview ownership (fixed-price + resale) ----------------------
+  // ownership[id] = { status: 'owned' | 'listed', listPrice: number|null }.
+  // Absent id ⇒ unowned. Local preview only.
+  function loadHouses() {
+    try {
+      var raw = localStorage.getItem(HOUSES_KEY);
+      if (!raw) return {};
+      var parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (err) {
+      return {};
+    }
+  }
+  function saveHouses(h) {
+    try {
+      localStorage.setItem(HOUSES_KEY, JSON.stringify(h));
+    } catch (err) {
+      /* ignore */
+    }
+  }
+
+  var ownership = loadHouses();
+  // Drop entries for plots no longer present.
+  Object.keys(ownership).forEach(function (id) {
+    if (!houseById[id]) delete ownership[id];
+  });
+
+  function houseStatus(h) {
+    var o = ownership[h.id];
+    return o ? o.status : "unowned";
+  }
+
+  // ---- Account form (account.html) -----------------------------------------
+  function populateWorldSelect() {
+    var sel = $("#char-world");
+    if (!sel || sel.dataset.built === "1") return;
+    WORLDS.forEach(function (w) {
+      var opt = document.createElement("option");
+      opt.value = w.id;
+      opt.textContent = w.name + " — " + w.type + " · " + w.region + " · " + w.stage;
+      if (w.stage === "Planned") opt.disabled = true;
+      sel.appendChild(opt);
+    });
+    sel.dataset.built = "1";
+  }
+
+  function renderAccountView() {
+    var wrap = $("#account-form-wrap");
+    var summary = $("#account-summary");
+    if (account) {
+      if (wrap) wrap.hidden = true;
+      if (summary) {
+        summary.hidden = false;
+        var w = worldById[account.world];
+        setText("#summary-name", account.name);
+        setText("#summary-sex", account.sex === "female" ? "Female" : "Male");
+        setText("#summary-world", w ? w.name : account.world);
+        setText("#summary-gold", fmt(account.goldBalance));
+        setText("#summary-premium", account.premium ? "Active" : "Standard");
+      }
+    } else {
+      if (wrap) wrap.hidden = false;
+      if (summary) summary.hidden = true;
+    }
+  }
+
+  function onAccountSubmit(e) {
+    e.preventDefault();
+    var nameEl = $("#char-name");
+    var worldEl = $("#char-world");
+    var sexEl = document.querySelector('input[name="sex"]:checked');
+    var ok = true;
+
+    var name = nameEl ? nameEl.value.trim() : "";
+    if (!/^[A-Za-z][A-Za-z '\-]{1,19}$/.test(name)) {
+      setErr("err-name", "Use 2–20 letters (spaces, apostrophe and hyphen allowed).");
+      ok = false;
+    } else {
+      setErr("err-name", "");
+    }
+
+    if (!sexEl) {
+      setErr("err-sex", "Choose a sex.");
+      ok = false;
+    } else {
+      setErr("err-sex", "");
+    }
+
+    var worldId = worldEl ? worldEl.value : "";
+    if (!worldId || !worldById[worldId]) {
+      setErr("err-world", "Choose a world.");
+      ok = false;
+    } else if (worldById[worldId].stage === "Planned") {
+      setErr("err-world", "That world isn't open yet.");
+      ok = false;
+    } else {
+      setErr("err-world", "");
+    }
+
+    if (!ok) return;
+
+    account = {
+      name: name,
+      sex: sexEl.value,
+      world: worldId,
+      goldBalance: START_GOLD,
+      premium: false,
+      createdAt: new Date().toISOString(),
+    };
+    saveAccount(account);
+    renderAccountView();
+    renderHoldings();
+    applyAccountGates();
+    renderHouses();
+    alert(
+      "Preview character created — " +
+        name +
+        " on " +
+        worldById[worldId].name +
+        ".\n\nThis is a local preview only. No real account, world transfer, " +
+        "or game data is created."
+    );
+  }
+
+  function initAccount() {
+    var form = $("#account-form");
+    var summary = $("#account-summary");
+    if (!form && !summary) return; // not the account page
+    populateWorldSelect();
+    renderAccountView();
+    if (form) form.addEventListener("submit", onAccountSubmit);
+    var reset = $("#account-reset");
+    if (reset) {
+      reset.addEventListener("click", function () {
+        if (confirm("Start over? This clears your local preview character.")) {
+          clearAccount();
+          account = null;
+          renderAccountView();
+          renderHoldings();
+          applyAccountGates();
+        }
+      });
+    }
+  }
+
+  // ---- Sidebar holdings (all pages) ----------------------------------------
+  function renderHoldings() {
+    var panel = $("#holdings-panel");
+    if (!panel) return;
+    var empty = $("#holdings-empty");
+    var body = $("#holdings-body");
+    if (account) {
+      if (empty) empty.hidden = true;
+      if (body) body.hidden = false;
+      var w = worldById[account.world];
+      setText("#holdings-name", account.name);
+      setText("#holdings-world", w ? w.name : account.world);
+      setText("#holdings-gold", fmt(account.goldBalance));
+      setText("#holdings-premium", account.premium ? "Active" : "Standard");
+    } else {
+      if (empty) empty.hidden = false;
+      if (body) body.hidden = true;
+    }
+  }
+
+  // ---- Account gating (Houses & Shop require a character) ------------------
+  // Preview only: a "logged-in character" is a local account in localStorage.
+  // Hides gated nav links and gated page content when no character exists.
+  function applyAccountGates() {
+    var loggedIn = !!account;
+    $all(".requires-account").forEach(function (el) {
+      el.hidden = !loggedIn;
+    });
+    if (document.body && document.body.hasAttribute("data-requires-account")) {
+      var gate = $("#account-required");
+      var content = $("#gated-content");
+      if (gate) gate.hidden = loggedIn;
+      if (content) content.hidden = !loggedIn;
+    }
+  }
+
+  // ---- House preview: fixed-price buy + resale (houses.html) ---------------
+  // Mirrors the supported server model. Auctions are NOT here (planned only).
+  function houseCardHtml(h) {
+    var status = houseStatus(h);
+    var o = ownership[h.id];
+    var statusLabel =
+      status === "owned"
+        ? "Owned by you (preview)"
+        : status === "listed"
+        ? "Listed for resale (preview)"
+        : "Available";
+
+    var action;
+    if (status === "unowned") {
+      action =
+        '<button class="btn btn-gold btn-block" data-buy="' + h.id + '">Buy — ' +
+        fmt(h.priceGold) + " gold</button>" +
+        '<p class="field-error" id="house-error-' + h.id + '" aria-live="polite"></p>';
+    } else if (status === "owned") {
+      action =
+        '<form class="resale-row" data-list="' + h.id + '" novalidate>' +
+        '<label class="resale-label" for="price-' + h.id + '">Resale price (gold)</label>' +
+        '<div class="resale-controls">' +
+        '<input class="resale-input" type="number" id="price-' + h.id + '" name="price" min="1" inputmode="numeric" placeholder="e.g. ' +
+        h.priceGold + '" />' +
+        '<button class="btn btn-gold" type="submit">List for resale</button>' +
+        "</div>" +
+        '<p class="field-error" id="house-error-' + h.id + '" aria-live="polite"></p>' +
+        "</form>";
+    } else {
+      action =
+        '<p class="resale-note">Listed at <span class="gold">' + fmt(o.listPrice) +
+        "</span> gold. Another character could buy it at this price (preview).</p>" +
+        '<button class="btn btn-ghost btn-block" data-unlist="' + h.id + '">Unlist (preview)</button>';
+    }
+
+    return (
+      '<header class="house-head">' +
+      '<h3 class="house-name">' + h.name + "</h3>" +
+      '<span class="house-world">' + h.world + " · " + h.district + "</span>" +
+      "</header>" +
+      '<dl class="house-meta">' +
+      '<div><dt>Plot</dt><dd class="house-coords">' + h.coords + "</dd></div>" +
+      '<div><dt>Price</dt><dd><span class="gold">' + fmt(h.priceGold) + "</span> gold</dd></div>" +
+      "<div><dt>Status</dt><dd>" + statusLabel + "</dd></div>" +
+      "</dl>" +
+      '<div class="house-bid">' +
+      action +
+      "</div>"
+    );
+  }
+
+  function renderOneHouse(h) {
+    var grid = $("#houses-grid");
+    if (!grid) return;
+    var card = grid.querySelector('[data-house="' + h.id + '"]');
+    if (card) card.innerHTML = houseCardHtml(h);
+  }
+
+  function buyHouse(id) {
+    var h = houseById[id];
+    if (!h) return;
+    var errId = "house-error-" + id;
+    if (!account) {
+      setErr(errId, "Create a character first.");
+      return;
+    }
+    if (houseStatus(h) !== "unowned") return;
+    if (account.goldBalance < h.priceGold) {
+      setErr(errId, "Not enough preview gold (need " + fmt(h.priceGold) + ").");
+      return;
+    }
+    // Primary purchase is a gold sink in the real model — mirror that here.
+    account.goldBalance -= h.priceGold;
+    saveAccount(account);
+    ownership[id] = { status: "owned", listPrice: null };
+    saveHouses(ownership);
+    renderOneHouse(h);
+    renderHoldings();
+  }
+
+  function listHouse(id, raw) {
+    var h = houseById[id];
+    if (!h) return;
+    var errId = "house-error-" + id;
+    if (houseStatus(h) !== "owned") return;
+    var price = parseInt(String(raw).trim(), 10);
+    if (!price || isNaN(price) || price < 1) {
+      setErr(errId, "Enter a resale price in gold.");
+      return;
+    }
+    if (price > 1000000) {
+      setErr(errId, "Max 1,000,000 gold.");
+      return;
+    }
+    ownership[id] = { status: "listed", listPrice: price };
+    saveHouses(ownership);
+    renderOneHouse(h);
+  }
+
+  function unlistHouse(id) {
+    var h = houseById[id];
+    if (!h) return;
+    if (houseStatus(h) !== "listed") return;
+    ownership[id] = { status: "owned", listPrice: null };
+    saveHouses(ownership);
+    renderOneHouse(h);
+  }
+
+  function onHousesClick(e) {
+    var buy = e.target.closest ? e.target.closest("[data-buy]") : null;
+    if (buy) {
+      buyHouse(buy.getAttribute("data-buy"));
+      return;
+    }
+    var unlist = e.target.closest ? e.target.closest("[data-unlist]") : null;
+    if (unlist) {
+      unlistHouse(unlist.getAttribute("data-unlist"));
+    }
+  }
+
+  function onHousesSubmit(e) {
+    var form = e.target.closest ? e.target.closest("[data-list]") : null;
+    if (!form) return;
+    e.preventDefault();
+    var id = form.getAttribute("data-list");
+    var input = form.querySelector('input[name="price"]');
+    listHouse(id, input ? input.value : "");
+  }
+
+  function renderHouses() {
+    var grid = $("#houses-grid");
+    if (!grid) return;
+    if (grid.dataset.wired !== "1") {
+      grid.addEventListener("click", onHousesClick);
+      grid.addEventListener("submit", onHousesSubmit);
+      grid.dataset.wired = "1";
+    }
+    grid.innerHTML = "";
+    HOUSES.forEach(function (h) {
+      var card = document.createElement("article");
+      card.className = "house-card";
+      card.setAttribute("data-house", h.id);
+      card.innerHTML = houseCardHtml(h);
+      grid.appendChild(card);
+    });
+  }
+
+  function initHouses() {
+    var grid = $("#houses-grid");
+    if (!grid) return; // not the houses page
+    renderHouses();
   }
 
   // ---- Year + boot ---------------------------------------------------------
@@ -357,6 +785,10 @@
   function boot() {
     initTabs();
     initCart();
+    initAccount();
+    initHouses();
+    renderHoldings();
+    applyAccountGates();
     initMisc();
     render();
   }

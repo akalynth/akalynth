@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Account — Akalynth: Create Your Character</title>
+    <meta
+      name="description"
+      content="Preview character creation for Akalynth — choose a name, sex, and game world. Pre-alpha preview only; saved locally, no real account is created."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%231f1a13'/%3E%3Cpath d='M16 5l7 11-7 11-7-11z' fill='%23d9b25a'/%3E%3C/svg%3E"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Akalynth" />
+    <meta property="og:title" content="Create Your Character — Akalynth" />
+    <meta
+      property="og:description"
+      content="Preview character creation for Akalynth — name, sex, and game world. Pre-alpha preview, saved locally."
+    />
+    <meta name="twitter:card" content="summary" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body data-page="account">
+    <!--
+      Akalynth account / character-creation page. Shares chrome with the rest
+      of the site. Preview only: the character is stored in localStorage; no
+      real account, server identity, world transfer, or game data is created.
+    -->
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header" role="banner">
+      <div class="header-inner">
+        <a class="brand" href="index.html#home" data-nav="home">
+          <span class="brand-mark" aria-hidden="true">⚔</span>
+          <span class="brand-text">
+            <span class="brand-name">Akalynth</span>
+            <span class="brand-tag">The World of Azura</span>
+          </span>
+        </a>
+        <nav class="top-nav" aria-label="Primary">
+          <ul>
+            <li><a class="tab-btn" href="index.html#home" data-nav="home">Home</a></li>
+            <li><a class="tab-btn" href="index.html#world" data-nav="world">World</a></li>
+            <li class="requires-account"><a class="tab-btn" href="houses.html" data-nav="houses">Houses</a></li>
+            <li class="requires-account"><a class="tab-btn" href="shop.html" data-nav="shop">Shop</a></li>
+            <li><a class="tab-btn is-active" href="account.html" data-nav="account" aria-current="page">Account</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <div class="layout">
+      <!-- Ornate sidebar -->
+      <aside class="sidebar" aria-label="Sidebar">
+        <section class="panel">
+          <h2 class="panel-title">Realm Status</h2>
+          <div class="panel-body">
+            <ul class="status-list">
+              <li><span class="dot dot-amber"></span> Stage: <strong>Pre-alpha</strong></li>
+              <li><span class="dot dot-green"></span> World: <strong>Azura</strong></li>
+              <li><span class="dot dot-green"></span> Authority: <strong>Server-side</strong></li>
+              <li><span class="dot dot-blue"></span> Guardian: <strong>Tem (anti-bot)</strong></li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="panel" id="holdings-panel">
+          <h2 class="panel-title">Your Holdings</h2>
+          <div class="panel-body">
+            <div id="holdings-empty">
+              <p class="muted small">No character yet.</p>
+            </div>
+            <div id="holdings-body" hidden>
+              <p class="holdings-name"><strong id="holdings-name">—</strong></p>
+              <p class="muted small">World: <span id="holdings-world">—</span></p>
+              <p class="holdings-gold">
+                <span class="gold" id="holdings-gold">0</span> preview gold
+              </p>
+              <p class="muted small">Premium: <strong id="holdings-premium">—</strong></p>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <!-- Parchment content column -->
+      <main class="content" id="main" role="main" tabindex="-1">
+        <h1 class="page-title">Adventurer's Ledger</h1>
+
+        <!-- Existing character summary -->
+        <article class="parchment" id="account-summary" hidden>
+          <p class="lede">Your preview character</p>
+          <dl class="summary-list">
+            <div><dt>Name</dt><dd id="summary-name">—</dd></div>
+            <div><dt>Sex</dt><dd id="summary-sex">—</dd></div>
+            <div><dt>World</dt><dd id="summary-world">—</dd></div>
+            <div><dt>Preview gold</dt><dd><span class="gold" id="summary-gold">0</span></dd></div>
+            <div><dt>Premium</dt><dd id="summary-premium">Standard</dd></div>
+          </dl>
+          <p class="muted small">
+            Local preview only — no real account or game data exists. Your
+            <strong>vocation is chosen in-game</strong>, not here. You can now buy
+            and resell plots on the <a href="houses.html">House Plots</a> with
+            in-game gold.
+          </p>
+          <button class="btn btn-ghost" id="account-reset" type="button">Start over</button>
+        </article>
+
+        <!-- Creation form -->
+        <div id="account-form-wrap">
+          <article class="parchment">
+            <p class="lede">Create your character.</p>
+            <p class="notice">
+              ⚠ Preview only. Your character is saved in this browser; no real
+              account, server identity, or world transfer is created.
+            </p>
+            <p class="muted small">
+              Choose your name, sex, and world here. Your <strong>vocation is
+              chosen in-game</strong>, not on the site.
+            </p>
+
+            <form class="account-form" id="account-form" novalidate>
+              <div class="field">
+                <label for="char-name">Character name</label>
+                <input
+                  type="text"
+                  id="char-name"
+                  name="name"
+                  maxlength="20"
+                  autocomplete="off"
+                  aria-describedby="err-name"
+                  placeholder="e.g. Brannic"
+                />
+                <p class="field-error" id="err-name" aria-live="polite"></p>
+              </div>
+
+              <fieldset class="field radio-group" aria-describedby="err-sex">
+                <legend>Sex</legend>
+                <label class="radio">
+                  <input type="radio" name="sex" value="male" /> Male
+                </label>
+                <label class="radio">
+                  <input type="radio" name="sex" value="female" /> Female
+                </label>
+                <p class="field-error" id="err-sex" aria-live="polite"></p>
+              </fieldset>
+
+              <div class="field">
+                <label for="char-world">World</label>
+                <select id="char-world" name="world" aria-describedby="err-world">
+                  <option value="">Choose a world…</option>
+                  <!-- options injected by app.js -->
+                </select>
+                <p class="field-error" id="err-world" aria-live="polite"></p>
+              </div>
+
+              <button class="btn btn-gold btn-block" type="submit">Create character (preview)</button>
+            </form>
+          </article>
+        </div>
+      </main>
+    </div>
+
+    <footer class="site-footer" role="contentinfo">
+      <div class="footer-inner">
+        <p>© <span id="year"></span> Akalynth · The World of Azura — a pre-alpha, proof-native MMO.</p>
+        <p class="small muted">
+          Linux server + Android client. Classic-MMO aesthetic recreated with original art and copy.
+        </p>
+      </div>
+    </footer>
+
+    <script src="js/app.js" defer></script>
+  </body>
+</html>
