@@ -11,6 +11,14 @@ const TILE_SPRITE_SRC: Partial<Record<TileCode, string>> = {
   [TileCode.Wall]: '/tiles/structures__stone_wall.png',
   [TileCode.Water]: '/tiles/ground__water.png',
   [TileCode.Door]: '/tiles/structures__door.png',
+  // Tutorial/gate tiles have no bespoke art yet. Render the walkable ground they
+  // sit on — grass for the tutorial zones, stone for the gate threshold — so the
+  // whole map reads as pixel art. MapCanvas still draws the glyph (M/S/T/G) and
+  // the landmark markers on top to identify them.
+  [TileCode.TutorialMove]: '/tiles/ground__grass.png',
+  [TileCode.TutorialChat]: '/tiles/ground__grass.png',
+  [TileCode.TutorialTem]: '/tiles/ground__grass.png',
+  [TileCode.GateToAzura]: '/tiles/ground__stone_floor.png',
 };
 
 /**
