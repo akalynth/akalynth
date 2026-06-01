@@ -17,6 +17,10 @@ import {
   PROPERTY_UNLISTED_ACTION,
   PROPERTY_PURCHASED_ACTION,
   PROPERTY_TRANSFERRED_ACTION,
+  PROPERTY_AUCTION_OPENED_ACTION,
+  PROPERTY_BID_ACTION,
+  PROPERTY_BID_REFUNDED_ACTION,
+  PROPERTY_AUCTION_CANCELLED_ACTION,
   FIRST_ATTEMPT_STONE_ACTION,
   HEAT_CHANGED_ACTION,
   LEDGER_MARKED_ACTION,
@@ -170,6 +174,8 @@ import {
   getProperty,
   getAllProperties,
   getMarketListings,
+  getAuction,
+  minNextBid,
   isValidPrice,
   makePropertyId,
   type PropertyProjection,
@@ -5190,6 +5196,162 @@ function processSessionQueue(s: Session, now: number) {
         const prop = getProperty(msg.property_id);
         if (!prop) break;
         send(s.ws, ServerMessages.propertyLedger(prop.property_id, ownerHistoryToPublic(prop), prop.sale_count));
+        break;
+      }
+
+      // ========================================================================
+      // Property Auctions (Step 4a): open / bid / cancel handlers.
+      // These emit the receipts proven to conserve gold in Step 3. There is NO
+      // automatic settlement here — close→settle (the wall-clock path) is a
+      // separate later lane (4b). Synchronous per-session processing + synchronous
+      // audit.write make read→validate→emit atomic on the event loop.
+      // ========================================================================
+
+      case 'open_house_auction': {
+        if (!requireAuth(s) || !s.player) break;
+        const prop = getProperty(msg.property_id);
+        if (!prop) {
+          send(s.ws, ServerMessages.propertyResult('open_house_auction', false, msg.property_id, 'unknown_plot'));
+          break;
+        }
+        if (prop.owner_player_id !== s.player.id) {
+          send(s.ws, ServerMessages.propertyResult('open_house_auction', false, msg.property_id, 'not_owner'));
+          break;
+        }
+        if (prop.status !== 'owned') {
+          send(s.ws, ServerMessages.propertyResult('open_house_auction', false, msg.property_id,
+            prop.status === 'auctioning' ? 'already_auctioning' : 'already_listed'));
+          break;
+        }
+        if (!isValidPrice(msg.min_bid) || !isValidPrice(msg.min_increment_gold)) {
+          send(s.ws, ServerMessages.propertyResult('open_house_auction', false, msg.property_id, 'invalid_price'));
+          break;
+        }
+        // duration_s is recorded as the requested window only; 4a has NO close
+        // scheduler and computes NO absolute close time (no wall-clock here).
+        audit.write({
+          player_id: s.player.id,
+          action: PROPERTY_AUCTION_OPENED_ACTION,
+          inputs: {
+            property_id: prop.property_id,
+            kind: 'resale',
+            seller_id: s.player.id,
+            min_bid: msg.min_bid,
+            min_increment_gold: msg.min_increment_gold,
+            duration_s: msg.duration_s,
+          },
+          result: 'ok',
+        });
+        const auction = getAuction(msg.property_id);
+        const updated = getProperty(msg.property_id)!;
+        send(s.ws, ServerMessages.propertyResult('open_house_auction', true, msg.property_id));
+        send(s.ws, ServerMessages.propertyState(propertyToPublic(updated)));
+        if (auction) {
+          const stateMsg = ServerMessages.propertyAuctionState(
+            auction.property_id, auction.kind, auction.current_high,
+            resolvePlayerName(auction.high_bidder_id), minNextBid(auction), null
+          );
+          send(s.ws, stateMsg);
+          broadcastToMap(updated.zone as 'Rookguard' | 'Azura', stateMsg, s.connId);
+        }
+        break;
+      }
+
+      case 'place_house_bid': {
+        if (!requireAuth(s) || !s.player) break;
+        const bidder = s.player.id;
+        const auction = getAuction(msg.property_id);
+        if (!auction || auction.status !== 'open') {
+          send(s.ws, ServerMessages.propertyResult('place_house_bid', false, msg.property_id, 'not_auctioning'));
+          break;
+        }
+        if (auction.kind === 'resale' && auction.seller_id === bidder) {
+          send(s.ws, ServerMessages.propertyResult('place_house_bid', false, msg.property_id, 'cannot_bid_own'));
+          break;
+        }
+        if (!isValidPrice(msg.amount)) {
+          send(s.ws, ServerMessages.propertyResult('place_house_bid', false, msg.property_id, 'invalid_price'));
+          break;
+        }
+        if (msg.amount < minNextBid(auction)) {
+          send(s.ws, ServerMessages.propertyResult('place_house_bid', false, msg.property_id, 'bid_too_low'));
+          break;
+        }
+        if (!canAfford(bidder, msg.amount)) {
+          send(s.ws, ServerMessages.propertyResult('place_house_bid', false, msg.property_id, 'insufficient_gold'));
+          break;
+        }
+        // Capture the prior high BEFORE recording the new bid (for the refund).
+        const priorBidder = auction.high_bidder_id;
+        const priorAmount = auction.current_high;
+        // Escrow the new bid (gold leaves circulation; no escrow ledger).
+        audit.write({
+          player_id: bidder,
+          action: WALLET_DEBIT_ACTION,
+          inputs: { amount: msg.amount, reason: `auction_escrow:${auction.property_id}` as WalletDebitReason },
+          result: 'ok',
+        });
+        // Refund the outbid prior high bidder the EXACT prior amount.
+        if (priorBidder && priorAmount != null) {
+          audit.write({
+            player_id: priorBidder,
+            action: WALLET_CREDIT_ACTION,
+            inputs: { amount: priorAmount, reason: `auction_refund:${auction.property_id}` as WalletCreditReason },
+            result: 'ok',
+          });
+          audit.write({
+            player_id: 'system',
+            action: PROPERTY_BID_REFUNDED_ACTION,
+            inputs: { property_id: auction.property_id, refunded_player_id: priorBidder, amount: priorAmount },
+            result: 'ok',
+          });
+        }
+        // Record the bid (reducer sets current_high/high_bidder).
+        audit.write({
+          player_id: bidder,
+          action: PROPERTY_BID_ACTION,
+          inputs: { property_id: auction.property_id, amount: msg.amount },
+          result: 'ok',
+        });
+        const updated = getAuction(msg.property_id)!;
+        const prop = getProperty(msg.property_id)!;
+        const stateMsg = ServerMessages.propertyAuctionState(
+          updated.property_id, updated.kind, updated.current_high,
+          resolvePlayerName(updated.high_bidder_id), minNextBid(updated), null
+        );
+        send(s.ws, ServerMessages.propertyResult('place_house_bid', true, msg.property_id));
+        send(s.ws, stateMsg);
+        send(s.ws, ServerMessages.walletSnapshot(getGoldBalance(bidder)));
+        broadcastToMap(prop.zone as 'Rookguard' | 'Azura', stateMsg, s.connId);
+        break;
+      }
+
+      case 'cancel_house_auction': {
+        if (!requireAuth(s) || !s.player) break;
+        const auction = getAuction(msg.property_id);
+        if (!auction || auction.status !== 'open') {
+          send(s.ws, ServerMessages.propertyResult('cancel_house_auction', false, msg.property_id, 'not_auctioning'));
+          break;
+        }
+        if (auction.seller_id !== s.player.id) {
+          send(s.ws, ServerMessages.propertyResult('cancel_house_auction', false, msg.property_id, 'not_owner'));
+          break;
+        }
+        if (auction.current_high !== null) {
+          // Owner cancel is allowed only with zero bids (D4).
+          send(s.ws, ServerMessages.propertyResult('cancel_house_auction', false, msg.property_id, 'has_bids'));
+          break;
+        }
+        audit.write({
+          player_id: s.player.id,
+          action: PROPERTY_AUCTION_CANCELLED_ACTION,
+          inputs: { property_id: auction.property_id },
+          result: 'ok',
+        });
+        const updated = getProperty(msg.property_id)!;
+        send(s.ws, ServerMessages.propertyResult('cancel_house_auction', true, msg.property_id));
+        send(s.ws, ServerMessages.propertyState(propertyToPublic(updated)));
+        broadcastToMap(updated.zone as 'Rookguard' | 'Azura', ServerMessages.propertyState(propertyToPublic(updated)), s.connId);
         break;
       }
 

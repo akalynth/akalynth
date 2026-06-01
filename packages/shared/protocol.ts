@@ -1,7 +1,7 @@
 // Akalynth Protocol Messages
 // All messages sent over WebSocket
 
-import type { Direction, Element, PlayerPublic, PropertyAuctionKind, PropertyDenialReason, PropertyStatus, RunestoneDenialReason, SovereignVocation } from './types.js';
+import type { Direction, Element, PlayerPublic, PropertyAuctionKind, PropertyAuctionDenialReason, PropertyDenialReason, PropertyStatus, RunestoneDenialReason, SovereignVocation } from './types.js';
 import { ELEMENTS, SOVEREIGN_VOCATIONS } from './types.js';
 import type { MapName } from './http.js';
 
@@ -283,13 +283,13 @@ export interface GetPropertyLedgerMessage extends BaseMessage {
 }
 
 // ----------------------------------------------------------------------------
-// Property Auctions — RESERVED client messages (types only; NOT implemented).
-// These describe the planned auction lane. They are intentionally NOT added to
-// the active `ClientMessage` union and NO server handler accepts them yet, so no
-// auction is executable. See docs/PROTOCOL.md "Property auctions (reserved)".
+// Property Auctions — client messages (active as of Step 4a handlers).
+// Handlers open/bid/cancel and emit receipts. NOTE: there is NO automatic
+// settlement in 4a — the world-loop close→settle path is a separate later lane
+// (4b). Clients are intent-only; accepted amount/winner state is server-derived.
 // ----------------------------------------------------------------------------
 
-// Client → Server (RESERVED): owner opens a resale auction on an owned plot.
+// Client → Server: owner opens a resale auction on an owned plot.
 export interface OpenHouseAuctionMessage extends BaseMessage {
   type: 'open_house_auction';
   property_id: string;
@@ -298,14 +298,14 @@ export interface OpenHouseAuctionMessage extends BaseMessage {
   duration_s: number;
 }
 
-// Client → Server (RESERVED): place a gold bid on an open auction.
+// Client → Server: place a gold bid on an open auction.
 export interface PlaceHouseBidMessage extends BaseMessage {
   type: 'place_house_bid';
   property_id: string;
   amount: number;
 }
 
-// Client → Server (RESERVED): owner cancels a resale auction (only with zero bids).
+// Client → Server: owner cancels a resale auction (only with zero bids).
 export interface CancelHouseAuctionMessage extends BaseMessage {
   type: 'cancel_house_auction';
   property_id: string;
@@ -344,7 +344,10 @@ export type ClientMessage =
   | BuyHouseMessage
   | ListHouseMessage
   | UnlistHouseMessage
-  | GetPropertyLedgerMessage;
+  | GetPropertyLedgerMessage
+  | OpenHouseAuctionMessage
+  | PlaceHouseBidMessage
+  | CancelHouseAuctionMessage;
 
 // ============================================================================
 // Server → Client Messages
@@ -857,13 +860,13 @@ export interface HouseSoldMessage extends BaseMessage {
   sale_count: number;
 }
 
-// Result of a buy/list/unlist intent.
+// Result of a buy/list/unlist intent, or an auction open/bid/cancel intent (4a).
 export interface PropertyResultMessage extends BaseMessage {
   type: 'property_result';
-  action: 'buy_house' | 'list_house' | 'unlist_house';
+  action: 'buy_house' | 'list_house' | 'unlist_house' | 'open_house_auction' | 'place_house_bid' | 'cancel_house_auction';
   success: boolean;
   property_id: string;
-  reason?: PropertyDenialReason;
+  reason?: PropertyDenialReason | PropertyAuctionDenialReason;
 }
 
 // Ownership ledger for a property.
@@ -875,14 +878,13 @@ export interface PropertyLedgerMessage extends BaseMessage {
 }
 
 // ----------------------------------------------------------------------------
-// Property Auctions — RESERVED server messages (types only; NOT implemented).
-// Intentionally NOT added to the active `ServerMessage` union; no server code
-// emits these yet. `scheduled_close` is a display hint, never authoritative —
-// auction truth would come only from a settlement receipt (see the auction
-// design lane). See docs/PROTOCOL.md "Property auctions (reserved)".
+// Property Auctions — server messages.
+// `property_auction_state` is ACTIVE as of Step 4a (emitted after open/bid/cancel).
+// `scheduled_close` is a display hint, never authoritative — auction truth comes
+// only from a settlement receipt.
 // ----------------------------------------------------------------------------
 
-// Server → Client (RESERVED): current state of an open auction.
+// Server → Client: current state of an open auction.
 export interface PropertyAuctionStateMessage extends BaseMessage {
   type: 'property_auction_state';
   property_id: string;
@@ -893,7 +895,9 @@ export interface PropertyAuctionStateMessage extends BaseMessage {
   scheduled_close: number | null;  // display hint (epoch ms), NOT authoritative
 }
 
-// Server → Client (RESERVED): broadcast when an auction settles.
+// Server → Client (RESERVED for 4b — settlement lane): broadcast when an auction
+// settles. NOT emitted in 4a (no automatic close yet) and intentionally NOT in
+// the active ServerMessage union until 4b. See docs/PROTOCOL.md.
 export interface HouseAuctionSettledMessage extends BaseMessage {
   type: 'house_auction_settled';
   property_id: string;
@@ -946,7 +950,8 @@ export type ServerMessage =
   | PropertyStateMessage
   | HouseSoldMessage
   | PropertyResultMessage
-  | PropertyLedgerMessage;
+  | PropertyLedgerMessage
+  | PropertyAuctionStateMessage;
 
 // ============================================================================
 // Message Factories
@@ -1367,16 +1372,33 @@ export const ServerMessages = {
   }),
 
   propertyResult: (
-    action: 'buy_house' | 'list_house' | 'unlist_house',
+    action: PropertyResultMessage['action'],
     success: boolean,
     property_id: string,
-    reason?: PropertyDenialReason
+    reason?: PropertyDenialReason | PropertyAuctionDenialReason
   ): PropertyResultMessage => ({
     type: 'property_result',
     action,
     success,
     property_id,
     reason,
+  }),
+
+  propertyAuctionState: (
+    property_id: string,
+    kind: PropertyAuctionKind,
+    current_high: number | null,
+    high_bidder_name: string | null,
+    min_next: number,
+    scheduled_close: number | null
+  ): PropertyAuctionStateMessage => ({
+    type: 'property_auction_state',
+    property_id,
+    kind,
+    current_high,
+    high_bidder_name,
+    min_next,
+    scheduled_close,
   }),
 
   propertyLedger: (
@@ -1620,6 +1642,31 @@ export function parseClientMessage(data: unknown): ClientMessage | null {
     case 'get_property_ledger': {
       if (typeof msg.property_id !== 'string') return null;
       return { type: 'get_property_ledger', property_id: msg.property_id };
+    }
+
+    case 'open_house_auction': {
+      if (typeof msg.property_id !== 'string') return null;
+      if (typeof msg.min_bid !== 'number') return null;
+      if (typeof msg.min_increment_gold !== 'number') return null;
+      if (typeof msg.duration_s !== 'number') return null;
+      return {
+        type: 'open_house_auction',
+        property_id: msg.property_id,
+        min_bid: msg.min_bid,
+        min_increment_gold: msg.min_increment_gold,
+        duration_s: msg.duration_s,
+      };
+    }
+
+    case 'place_house_bid': {
+      if (typeof msg.property_id !== 'string') return null;
+      if (typeof msg.amount !== 'number') return null;
+      return { type: 'place_house_bid', property_id: msg.property_id, amount: msg.amount };
+    }
+
+    case 'cancel_house_auction': {
+      if (typeof msg.property_id !== 'string') return null;
+      return { type: 'cancel_house_auction', property_id: msg.property_id };
     }
 
     default:
