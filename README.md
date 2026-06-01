@@ -4,7 +4,7 @@
 
 Legacy folders (if any remain) are deprecated; use `apps/` + `packages/` for new work.
 
-A Tibia-world-feel MMO with a **server-authoritative** architecture and **anti-bot-first** enforcement (Tem).
+A classic-feel MMO with a **server-authoritative** architecture and **anti-bot-first** enforcement (Tem).
 
 **Platform policy**: Linux server + Android client only. **Windows is intentionally unsupported.**
 
