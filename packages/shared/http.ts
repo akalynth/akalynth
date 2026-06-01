@@ -5,6 +5,7 @@ import type {
   LearningFeatureRow,
   PlayerPublic,
   PlayerStatus,
+  PropertyStatus,
   SuspicionBand,
   SuspicionScore,
   SuspicionTopSignal,
@@ -179,7 +180,7 @@ export interface PropertyMarketListing {
   zone: string;
   plot_id: string;
   district: string | null;
-  status: 'unowned' | 'owned' | 'listed';
+  status: PropertyStatus;
   owner_name: string | null; // anonymized display name; never a raw player id
   primary_price_gold: number;
   listed_price_gold: number | null;

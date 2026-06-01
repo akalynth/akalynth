@@ -426,15 +426,14 @@ export const PROPERTY_UNLISTED_ACTION = 'property_unlisted';
 export const PROPERTY_PURCHASED_ACTION = 'property_purchased';     // primary sale (treasury → player, gold sink)
 export const PROPERTY_TRANSFERRED_ACTION = 'property_transferred'; // resale (player → player, conserved)
 
-export type PropertyStatus = 'unowned' | 'owned' | 'listed';
+// 'auctioning' = an open auction is running on the plot. It is set/cleared only
+// by the property auction reducer from receipts (never wall-clock). Folded in at
+// the reducer/projection step alongside its consumers (e.g. http
+// PropertyMarketListing.status).
+export type PropertyStatus = 'unowned' | 'owned' | 'listed' | 'auctioning';
 
-// RESERVED (Property Auction Lane, types-only): the future 'auctioning' status.
-// Kept OUT of PropertyStatus for now so existing narrow consumers (e.g.
-// PropertyMarketListing.status in http.ts) remain valid and apps/server stays
-// untouched. It will be folded directly into PropertyStatus in the
-// reducer/projection step, together with the consumers that must then handle it.
-// No server behavior places a plot into 'auctioning' yet.
-export type ReservedPropertyStatus = PropertyStatus | 'auctioning';
+/** @deprecated 'auctioning' is now part of PropertyStatus; prefer PropertyStatus. */
+export type ReservedPropertyStatus = PropertyStatus;
 
 export type PropertyDenialReason =
   | 'unknown_plot'
