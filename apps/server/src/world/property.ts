@@ -68,11 +68,17 @@ export interface AuctionProjection {
   current_high: number | null;      // null = no accepted bid yet
   high_bidder_id: string | null;
   status: 'open' | 'settled' | 'cancelled';
+  // RECEIPT METADATA ONLY: absolute close time recorded by the live open handler
+  // into the property_auction_opened receipt. The reducer STORES it but MUST NOT
+  // compare it to Date.now() or decide settlement from it — settlement truth is
+  // the property_auction_settled receipt. The close→settle loop (clock-injected)
+  // reads this to decide WHEN to emit settlement.
+  scheduled_close_ms: number | null;
   opened_receipt: string;
   last_receipt: string;
 }
 
-type WriteReceiptFn = (
+export type WriteReceiptFn = (
   receipt: Omit<
     AuditReceipt,
     'sequence' | 'timestamp' | 'prev_hash' | 'event_hash' | 'signature' | 'inputs_hash' | 'outputs_hash'
@@ -380,6 +386,12 @@ export function applyReceiptToProperty(receipt: AuditReceipt): void {
         current_high: null,
         high_bidder_id: null,
         status: 'open',
+        // Stored metadata only (recorded by the live handler); never used by the
+        // reducer to decide settlement.
+        scheduled_close_ms:
+          typeof receipt.inputs?.scheduled_close_ms === 'number'
+            ? (receipt.inputs.scheduled_close_ms as number)
+            : null,
         opened_receipt: eventHash,
         last_receipt: eventHash,
       });

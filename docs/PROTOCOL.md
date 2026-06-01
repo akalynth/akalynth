@@ -140,7 +140,7 @@ interface BaseMessage {
 | `property_result` | Result of a buy/list/unlist intent with optional denial reason. |
 | `property_ledger` | Ownership ledger (anonymized history + sale count) for a property. |
 | `property_auction_state` | Open-auction state (anonymized) after open/bid/cancel. |
-| `house_auction_settled` | **RESERVED (4b).** Settled-auction broadcast; not emitted until the close→settle lane. |
+| `house_auction_settled` | Zone broadcast when an auction closes and settles (winner/seller/price). |
 
 ## Client → Server Details
 
@@ -278,16 +278,17 @@ Requests the ownership ledger (owner history + sale count) for a `property_id`.
 
 ### Property auctions
 
-> **Status (Step 4a): open / bid / cancel handlers are ACTIVE and emit receipts;
-> there is NO automatic settlement yet.** A plot closes only via the world-loop
-> close→settle path, which is a separate later lane (4b) — until then auctions do
-> not settle on their own and `house_auction_settled` is not emitted. Clients are
-> intent-only; accepted amount/winner state is server-derived. The auction
-> *projection/reducer* (status `'auctioning'`, the `property_auction_*` receipt
-> actions) and the synthetic gold-conservation proof already exist; live
-> settlement and durable persistence do not. `HousePlot.allocation_mode`
-> (`'fixed' | 'auction'`, absent ⇒ `fixed`) governs how an unowned plot is
-> allocated in future steps.
+> **Status (Step 4b): open / bid / cancel handlers are ACTIVE and emit receipts,
+> and the world-loop close→settle trigger is ACTIVE for resale auctions.** When an
+> open auction passes its recorded close, the loop emits `property_auction_settled`
+> (and `house_auction_settled` broadcast); for a resale winner it also credits the
+> seller. **Wall-clock only decides *when* to emit — settlement truth is the
+> receipt; replay never recomputes the winner.** Clients are intent-only;
+> accepted amount/winner state is server-derived. Only **resale** auctions can be
+> opened today (owner-initiated); **primary/system auction opening is a separate
+> later lane**, and **durable persistence/materializer** of auctions is not yet
+> claimed (Step 5). `HousePlot.allocation_mode` (`'fixed' | 'auction'`, absent ⇒
+> `fixed`) governs how an unowned plot is allocated in future steps.
 
 #### `open_house_auction`
 
@@ -482,9 +483,10 @@ Carries an open auction's `kind`, `current_high`, anonymized `high_bidder_name`,
 
 #### `house_auction_settled`
 
-RESERVED (4b — close→settle lane). Will broadcast a settled auction (`winner_name`,
-`seller_name`, `price`, `sale_count`). Not emitted in 4a (no automatic close yet).
-Auction truth comes only from a settlement receipt, never from wall-clock.
+Zone broadcast when an auction closes and settles: `property_id`, `plot_id`,
+`zone`, `winner_name` (null = no bids), `seller_name` (null = primary), `price`,
+`sale_count`. Emitted by the world-loop close→settle trigger. Auction truth comes
+only from the `property_auction_settled` receipt, never from wall-clock.
 
 ## Contract Type Literals
 

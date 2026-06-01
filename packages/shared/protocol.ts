@@ -951,7 +951,8 @@ export type ServerMessage =
   | HouseSoldMessage
   | PropertyResultMessage
   | PropertyLedgerMessage
-  | PropertyAuctionStateMessage;
+  | PropertyAuctionStateMessage
+  | HouseAuctionSettledMessage;
 
 // ============================================================================
 // Message Factories
@@ -1399,6 +1400,25 @@ export const ServerMessages = {
     high_bidder_name,
     min_next,
     scheduled_close,
+  }),
+
+  houseAuctionSettled: (
+    property_id: string,
+    plot_id: string,
+    zone: string,
+    winner_name: string | null,
+    seller_name: string | null,
+    price: number,
+    sale_count: number
+  ): HouseAuctionSettledMessage => ({
+    type: 'house_auction_settled',
+    property_id,
+    plot_id,
+    zone,
+    winner_name,
+    seller_name,
+    price,
+    sale_count,
   }),
 
   propertyLedger: (
