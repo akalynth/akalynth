@@ -13,6 +13,8 @@ Used by automation and operations only.
 - `infra/systemd/akalynth.service` — systemd unit for the direct Node runtime.
 - `infra/systemd/akalynth-docker.service` — systemd unit for the Docker Compose runtime.
 - `infra/deploy_beta.sh` — beta deploy helper.
+- `infra/caddy/Caddyfile.example` — reverse-proxy template for the prod box.
+- `infra/PROVISIONING.md` — runbook for provisioning the prod and dev/Android boxes.
 
 ## Docker Server Runtime
 
