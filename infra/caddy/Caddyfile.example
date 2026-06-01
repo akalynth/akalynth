@@ -11,9 +11,11 @@
 # Cloudflare proxy mode: Full (strict) — chain is CF → Caddy → Node.
 #
 # Static site (akalynth.com):
-#   Build mmo-site/ and deploy to /var/www/akalynth before enabling this block.
+#   The public static site source now lives in akalynth-site (github.com/akalynth/akalynth-site).
+#   The monorepo static-site copy has been retired; akalynth-site is the publication authority.
+#   akalynth.com remains served from the prod Caddy webroot /var/www/akalynth.
+#   Deploy site releases from akalynth-site to /var/www/akalynth (see akalynth-ops runbooks).
 #   sudo mkdir -p /var/www/akalynth && sudo chown caddy:caddy /var/www/akalynth
-#   (cd mmo-site && npm run build && rsync -a dist/ /var/www/akalynth/)
 
 # ── Marketing / landing site ──────────────────────────────────────────────────
 akalynth.com {
