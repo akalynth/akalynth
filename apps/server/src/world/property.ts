@@ -6,6 +6,7 @@
 import type {
   AuditReceipt,
   HousePlot,
+  PropertyAuctionKind,
   PropertyStatus,
 } from '../../../../packages/shared/types.js';
 import {
@@ -14,6 +15,11 @@ import {
   PROPERTY_UNLISTED_ACTION,
   PROPERTY_PURCHASED_ACTION,
   PROPERTY_TRANSFERRED_ACTION,
+  PROPERTY_AUCTION_OPENED_ACTION,
+  PROPERTY_BID_ACTION,
+  PROPERTY_BID_REFUNDED_ACTION,
+  PROPERTY_AUCTION_SETTLED_ACTION,
+  PROPERTY_AUCTION_CANCELLED_ACTION,
   MAX_GOLD_AMOUNT,
 } from '../../../../packages/shared/types.js';
 
@@ -49,6 +55,23 @@ export interface PropertyProjection {
   last_receipt: string;
 }
 
+// Auction projection (Property Auction Lane — projection/reducer only).
+// In-memory, receipt-derived; ONE auction per property at a time. No wallet,
+// escrow, persistence, or wall-clock state lives here. Settlement truth comes
+// from the property_auction_settled receipt, never from a clock.
+export interface AuctionProjection {
+  property_id: string;
+  kind: PropertyAuctionKind;        // 'primary' (unowned→winner, sink) | 'resale'
+  seller_id: string | null;         // null for primary; owner id for resale
+  min_bid: number;
+  min_increment_gold: number;
+  current_high: number | null;      // null = no accepted bid yet
+  high_bidder_id: string | null;
+  status: 'open' | 'settled' | 'cancelled';
+  opened_receipt: string;
+  last_receipt: string;
+}
+
 type WriteReceiptFn = (
   receipt: Omit<
     AuditReceipt,
@@ -61,6 +84,8 @@ type WriteReceiptFn = (
 // ============================================================================
 
 const propertyById = new Map<string, PropertyProjection>();
+// One auction projection per property (open/settled/cancelled). Receipt-derived.
+const auctionByPropertyId = new Map<string, AuctionProjection>();
 // Tracks plots we have already emitted a property_created receipt for this
 // process, so boot-time seeding is idempotent even before the receipt is read
 // back through the reducer.
@@ -91,9 +116,25 @@ export function isOwnedBy(propertyId: string, playerId: string): boolean {
   return propertyById.get(propertyId)?.owner_player_id === playerId;
 }
 
+export function getAuction(propertyId: string): AuctionProjection | null {
+  return auctionByPropertyId.get(propertyId) ?? null;
+}
+
+export function getOpenAuctions(): AuctionProjection[] {
+  return [...auctionByPropertyId.values()].filter((a) => a.status === 'open');
+}
+
+/** Minimum acceptable next bid for an auction (first bid: min_bid). */
+export function minNextBid(auction: AuctionProjection): number {
+  return auction.current_high === null
+    ? auction.min_bid
+    : auction.current_high + auction.min_increment_gold;
+}
+
 /** Clear all projection state (testing / fresh replay). */
 export function clearPropertyProjection(): void {
   propertyById.clear();
+  auctionByPropertyId.clear();
   seededProperties.clear();
 }
 
@@ -287,6 +328,159 @@ export function applyReceiptToProperty(receipt: AuditReceipt): void {
         timestamp: receipt.timestamp,
       });
       prop.last_receipt = eventHash;
+      break;
+    }
+
+    // ========================================================================
+    // Property Auctions (projection/reducer only — NO wallet/escrow/persistence/
+    // handlers, NO wall-clock). Settlement truth comes from the settle receipt's
+    // inputs, applied in sequence — never recomputed from a clock.
+    // ========================================================================
+
+    case PROPERTY_AUCTION_OPENED_ACTION: {
+      const propertyId = receipt.inputs?.property_id as string | undefined;
+      if (!propertyId) break;
+      const prop = propertyById.get(propertyId);
+      if (!prop) break;
+      const existing = auctionByPropertyId.get(propertyId);
+      if (existing && existing.status === 'open') {
+        console.warn(`[property] INVALID auction_open: ${propertyId} already auctioning`);
+        break;
+      }
+      const kind = receipt.inputs?.kind as PropertyAuctionKind | undefined;
+      if (kind !== 'primary' && kind !== 'resale') break;
+      if (kind === 'primary') {
+        if (prop.status !== 'unowned' || prop.owner_player_id !== null) {
+          console.warn(`[property] INVALID primary auction_open: ${propertyId} not unowned`);
+          break;
+        }
+      } else {
+        // Resale: only the current owner may open; status must be 'owned'.
+        if (prop.owner_player_id !== actorId) {
+          console.warn(`[property] INVALID resale auction_open: actor=${actorId} not owner of ${propertyId}`);
+          break;
+        }
+        if (prop.status !== 'owned') {
+          console.warn(`[property] INVALID resale auction_open: ${propertyId} status=${prop.status}`);
+          break;
+        }
+      }
+      const minBid = receipt.inputs?.min_bid;
+      const minIncrement = receipt.inputs?.min_increment_gold;
+      if (!isValidPrice(minBid) || !isValidPrice(minIncrement)) break;
+      prop.status = 'auctioning';
+      prop.listed_price_gold = null;
+      prop.last_receipt = eventHash;
+      auctionByPropertyId.set(propertyId, {
+        property_id: propertyId,
+        kind,
+        seller_id: kind === 'resale' ? actorId : null,
+        min_bid: minBid,
+        min_increment_gold: minIncrement,
+        current_high: null,
+        high_bidder_id: null,
+        status: 'open',
+        opened_receipt: eventHash,
+        last_receipt: eventHash,
+      });
+      break;
+    }
+
+    case PROPERTY_BID_ACTION: {
+      const propertyId = receipt.inputs?.property_id as string | undefined;
+      if (!propertyId || !actorId) break;
+      const auction = auctionByPropertyId.get(propertyId);
+      if (!auction || auction.status !== 'open') {
+        console.warn(`[property] INVALID bid: no open auction for ${propertyId}`);
+        break;
+      }
+      // Resale seller cannot bid on their own auction.
+      if (auction.kind === 'resale' && auction.seller_id === actorId) {
+        console.warn(`[property] INVALID bid: seller ${actorId} cannot bid on own auction ${propertyId}`);
+        break;
+      }
+      const amount = receipt.inputs?.amount;
+      if (!isValidPrice(amount)) break;
+      if (amount < minNextBid(auction)) {
+        console.warn(`[property] INVALID bid: ${amount} < min_next ${minNextBid(auction)} for ${propertyId}`);
+        break;
+      }
+      auction.current_high = amount;
+      auction.high_bidder_id = actorId;
+      auction.last_receipt = eventHash;
+      break;
+    }
+
+    case PROPERTY_BID_REFUNDED_ACTION: {
+      // Marker that a prior high bidder was refunded. The gold movement is a
+      // treasury (wallet_credit) concern handled elsewhere; the auction high
+      // state already reflects the outbidding bid. Projection: record only.
+      const propertyId = receipt.inputs?.property_id as string | undefined;
+      if (!propertyId) break;
+      const auction = auctionByPropertyId.get(propertyId);
+      if (!auction) break;
+      auction.last_receipt = eventHash;
+      break;
+    }
+
+    case PROPERTY_AUCTION_SETTLED_ACTION: {
+      // Receipt-sourced: winner/price/seller come from inputs, applied in
+      // sequence. No clock, no recomputation of the winner.
+      const propertyId = receipt.inputs?.property_id as string | undefined;
+      if (!propertyId) break;
+      const prop = propertyById.get(propertyId);
+      const auction = auctionByPropertyId.get(propertyId);
+      if (!prop || !auction || auction.status !== 'open') {
+        console.warn(`[property] INVALID settle: no open auction for ${propertyId}`);
+        break;
+      }
+      const winnerId = (receipt.inputs?.winner_id as string | null | undefined) ?? null;
+      if (winnerId) {
+        const price = receipt.inputs?.price;
+        const sellerId =
+          (receipt.inputs?.seller_id as string | null | undefined) ?? auction.seller_id;
+        prop.owner_player_id = winnerId;
+        prop.status = 'owned';
+        prop.listed_price_gold = null;
+        prop.purchased_at = receipt.timestamp;
+        prop.sale_count += 1;
+        prop.owner_history.push({
+          from: auction.kind === 'primary' ? null : sellerId,
+          to: winnerId,
+          price: typeof price === 'number' ? price : 0,
+          action: auction.kind === 'primary' ? 'purchased' : 'transferred',
+          timestamp: receipt.timestamp,
+        });
+        prop.last_receipt = eventHash;
+      } else {
+        // No bids: revert to pre-auction status.
+        prop.status = auction.kind === 'primary' ? 'unowned' : 'owned';
+        prop.last_receipt = eventHash;
+      }
+      auction.status = 'settled';
+      auction.last_receipt = eventHash;
+      break;
+    }
+
+    case PROPERTY_AUCTION_CANCELLED_ACTION: {
+      // Owner cancels a resale auction — only while it has zero bids (D4).
+      const propertyId = receipt.inputs?.property_id as string | undefined;
+      if (!propertyId) break;
+      const prop = propertyById.get(propertyId);
+      const auction = auctionByPropertyId.get(propertyId);
+      if (!prop || !auction || auction.status !== 'open') break;
+      if (auction.seller_id !== actorId) {
+        console.warn(`[property] INVALID auction_cancel: actor=${actorId} not seller of ${propertyId}`);
+        break;
+      }
+      if (auction.current_high !== null) {
+        console.warn(`[property] INVALID auction_cancel: ${propertyId} has bids`);
+        break;
+      }
+      prop.status = 'owned';
+      prop.last_receipt = eventHash;
+      auction.status = 'cancelled';
+      auction.last_receipt = eventHash;
       break;
     }
 
