@@ -92,6 +92,15 @@ constraints — never copy any existing game's art, sprites, layouts, or UI**):
   tile, but still authored at the **Classic 32** base (32px; integer-upscaled for
   display). Higher-res painted reference boards inform *material + warmth*, not the
   authored resolution.
+- **Modular building kit:** architecture is assembled from interchangeable 32px
+  pieces, not bespoke whole buildings — wall variants (stone, half-timber), **two
+  roof materials (thatch/straw and red clay)** with gable/edge/ridge pieces, arched
+  and plank doors, windows, support beams, and an arch/gate. Build the kit before
+  bespoke structures.
+- **Town dressing + interiors:** wall-mounted lanterns (warm amber), banners with
+  abstract Akalynth sigils, wells, carts, barrels, sacks, flower planters, and
+  fences; simple interiors (bed, fireplace/hearth) for enterable buildings. These
+  are the recurring props that make a square feel inhabited.
 
 ### Akalynth signature motifs
 
