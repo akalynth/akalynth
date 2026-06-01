@@ -18,6 +18,7 @@ Define what v1 covers and what it explicitly does not. This prevents scope drift
   - `verify:treasury` (unit)
   - `verify:property` (unit) — house ownership/transfers, gold conservation, replay + DB determinism
 - Property ownership v0 (server + proof): house registry seeded from map plots, primary sale (gold sink) + listing + resale (player→player, conserved), durable in SQLite (schema v13), receipt-sourced. **In-game gold only — no real money** (the monetization constitution governs value entry; gameplay gold purchases are not monetization). Buyable by any player (no capability gate on standard plots).
+- Property auctions, resale (server + proof): owner-opened resale auctions with open/bid/cancel handlers, world-loop close→settle (wall-clock only triggers emission; settlement truth is the receipt; reducer/replay are clock-free), and a **durable auction projection** (SQLite schema v14, `property_auctions`, materializer + boot hydration). Gold model proven to conserve (primary sink / resale net-zero) and persistence proven (projection==DB, idempotent re-materialize, DB-hydration==replay) via `verify:property-auction*`. **In-game gold only.** Not in V1: primary/system auction opening, anti-snipe, a production restart proof run, and the site auction UI.
 - Public transparency surfaces exist: `/v1/receipts/public` (and `/v1/transparency`, `/v1/receipts`), served by `apps/server/src/api/http.ts`; docs describe what they are today. Property market/ledger are exposed (anonymized) at `/v1/property/market` and `/v1/property/ledger`.
 
 ## Out of Scope (v1)

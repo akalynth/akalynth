@@ -7,7 +7,7 @@ import type Database from 'better-sqlite3';
 // Schema Version
 // ============================================================================
 
-export const SCHEMA_VERSION = 13;
+export const SCHEMA_VERSION = 14;
 
 // ============================================================================
 // DDL Statements
@@ -248,6 +248,28 @@ CREATE INDEX IF NOT EXISTS idx_properties_owner ON properties(owner_player_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_properties_plot ON properties(zone, plot_id);
 `;
 
+// Property Auction Lane: durable mirror of the in-memory auction projection.
+// One row per property (the current/latest auction), keyed like the projection's
+// auctionByPropertyId map. Settled/cancelled rows are KEPT (status reflects it)
+// and only overwritten when a NEW auction opens on the same plot. Receipts remain
+// the source of truth; this table is a materialized mirror.
+const DDL_PROPERTY_AUCTIONS = `
+CREATE TABLE IF NOT EXISTS property_auctions (
+  property_id        TEXT PRIMARY KEY,
+  kind               TEXT NOT NULL,
+  seller_id          TEXT DEFAULT NULL,
+  min_bid            INTEGER NOT NULL,
+  min_increment_gold INTEGER NOT NULL,
+  current_high       INTEGER DEFAULT NULL,
+  high_bidder_id     TEXT DEFAULT NULL,
+  status             TEXT NOT NULL DEFAULT 'open',
+  scheduled_close_ms INTEGER DEFAULT NULL,
+  opened_receipt     TEXT NOT NULL,
+  last_receipt       TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_property_auctions_status ON property_auctions(status);
+`;
+
 // ============================================================================
 // Schema Initialization
 // ============================================================================
@@ -359,6 +381,9 @@ function runMigration(db: Database.Database, version: number): void {
       break;
     case 13:
       migrateToV13(db);
+      break;
+    case 14:
+      migrateToV14(db);
       break;
     default:
       throw new Error(`Unknown schema version: ${version}`);
@@ -560,6 +585,17 @@ function migrateToV13(db: Database.Database): void {
     'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
   );
   insertMeta.run('schema_version', '13');
+}
+
+function migrateToV14(db: Database.Database): void {
+  // Property Auction Lane: durable auction projection (additive — does not touch
+  // the properties table or any existing rows).
+  db.exec(DDL_PROPERTY_AUCTIONS);
+
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', '14');
 }
 
 // ============================================================================

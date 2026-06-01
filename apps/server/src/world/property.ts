@@ -152,6 +152,16 @@ export function hydrateProperty(p: PropertyProjection): void {
   propertyById.set(p.property_id, p);
 }
 
+/**
+ * Hydrate an auction projection entry from a persisted row (warm boot). The DB
+ * is a materialized mirror of receipt truth; hydration loads it so the
+ * close→settle loop can re-arm without a full replay. The durable proof shows
+ * DB hydration matches receipt replay.
+ */
+export function hydrateAuction(a: AuctionProjection): void {
+  auctionByPropertyId.set(a.property_id, a);
+}
+
 // ============================================================================
 // Seeding (idempotent, receipt-sourced)
 // ============================================================================

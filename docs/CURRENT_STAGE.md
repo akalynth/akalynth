@@ -52,6 +52,7 @@ Implemented-but-not-release-claimed systems include:
 - Load-test harness
 - Public/private receipt and rumor surfaces
 - Property ownership v0 (house buy / list / resale) — receipt-sourced, durable (SQLite schema v13), covered by `apps/server` `npm run verify:property`. Server + proof only; debug-client/site/Android views and a production proof run are not yet claimed.
+- Property auctions (resale): open / bid / cancel handlers, world-loop close→settle (wall-clock only triggers emission; settlement truth is the receipt), and a **durable auction projection** (SQLite schema v14, `property_auctions` table, materializer + boot hydration). Proven by `verify:property-auction*` (reducer, gold conservation, handlers, close→settle, and **persistence: projection==DB, idempotent re-materialize, DB-hydration==replay**). Receipts remain the source of truth; the DB is a materialized mirror. Not yet claimed: a production restart proof run, primary/system auction opening, anti-snipe, and the site auction UI.
 
 ## Debug-Only Or Environment-Gated
 

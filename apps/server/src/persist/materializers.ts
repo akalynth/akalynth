@@ -78,6 +78,11 @@ const HANDLERS: Record<string, Handler> = {
   [RECEIPT_ACTIONS.PROPERTY_UNLISTED]: handlePropertyUnlisted,
   [RECEIPT_ACTIONS.PROPERTY_PURCHASED]: handlePropertyPurchased,
   [RECEIPT_ACTIONS.PROPERTY_TRANSFERRED]: handlePropertyTransferred,
+  [RECEIPT_ACTIONS.PROPERTY_AUCTION_OPENED]: handlePropertyAuctionOpened,
+  [RECEIPT_ACTIONS.PROPERTY_BID]: handlePropertyBid,
+  [RECEIPT_ACTIONS.PROPERTY_BID_REFUNDED]: handlePropertyBidRefunded,
+  [RECEIPT_ACTIONS.PROPERTY_AUCTION_SETTLED]: handlePropertyAuctionSettled,
+  [RECEIPT_ACTIONS.PROPERTY_AUCTION_CANCELLED]: handlePropertyAuctionCancelled,
 };
 
 // ============================================================================
@@ -456,6 +461,159 @@ function handlePropertyTransferred(
         purchased_at = ?, sale_count = sale_count + 1, owner_history = ?, last_receipt = ?
     WHERE property_id = ? AND owner_player_id = ?
   `).run(buyer, receipt.timestamp, JSON.stringify(history), receiptHash, propertyId, sellerId);
+}
+
+// ----------------------------------------------------------------------------
+// Property Auction Lane: durable mirror of the in-memory auction reducer.
+// One property_auctions row per property (latest auction). The properties.status
+// transitions (owned↔auctioning) are written so that re-materializing the full
+// receipt log leaves identical state (the transient 'auctioning' set by `opened`
+// is corrected by `settled`/`cancelled` within the same replay pass; sale_count
+// stays guarded by the owner predicate so it never double-counts).
+// ----------------------------------------------------------------------------
+
+function handlePropertyAuctionOpened(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const inputs = receipt.inputs ?? {};
+  const propertyId = inputs.property_id as string | undefined;
+  const kind = inputs.kind as string | undefined;
+  const minBid = inputs.min_bid as number | undefined;
+  const minIncrement = inputs.min_increment_gold as number | undefined;
+  if (!propertyId || (kind !== 'primary' && kind !== 'resale')) return;
+  if (typeof minBid !== 'number' || typeof minIncrement !== 'number') return;
+
+  const sellerId = kind === 'resale' ? receipt.actor_id : null;
+  const scheduledClose =
+    typeof inputs.scheduled_close_ms === 'number' ? (inputs.scheduled_close_ms as number) : null;
+
+  // One row per property (latest auction) — REPLACE on a new open.
+  db.prepare(`
+    INSERT OR REPLACE INTO property_auctions (
+      property_id, kind, seller_id, min_bid, min_increment_gold,
+      current_high, high_bidder_id, status, scheduled_close_ms, opened_receipt, last_receipt
+    ) VALUES (?, ?, ?, ?, ?, NULL, NULL, 'open', ?, ?, ?)
+  `).run(propertyId, kind, sellerId, minBid, minIncrement, scheduledClose, receiptHash, receiptHash);
+
+  // Mark the plot auctioning (only from a valid pre-auction state).
+  db.prepare(`
+    UPDATE properties
+    SET status = 'auctioning', listed_price_gold = NULL, last_receipt = ?
+    WHERE property_id = ? AND status IN ('owned', 'unowned')
+  `).run(receiptHash, propertyId);
+}
+
+function handlePropertyBid(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const inputs = receipt.inputs ?? {};
+  const propertyId = inputs.property_id as string | undefined;
+  const amount = inputs.amount as number | undefined;
+  const bidder = receipt.actor_id;
+  if (!propertyId || typeof amount !== 'number' || !bidder) return;
+
+  // Accepted bids arrive in monotonically increasing order in the log.
+  db.prepare(`
+    UPDATE property_auctions
+    SET current_high = ?, high_bidder_id = ?, last_receipt = ?
+    WHERE property_id = ? AND status = 'open'
+  `).run(amount, bidder, receiptHash, propertyId);
+}
+
+function handlePropertyBidRefunded(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const inputs = receipt.inputs ?? {};
+  const propertyId = inputs.property_id as string | undefined;
+  if (!propertyId) return;
+  // The outbid refund is a wallet (treasury) effect; the auction row's high state
+  // already reflects the outbidding bid. Record only the last_receipt.
+  db.prepare(`UPDATE property_auctions SET last_receipt = ? WHERE property_id = ?`).run(
+    receiptHash,
+    propertyId
+  );
+}
+
+function handlePropertyAuctionSettled(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const inputs = receipt.inputs ?? {};
+  const propertyId = inputs.property_id as string | undefined;
+  if (!propertyId) return;
+  const kind = inputs.kind as string | undefined;
+  const winnerId = (inputs.winner_id as string | null | undefined) ?? null;
+  const sellerId = (inputs.seller_id as string | null | undefined) ?? null;
+  const price = typeof inputs.price === 'number' ? (inputs.price as number) : 0;
+
+  if (winnerId) {
+    const history = readPropertyOwnerHistory(db, propertyId);
+    if (kind === 'primary') {
+      history.push({ from: null, to: winnerId, price, action: 'purchased', timestamp: receipt.timestamp });
+      // owner IS NULL predicate prevents sale_count double-increment on re-materialize.
+      db.prepare(`
+        UPDATE properties
+        SET owner_player_id = ?, status = 'owned', listed_price_gold = NULL,
+            purchased_at = ?, sale_count = sale_count + 1, owner_history = ?, last_receipt = ?
+        WHERE property_id = ? AND owner_player_id IS NULL
+      `).run(winnerId, receipt.timestamp, JSON.stringify(history), receiptHash, propertyId);
+    } else {
+      history.push({ from: sellerId, to: winnerId, price, action: 'transferred', timestamp: receipt.timestamp });
+      // seller predicate prevents double-sell / double-increment on re-materialize.
+      db.prepare(`
+        UPDATE properties
+        SET owner_player_id = ?, status = 'owned', listed_price_gold = NULL,
+            purchased_at = ?, sale_count = sale_count + 1, owner_history = ?, last_receipt = ?
+        WHERE property_id = ? AND owner_player_id = ?
+      `).run(winnerId, receipt.timestamp, JSON.stringify(history), receiptHash, propertyId, sellerId);
+    }
+    // Status correction (idempotent): flip a still-auctioning plot to owned even
+    // when the guarded ownership update above did not re-fire (re-materialize).
+    db.prepare(`
+      UPDATE properties SET status = 'owned', last_receipt = ?
+      WHERE property_id = ? AND status = 'auctioning'
+    `).run(receiptHash, propertyId);
+  } else {
+    // No bids: revert to the pre-auction status.
+    const revertTo = kind === 'primary' ? 'unowned' : 'owned';
+    db.prepare(`
+      UPDATE properties SET status = ?, last_receipt = ?
+      WHERE property_id = ? AND status = 'auctioning'
+    `).run(revertTo, receiptHash, propertyId);
+  }
+
+  db.prepare(`
+    UPDATE property_auctions SET status = 'settled', last_receipt = ?
+    WHERE property_id = ? AND status = 'open'
+  `).run(receiptHash, propertyId);
+}
+
+function handlePropertyAuctionCancelled(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const inputs = receipt.inputs ?? {};
+  const propertyId = inputs.property_id as string | undefined;
+  if (!propertyId) return;
+
+  // Cancel only fires for a zero-bid open auction owned/sellered by the actor.
+  db.prepare(`
+    UPDATE property_auctions SET status = 'cancelled', last_receipt = ?
+    WHERE property_id = ? AND status = 'open' AND current_high IS NULL AND seller_id = ?
+  `).run(receiptHash, propertyId, receipt.actor_id);
+
+  db.prepare(`
+    UPDATE properties SET status = 'owned', last_receipt = ?
+    WHERE property_id = ? AND status = 'auctioning'
+  `).run(receiptHash, propertyId);
 }
 
 // ============================================================================
