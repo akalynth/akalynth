@@ -30,6 +30,7 @@ import type {
   ChronicleEventRow,
   ModerationReportRow,
   PropertyRow,
+  AuctionRow,
 } from './types.js';
 export type { DeathRow, ModerationReportRow } from './types.js';
 import { initSchema } from './schema.js';
@@ -189,6 +190,14 @@ export function createPersistenceLayer(
 
     getPropertiesForOwner(playerId: string): PropertyRow[] {
       return queries.getPropertiesForOwner(db, playerId);
+    },
+
+    getAuction(propertyId: string): AuctionRow | null {
+      return queries.getAuction(db, propertyId);
+    },
+
+    getOpenAuctions(): AuctionRow[] {
+      return queries.getOpenAuctions(db);
     },
 
     // Chronicle queries (Phase 4)

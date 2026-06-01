@@ -15,6 +15,7 @@ import type {
   ChronicleEventRow,
   ModerationReportRow,
   PropertyRow,
+  AuctionRow,
 } from './types.js';
 
 // ============================================================================
@@ -278,6 +279,19 @@ export function getPropertiesForOwner(db: Database.Database, playerId: string): 
   return db
     .prepare(`SELECT * FROM properties WHERE owner_player_id = ? ORDER BY property_id`)
     .all(playerId) as PropertyRow[];
+}
+
+export function getAuction(db: Database.Database, propertyId: string): AuctionRow | null {
+  return (
+    (db.prepare(`SELECT * FROM property_auctions WHERE property_id = ?`).get(propertyId) as AuctionRow) ??
+    null
+  );
+}
+
+export function getOpenAuctions(db: Database.Database): AuctionRow[] {
+  return db
+    .prepare(`SELECT * FROM property_auctions WHERE status = 'open' ORDER BY property_id`)
+    .all() as AuctionRow[];
 }
 
 // ============================================================================

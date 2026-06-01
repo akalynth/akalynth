@@ -171,6 +171,7 @@ import { getGoldBalance, canAfford, withTreasuryLock, debitForAction } from './w
 import {
   ensurePropertiesSeeded,
   hydrateProperty,
+  hydrateAuction,
   getProperty,
   getAllProperties,
   getMarketListings,
@@ -179,6 +180,7 @@ import {
   isValidPrice,
   makePropertyId,
   type PropertyProjection,
+  type AuctionProjection,
 } from './world/property.js';
 import { settleDueAuctions, clampAuctionDurationS } from './world/auction-loop.js';
 import { maybeSealOriginFromReceipt } from './world/origin.js';
@@ -1643,10 +1645,31 @@ function loadPropertiesAndSeed(): void {
     });
   }
 
+  // Hydrate OPEN auctions from the durable mirror so the close→settle loop can
+  // re-arm without a full replay. DB remains a materialized mirror of receipts.
+  const auctionRows = persist.getOpenAuctions();
+  for (const a of auctionRows) {
+    hydrateAuction({
+      property_id: a.property_id,
+      kind: a.kind as AuctionProjection['kind'],
+      seller_id: a.seller_id,
+      min_bid: a.min_bid,
+      min_increment_gold: a.min_increment_gold,
+      current_high: a.current_high,
+      high_bidder_id: a.high_bidder_id,
+      status: a.status as AuctionProjection['status'],
+      scheduled_close_ms: a.scheduled_close_ms,
+      opened_receipt: a.opened_receipt,
+      last_receipt: a.last_receipt,
+    });
+  }
+
   // Seed any plots defined on the Azura map but not yet in the registry.
   const plots = worlds.Azura.map.landmarks.house_plots ?? [];
   ensurePropertiesSeeded(plots, 'Azura', (r) => audit.write(r));
-  console.log(`[property] Loaded ${rows.length} properties; ensured ${plots.length} Azura plots seeded`);
+  console.log(
+    `[property] Loaded ${rows.length} properties, ${auctionRows.length} open auctions; ensured ${plots.length} Azura plots seeded`
+  );
 }
 
 // Resolve a player id to a display name (durable lookup; null = treasury/unowned).

@@ -204,6 +204,22 @@ export interface PropertyRow {
   created_at: string; // ISO8601
 }
 
+// Property Auction Lane: durable mirror of the in-memory auction projection.
+// One row per property (latest auction). Receipts remain the source of truth.
+export interface AuctionRow {
+  property_id: string;
+  kind: string; // PropertyAuctionKind
+  seller_id: string | null;
+  min_bid: number;
+  min_increment_gold: number;
+  current_high: number | null;
+  high_bidder_id: string | null;
+  status: string; // 'open' | 'settled' | 'cancelled'
+  scheduled_close_ms: number | null;
+  opened_receipt: string;
+  last_receipt: string;
+}
+
 // Dialogue Contract v1: append-only NPC talk event (durable variation nonce source)
 export interface NpcTalkEventRow {
   id: number;
@@ -295,6 +311,13 @@ export const RECEIPT_ACTIONS = {
   PROPERTY_UNLISTED: 'property_unlisted',
   PROPERTY_PURCHASED: 'property_purchased',
   PROPERTY_TRANSFERRED: 'property_transferred',
+
+  // Property Auction Lane: durable auction projection
+  PROPERTY_AUCTION_OPENED: 'property_auction_opened',
+  PROPERTY_BID: 'property_bid',
+  PROPERTY_BID_REFUNDED: 'property_bid_refunded',
+  PROPERTY_AUCTION_SETTLED: 'property_auction_settled',
+  PROPERTY_AUCTION_CANCELLED: 'property_auction_cancelled',
 } as const;
 
 // Alias mapping for existing receipt actions
@@ -406,6 +429,10 @@ export interface PersistenceLayer {
   getProperty(property_id: string): PropertyRow | null;
   getPropertyByPlot(zone: string, plot_id: string): PropertyRow | null;
   getPropertiesForOwner(player_id: string): PropertyRow[];
+
+  // Read queries - Property Auction Lane (durable auction projection)
+  getAuction(property_id: string): AuctionRow | null;
+  getOpenAuctions(): AuctionRow[];
 
   // Read queries - Chronicle (Phase 4)
   getChronicleForPlayer(player_id: string, limit?: number, before?: string): ChronicleEventRow[];
