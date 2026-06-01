@@ -180,6 +180,7 @@ import {
   makePropertyId,
   type PropertyProjection,
 } from './world/property.js';
+import { settleDueAuctions, clampAuctionDurationS } from './world/auction-loop.js';
 import { maybeSealOriginFromReceipt } from './world/origin.js';
 import {
   startContract,
@@ -5227,8 +5228,11 @@ function processSessionQueue(s: Session, now: number) {
           send(s.ws, ServerMessages.propertyResult('open_house_auction', false, msg.property_id, 'invalid_price'));
           break;
         }
-        // duration_s is recorded as the requested window only; 4a has NO close
-        // scheduler and computes NO absolute close time (no wall-clock here).
+        // Record the absolute close (live wall-clock) into the receipt so it is
+        // replayable; the reducer stores it as metadata and never compares it to
+        // a clock. The close→settle loop reads it to decide WHEN to settle.
+        const durationS = clampAuctionDurationS(msg.duration_s);
+        const scheduledCloseMs = Date.now() + durationS * 1000;
         audit.write({
           player_id: s.player.id,
           action: PROPERTY_AUCTION_OPENED_ACTION,
@@ -5238,7 +5242,8 @@ function processSessionQueue(s: Session, now: number) {
             seller_id: s.player.id,
             min_bid: msg.min_bid,
             min_increment_gold: msg.min_increment_gold,
-            duration_s: msg.duration_s,
+            duration_s: durationS,
+            scheduled_close_ms: scheduledCloseMs,
           },
           result: 'ok',
         });
@@ -5249,7 +5254,7 @@ function processSessionQueue(s: Session, now: number) {
         if (auction) {
           const stateMsg = ServerMessages.propertyAuctionState(
             auction.property_id, auction.kind, auction.current_high,
-            resolvePlayerName(auction.high_bidder_id), minNextBid(auction), null
+            resolvePlayerName(auction.high_bidder_id), minNextBid(auction), auction.scheduled_close_ms
           );
           send(s.ws, stateMsg);
           broadcastToMap(updated.zone as 'Rookguard' | 'Azura', stateMsg, s.connId);
@@ -5317,7 +5322,7 @@ function processSessionQueue(s: Session, now: number) {
         const prop = getProperty(msg.property_id)!;
         const stateMsg = ServerMessages.propertyAuctionState(
           updated.property_id, updated.kind, updated.current_high,
-          resolvePlayerName(updated.high_bidder_id), minNextBid(updated), null
+          resolvePlayerName(updated.high_bidder_id), minNextBid(updated), updated.scheduled_close_ms
         );
         send(s.ws, ServerMessages.propertyResult('place_house_bid', true, msg.property_id));
         send(s.ws, stateMsg);
@@ -5579,6 +5584,13 @@ function processSessionQueue(s: Session, now: number) {
   }
 }
 
+// Property auction close→settle scan runs inside the existing world tick loop,
+// throttled to a low frequency. This is the ONLY auction wall-clock trigger;
+// `now` is passed into settleDueAuctions (the loop module never calls Date.now()
+// itself), and replay never runs this path.
+const AUCTION_SCAN_INTERVAL_MS = 1000;
+let lastAuctionScanMs = 0;
+
 setInterval(() => {
   const now = Date.now();
   // Resolve expired unresolved witness requests before cleanup
@@ -5595,6 +5607,20 @@ setInterval(() => {
     // Presence tick (linger + co-presence)
     if (s.inWorld && s.player) {
       onPresenceTick(s.player.id, now, (r) => audit.write(r));
+    }
+  }
+  // Close→settle due auctions (resale). Settlement truth is the emitted receipt.
+  if (now - lastAuctionScanMs >= AUCTION_SCAN_INTERVAL_MS) {
+    lastAuctionScanMs = now;
+    const settlements = settleDueAuctions(now, (r) => audit.write(r));
+    for (const st of settlements) {
+      broadcastToMap(
+        st.zone as 'Rookguard' | 'Azura',
+        ServerMessages.houseAuctionSettled(
+          st.property_id, st.plot_id, st.zone,
+          resolvePlayerName(st.winner_id), resolvePlayerName(st.seller_id), st.price, st.sale_count
+        )
+      );
     }
   }
 }, TICK_MS);

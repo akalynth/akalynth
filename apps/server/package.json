@@ -44,7 +44,8 @@
     "install-hooks": "bash scripts/install-hooks.sh",
     "verify:mob-loot": "tsx tools/verify-mob-loot.ts",
     "verify:item-pickup-type": "tsx tools/verify-item-pickup-type.ts",
-    "verify:property-auction-handlers": "tsx tools/verify-property-auction-handlers.ts"
+    "verify:property-auction-handlers": "tsx tools/verify-property-auction-handlers.ts",
+    "verify:property-auction-settle": "tsx tools/verify-property-auction-settle.ts"
   },
   "dependencies": {
     "@akalynth/coordination-kernel": "file:../../packages/coordination-kernel",
