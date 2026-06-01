@@ -21,7 +21,7 @@
 import { blake3 } from '@noble/hashes/blake3';
 import * as nodeCrypto from 'node:crypto';
 import stableStringify from 'fast-json-stable-stringify';
-import { rngCommit, rngCommitV1, rngDrawU32Legacy, rngDeriveSeedV2 } from './rng.js';
+import { rngCommit, rngCommitV1, rngDrawU32Legacy, rngDeriveSeedV2, computeInventoryCommit } from './rng.js';
 import { computeDeathDrops, type ItemForDrop } from './dropPolicy.js';
 import type { MapName } from './http.js';
 import {
@@ -97,6 +97,15 @@ export type OutcomeVerificationContext = {
   // (SLICE_NOT_AUTHENTICATED) and "verified" is unreachable (ceiling
   // rng_consistent).
   signingPublicKeyHex?: string;
+  // #103: Inventory opening — the salt + items needed to verify
+  // `rng_proof.derivation.inputs.inventory_commit` and to re-run
+  // computeDeathDrops for `outcome_derivation: pass`. When absent and the receipt
+  // uses a commitment, outcome_derivation is 'unsupported' + COMMITTED_NOT_OPENED
+  // (not a failure — just "can't verify without opening").
+  inventoryOpening?: {
+    salt: string;       // 16-byte salt, hex-encoded (32 hex chars)
+    items: ItemForDrop[]; // full inventory snapshot passed to computeDeathDrops
+  };
 };
 
 // ---------------------------------------------------------------------------
@@ -306,7 +315,7 @@ function verifyCombatResolved(
     if (isObject(proofMaybe) && proofMaybe['version'] === 2) {
       return verifyReceiptRngProofV2(receipt, inp, proofMaybe, context);
     }
-    return verifyReceiptRngProof(receipt, inp);
+    return verifyReceiptRngProof(receipt, inp, context);
   }
 
   // ----- SEED BINDING (deterministic replay) -----
@@ -421,7 +430,8 @@ function buildHeatLookup(items: ItemForDrop[]): Map<string, number> {
 
 function verifyReceiptRngProof(
   receipt: Record<string, unknown>,
-  inp: Record<string, unknown>
+  inp: Record<string, unknown>,
+  context?: OutcomeVerificationContext
 ): OutcomeVerificationResult {
   const reason_codes: string[] = [];
 
@@ -541,6 +551,12 @@ function verifyReceiptRngProof(
   }
 
   // ----- outcome_derivation: recompute dropped_item_ids via shared dropPolicy -----
+  // #103: Two sub-paths:
+  //   A) Legacy: derivation.inputs.items present → old plaintext path (unchanged).
+  //   B) Commitment: derivation.inputs.inventory_commit present →
+  //      - Without opening (context.inventoryOpening absent):
+  //          outcome_derivation = 'unsupported' + COMMITTED_NOT_OPENED (not a failure).
+  //      - With opening: verify commit matches, then run computeDeathDrops.
   let outcome_derivation: CheckStatus = 'pass';
   const derivation = proof['derivation'];
   const dInputs = isObject(derivation) ? derivation['inputs'] : undefined;
@@ -549,39 +565,100 @@ function verifyReceiptRngProof(
     reason_codes.push('OUTCOME_MISMATCH');
     outcome_derivation = 'fail';
   } else {
-    const items = reconstructItemsForDrop(dInputs['items']);
-    const reputation = dInputs['reputation'];
-    const map = dInputs['map'];
-    const dropped = inp['dropped_item_ids'];
+    const hasItemsArray = 'items' in dInputs;
+    const hasCommit = 'inventory_commit' in dInputs;
 
-    if (
-      items === null ||
-      typeof reputation !== 'number' ||
-      typeof map !== 'string' ||
-      typeof revealSeed !== 'string' ||
-      !Array.isArray(dropped)
-    ) {
-      reason_codes.push('OUTCOME_MISMATCH');
-      outcome_derivation = 'fail';
-    } else {
-      const heatLookup = buildHeatLookup(items);
-      const recomputed = computeDeathDrops(
-        items,
-        map as MapName,
-        reputation,
-        revealSeed,
-        [],
-        heatLookup
-      ).droppedItemIds;
+    if (hasItemsArray) {
+      // --- Legacy plaintext path (existing fixtures / v0 receipts) ---
+      const items = reconstructItemsForDrop(dInputs['items']);
+      const reputation = dInputs['reputation'];
+      const map = dInputs['map'];
+      const dropped = inp['dropped_item_ids'];
 
-      const expected = dropped as unknown[];
-      const sameLen = recomputed.length === expected.length;
-      const sameItems =
-        sameLen && recomputed.every((id, i) => id === expected[i]);
-      if (!sameItems) {
+      if (
+        items === null ||
+        typeof reputation !== 'number' ||
+        typeof map !== 'string' ||
+        typeof revealSeed !== 'string' ||
+        !Array.isArray(dropped)
+      ) {
         reason_codes.push('OUTCOME_MISMATCH');
         outcome_derivation = 'fail';
+      } else {
+        const heatLookup = buildHeatLookup(items);
+        const recomputed = computeDeathDrops(
+          items,
+          map as MapName,
+          reputation,
+          revealSeed,
+          [],
+          heatLookup
+        ).droppedItemIds;
+
+        const expected = dropped as unknown[];
+        const sameLen = recomputed.length === expected.length;
+        const sameItems =
+          sameLen && recomputed.every((id, i) => id === expected[i]);
+        if (!sameItems) {
+          reason_codes.push('OUTCOME_MISMATCH');
+          outcome_derivation = 'fail';
+        }
       }
+    } else if (hasCommit) {
+      // --- Commitment path (#103) ---
+      const opening = context?.inventoryOpening;
+      if (!opening) {
+        // No opening supplied — cannot verify outcome derivation. NOT a failure.
+        reason_codes.push('COMMITTED_NOT_OPENED');
+        outcome_derivation = 'unsupported';
+      } else {
+        // Recompute the commitment from the supplied opening and compare.
+        const recomputedCommit = computeInventoryCommit(opening.salt, opening.items);
+        const storedCommit = dInputs['inventory_commit'];
+        if (recomputedCommit !== storedCommit) {
+          reason_codes.push('INVENTORY_COMMIT_MISMATCH');
+          outcome_derivation = 'fail';
+        } else {
+          // Commitment verified — now re-run computeDeathDrops with the opened items.
+          const items = opening.items;
+          const reputation = dInputs['reputation'];
+          const map = dInputs['map'];
+          const dropped = inp['dropped_item_ids'];
+
+          if (
+            typeof reputation !== 'number' ||
+            typeof map !== 'string' ||
+            typeof revealSeed !== 'string' ||
+            !Array.isArray(dropped)
+          ) {
+            reason_codes.push('OUTCOME_MISMATCH');
+            outcome_derivation = 'fail';
+          } else {
+            const heatLookup = buildHeatLookup(items);
+            const recomputed = computeDeathDrops(
+              items,
+              map as MapName,
+              reputation,
+              revealSeed,
+              [],
+              heatLookup
+            ).droppedItemIds;
+
+            const expected = dropped as unknown[];
+            const same =
+              recomputed.length === expected.length &&
+              recomputed.every((id, i) => id === expected[i]);
+            if (!same) {
+              reason_codes.push('OUTCOME_MISMATCH');
+              outcome_derivation = 'fail';
+            }
+          }
+        }
+      }
+    } else {
+      // Neither items nor inventory_commit — malformed derivation.
+      reason_codes.push('OUTCOME_MISMATCH');
+      outcome_derivation = 'fail';
     }
   }
 
@@ -592,14 +669,20 @@ function verifyReceiptRngProof(
   //  - v1 commit unverifiable offline (but seed/output/outcome all checked) →
   //    replay_consistent. This is NOT a failure — it is honest about the commit
   //    being unprovable offline until #101. final_status is NEVER "verified".
+  //  - outcome_derivation 'unsupported' (no opening): max is replay_consistent /
+  //    rng_consistent (depends on rng_commit_reveal status). NOT failed.
   const hardFail =
-    !bodyHashOk || rng_commit_reveal === 'fail' || outcome_derivation !== 'pass';
+    !bodyHashOk || rng_commit_reveal === 'fail' || outcome_derivation === 'fail';
   let final_status: FinalStatus;
   if (hardFail) {
     final_status = 'failed';
-  } else if (rng_commit_reveal === 'pass') {
+  } else if (rng_commit_reveal === 'pass' && outcome_derivation === 'pass') {
+    final_status = 'rng_consistent';
+  } else if (rng_commit_reveal === 'pass' && outcome_derivation === 'unsupported') {
+    // RNG triple verified, but opening absent → rng_consistent (honest ceiling).
     final_status = 'rng_consistent';
   } else {
+    // outcome derivation unsupported or rng_commit_reveal unsupported (v1 commit)
     final_status = 'replay_consistent';
   }
 

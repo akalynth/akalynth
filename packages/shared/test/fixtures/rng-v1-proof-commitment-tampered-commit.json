@@ -1,0 +1,51 @@
+{
+  "sequence": 200,
+  "timestamp": "2026-05-31T13:00:00.000Z",
+  "actor_id": "did:akalynth:attacker-001",
+  "action": "combat_resolved",
+  "inputs": {
+    "target_player_id": "did:akalynth:victim-001",
+    "map": "Azura",
+    "position": {
+      "x": 12,
+      "y": 34
+    },
+    "outcome": "kill",
+    "dropped_item_ids": [
+      "item-legendary-001",
+      "item-ration-001",
+      "item-torch-002",
+      "item-torch-001"
+    ],
+    "drop_seed_hash": "blake3:03797e01d4fcb3e2ac678799d4ff704d0aeec12ec92e7145d9e97e2b8616c159",
+    "protected_item_id": null,
+    "rng_proof": {
+      "version": 1,
+      "scheme": "receipt_hash_seeded_replay",
+      "outcome_type": "loot_drop",
+      "rng_commit_scheme": "death_drop:v0",
+      "receipt_body_hash": "blake3:03797e01d4fcb3e2ac678799d4ff704d0aeec12ec92e7145d9e97e2b8616c159",
+      "rng_commit": "blake3:c0d009aa427590696e2749da0a79120cd04107cf195eb88412e1ed858fe99613",
+      "reveal_seed": "blake3:03797e01d4fcb3e2ac678799d4ff704d0aeec12ec92e7145d9e97e2b8616c159",
+      "rng_out": [
+        466122438,
+        1928383895,
+        764285833,
+        2959601787,
+        941724044
+      ],
+      "derivation": {
+        "algorithm": "rngDrawU32Legacy/selectItemsToDrop@v0",
+        "domain": "pvp_loot_drop",
+        "inputs": {
+          "inventory_commit": "blake3:0000000000000000000000000000000000000000000000000000000000000bad",
+          "inventory_size": 5,
+          "reputation": -4,
+          "map": "Azura",
+          "protected_item_id": null
+        }
+      }
+    }
+  },
+  "result": "ok"
+}
