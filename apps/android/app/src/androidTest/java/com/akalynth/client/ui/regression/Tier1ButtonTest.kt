@@ -8,6 +8,9 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
 import org.junit.Assert.*
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * Regression tests for Tier 1 (tap + cooldown) button.
@@ -16,6 +19,8 @@ import org.junit.Assert.*
  * Timing constants:
  * - COOLDOWN_MS = 500ms (±50ms tolerance)
  */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
 class Tier1ButtonTest {
 
     @get:Rule

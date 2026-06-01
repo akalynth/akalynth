@@ -10,6 +10,9 @@ import com.akalynth.client.ui.components.confirmation.Tier2HoldButton
 import org.junit.Rule
 import org.junit.Test
 import org.junit.Assert.*
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * Regression tests for Tier 2 (hold 1.5s) confirmation button.
@@ -21,6 +24,8 @@ import org.junit.Assert.*
  * Note: These tests use Compose's test clock for deterministic timing.
  * mainClock.advanceTimeBy() controls the animation progress.
  */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
 class Tier2HoldButtonTest {
 
     @get:Rule

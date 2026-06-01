@@ -16,6 +16,9 @@ import com.akalynth.client.ui.components.character.MAX_NAME_LENGTH
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * Regression tests for character creation screen.
@@ -27,6 +30,8 @@ import org.junit.Test
  * - N3: Sprite preview swaps on sex change
  * - N4: Create button enabled only when valid
  */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
 class CharacterCreateScreenTest {
 
     @get:Rule

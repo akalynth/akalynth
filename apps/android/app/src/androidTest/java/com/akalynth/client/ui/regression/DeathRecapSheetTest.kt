@@ -15,6 +15,9 @@ import com.akalynth.client.ui.state.ChronicleEventKind
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * Regression tests for death recap sheet.
@@ -23,6 +26,8 @@ import org.junit.Test
  * Timing constants:
  * - SHEET_OPEN_MS = 300ms (max)
  */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
 class DeathRecapSheetTest {
 
     @get:Rule

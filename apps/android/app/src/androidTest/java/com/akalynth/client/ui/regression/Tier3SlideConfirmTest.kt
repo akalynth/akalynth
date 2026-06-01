@@ -14,6 +14,9 @@ import com.akalynth.client.ui.components.confirmation.Tier3SlideConfirm
 import org.junit.Rule
 import org.junit.Test
 import org.junit.Assert.*
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * Regression tests for Tier 3 (slide >= 90%) confirmation.
@@ -26,6 +29,8 @@ import org.junit.Assert.*
  * Note: These tests use Compose's test clock for deterministic timing.
  * swipeRight with endX controls slide position.
  */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
 class Tier3SlideConfirmTest {
 
     @get:Rule

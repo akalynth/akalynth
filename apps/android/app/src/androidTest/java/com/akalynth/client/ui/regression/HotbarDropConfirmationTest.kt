@@ -14,6 +14,9 @@ import com.akalynth.client.ui.state.UiOverlayState
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * Regression tests for hotbar drop confirmation wiring.
@@ -27,6 +30,8 @@ import org.junit.Test
  * - D6: Overlay prevents interaction with underlying UI
  * - D7: Item name and rarity displayed clearly
  */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
 class HotbarDropConfirmationTest {
 
     @get:Rule
