@@ -399,6 +399,21 @@ export function createDefaultRegistry(): VerifierRegistry {
     },
   };
 
+  // Map generation (pure; no DB/runtime). Proves deterministic map + SVG render,
+  // manifest hash binding, reachability, plot validity, and no hidden entropy.
+  const mapgenVerifier: VerifierSpec = {
+    id: 'mapgen',
+    title: 'Map Generation (mapgen@v1)',
+    description:
+      'Deterministic map + SVG generation: byte-identical replay, map_hash/svg_hash binding, reachability, house-plot validity, no hidden entropy',
+    phase: 1,
+    dependsOn: ['build'],
+    auditSafe: true,
+    async run(ctx) {
+      return runLegacyVerifier('apps/server/tools/verify-mapgen.ts', 'mapgen', ctx);
+    },
+  };
+
   // ============================================================================
   // Register all verifiers
   // ============================================================================
@@ -414,6 +429,7 @@ export function createDefaultRegistry(): VerifierRegistry {
   registry.register(protocolDriftVerifier);
   registry.register(identityVerifier);
   registry.register(receiptsChainVerifier);
+  registry.register(mapgenVerifier);
 
   // Phase 2
   registry.register(chronicleVerifier);

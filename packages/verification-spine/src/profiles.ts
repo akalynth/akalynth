@@ -36,6 +36,7 @@ export const PROFILES: Record<ProfileName, Profile> = {
       'doctrine',
       'identity',
       'receipts-chain',
+      'mapgen',
     ],
   },
 

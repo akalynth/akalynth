@@ -87,3 +87,9 @@ data/assets-src/**/_raw/
 # Compiled JS build artifacts of tracked .ts sources (regenerate via tsc/tsx)
 packages/shared/scripts/*.js
 packages/verification-spine/src/**/*.js
+
+# Map-compiler generated output (compilers emit here; runtime consumes built maps).
+# Editors write data/world/maps-src/; built maps + .mapgen.json manifest + .svg
+# are reproducible from `generate` (same params -> identical map_hash/svg_hash),
+# so they are not committed (prevents accidental promotion of generated samples).
+data/world/maps-built/
