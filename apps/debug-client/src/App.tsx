@@ -7,6 +7,7 @@ import { useExistenceMode } from './hooks/useExistenceMode';
 import { MapCanvas } from './components/MapCanvas';
 import { DPad } from './components/DPad';
 import { ActionsPanel } from './components/ActionsPanel';
+import { PropertyLedger } from './components/PropertyLedger';
 import { ChatSheet } from './components/ChatSheet';
 import { TopBar } from './components/TopBar';
 import { NearbyList } from './components/NearbyList';
@@ -217,6 +218,14 @@ function DebugApp() {
     return null;
   }, [state.world.me, state.groundItems]);
   const others = useMemo(() => Array.from(state.world.others.values()), [state.world.others]);
+  const propertyList = useMemo(() => Array.from(state.properties.values()), [state.properties]);
+  const propertyByPlot = useMemo(() => {
+    const m = new Map<string, { status: string; owner_name: string | null; listed_price_gold: number | null }>();
+    for (const p of propertyList) {
+      m.set(p.plot_id, { status: p.status, owner_name: p.owner_name, listed_price_gold: p.listed_price_gold });
+    }
+    return m;
+  }, [propertyList]);
   const roster = useMemo(() => others.slice().sort((a, b) => a.name.localeCompare(b.name)), [others]);
   const targetName = useMemo(() => {
     if (!state.combat.targetId) return null;
@@ -458,6 +467,7 @@ function DebugApp() {
             fx={state.combat.fx}
             onSelectTarget={api.setTarget}
             groundItems={state.groundItems}
+            propertyByPlot={propertyByPlot}
           />
           <div className="scene-vignette" />
           {!isDead && healthPct <= 30 && (
@@ -526,6 +536,16 @@ function DebugApp() {
             </div>
           </div>
           {state.ui.stage >= 3 && <NearbyList players={roster} />}
+          {state.ui.stage >= 3 && propertyList.length > 0 && (
+            <PropertyLedger
+              properties={propertyList}
+              myName={state.session.name}
+              gold={state.gold}
+              onBuy={api.buyHouse}
+              onList={api.listHouse}
+              onUnlist={api.unlistHouse}
+            />
+          )}
           <div
             className="dead-zone"
             onPointerDown={(e) => {

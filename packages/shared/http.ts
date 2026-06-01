@@ -171,6 +171,44 @@ export interface PublicRumorsResponse {
 }
 
 // ============================================================================
+// Property Market API (public, anonymized)
+// ============================================================================
+
+export interface PropertyMarketListing {
+  property_id: string;
+  zone: string;
+  plot_id: string;
+  district: string | null;
+  status: 'unowned' | 'owned' | 'listed';
+  owner_name: string | null; // anonymized display name; never a raw player id
+  primary_price_gold: number;
+  listed_price_gold: number | null;
+}
+
+export interface PropertyMarketResponse {
+  listings: PropertyMarketListing[];
+  total: number;
+}
+
+export interface PropertyLedgerEntry {
+  from_name: string | null;
+  to_name: string;
+  price: number;
+  action: 'purchased' | 'transferred';
+  timestamp: string;
+}
+
+export interface PropertyLedgerResponse {
+  property_id: string;
+  district: string | null;
+  owner_name: string | null;
+  sale_count: number;
+  owner_count: number; // distinct owners over the property's history
+  last_sale: { from_name: string | null; to_name: string; price: number; timestamp: string } | null;
+  owner_history: PropertyLedgerEntry[];
+}
+
+// ============================================================================
 // Transparency API (public)
 // ============================================================================
 
@@ -180,6 +218,12 @@ export interface TransparencyResponse {
   identity: {
     auth_public_key_hex: string;
     key_derivation: string;
+    // Raw-seed Ed25519 public key that signs receipts AND chronicle events
+    // (distinct from auth_public_key_hex, the blake3-derived token key). Published
+    // so a third party can verify receipt + chronicle-line signatures offline
+    // (e.g. RNG outcome `verified`). See docs/RNG_OUTCOME_VERIFICATION.md.
+    signing_public_key_hex: string;
+    signing_key_derivation: string;
   };
   principles: string[];
   documentation: {

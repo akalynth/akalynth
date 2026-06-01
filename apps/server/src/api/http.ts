@@ -21,6 +21,8 @@ import type {
   WorldPlayersQuery,
   TransparencyResponse,
   AntiCheatPriorResponse,
+  PropertyMarketResponse,
+  PropertyLedgerResponse,
 } from '../../../../packages/shared/http.js';
 
 type GuestSessionMintResult = GuestSessionResponse | { error: string; status?: number };
@@ -51,6 +53,9 @@ export interface ApiDeps {
   queryAntiCheatPrior?: (playerId: string) => AntiCheatPriorResult;
   // Identity v0.1: Character creation
   createCharacter?: (name: string) => CharacterCreateResult;
+  // Property Ownership v0 (public, anonymized)
+  getPropertyMarket?: () => PropertyMarketResponse;
+  getPropertyLedger?: (property_id: string) => PropertyLedgerResponse | null;
 }
 
 function json(res: ServerResponse, status: number, body: unknown) {
@@ -455,6 +460,30 @@ export function handleHttp(
 
     const result = deps.queryPublicRumors(params);
     json(res, 200, result);
+    return true;
+  }
+
+  // Property Ownership v0: public, anonymized house market
+  if (method === 'GET' && path === '/v1/property/market') {
+    if (!deps.getPropertyMarket) return false;
+    json(res, 200, deps.getPropertyMarket());
+    return true;
+  }
+
+  // Property Ownership v0: public ownership ledger for one property
+  if (method === 'GET' && path === '/v1/property/ledger') {
+    if (!deps.getPropertyLedger) return false;
+    const propertyId = url.searchParams.get('property_id');
+    if (!propertyId) {
+      json(res, 400, { error: 'property_id required' });
+      return true;
+    }
+    const ledger = deps.getPropertyLedger(propertyId);
+    if (!ledger) {
+      notFound(res);
+      return true;
+    }
+    json(res, 200, ledger);
     return true;
   }
 

@@ -1,5 +1,7 @@
 # MVP Verification Report v1
 
+> **ARCHIVED (2026-05-30).** Point-in-time verification record for a single early commit (2026-01-13). Superseded by the continuous verification spine (`npm run verify`, see [`../VERIFICATION_SPINE_API.md`](../VERIFICATION_SPINE_API.md)) and the proof-run process in [`../PROOF_RUN_TEMPLATE.md`](../PROOF_RUN_TEMPLATE.md). Kept for history; not a current claim.
+
 **Project:** Akalynth Proof-Native MMO
 **Status:** Historical verification (MVP)
 **Date:** 2026-01-13

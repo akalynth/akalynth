@@ -1,0 +1,32 @@
+{
+  "inventoryOpening": {
+    "salt": "aabbccddeeff00112233445566778899",
+    "items": [
+      {
+        "item_id": "item-torch-001",
+        "item_type": "torch"
+      },
+      {
+        "item_id": "item-ration-001",
+        "item_type": "ration"
+      },
+      {
+        "item_id": "item-mark-001",
+        "item_type": "mark_token"
+      },
+      {
+        "item_id": "item-legendary-001",
+        "item_type": "unknown",
+        "meta": {
+          "legendary": true,
+          "legendary_tier": 2,
+          "heat": 7.5
+        }
+      },
+      {
+        "item_id": "item-torch-002",
+        "item_type": "torch"
+      }
+    ]
+  }
+}

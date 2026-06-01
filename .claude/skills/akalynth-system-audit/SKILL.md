@@ -40,11 +40,17 @@ sudo ss -ltnp | rg ":(80|443|3000)\b"
 sudo ufw status verbose
 curl -s "$AKALYNTH_AUDIT_BASE_URL/v1/health"
 curl -s "$AKALYNTH_AUDIT_BASE_URL/v1/transparency" | jq .
+curl --resolve api.akalynth.com:443:127.0.0.1 -sf https://api.akalynth.com/v1/health
+curl -i http://127.0.0.1:3000/v1/health
 timeout 5 wscat -c "$AKALYNTH_AUDIT_WS_URL"
 systemd-analyze security akalynth --no-pager
 ```
 
 Active default target is `https://api.akalynth.com`. Set `AKALYNTH_AUDIT_BASE_URL` or `AKALYNTH_AUDIT_WS_URL` to `https://beta-api.akalynth.com` for beta-path audits only.
+
+For prod, direct loopback app health may return `403 {"error":"tls_required"}`. Treat this as expected TLS/proxy enforcement when host-local Caddy/TLS health and public API health both return `200`. If the API hostname has an AAAA record, collect both IPv4 and IPv6 public health/transparency evidence.
+
+For beta/dev, separate service topology from API liveness. A beta host that passes `https://beta-api.akalynth.com/v1/health` but lacks `/opt/akalynth`, `/etc/akalynth`, `/var/lib/akalynth`, or `akalynth.service` is a topology drift finding, not proof of prod-layout readiness.
 
 ## Commands (Repo)
 

@@ -1,5 +1,6 @@
 package com.akalynth.client.action
 
+import com.akalynth.client.protocol.Direction
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.util.UUID
@@ -103,20 +104,6 @@ sealed class ActionIntent {
     }
 }
 
-/**
- * Movement direction enum.
- */
-@Serializable
-enum class Direction {
-    @SerialName("north") NORTH,
-    @SerialName("south") SOUTH,
-    @SerialName("east") EAST,
-    @SerialName("west") WEST,
-    @SerialName("northeast") NORTHEAST,
-    @SerialName("northwest") NORTHWEST,
-    @SerialName("southeast") SOUTHEAST,
-    @SerialName("southwest") SOUTHWEST
-}
 
 /**
  * Chat channel enum.

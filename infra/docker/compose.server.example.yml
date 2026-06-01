@@ -13,7 +13,11 @@ services:
       - NODE_ENV=production
       - AKALYNTH_ENV=production
       - PORT=3000
-      - HOST=0.0.0.0
+      # Bind loopback inside the container to match the 127.0.0.1 port map below.
+      # HOST=0.0.0.0 would bind all container interfaces, but the loopback port
+      # map ("127.0.0.1:3000:3000") still keeps it host-local — so the wider bind
+      # buys nothing here and HOST=127.0.0.1 makes the loopback intent explicit.
+      - HOST=127.0.0.1
       - REQUIRE_TLS=1
       - TRUST_PROXY=1
       - TRUST_PROXY_LOOPBACK_ONLY=1

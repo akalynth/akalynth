@@ -14,6 +14,7 @@ import type {
   PlayerAntiCheatEnforcementRow,
   ChronicleEventRow,
   ModerationReportRow,
+  PropertyRow,
 } from './types.js';
 
 // ============================================================================
@@ -239,6 +240,44 @@ export function getActiveObjectCount(db: Database.Database): number {
   `);
   const row = stmt.get() as { count: number };
   return row.count;
+}
+
+// ============================================================================
+// Property Queries (Property Ownership v0)
+// ============================================================================
+
+export function getProperties(db: Database.Database, zone?: string): PropertyRow[] {
+  if (zone) {
+    return db
+      .prepare(`SELECT * FROM properties WHERE zone = ? ORDER BY property_id`)
+      .all(zone) as PropertyRow[];
+  }
+  return db.prepare(`SELECT * FROM properties ORDER BY property_id`).all() as PropertyRow[];
+}
+
+export function getProperty(db: Database.Database, propertyId: string): PropertyRow | null {
+  return (
+    (db.prepare(`SELECT * FROM properties WHERE property_id = ?`).get(propertyId) as PropertyRow) ??
+    null
+  );
+}
+
+export function getPropertyByPlot(
+  db: Database.Database,
+  zone: string,
+  plotId: string
+): PropertyRow | null {
+  return (
+    (db
+      .prepare(`SELECT * FROM properties WHERE zone = ? AND plot_id = ?`)
+      .get(zone, plotId) as PropertyRow) ?? null
+  );
+}
+
+export function getPropertiesForOwner(db: Database.Database, playerId: string): PropertyRow[] {
+  return db
+    .prepare(`SELECT * FROM properties WHERE owner_player_id = ? ORDER BY property_id`)
+    .all(playerId) as PropertyRow[];
 }
 
 // ============================================================================

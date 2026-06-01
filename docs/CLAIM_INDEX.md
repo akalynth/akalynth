@@ -48,7 +48,7 @@ Grouped by role. `L` = line count at last review. Entries marked **(non-binding)
 | [VERIFICATION_SPINE_API.md](./VERIFICATION_SPINE_API.md) | 926 | Verification Spine API v1. |
 | [PROOF_BUNDLES.md](./PROOF_BUNDLES.md) | 282 | What a proof bundle is and how to assemble one. |
 | [PROOF_RUN_TEMPLATE.md](./PROOF_RUN_TEMPLATE.md) | 92 | Template for recording a reproducible proof run. |
-| [MVP_VERIFICATION_REPORT_v1.md](./MVP_VERIFICATION_REPORT_v1.md) | 217 | Recorded MVP verification report. |
+| [archive/MVP_VERIFICATION_REPORT_v1.md](./archive/MVP_VERIFICATION_REPORT_v1.md) | 217 | **Archived** — point-in-time MVP verification record (superseded by the verification spine). |
 | [LOAD_TEST_HARNESS.md](./LOAD_TEST_HARNESS.md) | 586 | Load-test harness spec (local/staging only). |
 
 ### Identity & anti-cheat
@@ -61,7 +61,6 @@ Grouped by role. `L` = line count at last review. Entries marked **(non-binding)
 | Doc | L | Role |
 | --- | --- | --- |
 | [MONETIZATION_CONSTITUTION.md](./MONETIZATION_CONSTITUTION.md) | 170 | Constitutional rules for monetization. |
-| [MONETIZATION_CONSTITUTION_REVIEW.md](./MONETIZATION_CONSTITUTION_REVIEW.md) | 185 | Player-trust review notes. |
 | [MONETIZATION_BLUEPRINT.md](./MONETIZATION_BLUEPRINT.md) | 182 | What money may/may not buy **(non-binding)**. |
 | [MONETIZATION_JUSTIFICATIONS.md](./MONETIZATION_JUSTIFICATIONS.md) | 23 | "Not power" justification registry. |
 | [MONETIZATION_RECEIPTS.md](./MONETIZATION_RECEIPTS.md) | 144 | Monetization receipt schema (draft). |
@@ -89,7 +88,7 @@ Grouped by role. `L` = line count at last review. Entries marked **(non-binding)
 | [SHOWCASE_RUNBOOK.md](./SHOWCASE_RUNBOOK.md) | 142 | Local pre-alpha proof showcase runbook. |
 | [NEW_BOX_PROVISIONING.md](./NEW_BOX_PROVISIONING.md) | 237 | New-box provisioning runbook. |
 | [APK_DISTRIBUTION_CHECKLIST.md](./APK_DISTRIBUTION_CHECKLIST.md) | 220 | Android APK distribution checklist. |
-| [MMO_SITE_AND_LOOT_RUNBOOK.md](./MMO_SITE_AND_LOOT_RUNBOOK.md) | 126 | Marketing-site serve/deploy + mob-loot id-fix runbook. |
+| [archive/MMO_SITE_AND_LOOT_RUNBOOK.md](./archive/MMO_SITE_AND_LOOT_RUNBOOK.md) | 126 | **Archived** — completed-work log (mmo-site PR #75, mob-loot fix PR #81). |
 | [DRIVER_BRIEF.md](./DRIVER_BRIEF.md) | 69 | Technical driver brief. |
 | [DRIVER_30_DAY_PLAN.md](./DRIVER_30_DAY_PLAN.md) | 97 | 30-day driver plan. |
 | [README.md](./README.md) | 192 | Docs index / single source of truth pointer. |
@@ -110,7 +109,7 @@ Grouped by role. `L` = line count at last review. Entries marked **(non-binding)
 | Doc | L | Role |
 | --- | --- | --- |
 | [AUDITS/SYSTEM_AUDIT_CODEX_POST_REPAIR.md](./AUDITS/SYSTEM_AUDIT_CODEX_POST_REPAIR.md) | 291 | Post-repair system audit (Codex). |
-| [AUDITS/SYSTEM_AUDIT_POST_REPAIR_v1.md](./AUDITS/SYSTEM_AUDIT_POST_REPAIR_v1.md) | 36 | Post-repair system audit v1. |
+| [AUDITS/ARCHIVED/SYSTEM_AUDIT_POST_REPAIR_v1.md](./AUDITS/ARCHIVED/SYSTEM_AUDIT_POST_REPAIR_v1.md) | 36 | **Archived** — point-in-time audit result (superseded by the Codex audit procedure). |
 | [`/AUDIT_REPORT.md`](../AUDIT_REPORT.md) | 132 | Repo audit: v0 client spine + protocol parity. |
 | [`/CODEX_SIGNAL_REPORT.md`](../CODEX_SIGNAL_REPORT.md) | 403 | "Where are we?" signal report. |
 
@@ -149,6 +148,7 @@ Backed by a verifier/CI job for a specific commit (`CURRENT_STAGE.md` §Mechanic
 | Receipt/chronicle hygiene; lifecycle (fixture receipts) | `apps/server` `verify:receipt-hygiene`, `verify:lifecycle` |
 | Monetization rules (fixture receipts) | `apps/server` `npm run verify:monetization` |
 | Mob-loot item ids are receipt-derived (deterministic/replay-safe) | `apps/server` `npm run verify:mob-loot` *(added this session)* |
+| Property ownership v0: single owner (P-H1), gold conserved/no-mint (P-H2), receipt-derived state (P-H3), guard rails incl. ungated buy (P-H4), replay determinism (P-H5), projection==DB (P-H6) | `apps/server` `npm run verify:property`; `apps/server/src/world/property.ts`; `docs/PERSISTENCE_MATRIX.md` |
 | Public transparency surfaces exist (`/v1/receipts/public`, `/v1/transparency`) | `apps/server/src/api/http.ts`; `V1_SCOPE.md` |
 
 > **Nuance:** Treasury, work-contracts, NPC recognition, etc. have **unit verifiers** (mechanically checked, above) yet are listed under *Implemented But Not Release-Claimed* below as **gameplay features**. Both are true: the verifier passes; the feature is not release-claimed.

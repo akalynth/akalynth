@@ -16,13 +16,16 @@ Define what v1 covers and what it explicitly does not. This prevents scope drift
   - `verify:monetization` (fixture receipts)
   - `verify:work-contracts` (unit)
   - `verify:treasury` (unit)
-- Public transparency surfaces exist: `/v1/receipts/public` (and `/v1/transparency`, `/v1/receipts`), served by `apps/server/src/api/http.ts`; docs describe what they are today
+  - `verify:property` (unit) — house ownership/transfers, gold conservation, replay + DB determinism
+- Property ownership v0 (server + proof): house registry seeded from map plots, primary sale (gold sink) + listing + resale (player→player, conserved), durable in SQLite (schema v13), receipt-sourced. **In-game gold only — no real money** (the monetization constitution governs value entry; gameplay gold purchases are not monetization). Buyable by any player (no capability gate on standard plots).
+- Public transparency surfaces exist: `/v1/receipts/public` (and `/v1/transparency`, `/v1/receipts`), served by `apps/server/src/api/http.ts`; docs describe what they are today. Property market/ledger are exposed (anonymized) at `/v1/property/market` and `/v1/property/ledger`.
 
 ## Out of Scope (v1)
 
 - Moderation system (Phase 7), appeals, bans, enforcement tooling
 - Witness UI (Phase 6) beyond docs/spec
 - Mail MMO system (doc only)
+- Property ownership beyond v0: taxation/upkeep, house customization, furniture, premium plot tiers (`house:estate`/`house:guild` capability gates), and the client/site/Android property views (deferred to PR B/C)
 - Any “constitutional freeze” guarantees not enforced by CI/verifiers
 - Cryptographic envelope verification for receipts (`verify:receipt-chain`) until PR2 lands
 

@@ -51,6 +51,7 @@ Implemented-but-not-release-claimed systems include:
 - Android observe/play client
 - Load-test harness
 - Public/private receipt and rumor surfaces
+- Property ownership v0 (house buy / list / resale) — receipt-sourced, durable (SQLite schema v13), covered by `apps/server` `npm run verify:property`. Server + proof only; debug-client/site/Android views and a production proof run are not yet claimed.
 
 ## Debug-Only Or Environment-Gated
 

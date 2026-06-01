@@ -1,6 +1,7 @@
 package com.akalynth.client.coordinator
 
 import com.akalynth.client.action.ActionIntent
+import com.akalynth.client.protocol.Direction
 import com.akalynth.client.ui.state.ChronicleEventKind
 import com.akalynth.client.ui.state.EventSource
 import com.akalynth.client.ui.state.EventStatus
@@ -112,7 +113,7 @@ class ChronicleCoordinatorTest {
     @Test
     fun `W2 - dispatch Move does not create chronicle event`() = runTest {
         val intent = ActionIntent.Move(
-            direction = com.akalynth.client.action.Direction.NORTH
+            direction = Direction.NORTH
         )
         coordinator.dispatch(intent)
 

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTileSprites } from '../hooks/useTileSprites';
 import type { MapData, PlayerPublic } from '@shared/types';
 import { TileCode } from '@shared/types';
 import type { FloatingText } from '../types';
@@ -22,6 +23,8 @@ interface MapCanvasProps {
   fx: FloatingText[];
   onSelectTarget: (playerId: string | null) => void;
   groundItems?: Map<string, GroundItem>;
+  // Property Ownership v0: keyed by plot_id (e.g. "H1") → ownership label info.
+  propertyByPlot?: Map<string, { status: string; owner_name: string | null; listed_price_gold: number | null }>;
 }
 
 const TILE_SIZE = 12;
@@ -93,8 +96,9 @@ function loreAt(map: MapData, hitBoxes: LoreHitBox[], tx: number, ty: number): L
   return TILE_LORE[map.tiles[ty * map.width + tx] as TileCode] ?? null;
 }
 
-export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget, groundItems }: MapCanvasProps) {
+export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget, groundItems, propertyByPlot }: MapCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const { images: tileSprites, ready: spritesReady } = useTileSprites();
   const [tooltip, setTooltip] = useState<{ lore: LoreEntry; x: number; y: number } | null>(null);
   const othersById = useMemo(() => {
     const m = new Map<string, PlayerPublic>();
@@ -119,6 +123,8 @@ export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget
     canvas.height = map.height * TILE_SIZE;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+    // Pixel-art tiles: keep hard edges when scaling 32px sprites to TILE_SIZE.
+    ctx.imageSmoothingEnabled = false;
 
     ctx.fillStyle = '#0d1117';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -127,8 +133,14 @@ export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget
       for (let x = 0; x < map.width; x++) {
         const idx = y * map.width + x;
         const code = map.tiles[idx];
-        ctx.fillStyle = TILE_COLOR[code] || '#121820';
-        ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        const sprite = tileSprites.get(code);
+        if (sprite) {
+          ctx.drawImage(sprite, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        } else {
+          // No committed art for this code (e.g. tutorial/gate tiles): flat color.
+          ctx.fillStyle = TILE_COLOR[code] || '#121820';
+          ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        }
         const glyph = TILE_GLYPH[code];
         if (glyph) {
           ctx.fillStyle = '#f7e9a7';
@@ -169,6 +181,37 @@ export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget
       SPAWN_MARKER.glyph,
       SPAWN_MARKER.color,
     );
+
+    // Property Ownership v0: neighborhood ownership labels above house plots.
+    // Drives screenshot 3 (Neighborhood view).
+    const housePlots = map.landmarks.house_plots;
+    if (propertyByPlot && Array.isArray(housePlots)) {
+      ctx.textAlign = 'center';
+      for (const plot of housePlots) {
+        const info = propertyByPlot.get(plot.id);
+        if (!info) continue;
+        const cx = (plot.x + plot.width / 2) * TILE_SIZE;
+        const topY = plot.y * TILE_SIZE - 3;
+        let label: string;
+        let color: string;
+        if (info.status === 'listed') {
+          label = info.listed_price_gold != null ? `For Sale ${info.listed_price_gold}g` : 'For Sale';
+          color = '#fbbf24';
+        } else if (info.status === 'owned') {
+          label = `Owned by ${info.owner_name ?? '???'}`;
+          color = '#7ee787';
+        } else {
+          label = 'Available';
+          color = '#8b949e';
+        }
+        ctx.font = 'bold 8px "Space Grotesk", sans-serif';
+        ctx.fillStyle = '#081018';
+        ctx.fillText(label, cx + 0.5, topY + 0.5);
+        ctx.fillStyle = color;
+        ctx.fillText(label, cx, topY);
+      }
+      ctx.textAlign = 'left';
+    }
 
     if (groundItems) {
       for (const item of groundItems.values()) {
@@ -220,7 +263,7 @@ export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget
       ctx.fillText(f.text, f.x * TILE_SIZE + 2, f.y * TILE_SIZE - lift);
       ctx.restore();
     }
-  }, [map, me, others, nowMs, targetId, fx, othersById, groundItems]);
+  }, [map, me, others, nowMs, targetId, fx, othersById, groundItems, propertyByPlot, tileSprites, spritesReady]);
 
   return (
     <>

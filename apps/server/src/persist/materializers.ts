@@ -72,6 +72,12 @@ const HANDLERS: Record<string, Handler> = {
   [RECEIPT_ACTIONS.AUTH_TOKEN_ISSUE]: handleAuthTokenIssue,
   // Dialogue Contract v1
   [RECEIPT_ACTIONS.NPC_TALKED]: handleNpcTalked,
+  // Property Ownership v0
+  [RECEIPT_ACTIONS.PROPERTY_CREATED]: handlePropertyCreated,
+  [RECEIPT_ACTIONS.PROPERTY_LISTED]: handlePropertyListed,
+  [RECEIPT_ACTIONS.PROPERTY_UNLISTED]: handlePropertyUnlisted,
+  [RECEIPT_ACTIONS.PROPERTY_PURCHASED]: handlePropertyPurchased,
+  [RECEIPT_ACTIONS.PROPERTY_TRANSFERRED]: handlePropertyTransferred,
 };
 
 // ============================================================================
@@ -306,6 +312,153 @@ function handleWorldObjectRemoved(
 }
 
 // ============================================================================
+// Property Handlers (Property Ownership v0)
+// ============================================================================
+
+interface PropertyOwnerHistoryRow {
+  from: string | null;
+  to: string;
+  price: number;
+  action: 'purchased' | 'transferred';
+  timestamp: string;
+}
+
+function readPropertyOwnerHistory(
+  db: Database.Database,
+  propertyId: string
+): PropertyOwnerHistoryRow[] {
+  const existing = db
+    .prepare('SELECT owner_history FROM properties WHERE property_id = ?')
+    .get(propertyId) as { owner_history: string } | undefined;
+  if (!existing?.owner_history) return [];
+  try {
+    return JSON.parse(existing.owner_history) as PropertyOwnerHistoryRow[];
+  } catch {
+    return [];
+  }
+}
+
+function handlePropertyCreated(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const inputs = receipt.inputs ?? {};
+  const propertyId = inputs.property_id as string | undefined;
+  const zone = inputs.zone as string | undefined;
+  const plotId = inputs.plot_id as string | undefined;
+  if (!propertyId || !zone || !plotId) return;
+
+  // Idempotent: genesis_receipt UNIQUE + INSERT OR IGNORE means re-materialize is a no-op.
+  const stmt = db.prepare(`
+    INSERT OR IGNORE INTO properties (
+      property_id, zone, plot_id, x, y, width, height, district,
+      owner_player_id, status, listed_price_gold, primary_price_gold,
+      purchased_at, sale_count, owner_history, genesis_receipt, last_receipt, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, 'unowned', NULL, ?, NULL, 0, '[]', ?, ?, ?)
+  `);
+  stmt.run(
+    propertyId,
+    zone,
+    plotId,
+    Number(inputs.x ?? 0),
+    Number(inputs.y ?? 0),
+    Number(inputs.width ?? 0),
+    Number(inputs.height ?? 0),
+    (inputs.district as string | null) ?? null,
+    Number(inputs.primary_price_gold ?? 0),
+    receiptHash,
+    receiptHash,
+    receipt.timestamp
+  );
+}
+
+function handlePropertyListed(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const inputs = receipt.inputs ?? {};
+  const propertyId = inputs.property_id as string | undefined;
+  const price = inputs.price as number | undefined;
+  if (!propertyId || typeof price !== 'number') return;
+
+  // Owner predicate: only the current owner can list (self-correcting on replay).
+  db.prepare(`
+    UPDATE properties
+    SET status = 'listed', listed_price_gold = ?, last_receipt = ?
+    WHERE property_id = ? AND owner_player_id = ?
+  `).run(price, receiptHash, propertyId, receipt.actor_id);
+}
+
+function handlePropertyUnlisted(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const inputs = receipt.inputs ?? {};
+  const propertyId = inputs.property_id as string | undefined;
+  if (!propertyId) return;
+
+  db.prepare(`
+    UPDATE properties
+    SET status = 'owned', listed_price_gold = NULL, last_receipt = ?
+    WHERE property_id = ? AND owner_player_id = ?
+  `).run(receiptHash, propertyId, receipt.actor_id);
+}
+
+function handlePropertyPurchased(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  // Primary sale: treasury (unowned) → buyer (actor_id).
+  const inputs = receipt.inputs ?? {};
+  const propertyId = inputs.property_id as string | undefined;
+  const buyer = receipt.actor_id;
+  if (!propertyId || !buyer) return;
+
+  const price = typeof inputs.price === 'number' ? (inputs.price as number) : 0;
+  const history = readPropertyOwnerHistory(db, propertyId);
+  history.push({ from: null, to: buyer, price, action: 'purchased', timestamp: receipt.timestamp });
+
+  // owner IS NULL predicate prevents sale_count double-increment on re-materialize
+  // and blocks any second primary sale.
+  db.prepare(`
+    UPDATE properties
+    SET owner_player_id = ?, status = 'owned', listed_price_gold = NULL,
+        purchased_at = ?, sale_count = sale_count + 1, owner_history = ?, last_receipt = ?
+    WHERE property_id = ? AND owner_player_id IS NULL
+  `).run(buyer, receipt.timestamp, JSON.stringify(history), receiptHash, propertyId);
+}
+
+function handlePropertyTransferred(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  // Resale: seller → buyer (actor_id = buyer).
+  const inputs = receipt.inputs ?? {};
+  const propertyId = inputs.property_id as string | undefined;
+  const sellerId = inputs.seller_id as string | undefined;
+  const buyer = receipt.actor_id;
+  if (!propertyId || !sellerId || !buyer) return;
+
+  const price = typeof inputs.price === 'number' ? (inputs.price as number) : 0;
+  const history = readPropertyOwnerHistory(db, propertyId);
+  history.push({ from: sellerId, to: buyer, price, action: 'transferred', timestamp: receipt.timestamp });
+
+  // seller predicate: resale only fires when the named seller still owns it
+  // (blocks double-sell and double-increment on replay).
+  db.prepare(`
+    UPDATE properties
+    SET owner_player_id = ?, status = 'owned', listed_price_gold = NULL,
+        purchased_at = ?, sale_count = sale_count + 1, owner_history = ?, last_receipt = ?
+    WHERE property_id = ? AND owner_player_id = ?
+  `).run(buyer, receipt.timestamp, JSON.stringify(history), receiptHash, propertyId, sellerId);
+}
+
+// ============================================================================
 // Item Handlers (Phase 2)
 // ============================================================================
 
@@ -365,11 +518,16 @@ function handleItemAddedToInventory(
   `).run(receipt.actor_id, `Guest_${receipt.actor_id.slice(-4)}`, receipt.timestamp, receiptHash);
 
   // Safety net: ensure item exists (handles receipt reordering edge cases)
-  // This creates a stub row if item_minted receipt hasn't been processed yet
+  // This creates a stub row if item_minted receipt hasn't been processed yet.
+  // Since #82, mob loot is item_minted at spawn so its row already exists;
+  // item_type on the pickup receipt is kept for backward-compat with old
+  // mob_loot_spawned receipts (which have no materializer). Falls back to
+  // 'unknown' for older receipts so INSERT OR IGNORE is a no-op for minted items.
+  const stubItemType = (inputs.item_type as string) ?? 'unknown';
   db.prepare(`
     INSERT OR IGNORE INTO items (item_id, item_type, created_at, genesis_receipt, meta_json)
     VALUES (?, ?, ?, ?, ?)
-  `).run(itemId, 'unknown', receipt.timestamp, receiptHash, '{}');
+  `).run(itemId, stubItemType, receipt.timestamp, receiptHash, '{}');
 
   // Upsert into inventory
   db.prepare(`
@@ -1096,6 +1254,18 @@ export function materializeChronicle(
       const delta = (inputs.delta as number) ?? (inputs.penalty as number) ?? 0;
       // entity_id: null (no distinct entity)
       insertChronicleEvent(db, playerId, 'reputation_change', timestamp, originalAction, receiptHash, null, null, null, null, { event_type: eventType, delta });
+      break;
+    }
+
+    // Property acquired (buyer perspective) — primary purchase or resale
+    case RECEIPT_ACTIONS.PROPERTY_PURCHASED:
+    case RECEIPT_ACTIONS.PROPERTY_TRANSFERRED: {
+      const propertyId = inputs.property_id as string | undefined;
+      if (!propertyId || !playerId) break;
+      const price = typeof inputs.price === 'number' ? (inputs.price as number) : 0;
+      const fromSeller = (inputs.seller_id as string) ?? null;
+      // entity_id: property_id (dedup)
+      insertChronicleEvent(db, playerId, 'property_acquired', timestamp, originalAction, receiptHash, null, null, null, propertyId, { property_id: propertyId, price, from: fromSeller });
       break;
     }
 

@@ -6,6 +6,7 @@ import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.unit.dp
 import com.akalynth.client.ui.components.hotbar.HOTBAR_SLOT_COUNT
 import com.akalynth.client.ui.components.hotbar.HOTBAR_SLOT_GAP
 import com.akalynth.client.ui.components.hotbar.HOTBAR_SLOT_SIZE

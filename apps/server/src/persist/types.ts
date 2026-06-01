@@ -155,7 +155,8 @@ export type ChronicleEventKind =
   | 'reputation_change'
   | 'legendary_obtained'
   | 'legendary_lost'
-  | 'origin_sealed';
+  | 'origin_sealed'
+  | 'property_acquired';
 
 // Phase 4.4 E2: Evidence reference for forensic linkage
 // Format: JSON { chronicle_event_id: number, receipt_hash: string }
@@ -178,6 +179,29 @@ export interface ChronicleEventRow {
   source_action: string; // original receipt action (for audit traceability)
   receipt_hash: string;
   evidence_ref: string | null; // Phase 4.4 E2: JSON EvidenceRef or null
+}
+
+// Property Ownership v0: durable house registry projection.
+// owner_player_id NULL = treasury/unowned. owner_history is a JSON string.
+export interface PropertyRow {
+  property_id: string; // `${zone}:${plot_id}`
+  zone: string;
+  plot_id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  district: string | null;
+  owner_player_id: string | null;
+  status: string; // PropertyStatus
+  listed_price_gold: number | null;
+  primary_price_gold: number;
+  purchased_at: string | null;
+  sale_count: number;
+  owner_history: string; // JSON array of {from,to,price,action,timestamp}
+  genesis_receipt: string;
+  last_receipt: string;
+  created_at: string; // ISO8601
 }
 
 // Dialogue Contract v1: append-only NPC talk event (durable variation nonce source)
@@ -264,6 +288,13 @@ export const RECEIPT_ACTIONS = {
 
   // Dialogue Contract v1: durable NPC talk counter (seeds dialogue variation)
   NPC_TALKED: 'npc_talked',
+
+  // Property Ownership v0: house registry
+  PROPERTY_CREATED: 'property_created',
+  PROPERTY_LISTED: 'property_listed',
+  PROPERTY_UNLISTED: 'property_unlisted',
+  PROPERTY_PURCHASED: 'property_purchased',
+  PROPERTY_TRANSFERRED: 'property_transferred',
 } as const;
 
 // Alias mapping for existing receipt actions
@@ -369,6 +400,12 @@ export interface PersistenceLayer {
 
   // Read queries - Protected Slots (Phase 3.2)
   getProtectedSlots(): Array<{ owner_player_id: string; item_id: string; updated_at: string }>;
+
+  // Read queries - Property Ownership v0
+  getProperties(zone?: string): PropertyRow[];
+  getProperty(property_id: string): PropertyRow | null;
+  getPropertyByPlot(zone: string, plot_id: string): PropertyRow | null;
+  getPropertiesForOwner(player_id: string): PropertyRow[];
 
   // Read queries - Chronicle (Phase 4)
   getChronicleForPlayer(player_id: string, limit?: number, before?: string): ChronicleEventRow[];

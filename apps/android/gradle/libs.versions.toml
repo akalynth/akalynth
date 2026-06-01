@@ -58,6 +58,7 @@ constraintlayout-compose = { group = "androidx.constraintlayout", name = "constr
 junit = { group = "junit", name = "junit", version = "4.13.2" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version = "1.2.1" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

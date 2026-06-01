@@ -14,6 +14,7 @@ import { applyReceiptToIdentity, clearIdentityProjection } from '../world/identi
 import { applyReceiptToTreasury, clearTreasuryProjection } from '../world/treasury.js';
 import { applyReceiptToWorkContracts, clearWorkContractsProjection } from '../world/work_contracts.js';
 import { applyReceiptToPresence, clearPresenceProjection } from '../world/presence.js';
+import { applyReceiptToProperty, clearPropertyProjection } from '../world/property.js';
 
 // ============================================================================
 // Replay Configuration
@@ -113,6 +114,7 @@ export function replayReceipts(config: ReplayConfig): ReplayResult {
   clearTreasuryProjection();
   clearWorkContractsProjection();
   clearPresenceProjection();
+  clearPropertyProjection();
 
   // Open file from BEGINNING (identity needs all receipts, DB only needs new ones)
   const fd = fs.openSync(receiptsPath, 'r');
@@ -194,6 +196,7 @@ export function replayReceipts(config: ReplayConfig): ReplayResult {
         applyReceiptToTreasury(receipt);
         applyReceiptToWorkContracts(receipt);
         applyReceiptToPresence(receipt);
+        applyReceiptToProperty(receipt);
 
         // Only materialize to DB if this is a new receipt (after startOffset)
         if (offsetBeforeLine >= startOffset) {
