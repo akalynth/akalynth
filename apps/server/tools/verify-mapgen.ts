@@ -6,6 +6,8 @@
 //   M-G3 seed sensitivity  changing only the seed changes the map (seed is wired)
 //   M-G4 manifest binding  manifest.map_hash == recomputed hash of the map
 //   M-G5 landmark seeding  output carries a house_plot so property seeding binds
+//   M-G6 svg determinism   same params -> byte-identical SVG; seed changes it
+//   M-G7 svg binding       manifest.svg_hash == hashSvg(renderMapSvg(map))
 //
 // Run from apps/server/: `npm run verify:mapgen`
 // This exercises the PURE generator only — no filesystem, no server runtime.
@@ -13,6 +15,8 @@
 import {
   generateMap,
   hashMap,
+  renderMapSvg,
+  hashSvg,
   type MapGenParams,
 } from '../../../tools/map-compiler/generate.js';
 import { validateMapData } from '../../../packages/shared/map-validation.js';
@@ -77,6 +81,24 @@ test('M-G5 landmark seeding: output exposes a house_plot', () => {
     p.x > 0 && p.y > 0 && p.x < map.width - 1 && p.y < map.height - 1,
     'house_plot must sit inside the map border',
   );
+});
+
+test('M-G6 svg determinism: same params -> identical SVG; seed changes it', () => {
+  const a = generateMap(BASE);
+  const b = generateMap({ ...BASE });
+  assert(a.svg === b.svg, 'SVG differs for identical params');
+  assert(a.manifest.svg_hash === b.manifest.svg_hash, 'svg_hash differs for identical params');
+  const c = generateMap({ ...BASE, seed: 'verify-mapgen-0002' });
+  assert(a.svg !== c.svg, 'SVG ignored the seed (identical render for different map)');
+  assert(a.manifest.svg_hash !== c.manifest.svg_hash, 'svg_hash ignored the seed');
+});
+
+test('M-G7 svg binding: svg_hash binds the rendered map; SVG re-render is pure', () => {
+  const { map, svg, manifest } = generateMap(BASE);
+  assert(svg === renderMapSvg(map), 'result.svg differs from a fresh render of the same map');
+  assert(manifest.svg_hash === hashSvg(svg), 'manifest.svg_hash does not bind result.svg');
+  assert(manifest.svg_hash === hashSvg(renderMapSvg(map)), 'svg_hash does not bind renderMapSvg(map)');
+  assert(svg.startsWith('<svg') && svg.trimEnd().endsWith('</svg>'), 'render is not a well-formed SVG document');
 });
 
 console.log('\n✓ All mapgen tests passed');

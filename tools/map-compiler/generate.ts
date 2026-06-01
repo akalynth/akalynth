@@ -58,16 +58,78 @@ export interface MapGenManifest {
   /** sha256 over canonical JSON of the produced map. Replay re-derives the map
    *  from `params` and asserts this hash matches. */
   map_hash: string;
+  /** sha256 over the deterministic SVG render of the map. The SVG is a
+   *  byte-stable visual of the same MapData (same params -> same SVG), so it is
+   *  part of the audit trail alongside `map_hash`. Not a PNG: raster bytes vary
+   *  by renderer; SVG text does not. */
+  svg_hash: string;
 }
 
 export interface MapGenResult {
   map: MapData;
   manifest: MapGenManifest;
+  /** Deterministic SVG render of `map` (see renderMapSvg). */
+  svg: string;
 }
 
 /** Canonical hash of a produced map (stable key order). */
 export function hashMap(map: MapData): string {
   return `sha256:${createHash('sha256').update(stableJson(map)).digest('hex')}`;
+}
+
+/** sha256 of the deterministic SVG render (byte-stable). */
+export function hashSvg(svg: string): string {
+  return `sha256:${createHash('sha256').update(svg).digest('hex')}`;
+}
+
+// Fixed render scale + palette. Same MapData -> byte-identical SVG. Integers
+// only (no locale-sensitive floats); fixed iteration order. NOT a PNG — SVG text
+// is reproducible across machines/renderers, so it can be hashed and committed.
+const TILE_PX = 12;
+const TILE_FILL: Record<number, string> = {
+  [TileCode.Grass]: '#4a7c3a',
+  [TileCode.Stone]: '#9a9488',
+  [TileCode.Wall]: '#3a2c1a',
+  [TileCode.Water]: '#3a6ea5',
+  [TileCode.Door]: '#b5862f',
+  [TileCode.TutorialMove]: '#6fae5a',
+  [TileCode.TutorialChat]: '#6f9fd8',
+  [TileCode.TutorialTem]: '#d9a23a',
+  [TileCode.GateToAzura]: '#b060c0',
+};
+const TILE_FILL_UNKNOWN = '#ff00ff'; // magenta = an unmapped tile code (visible)
+
+/**
+ * Deterministic SVG render of a MapData: one colored rect per tile (y,x order),
+ * house-plot outlines, then a spawn marker. Pure — no I/O, no clock, no RNG.
+ * Same map -> byte-identical string. TILE_PX is even so all coordinates stay
+ * integral.
+ */
+export function renderMapSvg(map: MapData): string {
+  const ts = TILE_PX;
+  const w = map.width * ts;
+  const h = map.height * ts;
+  const parts: string[] = [];
+  parts.push(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges">`
+  );
+  for (let y = 0; y < map.height; y++) {
+    for (let x = 0; x < map.width; x++) {
+      const code = map.tiles[y * map.width + x];
+      const fill = TILE_FILL[code] ?? TILE_FILL_UNKNOWN;
+      parts.push(`<rect x="${x * ts}" y="${y * ts}" width="${ts}" height="${ts}" fill="${fill}"/>`);
+    }
+  }
+  for (const p of map.landmarks.house_plots ?? []) {
+    parts.push(
+      `<rect x="${p.x * ts}" y="${p.y * ts}" width="${p.width * ts}" height="${p.height * ts}" fill="none" stroke="#f0d07f" stroke-width="2"/>`
+    );
+  }
+  parts.push(
+    `<circle cx="${map.spawn.x * ts + ts / 2}" cy="${map.spawn.y * ts + ts / 2}" r="${ts / 3}" fill="#e23b3b"/>`
+  );
+  parts.push('</svg>');
+  return parts.join('\n') + '\n';
 }
 
 /**
@@ -151,15 +213,20 @@ export function generateMap(params: MapGenParams): MapGenResult {
   // Hard gate: a generated map must satisfy the same validator as authored maps.
   assertValidMapData(map);
 
+  // Deterministic visual of the same MapData. Hashed into the manifest so the
+  // render is part of the reproducible audit trail (re-render -> same bytes).
+  const svg = renderMapSvg(map);
+
   const manifest: MapGenManifest = {
     algorithm: MAPGEN_ALGORITHM,
     event_domain: MAPGEN_EVENT_DOMAIN,
     params,
     derived_seed: derivedSeed,
     map_hash: hashMap(map),
+    svg_hash: hashSvg(svg),
   };
 
-  return { map, manifest };
+  return { map, manifest, svg };
 }
 
 // ---------------------------------------------------------------------------
@@ -188,18 +255,22 @@ function parseArgs(argv: string[]): MapGenParams {
 
 function main() {
   const params = parseArgs(process.argv.slice(2));
-  const { map, manifest } = generateMap(params);
+  const { map, manifest, svg } = generateMap(params);
 
   const outDir = path.resolve(process.cwd(), 'data/world/maps-built');
   fs.mkdirSync(outDir, { recursive: true });
   const mapPath = path.join(outDir, `${params.name}.json`);
   const manifestPath = path.join(outDir, `${params.name}.mapgen.json`);
+  const svgPath = path.join(outDir, `${params.name}.svg`);
   fs.writeFileSync(mapPath, JSON.stringify(map, null, 2) + '\n');
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
+  fs.writeFileSync(svgPath, svg);
 
   console.log(`[mapgen] wrote ${mapPath}`);
   console.log(`[mapgen] wrote ${manifestPath}`);
+  console.log(`[mapgen] wrote ${svgPath}`);
   console.log(`[mapgen] map_hash=${manifest.map_hash}`);
+  console.log(`[mapgen] svg_hash=${manifest.svg_hash}`);
 }
 
 // Run only when invoked directly (not when imported by verify:mapgen).
