@@ -284,8 +284,9 @@ Requests the ownership ledger (owner history + sale count) for a `property_id`.
 > (`packages/shared/protocol.ts`) and are intentionally **not** part of the active
 > `ClientMessage`/`ServerMessage` unions. **No server handler accepts or emits
 > them, no reducer/escrow/settlement/persistence exists, and no auction is
-> executable.** Related type-only additions: `PropertyStatus` value `'auctioning'`,
-> `HousePlot.allocation_mode` (`'fixed' | 'auction'`, absent ⇒ `fixed`), and the
+> executable.** Related type-only additions: a reserved `ReservedPropertyStatus`
+> (`PropertyStatus | 'auctioning'`) kept separate from `PropertyStatus` until the
+> later reducer step, `HousePlot.allocation_mode` (`'fixed' | 'auction'`, absent ⇒ `fixed`), and the
 > reserved `property_auction_opened` / `property_bid` / `property_bid_refunded` /
 > `property_auction_settled` / `property_auction_cancelled` receipt-action names.
 > Auctions will become available only after the server-side reducer, wallet
