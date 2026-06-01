@@ -405,14 +405,22 @@ export const MAX_GOLD_AMOUNT = 1_000_000;
 export type WalletCreditReason =
   | 'work_contract'              // Faucet: earned through labor (future)
   | 'debug_grant'                // Debug-only: admin grant
-  | `property_sale:${string}`;   // Resale: seller credited (property_sale:<property_id>)
+  | `property_sale:${string}`    // Resale: seller credited (property_sale:<property_id>)
+  // RESERVED (Property Auction Lane): not emitted by runtime yet. Escrow is
+  // represented by receipt sequence + derived balance state, not a treasury
+  // escrow ledger.
+  | `auction_refund:${string}`   // Outbid bidder made whole (auction_refund:<property_id>)
+  | `auction_sale:${string}`;    // Resale auction: seller credited on settle (auction_sale:<property_id>)
 
 export type WalletDebitReason =
   | 'temple_tithe'                  // Sink: voluntary tithe
   | 'debug_burn'                    // Debug-only: admin burn
   | `action_cost:${string}`         // Costed action: action_cost:<action_type>
   | `property_purchase:${string}`   // Primary sale sink (property_purchase:<property_id>)
-  | `property_transfer:${string}`;  // Resale buyer debit (property_transfer:<property_id>)
+  | `property_transfer:${string}`   // Resale buyer debit (property_transfer:<property_id>)
+  // RESERVED (Property Auction Lane): not emitted by runtime yet. A bid escrows
+  // the bidder's gold (debit); being outbid refunds it (credit). No escrow ledger.
+  | `auction_escrow:${string}`;     // Bid escrow debit (auction_escrow:<property_id>)
 
 // ============================================================================
 // Property Registry v0 (House Ownership)
