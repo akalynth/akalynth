@@ -103,81 +103,23 @@
     worldById[w.id] = w;
   });
 
-  // ---- House preview auctions ----------------------------------------------
-  // Houses use PREVIEW GOLD, distinct from the shop's premium Azura coins.
-  // Plots are grounded in docs/WORLD_AZURA.md (the Azura residential row, plots
-  // H1-H3, just below the Guild Hall). INVARIANT: gold and bids are local
-  // preview state only -- they do not prove ownership, reserve a house, spend
-  // real account currency, or affect live game state. No settlement, no proof.
+  // ---- House preview (fixed-price + resale) --------------------------------
+  // Mirrors the CURRENTLY SUPPORTED server property model: fixed-price primary
+  // purchase (a gold sink) + owner resale via list/unlist
+  // (apps/server/src/world/property.ts, docs/V1_SCOPE.md). Plots and prices are
+  // taken from packages/shared/maps/azura.json (H1/H2/H3).
+  // INVARIANT: LOCAL PREVIEW ONLY — it does not prove ownership, spend real
+  // currency, or affect live game state. Auctions are PLANNED and NOT yet
+  // implemented server-side, so they are shown here as non-interactive only
+  // (no bidding, no countdown, no settlement).
   var ACCOUNT_KEY = "akalynth.account.v1";
-  var BIDS_KEY = "akalynth.bids.v1";
-  var BID_INCREMENT = 1000; // minimum gold step over the current top bid
+  var HOUSES_KEY = "akalynth.houses.v1"; // preview ownership state
   var START_GOLD = 50000; // preview starting balance for a new character
 
-  // endsAt is set relative to load (no backend to anchor a real clock).
-  var HOUR = 3600 * 1000;
-  var now = Date.now();
   var HOUSES = [
-    {
-      id: "azura-h1",
-      name: "Plaza Row Cottage",
-      world: "Azura",
-      district: "Residential Row",
-      coords: "(10, 32)",
-      sizeTiles: 4,
-      rentGold: 800,
-      topBidGold: 22000,
-      topBidder: "Brannic",
-      endsAt: now + 48 * HOUR,
-    },
-    {
-      id: "azura-h2",
-      name: "Guildside House",
-      world: "Azura",
-      district: "Residential Row",
-      coords: "(14, 32)",
-      sizeTiles: 4,
-      rentGold: 950,
-      topBidGold: 31000,
-      topBidder: "Sera of the Vale",
-      endsAt: now + 18 * HOUR,
-    },
-    {
-      id: "azura-h3",
-      name: "Lantern Walk Home",
-      world: "Azura",
-      district: "Residential Row",
-      coords: "(18, 32)",
-      sizeTiles: 4,
-      rentGold: 1100,
-      topBidder: "Olwin Reed",
-      topBidGold: 28000,
-      endsAt: now + 5 * HOUR,
-    },
-    {
-      id: "azura-h4",
-      name: "Plaza Overlook",
-      world: "Azura",
-      district: "Central Plaza edge",
-      coords: "(24, 46)",
-      sizeTiles: 9,
-      rentGold: 1800,
-      topBidGold: 45000,
-      topBidder: "Maren Dusk",
-      endsAt: now + 30 * HOUR,
-    },
-    {
-      id: "azura-h5",
-      name: "Old Gatehouse Flat",
-      world: "Azura",
-      district: "Northern Wall",
-      coords: "(8, 14)",
-      sizeTiles: 6,
-      rentGold: 1300,
-      topBidder: "—",
-      topBidGold: 19000,
-      endsAt: now - 2 * HOUR, // already closed: demonstrates the ended state
-    },
+    { id: "H1", name: "Harbor Edge Plot", world: "Azura", district: "Harbor Edge", coords: "(10, 32)", priceGold: 500 },
+    { id: "H2", name: "Market Quarter Plot", world: "Azura", district: "Market Quarter", coords: "(14, 32)", priceGold: 1000 },
+    { id: "H3", name: "South Gate Plot", world: "Azura", district: "South Gate", coords: "(18, 32)", priceGold: 2000 },
   ];
   var houseById = {};
   HOUSES.forEach(function (h) {
@@ -428,14 +370,15 @@
           " coins (≈ $" +
           estimateUsd().toFixed(2) +
           ").\n\nReal purchases open with the Akalynth beta.";
-        // Buying Premium Time grants preview premium, which unlocks house
-        // bidding. Preview only — no real entitlement is created.
+        // Buying Premium Time marks the preview character as Premium. Preview
+        // only — no real entitlement is created. (Houses do not require
+        // Premium: standard plots are buyable by any character.)
         if (cartHasPremium()) {
           if (account) {
             account.premium = true;
             saveAccount(account);
             renderHoldings();
-            msg += "\n\nPreview Premium activated — you can now bid on houses.";
+            msg += "\n\nPreview Premium activated.";
           } else {
             msg += "\n\nCreate a character to apply preview Premium.";
           }
@@ -498,10 +441,12 @@
 
   var account = loadAccount();
 
-  // ---- Preview bids --------------------------------------------------------
-  function loadBids() {
+  // ---- House preview ownership (fixed-price + resale) ----------------------
+  // ownership[id] = { status: 'owned' | 'listed', listPrice: number|null }.
+  // Absent id ⇒ unowned. Local preview only.
+  function loadHouses() {
     try {
-      var raw = localStorage.getItem(BIDS_KEY);
+      var raw = localStorage.getItem(HOUSES_KEY);
       if (!raw) return {};
       var parsed = JSON.parse(raw);
       return parsed && typeof parsed === "object" ? parsed : {};
@@ -509,47 +454,23 @@
       return {};
     }
   }
-  function saveBids(b) {
+  function saveHouses(h) {
     try {
-      localStorage.setItem(BIDS_KEY, JSON.stringify(b));
+      localStorage.setItem(HOUSES_KEY, JSON.stringify(h));
     } catch (err) {
       /* ignore */
     }
   }
 
-  var bids = loadBids();
-  // Drop bids for houses no longer listed.
-  Object.keys(bids).forEach(function (id) {
-    if (!houseById[id]) delete bids[id];
+  var ownership = loadHouses();
+  // Drop entries for plots no longer present.
+  Object.keys(ownership).forEach(function (id) {
+    if (!houseById[id]) delete ownership[id];
   });
 
-  // ---- Auction helpers -----------------------------------------------------
-  function currentTop(house) {
-    return Math.max(house.topBidGold, bids[house.id] || 0);
-  }
-  function minNextBid(house) {
-    return currentTop(house) + BID_INCREMENT;
-  }
-  function isMine(house) {
-    var mine = bids[house.id] || 0;
-    return mine > 0 && mine >= house.topBidGold;
-  }
-  function isEnded(house) {
-    return Date.now() >= house.endsAt;
-  }
-  function fmtCountdown(ms) {
-    if (ms <= 0) return "Auction ended";
-    var s = Math.floor(ms / 1000);
-    var d = Math.floor(s / 86400);
-    s -= d * 86400;
-    var h = Math.floor(s / 3600);
-    s -= h * 3600;
-    var m = Math.floor(s / 60);
-    var parts = [];
-    if (d) parts.push(d + "d");
-    parts.push(h + "h");
-    parts.push(m + "m");
-    return parts.join(" ") + " left";
+  function houseStatus(h) {
+    var o = ownership[h.id];
+    return o ? o.status : "unowned";
   }
 
   // ---- Account form (account.html) -----------------------------------------
@@ -701,45 +622,40 @@
     }
   }
 
-  // ---- House preview auctions (houses.html) --------------------------------
-  function houseCardHtml(h, hasAccount) {
-    var top = currentTop(h);
-    var ended = isEnded(h);
-    var mine = isMine(h);
-
-    var statusHtml = "";
-    if (ended) {
-      statusHtml = mine
-        ? '<p class="house-status is-won">Auction ended — you held the top preview bid.</p>'
-        : '<p class="house-status is-ended">Auction ended.</p>';
-    } else if (mine) {
-      statusHtml = '<p class="house-status is-high">You hold the top preview bid.</p>';
-    }
+  // ---- House preview: fixed-price buy + resale (houses.html) ---------------
+  // Mirrors the supported server model. Auctions are NOT here (planned only).
+  function houseCardHtml(h) {
+    var status = houseStatus(h);
+    var o = ownership[h.id];
+    var statusLabel =
+      status === "owned"
+        ? "Owned by you (preview)"
+        : status === "listed"
+        ? "Listed for resale (preview)"
+        : "Available";
 
     var action;
-    if (ended) {
-      action = '<button class="btn btn-ghost btn-block" disabled>Bidding closed</button>';
-    } else if (!hasAccount) {
+    if (status === "unowned") {
       action =
-        '<a class="btn btn-ghost btn-block" href="account.html">Create a character to bid</a>';
-    } else if (!account.premium) {
+        '<button class="btn btn-gold btn-block" data-buy="' + h.id + '">Buy — ' +
+        fmt(h.priceGold) + " gold</button>" +
+        '<p class="field-error" id="house-error-' + h.id + '" aria-live="polite"></p>';
+    } else if (status === "owned") {
       action =
-        '<a class="btn btn-ghost btn-block" href="shop.html">Premium required to bid</a>';
-    } else {
-      var min = minNextBid(h);
-      action =
-        '<form class="bid-row" data-bid="' + h.id + '" novalidate>' +
-        '<label class="bid-input-label" for="bid-' + h.id + '">Your preview bid (gold)</label>' +
-        '<div class="bid-controls">' +
-        '<input class="bid-input" type="number" id="bid-' + h.id + '" name="bid" min="' + min +
-        '" step="' + BID_INCREMENT + '" inputmode="numeric" placeholder="' + min + '" />' +
-        '<button class="btn btn-gold" type="submit">Place bid</button>' +
+        '<form class="resale-row" data-list="' + h.id + '" novalidate>' +
+        '<label class="resale-label" for="price-' + h.id + '">Resale price (gold)</label>' +
+        '<div class="resale-controls">' +
+        '<input class="resale-input" type="number" id="price-' + h.id + '" name="price" min="1" inputmode="numeric" placeholder="e.g. ' +
+        h.priceGold + '" />' +
+        '<button class="btn btn-gold" type="submit">List for resale</button>' +
         "</div>" +
-        '<p class="field-error" id="bid-error-' + h.id + '" aria-live="polite"></p>' +
-        '<p class="bid-hint">Min next bid <span class="gold">' + fmt(min) +
-        '</span> gold · your preview balance <span class="gold">' +
-        fmt(account ? account.goldBalance : 0) + "</span> gold</p>" +
+        '<p class="field-error" id="house-error-' + h.id + '" aria-live="polite"></p>' +
         "</form>";
+    } else {
+      action =
+        '<p class="resale-note">Listed at <span class="gold">' + fmt(o.listPrice) +
+        "</span> gold. Another character could buy it at this price (preview).</p>" +
+        '<button class="btn btn-ghost btn-block" data-unlist="' + h.id + '">Unlist (preview)</button>';
     }
 
     return (
@@ -748,18 +664,11 @@
       '<span class="house-world">' + h.world + " · " + h.district + "</span>" +
       "</header>" +
       '<dl class="house-meta">' +
-      "<div><dt>Plot</dt><dd class=\"house-coords\">" + h.coords + "</dd></div>" +
-      "<div><dt>Size</dt><dd>" + h.sizeTiles + " tiles</dd></div>" +
-      '<div><dt>Rent</dt><dd><span class="gold">' + fmt(h.rentGold) + "</span> gold/mo</dd></div>" +
+      '<div><dt>Plot</dt><dd class="house-coords">' + h.coords + "</dd></div>" +
+      '<div><dt>Price</dt><dd><span class="gold">' + fmt(h.priceGold) + "</span> gold</dd></div>" +
+      "<div><dt>Status</dt><dd>" + statusLabel + "</dd></div>" +
       "</dl>" +
       '<div class="house-bid">' +
-      '<div class="bid-line">' +
-      '<span class="bid-label">Top preview bid</span>' +
-      '<span class="bid-amount"><span class="gold">' + fmt(top) + "</span> gold</span>" +
-      "</div>" +
-      '<p class="countdown" data-ends="' + h.endsAt + '"' + (ended ? ' data-ended="1"' : "") +
-      ' aria-live="polite">' + fmtCountdown(h.endsAt - Date.now()) + "</p>" +
-      statusHtml +
       action +
       "</div>"
     );
@@ -769,77 +678,86 @@
     var grid = $("#houses-grid");
     if (!grid) return;
     var card = grid.querySelector('[data-house="' + h.id + '"]');
-    if (card) card.innerHTML = houseCardHtml(h, !!account);
+    if (card) card.innerHTML = houseCardHtml(h);
   }
 
-  function onBidSubmit(e) {
-    var form = e.target.closest ? e.target.closest("[data-bid]") : null;
-    if (!form) return;
-    e.preventDefault();
-    var id = form.getAttribute("data-bid");
+  function buyHouse(id) {
     var h = houseById[id];
     if (!h) return;
-    var errId = "bid-error-" + id;
-
+    var errId = "house-error-" + id;
     if (!account) {
-      setErr(errId, "Create a character to place a preview bid.");
+      setErr(errId, "Create a character first.");
       return;
     }
-    if (!account.premium) {
-      setErr(errId, "Premium required to bid — get Premium Time in the Shop.");
+    if (houseStatus(h) !== "unowned") return;
+    if (account.goldBalance < h.priceGold) {
+      setErr(errId, "Not enough preview gold (need " + fmt(h.priceGold) + ").");
       return;
     }
-    if (isEnded(h)) {
-      setErr(errId, "This auction has ended.");
+    // Primary purchase is a gold sink in the real model — mirror that here.
+    account.goldBalance -= h.priceGold;
+    saveAccount(account);
+    ownership[id] = { status: "owned", listPrice: null };
+    saveHouses(ownership);
+    renderOneHouse(h);
+    renderHoldings();
+  }
+
+  function listHouse(id, raw) {
+    var h = houseById[id];
+    if (!h) return;
+    var errId = "house-error-" + id;
+    if (houseStatus(h) !== "owned") return;
+    var price = parseInt(String(raw).trim(), 10);
+    if (!price || isNaN(price) || price < 1) {
+      setErr(errId, "Enter a resale price in gold.");
       return;
     }
-    var input = form.querySelector(".bid-input");
-    var raw = input ? input.value.trim() : "";
-    var amount = parseInt(raw, 10);
-    if (!raw || isNaN(amount)) {
-      setErr(errId, "Enter a bid amount in gold.");
+    if (price > 1000000) {
+      setErr(errId, "Max 1,000,000 gold.");
       return;
     }
-    var min = minNextBid(h);
-    if (amount < min) {
-      setErr(errId, "Bid must be at least " + fmt(min) + " gold.");
-      return;
-    }
-    if (amount > account.goldBalance) {
-      setErr(errId, "That exceeds your preview gold balance (" + fmt(account.goldBalance) + ").");
-      return;
-    }
-    bids[id] = amount;
-    saveBids(bids);
+    ownership[id] = { status: "listed", listPrice: price };
+    saveHouses(ownership);
     renderOneHouse(h);
   }
 
-  function renderHousesGate() {
-    var gate = $("#houses-gate");
-    if (!gate) return;
-    if (!account) {
-      gate.hidden = false;
-      gate.innerHTML =
-        "<p><strong>Create a character first.</strong> You can browse the plots " +
-        "below, but placing a preview bid needs a local character. " +
-        '<a href="account.html">Create your character →</a></p>';
-    } else if (!account.premium) {
-      gate.hidden = false;
-      gate.innerHTML =
-        "<p><strong>Premium required.</strong> Only Premium adventurers can bid on " +
-        "houses. Get <strong>Premium Time</strong> in the " +
-        '<a href="shop.html">Shop</a> (preview) to unlock bidding.</p>';
-    } else {
-      gate.hidden = true;
+  function unlistHouse(id) {
+    var h = houseById[id];
+    if (!h) return;
+    if (houseStatus(h) !== "listed") return;
+    ownership[id] = { status: "owned", listPrice: null };
+    saveHouses(ownership);
+    renderOneHouse(h);
+  }
+
+  function onHousesClick(e) {
+    var buy = e.target.closest ? e.target.closest("[data-buy]") : null;
+    if (buy) {
+      buyHouse(buy.getAttribute("data-buy"));
+      return;
     }
+    var unlist = e.target.closest ? e.target.closest("[data-unlist]") : null;
+    if (unlist) {
+      unlistHouse(unlist.getAttribute("data-unlist"));
+    }
+  }
+
+  function onHousesSubmit(e) {
+    var form = e.target.closest ? e.target.closest("[data-list]") : null;
+    if (!form) return;
+    e.preventDefault();
+    var id = form.getAttribute("data-list");
+    var input = form.querySelector('input[name="price"]');
+    listHouse(id, input ? input.value : "");
   }
 
   function renderHouses() {
     var grid = $("#houses-grid");
     if (!grid) return;
-    renderHousesGate();
     if (grid.dataset.wired !== "1") {
-      grid.addEventListener("submit", onBidSubmit);
+      grid.addEventListener("click", onHousesClick);
+      grid.addEventListener("submit", onHousesSubmit);
       grid.dataset.wired = "1";
     }
     grid.innerHTML = "";
@@ -847,21 +765,8 @@
       var card = document.createElement("article");
       card.className = "house-card";
       card.setAttribute("data-house", h.id);
-      card.innerHTML = houseCardHtml(h, !!account);
+      card.innerHTML = houseCardHtml(h);
       grid.appendChild(card);
-    });
-  }
-
-  function tickCountdowns() {
-    $all(".countdown[data-ends]").forEach(function (el) {
-      var ends = parseInt(el.getAttribute("data-ends"), 10);
-      var left = ends - Date.now();
-      el.textContent = fmtCountdown(left);
-      if (left <= 0 && el.getAttribute("data-ended") !== "1") {
-        var card = el.closest(".house-card");
-        var id = card ? card.getAttribute("data-house") : null;
-        if (id && houseById[id]) renderOneHouse(houseById[id]);
-      }
     });
   }
 
@@ -869,8 +774,6 @@
     var grid = $("#houses-grid");
     if (!grid) return; // not the houses page
     renderHouses();
-    tickCountdowns();
-    setInterval(tickCountdowns, 30000);
   }
 
   // ---- Year + boot ---------------------------------------------------------

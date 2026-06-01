@@ -622,53 +622,25 @@ a {
   border-top: 1px dashed var(--parchment-edge);
   padding-top: 10px;
 }
-.bid-line {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-}
-.bid-label {
-  font-size: 11px;
-  color: var(--ink-soft);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-.bid-amount {
-  font-family: var(--font-display);
-  font-size: 18px;
-}
-.countdown {
+.resale-note {
   font-size: 13px;
   color: var(--ink-soft);
-  margin: 4px 0 8px;
-  font-variant-numeric: tabular-nums;
-}
-.house-status {
-  font-size: 13px;
-  font-weight: 700;
   margin: 0 0 8px;
 }
-.house-status.is-high,
-.house-status.is-won {
-  color: #2f7d3a;
-}
-.house-status.is-ended {
-  color: var(--ink-soft);
-}
-.bid-row {
+.resale-row {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
-.bid-input-label {
+.resale-label {
   font-size: 12px;
   color: var(--ink-soft);
 }
-.bid-controls {
+.resale-controls {
   display: flex;
   gap: 8px;
 }
-.bid-input {
+.resale-input {
   flex: 1;
   min-width: 0;
   padding: 8px 10px;
@@ -679,13 +651,14 @@ a {
   font-family: var(--font-body);
   font-size: 14px;
 }
-.bid-row .btn {
+.resale-row .btn {
   white-space: nowrap;
 }
-.bid-hint {
-  font-size: 12px;
+#auctions-planned {
+  opacity: 0.85;
+}
+#auctions-planned .section-title {
   color: var(--ink-soft);
-  margin: 2px 0 0;
 }
 
 /* ---------- Forms (account creation) ---------- */
@@ -799,7 +772,7 @@ select:focus-visible {
   .page-title {
     font-size: 26px;
   }
-  .bid-controls {
+  .resale-controls {
     flex-direction: column;
   }
   .house-meta {
