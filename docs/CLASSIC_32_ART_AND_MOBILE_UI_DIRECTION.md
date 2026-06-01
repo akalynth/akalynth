@@ -73,6 +73,26 @@ Rules (these refine, not replace, the sections below):
   saturated color reserved for magic, fire, water, light, and equipment —
   arcane cyan, ember orange, bone white, corrupted violet.
 
+### Visual target (reference boards)
+
+The intended feel (captured from internal reference boards, described as **original
+constraints — never copy any existing game's art, sprites, layouts, or UI**):
+
+- **Warm, dense town squares:** cobblestone streets with *varied, worn* stones and
+  moss in the cracks; half-timber + steep red/brown clay-roof buildings; amber-lit
+  windows and brass lanterns casting a warm glow; layered greenery (trees, hedges,
+  flower boxes); market crates/barrels; a **blue-crystal fountain** centerpiece.
+- **Harbors:** stone quays over deep blue water, a moored sailing ship + a rowboat,
+  banners with abstract Akalynth sigils, lamp-lined streets.
+- **Biome range:** town · green forest/jungle · dark stone dungeon (with arcane
+  blue spell glow) · ember/lava depths (with a rune summoning circle). Same 32px
+  language, shifted palette + materials per biome.
+- **Material/lighting reference:** rich, warm, hand-pixelled materials (stone,
+  timber, clay, brass) with soft upper-left light — denser and warmer than a flat
+  tile, but still authored at the **Classic 32** base (32px; integer-upscaled for
+  display). Higher-res painted reference boards inform *material + warmth*, not the
+  authored resolution.
+
 ### Akalynth signature motifs
 
 To stay original (nostalgia without cloning), reuse this recurring visual
