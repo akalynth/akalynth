@@ -1,77 +1,84 @@
-AKALYNTH_CHAT_ENCRYPTION_THREAT_MODEL_AND_AUTHORITY_DECISION_V1
+AKALYNTH_CHAT_ACCOUNTABLE_WORLD_CHAT_BASELINE_V1
 
-status=closed_chat_encryption_authority_decision_no_implementation_no_runtime_mutation
-timestamp_utc=2026-06-01T08:02:04Z
-repo=/home/sovereign/akalynth-ops/repos/akalynth
-head=e99cfa5c5609113a1a4f3bb45038e1c7609fe30e
+status=closed_accountable_world_chat_baseline_no_encryption_no_runtime_mutation
+timestamp_utc=2026-06-01T08:25:58Z
+repo=/home/sovereign/akalynth-ops/repos/akalynth-chat-accountable-world-chat-baseline-v1
+base_origin_main=d26ac12e21fc4f156ecb81de463d90d6eaf65cbc
+branch=docs/chat-accountable-world-chat-baseline-v1
 
-dirty_status_before=dirty on main tracking origin/main; prior source-boundary edits, prior skill/plugin removals, and prior chat-research markdown artifacts were present
-dirty_status_after=dirty on main tracking origin/main; this lane added/updated markdown decision artifacts only
-
-decision:
-- world/global chat remains server-readable, moderated, accountable, and receipt-compatible
-- current plaintext relay is acceptable for pre-alpha if clearly documented
-- TLS/WSS is transport protection only and is not application-level chat encryption or chat E2EE
-- E2EE is not recommended for world chat in V1
-- E2EE 1:1 whispers remain a future candidate only
-- no encryption implementation should start until key exchange, identity binding, report flow, metadata policy, replay boundary, and Android parity are designed
-- reports for encrypted messages must be participant-supplied evidence, not server omniscience
-
-outputs_created_or_updated:
-- CHAT_AUTHORITY_DECISION.md
-- CHAT_THREAT_MODEL.md
-- CHAT_SURFACE_POLICY.md
-- E2EE_WHISPER_PRECONDITIONS.md
-- REPORTING_AND_MODERATION_DECISION.md
-- RECEIPT_BOUNDARY_DECISION.md
-- RECOMMENDED_NEXT_LANE.md
+outputs_created:
+- CHAT_ACCOUNTABLE_WORLD_CHAT_BASELINE.md
+- CHAT_RELAY_PATH.md
+- CHAT_RECEIPT_AND_MODERATION_BOUNDARY.md
+- scripts/verify-chat-accountable-world-chat-baseline.sh
 - receipt.txt
 
-inputs_read:
-- CHAT_ENCRYPTION_RESEARCH.md
-- CHAT_SURFACE_CLASSIFICATION.md
-- ENCRYPTION_MODEL_MATRIX.md
-- MODERATION_AND_REPORTING_IMPACT.md
-- RECEIPT_AND_PROOF_IMPACT.md
-- KEY_MANAGEMENT_OPTIONS.md
-- ANDROID_PROTOCOL_IMPACT.md
-- /home/sovereign/akalynth-ops/receipts/AKALYNTH_CHAT_ENCRYPTION_RESEARCH_CLOSURE_20260601T075459Z.txt
+files_inspected:
+- packages/shared/protocol.ts
+- docs/PROTOCOL.md
+- apps/server/src/index.ts
+- apps/debug-client/src/hooks/useGameClient.ts
+- apps/debug-client/src/components/ChatSheet.tsx
+- apps/android/app/src/main/java/com/akalynth/client/protocol/ClientMessage.kt
+- apps/android/app/src/main/java/com/akalynth/client/protocol/MessageSerializer.kt
+- apps/android/app/src/main/java/com/akalynth/client/protocol/ServerMessage.kt
+- apps/android/app/src/main/java/com/akalynth/client/game/GameStore.kt
+- apps/server/src/persist/schema.ts
+- CHAT_AUTHORITY_DECISION.md
+- RECEIPT_BOUNDARY_DECISION.md
 
-actions_taken=markdown_decision_outputs_only
-implementation_changes=no
-code_edits=no
-schema_edits=no
-protocol_edits=no
-dependency_changes=no
-encryption_libraries_added=no
-runtime_mutation=no
-service_restart=no
-build=no
-deploy=no
-source_sync=no
-opt_mutation=no
-var_lib_mutation=no
-etc_mutation=no
-caddy_change=no
-systemd_change=no
-secret_values_read_or_printed=no
+decision_preserved:
+- world chat remains server-readable, moderated, accountable, and receipt-compatible
+- current chat is plaintext application relay over WebSocket transport
+- TLS/WSS is transport protection only, not application-level chat encryption and not chat E2EE
+- private encrypted whispers are not implemented and remain a future candidate only
+
+baseline_findings:
+- chat is implemented as a plaintext `chat` client message and `chat_broadcast` server message
+- server accepts chat only after world entry and applies IP action limiting
+- accepted chat writes an audit receipt containing plaintext message input
+- server emits a chronicle chat event with message length and SHA-256 hash metadata
+- debug client and Android both send capped chat bodies and render broadcast message bodies
+- no app-level encrypted chat fields were found in the shared protocol
+- no dedicated durable chat-history table was found in the persistence schema
+
+forbidden_actions_confirmation:
+- encryption implementation: no
+- E2EE key exchange: no
+- ciphertext fields: no
+- protocol redesign: no
+- code/runtime behavior change: no
+- runtime mutation: no
+- /opt mutation: no
+- /var/lib mutation: no
+- /etc mutation: no
+- Caddy/systemd/service/build/deploy changes: no
 
 commands_run:
+- git worktree add -b docs/chat-accountable-world-chat-baseline-v1 /home/sovereign/akalynth-ops/repos/akalynth-chat-accountable-world-chat-baseline-v1 origin/main
+- git rev-parse HEAD && git rev-parse --abbrev-ref HEAD
 - read protocol-guardian skill
 - read receipt-chain-steward skill
-- pwd && git rev-parse HEAD && git status --short --branch
-- date -u +%Y%m%dT%H%M%SZ
-- read chat research markdown inputs
-- apply_patch markdown decision outputs
-- git diff --check -- CHAT_AUTHORITY_DECISION.md CHAT_THREAT_MODEL.md CHAT_SURFACE_POLICY.md E2EE_WHISPER_PRECONDITIONS.md REPORTING_AND_MODERATION_DECISION.md RECEIPT_BOUNDARY_DECISION.md RECOMMENDED_NEXT_LANE.md receipt.txt
-- grep restricted encryption-readiness wording across decision outputs
-- grep required decision statements across decision outputs
-- git status --short -- CHAT_AUTHORITY_DECISION.md CHAT_THREAT_MODEL.md CHAT_SURFACE_POLICY.md E2EE_WHISPER_PRECONDITIONS.md REPORTING_AND_MODERATION_DECISION.md RECEIPT_BOUNDARY_DECISION.md RECOMMENDED_NEXT_LANE.md receipt.txt
+- read debug-client skill
+- read android-client skill
+- grep/read inspected protocol, server, debug-client, Android, persistence, and decision docs
+- apply_patch baseline docs, static verifier, and receipt
+- bash -n scripts/verify-chat-accountable-world-chat-baseline.sh
+- bash scripts/verify_protocol_sync.sh
+- git diff --check -- CHAT_ACCOUNTABLE_WORLD_CHAT_BASELINE.md CHAT_RELAY_PATH.md CHAT_RECEIPT_AND_MODERATION_BOUNDARY.md scripts/verify-chat-accountable-world-chat-baseline.sh receipt.txt
+- bash scripts/verify-chat-accountable-world-chat-baseline.sh
+- grep restricted encryption-readiness wording across baseline outputs
+- git status --short
+- git diff --name-only
+- git diff --stat
 
 validation:
-- markdown diff check passed
+- bash syntax check passed
+- protocol sync check passed
+- diff whitespace check passed
+- accountable world chat static verifier passed
 - restricted encryption-readiness wording grep returned no matches
-- required decision statements present
-- touched files are markdown decision outputs and receipt only
+- verifier confirmed plaintext/server-readable chat relay, receipt/chronicle side effects, debug-client and Android parity, no encrypted chat fields, and no dedicated durable chat-history table
+- changed source-worktree files are limited to baseline docs, verifier script, and receipt
 
-note=This is a decision receipt, not an Akalynth runtime audit-chain receipt.
+note=This is a source-documentation and static-verification baseline, not an Akalynth runtime audit-chain receipt.
