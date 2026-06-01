@@ -1,0 +1,3 @@
+Create a single original game asset for Akalynth. Nostalgic top-down fantasy MMO readability; original Akalynth world asset, not copied from any existing game. Hand-pixelled, authored at the Classic 32 base (32x32 unless noted), readable when integer-scaled to 64/128. Top-down slightly isometric view. Transparent background, centered object only, no scene, no UI, no logo, no text. Crisp 1px dark edge, readable silhouette first. Soft lighting from upper-left with a small contact shadow. Dark fantasy medieval palette with subtle Akalynth magical detail.
+
+Object: round mossy stone well with a wooden roof frame, a rope and bucket, faint blue arcane shimmer on the water surface. Usable as a town centerpiece prop.

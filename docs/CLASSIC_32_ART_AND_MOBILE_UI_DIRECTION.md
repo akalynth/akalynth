@@ -43,6 +43,74 @@ square-grid movement, dark readable silhouettes,
 low-grind social fantasy world.
 ```
 
+## Visual Contract v1
+
+The one-line direction: **nostalgic top-down MMO readability + original Akalynth
+world assets.** Every generated/authored asset is reviewed against this contract.
+Production discipline lives in `data/assets-src/FACTORY.md` (the Asset Factory).
+
+Stable id (recorded in each asset manifest's `style_contract`):
+
+```text
+nostalgic_top_down_mmo_readability_original_akalynth_assets_v1
+```
+
+Rules (these refine, not replace, the sections below):
+
+- **Camera:** top-down / slightly isometric MMO view.
+- **Resolution:** authored at the **Classic 32** base — 32x32 tiles, 32x64 / 64x64
+  for tall sprites and composites. "Readable at 64/96/128" means **integer /
+  nearest-neighbor upscaling** of the 32px source, never a separate high-res
+  master. There is one art resolution: 32px.
+- **Lighting:** consistent soft light from the upper-left; a small natural contact
+  shadow beneath free-standing objects/creatures. No cinematic side lighting except
+  in promotional art (which is never wired into the tile renderer).
+- **Tone:** dark fantasy, adventurous, medieval, magical, slightly dangerous.
+- **Readability first:** dense-but-controlled pixel detail; silhouette before
+  texture; 1px dark edge on objects/creatures/props; flat hand-pixelled look (no
+  soft gradients / painterly rendering).
+- **Palette:** earthy base (stone, moss green, deep water blue, aged gold) with
+  saturated color reserved for magic, fire, water, light, and equipment —
+  arcane cyan, ember orange, bone white, corrupted violet.
+
+### Akalynth signature motifs
+
+To stay original (nostalgia without cloning), reuse this recurring visual
+language: blue-gold crystal magic; moss-covered stonework; rune-carved
+thresholds; brass lanterns with amber windows; ancient broken monoliths; twisted
+roots around ruins; crescent-shaped metal ornaments; weathered banners with
+abstract sigils; arcane wells, portals, and sealed gates; layered medieval towns
+built over older ruins.
+
+### Master prompt (asset generation base)
+
+Reuse this as the spine for every single-asset prompt (then append the specific
+object). It encodes the contract and the boundaries; see "Prompt Pattern" below
+and the per-asset files in `data/assets-src/prompts/`.
+
+```text
+Create a single original game asset for Akalynth.
+Nostalgic top-down fantasy MMO readability; original Akalynth world asset, not
+copied from any existing game. Hand-pixelled 32x32 base sprite (use 32x64 / 64x64
+only for tall sprites/composites), top-down slightly isometric view. Transparent
+background. Centered object only. No scene, no UI, no logo, no text. Crisp 1px dark
+edge; readable silhouette first. Consistent lighting from upper-left with a small
+contact shadow. Dark fantasy medieval palette with subtle Akalynth magical detail.
+Usable as an object/tile/sprite in a tile-based online RPG.
+```
+
+### Boundaries (reaffirmed — non-negotiable)
+
+- **Legal/creative boundary:** never prompt for or reproduce Tibia/CipSoft art,
+  named map layouts, item silhouettes, creature designs, outfit shapes, or UI.
+  Describe constraints and the Akalynth identity instead. (See "Legal And Creative
+  Boundary".)
+- **Server-metadata lockstep:** art is display-only. Collision, walkability,
+  interactability, zone/heat/spawn/receipt behavior live in **server metadata
+  only**, never inferred from an image. Asset manifests therefore carry
+  `mechanics: null`; any mechanical effect is routed through server +
+  verification work. (See "Server Metadata Lockstep".)
+
 ## Research Summary
 
 Old Tibia-era art is defined more by production constraints than by nostalgia alone:

@@ -31,7 +31,8 @@
     "verify:lifecycle": "npm -w apps/server run verify:lifecycle",
     "verify:receipt-hygiene": "npm -w apps/server run verify:receipt-hygiene",
     "verify:outcome": "tsx tools/verify-outcome/src/index.ts",
-    "verify:outcome:test": "tsx tools/verify-outcome/test.ts"
+    "verify:outcome:test": "tsx tools/verify-outcome/test.ts",
+    "verify:assets": "tsx tools/asset-gen/verify-assets.ts"
   },
   "keywords": ["mmo", "game", "akalynth", "multiplayer"],
   "author": "",
