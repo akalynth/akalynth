@@ -1,6 +1,6 @@
 # Akalynth
 
-A Tibia-world-feel MMO with authoritative server architecture.
+A classic-feel MMO with authoritative server architecture.
 
 > **Platform Policy**: This repo targets Linux and Android only. Windows is intentionally unsupported.
 
