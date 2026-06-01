@@ -147,6 +147,11 @@ export interface HousePlot extends Landmark {
   // Property Ownership v0: addressable district label + primary (treasury) sale price.
   district?: string;
   primary_price_gold?: number;
+  // RESERVED (Property Auction Lane, types-only): how an UNOWNED plot is
+  // allocated. Absent/`'fixed'` ⇒ current v0 fixed-price primary buy (no change).
+  // `'auction'` is reserved for the future auction lane and is NOT yet honored by
+  // any server behavior. See docs/PROTOCOL.md "Property auctions (reserved)".
+  allocation_mode?: PropertyAllocationMode;
 }
 
 export interface MapData {
@@ -423,6 +428,14 @@ export const PROPERTY_TRANSFERRED_ACTION = 'property_transferred'; // resale (pl
 
 export type PropertyStatus = 'unowned' | 'owned' | 'listed';
 
+// RESERVED (Property Auction Lane, types-only): the future 'auctioning' status.
+// Kept OUT of PropertyStatus for now so existing narrow consumers (e.g.
+// PropertyMarketListing.status in http.ts) remain valid and apps/server stays
+// untouched. It will be folded directly into PropertyStatus in the
+// reducer/projection step, together with the consumers that must then handle it.
+// No server behavior places a plot into 'auctioning' yet.
+export type ReservedPropertyStatus = PropertyStatus | 'auctioning';
+
 export type PropertyDenialReason =
   | 'unknown_plot'
   | 'not_for_sale'
@@ -430,6 +443,43 @@ export type PropertyDenialReason =
   | 'cannot_buy_own'
   | 'insufficient_gold'
   | 'not_owner'
+  | 'invalid_price';
+
+// ============================================================================
+// Property Auctions — RESERVED (types only; NOT implemented, NOT behavior-active)
+// ============================================================================
+// These constants/types describe the planned auction lane so protocol and type
+// surfaces can be agreed in advance. There is intentionally NO reducer, handler,
+// wallet/escrow, settlement, or persistence behavior in this change. The auction
+// message interfaces in protocol.ts are likewise reserved and are NOT yet part of
+// the active ClientMessage/ServerMessage unions. Auctions are NOT live, NOT
+// implemented, and NOT verified. See docs/PROTOCOL.md "Property auctions (reserved)".
+
+// How an unowned plot is allocated. Absent/'fixed' = current v0 fixed-price buy.
+export type PropertyAllocationMode = 'fixed' | 'auction';
+
+// Auction kind: 'primary' = unowned plot allocation (gold sink); 'resale' =
+// owner-initiated auction (conserved, seller credited on settle).
+export type PropertyAuctionKind = 'primary' | 'resale';
+
+// Reserved receipt action names (NOT emitted by any code path in this change).
+export const PROPERTY_AUCTION_OPENED_ACTION = 'property_auction_opened';
+export const PROPERTY_BID_ACTION = 'property_bid';
+export const PROPERTY_BID_REFUNDED_ACTION = 'property_bid_refunded';
+export const PROPERTY_AUCTION_SETTLED_ACTION = 'property_auction_settled';
+export const PROPERTY_AUCTION_CANCELLED_ACTION = 'property_auction_cancelled';
+
+// Reserved denial reasons for the future auction intents.
+export type PropertyAuctionDenialReason =
+  | 'unknown_plot'
+  | 'not_owner'
+  | 'already_listed'
+  | 'already_auctioning'
+  | 'not_auctioning'
+  | 'bid_too_low'
+  | 'insufficient_gold'
+  | 'auction_closed'
+  | 'cannot_bid_own'
   | 'invalid_price';
 
 // ============================================================================
