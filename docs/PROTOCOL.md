@@ -90,9 +90,9 @@ interface BaseMessage {
 | `list_house` | Lists an owned house for sale at `price`. |
 | `unlist_house` | Removes an owned house from the market. |
 | `get_property_ledger` | Requests a property's ownership ledger. |
-| `open_house_auction` | **RESERVED / not implemented.** Planned: owner opens a resale auction. |
-| `place_house_bid` | **RESERVED / not implemented.** Planned: place a gold bid on an auction. |
-| `cancel_house_auction` | **RESERVED / not implemented.** Planned: owner cancels a zero-bid auction. |
+| `open_house_auction` | Owner opens a resale auction on an owned plot. |
+| `place_house_bid` | Places a gold bid on an open auction (escrow + outbid refund). |
+| `cancel_house_auction` | Owner cancels a resale auction (only with zero bids). |
 
 ## Server → Client Messages
 
@@ -139,8 +139,8 @@ interface BaseMessage {
 | `house_sold` | Zone broadcast when a house changes hands (buyer/seller names, price, sale count). |
 | `property_result` | Result of a buy/list/unlist intent with optional denial reason. |
 | `property_ledger` | Ownership ledger (anonymized history + sale count) for a property. |
-| `property_auction_state` | **RESERVED / not implemented.** Planned: open-auction state (anonymized). |
-| `house_auction_settled` | **RESERVED / not implemented.** Planned: settled-auction broadcast. |
+| `property_auction_state` | Open-auction state (anonymized) after open/bid/cancel. |
+| `house_auction_settled` | **RESERVED (4b).** Settled-auction broadcast; not emitted until the close→settle lane. |
 
 ## Client → Server Details
 
@@ -276,36 +276,37 @@ Removes an owned house from the market. Only the current owner may unlist.
 
 Requests the ownership ledger (owner history + sale count) for a `property_id`.
 
-### Property auctions (reserved)
+### Property auctions
 
-> **RESERVED / PLANNED — not implemented, not behavior-active, not verified.**
-> The message types below describe the *planned* property auction lane so the
-> protocol/type surface can be agreed in advance. They are defined as types only
-> (`packages/shared/protocol.ts`) and are intentionally **not** part of the active
-> `ClientMessage`/`ServerMessage` unions. **No server handler accepts or emits
-> them, no reducer/escrow/settlement/persistence exists, and no auction is
-> executable.** Related type-only additions: a reserved `ReservedPropertyStatus`
-> (`PropertyStatus | 'auctioning'`) kept separate from `PropertyStatus` until the
-> later reducer step, `HousePlot.allocation_mode` (`'fixed' | 'auction'`, absent ⇒ `fixed`), and the
-> reserved `property_auction_opened` / `property_bid` / `property_bid_refunded` /
-> `property_auction_settled` / `property_auction_cancelled` receipt-action names.
-> Auctions will become available only after the server-side reducer, wallet
-> escrow/refund, settlement-receipt, and `verify:property` invariant work lands.
+> **Status (Step 4a): open / bid / cancel handlers are ACTIVE and emit receipts;
+> there is NO automatic settlement yet.** A plot closes only via the world-loop
+> close→settle path, which is a separate later lane (4b) — until then auctions do
+> not settle on their own and `house_auction_settled` is not emitted. Clients are
+> intent-only; accepted amount/winner state is server-derived. The auction
+> *projection/reducer* (status `'auctioning'`, the `property_auction_*` receipt
+> actions) and the synthetic gold-conservation proof already exist; live
+> settlement and durable persistence do not. `HousePlot.allocation_mode`
+> (`'fixed' | 'auction'`, absent ⇒ `fixed`) governs how an unowned plot is
+> allocated in future steps.
 
 #### `open_house_auction`
 
-RESERVED (not implemented). Would let an owner open a resale auction on an owned
-plot with `min_bid`, `min_increment_gold`, and `duration_s`. No handler exists.
+Owner opens a resale auction on an owned plot with `min_bid`, `min_increment_gold`,
+and `duration_s` (the requested window; settlement is not automatic in 4a).
+Only the current owner may open; the plot must be `owned`.
 
 #### `place_house_bid`
 
-RESERVED (not implemented). Would place a gold bid (`amount`) on an open auction.
-No handler exists.
+Places a gold bid (`amount`) on an open auction. The amount must be ≥ the next
+minimum (`current_high + min_increment_gold`, or `min_bid` for the first bid) and
+affordable; the seller cannot bid. Accepting a bid escrows the bidder's gold
+(`wallet_debit`/`auction_escrow`) and, when it outbids a prior high bidder,
+refunds that bidder the exact prior amount (`property_bid_refunded` +
+`wallet_credit`/`auction_refund`).
 
 #### `cancel_house_auction`
 
-RESERVED (not implemented). Would let an owner cancel a resale auction while it
-has zero bids. No handler exists.
+Owner cancels a resale auction — allowed **only while it has zero bids**.
 
 ## Server → Client Details
 
@@ -475,17 +476,15 @@ Ownership ledger for a property: `owner_history` (names anonymized) and `sale_co
 
 #### `property_auction_state`
 
-RESERVED (not implemented). Would carry an open auction's `kind`, `current_high`,
-anonymized `high_bidder_name`, `min_next`, and a non-authoritative
-`scheduled_close` display hint. No server code emits this. See
-"Property auctions (reserved)" above.
+Carries an open auction's `kind`, `current_high`, anonymized `high_bidder_name`,
+`min_next`, and a non-authoritative `scheduled_close` display hint. Emitted after
+`open_house_auction` / `place_house_bid` / `cancel_house_auction`.
 
 #### `house_auction_settled`
 
-RESERVED (not implemented). Would broadcast a settled auction (`winner_name`,
-`seller_name`, `price`, `sale_count`). No server code emits this. Auction truth
-would come only from a settlement receipt, not from wall-clock. See
-"Property auctions (reserved)" above.
+RESERVED (4b — close→settle lane). Will broadcast a settled auction (`winner_name`,
+`seller_name`, `price`, `sale_count`). Not emitted in 4a (no automatic close yet).
+Auction truth comes only from a settlement receipt, never from wall-clock.
 
 ## Contract Type Literals
 

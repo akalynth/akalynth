@@ -476,7 +476,7 @@ export const PROPERTY_BID_REFUNDED_ACTION = 'property_bid_refunded';
 export const PROPERTY_AUCTION_SETTLED_ACTION = 'property_auction_settled';
 export const PROPERTY_AUCTION_CANCELLED_ACTION = 'property_auction_cancelled';
 
-// Reserved denial reasons for the future auction intents.
+// Denial reasons for auction intents (open/bid/cancel).
 export type PropertyAuctionDenialReason =
   | 'unknown_plot'
   | 'not_owner'
@@ -487,6 +487,7 @@ export type PropertyAuctionDenialReason =
   | 'insufficient_gold'
   | 'auction_closed'
   | 'cannot_bid_own'
+  | 'has_bids'
   | 'invalid_price';
 
 // ============================================================================
