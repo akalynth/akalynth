@@ -1,0 +1,51 @@
+{
+  "id": "high_city_runtime_schema_projection_v1_draft",
+  "status": "draft_schema_projection_only",
+  "source_bundle_receipt": "AKALYNTH_HIGH_CITY_MAP_AUTHORITY_BUNDLE_V1",
+  "runtime_authority": false,
+  "server_authoritative": false,
+  "production_map_promoted": false,
+  "layers": {
+    "visual_object_layer": {
+      "status": "draft_projection_only",
+      "source_count": 1416,
+      "runtime_authority": false
+    },
+    "overlay_presentation_layer": {
+      "status": "draft_projection_only",
+      "source_count": 3,
+      "runtime_authority": false
+    },
+    "collision_layer": {
+      "status": "draft_projection_only",
+      "source_count": 28,
+      "runtime_authority": false
+    },
+    "walkability_layer": {
+      "status": "draft_projection_only",
+      "source_count": 28,
+      "runtime_authority": false
+    },
+    "door_house_layer": {
+      "status": "draft_projection_only",
+      "door_candidates": 4,
+      "house_candidates": 3,
+      "runtime_authority": false
+    },
+    "transition_layer": {
+      "status": "draft_projection_only",
+      "transition_candidates": 4,
+      "runtime_authority": false
+    }
+  },
+  "promotion": {
+    "production_promotion_receipt": "future_gate_required",
+    "shared_map_path": "none",
+    "server_movement_verified": false
+  },
+  "mechanics": null,
+  "notes": [
+    "Projection example only.",
+    "Does not create runtime-readable map data."
+  ]
+}

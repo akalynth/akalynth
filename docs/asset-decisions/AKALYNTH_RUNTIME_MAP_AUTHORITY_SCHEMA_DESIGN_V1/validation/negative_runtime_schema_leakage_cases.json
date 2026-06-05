@@ -1,0 +1,130 @@
+{
+  "id": "AKALYNTH_RUNTIME_MAP_AUTHORITY_SCHEMA_DESIGN_V1_NEGATIVE_CASES",
+  "status": "draft_design_validation_fixture",
+  "cases": [
+    {
+      "id": "negative_runtime_visual_object_declares_collision",
+      "expected_flags": [
+        "runtime_visual_layer_forbidden_field:collision"
+      ],
+      "payload": {
+        "layer": "runtime_visual_object_layer",
+        "object": {
+          "id": "v1",
+          "collision": "blocked"
+        }
+      }
+    },
+    {
+      "id": "negative_runtime_visual_object_declares_walkability",
+      "expected_flags": [
+        "runtime_visual_layer_forbidden_field:walkability"
+      ],
+      "payload": {
+        "layer": "runtime_visual_object_layer",
+        "object": {
+          "id": "v1",
+          "walkability": "walkable"
+        }
+      }
+    },
+    {
+      "id": "negative_collision_layer_declares_transition_to",
+      "expected_flags": [
+        "runtime_collision_layer_forbidden_field:transition_to"
+      ],
+      "payload": {
+        "layer": "runtime_collision_layer",
+        "cell": {
+          "tile": [
+            25,
+            26
+          ],
+          "transition_to": "sewer"
+        }
+      }
+    },
+    {
+      "id": "negative_walkability_layer_declares_door_permission",
+      "expected_flags": [
+        "runtime_walkability_layer_forbidden_field:door_permissions"
+      ],
+      "payload": {
+        "layer": "runtime_walkability_layer",
+        "cell": {
+          "tile": [
+            7,
+            22
+          ],
+          "door_permissions": "owner_only"
+        }
+      }
+    },
+    {
+      "id": "negative_overlay_layer_claims_house_entry",
+      "expected_flags": [
+        "runtime_overlay_layer_forbidden_field:house_entry"
+      ],
+      "payload": {
+        "layer": "runtime_overlay_presentation_layer",
+        "overlay": {
+          "id": "roof",
+          "house_entry": true
+        }
+      }
+    },
+    {
+      "id": "negative_door_house_layer_infers_from_visual_asset",
+      "expected_flags": [
+        "runtime_door_house_layer_forbidden_source:visual_asset"
+      ],
+      "payload": {
+        "layer": "runtime_door_house_layer",
+        "source": "visual_asset"
+      }
+    },
+    {
+      "id": "negative_transition_layer_runtime_enabled_without_destination_validation",
+      "expected_flags": [
+        "runtime_transition_enabled_without_destination_validation"
+      ],
+      "payload": {
+        "layer": "runtime_transition_layer",
+        "runtime_enabled": true,
+        "destination_validated": false
+      }
+    },
+    {
+      "id": "negative_manifest_sets_production_promoted_without_receipt",
+      "expected_flags": [
+        "production_promotion_without_receipt"
+      ],
+      "payload": {
+        "production_map_promoted": true,
+        "production_promotion_receipt": null
+      }
+    },
+    {
+      "id": "negative_manifest_references_shared_map_path_in_design_gate",
+      "expected_flags": [
+        "shared_map_path_forbidden_in_design_gate"
+      ],
+      "payload": {
+        "shared_map_path": "packages/shared/maps/high_city.json"
+      }
+    },
+    {
+      "id": "negative_runtime_schema_adds_spawn_ai_combat",
+      "expected_flags": [
+        "runtime_schema_forbidden_field:spawn",
+        "runtime_schema_forbidden_field:ai",
+        "runtime_schema_forbidden_field:combat"
+      ],
+      "payload": {
+        "spawn": "rat_small_01",
+        "ai": "ambush",
+        "combat": "enabled"
+      }
+    }
+  ]
+}

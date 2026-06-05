@@ -1,0 +1,30 @@
+{
+  "id": "floor_stone_01",
+  "asset_type": "terrain_tile",
+  "source_kind": "tile",
+  "image": "floor_stone_01.png",
+  "frame": {
+    "width": 64,
+    "height": 64
+  },
+  "rendering": {
+    "filtering": "nearest",
+    "display_only": true,
+    "draw_scale": 0.5,
+    "anchor": {
+      "type": "tile_top_left",
+      "source_pixels": [
+        0,
+        0
+      ]
+    },
+    "z_policy": "fixed_layer",
+    "layer": "terrain"
+  },
+  "mechanics": null,
+  "visual_notes": [
+    "Terrain floor visual only.",
+    "64px source is drawn as a 32px tile for floor readability.",
+    "Does not encode walkability or collision."
+  ]
+}

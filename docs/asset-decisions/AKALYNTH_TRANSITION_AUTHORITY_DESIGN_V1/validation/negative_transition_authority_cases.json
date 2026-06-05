@@ -1,0 +1,114 @@
+{
+  "id": "AKALYNTH_TRANSITION_AUTHORITY_DESIGN_V1_NEGATIVE_CASES",
+  "status": "draft_design_only",
+  "cases": [
+    {
+      "id": "negative_visual_sewer_object_declares_transition_to",
+      "expected_flags": [
+        "visual_object_forbidden_field:transition_to"
+      ],
+      "payload": {
+        "plane": "visual",
+        "asset_id": "sewer_grate",
+        "transition_to": "sewer_level_01"
+      }
+    },
+    {
+      "id": "negative_walkability_layer_contains_transition_to",
+      "expected_flags": [
+        "walkability_layer_forbidden_field:transition_to"
+      ],
+      "payload": {
+        "plane": "walkability",
+        "tile": [
+          25,
+          26
+        ],
+        "walkability_state": "walkable",
+        "transition_to": "sewer_level_01"
+      }
+    },
+    {
+      "id": "negative_door_candidate_declares_teleport_target",
+      "expected_flags": [
+        "door_house_candidate_forbidden_field:teleport_target"
+      ],
+      "payload": {
+        "plane": "door_house_authority_candidate",
+        "teleport_target": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "negative_transition_candidate_lacks_destination",
+      "expected_flags": [
+        "transition_candidate_missing_destination"
+      ],
+      "payload": {
+        "plane": "transition_authority",
+        "source": {
+          "tile": [
+            25,
+            26
+          ],
+          "floor": 0
+        }
+      }
+    },
+    {
+      "id": "negative_transition_candidate_changes_floor_without_floor_policy",
+      "expected_flags": [
+        "floor_change_without_policy"
+      ],
+      "payload": {
+        "plane": "transition_authority",
+        "source": {
+          "floor": 0
+        },
+        "destination": {
+          "floor": -1
+        }
+      }
+    },
+    {
+      "id": "negative_transition_candidate_runtime_enabled_true",
+      "expected_flags": [
+        "runtime_transition_enabled_forbidden"
+      ],
+      "payload": {
+        "plane": "transition_authority",
+        "runtime_enabled": true
+      }
+    },
+    {
+      "id": "negative_transition_candidate_references_unknown_destination_map",
+      "expected_flags": [
+        "destination_map_unknown_without_future_gate"
+      ],
+      "payload": {
+        "plane": "transition_authority",
+        "destination": {
+          "map_region": "unknown_runtime_map",
+          "authority_status": "runtime"
+        }
+      }
+    },
+    {
+      "id": "negative_transition_candidate_grants_spawn_ai_behavior",
+      "expected_flags": [
+        "transition_candidate_forbidden_field:spawn",
+        "transition_candidate_forbidden_field:ai"
+      ],
+      "payload": {
+        "plane": "transition_authority",
+        "spawn": "rat_small_01",
+        "ai": "ambush"
+      }
+    }
+  ],
+  "notes": [
+    "Negative cases document authority leakage that future validators must reject."
+  ]
+}

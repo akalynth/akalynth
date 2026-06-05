@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "akalynth://draft-schemas/interaction_layer.schema.draft.json",
+  "title": "Akalynth Interaction Layer Reserved Draft Schema",
+  "description": "Reserved future design shape. This gate does not implement interactions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "plane",
+    "authority_owner",
+    "requires_future_gate",
+    "map_id",
+    "interactions",
+    "must_not_own"
+  ],
+  "properties": {
+    "status": {
+      "const": "draft_reserved_for_future_gate"
+    },
+    "plane": {
+      "const": "interaction"
+    },
+    "authority_owner": {
+      "const": "future_server_authority_gate"
+    },
+    "requires_future_gate": {
+      "enum": [
+        "AKALYNTH_DOOR_AND_HOUSE_AUTHORITY_DESIGN_V1",
+        "AKALYNTH_NPC_CONTENT_AUTHORITY_DESIGN_V1",
+        "AKALYNTH_SHOP_DIALOGUE_AUTHORITY_DESIGN_V1"
+      ]
+    },
+    "map_id": {
+      "type": "string"
+    },
+    "interactions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "tile",
+          "floor",
+          "interaction_type",
+          "server_authority_receipt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "tile": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "integer",
+                "minimum": 0
+              }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "floor": {
+            "type": "integer"
+          },
+          "interaction_type": {
+            "enum": [
+              "door",
+              "shop",
+              "dialogue",
+              "sewer_transition",
+              "notice_board",
+              "container",
+              "house_entry"
+            ]
+          },
+          "server_authority_receipt": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "must_not_own": {
+      "type": "array",
+      "contains": {
+        "const": "collision"
+      },
+      "items": {
+        "enum": [
+          "collision",
+          "walkability",
+          "visual_asset_placement",
+          "npc_spawn",
+          "mob_spawn"
+        ]
+      }
+    }
+  }
+}

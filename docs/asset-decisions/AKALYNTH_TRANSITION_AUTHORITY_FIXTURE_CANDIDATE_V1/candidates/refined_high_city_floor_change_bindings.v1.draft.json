@@ -1,0 +1,107 @@
+{
+  "id": "refined_high_city_floor_change_bindings_v1",
+  "plane": "floor_change_binding_candidate_set",
+  "status": "draft_non_runtime",
+  "runtime_authority": false,
+  "server_authoritative": false,
+  "production_map_promoted": false,
+  "candidates": [
+    {
+      "id": "floor_change_binding_sewer_entry_down_candidate",
+      "source_transition_candidate_id": "high_city_sewer_grate_transition_candidate_01",
+      "source_floor": 0,
+      "destination_floor": -1,
+      "floor_delta_reserved": "down",
+      "plane": "floor_change_binding_candidate",
+      "status": "draft_non_runtime",
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "authority": {
+        "server_floor_change": "none",
+        "visibility_change": "none",
+        "collision_walkability_resolution": "none",
+        "destination_floor_validated": false
+      },
+      "mechanics": null,
+      "notes": [
+        "Draft floor-change binding only.",
+        "Does not change server floor authority."
+      ]
+    },
+    {
+      "id": "floor_change_binding_sewer_alt_entry_down_candidate",
+      "source_transition_candidate_id": "high_city_sewer_grate_transition_candidate_02",
+      "source_floor": 0,
+      "destination_floor": -1,
+      "floor_delta_reserved": "down",
+      "plane": "floor_change_binding_candidate",
+      "status": "draft_non_runtime",
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "authority": {
+        "server_floor_change": "none",
+        "visibility_change": "none",
+        "collision_walkability_resolution": "none",
+        "destination_floor_validated": false
+      },
+      "mechanics": null,
+      "notes": [
+        "Draft floor-change binding only.",
+        "Does not change server floor authority."
+      ]
+    },
+    {
+      "id": "floor_change_binding_slime_edge_unknown_candidate",
+      "source_transition_candidate_id": "high_city_slime_pool_edge_transition_review_candidate",
+      "source_floor": 0,
+      "destination_floor": null,
+      "floor_delta_reserved": "unknown",
+      "plane": "floor_change_binding_candidate",
+      "status": "draft_non_runtime",
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "authority": {
+        "server_floor_change": "none",
+        "visibility_change": "none",
+        "collision_walkability_resolution": "none",
+        "destination_floor_validated": false
+      },
+      "mechanics": null,
+      "notes": [
+        "Draft floor-change binding only.",
+        "Does not change server floor authority."
+      ]
+    },
+    {
+      "id": "floor_change_binding_gate_same_floor_candidate",
+      "source_transition_candidate_id": "high_city_north_gate_region_transfer_candidate",
+      "source_floor": 0,
+      "destination_floor": 0,
+      "floor_delta_reserved": "same_floor",
+      "plane": "floor_change_binding_candidate",
+      "status": "draft_non_runtime",
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "authority": {
+        "server_floor_change": "none",
+        "visibility_change": "none",
+        "collision_walkability_resolution": "none",
+        "destination_floor_validated": false
+      },
+      "mechanics": null,
+      "notes": [
+        "Draft floor-change binding only.",
+        "Does not change server floor authority."
+      ]
+    }
+  ],
+  "mechanics": null,
+  "notes": [
+    "Floor-change bindings reserve future design shape only.",
+    "They do not change server floor authority."
+  ]
+}

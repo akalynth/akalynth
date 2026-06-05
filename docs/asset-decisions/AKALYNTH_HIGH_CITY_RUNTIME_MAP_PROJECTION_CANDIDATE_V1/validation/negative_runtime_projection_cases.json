@@ -1,0 +1,130 @@
+{
+  "id": "AKALYNTH_HIGH_CITY_RUNTIME_MAP_PROJECTION_CANDIDATE_V1_NEGATIVE_CASES",
+  "status": "draft_validation_fixture",
+  "cases": [
+    {
+      "id": "negative_projection_sets_production_map_promoted_true",
+      "expected_flags": [
+        "production_map_promoted_forbidden"
+      ],
+      "payload": {
+        "production_map_promoted": true
+      }
+    },
+    {
+      "id": "negative_projection_sets_server_authoritative_true",
+      "expected_flags": [
+        "server_authoritative_forbidden"
+      ],
+      "payload": {
+        "server_authoritative": true
+      }
+    },
+    {
+      "id": "negative_projection_references_shared_map_active_target",
+      "expected_flags": [
+        "shared_map_path_forbidden"
+      ],
+      "payload": {
+        "shared_map_path": "packages/shared/maps/high_city.json"
+      }
+    },
+    {
+      "id": "negative_collision_layer_includes_visual_render_fields",
+      "expected_flags": [
+        "runtime_collision_layer_forbidden_field:render"
+      ],
+      "payload": {
+        "layer": "runtime_collision_layer",
+        "cell": {
+          "render": {
+            "layer": "terrain"
+          }
+        }
+      }
+    },
+    {
+      "id": "negative_walkability_layer_includes_transition_to",
+      "expected_flags": [
+        "runtime_walkability_layer_forbidden_field:transition_to"
+      ],
+      "payload": {
+        "layer": "runtime_walkability_layer",
+        "cell": {
+          "transition_to": "sewer_level_01"
+        }
+      }
+    },
+    {
+      "id": "negative_door_house_layer_enforces_access_list",
+      "expected_flags": [
+        "runtime_door_house_layer_forbidden_field:access_list_enforced"
+      ],
+      "payload": {
+        "layer": "runtime_door_house_layer",
+        "door_record": {
+          "access_list_enforced": true
+        }
+      }
+    },
+    {
+      "id": "negative_transition_layer_claims_destination_exists",
+      "expected_flags": [
+        "runtime_destination_existence_forbidden"
+      ],
+      "payload": {
+        "layer": "runtime_transition_layer",
+        "endpoint": {
+          "destination_exists": true
+        }
+      }
+    },
+    {
+      "id": "negative_projection_contains_content_behavior",
+      "expected_flags": [
+        "runtime_schema_forbidden_field:npc_behavior",
+        "runtime_schema_forbidden_field:mob_behavior",
+        "runtime_schema_forbidden_field:shop",
+        "runtime_schema_forbidden_field:dialogue",
+        "runtime_schema_forbidden_field:spawn",
+        "runtime_schema_forbidden_field:ai",
+        "runtime_schema_forbidden_field:combat"
+      ],
+      "payload": {
+        "npc_behavior": {},
+        "mob_behavior": {},
+        "shop": {},
+        "dialogue": {},
+        "spawn": {},
+        "ai": {},
+        "combat": {}
+      }
+    },
+    {
+      "id": "negative_projection_references_unaccepted_receipt",
+      "expected_flags": [
+        "source_receipt_not_accepted"
+      ],
+      "payload": {
+        "source_receipts": {
+          "test": {
+            "id": "AKALYNTH_FAKE_GATE",
+            "status": "implemented_pending_review"
+          }
+        }
+      }
+    },
+    {
+      "id": "negative_projection_hash_mismatch",
+      "expected_flags": [
+        "artifact_hash_mismatch"
+      ],
+      "payload": {
+        "artifact_hash_check": {
+          "expected": "aaaaaaaa",
+          "actual": "bbbbbbbb"
+        }
+      }
+    }
+  ]
+}

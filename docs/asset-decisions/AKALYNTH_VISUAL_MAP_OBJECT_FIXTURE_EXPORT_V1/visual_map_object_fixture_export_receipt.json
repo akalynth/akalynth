@@ -1,0 +1,142 @@
+{
+  "id": "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1",
+  "status": "accepted_draft_visual_fixture_export",
+  "scope": "draft visual map object fixture export only",
+  "input_receipts": [
+    "AKALYNTH_HIGH_CITY_BLOCK_LAYOUT_REFINEMENT_V1",
+    "AKALYNTH_MAP_OBJECT_METADATA_DESIGN_V1"
+  ],
+  "purpose": "Export the accepted refined high-city debug-client fixture into draft visual map object metadata only, using the accepted metadata boundary design.",
+  "artifacts": [
+    "exports/refined_high_city_visual_objects.v1.draft.json",
+    "exports/refined_high_city_overlay_zones.v1.draft.json",
+    "validation/fixture_export_validation_report.json",
+    "validation/negative_authority_leakage_cases.json",
+    "screenshots/01_exported_fixture_overview.png",
+    "screenshots/02_exported_fixture_gate_to_plaza.png",
+    "screenshots/03_exported_fixture_market_lane.png",
+    "screenshots/04_exported_fixture_house_block.png",
+    "screenshots/05_exported_fixture_castle_meeting.png",
+    "screenshots/06_exported_fixture_sewer_hint.png"
+  ],
+  "export_summary": {
+    "visual_object_count": 1416,
+    "overlay_zone_count": 3,
+    "source_debug_routes": [
+      "?visual-smoke=high_city_refined_overview",
+      "?visual-smoke=high_city_refined_gate_to_plaza",
+      "?visual-smoke=high_city_refined_market_lane",
+      "?visual-smoke=high_city_refined_house_block",
+      "?visual-smoke=high_city_refined_castle_meeting",
+      "?visual-smoke=high_city_refined_sewer_hint"
+    ]
+  },
+  "export_hashes_sha256": {
+    "exports/refined_high_city_visual_objects.v1.draft.json": "aeead8b86fb1bdfc6ecd84e66b49f55b0597949e6048aee7aca5747b2d389b45",
+    "exports/refined_high_city_overlay_zones.v1.draft.json": "ece3bce846770a25d50acb8a18caab0cec5cb30dcf3ddf544dad3c76d05d67d8",
+    "validation/negative_authority_leakage_cases.json": "8fbf9ff324d8805ea610520fd9fe5d4e9d5da319d7cf7e5325e61b8976e6f479",
+    "validation/fixture_export_validation_report.json": "51ef8804e0762a93a603193f8d87d9b77699b8311894eed122beff5020ab5fb6",
+    "screenshots/01_exported_fixture_overview.png": "141dd4ceb115d59f6b0669814c8add31a254594c0b39f1b6fd80957451481c46",
+    "screenshots/02_exported_fixture_gate_to_plaza.png": "f21ab1986e8962079e12559d950e094776c3f8a3fd414f1d56a8572d0de75b00",
+    "screenshots/03_exported_fixture_market_lane.png": "9dfb89a730ac922fbe0901f2022d9e9f110e3d1683f7cf97d263b8819186f213",
+    "screenshots/04_exported_fixture_house_block.png": "dbb9356880261cf898818778ba92a903f18c982ac30545ddb3f86bebce66a110",
+    "screenshots/05_exported_fixture_castle_meeting.png": "47323eee7036eda858d0d64f2a876c14281f2943fc920da15aeec14b06818345",
+    "screenshots/06_exported_fixture_sewer_hint.png": "2426b06d608547c908dd6129631b24ea59e2e3ec0076086a06e4d204fb8106ef"
+  },
+  "claims": {
+    "refined_high_city_fixture_exported_as_draft_visual_metadata": true,
+    "visual_objects_reference_existing_visual_asset_ids": true,
+    "overlay_zones_exported_as_presentation_only": true,
+    "mechanics_null": true,
+    "negative_authority_leakage_cases_added": true,
+    "production_map_promoted": false,
+    "server_protocol_changed": false,
+    "shared_maps_changed": false,
+    "npc_behavior_added": false,
+    "mob_behavior_added": false,
+    "collision_changed": false,
+    "walkability_changed": false,
+    "ownership_or_door_permission_added": false,
+    "dialogue_changed": false,
+    "shop_changed": false,
+    "faction_changed": false,
+    "spawn_changed": false,
+    "ai_changed": false,
+    "combat_changed": false,
+    "accepted_as_draft_docs_metadata_export": true,
+    "runtime_renderer_consumes_export": false
+  },
+  "validation": {
+    "export_json_valid": "pass",
+    "export_references_existing_visual_asset_ids": "pass",
+    "mechanics_null_preserved": "pass",
+    "no_gameplay_authority_fields": "pass",
+    "overlay_zones_presentation_only": "pass",
+    "negative_authority_leakage_cases_flagged": "pass",
+    "canvas_only_screenshots_captured": "pass",
+    "npm run verify:quick": "pass 9/9"
+  },
+  "visual_review": {
+    "status": "pass",
+    "checks": {
+      "exported_fixture_overview_readable": "pass",
+      "gate_to_plaza_route_readable": "pass",
+      "market_lane_readable": "pass",
+      "house_block_readable": "pass",
+      "castle_meeting_zone_readable": "pass",
+      "sewer_hint_readable": "pass",
+      "nearest_neighbor_preserved": "pass",
+      "canvas_only_screenshots_captured": "pass",
+      "boundary_preserved": "pass"
+    },
+    "notes": [
+      "Accepted as draft docs metadata export only.",
+      "Reference screenshots come from accepted debug-client visual routes.",
+      "This does not prove runtime rendering from exported JSON.",
+      "The 1416-object export is acceptable for draft traceability; future promotion should add zone/layer summaries or compaction before production review."
+    ]
+  },
+  "non_claims": [
+    "This is not production map promotion.",
+    "This does not implement production map object metadata in shared runtime packages.",
+    "This does not implement collision, walkability, door authority, house ownership, NPC or mob behavior, shops, dialogue, factions, spawns, AI, combat, protocol changes, or shared map changes.",
+    "Screenshots are reference captures from the accepted refined debug-client visual routes; the exported draft metadata remains docs-only.",
+    "The debug client does not render from exported visual metadata in this gate.",
+    "Shared runtime map format support for these objects is not implemented.",
+    "Exported metadata is not production-ready.",
+    "Collision and walkability are not implemented."
+  ],
+  "next_recommended_gate": "AKALYNTH_COLLISION_WALKABILITY_METADATA_DESIGN_V1",
+  "notes": [
+    "Draft export files are docs artifacts only.",
+    "Visual appearance continues not to grant mechanics.",
+    "Future hardening should convert the custom validation into a repo verifier if this export format graduates beyond draft.",
+    "A future export summary artifact should count objects by zone, asset_id, render.layer, plane, and floor before production review."
+  ],
+  "screenshot_capture": {
+    "mode": "canvas_region_only",
+    "dimensions": "1024x1024",
+    "css_image_rendering": "pixelated",
+    "source_routes": {
+      "screenshots/01_exported_fixture_overview.png": "?visual-smoke=high_city_refined_overview",
+      "screenshots/02_exported_fixture_gate_to_plaza.png": "?visual-smoke=high_city_refined_gate_to_plaza",
+      "screenshots/03_exported_fixture_market_lane.png": "?visual-smoke=high_city_refined_market_lane",
+      "screenshots/04_exported_fixture_house_block.png": "?visual-smoke=high_city_refined_house_block",
+      "screenshots/05_exported_fixture_castle_meeting.png": "?visual-smoke=high_city_refined_castle_meeting",
+      "screenshots/06_exported_fixture_sewer_hint.png": "?visual-smoke=high_city_refined_sewer_hint"
+    },
+    "hashes_sha256": {
+      "screenshots/01_exported_fixture_overview.png": "141dd4ceb115d59f6b0669814c8add31a254594c0b39f1b6fd80957451481c46",
+      "screenshots/02_exported_fixture_gate_to_plaza.png": "f21ab1986e8962079e12559d950e094776c3f8a3fd414f1d56a8572d0de75b00",
+      "screenshots/03_exported_fixture_market_lane.png": "9dfb89a730ac922fbe0901f2022d9e9f110e3d1683f7cf97d263b8819186f213",
+      "screenshots/04_exported_fixture_house_block.png": "dbb9356880261cf898818778ba92a903f18c982ac30545ddb3f86bebce66a110",
+      "screenshots/05_exported_fixture_castle_meeting.png": "47323eee7036eda858d0d64f2a876c14281f2943fc920da15aeec14b06818345",
+      "screenshots/06_exported_fixture_sewer_hint.png": "2426b06d608547c908dd6129631b24ea59e2e3ec0076086a06e4d204fb8106ef"
+    },
+    "notes": [
+      "Screenshots are reference captures from the accepted refined debug-client visual routes.",
+      "The export remains draft docs metadata and is not a runtime dependency."
+    ]
+  },
+  "accepted_claim": "The accepted refined high-city visual fixture has been exported into draft visual map object metadata with authority leakage checks and hash-recorded reference screenshots."
+}

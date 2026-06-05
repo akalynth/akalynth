@@ -1,0 +1,137 @@
+{
+  "id": "small_house_collision_walkability_candidates_v1",
+  "status": "draft_design_only",
+  "source_visual_layout_receipt": "AKALYNTH_WALK_IN_BUILDING_VISUAL_ASSEMBLY_V1",
+  "coordinate_system": {
+    "origin": "top_left",
+    "unit": "tile",
+    "tile_size_px": 32,
+    "axes": {
+      "x": "east",
+      "y": "south"
+    },
+    "floor": {
+      "default": 0,
+      "meaning": "visual/debug floor index only until production promotion"
+    }
+  },
+  "collision_cells": [
+    {
+      "tile": [
+        7,
+        23
+      ],
+      "floor": 0,
+      "collision_state": "reserved_conditional",
+      "category": "doorway_threshold_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_small_house_door_7_23"
+        ]
+      },
+      "notes": [
+        "Door threshold candidate only.",
+        "Door and house authority are future gates."
+      ]
+    },
+    {
+      "tile": [
+        5,
+        18
+      ],
+      "floor": 0,
+      "collision_state": "blocked",
+      "category": "wall_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_small_house_wall_5_18"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        7,
+        21
+      ],
+      "floor": 0,
+      "collision_state": "clear",
+      "category": "interior_floor_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_small_house_floor_7_21"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    }
+  ],
+  "walkability_cells": [
+    {
+      "tile": [
+        7,
+        23
+      ],
+      "floor": 0,
+      "walkability_state": "reserved_conditional",
+      "category": "doorway_threshold_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_small_house_door_7_23"
+        ]
+      },
+      "notes": [
+        "Walkability candidate only.",
+        "Does not become runtime traversal authority until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        5,
+        18
+      ],
+      "floor": 0,
+      "walkability_state": "not_walkable",
+      "category": "wall_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_small_house_wall_5_18"
+        ]
+      },
+      "notes": [
+        "Walkability candidate only.",
+        "Does not become runtime traversal authority until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        7,
+        21
+      ],
+      "floor": 0,
+      "walkability_state": "walkable",
+      "category": "interior_floor_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_small_house_floor_7_21"
+        ]
+      },
+      "notes": [
+        "Walkability candidate only.",
+        "Does not become runtime traversal authority until promoted by a later gate."
+      ]
+    }
+  ],
+  "mechanics": null
+}

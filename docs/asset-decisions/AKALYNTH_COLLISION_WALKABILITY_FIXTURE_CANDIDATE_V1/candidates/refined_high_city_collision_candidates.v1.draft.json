@@ -1,0 +1,577 @@
+{
+  "id": "refined_high_city_collision_candidates_v1",
+  "plane": "collision",
+  "status": "draft_candidate_only",
+  "source_receipts": [
+    "AKALYNTH_HIGH_CITY_BLOCK_LAYOUT_REFINEMENT_V1",
+    "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1",
+    "AKALYNTH_COLLISION_WALKABILITY_METADATA_DESIGN_V1"
+  ],
+  "source_visual_fixture_receipt": "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1",
+  "source_visual_layout_receipt": "AKALYNTH_HIGH_CITY_BLOCK_LAYOUT_REFINEMENT_V1",
+  "runtime_authority": false,
+  "server_authoritative": false,
+  "production_map_promoted": false,
+  "coordinate_system": {
+    "origin": "top_left",
+    "unit": "tile",
+    "tile_size_px": 32,
+    "axes": {
+      "x": "east",
+      "y": "south"
+    },
+    "floor": {
+      "default": 0,
+      "meaning": "draft visual fixture floor index only; not production map floor authority"
+    }
+  },
+  "coverage": {
+    "mode": "partial_candidate",
+    "bounds": {
+      "x": 0,
+      "y": 0,
+      "width": 32,
+      "height": 32,
+      "floor": 0
+    }
+  },
+  "cells": [
+    {
+      "tile": [
+        15,
+        14
+      ],
+      "floor": 0,
+      "collision_state": "clear",
+      "category": "public_plaza_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_0945_fountain_15_14"
+        ]
+      },
+      "notes": [
+        "Public plaza clear candidate.",
+        "Walkability is declared separately."
+      ]
+    },
+    {
+      "tile": [
+        14,
+        18
+      ],
+      "floor": 0,
+      "collision_state": "clear",
+      "category": "gate_to_plaza_route_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_0417_floor_cobble_01_14_18"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        15,
+        18
+      ],
+      "floor": 0,
+      "collision_state": "clear",
+      "category": "gate_to_plaza_route_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_0418_floor_cobble_01_15_18"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        16,
+        18
+      ],
+      "floor": 0,
+      "collision_state": "clear",
+      "category": "gate_to_plaza_route_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_0419_floor_cobble_01_16_18"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        12,
+        14
+      ],
+      "floor": 0,
+      "collision_state": "clear",
+      "category": "public_plaza_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_0698_floor_stone_01_12_14"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        18,
+        14
+      ],
+      "floor": 0,
+      "collision_state": "clear",
+      "category": "public_plaza_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_0704_floor_stone_01_18_14"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        4,
+        4
+      ],
+      "floor": 0,
+      "collision_state": "blocked",
+      "category": "wall_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_0851_wall_stone_north_4_4"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        5,
+        4
+      ],
+      "floor": 0,
+      "collision_state": "blocked",
+      "category": "wall_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_0852_wall_stone_north_5_4"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        13,
+        4
+      ],
+      "floor": 0,
+      "collision_state": "blocked",
+      "category": "wall_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_0860_wall_stone_north_13_4"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        17,
+        4
+      ],
+      "floor": 0,
+      "collision_state": "blocked",
+      "category": "wall_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_0861_wall_stone_north_17_4"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        29,
+        4
+      ],
+      "floor": 0,
+      "collision_state": "blocked",
+      "category": "wall_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_0873_wall_stone_north_29_4"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        3,
+        10
+      ],
+      "floor": 0,
+      "collision_state": "blocked",
+      "category": "outer_column_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_0905_stone_column_3_10"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        30,
+        10
+      ],
+      "floor": 0,
+      "collision_state": "blocked",
+      "category": "outer_column_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_0926_stone_column_30_10"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        15,
+        4
+      ],
+      "floor": 0,
+      "collision_state": "reserved_conditional",
+      "category": "gate_door_threshold_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_0944_door_wood_open_south_15_4"
+        ]
+      },
+      "notes": [
+        "Reserved for future door/gate authority gate.",
+        "Does not imply passability."
+      ]
+    },
+    {
+      "tile": [
+        10,
+        14
+      ],
+      "floor": 0,
+      "collision_state": "reserved_conditional",
+      "category": "castle_door_threshold_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_1134_door_wood_open_south_10_14"
+        ]
+      },
+      "notes": [
+        "Reserved for future door/house authority gate.",
+        "Does not imply passability."
+      ]
+    },
+    {
+      "tile": [
+        25,
+        17
+      ],
+      "floor": 0,
+      "collision_state": "reserved_conditional",
+      "category": "market_shop_threshold_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_1284_door_wood_open_south_25_17"
+        ]
+      },
+      "notes": [
+        "Reserved for future door/shop authority gate.",
+        "Does not imply passability."
+      ]
+    },
+    {
+      "tile": [
+        7,
+        22
+      ],
+      "floor": 0,
+      "collision_state": "reserved_conditional",
+      "category": "small_house_threshold_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_1357_door_wood_open_south_7_22"
+        ]
+      },
+      "notes": [
+        "Reserved for future door/house authority gate.",
+        "Does not imply passability."
+      ]
+    },
+    {
+      "tile": [
+        21,
+        12
+      ],
+      "floor": 0,
+      "collision_state": "blocked",
+      "category": "market_stall_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_1285_market_food_stall_21_12"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        27,
+        12
+      ],
+      "floor": 0,
+      "collision_state": "blocked",
+      "category": "market_stall_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_1286_market_cloth_stall_27_12"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        20,
+        17
+      ],
+      "floor": 0,
+      "collision_state": "blocked",
+      "category": "bench_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_1288_bench_20_17"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        28,
+        17
+      ],
+      "floor": 0,
+      "collision_state": "blocked",
+      "category": "chest_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_1289_chest_small_28_17"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        10,
+        8
+      ],
+      "floor": 0,
+      "collision_state": "blocked",
+      "category": "throne_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_1135_throne_10_8"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        5,
+        13
+      ],
+      "floor": 0,
+      "collision_state": "blocked",
+      "category": "castle_wall_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_1118_wall_stone_south_5_14"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        24,
+        23
+      ],
+      "floor": 0,
+      "collision_state": "blocked",
+      "category": "pipe_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_1411_sewer_pipe_24_23"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        29,
+        23
+      ],
+      "floor": 0,
+      "collision_state": "blocked",
+      "category": "pipe_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_1412_sewer_pipe_29_23"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        25,
+        26
+      ],
+      "floor": 0,
+      "collision_state": "reserved_conditional",
+      "category": "sewer_grate_transition_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_1413_sewer_grate_25_26"
+        ]
+      },
+      "notes": [
+        "Reserved for future transition/underworld gate.",
+        "Does not imply travel."
+      ]
+    },
+    {
+      "tile": [
+        28,
+        26
+      ],
+      "floor": 0,
+      "collision_state": "reserved_conditional",
+      "category": "sewer_grate_transition_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_1414_sewer_grate_28_26"
+        ]
+      },
+      "notes": [
+        "Reserved for future transition/underworld gate.",
+        "Does not imply travel."
+      ]
+    },
+    {
+      "tile": [
+        30,
+        26
+      ],
+      "floor": 0,
+      "collision_state": "reserved_conditional",
+      "category": "slime_pool_edge_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_1415_slime_pool_30_26"
+        ]
+      },
+      "notes": [
+        "Reserved conditional because map edge/object intent needs later review."
+      ]
+    }
+  ],
+  "mechanics": null,
+  "notes": [
+    "Draft candidate metadata only.",
+    "Not consumed by runtime systems.",
+    "Visual object references are evidence pointers only, not authority."
+  ]
+}

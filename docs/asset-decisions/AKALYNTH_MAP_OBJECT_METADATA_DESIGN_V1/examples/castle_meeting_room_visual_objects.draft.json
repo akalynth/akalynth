@@ -1,0 +1,129 @@
+{
+  "id": "castle_meeting_room_visual_objects_draft",
+  "status": "draft_visual_only_example",
+  "source_receipt": "AKALYNTH_HIGH_CITY_BLOCK_LAYOUT_REFINEMENT_V1",
+  "visual_objects": [
+    {
+      "id": "vis_castle_throne_01",
+      "asset_id": "throne",
+      "plane": "visual",
+      "position": {
+        "tile": [
+          8,
+          8
+        ],
+        "floor": 0
+      },
+      "render": {
+        "layer": "object_overlay",
+        "anchor": "bottom_center",
+        "z_policy": "sort_by_anchor_y",
+        "draw_scale": 1
+      },
+      "mechanics": null,
+      "authority": {
+        "collision": "none",
+        "walkability": "none",
+        "interaction": "none",
+        "server_entity": "none",
+        "ownership": "none",
+        "door_permissions": "none",
+        "npc_behavior": "none",
+        "mob_behavior": "none",
+        "shop": "none",
+        "dialogue": "none",
+        "spawn": "none",
+        "ai": "none",
+        "combat": "none"
+      },
+      "notes": [
+        "Visual castle object only.",
+        "Does not create role, access, ownership, faction, or interaction behavior."
+      ]
+    },
+    {
+      "id": "vis_castle_weapon_rack_01",
+      "asset_id": "weapon_rack",
+      "plane": "visual",
+      "position": {
+        "tile": [
+          10,
+          9
+        ],
+        "floor": 0
+      },
+      "render": {
+        "layer": "object_overlay",
+        "anchor": "bottom_center",
+        "z_policy": "sort_by_anchor_y",
+        "draw_scale": 1
+      },
+      "mechanics": null,
+      "authority": {
+        "collision": "none",
+        "walkability": "none",
+        "interaction": "none",
+        "server_entity": "none",
+        "ownership": "none",
+        "door_permissions": "none",
+        "npc_behavior": "none",
+        "mob_behavior": "none",
+        "shop": "none",
+        "dialogue": "none",
+        "spawn": "none",
+        "ai": "none",
+        "combat": "none"
+      },
+      "notes": [
+        "Visual prop only.",
+        "Does not grant weapons, inventory, combat, or use behavior."
+      ]
+    }
+  ],
+  "overlay_zones": [
+    {
+      "id": "overlay_castle_meeting_roof_01",
+      "plane": "presentation_overlay",
+      "asset_id": "roof_castle_overlay",
+      "position": {
+        "tile": [
+          5,
+          5
+        ],
+        "floor": 1
+      },
+      "review_visibility": {
+        "outside": "visible",
+        "threshold": "faded",
+        "inside": "hidden"
+      },
+      "review_only_context": {
+        "interior_footprint": {
+          "x": 5,
+          "y": 5,
+          "width": 8,
+          "height": 6
+        },
+        "doorway_tiles": [
+          [
+            9,
+            11
+          ]
+        ]
+      },
+      "mechanics": null,
+      "authority": {
+        "house_entry": "none",
+        "ownership": "none",
+        "door_permissions": "none",
+        "collision": "none",
+        "walkability": "none",
+        "server_floor_visibility": "none"
+      },
+      "notes": [
+        "Visual overlay only.",
+        "Review footprint is presentation metadata, not a house zone."
+      ]
+    }
+  ]
+}

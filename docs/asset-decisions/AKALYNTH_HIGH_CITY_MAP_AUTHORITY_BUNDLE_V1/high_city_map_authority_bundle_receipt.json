@@ -1,0 +1,243 @@
+{
+  "id": "AKALYNTH_HIGH_CITY_MAP_AUTHORITY_BUNDLE_V1",
+  "status": "accepted_high_city_map_authority_bundle",
+  "scope": "non-runtime high-city map authority evidence bundle",
+  "input_receipts": [
+    "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1",
+    "AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1",
+    "AKALYNTH_DOOR_HOUSE_AUTHORITY_FIXTURE_CANDIDATE_V1",
+    "AKALYNTH_TRANSITION_AUTHORITY_FIXTURE_CANDIDATE_V1",
+    "AKALYNTH_MAP_OBJECT_METADATA_DESIGN_V1",
+    "AKALYNTH_COLLISION_WALKABILITY_METADATA_DESIGN_V1",
+    "AKALYNTH_DOOR_AND_HOUSE_AUTHORITY_DESIGN_V1",
+    "AKALYNTH_TRANSITION_AUTHORITY_DESIGN_V1"
+  ],
+  "purpose": "Bundle accepted draft planes for the refined high-city layout into one non-runtime, non-authoritative map-candidate evidence package and validate cross-plane alignment without production promotion.",
+  "artifacts": [
+    "bundle/high_city_authority_bundle.v1.draft.json",
+    "bundle/high_city_authority_bundle.index.v1.json",
+    "bundle/high_city_authority_bundle.summary.v1.json",
+    "bundle/high_city_authority_bundle.sha256",
+    "validation/authority_bundle_validation_report.json",
+    "validation/negative_cross_plane_mismatch_cases.json",
+    "screenshots/01_bundle_visual_overview.png",
+    "screenshots/02_bundle_collision_walkability_overlay.png",
+    "screenshots/03_bundle_door_house_overlay.png",
+    "screenshots/04_bundle_transition_overlay.png",
+    "screenshots/05_bundle_reserved_conditionals_overlay.png",
+    "screenshots/06_bundle_combined_review.png"
+  ],
+  "bundle_summary": {
+    "counts_by_plane": {
+      "visual_objects": 1416,
+      "overlay_zones": 3,
+      "collision_cells": 28,
+      "walkability_cells": 28,
+      "door_candidates": 4,
+      "house_candidates": 3,
+      "access_policy_candidates": 4,
+      "overlay_binding_candidates": 3,
+      "transition_candidates": 4,
+      "transition_endpoint_candidates": 4,
+      "floor_change_binding_candidates": 4,
+      "transition_policy_candidates": 3
+    },
+    "cross_plane_link_counts": {
+      "door_to_reserved_conditionals": 4,
+      "transition_to_reserved_conditionals": 4,
+      "overlay_bindings_to_house_candidates": 3,
+      "house_to_doors_and_overlays": 3,
+      "transition_to_endpoints_policies_and_floor": 4
+    },
+    "reserved_conditionals": 7,
+    "unresolved_authority_summary": {
+      "runtime_movement": "none",
+      "runtime_collision": "none",
+      "runtime_walkability": "none",
+      "runtime_doors": "none",
+      "runtime_houses": "none",
+      "runtime_access_policy": "none",
+      "runtime_overlay_visibility": "none",
+      "runtime_transitions": "none",
+      "production_map": "none",
+      "server_protocol": "none"
+    }
+  },
+  "claims": {
+    "non_runtime_authority_bundle_created": true,
+    "visual_plane_linked": true,
+    "collision_walkability_plane_linked": true,
+    "door_house_plane_linked": true,
+    "transition_plane_linked": true,
+    "cross_plane_validation_report_created": true,
+    "negative_cross_plane_mismatch_cases_flagged": true,
+    "production_map_promoted": false,
+    "runtime_movement_implemented": false,
+    "runtime_collision_implemented": false,
+    "runtime_walkability_implemented": false,
+    "runtime_doors_implemented": false,
+    "runtime_houses_implemented": false,
+    "runtime_transitions_implemented": false,
+    "server_authority_changed": false,
+    "shared_maps_changed": false,
+    "server_protocol_changed": false,
+    "npc_behavior_added": false,
+    "mob_behavior_added": false,
+    "shop_changed": false,
+    "dialogue_changed": false,
+    "spawn_changed": false,
+    "ai_changed": false,
+    "combat_changed": false,
+    "mechanics_null": true
+  },
+  "validation": {
+    "referenced_artifact_files_exist": "pass",
+    "referenced_artifact_hashes_match": "pass",
+    "referenced_receipts_are_accepted": "pass",
+    "coordinate_systems_match_across_planes": "pass",
+    "bounds_match_or_are_explicitly_partial": "pass",
+    "visual_object_ids_referenced_by_candidates_exist": "pass",
+    "door_candidates_reference_reserved_conditional_tiles": "pass",
+    "transition_candidates_reference_reserved_conditional_tiles": "pass",
+    "sewer_conditionals_not_resolved_by_door_house_candidates": "pass",
+    "door_house_candidates_not_used_as_transition_authority": "pass",
+    "overlay_bindings_reference_known_visual_overlays_and_house_candidates": "pass",
+    "house_candidates_reference_known_doors_and_overlays": "pass",
+    "transition_candidates_reference_known_endpoints_policies_and_floor_bindings": "pass",
+    "collision_walkability_candidate_conflicts_remain_zero": "pass",
+    "negative_cross_plane_mismatch_cases_flagged": "pass",
+    "production_map_promoted_false": "pass",
+    "bundle_remains_non_runtime": "pass",
+    "canvas_only_screenshots_captured": "pass",
+    "protected_runtime_files_remain_unchanged": "pass",
+    "npm_run_verify_quick_passes": "pass 9/9"
+  },
+  "review": {
+    "status": "pass",
+    "acceptance_criteria": {
+      "visual_objects_linked": "pass",
+      "overlay_zones_linked": "pass",
+      "collision_cells_linked": "pass",
+      "walkability_cells_linked": "pass",
+      "door_candidates_linked": "pass",
+      "house_candidates_linked": "pass",
+      "access_policy_candidates_are_unenforced": "pass",
+      "overlay_binding_candidates_linked": "pass",
+      "transition_candidates_linked": "pass",
+      "endpoint_candidates_are_placeholders": "pass",
+      "floor_change_bindings_are_candidates": "pass",
+      "transition_policy_candidates_are_unenforced": "pass",
+      "cross_plane_link_checks_pass": "pass",
+      "negative_mismatch_cases_flagged": "pass",
+      "bundle_screenshots_nonblank": "pass",
+      "protected_runtime_paths_remain_unchanged": "pass",
+      "npm_run_verify_quick_passes": "pass"
+    },
+    "notes": [
+      "Accepted as a non-runtime map authority bundle.",
+      "The bundle links accepted candidate planes but does not promote them into shared production maps.",
+      "The bundle does not implement runtime movement, collision, walkability, doors, houses, transitions, ownership, access policy, NPCs, mobs, shops, dialogue, spawns, AI, or combat.",
+      "Cross-plane validation passed for the draft candidate artifacts.",
+      "Negative mismatch cases correctly guard against authority leakage and broken references.",
+      "Production map promotion remains blocked pending a separate runtime map schema and promotion-readiness gate."
+    ]
+  },
+  "accepted_claim_if_reviewed": "A non-runtime high-city map authority bundle exists, linking the accepted visual, collision/walkability, door/house, and transition candidate planes with cross-plane validation and authority-leakage protections.",
+  "valid_accepted_status": "accepted_high_city_map_authority_bundle",
+  "validation_report": "validation/authority_bundle_validation_report.json",
+  "non_claims": [
+    "Production map is not promoted.",
+    "Shared map JSON is not changed.",
+    "Runtime movement is not implemented.",
+    "Runtime collision is not implemented.",
+    "Runtime walkability is not implemented.",
+    "Runtime doors are not implemented.",
+    "Runtime houses are not implemented.",
+    "Runtime ownership is not implemented.",
+    "Access lists are not enforced.",
+    "Runtime transitions are not implemented.",
+    "Destination maps are not promoted.",
+    "Server authority is not changed.",
+    "Protocol is not changed.",
+    "NPC, mob, shop, dialogue, faction, spawn, AI, and combat behavior is not added."
+  ],
+  "next_recommended_gate": "AKALYNTH_RUNTIME_MAP_AUTHORITY_SCHEMA_DESIGN_V1",
+  "hashes_sha256": {
+    "bundle/high_city_authority_bundle.v1.draft.json": "4f67d068eb745af2a0a064787ab0ed8a1cf0a2922c9209dde341aaf5ff8248bb",
+    "bundle/high_city_authority_bundle.index.v1.json": "bdc673066280c99bcc88b6b90382c2baa1561565276368e92ecf1f3b2a1a0056",
+    "bundle/high_city_authority_bundle.summary.v1.json": "5fddd35e884cc15bb72bfd21ea7c38d75bd1aa675d2565771db01caec9bb687f",
+    "bundle/high_city_authority_bundle.sha256": "5488e867b52066f37589e88f18d3e359cf552fd55c4bda0fe54fd525e506d5eb",
+    "validation/negative_cross_plane_mismatch_cases.json": "ea95dfcaf5ad130cf1add7f47c110820808f3dd22a788ad9e08d25ecabf6b8a9",
+    "screenshots/01_bundle_visual_overview.png": "412e6279bc98eb533be3de9fc16128a8f516d91d02f6f08cc1558ed078355b89",
+    "screenshots/02_bundle_collision_walkability_overlay.png": "bbc108bf1f5d02d9fdae55f19d01033d3ae0269d022c95c14dfbe4bd21572b10",
+    "screenshots/03_bundle_door_house_overlay.png": "22f999d9e80d5857c39cf608a7ea21b9b3cb361d3b1212bb996b3f1aba5ae0f4",
+    "screenshots/04_bundle_transition_overlay.png": "753b12832a1ff5969aa128ab92e3c9a3525abdc3f10a4cd15ff8e1f349494f84",
+    "screenshots/05_bundle_reserved_conditionals_overlay.png": "502df1cd4f5603a05ff9bdd235124b37d8c15f708ee0ec17d12151e3326307b8",
+    "screenshots/06_bundle_combined_review.png": "b5d2054e9a7222ab1bc23cb351046c66f9cab58928fa649de765fca7d5aec0ba",
+    "validation/authority_bundle_validation_report.json": "d53e56aa6671c3399a7dcf8ce28715671b01e6424fd94696c461f83feb5db686"
+  },
+  "screenshot_capture": {
+    "status": "pass",
+    "mode": "generated_canvas_bundle_overlay",
+    "dimensions": "1024x1024",
+    "source": "draft bundle metadata and referenced candidate planes, not runtime map renderer",
+    "screenshots": [
+      {
+        "file": "screenshots/01_bundle_visual_overview.png",
+        "title": "Bundle visual overview",
+        "sha256": "412e6279bc98eb533be3de9fc16128a8f516d91d02f6f08cc1558ed078355b89"
+      },
+      {
+        "file": "screenshots/02_bundle_collision_walkability_overlay.png",
+        "title": "Bundle collision walkability overlay",
+        "sha256": "bbc108bf1f5d02d9fdae55f19d01033d3ae0269d022c95c14dfbe4bd21572b10"
+      },
+      {
+        "file": "screenshots/03_bundle_door_house_overlay.png",
+        "title": "Bundle door house overlay",
+        "sha256": "22f999d9e80d5857c39cf608a7ea21b9b3cb361d3b1212bb996b3f1aba5ae0f4"
+      },
+      {
+        "file": "screenshots/04_bundle_transition_overlay.png",
+        "title": "Bundle transition overlay",
+        "sha256": "753b12832a1ff5969aa128ab92e3c9a3525abdc3f10a4cd15ff8e1f349494f84"
+      },
+      {
+        "file": "screenshots/05_bundle_reserved_conditionals_overlay.png",
+        "title": "Bundle reserved conditionals overlay",
+        "sha256": "502df1cd4f5603a05ff9bdd235124b37d8c15f708ee0ec17d12151e3326307b8"
+      },
+      {
+        "file": "screenshots/06_bundle_combined_review.png",
+        "title": "Bundle combined review",
+        "sha256": "b5d2054e9a7222ab1bc23cb351046c66f9cab58928fa649de765fca7d5aec0ba"
+      }
+    ],
+    "notes": [
+      "Screenshots visualize the non-runtime authority bundle only.",
+      "These images do not prove runtime rendering or gameplay authority."
+    ]
+  },
+  "screenshots": [
+    "screenshots/01_bundle_visual_overview.png",
+    "screenshots/02_bundle_collision_walkability_overlay.png",
+    "screenshots/03_bundle_door_house_overlay.png",
+    "screenshots/04_bundle_transition_overlay.png",
+    "screenshots/05_bundle_reserved_conditionals_overlay.png",
+    "screenshots/06_bundle_combined_review.png"
+  ],
+  "verification": {
+    "npm run verify:quick": "pass 9/9",
+    "protected_runtime_files_remain_unchanged": "pass"
+  },
+  "boundary_review": {
+    "status": "pass",
+    "protected_runtime_files_remain_unchanged": "pass",
+    "notes": [
+      "Protected runtime file status was checked after authority bundle artifacts were generated.",
+      "This gate created draft bundle metadata, validation artifacts, screenshots, and a receipt only.",
+      "No server, protocol, shared map, runtime movement, collision, walkability, door, house, access, overlay visibility, transition, production map, shop, dialogue, spawn, AI, combat, NPC, or mob behavior was introduced."
+    ]
+  },
+  "accepted_claim": "A non-runtime high-city map authority bundle exists, linking the accepted visual, overlay, collision/walkability, door/house, and transition candidate planes with cross-plane validation and authority-leakage protections."
+}

@@ -1,0 +1,29 @@
+{
+  "id": "notice_board",
+  "asset_type": "world_object",
+  "source_kind": "sprite",
+  "image": "notice_board.png",
+  "frame": {
+    "width": 128,
+    "height": 96
+  },
+  "rendering": {
+    "filtering": "nearest",
+    "display_only": true,
+    "draw_scale": 0.8,
+    "anchor": {
+      "type": "bottom_center",
+      "source_pixels": [
+        64,
+        90
+      ]
+    },
+    "z_policy": "sort_by_anchor_y",
+    "layer": "object_overlay"
+  },
+  "mechanics": null,
+  "visual_notes": [
+    "Notice board visual only.",
+    "Does not encode reading, quests, or interaction."
+  ]
+}

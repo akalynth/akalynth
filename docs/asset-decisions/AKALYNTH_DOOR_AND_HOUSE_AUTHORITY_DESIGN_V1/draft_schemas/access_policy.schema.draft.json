@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "akalynth.draft.access_policy.schema.v1",
+  "title": "Draft Access Policy Boundary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "plane",
+    "status",
+    "runtime_authority",
+    "server_authoritative",
+    "production_map_promoted",
+    "policy_subject",
+    "mechanics",
+    "authority"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "plane": {
+      "const": "access_policy"
+    },
+    "status": {
+      "const": "draft_design_only"
+    },
+    "runtime_authority": {
+      "const": false
+    },
+    "server_authoritative": {
+      "const": false
+    },
+    "production_map_promoted": {
+      "const": false
+    },
+    "policy_subject": {
+      "enum": [
+        "door_threshold",
+        "house_region",
+        "room_region"
+      ]
+    },
+    "allowed_policy_shapes_reserved": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "owner_only",
+          "allow_list",
+          "deny_list",
+          "public",
+          "guild_or_role",
+          "quest_state"
+        ]
+      }
+    },
+    "mechanics": {
+      "type": "null"
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "permission_evaluation",
+        "owner_identity",
+        "role_source"
+      ],
+      "properties": {
+        "permission_evaluation": {
+          "const": "future_gate_required"
+        },
+        "owner_identity": {
+          "const": "future_gate_required_if_owned"
+        },
+        "role_source": {
+          "const": "future_gate_required_if_role_based"
+        }
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

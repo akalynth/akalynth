@@ -1,0 +1,6 @@
+{
+  "status": "pass",
+  "schemas": 7,
+  "positives": 2,
+  "negatives": 10
+}

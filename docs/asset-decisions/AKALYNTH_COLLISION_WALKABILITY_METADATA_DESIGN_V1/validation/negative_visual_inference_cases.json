@@ -1,0 +1,46 @@
+{
+  "id": "AKALYNTH_COLLISION_WALKABILITY_METADATA_DESIGN_V1_NEGATIVE_VISUAL_INFERENCE_CASES",
+  "status": "draft_negative_cases",
+  "expected_result": "rejected_or_flagged_by_future_validator",
+  "cases": [
+    {
+      "id": "wall_visual_implies_collision",
+      "forbidden_inference": "wall_stone_north => collision blocked",
+      "expected_flag": "visual_asset_cannot_define_collision"
+    },
+    {
+      "id": "floor_visual_implies_walkability",
+      "forbidden_inference": "floor_cobble_01 => walkable",
+      "expected_flag": "visual_asset_cannot_define_walkability"
+    },
+    {
+      "id": "door_visual_implies_passability",
+      "forbidden_inference": "door_wood_open_south => passable threshold",
+      "expected_flag": "door_visual_cannot_define_movement"
+    },
+    {
+      "id": "sewer_visual_implies_transition",
+      "forbidden_inference": "sewer_grate => sewer travel",
+      "expected_flag": "visual_asset_cannot_define_transition"
+    },
+    {
+      "id": "roof_footprint_implies_house_bounds",
+      "forbidden_inference": "roof overlay footprint => house zone",
+      "expected_flag": "overlay_cannot_define_house_authority"
+    },
+    {
+      "id": "market_visual_implies_blocking_or_shop",
+      "forbidden_inference": "market stall => blocking and shop inventory",
+      "expected_flag": "visual_asset_cannot_define_interaction_or_collision"
+    },
+    {
+      "id": "npc_visual_implies_entity_collision",
+      "forbidden_inference": "NPC-looking sprite => server entity collision",
+      "expected_flag": "visual_preset_cannot_define_server_entity"
+    }
+  ],
+  "notes": [
+    "These cases are design hardening targets for a future validator.",
+    "This gate records the negative cases but does not install a runtime validator."
+  ]
+}

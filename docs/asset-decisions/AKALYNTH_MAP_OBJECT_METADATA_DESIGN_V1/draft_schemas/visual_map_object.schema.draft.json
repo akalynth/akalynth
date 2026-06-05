@@ -1,0 +1,233 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "akalynth://draft-schemas/visual_map_object.schema.draft.json",
+  "title": "Akalynth Visual Map Object Draft Schema",
+  "description": "Draft design schema for visual-only map object placement. Not a runtime schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "asset_id",
+    "plane",
+    "position",
+    "render",
+    "mechanics",
+    "authority",
+    "notes"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$"
+    },
+    "asset_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$"
+    },
+    "plane": {
+      "const": "visual"
+    },
+    "position": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tile",
+        "floor"
+      ],
+      "properties": {
+        "tile": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "integer",
+              "minimum": 0
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "floor": {
+          "type": "integer",
+          "default": 0
+        }
+      }
+    },
+    "render": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layer",
+        "anchor",
+        "z_policy",
+        "draw_scale"
+      ],
+      "properties": {
+        "layer": {
+          "enum": [
+            "terrain",
+            "object_overlay",
+            "floor_overlay",
+            "roof_overlay"
+          ]
+        },
+        "anchor": {
+          "enum": [
+            "tile_top_left",
+            "bottom_center",
+            "bottom_left",
+            "center"
+          ]
+        },
+        "z_policy": {
+          "enum": [
+            "fixed_layer",
+            "sort_by_anchor_y",
+            "fixed_above_building"
+          ]
+        },
+        "draw_scale": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "mechanics": {
+      "type": "null"
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "collision",
+        "walkability",
+        "interaction",
+        "server_entity",
+        "ownership",
+        "door_permissions",
+        "npc_behavior",
+        "mob_behavior",
+        "shop",
+        "dialogue",
+        "spawn",
+        "ai",
+        "combat"
+      ],
+      "properties": {
+        "collision": {
+          "const": "none"
+        },
+        "walkability": {
+          "const": "none"
+        },
+        "interaction": {
+          "const": "none"
+        },
+        "server_entity": {
+          "const": "none"
+        },
+        "ownership": {
+          "const": "none"
+        },
+        "door_permissions": {
+          "const": "none"
+        },
+        "npc_behavior": {
+          "const": "none"
+        },
+        "mob_behavior": {
+          "const": "none"
+        },
+        "shop": {
+          "const": "none"
+        },
+        "dialogue": {
+          "const": "none"
+        },
+        "spawn": {
+          "const": "none"
+        },
+        "ai": {
+          "const": "none"
+        },
+        "combat": {
+          "const": "none"
+        }
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "not": {
+        "required": [
+          "blocking"
+        ]
+      }
+    },
+    {
+      "not": {
+        "required": [
+          "walkable"
+        ]
+      }
+    },
+    {
+      "not": {
+        "required": [
+          "interaction_type"
+        ]
+      }
+    },
+    {
+      "not": {
+        "required": [
+          "shop_inventory"
+        ]
+      }
+    },
+    {
+      "not": {
+        "required": [
+          "dialogue_tree"
+        ]
+      }
+    },
+    {
+      "not": {
+        "required": [
+          "spawn_table"
+        ]
+      }
+    },
+    {
+      "not": {
+        "required": [
+          "house_zone"
+        ]
+      }
+    },
+    {
+      "not": {
+        "required": [
+          "access_list"
+        ]
+      }
+    },
+    {
+      "not": {
+        "required": [
+          "door_permissions"
+        ]
+      }
+    }
+  ]
+}

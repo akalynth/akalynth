@@ -1,0 +1,144 @@
+{
+  "id": "AKALYNTH_COLLISION_WALKABILITY_METADATA_DESIGN_V1_VALIDATION_REPORT",
+  "status": "pass",
+  "generated_from": [
+    "draft_schemas/collision_layer.schema.draft.json",
+    "draft_schemas/walkability_layer.schema.draft.json",
+    "draft_schemas/collision_walkability_consistency.schema.draft.json",
+    "examples/refined_high_city_collision_candidates.draft.json",
+    "examples/refined_high_city_walkability_candidates.draft.json",
+    "examples/small_house_collision_walkability_candidates.draft.json",
+    "examples/market_shop_collision_walkability_candidates.draft.json",
+    "examples/castle_meeting_collision_walkability_candidates.draft.json",
+    "examples/sewer_hint_collision_walkability_candidates.draft.json",
+    "validation/negative_collision_walkability_cases.json"
+  ],
+  "checks": {
+    "draft_schema_json_valid": "pass",
+    "draft_example_json_valid": "pass",
+    "negative_collision_walkability_cases_flagged": "pass",
+    "examples_are_draft_non_runtime_candidates": "pass",
+    "visual_references_are_evidence_only": "pass"
+  },
+  "schema_parse_results": [
+    {
+      "file": "draft_schemas/collision_layer.schema.draft.json",
+      "status": "pass"
+    },
+    {
+      "file": "draft_schemas/walkability_layer.schema.draft.json",
+      "status": "pass"
+    },
+    {
+      "file": "draft_schemas/collision_walkability_consistency.schema.draft.json",
+      "status": "pass"
+    }
+  ],
+  "example_results": [
+    {
+      "file": "examples/refined_high_city_collision_candidates.draft.json",
+      "status": "pass",
+      "flags": []
+    },
+    {
+      "file": "examples/refined_high_city_walkability_candidates.draft.json",
+      "status": "pass",
+      "flags": []
+    },
+    {
+      "file": "examples/small_house_collision_walkability_candidates.draft.json",
+      "status": "pass",
+      "flags": []
+    },
+    {
+      "file": "examples/market_shop_collision_walkability_candidates.draft.json",
+      "status": "pass",
+      "flags": []
+    },
+    {
+      "file": "examples/castle_meeting_collision_walkability_candidates.draft.json",
+      "status": "pass",
+      "flags": []
+    },
+    {
+      "file": "examples/sewer_hint_collision_walkability_candidates.draft.json",
+      "status": "pass",
+      "flags": []
+    }
+  ],
+  "negative_case_results": [
+    {
+      "id": "negative_visual_object_declares_collision",
+      "expected_flags": [
+        "visual_object_forbidden_field:collision"
+      ],
+      "observed_flags": [
+        "visual_object_forbidden_field:collision"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_visual_object_declares_walkability",
+      "expected_flags": [
+        "visual_object_forbidden_field:walkability"
+      ],
+      "observed_flags": [
+        "visual_object_forbidden_field:walkability"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_collision_walkability_conflict",
+      "expected_flags": [
+        "collision_walkability_conflict:blocked_and_walkable"
+      ],
+      "observed_flags": [
+        "collision_walkability_conflict:blocked_and_walkable"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_door_promoted_without_door_gate",
+      "expected_flags": [
+        "door_authority_without_gate"
+      ],
+      "observed_flags": [
+        "door_authority_without_gate"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_sewer_transition_in_walkability_layer",
+      "expected_flags": [
+        "transition_authority_in_walkability_layer"
+      ],
+      "observed_flags": [
+        "transition_authority_in_walkability_layer"
+      ],
+      "result": "flagged"
+    }
+  ],
+  "consistency_rules_confirmed": [
+    "blocked + walkable is flagged invalid",
+    "door authority without a future gate is flagged",
+    "sewer transition authority inside walkability is flagged",
+    "visual collision/walkability fields are flagged"
+  ],
+  "hashes_sha256": {
+    "draft_schemas/collision_layer.schema.draft.json": "81fbd68e4dc68cd7f0f47739dff6d297cc4535f5e285e368fe0a832c5ec87a0e",
+    "draft_schemas/walkability_layer.schema.draft.json": "15b78d9cd6f665195fa026c3ca98ab9150e22c2d3d04697209c0f94d0648cd2b",
+    "draft_schemas/collision_walkability_consistency.schema.draft.json": "813e05f76149df4db6e49d4a90f19c65ef8cae2164086f41a4c20e9cd7f80d64",
+    "examples/refined_high_city_collision_candidates.draft.json": "ade33a284808deefdbab0129e822ab0a9b7d8ecee1d98061e5b9eb64b9e7e10b",
+    "examples/refined_high_city_walkability_candidates.draft.json": "0c2655e077c0360234289b38fdb84f292f6753e62378c1fa4e24fc5aca998d89",
+    "examples/small_house_collision_walkability_candidates.draft.json": "4489c51965d76b6d2e368052ed451170df5be0d8f9a9a0de1f692042206197af",
+    "examples/market_shop_collision_walkability_candidates.draft.json": "f8d0a7dd0ed808da3e3ce416bdf5296a78c5e6795f0d5c7dd2fec8712c0cd80c",
+    "examples/castle_meeting_collision_walkability_candidates.draft.json": "55252dc7b6ee2584a3eea947fce6113e686c97ea398b89597d83956d94b91462",
+    "examples/sewer_hint_collision_walkability_candidates.draft.json": "4cc208465d5c0043baae61b86fcc1e9a5c5f79cf59ef97d3e3324e9a7c3439c1",
+    "validation/negative_collision_walkability_cases.json": "26eed63d54f584d03f8d9ddeb24e8c51676b3c67aa841c29a25464f8b982adbf"
+  },
+  "notes": [
+    "This validates draft design artifacts only.",
+    "No runtime validator or shared schema promotion was added.",
+    "Candidate visual references remain evidence pointers, not movement authority."
+  ]
+}

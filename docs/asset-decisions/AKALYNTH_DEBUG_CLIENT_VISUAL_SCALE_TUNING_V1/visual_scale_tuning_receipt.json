@@ -1,0 +1,90 @@
+{
+  "id": "AKALYNTH_DEBUG_CLIENT_VISUAL_SCALE_TUNING_V1",
+  "status": "accepted_debug_client_visual_scale_tuning",
+  "scope": "debug-client-only visual scale/readability tuning for imported character and preset sprites",
+  "input_receipts": [
+    "AKALYNTH_ENGINE_IMPORT_SMOKE_TEST_V1",
+    "AKALYNTH_CHARACTER_VISUAL_PLACEMENT_REVIEW_V1",
+    "AKALYNTH_NPC_VISUAL_PRESET_IMPORT_V1"
+  ],
+  "renderer_change": {
+    "tile_size_before": 12,
+    "tile_size_after": 32,
+    "character_frame_source_px": 64,
+    "character_draw_scale_after": 1.25,
+    "character_drawn_size_after_px": 80,
+    "feet_anchor": [
+      32,
+      54
+    ],
+    "row_order": [
+      "south",
+      "north",
+      "east",
+      "west"
+    ],
+    "render_authority": "debug-client only"
+  },
+  "screenshots": [
+    "screenshots/01_tuned_placement_scale_compare.png",
+    "screenshots/02_tuned_npc_presets_lineup.png",
+    "screenshots/03_tuned_npc_presets_creatures.png",
+    "screenshots/04_tuned_npc_presets_crowd_scale.png"
+  ],
+  "checks": {
+    "larger_character_readability": "pass",
+    "nearest_neighbor": "pass",
+    "feet_anchor_stable": "pass",
+    "no_cropping": "pass",
+    "direction_rows_preserved": "pass",
+    "visual_only_boundary_preserved": "pass"
+  },
+  "claims": {
+    "debug_client_visual_scale_tuned": true,
+    "server_protocol_changed": false,
+    "production_map_promoted": false,
+    "npc_behavior_added": false,
+    "mob_behavior_added": false,
+    "collision_changed": false,
+    "walkability_changed": false,
+    "mechanics_changed": false
+  },
+  "notes": [
+    "This lane changes debug-client presentation scale only.",
+    "The 64px source frame is now drawn at 1.25x canvas scale for readability instead of being shrunk to one tile.",
+    "Tile size is a debug-client renderer constant and does not encode map, collision, walkability, or server authority."
+  ],
+  "outcome": "accepted_debug_client_visual_scale_tuning",
+  "visual_review": {
+    "status": "pass",
+    "method": "captured debug-client screenshots with live canvas scale checks",
+    "evidence": {
+      "screenshot_dimensions": "900x700",
+      "canvas_dimensions": "1024x1024",
+      "displayed_canvas_dimensions_at_900x700_viewport": "864x864",
+      "displayed_tile_size_at_900x700_viewport": "27x27",
+      "displayed_character_size_at_900x700_viewport": "67.5x67.5",
+      "image_smoothing_enabled": false,
+      "css_image_rendering": "pixelated",
+      "expected_sprite_rectangles_in_bounds": true,
+      "expected_sprite_rectangles_visible": true,
+      "canvas_aspect_ratio_preserved": true
+    },
+    "notes": [
+      "The previous active CSS max-height rules vertically compressed the square map; they were removed from active map-canvas breakpoints.",
+      "The debug-client now uses a 32px canvas tile grid and draws 64px source frames at 1.25x canvas scale for readability."
+    ]
+  },
+  "automated_verification": {
+    "npm run verify:assets": "pass",
+    "npm run build:client": "pass",
+    "npm run build:server": "pass",
+    "npm run verify:quick": "pass 9/9"
+  },
+  "accepted_claim": "The debug client renders imported character, NPC preset, and creature visual sprites at a readable, unsquashed presentation scale while preserving display-only authority boundaries.",
+  "non_claims": [
+    "No production map promotion is claimed.",
+    "No server NPC, mob, collision, walkability, combat, dialogue, shop, quest, spawn, or protocol behavior is claimed.",
+    "This is a debug-client presentation change only."
+  ]
+}

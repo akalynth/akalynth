@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "akalynth.draft.door_authority.schema.v1",
+  "title": "Draft Door Authority Boundary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "plane",
+    "status",
+    "runtime_authority",
+    "server_authoritative",
+    "production_map_promoted",
+    "threshold",
+    "states_reserved",
+    "mechanics",
+    "authority"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "plane": {
+      "const": "door_authority"
+    },
+    "status": {
+      "const": "draft_design_only"
+    },
+    "runtime_authority": {
+      "const": false
+    },
+    "server_authoritative": {
+      "const": false
+    },
+    "production_map_promoted": {
+      "const": false
+    },
+    "source_candidate_receipt": {
+      "const": "AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1"
+    },
+    "threshold": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tile",
+        "floor",
+        "candidate_state_required"
+      ],
+      "properties": {
+        "tile": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "integer"
+          }
+        },
+        "floor": {
+          "type": "integer"
+        },
+        "candidate_state_required": {
+          "const": "reserved_conditional"
+        }
+      }
+    },
+    "states_reserved": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "open",
+          "closed",
+          "locked",
+          "unlocked",
+          "permission_gated",
+          "reserved_unknown"
+        ]
+      }
+    },
+    "mechanics": {
+      "type": "null"
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runtime_door_state",
+        "collision_resolution",
+        "walkability_resolution",
+        "ownership",
+        "access_policy"
+      ],
+      "properties": {
+        "runtime_door_state": {
+          "const": "future_gate_required"
+        },
+        "collision_resolution": {
+          "const": "future_gate_required"
+        },
+        "walkability_resolution": {
+          "const": "future_gate_required"
+        },
+        "ownership": {
+          "const": "none"
+        },
+        "access_policy": {
+          "const": "future_gate_required_if_permissioned"
+        }
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

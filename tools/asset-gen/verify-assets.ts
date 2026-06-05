@@ -1,18 +1,20 @@
-// Verify Akalynth asset manifests (Factory v1).
+// Verify Akalynth asset manifests (Factory v1 + bounded visual spritesheet sidecars).
 //
 // Enforces the sidecar contract (see data/assets-src/MANIFEST_SCHEMA.md):
 //   A-1 pairing      every cleaned PNG has a sidecar JSON, and vice-versa
-//   A-2 naming       files are <class>__<name>.png / .json
+//   A-2 naming       factory files are <class>__<name>.png / .json
 //   A-3 schema       required fields present with valid enums/types
 //   A-4 dimensions   dims are multiples of 32; dimensions_px matches the PNG
 //   A-5 sha256       once status >= cleaned_png, sha256 matches the cleaned PNG
 //   A-6 lockstep     mechanics === null (art never asserts mechanics)
 //   A-7 lineage      referenced prompt_file exists
 //   A-8 pack spec    packs/*.json entries valid; prompt_file exists; dims 32-mult
+//   A-9 visual sheets data/assets-src/sprites/{characters,creatures}/*.json stay visual-only
+//   A-10 world visuals data/assets-src/sprites/world/**/*.json stay render-only
 //
 // Pure read-only; run from repo root: `npm run verify:assets`.
 
-import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync, statSync, realpathSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import * as path from 'node:path';
@@ -26,6 +28,11 @@ const STYLE_CONTRACT = 'nostalgic_top_down_mmo_readability_original_akalynth_ass
 const ASSET_TYPES = new Set(['ground', 'border', 'structure', 'prop', 'creature', 'character', 'npc', 'building', 'effect', 'ui', 'tile', 'item']);
 const LIFECYCLE = ['prompt_written', 'raw_generated', 'cleaned_png', 'manifest_recorded', 'tilemap_tested', 'human_reviewed', 'promoted', 'legacy'];
 const HAS_PNG_STATUS = new Set(['cleaned_png', 'manifest_recorded', 'tilemap_tested', 'human_reviewed', 'promoted', 'legacy']);
+const SMOKE_CHARACTER_ROWS = ['south', 'north', 'east', 'west'];
+const WORLD_VISUAL_TYPES = new Set(['terrain_tile', 'wall_overlay', 'door_overlay', 'world_object', 'floor_overlay']);
+const WORLD_VISUAL_ANCHORS = new Set(['tile_top_left', 'bottom_center', 'bottom_left', 'center']);
+const WORLD_VISUAL_LAYERS = new Set(['terrain', 'object_overlay', 'floor_overlay']);
+const WORLD_VISUAL_Z_POLICIES = new Set(['fixed_layer', 'sort_by_anchor_y', 'fixed_above_building']);
 
 const errors: string[] = [];
 const fail = (f: string, msg: string) => errors.push(`${f}: ${msg}`);
@@ -37,8 +44,34 @@ function pngDims(buf: Buffer): [number, number] | null {
 }
 const isMult32 = (n: unknown): n is number => typeof n === 'number' && Number.isInteger(n) && n > 0 && n % 32 === 0;
 const repoRel = (abs: string) => path.relative(REPO_ROOT, abs);
+const arrayEq = (a: unknown, b: readonly unknown[]) => Array.isArray(a) && a.length === b.length && a.every((v, i) => v === b[i]);
 
-function validateSidecar(jsonPath: string, pngPath: string) {
+function walkFiles(dir: string, seen = new Set<string>()): string[] {
+  const out: string[] = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const abs = path.join(dir, entry.name);
+    // statSync follows symlinks (entry.isDirectory() is false for a symlinked
+    // dir), so symlinked sprite subtrees are still verified; a realpath visited
+    // set prevents infinite recursion on cyclic links.
+    let stat;
+    try {
+      stat = statSync(abs);
+    } catch {
+      continue; // broken symlink or unreadable entry
+    }
+    if (stat.isDirectory()) {
+      const real = realpathSync(abs);
+      if (seen.has(real)) continue;
+      seen.add(real);
+      out.push(...walkFiles(abs, seen));
+    } else if (stat.isFile()) {
+      out.push(abs);
+    }
+  }
+  return out;
+}
+
+function validateFactorySidecar(jsonPath: string, pngPath: string) {
   const f = repoRel(jsonPath);
   let m: Record<string, unknown>;
   try {
@@ -70,7 +103,7 @@ function validateSidecar(jsonPath: string, pngPath: string) {
   // A-4 dimensions
   const dt = m.dimensions_target_px;
   if (!Array.isArray(dt) || dt.length !== 2 || !isMult32(dt[0]) || !isMult32(dt[1])) fail(f, 'dimensions_target_px must be [w,h], multiples of 32');
-  // A cleaned PNG exists for these statuses → check actual dims + sha256.
+  // A cleaned PNG exists for these statuses -> check actual dims + sha256.
   if (HAS_PNG_STATUS.has(m.status as string)) {
     const buf = readFileSync(pngPath);
     const dims = pngDims(buf);
@@ -89,19 +122,113 @@ function validateSidecar(jsonPath: string, pngPath: string) {
   }
 }
 
+function validateVisualSpritesheetSidecar(jsonPath: string, pngPath: string, expectedAssetType: 'character' | 'creature') {
+  const f = repoRel(jsonPath);
+  let m: Record<string, unknown>;
+  try {
+    m = JSON.parse(readFileSync(jsonPath, 'utf8'));
+  } catch (e) {
+    fail(f, `invalid JSON (${e})`);
+    return;
+  }
+
+  const base = path.basename(pngPath, '.png');
+  if (m.id !== base) fail(f, `id must match PNG basename '${base}'`);
+  if (m.asset_type !== expectedAssetType) fail(f, `asset_type must be ${expectedAssetType}`);
+  if (m.source_kind !== 'spritesheet') fail(f, 'source_kind must be spritesheet');
+  if (m.image !== `${base}.png`) fail(f, `image must be ${base}.png`);
+  if (m.mechanics !== null) fail(f, 'mechanics MUST be null (server-metadata lockstep)');
+  for (const prohibited of ['collision', 'walkability', 'npc_behavior', 'server_protocol']) {
+    if (Object.prototype.hasOwnProperty.call(m, prohibited)) fail(f, `${prohibited} must not be encoded in visual manifests`);
+  }
+
+  const buf = readFileSync(pngPath);
+  const dims = pngDims(buf);
+  if (!dims) { fail(f, 'cannot read PNG dimensions'); return; }
+  const dimensions = m.dimensions as Record<string, unknown> | undefined;
+  if (!dimensions || dimensions.width !== 256 || dimensions.height !== 256) fail(f, 'dimensions must be {width:256,height:256}');
+  if (dims[0] !== 256 || dims[1] !== 256) fail(f, `PNG dims ${dims[0]}x${dims[1]} must be 256x256`);
+
+  const frame = m.frame as Record<string, unknown> | undefined;
+  if (!frame || frame.width !== 64 || frame.height !== 64) fail(f, 'frame must be {width:64,height:64}');
+  const directions = m.directions as Record<string, unknown> | undefined;
+  if (!directions || !arrayEq(directions.rows, SMOKE_CHARACTER_ROWS)) fail(f, 'directions.rows must be [south,north,east,west]');
+  const animations = m.animations as Record<string, unknown> | undefined;
+  const walk = animations?.walk as Record<string, unknown> | undefined;
+  const idle = animations?.idle as Record<string, unknown> | undefined;
+  if (!walk || !arrayEq(walk.columns, [0, 1, 2, 3]) || walk.frames !== 4) fail(f, 'animations.walk must use columns [0,1,2,3] and frames 4');
+  if (!idle || idle.column !== 0) fail(f, 'animations.idle.column must be 0');
+  const rendering = m.rendering as Record<string, unknown> | undefined;
+  if (!rendering || rendering.filtering !== 'nearest' || rendering.display_only !== true) fail(f, 'rendering must be nearest/display_only');
+  const anchor = m.render_anchor as Record<string, unknown> | undefined;
+  if (!anchor || !arrayEq(anchor.feet, [32, 54]) || anchor.unit !== 'source_pixels') fail(f, 'render_anchor.feet must be [32,54] source_pixels');
+}
+
+function validateWorldVisualSidecar(jsonPath: string, pngPath: string) {
+  const f = repoRel(jsonPath);
+  let m: Record<string, unknown>;
+  try {
+    m = JSON.parse(readFileSync(jsonPath, 'utf8'));
+  } catch (e) {
+    fail(f, `invalid JSON (${e})`);
+    return;
+  }
+
+  const base = path.basename(pngPath, '.png');
+  if (m.id !== base) fail(f, `id must match PNG basename '${base}'`);
+  if (!WORLD_VISUAL_TYPES.has(m.asset_type as string)) fail(f, `asset_type '${m.asset_type}' invalid for world visual`);
+  if (!['sprite', 'tile'].includes(m.source_kind as string)) fail(f, 'source_kind must be sprite or tile');
+  if (m.image !== `${base}.png`) fail(f, `image must be ${base}.png`);
+  if (m.mechanics !== null) fail(f, 'mechanics MUST be null (server-metadata lockstep)');
+  for (const prohibited of ['collision', 'walkability', 'npc_behavior', 'server_protocol', 'interaction', 'authority']) {
+    if (Object.prototype.hasOwnProperty.call(m, prohibited)) fail(f, `${prohibited} must not be encoded in visual manifests`);
+  }
+
+  const buf = readFileSync(pngPath);
+  const dims = pngDims(buf);
+  if (!dims) { fail(f, 'cannot read PNG dimensions'); return; }
+  const frame = m.frame as Record<string, unknown> | undefined;
+  if (!frame || frame.width !== dims[0] || frame.height !== dims[1]) fail(f, `frame must match PNG dimensions ${dims[0]}x${dims[1]}`);
+
+  const rendering = m.rendering as Record<string, unknown> | undefined;
+  if (!rendering) { fail(f, 'rendering required'); return; }
+  if (rendering.filtering !== 'nearest') fail(f, 'rendering.filtering must be nearest');
+  if (rendering.display_only !== true) fail(f, 'rendering.display_only must be true');
+  if (typeof rendering.draw_scale !== 'number' || rendering.draw_scale <= 0) fail(f, 'rendering.draw_scale must be a positive number');
+  if (!WORLD_VISUAL_LAYERS.has(rendering.layer as string)) fail(f, `rendering.layer '${rendering.layer}' invalid`);
+  if (rendering.z_policy != null && !WORLD_VISUAL_Z_POLICIES.has(rendering.z_policy as string)) fail(f, `rendering.z_policy '${rendering.z_policy}' invalid`);
+
+  const anchor = rendering.anchor as Record<string, unknown> | undefined;
+  if (!anchor) { fail(f, 'rendering.anchor required'); return; }
+  if (!WORLD_VISUAL_ANCHORS.has(anchor.type as string)) fail(f, `rendering.anchor.type '${anchor.type}' invalid`);
+  const sp = anchor.source_pixels as unknown;
+  if (!Array.isArray(sp) || sp.length !== 2 || typeof sp[0] !== 'number' || typeof sp[1] !== 'number') fail(f, 'rendering.anchor.source_pixels must be numeric [x,y]');
+}
+
 function run() {
-  // A-1 pairing over sprites/
-  const entries = existsSync(SPRITES) ? readdirSync(SPRITES) : [];
+  // A-1 pairing over sprites/ recursively.
+  const entries = existsSync(SPRITES) ? walkFiles(SPRITES) : [];
   const pngs = entries.filter((e) => e.endsWith('.png'));
   const jsons = entries.filter((e) => e.endsWith('.json'));
-  for (const png of pngs) {
-    const sidecar = png.replace(/\.png$/, '.json');
-    if (!entries.includes(sidecar)) fail(`data/assets-src/sprites/${png}`, 'missing sidecar JSON');
-    else validateSidecar(path.join(SPRITES, sidecar), path.join(SPRITES, png));
+  const rels = new Set(entries.map((e) => repoRel(e)));
+
+  for (const pngPath of pngs) {
+    const rel = repoRel(pngPath);
+    const sidecarRel = rel.replace(/\.png$/, '.json');
+    const sidecarPath = path.join(REPO_ROOT, sidecarRel);
+    if (!rels.has(sidecarRel)) fail(rel, 'missing sidecar JSON');
+    else {
+      const relFromSprites = path.relative(SPRITES, pngPath);
+      if (relFromSprites.startsWith(`characters${path.sep}`)) validateVisualSpritesheetSidecar(sidecarPath, pngPath, 'character');
+      else if (relFromSprites.startsWith(`creatures${path.sep}`)) validateVisualSpritesheetSidecar(sidecarPath, pngPath, 'creature');
+      else if (relFromSprites.startsWith(`world${path.sep}`)) validateWorldVisualSidecar(sidecarPath, pngPath);
+      else validateFactorySidecar(sidecarPath, pngPath);
+    }
   }
-  for (const j of jsons) {
-    const png = j.replace(/\.json$/, '.png');
-    if (!entries.includes(png)) fail(`data/assets-src/sprites/${j}`, 'orphan sidecar (no matching PNG)');
+  for (const jsonPath of jsons) {
+    const rel = repoRel(jsonPath);
+    const pngRel = rel.replace(/\.json$/, '.png');
+    if (!rels.has(pngRel)) fail(rel, 'orphan sidecar (no matching PNG)');
   }
 
   // A-8 pack specs
@@ -128,7 +255,7 @@ function run() {
     for (const e of errors) console.error(`  - ${e}`);
     process.exit(1);
   }
-  console.log(`✓ verify:assets — ${pngs.length} sprite manifest(s) + ${packFiles.length} pack(s) valid (Factory v1; lockstep mechanics=null).`);
+  console.log(`✓ verify:assets — ${pngs.length} sprite manifest(s) + ${packFiles.length} pack(s) valid (Factory v1 + visual spritesheet/world render sidecars; lockstep mechanics=null).`);
 }
 
 run();
