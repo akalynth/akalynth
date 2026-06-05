@@ -171,7 +171,13 @@ class CharacterCreateActivity : Activity() {
                                 setLoading(false)
                                 setStatus("Welcome, $name!")
                                 mainHandler.postDelayed({
-                                    startActivity(Intent(this@CharacterCreateActivity, WireTracerActivity::class.java))
+                                    startActivity(
+                                        Intent(this@CharacterCreateActivity, MainActivity::class.java).apply {
+                                            putExtra(MainActivity.EXTRA_AUTO_CONNECT, true)
+                                            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                                        }
+                                    )
+                                    finish()
                                 }, 2000)
                             }
                         } else {

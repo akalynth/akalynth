@@ -19,6 +19,7 @@ data class SessionState(
     val guestToken: String? = null,
     val playerId: String? = null,
     val playerName: String? = null,
+    val savedCharacterName: String? = null,
     val serverUrl: String = "ws://10.0.2.2:3000"
 )
 
