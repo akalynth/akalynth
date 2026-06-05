@@ -306,6 +306,21 @@ export interface AccountPasswordResetRow {
   consumed_at: string | null; // ISO8601 or null
 }
 
+// Account Platform v1 (E4): a character bound to an account. character_id is the
+// player_id. Not PII; safe to receipt the ids/world/outfit (never email/tokens).
+export type CharacterSex = 'male' | 'female';
+
+export interface AccountCharacterRow {
+  character_id: string; // == player_id
+  account_id: string;
+  name: string;
+  world_id: string;
+  sex: CharacterSex;
+  outfit_id: string;
+  created_at: string; // ISO8601
+  created_receipt: string | null;
+}
+
 // ============================================================================
 // Receipt Taxonomy (Phase 1 + Phase 2)
 // ============================================================================
@@ -391,6 +406,13 @@ export const RECEIPT_ACTIONS = {
   ACCOUNT_PASSWORD_RESET_COMPLETED: 'account_password_reset_completed',
   ACCOUNT_SESSION_ISSUED: 'account_session_issued',
   ACCOUNT_SESSION_REVOKED: 'account_session_revoked',
+
+  // Account Platform v1 (E4): character-under-account lifecycle. Privacy-bounded:
+  // carry account_id + character_id + world_id + outfit_id + sex only.
+  CHARACTER_CREATED: 'character_created',
+  CHARACTER_SELECTED: 'character_selected',
+  CHARACTER_WORLD_ASSIGNED: 'character_world_assigned',
+  CHARACTER_OUTFIT_SELECTED: 'character_outfit_selected',
 } as const;
 
 // Alias mapping for existing receipt actions

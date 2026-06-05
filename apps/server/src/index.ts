@@ -53,6 +53,8 @@ import type {
   WorldStateResult,
 } from '../../../packages/shared/http.js';
 import { handleHttp } from './api/http.js';
+import { parseCorsOrigins, corsHeadersFor, type CorsPolicy } from './api/cors.js';
+import { createEmailSender, buildAccountEmail } from './account/email.js';
 
 import { createAuditLogger } from './audit/logger.js';
 import { createReceiptsReader } from './audit/reader.js';
@@ -70,6 +72,9 @@ import { AccountService } from './account/service.js';
 import { makeAccountRouter } from './account/router.js';
 import { RateLimiter } from './account/rateLimit.js';
 import { hashPassword, verifyPassword } from './account/password.js';
+import { CharacterStore } from './character/store.js';
+import { CharacterService } from './character/service.js';
+import { makeCharacterRouter } from './character/router.js';
 import { publicActorForReceipt, toPublicReceipt } from './audit/public_receipts.js';
 import {
   loadAuthKeyPair,
@@ -235,6 +240,33 @@ const ANTICHEAT_PRIORS_PATH = process.env.AKALYNTH_ANTICHEAT_PRIORS_PATH;
 const DEV_MINT_ENABLED = parseBoolEnv(process.env.AKALYNTH_DEV_MINT, false);
 const REQUIRE_TLS = parseBoolEnv(process.env.REQUIRE_TLS, true);
 const ALLOW_INSECURE_LOCAL = parseBoolEnv(process.env.ALLOW_INSECURE_LOCAL, false);
+// Account portal CORS (E5 companion): the static website is a separate origin
+// from this API and uses cookie sessions (`credentials: 'include'`), so the API
+// must reflect an explicit allowlisted Origin — never `*`. ACCOUNT_CORS_ORIGINS
+// (comma-separated) overrides these production defaults; localhost dev origins
+// are additionally allowed under DEBUG/insecure-local.
+const DEFAULT_WEBSITE_ORIGINS = [
+  'https://akalynth.com',
+  'https://www.akalynth.com',
+  'https://beta.akalynth.com',
+] as const;
+const ACCOUNT_CORS_ORIGINS = parseCorsOrigins(process.env.ACCOUNT_CORS_ORIGINS, DEFAULT_WEBSITE_ORIGINS);
+const CORS_POLICY: CorsPolicy = {
+  allow: ACCOUNT_CORS_ORIGINS,
+  allowLocalDev: DEBUG_MODE || ALLOW_INSECURE_LOCAL,
+};
+// Account email delivery (E3): provider-neutral. EMAIL_TRANSPORT=smtp sends via
+// nodemailer with any provider's SMTP creds (or a self-hosted relay); the
+// default 'console' just logs the link (dev). Verification/reset links point at
+// the portal (PORTAL_BASE_URL). Recipient email is PII — never receipted.
+const EMAIL_TRANSPORT: 'smtp' | 'console' = process.env.EMAIL_TRANSPORT === 'smtp' ? 'smtp' : 'console';
+const EMAIL_FROM = process.env.EMAIL_FROM || 'Akalynth <no-reply@akalynth.com>';
+const PORTAL_BASE_URL = process.env.PORTAL_BASE_URL || 'https://akalynth.com';
+const SMTP_HOST = process.env.SMTP_HOST || '';
+const SMTP_PORT = parseEnvInt(process.env.SMTP_PORT, 587, 1);
+const SMTP_SECURE = parseBoolEnv(process.env.SMTP_SECURE, SMTP_PORT === 465);
+const SMTP_USER = process.env.SMTP_USER || undefined;
+const SMTP_PASS = process.env.SMTP_PASS || undefined;
 const TRUST_PROXY = parseBoolEnv(process.env.TRUST_PROXY, false);
 const TRUST_PROXY_LOOPBACK_ONLY = parseBoolEnv(process.env.TRUST_PROXY_LOOPBACK_ONLY, true);
 const TRUST_PROXY_ALLOWLIST = process.env.TRUST_PROXY_ALLOWLIST ?? '';
@@ -1163,6 +1195,19 @@ const receiptsReader = createReceiptsReader(chainPaths.receiptsPath);
 // surface. Receipts are privacy-bounded (emitReceipt passes only event + opaque
 // account_id + redacted inputs to the audit chain). Account rows are written
 // directly to persist.db, not materialized from receipts.
+// Account email delivery (E3). Construction never throws (misconfigured SMTP
+// falls back to console); a TLS/prod context still on console means no real
+// email is going out, so warn loudly.
+const emailSender = createEmailSender({
+  transport: EMAIL_TRANSPORT,
+  smtp: { host: SMTP_HOST, port: SMTP_PORT, secure: SMTP_SECURE, user: SMTP_USER, pass: SMTP_PASS, from: EMAIL_FROM },
+});
+const emailLinks = { portalBaseUrl: PORTAL_BASE_URL, from: EMAIL_FROM };
+console.log(`[email] transport=${emailSender.transport} from="${EMAIL_FROM}" portal=${PORTAL_BASE_URL}`);
+if (REQUIRE_TLS && emailSender.transport === 'console') {
+  console.warn('[email] WARNING: console transport in a TLS/prod context — verification/reset emails are NOT being sent. Set EMAIL_TRANSPORT=smtp.');
+}
+
 const accountService = new AccountService({
   store: new AccountStore(persist.db),
   hashPassword,
@@ -1175,16 +1220,50 @@ const accountService = new AccountService({
     sessionTtlSec: 30 * 24 * 60 * 60,
     verificationTtlSec: 24 * 60 * 60,
     resetTtlSec: 60 * 60,
-    // No email delivery yet (E3): dev/insecure-local exposes verification/reset
-    // tokens in the response and logs them; production never exposes them.
+    // E3 delivers real email; dev/insecure-local ALSO exposes the token in the
+    // response (and logs it) for local testing. Production never exposes it.
     devExposeLinks: ALLOW_INSECURE_LOCAL,
   },
-  logLink: (kind, accountId, token) => console.log(`[account] ${kind} token for ${accountId}: ${token}`),
+  // Tokens are secrets: only log them under insecure-local dev, never in prod.
+  logLink: ALLOW_INSECURE_LOCAL
+    ? (kind, accountId, token) => console.log(`[account] ${kind} token for ${accountId}: ${token}`)
+    : undefined,
+  // Real delivery (E3): fire-and-forget so it never blocks the response or leaks
+  // timing; the recipient email reaches the transport only, never receipts.
+  deliverEmail: (m) => {
+    void emailSender
+      .send(buildAccountEmail(m.kind, m.email, m.token, emailLinks))
+      .catch((err) => console.error(`[email] failed to send ${m.kind} for account ${m.accountId}: ${String(err)}`));
+  },
 });
 const handleAccount = makeAccountRouter({
   service: accountService,
   loginLimiter: new RateLimiter(10, 5 * 60 * 1000),
   writeLimiter: new RateLimiter(5, 60 * 60 * 1000),
+});
+
+// Account Platform v1 (E4 / AKALYNTH_ACCOUNT_CHARACTER_V2_V1): catalogs +
+// account-gated character create/list/select. Reuses the core player+token
+// primitives via injection (createCharacterHandler + issuePlayTokenForPlayer,
+// both hoisted function declarations defined below). Privacy-bounded receipts.
+const characterService = new CharacterService({
+  store: new CharacterStore(persist.db),
+  mintCharacter: (name) => createCharacterHandler(name),
+  issuePlayToken: (characterId) => issuePlayTokenForPlayer(characterId),
+  emitReceipt: (e) =>
+    audit.write({
+      player_id: e.accountId,
+      action: e.action,
+      inputs: { character_id: e.characterId, ...(e.inputs ?? {}) },
+      result: e.result,
+    }),
+  now: () => Date.now(),
+  maxCharactersPerAccount: 5,
+});
+const handleCharacter = makeCharacterRouter({
+  service: characterService,
+  resolveAccount: (cookies) => accountService.sessionAccount(cookies),
+  requireVerifiedForCreate: true,
 });
 
 const antiCheatPriorStore = createAntiCheatPriorStore({
@@ -2126,10 +2205,35 @@ function createCharacterHandler(name: string): CharacterCreateResult {
   };
 }
 
+// Account Platform v1 (E4): issue a fresh play token for an EXISTING character
+// (used by /v1/characters/select). Mirrors the createCharacterHandler token mint
+// without creating a new player. auth_token_issue captures the nonce for
+// determinism; no PII.
+function issuePlayTokenForPlayer(playerId: string): { token: string; expires_at: number } | null {
+  if (!authKeyPair) return null;
+  const now = Date.now();
+  const nonce = generateNonce();
+  const signed = signToken(playerId, authKeyPair.privateKey, { nowMs: now, nonce });
+  audit.write({
+    actor_id: playerId,
+    action: 'auth_token_issue',
+    inputs: {
+      token_id: signed.payload.token_id,
+      player_id: playerId,
+      issued_at: signed.payload.issued_at,
+      expires_at: signed.payload.expires_at,
+      nonce,
+      trigger: 'character_select',
+    },
+    result: 'ok',
+  });
+  return { token: signed.wire, expires_at: signed.payload.expires_at };
+}
+
 // HTTP control plane
 const httpServer = http.createServer((req, res) => {
-  const devCors = applyDevCors(req, res);
-  if ((req.method ?? '').toUpperCase() === 'OPTIONS' && devCors) {
+  const corsApplied = applyCors(req, res);
+  if ((req.method ?? '').toUpperCase() === 'OPTIONS' && corsApplied) {
     res.statusCode = 204;
     res.end();
     return;
@@ -2144,6 +2248,7 @@ const httpServer = http.createServer((req, res) => {
     getVersion: () => VERSION,
     getTickMs: () => TICK_MS,
     handleAccount,
+    handleCharacter,
     listMaps: () =>
       (Object.keys(worlds) as MapName[]).map((name) => ({
         name,
@@ -2538,28 +2643,14 @@ function send(ws: WebSocket, message: ServerMessage) {
   if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(message));
 }
 
-function isLocalDevOrigin(origin: string): boolean {
-  try {
-    const url = new URL(origin);
-    return (
-      (url.protocol === 'http:' || url.protocol === 'https:') &&
-      (url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname === '::1')
-    );
-  } catch {
-    return false;
-  }
-}
-
-function applyDevCors(req: IncomingMessage, res: ServerResponse): boolean {
-  if (!DEBUG_MODE && !ALLOW_INSECURE_LOCAL) return false;
-  const origin = req.headers.origin;
-  if (typeof origin !== 'string' || !isLocalDevOrigin(origin)) return false;
-
-  res.setHeader('access-control-allow-origin', origin);
-  res.setHeader('access-control-allow-methods', 'GET,POST,OPTIONS');
-  res.setHeader('access-control-allow-headers', 'authorization,content-type');
-  res.setHeader('access-control-max-age', '600');
-  res.setHeader('vary', 'Origin');
+// Apply the account-portal CORS allowlist (see api/cors.ts). Reflects an
+// explicit allowlisted Origin with credentials enabled, or no CORS headers at
+// all for disallowed origins. Returns true when headers were set so the OPTIONS
+// preflight can short-circuit with 204.
+function applyCors(req: IncomingMessage, res: ServerResponse): boolean {
+  const headers = corsHeadersFor(req.headers.origin, CORS_POLICY);
+  if (!headers) return false;
+  for (const [key, value] of Object.entries(headers)) res.setHeader(key, value);
   return true;
 }
 
