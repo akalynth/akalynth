@@ -1,0 +1,82 @@
+{
+  "id": "AKALYNTH_CHARACTER_VISUAL_PLACEMENT_REVIEW_V1",
+  "status": "accepted_visual_placement_review",
+  "scope": "visual-only character placement review in debug-client map context",
+  "input_receipt": "AKALYNTH_ENGINE_IMPORT_SMOKE_TEST_V1",
+  "characters": [
+    "base_human_male_01",
+    "guard_city_01",
+    "mage_apprentice_01",
+    "skeleton_warrior_01"
+  ],
+  "scenes": [
+    "?visual-smoke=placement_cobble",
+    "?visual-smoke=placement_wall",
+    "?visual-smoke=placement_door",
+    "?visual-smoke=placement_crowd",
+    "?visual-smoke=placement_walk_cycle",
+    "?visual-smoke=placement_scale_compare"
+  ],
+  "screenshots": [
+    "screenshots/01_placement_cobble.png",
+    "screenshots/02_placement_wall.png",
+    "screenshots/03_placement_door.png",
+    "screenshots/04_placement_crowd.png",
+    "screenshots/05_placement_walk_cycle.png",
+    "screenshots/06_placement_scale_compare.png"
+  ],
+  "checks": {
+    "scale_against_tiles": "pass",
+    "scale_against_walls": "pass",
+    "scale_against_doors": "pass",
+    "feet_anchor_stability": "pass",
+    "z_order_readability": "pass",
+    "no_cropping": "pass",
+    "nearest_neighbor": "pass",
+    "directional_readability": "pass",
+    "crowd_spacing": "pass",
+    "style_compatibility": "pass"
+  },
+  "claims": {
+    "visual_context_reviewed": true,
+    "production_map_promoted": false,
+    "npc_behavior_added": false,
+    "mob_behavior_added": false,
+    "collision_changed": false,
+    "walkability_changed": false,
+    "server_protocol_changed": false,
+    "mechanics_changed": false
+  },
+  "notes": [
+    "Visual-only debug-client placement review gate.",
+    "Review maps are local debug-client fixtures and do not modify shared map JSON.",
+    "No server, protocol, NPC, mob, collision, walkability, or mechanics metadata is introduced by this gate.",
+    "Accepted walk-pack row order remains south, north, east, west."
+  ],
+  "outcome": "accepted_visual_placement_review",
+  "accepted_claim": "The four imported character sheets are visually acceptable in deterministic debug-client map-context review scenes.",
+  "visual_review": {
+    "status": "pass",
+    "method": "captured debug-client screenshots with live canvas checks",
+    "evidence": {
+      "screenshot_dimensions": "900x700",
+      "canvas_dimensions": "384x384",
+      "image_smoothing_enabled": false,
+      "css_image_rendering": "pixelated",
+      "expected_sprite_rectangles_in_bounds": true,
+      "expected_sprite_rectangles_visible": true,
+      "screenshots_distinct": true
+    },
+    "notes": [
+      "Screenshots were captured from http://localhost:5173/ using the requested visual-smoke routes.",
+      "The in-app image inspection helper was blocked by the sandbox wrapper, so review used captured screenshot artifacts plus live canvas pixel checks."
+    ]
+  },
+  "non_claims": [
+    "NPC readiness is not claimed.",
+    "Mob behavior is not claimed.",
+    "Production map promotion is not claimed.",
+    "Collision, walkability, and mechanics semantics are not claimed.",
+    "Server-authoritative facing is not claimed."
+  ]
+}

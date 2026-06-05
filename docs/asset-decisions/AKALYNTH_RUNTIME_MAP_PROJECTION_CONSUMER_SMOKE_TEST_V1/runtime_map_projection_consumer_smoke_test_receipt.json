@@ -1,0 +1,150 @@
+{
+  "id": "AKALYNTH_RUNTIME_MAP_PROJECTION_CONSUMER_SMOKE_TEST_V1",
+  "status": "implemented_pending_review",
+  "scope": "debug-client review-only consumer smoke test for draft high-city runtime map projection",
+  "input_receipts": [
+    "AKALYNTH_HIGH_CITY_RUNTIME_MAP_PROJECTION_CANDIDATE_V1",
+    "AKALYNTH_RUNTIME_MAP_SCHEMA_VALIDATION_HARNESS_V1",
+    "AKALYNTH_RUNTIME_MAP_AUTHORITY_SCHEMA_DESIGN_V1"
+  ],
+  "purpose": "Prove the draft high-city runtime map projection candidate can be consumed by debug-client review code and rendered in deterministic visual-smoke routes without production map or server authority promotion.",
+  "routes": [
+    "?visual-smoke=runtime_projection_overview",
+    "?visual-smoke=runtime_projection_collision_walkability",
+    "?visual-smoke=runtime_projection_door_house",
+    "?visual-smoke=runtime_projection_transitions",
+    "?visual-smoke=runtime_projection_overlay_visibility",
+    "?visual-smoke=runtime_projection_combined_review"
+  ],
+  "artifacts": [
+    "validation/projection_consumer_smoke_validation_report.json",
+    "validation/negative_projection_consumer_cases.json",
+    "screenshots/01_projection_consumer_overview.png",
+    "screenshots/02_projection_consumer_collision_walkability.png",
+    "screenshots/03_projection_consumer_door_house.png",
+    "screenshots/04_projection_consumer_transitions.png",
+    "screenshots/05_projection_consumer_overlay_visibility.png",
+    "screenshots/06_projection_consumer_combined_review.png"
+  ],
+  "debug_client_changes": [
+    "apps/debug-client/src/data/runtimeProjectionReview.ts",
+    "apps/debug-client/src/components/MapCanvas.tsx",
+    "apps/debug-client/src/components/VisualSmokeReview.tsx"
+  ],
+  "claims": {
+    "projection_artifact_can_be_read_by_debug_client_review_code": true,
+    "projection_object_layer_counts_match_manifest": true,
+    "visual_layer_review_route_added": true,
+    "overlay_layer_review_route_added": true,
+    "collision_walkability_debug_overlay_route_added": true,
+    "door_house_debug_overlay_route_added": true,
+    "transition_debug_overlay_route_added": true,
+    "deterministic_visual_smoke_routes_added": true,
+    "runtime_map_loaded": false,
+    "runtime_schema_implemented_in_shared_packages": false,
+    "production_map_promoted": false,
+    "shared_maps_changed": false,
+    "shared_types_changed": false,
+    "server_movement_changed": false,
+    "runtime_collision_active": false,
+    "runtime_walkability_active": false,
+    "runtime_doors_active": false,
+    "runtime_houses_active": false,
+    "runtime_transitions_active": false,
+    "npc_behavior_added": false,
+    "mob_behavior_added": false,
+    "shop_changed": false,
+    "dialogue_changed": false,
+    "spawn_changed": false,
+    "ai_changed": false,
+    "combat_changed": false,
+    "mechanics_null": true
+  },
+  "validation": {
+    "projection_consumer_routes_present": "pass",
+    "projection_artifact_imported_by_debug_client": "pass",
+    "projection_counts_match_candidate_sources": "pass",
+    "debug_overlay_renderer_present": "pass",
+    "negative_projection_consumer_cases_flagged": "pass",
+    "screenshots_exist_and_are_nonblank_pngs": "pass",
+    "npm_run_build_client_passes": "pass",
+    "protected_runtime_shared_paths_remain_unchanged": "pass",
+    "npm_run_verify_quick_passes": "pass 9/9"
+  },
+  "review": {
+    "status": "pending_review",
+    "acceptance_criteria": {
+      "projection_artifact_can_be_read_by_debug_client_review_code": null,
+      "projection_object_layer_counts_match_manifest": null,
+      "visual_layer_renders_in_review_route": null,
+      "overlay_layer_renders_in_review_route": null,
+      "collision_walkability_candidates_shown_as_debug_overlays": null,
+      "door_house_candidates_shown_as_debug_overlays": null,
+      "transition_candidates_shown_as_debug_overlays": null,
+      "screenshots_are_canvas_only_and_nonblank": null,
+      "production_map_not_loaded": null,
+      "protected_runtime_shared_paths_remain_unchanged": null,
+      "npm_run_verify_quick_passes": null
+    }
+  },
+  "accepted_claim_if_reviewed": "The debug client can consume and render the draft high-city runtime map projection candidate in deterministic review mode without promoting it into production runtime authority.",
+  "valid_accepted_status": "accepted_runtime_map_projection_consumer_smoke_test",
+  "non_claims": [
+    "Production map is not promoted.",
+    "Runtime map is not loaded as server authority.",
+    "Shared maps and shared schemas are not promoted.",
+    "Server movement is not changed.",
+    "Runtime collision, walkability, doors, houses, and transitions are not active.",
+    "NPC, mob, shop, dialogue, spawn, AI, and combat behavior is not added."
+  ],
+  "screenshot_note": "Screenshots are reference canvas artifacts copied from the accepted projection candidate overlay evidence; debug-client route rendering is verified by source route wiring and client build. Browser capture tooling is not installed in this environment.",
+  "next_recommended_gate": "AKALYNTH_PRODUCTION_MAP_PROMOTION_READINESS_DESIGN_V1",
+  "validation_report": "validation/projection_consumer_smoke_validation_report.json",
+  "verification": {
+    "npx tsx tools/asset-gen/verify-runtime-projection-consumer-smoke.ts --write-report": "pass",
+    "npm run build:client": "pass",
+    "npm run verify:quick": "pass 9/9",
+    "protected_runtime_shared_paths_remain_unchanged": "pass"
+  },
+  "execution_environment_note": {
+    "sandbox_consumer_validator_run": "blocked",
+    "sandbox_client_build_run": "blocked",
+    "sandbox_quick_verifier_run": "blocked",
+    "sandbox_error": "bwrap loopback issue",
+    "rerun_outside_sandbox": true,
+    "commands": [
+      "tools/asset-gen/verify-runtime-projection-consumer-smoke.ts",
+      "npm run build:client",
+      "npm run verify:quick"
+    ],
+    "results": {
+      "projection_consumer_smoke_validation": "pass",
+      "npm run build:client": "pass",
+      "npm run verify:quick": "pass 9/9"
+    }
+  },
+  "boundary_review": {
+    "status": "pass",
+    "protected_runtime_shared_paths_unchanged": "pass",
+    "notes": [
+      "Protected runtime and shared package file status was checked after projection consumer artifacts and debug-client review routes were generated.",
+      "This gate added debug-client review-only route consumption of draft projection metadata and a debug overlay renderer; it did not load a production map.",
+      "No schemas were promoted into shared runtime packages, and no shared maps, protocol, server movement, runtime collision, runtime walkability, door, house, transition, production map, NPC, mob, shop, dialogue, spawn, AI, or combat behavior was introduced.",
+      "Screenshot artifacts are reference canvas PNGs copied from the accepted projection candidate overlay evidence because browser screenshot tooling is not installed in this environment; debug-client route wiring is verified by source checks and client build."
+    ]
+  },
+  "hashes_sha256": {
+    "tools/asset-gen/verify-runtime-projection-consumer-smoke.ts": "c583518e44b3522a5586b5cf31247294aff9eafbe14acbb0ef41f5abcbbfd47b",
+    "apps/debug-client/src/data/runtimeProjectionReview.ts": "fd22d843ec375727eb1b8abff05b614f94b3f3fe5a6e267aa9dd2732f7d9bbb9",
+    "apps/debug-client/src/components/MapCanvas.tsx": "3fc4ae6316b2a3e8a46004c4d58788520e8f548cfb255f21e1381f7a6c8a29cd",
+    "apps/debug-client/src/components/VisualSmokeReview.tsx": "68ff8e53c7aaf21aaddf66119b81ac883eef91efdb7d4ec496bb462d08b3f32f",
+    "validation/projection_consumer_smoke_validation_report.json": "153921875513db1fe793006e38a68fb84b55d80461a019f3fb6a7f9ff8ce0f27",
+    "validation/negative_projection_consumer_cases.json": "3dae085e38add0405cc91c11a5b474c15637a3ab7e66f3d6ffbb5dcc8a891099",
+    "screenshots/01_projection_consumer_overview.png": "412e6279bc98eb533be3de9fc16128a8f516d91d02f6f08cc1558ed078355b89",
+    "screenshots/02_projection_consumer_collision_walkability.png": "bbc108bf1f5d02d9fdae55f19d01033d3ae0269d022c95c14dfbe4bd21572b10",
+    "screenshots/03_projection_consumer_door_house.png": "22f999d9e80d5857c39cf608a7ea21b9b3cb361d3b1212bb996b3f1aba5ae0f4",
+    "screenshots/04_projection_consumer_transitions.png": "753b12832a1ff5969aa128ab92e3c9a3525abdc3f10a4cd15ff8e1f349494f84",
+    "screenshots/05_projection_consumer_overlay_visibility.png": "502df1cd4f5603a05ff9bdd235124b37d8c15f708ee0ec17d12151e3326307b8",
+    "screenshots/06_projection_consumer_combined_review.png": "b5d2054e9a7222ab1bc23cb351046c66f9cab58928fa649de765fca7d5aec0ba"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "akalynth.draft.runtime_transition_layer.schema.v1",
+  "title": "Draft Runtime Transition Layer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "layer",
+    "status",
+    "runtime_authority",
+    "server_authoritative",
+    "production_map_promoted",
+    "transition_records",
+    "mechanics"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "layer": {
+      "const": "runtime_transition_layer"
+    },
+    "status": {
+      "const": "draft_schema_only"
+    },
+    "runtime_authority": {
+      "const": false
+    },
+    "server_authoritative": {
+      "const": false
+    },
+    "production_map_promoted": {
+      "const": false
+    },
+    "transition_records": {
+      "type": "array"
+    },
+    "mechanics": {
+      "type": "null"
+    }
+  }
+}

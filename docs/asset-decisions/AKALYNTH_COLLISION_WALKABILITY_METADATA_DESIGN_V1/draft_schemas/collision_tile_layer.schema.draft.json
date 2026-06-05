@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "akalynth://draft-schemas/collision_tile_layer.schema.draft.json",
+  "title": "Akalynth Collision Tile Layer Draft Schema",
+  "description": "Reserved future design schema. This gate does not implement active collision metadata.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "plane",
+    "authority_owner",
+    "map_id",
+    "source_receipts",
+    "entries",
+    "derivation_rule",
+    "mechanics"
+  ],
+  "properties": {
+    "status": {
+      "const": "draft_reserved_for_future_gate"
+    },
+    "plane": {
+      "const": "collision"
+    },
+    "authority_owner": {
+      "const": "future_collision_authority_gate"
+    },
+    "map_id": {
+      "type": "string"
+    },
+    "source_receipts": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^AKALYNTH_[A-Z0-9_]+_V[0-9]+$"
+      },
+      "minItems": 1
+    },
+    "derivation_rule": {
+      "const": "not_derived_from_visual_objects"
+    },
+    "mechanics": {
+      "type": "null"
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tile",
+          "floor",
+          "collision_state",
+          "evidence_receipt"
+        ],
+        "properties": {
+          "tile": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "integer",
+                "minimum": 0
+              }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "floor": {
+            "type": "integer"
+          },
+          "collision_state": {
+            "enum": [
+              "open",
+              "blocked",
+              "edge_blocked",
+              "reserved_unknown"
+            ]
+          },
+          "edge": {
+            "enum": [
+              "north",
+              "south",
+              "east",
+              "west"
+            ]
+          },
+          "evidence_receipt": {
+            "type": "string",
+            "pattern": "^AKALYNTH_[A-Z0-9_]+_V[0-9]+$"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "not": {
+        "required": [
+          "asset_id"
+        ]
+      }
+    },
+    {
+      "not": {
+        "required": [
+          "visual_object_id"
+        ]
+      }
+    },
+    {
+      "not": {
+        "required": [
+          "render"
+        ]
+      }
+    },
+    {
+      "not": {
+        "required": [
+          "sprite"
+        ]
+      }
+    },
+    {
+      "not": {
+        "required": [
+          "image"
+        ]
+      }
+    },
+    {
+      "not": {
+        "required": [
+          "shop_inventory"
+        ]
+      }
+    },
+    {
+      "not": {
+        "required": [
+          "dialogue_tree"
+        ]
+      }
+    },
+    {
+      "not": {
+        "required": [
+          "spawn_table"
+        ]
+      }
+    },
+    {
+      "not": {
+        "required": [
+          "ai"
+        ]
+      }
+    },
+    {
+      "not": {
+        "required": [
+          "combat"
+        ]
+      }
+    },
+    {
+      "not": {
+        "required": [
+          "ownership"
+        ]
+      }
+    },
+    {
+      "not": {
+        "required": [
+          "door_permissions"
+        ]
+      }
+    },
+    {
+      "not": {
+        "required": [
+          "access_list"
+        ]
+      }
+    }
+  ]
+}

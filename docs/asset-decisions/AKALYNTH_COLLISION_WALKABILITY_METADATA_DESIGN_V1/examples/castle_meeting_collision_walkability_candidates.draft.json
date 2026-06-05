@@ -1,0 +1,175 @@
+{
+  "id": "castle_meeting_collision_walkability_candidates_v1",
+  "status": "draft_design_only",
+  "source_visual_layout_receipt": "AKALYNTH_HIGH_CITY_BLOCK_LAYOUT_REFINEMENT_V1",
+  "coordinate_system": {
+    "origin": "top_left",
+    "unit": "tile",
+    "tile_size_px": 32,
+    "axes": {
+      "x": "east",
+      "y": "south"
+    },
+    "floor": {
+      "default": 0,
+      "meaning": "visual/debug floor index only until production promotion"
+    }
+  },
+  "collision_cells": [
+    {
+      "tile": [
+        4,
+        5
+      ],
+      "floor": 0,
+      "collision_state": "blocked",
+      "category": "castle_wall_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_castle_wall_4_5"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        10,
+        14
+      ],
+      "floor": 0,
+      "collision_state": "reserved_conditional",
+      "category": "castle_door_threshold_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_castle_door_10_14"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        11,
+        11
+      ],
+      "floor": 0,
+      "collision_state": "clear",
+      "category": "meeting_floor_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_castle_floor_11_11"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        10,
+        8
+      ],
+      "floor": 0,
+      "collision_state": "blocked",
+      "category": "throne_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_castle_throne_10_8"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    }
+  ],
+  "walkability_cells": [
+    {
+      "tile": [
+        4,
+        5
+      ],
+      "floor": 0,
+      "walkability_state": "not_walkable",
+      "category": "castle_wall_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_castle_wall_4_5"
+        ]
+      },
+      "notes": [
+        "Walkability candidate only.",
+        "Does not become runtime traversal authority until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        10,
+        14
+      ],
+      "floor": 0,
+      "walkability_state": "reserved_conditional",
+      "category": "castle_door_threshold_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_castle_door_10_14"
+        ]
+      },
+      "notes": [
+        "Walkability candidate only.",
+        "Does not become runtime traversal authority until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        11,
+        11
+      ],
+      "floor": 0,
+      "walkability_state": "walkable",
+      "category": "meeting_floor_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_castle_floor_11_11"
+        ]
+      },
+      "notes": [
+        "Walkability candidate only.",
+        "Does not become runtime traversal authority until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        10,
+        8
+      ],
+      "floor": 0,
+      "walkability_state": "not_walkable",
+      "category": "throne_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_castle_throne_10_8"
+        ]
+      },
+      "notes": [
+        "Walkability candidate only.",
+        "Does not become runtime traversal authority until promoted by a later gate."
+      ]
+    }
+  ],
+  "mechanics": null
+}

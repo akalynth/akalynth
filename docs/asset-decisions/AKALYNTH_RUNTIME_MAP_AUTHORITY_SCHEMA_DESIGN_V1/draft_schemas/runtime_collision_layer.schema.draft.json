@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "akalynth.draft.runtime_collision_layer.schema.v1",
+  "title": "Draft Runtime Collision Layer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "layer",
+    "status",
+    "runtime_authority",
+    "server_authoritative",
+    "production_map_promoted",
+    "cells",
+    "mechanics"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "layer": {
+      "const": "runtime_collision_layer"
+    },
+    "status": {
+      "const": "draft_schema_only"
+    },
+    "runtime_authority": {
+      "const": false
+    },
+    "server_authoritative": {
+      "const": false
+    },
+    "production_map_promoted": {
+      "const": false
+    },
+    "cells": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tile",
+          "floor",
+          "collision_state"
+        ],
+        "properties": {
+          "tile": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "integer"
+            }
+          },
+          "floor": {
+            "type": "integer"
+          },
+          "collision_state": {
+            "enum": [
+              "blocked",
+              "clear",
+              "reserved_conditional",
+              "unknown"
+            ]
+          }
+        }
+      }
+    },
+    "mechanics": {
+      "type": "null"
+    }
+  }
+}

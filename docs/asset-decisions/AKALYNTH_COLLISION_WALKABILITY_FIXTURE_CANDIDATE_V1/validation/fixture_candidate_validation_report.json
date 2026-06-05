@@ -1,0 +1,175 @@
+{
+  "id": "AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1_VALIDATION_REPORT",
+  "status": "pass",
+  "generated_from": [
+    "candidates/refined_high_city_collision_candidates.v1.draft.json",
+    "candidates/refined_high_city_walkability_candidates.v1.draft.json",
+    "candidates/refined_high_city_collision_walkability_consistency.v1.json",
+    "validation/negative_fixture_candidate_cases.json"
+  ],
+  "checks": {
+    "collision_json_valid": "pass",
+    "walkability_json_valid": "pass",
+    "candidate_bounds_declared": "pass",
+    "allowed_states_only": "pass",
+    "blocked_walkable_conflicts_flagged": "pass",
+    "door_sewer_stair_tiles_reserved_conditional": "pass",
+    "visual_object_ids_evidence_only": "pass",
+    "no_gameplay_authority_fields": "pass",
+    "mechanics_null": "pass",
+    "production_map_promoted_false": "pass",
+    "negative_fixture_candidate_cases_flagged": "pass",
+    "canvas_only_screenshots_captured": "pass",
+    "protected_runtime_files_remain_unchanged": "pass",
+    "npm_run_verify_quick_passes": "pass 9/9"
+  },
+  "candidate_summary": {
+    "collision_cells": 28,
+    "walkability_cells": 28,
+    "consistency_checked_tiles": 28,
+    "consistency_fail_count": 0,
+    "reserved_conditional_collision_cells": 7,
+    "reserved_conditional_walkability_cells": 7
+  },
+  "collision_flags": [],
+  "walkability_flags": [],
+  "consistency_flags": [],
+  "reserved_conditional_problems": [],
+  "negative_case_results": [
+    {
+      "id": "negative_blocked_walkable_tile",
+      "expected_flags": [
+        "collision_walkability_conflict:blocked_and_walkable"
+      ],
+      "observed_flags": [
+        "collision_walkability_conflict:blocked_and_walkable"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_visual_object_directly_declares_blocking",
+      "expected_flags": [
+        "visual_object_forbidden_field:collision"
+      ],
+      "observed_flags": [
+        "visual_object_forbidden_field:collision"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_visual_object_directly_declares_walkable",
+      "expected_flags": [
+        "visual_object_forbidden_field:walkability"
+      ],
+      "observed_flags": [
+        "visual_object_forbidden_field:walkability"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_door_clear_walkable_with_open_state",
+      "expected_flags": [
+        "door_authority_without_gate",
+        "threshold_not_reserved_conditional"
+      ],
+      "observed_flags": [
+        "door_authority_without_gate",
+        "threshold_not_reserved_conditional"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_sewer_tile_with_transition_to",
+      "expected_flags": [
+        "transition_authority_in_walkability_layer"
+      ],
+      "observed_flags": [
+        "transition_authority_in_walkability_layer"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_collision_layer_contains_shop_dialogue_spawn_ai_combat",
+      "expected_flags": [
+        "collision_layer_forbidden_field:shop",
+        "collision_layer_forbidden_field:dialogue",
+        "collision_layer_forbidden_field:spawn",
+        "collision_layer_forbidden_field:ai",
+        "collision_layer_forbidden_field:combat"
+      ],
+      "observed_flags": [
+        "collision_layer_forbidden_field:shop",
+        "collision_layer_forbidden_field:dialogue",
+        "collision_layer_forbidden_field:spawn",
+        "collision_layer_forbidden_field:ai",
+        "collision_layer_forbidden_field:combat"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_walkability_layer_contains_ownership_or_door_permissions",
+      "expected_flags": [
+        "walkability_layer_forbidden_field:ownership",
+        "walkability_layer_forbidden_field:door_permissions"
+      ],
+      "observed_flags": [
+        "walkability_layer_forbidden_field:ownership",
+        "walkability_layer_forbidden_field:door_permissions"
+      ],
+      "result": "flagged"
+    }
+  ],
+  "hashes_sha256": {
+    "candidates/refined_high_city_collision_candidates.v1.draft.json": "e086e1391f80a2ed81346123217ebbbdba3401215e5e8f7fa29dbf004d05e628",
+    "candidates/refined_high_city_walkability_candidates.v1.draft.json": "7c94fcaa639e43e4c4475a3d9431a41d0547e877b3002662f45b4410ecf4668d",
+    "candidates/refined_high_city_collision_walkability_consistency.v1.json": "fef4dfa44ec3ee561484029758fcf4bab0e8d5dd2112a989079d402d263a60b1",
+    "validation/negative_fixture_candidate_cases.json": "7df166c47513f726d08b2dfb430c04a87445752b9a8a69e0e057ae97ecca020c"
+  },
+  "notes": [
+    "Validation checks draft candidate metadata only.",
+    "Visual object ids are treated as evidence pointers only.",
+    "No runtime collision, walkability, movement, or production map authority is created."
+  ],
+  "screenshot_capture": {
+    "status": "pass",
+    "mode": "generated_canvas_candidate_overlay",
+    "dimensions": "1024x1024",
+    "source": "draft candidate metadata, not runtime map renderer",
+    "screenshots": [
+      {
+        "file": "screenshots/01_collision_candidate_overlay.png",
+        "title": "Collision candidate overlay",
+        "sha256": "893257c9ceb24d162e0eb5610b85ebf6e266542a1d6006d7af82f61505fc2e77"
+      },
+      {
+        "file": "screenshots/02_walkability_candidate_overlay.png",
+        "title": "Walkability candidate overlay",
+        "sha256": "1f6356edf9095c508799af1033fcb80959ba058bc668c1a7ac2384c57e3fb04d"
+      },
+      {
+        "file": "screenshots/03_reserved_conditional_doors.png",
+        "title": "Reserved conditional doors and thresholds",
+        "sha256": "f7ce0a7a51634e775163eb75be2bac7e6cfdfd634a065b9627f17ff5ecfa4c63"
+      },
+      {
+        "file": "screenshots/04_reserved_conditional_sewer.png",
+        "title": "Reserved conditional sewer candidates",
+        "sha256": "ae95c6ac0d5b393a96b13b4c557b65310c5bc524a35c592e16ec303ceec56916"
+      },
+      {
+        "file": "screenshots/05_conflict_check_overlay.png",
+        "title": "Collision/walkability conflict check",
+        "sha256": "9956472698eff5511811efd2a6c04c96a50ea47bdb34b6d1da64dd4117daab5c"
+      },
+      {
+        "file": "screenshots/06_combined_candidate_review.png",
+        "title": "Combined candidate review",
+        "sha256": "fd81072cf2b9c15151b762b7f6169c30d8506f136c35c7a573becc2f86d9c553"
+      }
+    ],
+    "notes": [
+      "Screenshots visualize draft collision and walkability candidates only.",
+      "These images do not prove runtime rendering from candidate metadata."
+    ]
+  }
+}

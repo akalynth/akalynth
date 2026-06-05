@@ -1,0 +1,25 @@
+{
+  "id": "castle_meeting_hall_access_boundary_candidate_v1",
+  "plane": "house_authority",
+  "status": "draft_design_only",
+  "runtime_authority": false,
+  "server_authoritative": false,
+  "production_map_promoted": false,
+  "region": {
+    "kind": "inside_region_candidate",
+    "floor": 0,
+    "tiles_source": "explicit_future_authority_record_required"
+  },
+  "mechanics": null,
+  "authority": {
+    "inside_outside_truth": "future_gate_required",
+    "ownership": "future_gate_required_if_owned",
+    "access_lists": "future_gate_required_if_restricted",
+    "protection_zone": "future_gate_required_if_supported",
+    "roof_overlay_trigger": "future_binding_required"
+  },
+  "notes": [
+    "Castle visuals do not create access restrictions or protection zones.",
+    "This reserves authority shape only."
+  ]
+}

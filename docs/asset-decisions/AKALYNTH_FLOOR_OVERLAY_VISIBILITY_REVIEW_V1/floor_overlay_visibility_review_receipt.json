@@ -1,0 +1,87 @@
+{
+  "id": "AKALYNTH_FLOOR_OVERLAY_VISIBILITY_REVIEW_V1",
+  "status": "accepted_floor_overlay_visibility_review",
+  "scope": "debug-client visual-only overlay visibility review",
+  "input_receipts": [
+    "AKALYNTH_ENGINE_IMPORT_SMOKE_TEST_V1",
+    "AKALYNTH_CHARACTER_VISUAL_PLACEMENT_REVIEW_V1",
+    "AKALYNTH_DEBUG_CLIENT_VISUAL_SCALE_TUNING_V1",
+    "AKALYNTH_WORLD_OBJECT_VISUAL_SCALE_AUDIT_V1",
+    "AKALYNTH_WALK_IN_BUILDING_VISUAL_ASSEMBLY_V1"
+  ],
+  "visibility_model": {
+    "outside_building_footprint": "visible",
+    "doorway_or_threshold": "faded",
+    "inside_building_footprint": "hidden"
+  },
+  "review_metadata_authority": {
+    "buildingInterior": "debug-client visual review only",
+    "doorwayTiles": "debug-client visual review only",
+    "playerTile": "simulated debug-client review position"
+  },
+  "implementation": {
+    "route_labels_validated": true,
+    "canvas_dimensions_validated": "1024x1024",
+    "screenshot_pngs_captured": true,
+    "pixel_validation": {
+      "png_dimensions": "900x700",
+      "small_house_visible_vs_faded_diff_px": 21181,
+      "small_house_faded_vs_hidden_diff_px": 15194,
+      "small_house_visible_vs_hidden_diff_px": 22093
+    }
+  },
+  "claims": {
+    "debug_client_can_render_overlay_visible_state": true,
+    "debug_client_can_render_overlay_faded_state": true,
+    "debug_client_can_render_overlay_hidden_state": true,
+    "overlay_visibility_is_visual_only": true,
+    "mechanics_null": true,
+    "server_protocol_changed": false,
+    "shared_maps_changed": false,
+    "collision_changed": false,
+    "walkability_changed": false,
+    "door_interaction_added": false,
+    "house_ownership_added": false,
+    "floor_stack_protocol_added": false,
+    "production_map_promoted": false
+  },
+  "verification": {
+    "npm run verify:assets": "pass",
+    "npm run build:client": "pass",
+    "npm run build:server": "pass",
+    "npm run verify:quick": "pass 9/9"
+  },
+  "screenshots": [
+    "screenshots/01_small_house_overlay_visible_outside.png",
+    "screenshots/02_small_house_overlay_faded_doorway.png",
+    "screenshots/03_small_house_overlay_hidden_inside.png",
+    "screenshots/04_market_shop_overlay_visible_outside.png",
+    "screenshots/05_market_shop_overlay_hidden_inside.png",
+    "screenshots/06_castle_hall_overlay_hidden_inside.png"
+  ],
+  "boundary": {
+    "mechanics": null,
+    "server_changed": false,
+    "protocol_changed": false,
+    "shared_maps_changed": false,
+    "npc_or_mob_behavior_changed": false,
+    "collision_or_walkability_changed": false,
+    "ownership_or_door_permission_added": false
+  },
+  "notes": [
+    "Roofs are modeled as visual floor overlays, not proximity-hidden objects.",
+    "Visibility is derived from simulated debug-client review position relative to review-only building footprint metadata.",
+    "This receipt does not claim real house entry, floor-stack protocol, collision, walkability, ownership, or door permissions."
+  ],
+  "manual_review": {
+    "status": "pass_with_minor_visual_note",
+    "outside_overlay_visible": "pass",
+    "doorway_overlay_faded": "pass",
+    "inside_overlay_hidden": "pass",
+    "interior_readable_when_hidden": "pass",
+    "door_threshold_readable_when_faded": "pass",
+    "characters_remain_visible_and_anchored": "pass",
+    "nearest_neighbor_preserved": "pass",
+    "minor_visual_note": "Faded alpha 0.35 is accepted for now. Consider 0.45 only if later reviewers confuse faded with hidden."
+  }
+}

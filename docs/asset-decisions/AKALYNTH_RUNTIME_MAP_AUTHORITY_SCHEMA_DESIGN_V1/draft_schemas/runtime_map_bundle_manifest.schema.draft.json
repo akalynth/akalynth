@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "akalynth.draft.runtime_map_bundle_manifest.schema.v1",
+  "title": "Draft Runtime Map Bundle Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "status",
+    "runtime_authority",
+    "server_authoritative",
+    "production_map_promoted",
+    "source_bundle_receipt",
+    "layers",
+    "promotion",
+    "mechanics"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "status": {
+      "const": "draft_schema_only"
+    },
+    "runtime_authority": {
+      "const": false
+    },
+    "server_authoritative": {
+      "const": false
+    },
+    "production_map_promoted": {
+      "const": false
+    },
+    "source_bundle_receipt": {
+      "const": "AKALYNTH_HIGH_CITY_MAP_AUTHORITY_BUNDLE_V1"
+    },
+    "layers": {
+      "type": "object"
+    },
+    "promotion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "production_promotion_receipt",
+        "shared_map_path",
+        "server_movement_verified"
+      ],
+      "properties": {
+        "production_promotion_receipt": {
+          "const": "future_gate_required"
+        },
+        "shared_map_path": {
+          "const": "none"
+        },
+        "server_movement_verified": {
+          "const": false
+        }
+      }
+    },
+    "mechanics": {
+      "type": "null"
+    }
+  }
+}

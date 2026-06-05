@@ -1,0 +1,210 @@
+{
+  "id": "refined_high_city_visual_objects_draft",
+  "status": "draft_visual_only_example",
+  "source_receipt": "AKALYNTH_HIGH_CITY_BLOCK_LAYOUT_REFINEMENT_V1",
+  "schema_notes": [
+    "Representative visual placements for the accepted refined block.",
+    "This is not shared production map JSON.",
+    "Every object is visual-only and carries mechanics: null."
+  ],
+  "visual_objects": [
+    {
+      "id": "vis_high_city_gate_wall_01",
+      "asset_id": "wall_stone_north",
+      "plane": "visual",
+      "position": {
+        "tile": [
+          14,
+          4
+        ],
+        "floor": 0
+      },
+      "render": {
+        "layer": "object_overlay",
+        "anchor": "bottom_center",
+        "z_policy": "sort_by_anchor_y",
+        "draw_scale": 1
+      },
+      "mechanics": null,
+      "authority": {
+        "collision": "none",
+        "walkability": "none",
+        "interaction": "none",
+        "server_entity": "none",
+        "ownership": "none",
+        "door_permissions": "none",
+        "npc_behavior": "none",
+        "mob_behavior": "none",
+        "shop": "none",
+        "dialogue": "none",
+        "spawn": "none",
+        "ai": "none",
+        "combat": "none"
+      },
+      "notes": [
+        "Visual wall only.",
+        "Does not block movement."
+      ]
+    },
+    {
+      "id": "vis_high_city_plaza_fountain_01",
+      "asset_id": "fountain",
+      "plane": "visual",
+      "position": {
+        "tile": [
+          15,
+          15
+        ],
+        "floor": 0
+      },
+      "render": {
+        "layer": "object_overlay",
+        "anchor": "bottom_center",
+        "z_policy": "sort_by_anchor_y",
+        "draw_scale": 1
+      },
+      "mechanics": null,
+      "authority": {
+        "collision": "none",
+        "walkability": "none",
+        "interaction": "none",
+        "server_entity": "none",
+        "ownership": "none",
+        "door_permissions": "none",
+        "npc_behavior": "none",
+        "mob_behavior": "none",
+        "shop": "none",
+        "dialogue": "none",
+        "spawn": "none",
+        "ai": "none",
+        "combat": "none"
+      },
+      "notes": [
+        "Visual plaza landmark only.",
+        "Does not block movement or create interaction."
+      ]
+    },
+    {
+      "id": "vis_high_city_market_food_stall_01",
+      "asset_id": "market_food_stall",
+      "plane": "visual",
+      "position": {
+        "tile": [
+          21,
+          10
+        ],
+        "floor": 0
+      },
+      "render": {
+        "layer": "object_overlay",
+        "anchor": "bottom_center",
+        "z_policy": "sort_by_anchor_y",
+        "draw_scale": 1
+      },
+      "mechanics": null,
+      "authority": {
+        "collision": "none",
+        "walkability": "none",
+        "interaction": "none",
+        "server_entity": "none",
+        "ownership": "none",
+        "door_permissions": "none",
+        "npc_behavior": "none",
+        "mob_behavior": "none",
+        "shop": "none",
+        "dialogue": "none",
+        "spawn": "none",
+        "ai": "none",
+        "combat": "none"
+      },
+      "notes": [
+        "Visual shop-looking stall only.",
+        "Does not create inventory, price, shop, or NPC behavior."
+      ]
+    },
+    {
+      "id": "vis_high_city_sewer_grate_01",
+      "asset_id": "sewer_grate",
+      "plane": "visual",
+      "position": {
+        "tile": [
+          27,
+          24
+        ],
+        "floor": 0
+      },
+      "render": {
+        "layer": "object_overlay",
+        "anchor": "bottom_center",
+        "z_policy": "sort_by_anchor_y",
+        "draw_scale": 1
+      },
+      "mechanics": null,
+      "authority": {
+        "collision": "none",
+        "walkability": "none",
+        "interaction": "none",
+        "server_entity": "none",
+        "ownership": "none",
+        "door_permissions": "none",
+        "npc_behavior": "none",
+        "mob_behavior": "none",
+        "shop": "none",
+        "dialogue": "none",
+        "spawn": "none",
+        "ai": "none",
+        "combat": "none"
+      },
+      "notes": [
+        "Visual sewer hint only.",
+        "Does not create travel, teleport, entry, spawn, or collision."
+      ]
+    }
+  ],
+  "overlay_zones": [
+    {
+      "id": "overlay_high_city_house_roof_01",
+      "plane": "presentation_overlay",
+      "asset_id": "roof_red_small_overlay",
+      "position": {
+        "tile": [
+          5,
+          18
+        ],
+        "floor": 1
+      },
+      "review_visibility": {
+        "outside": "visible",
+        "threshold": "faded",
+        "inside": "hidden"
+      },
+      "review_only_context": {
+        "interior_footprint": {
+          "x": 5,
+          "y": 18,
+          "width": 7,
+          "height": 5
+        },
+        "doorway_tiles": [
+          [
+            8,
+            23
+          ]
+        ]
+      },
+      "mechanics": null,
+      "authority": {
+        "house_entry": "none",
+        "ownership": "none",
+        "door_permissions": "none",
+        "collision": "none",
+        "walkability": "none",
+        "server_floor_visibility": "none"
+      },
+      "notes": [
+        "Visual overlay only.",
+        "Review footprint is presentation metadata, not a house zone."
+      ]
+    }
+  ]
+}

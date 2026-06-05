@@ -1,0 +1,81 @@
+{
+  "id": "AKALYNTH_COLLISION_WALKABILITY_METADATA_DESIGN_V1_NEGATIVE_CASES",
+  "status": "draft_negative_cases",
+  "expected_result": "flagged",
+  "cases": [
+    {
+      "id": "negative_visual_object_declares_collision",
+      "expected_flags": [
+        "visual_object_forbidden_field:collision"
+      ],
+      "payload": {
+        "id": "visual_wall_bad_01",
+        "plane": "visual",
+        "asset_id": "wall_stone_north",
+        "collision": "blocked"
+      }
+    },
+    {
+      "id": "negative_visual_object_declares_walkability",
+      "expected_flags": [
+        "visual_object_forbidden_field:walkability"
+      ],
+      "payload": {
+        "id": "visual_floor_bad_01",
+        "plane": "visual",
+        "asset_id": "floor_cobble_01",
+        "walkable": true
+      }
+    },
+    {
+      "id": "negative_collision_walkability_conflict",
+      "expected_flags": [
+        "collision_walkability_conflict:blocked_and_walkable"
+      ],
+      "payload": {
+        "tile": [
+          10,
+          10
+        ],
+        "floor": 0,
+        "collision_state": "blocked",
+        "walkability_state": "walkable"
+      }
+    },
+    {
+      "id": "negative_door_promoted_without_door_gate",
+      "expected_flags": [
+        "door_authority_without_gate"
+      ],
+      "payload": {
+        "tile": [
+          12,
+          8
+        ],
+        "floor": 0,
+        "asset_id": "door_wood_closed_south",
+        "collision_state": "clear",
+        "walkability_state": "walkable",
+        "door_state": "open"
+      }
+    },
+    {
+      "id": "negative_sewer_transition_in_walkability_layer",
+      "expected_flags": [
+        "transition_authority_in_walkability_layer"
+      ],
+      "payload": {
+        "tile": [
+          22,
+          25
+        ],
+        "floor": 0,
+        "walkability_state": "walkable",
+        "transition_to": "sewer_level_01"
+      }
+    }
+  ],
+  "notes": [
+    "The goal is proving bad authority leakage gets flagged, not just that good examples pass."
+  ]
+}

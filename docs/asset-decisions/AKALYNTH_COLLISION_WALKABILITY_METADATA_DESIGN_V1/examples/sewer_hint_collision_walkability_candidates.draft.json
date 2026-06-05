@@ -1,0 +1,137 @@
+{
+  "id": "sewer_hint_collision_walkability_candidates_v1",
+  "status": "draft_design_only",
+  "source_visual_layout_receipt": "AKALYNTH_HIGH_CITY_BLOCK_LAYOUT_REFINEMENT_V1",
+  "coordinate_system": {
+    "origin": "top_left",
+    "unit": "tile",
+    "tile_size_px": 32,
+    "axes": {
+      "x": "east",
+      "y": "south"
+    },
+    "floor": {
+      "default": 0,
+      "meaning": "visual/debug floor index only until production promotion"
+    }
+  },
+  "collision_cells": [
+    {
+      "tile": [
+        25,
+        26
+      ],
+      "floor": 0,
+      "collision_state": "reserved_conditional",
+      "category": "sewer_grate_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_sewer_grate_25_26"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        24,
+        23
+      ],
+      "floor": 0,
+      "collision_state": "blocked",
+      "category": "sewer_pipe_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_sewer_pipe_24_23"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        27,
+        25
+      ],
+      "floor": 0,
+      "collision_state": "clear",
+      "category": "sewer_edge_floor_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_sewer_floor_27_25"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    }
+  ],
+  "walkability_cells": [
+    {
+      "tile": [
+        25,
+        26
+      ],
+      "floor": 0,
+      "walkability_state": "reserved_conditional",
+      "category": "sewer_grate_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_sewer_grate_25_26"
+        ]
+      },
+      "notes": [
+        "Walkability candidate only.",
+        "Does not become runtime traversal authority until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        24,
+        23
+      ],
+      "floor": 0,
+      "walkability_state": "not_walkable",
+      "category": "sewer_pipe_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_sewer_pipe_24_23"
+        ]
+      },
+      "notes": [
+        "Walkability candidate only.",
+        "Does not become runtime traversal authority until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        27,
+        25
+      ],
+      "floor": 0,
+      "walkability_state": "walkable",
+      "category": "sewer_edge_floor_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_sewer_floor_27_25"
+        ]
+      },
+      "notes": [
+        "Walkability candidate only.",
+        "Does not become runtime traversal authority until promoted by a later gate."
+      ]
+    }
+  ],
+  "mechanics": null
+}

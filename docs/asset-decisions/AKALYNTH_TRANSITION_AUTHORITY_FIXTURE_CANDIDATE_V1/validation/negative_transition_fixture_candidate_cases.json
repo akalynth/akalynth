@@ -1,0 +1,121 @@
+{
+  "id": "AKALYNTH_TRANSITION_AUTHORITY_FIXTURE_CANDIDATE_V1_NEGATIVE_CASES",
+  "status": "draft_non_runtime_validation_fixture",
+  "cases": [
+    {
+      "id": "negative_transition_candidate_runtime_enabled_true",
+      "expected_flags": [
+        "runtime_transition_enabled_forbidden"
+      ],
+      "payload": {
+        "plane": "transition_authority_candidate",
+        "runtime_enabled": true
+      }
+    },
+    {
+      "id": "negative_walkability_contains_transition_to",
+      "expected_flags": [
+        "walkability_layer_forbidden_field:transition_to"
+      ],
+      "payload": {
+        "plane": "walkability",
+        "tile": [
+          25,
+          26
+        ],
+        "transition_to": "sewer_level_01"
+      }
+    },
+    {
+      "id": "negative_collision_cell_contains_transition_to",
+      "expected_flags": [
+        "collision_layer_forbidden_field:transition_to"
+      ],
+      "payload": {
+        "plane": "collision",
+        "tile": [
+          25,
+          26
+        ],
+        "transition_to": "sewer_level_01"
+      }
+    },
+    {
+      "id": "negative_door_candidate_with_teleport_target",
+      "expected_flags": [
+        "door_house_candidate_forbidden_field:teleport_target"
+      ],
+      "payload": {
+        "plane": "door_house_authority_candidate",
+        "teleport_target": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "negative_sewer_visual_declares_destination",
+      "expected_flags": [
+        "visual_object_forbidden_field:destination"
+      ],
+      "payload": {
+        "plane": "visual",
+        "asset_id": "sewer_grate",
+        "destination": "sewer_level_01"
+      }
+    },
+    {
+      "id": "negative_endpoint_claims_destination_exists_true",
+      "expected_flags": [
+        "runtime_destination_existence_forbidden"
+      ],
+      "payload": {
+        "plane": "transition_endpoint_candidate",
+        "authority": {
+          "destination_exists": true
+        }
+      }
+    },
+    {
+      "id": "negative_floor_change_binding_changes_server_floor",
+      "expected_flags": [
+        "server_floor_change_forbidden"
+      ],
+      "payload": {
+        "plane": "floor_change_binding_candidate",
+        "authority": {
+          "server_floor_change": "down"
+        }
+      }
+    },
+    {
+      "id": "negative_transition_policy_grants_spawn_safety",
+      "expected_flags": [
+        "runtime_spawn_safety_forbidden"
+      ],
+      "payload": {
+        "plane": "transition_policy_candidate",
+        "authority": {
+          "spawn_safety": "safe"
+        }
+      }
+    },
+    {
+      "id": "negative_transition_policy_adds_combat_mob_spawn_behavior",
+      "expected_flags": [
+        "transition_policy_forbidden_field:combat",
+        "transition_policy_forbidden_field:mob_behavior",
+        "transition_policy_forbidden_field:spawn"
+      ],
+      "payload": {
+        "plane": "transition_policy_candidate",
+        "combat": "enabled",
+        "mob_behavior": "ambush",
+        "spawn": "rat_small_01"
+      }
+    }
+  ],
+  "notes": [
+    "Negative cases prove candidate metadata must not leak into runtime transition, floor, destination, spawn, mob, AI, combat, collision, or walkability authority."
+  ]
+}

@@ -1,0 +1,170 @@
+{
+  "id": "AKALYNTH_WORLD_OBJECT_VISUAL_SCALE_AUDIT_V1",
+  "status": "accepted_world_object_visual_scale_audit",
+  "scope": "debug-client visual-only world object scale audit beside accepted 80px character canvas rendering",
+  "input_receipts": [
+    "AKALYNTH_ENGINE_IMPORT_SMOKE_TEST_V1",
+    "AKALYNTH_CHARACTER_VISUAL_PLACEMENT_REVIEW_V1",
+    "AKALYNTH_NPC_VISUAL_PRESET_IMPORT_V1",
+    "AKALYNTH_DEBUG_CLIENT_VISUAL_SCALE_TUNING_V1"
+  ],
+  "accepted_claim": "The debug client can render selected terrain tiles and world objects with per-asset visual scale, anchors, and object-layer z-order beside accepted character rendering.",
+  "not_claimed": [
+    "production map promotion",
+    "collision correctness",
+    "walkability correctness",
+    "door interaction",
+    "house entry logic",
+    "roof hiding",
+    "object authority",
+    "server-side placement semantics",
+    "NPC behavior",
+    "mob behavior"
+  ],
+  "render_contract": {
+    "tile_size_canvas_px": 32,
+    "character_draw_scale": 1.25,
+    "character_draw_canvas_px": 80,
+    "terrain_behavior": "tile-bound 32x32 canvas rendering",
+    "world_object_behavior": "per-asset source frame, draw scale, anchor, layer, and z policy",
+    "z_policy": "object_overlay renderables are sorted by anchor y with characters",
+    "filtering": "nearest",
+    "mechanics": null
+  },
+  "world_visual_assets": {
+    "source_root": "data/assets-src/sprites/world/",
+    "asset_types": [
+      "terrain_tile",
+      "wall_overlay",
+      "door_overlay",
+      "world_object"
+    ],
+    "categories": {
+      "terrain": [
+        "grass_01",
+        "floor_cobble_01",
+        "floor_stone_01",
+        "floor_wood_01"
+      ],
+      "walls": [
+        "wall_stone_north",
+        "wall_stone_south",
+        "wall_stone_corner_ne",
+        "wall_stone_corner_nw"
+      ],
+      "doors": [
+        "door_wood_closed_south",
+        "door_wood_open_south",
+        "door_wood_closed_east",
+        "door_wood_open_east"
+      ],
+      "city_objects": [
+        "bench",
+        "fountain",
+        "notice_board",
+        "banner_blue",
+        "banner_red"
+      ],
+      "market": [
+        "market_food_stall",
+        "market_cloth_stall"
+      ],
+      "interior": [
+        "bed_single",
+        "table_small",
+        "chair_wood",
+        "chest_small",
+        "bookshelf",
+        "fireplace"
+      ],
+      "castle": [
+        "throne",
+        "weapon_rack",
+        "stone_column",
+        "prison_bars"
+      ],
+      "sewer": [
+        "sewer_grate",
+        "sewer_pipe",
+        "slime_pool"
+      ]
+    }
+  },
+  "automated_verification": {
+    "npm run verify:assets": "pass",
+    "npm run build:client": "pass",
+    "npm run build:server": "pass",
+    "npm run verify:quick": "pass 9/9"
+  },
+  "visual_review": {
+    "status": "pass",
+    "screenshot_viewport": "900x700",
+    "canvas_dimensions": {
+      "width": 1024,
+      "height": 1024
+    },
+    "displayed_canvas_at_review_viewport": {
+      "width": 864,
+      "height": 864
+    },
+    "measurements": {
+      "displayed_scale": 0.8438,
+      "character_height_displayed_px": 67.5,
+      "door_height_canvas_px": 73.6,
+      "door_height_displayed_px": 62.1,
+      "wall_height_canvas_px": 70.4,
+      "market_stall_canvas_px": {
+        "width": 144,
+        "height": 115.2
+      }
+    },
+    "checks": {
+      "characters_remain_at_accepted_scale": true,
+      "terrain_remains_tile_bound": true,
+      "doors_are_visibly_human_passable": true,
+      "walls_read_as_walls_not_floor_decoration": true,
+      "market_stalls_read_as_large_objects": true,
+      "furniture_reads_beside_characters": true,
+      "fountain_scale_plausible": true,
+      "sewer_objects_readable": true,
+      "nearest_neighbor": true,
+      "image_smoothing_disabled": true,
+      "no_canvas_squashing": true,
+      "object_bounds_within_canvas": true,
+      "z_order_uses_anchor_y_sort": true
+    },
+    "screenshots": [
+      "screenshots/01_world_scale_doors.png",
+      "screenshots/02_world_scale_walls.png",
+      "screenshots/03_world_scale_market.png",
+      "screenshots/04_world_scale_interior.png",
+      "screenshots/05_world_scale_castle.png",
+      "screenshots/06_world_scale_sewer.png",
+      "screenshots/07_world_scale_all_compare.png"
+    ]
+  },
+  "claims": {
+    "world_visual_source_assets_imported": true,
+    "world_visual_sidecars_added": true,
+    "debug_client_world_object_renderer_added": true,
+    "object_specific_scale_and_anchors_supported": true,
+    "terrain_globally_scaled": false,
+    "tile_size_changed": false,
+    "mechanics_null": true,
+    "server_changed": false,
+    "protocol_changed": false,
+    "shared_maps_changed": false,
+    "npc_behavior_changed": false,
+    "mob_behavior_changed": false,
+    "collision_changed": false,
+    "walkability_changed": false,
+    "production_map_promoted": false
+  },
+  "notes": [
+    "This receipt accepts only visual scale/rendering proof in deterministic debug-client scenes.",
+    "Terrain/floor rendering remains tile-bound at 32x32 canvas pixels.",
+    "Doors, walls, props, market stalls, furniture, castle objects, and sewer objects use render-only sidecar metadata.",
+    "Render anchors are visual placement metadata only and do not encode collision, walkability, interaction, or authority.",
+    "Server/protocol/shared map/NPC/mob behavior remains outside this lane."
+  ]
+}

@@ -16,6 +16,7 @@ import type {
   PropertyPublic,
 } from '@shared/protocol';
 import type { MapName } from '@shared/http';
+import { loadIdentity, saveIdentity, clearIdentity, hasValidToken } from '../identity';
 import {
   DIRECTION_OFFSETS,
   WALKABLE_TILES,
@@ -60,7 +61,7 @@ function initialState(mapName: MapName): GameClientState {
   return {
     world: { map: getMap(mapName), me: null, others: new Map() },
     conn: { phase: 'idle' },
-    session: { guestToken: null, playerId: null, name: null, status: 'alive' },
+    session: { guestToken: null, playerId: null, name: null, status: 'alive', token: null, authenticated: false },
     cooldowns: { attackEndsAt: 0 } as ActionCooldown,
     ui: { stage: 0 },
     chat: [],
@@ -709,6 +710,18 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     ws.addEventListener('message', (ev) => {
       try {
         const data = JSON.parse(ev.data as string);
+        // Identity v0.1 (#148): persist the (possibly rotated) signed token the
+        // server returns on a successful token login, so it survives reloads.
+        if (
+          data.type === 'login_ack' &&
+          data.ok !== false &&
+          typeof data.token === 'string' &&
+          data.token.length > 0
+        ) {
+          const expiresAt =
+            typeof data.expires_at === 'number' ? data.expires_at : loadIdentity()?.expiresAt ?? Date.now();
+          saveIdentity({ playerId: data.player_id, name: data.name, token: data.token, expiresAt });
+        }
         setState((s) => {
           const now = Date.now();
           const conn: ConnectionState = { ...s.conn, lastServerAt: now, phase: 'connected' };
@@ -721,17 +734,19 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
                 return {
                   ...s,
                   conn: { ...conn, phase: 'error', reason },
-                  session: { ...s.session, guestToken: null, playerId: null, name: null },
+                  session: { ...s.session, guestToken: null, playerId: null, name: null, token: null, authenticated: false },
                 };
               }
               return {
                 ...s,
                 conn,
                 session: {
-                  guestToken: data.guest_token,
+                  guestToken: data.guest_token || null,
                   playerId: data.player_id,
                   name: data.name,
                   status: s.session.status,
+                  token: typeof data.token === 'string' && data.token.length > 0 ? data.token : null,
+                  authenticated: typeof data.token === 'string' && data.token.length > 0,
                 },
               };
             case 'world_state': {
@@ -1154,18 +1169,39 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
       try {
         resetSessionState(map);
         setState((s) => ({ ...s, conn: { phase: 'connecting' } }));
-        const token = await hydrateToken();
-        await hydrateWorld(token, map);
-        setState((s) => ({
-          ...s,
-          session: { ...s.session, guestToken: token },
-        }));
+
+        // Identity v0.1 (#148): prefer a stored signed token (a created
+        // character); otherwise fall back to a guest session. The server treats
+        // the token login as authoritative (token > guest_token).
+        const identity = loadIdentity();
+        let loginMsg: ClientMessage;
+        if (hasValidToken(identity) && identity) {
+          setState((s) => ({
+            ...s,
+            session: {
+              ...s.session,
+              token: identity.token,
+              playerId: identity.playerId,
+              name: identity.name,
+              authenticated: true,
+            },
+          }));
+          loginMsg = { type: 'login', token: identity.token };
+        } else {
+          const guest = await hydrateToken();
+          await hydrateWorld(guest, map);
+          setState((s) => ({
+            ...s,
+            session: { ...s.session, guestToken: guest, authenticated: false },
+          }));
+          loginMsg = { type: 'login', guest_token: guest };
+        }
+
         const ws = new WebSocket(wsUrl(config.wsBase));
         wsRef.current = ws;
         attachHandlers(ws);
         ws.addEventListener('open', () => {
           const connectMsg: ClientMessage = { type: 'connect' };
-          const loginMsg: ClientMessage = { type: 'login', guest_token: token };
           const enterMsg: EnterWorldMessage = { type: 'enter_world' };
           ws.send(JSON.stringify(connectMsg));
           ws.send(JSON.stringify(loginMsg));
@@ -1179,6 +1215,54 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     },
     [attachHandlers, config.wsBase, hydrateToken, hydrateWorld, mapName, resetSessionState]
   );
+
+  // Identity v0.1 (#148): create a character (mints a signed token), persist it,
+  // then reconnect as that character. Returns an error string for the UI on
+  // failure (name taken / invalid / rate limited).
+  const createCharacter = useCallback(
+    async (name: string): Promise<{ ok: boolean; error?: string }> => {
+      const trimmed = name.trim();
+      if (!trimmed) return { ok: false, error: 'Name is required' };
+      try {
+        const url = httpUrl(config.httpBase, '/v1/characters/create');
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ name: trimmed }),
+        });
+        const body = await resp.json().catch(() => null);
+        if (!resp.ok || !body || body.ok === false) {
+          return { ok: false, error: (body && body.message) || 'Could not create character' };
+        }
+        saveIdentity({
+          playerId: body.player_id,
+          name: body.name,
+          token: body.token,
+          expiresAt: typeof body.expires_at === 'number' ? body.expires_at : Date.now(),
+        });
+        if (wsRef.current) {
+          wsRef.current.close();
+          wsRef.current = null;
+        }
+        await boot(mapName);
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, error: (err as Error).message };
+      }
+    },
+    [boot, config.httpBase, mapName]
+  );
+
+  // Clear the stored character token and fall back to a guest session.
+  const signOut = useCallback(() => {
+    clearIdentity();
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+    resetSessionState(mapName);
+    boot(mapName);
+  }, [boot, mapName, resetSessionState]);
 
   const toggleMap = useCallback(
     (newMap: MapName) => {
@@ -1233,6 +1317,8 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     setStage,
     toggleMap,
     relog,
+    createCharacter,
+    signOut,
     openChat,
     closeChat,
     buyHouse,

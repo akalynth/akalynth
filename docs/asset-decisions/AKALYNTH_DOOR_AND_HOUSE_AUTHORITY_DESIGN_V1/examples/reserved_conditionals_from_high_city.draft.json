@@ -1,0 +1,79 @@
+{
+  "id": "reserved_conditionals_from_refined_high_city_v1",
+  "plane": "door_house_authority_review_input",
+  "status": "draft_design_only",
+  "source_candidate_receipt": "AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1",
+  "runtime_authority": false,
+  "server_authoritative": false,
+  "production_map_promoted": false,
+  "candidates": [
+    {
+      "tile": [
+        8,
+        24
+      ],
+      "floor": 0,
+      "kind": "building_door_threshold",
+      "remains": "reserved_conditional"
+    },
+    {
+      "tile": [
+        17,
+        8
+      ],
+      "floor": 0,
+      "kind": "market_door_threshold",
+      "remains": "reserved_conditional"
+    },
+    {
+      "tile": [
+        6,
+        8
+      ],
+      "floor": 0,
+      "kind": "castle_door_threshold",
+      "remains": "reserved_conditional"
+    },
+    {
+      "tile": [
+        15,
+        3
+      ],
+      "floor": 0,
+      "kind": "city_gate_threshold",
+      "remains": "reserved_conditional"
+    },
+    {
+      "tile": [
+        16,
+        3
+      ],
+      "floor": 0,
+      "kind": "city_gate_threshold",
+      "remains": "reserved_conditional"
+    },
+    {
+      "tile": [
+        25,
+        26
+      ],
+      "floor": 0,
+      "kind": "sewer_transition_candidate",
+      "remains": "reserved_conditional"
+    },
+    {
+      "tile": [
+        28,
+        26
+      ],
+      "floor": 0,
+      "kind": "sewer_transition_candidate",
+      "remains": "reserved_conditional"
+    }
+  ],
+  "mechanics": null,
+  "notes": [
+    "These candidates are review inputs only.",
+    "This example does not resolve any conditional tile into runtime movement, entry, or transition behavior."
+  ]
+}

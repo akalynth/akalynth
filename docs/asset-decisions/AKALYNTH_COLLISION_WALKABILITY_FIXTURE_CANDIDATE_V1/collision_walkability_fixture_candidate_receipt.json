@@ -1,0 +1,187 @@
+{
+  "id": "AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1",
+  "status": "accepted_collision_walkability_fixture_candidate",
+  "scope": "draft non-runtime collision/walkability candidate for accepted refined high-city visual fixture",
+  "input_receipts": [
+    "AKALYNTH_HIGH_CITY_BLOCK_LAYOUT_REFINEMENT_V1",
+    "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1",
+    "AKALYNTH_COLLISION_WALKABILITY_METADATA_DESIGN_V1"
+  ],
+  "purpose": "Create a draft, non-runtime collision/walkability candidate for the accepted refined high-city visual fixture.",
+  "artifacts": [
+    "candidates/refined_high_city_collision_candidates.v1.draft.json",
+    "candidates/refined_high_city_walkability_candidates.v1.draft.json",
+    "candidates/refined_high_city_collision_walkability_consistency.v1.json",
+    "validation/fixture_candidate_validation_report.json",
+    "validation/negative_fixture_candidate_cases.json",
+    "screenshots/01_collision_candidate_overlay.png",
+    "screenshots/02_walkability_candidate_overlay.png",
+    "screenshots/03_reserved_conditional_doors.png",
+    "screenshots/04_reserved_conditional_sewer.png",
+    "screenshots/05_conflict_check_overlay.png",
+    "screenshots/06_combined_candidate_review.png"
+  ],
+  "candidate_summary": {
+    "collision_cell_count": 28,
+    "walkability_cell_count": 28,
+    "consistency_checked_tiles": 28,
+    "consistency_fail_count": 0,
+    "reserved_conditional_tiles": 7
+  },
+  "claims": {
+    "draft_collision_candidate_created": true,
+    "draft_walkability_candidate_created": true,
+    "consistency_report_created": true,
+    "source_visual_fixture_used_as_review_input": true,
+    "visual_objects_do_not_grant_authority": true,
+    "mechanics_null": true,
+    "runtime_authority": false,
+    "server_authoritative": false,
+    "production_map_promoted": false,
+    "server_protocol_changed": false,
+    "shared_maps_changed": false,
+    "collision_runtime_changed": false,
+    "walkability_runtime_changed": false,
+    "door_authority_added": false,
+    "house_ownership_added": false,
+    "npc_behavior_added": false,
+    "mob_behavior_added": false,
+    "shop_changed": false,
+    "dialogue_changed": false,
+    "spawn_changed": false,
+    "ai_changed": false,
+    "combat_changed": false
+  },
+  "validation": {
+    "collision_json_valid": "pass",
+    "walkability_json_valid": "pass",
+    "candidate_bounds_declared": "pass",
+    "allowed_states_only": "pass",
+    "blocked_walkable_conflicts_flagged": "pass",
+    "door_sewer_stair_tiles_reserved_conditional": "pass",
+    "visual_object_ids_evidence_only": "pass",
+    "no_gameplay_authority_fields": "pass",
+    "mechanics_null": "pass",
+    "production_map_promoted_false": "pass",
+    "protected_runtime_files_unchanged": "pending",
+    "canvas_only_screenshots_captured": "pass",
+    "npm run verify:quick": "pass 9/9",
+    "negative_fixture_candidate_cases_flagged": "pass",
+    "protected_runtime_files_remain_unchanged": "pass"
+  },
+  "review": {
+    "status": "pass",
+    "acceptance_criteria": {
+      "collision_candidate_exists": "pass",
+      "walkability_candidate_exists": "pass",
+      "candidate_cells_are_non_runtime": "pass",
+      "collision_walkability_consistency_failures_zero": "pass",
+      "negative_authority_leakage_cases_flagged": "pass",
+      "reserved_conditionals_preserved_for_doors_and_transitions": "pass",
+      "protected_runtime_files_remain_unchanged": "pass",
+      "npm_run_verify_quick_passes": "pass"
+    },
+    "notes": [
+      "Accepted as draft candidate metadata only.",
+      "This does not implement runtime collision or runtime walkability.",
+      "Overlay screenshots were generated and validated as nonblank image artifacts, but local image viewing was blocked by the known sandbox loopback issue.",
+      "Doorways, sewer entrances, stairs, transitions, ownership, permissions, and production map promotion remain reserved for later gates."
+    ]
+  },
+  "accepted_status_if_reviewed": "accepted_collision_walkability_fixture_candidate",
+  "accepted_claim_if_reviewed": "A draft, non-runtime collision/walkability candidate exists for the refined high-city visual fixture, with consistency checks and authority-leakage protections.",
+  "non_claims": [
+    "Runtime collision is not implemented.",
+    "Runtime walkability is not implemented.",
+    "Shared production map is not updated.",
+    "Server movement authority is not changed.",
+    "Door behavior is not implemented.",
+    "House entry is not implemented.",
+    "House ownership is not implemented.",
+    "Door permissions are not implemented.",
+    "Sewer transition is not implemented.",
+    "Stairs transition is not implemented.",
+    "NPC behavior is not implemented.",
+    "Mob behavior is not implemented.",
+    "Shops, dialogue, spawns, AI, and combat are not implemented.",
+    "Production map is not promoted."
+  ],
+  "validation_report": "validation/fixture_candidate_validation_report.json",
+  "hashes_sha256": {
+    "candidates/refined_high_city_collision_candidates.v1.draft.json": "e086e1391f80a2ed81346123217ebbbdba3401215e5e8f7fa29dbf004d05e628",
+    "candidates/refined_high_city_walkability_candidates.v1.draft.json": "7c94fcaa639e43e4c4475a3d9431a41d0547e877b3002662f45b4410ecf4668d",
+    "candidates/refined_high_city_collision_walkability_consistency.v1.json": "fef4dfa44ec3ee561484029758fcf4bab0e8d5dd2112a989079d402d263a60b1",
+    "validation/negative_fixture_candidate_cases.json": "7df166c47513f726d08b2dfb430c04a87445752b9a8a69e0e057ae97ecca020c",
+    "validation/fixture_candidate_validation_report.json": "50a908541ad7c780f183c4e47da26fcea41d5a65bb62ef77ca33a47fec82df47",
+    "screenshots/01_collision_candidate_overlay.png": "893257c9ceb24d162e0eb5610b85ebf6e266542a1d6006d7af82f61505fc2e77",
+    "screenshots/02_walkability_candidate_overlay.png": "1f6356edf9095c508799af1033fcb80959ba058bc668c1a7ac2384c57e3fb04d",
+    "screenshots/03_reserved_conditional_doors.png": "f7ce0a7a51634e775163eb75be2bac7e6cfdfd634a065b9627f17ff5ecfa4c63",
+    "screenshots/04_reserved_conditional_sewer.png": "ae95c6ac0d5b393a96b13b4c557b65310c5bc524a35c592e16ec303ceec56916",
+    "screenshots/05_conflict_check_overlay.png": "9956472698eff5511811efd2a6c04c96a50ea47bdb34b6d1da64dd4117daab5c",
+    "screenshots/06_combined_candidate_review.png": "fd81072cf2b9c15151b762b7f6169c30d8506f136c35c7a573becc2f86d9c553"
+  },
+  "screenshot_capture": {
+    "status": "pass",
+    "mode": "generated_canvas_candidate_overlay",
+    "dimensions": "1024x1024",
+    "source": "draft candidate metadata, not runtime map renderer",
+    "screenshots": [
+      {
+        "file": "screenshots/01_collision_candidate_overlay.png",
+        "title": "Collision candidate overlay",
+        "sha256": "893257c9ceb24d162e0eb5610b85ebf6e266542a1d6006d7af82f61505fc2e77"
+      },
+      {
+        "file": "screenshots/02_walkability_candidate_overlay.png",
+        "title": "Walkability candidate overlay",
+        "sha256": "1f6356edf9095c508799af1033fcb80959ba058bc668c1a7ac2384c57e3fb04d"
+      },
+      {
+        "file": "screenshots/03_reserved_conditional_doors.png",
+        "title": "Reserved conditional doors and thresholds",
+        "sha256": "f7ce0a7a51634e775163eb75be2bac7e6cfdfd634a065b9627f17ff5ecfa4c63"
+      },
+      {
+        "file": "screenshots/04_reserved_conditional_sewer.png",
+        "title": "Reserved conditional sewer candidates",
+        "sha256": "ae95c6ac0d5b393a96b13b4c557b65310c5bc524a35c592e16ec303ceec56916"
+      },
+      {
+        "file": "screenshots/05_conflict_check_overlay.png",
+        "title": "Collision/walkability conflict check",
+        "sha256": "9956472698eff5511811efd2a6c04c96a50ea47bdb34b6d1da64dd4117daab5c"
+      },
+      {
+        "file": "screenshots/06_combined_candidate_review.png",
+        "title": "Combined candidate review",
+        "sha256": "fd81072cf2b9c15151b762b7f6169c30d8506f136c35c7a573becc2f86d9c553"
+      }
+    ],
+    "notes": [
+      "Screenshots visualize draft collision and walkability candidates only.",
+      "These images do not prove runtime rendering from candidate metadata."
+    ]
+  },
+  "screenshots": [
+    "screenshots/01_collision_candidate_overlay.png",
+    "screenshots/02_walkability_candidate_overlay.png",
+    "screenshots/03_reserved_conditional_doors.png",
+    "screenshots/04_reserved_conditional_sewer.png",
+    "screenshots/05_conflict_check_overlay.png",
+    "screenshots/06_combined_candidate_review.png"
+  ],
+  "verification": {
+    "npm run verify:quick": "pass 9/9"
+  },
+  "boundary_review": {
+    "status": "pass",
+    "protected_runtime_files_remain_unchanged": "pass",
+    "notes": [
+      "Protected runtime file status was checked after candidate artifacts were generated.",
+      "No server, protocol, shared map, NPC, mob, collision runtime, walkability runtime, door, house, ownership, shop, dialogue, spawn, AI, or combat authority was introduced."
+    ]
+  },
+  "valid_accepted_status": "accepted_collision_walkability_fixture_candidate",
+  "accepted_claim": "A draft, non-runtime collision/walkability candidate exists for the refined high-city visual fixture, with consistency checks and authority-leakage protections.",
+  "next_recommended_gate": "AKALYNTH_DOOR_AND_HOUSE_AUTHORITY_DESIGN_V1"
+}

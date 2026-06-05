@@ -1,0 +1,140 @@
+{
+  "id": "AKALYNTH_RUNTIME_MAP_SCHEMA_VALIDATION_HARNESS_V1_NEGATIVE_CASES",
+  "status": "draft_validation_fixture",
+  "cases": [
+    {
+      "id": "negative_visual_runtime_layer_declares_blocked_walkable",
+      "expected_flags": [
+        "runtime_visual_layer_forbidden_field:collision",
+        "runtime_visual_layer_forbidden_field:walkability"
+      ],
+      "payload": {
+        "layer": "runtime_visual_object_layer",
+        "object": {
+          "collision": "blocked",
+          "walkability": "walkable"
+        }
+      }
+    },
+    {
+      "id": "negative_collision_layer_embeds_sprite_render_fields",
+      "expected_flags": [
+        "runtime_collision_layer_forbidden_field:sprite",
+        "runtime_collision_layer_forbidden_field:render"
+      ],
+      "payload": {
+        "layer": "runtime_collision_layer",
+        "cell": {
+          "sprite": "wall_stone",
+          "render": {
+            "layer": "object_overlay"
+          }
+        }
+      }
+    },
+    {
+      "id": "negative_walkability_layer_embeds_transition_to",
+      "expected_flags": [
+        "runtime_walkability_layer_forbidden_field:transition_to"
+      ],
+      "payload": {
+        "layer": "runtime_walkability_layer",
+        "cell": {
+          "tile": [
+            25,
+            26
+          ],
+          "transition_to": "sewer_level_01"
+        }
+      }
+    },
+    {
+      "id": "negative_door_layer_enforces_access_list",
+      "expected_flags": [
+        "runtime_door_house_layer_forbidden_field:access_list_enforced"
+      ],
+      "payload": {
+        "layer": "runtime_door_house_layer",
+        "door_record": {
+          "access_list_enforced": true
+        }
+      }
+    },
+    {
+      "id": "negative_house_layer_declares_owner_account",
+      "expected_flags": [
+        "runtime_door_house_layer_forbidden_field:owner_account_id"
+      ],
+      "payload": {
+        "layer": "runtime_door_house_layer",
+        "house_record": {
+          "owner_account_id": "acct_001"
+        }
+      }
+    },
+    {
+      "id": "negative_transition_endpoint_destination_exists_without_promotion",
+      "expected_flags": [
+        "runtime_destination_existence_forbidden"
+      ],
+      "payload": {
+        "layer": "runtime_transition_layer",
+        "endpoint": {
+          "destination_exists": true,
+          "promotion_receipt": null
+        }
+      }
+    },
+    {
+      "id": "negative_bundle_manifest_sets_production_promoted_true",
+      "expected_flags": [
+        "production_map_promoted_forbidden"
+      ],
+      "payload": {
+        "layer": "runtime_map_bundle_manifest",
+        "production_map_promoted": true
+      }
+    },
+    {
+      "id": "negative_schema_artifact_references_shared_map_promoted_target",
+      "expected_flags": [
+        "shared_map_path_forbidden"
+      ],
+      "payload": {
+        "layer": "runtime_map_bundle_manifest",
+        "shared_map_path": "packages/shared/maps/high_city.json"
+      }
+    },
+    {
+      "id": "negative_runtime_map_bundle_declares_server_authoritative_true",
+      "expected_flags": [
+        "server_authoritative_forbidden"
+      ],
+      "payload": {
+        "layer": "runtime_map_bundle_manifest",
+        "server_authoritative": true
+      }
+    },
+    {
+      "id": "negative_runtime_map_schema_contains_content_behavior",
+      "expected_flags": [
+        "runtime_schema_forbidden_field:npc_behavior",
+        "runtime_schema_forbidden_field:mob_behavior",
+        "runtime_schema_forbidden_field:shop",
+        "runtime_schema_forbidden_field:dialogue",
+        "runtime_schema_forbidden_field:spawn",
+        "runtime_schema_forbidden_field:ai",
+        "runtime_schema_forbidden_field:combat"
+      ],
+      "payload": {
+        "npc_behavior": "talk",
+        "mob_behavior": "aggro",
+        "shop": "food",
+        "dialogue": "hello",
+        "spawn": "rat_small_01",
+        "ai": "ambush",
+        "combat": "enabled"
+      }
+    }
+  ]
+}

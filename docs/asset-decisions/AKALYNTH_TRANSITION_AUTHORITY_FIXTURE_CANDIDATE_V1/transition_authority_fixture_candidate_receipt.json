@@ -1,0 +1,208 @@
+{
+  "id": "AKALYNTH_TRANSITION_AUTHORITY_FIXTURE_CANDIDATE_V1",
+  "status": "accepted_transition_authority_fixture_candidate",
+  "scope": "draft non-runtime transition authority fixture candidate for accepted refined high-city layout",
+  "input_receipts": [
+    "AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1",
+    "AKALYNTH_DOOR_HOUSE_AUTHORITY_FIXTURE_CANDIDATE_V1",
+    "AKALYNTH_TRANSITION_AUTHORITY_DESIGN_V1",
+    "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1"
+  ],
+  "purpose": "Create draft non-runtime metadata for transition-like reserved conditionals in the refined high-city fixture while preserving authority boundaries and avoiding runtime transition behavior.",
+  "artifacts": [
+    "candidates/refined_high_city_transition_candidates.v1.draft.json",
+    "candidates/refined_high_city_transition_endpoints.v1.draft.json",
+    "candidates/refined_high_city_floor_change_bindings.v1.draft.json",
+    "candidates/refined_high_city_transition_policy_candidates.v1.draft.json",
+    "validation/transition_fixture_candidate_validation_report.json",
+    "validation/negative_transition_fixture_candidate_cases.json",
+    "screenshots/01_transition_candidates_overview.png",
+    "screenshots/02_sewer_transition_candidate.png",
+    "screenshots/03_stair_or_floor_change_candidate.png",
+    "screenshots/04_gate_transition_candidate.png",
+    "screenshots/05_reserved_conditionals_review.png",
+    "screenshots/06_combined_transition_candidate_review.png"
+  ],
+  "candidate_summary": {
+    "transition_candidate_count": 4,
+    "endpoint_candidate_count": 4,
+    "floor_change_binding_candidate_count": 4,
+    "transition_policy_candidate_count": 3,
+    "reserved_conditional_source_tiles_used": 4,
+    "sewer_transition_candidates": 2,
+    "gate_transition_candidates": 1,
+    "environment_boundary_review_candidates": 1,
+    "door_house_candidates_excluded_as_authority": 4
+  },
+  "claims": {
+    "draft_transition_candidates_created": true,
+    "draft_endpoint_candidates_created": true,
+    "draft_floor_change_binding_candidates_created": true,
+    "draft_transition_policy_candidates_created": true,
+    "reserved_conditionals_preserved": true,
+    "runtime_transition_behavior_added": false,
+    "runtime_floor_change_added": false,
+    "runtime_teleport_added": false,
+    "runtime_sewer_entry_added": false,
+    "runtime_stair_traversal_added": false,
+    "runtime_destination_validation_added": false,
+    "spawn_safety_added": false,
+    "server_movement_authority_changed": false,
+    "collision_changed": false,
+    "walkability_changed": false,
+    "door_house_authority_used_as_transition_authority": false,
+    "server_protocol_changed": false,
+    "shared_maps_changed": false,
+    "production_map_promoted": false,
+    "npc_behavior_added": false,
+    "mob_behavior_added": false,
+    "shop_changed": false,
+    "dialogue_changed": false,
+    "spawn_changed": false,
+    "ai_changed": false,
+    "combat_changed": false,
+    "mechanics_null": true
+  },
+  "validation": {
+    "transition_candidate_json_valid": "pass",
+    "endpoint_candidate_json_valid": "pass",
+    "all_candidates_are_draft_non_runtime": "pass",
+    "all_mechanics_fields_are_null": "pass",
+    "runtime_authority_fields_none_or_false": "pass",
+    "source_tiles_link_to_reserved_conditionals": "pass",
+    "visual_object_ids_are_evidence_only": "pass",
+    "door_house_candidates_are_not_transition_authority": "pass",
+    "walkability_layer_does_not_contain_transition_to": "pass",
+    "collision_layer_does_not_contain_transition_to": "pass",
+    "candidate_endpoints_do_not_claim_runtime_destination_existence": "pass",
+    "floor_change_bindings_do_not_change_server_floor": "pass",
+    "transition_policies_do_not_grant_spawn_safety_or_behavior": "pass",
+    "negative_transition_fixture_candidate_cases_flagged": "pass",
+    "canvas_only_screenshots_captured": "pass",
+    "protected_runtime_files_remain_unchanged": "pass",
+    "npm_run_verify_quick_passes": "pass 9/9"
+  },
+  "review": {
+    "status": "pass",
+    "acceptance_criteria": {
+      "transition_candidates_exist": "pass",
+      "endpoint_placeholders_exist": "pass",
+      "floor_change_binding_candidates_exist": "pass",
+      "transition_policy_candidates_are_unenforced": "pass",
+      "reserved_conditional_source_tiles_used": "pass",
+      "sewer_transition_candidates_exist": "pass",
+      "gate_transition_candidate_exists": "pass",
+      "environment_boundary_candidate_exists": "pass",
+      "door_house_candidates_excluded_as_authority": "pass",
+      "negative_transition_leakage_cases_flagged": "pass",
+      "screenshots_generated_nonblank": "pass",
+      "protected_runtime_paths_remain_unchanged": "pass",
+      "npm_run_verify_quick_passes": "pass"
+    },
+    "notes": [
+      "Accepted as a draft, non-runtime transition authority fixture candidate.",
+      "Transition candidates do not implement runtime sewer entry, stairs, floor changes, teleport, destination validity, or server movement authority.",
+      "Endpoint placeholders do not create destination maps.",
+      "Transition policies are draft and unenforced.",
+      "Door/house candidates remain excluded as transition authority.",
+      "Collision and walkability layers do not grant transition authority.",
+      "Production map promotion remains blocked pending an integrated map authority bundle and later runtime promotion gates."
+    ]
+  },
+  "accepted_claim_if_reviewed": "A draft, non-runtime transition authority fixture candidate exists for the refined high-city layout, preserving reserved conditionals and preventing transition authority leakage.",
+  "valid_accepted_status": "accepted_transition_authority_fixture_candidate",
+  "validation_report": "validation/transition_fixture_candidate_validation_report.json",
+  "non_claims": [
+    "Runtime sewers are not implemented.",
+    "Runtime stairs are not implemented.",
+    "Runtime floor changes are not implemented.",
+    "Runtime teleports are not implemented.",
+    "Destination maps are not promoted.",
+    "Server movement is not changed.",
+    "Shared maps are not changed.",
+    "Server protocol is not changed.",
+    "Production map is not promoted.",
+    "Collision and walkability do not resolve transitions.",
+    "Door and house authority does not resolve transitions.",
+    "NPC, mob, shop, dialogue, spawn, AI, and combat behavior is not added."
+  ],
+  "next_recommended_gate": "AKALYNTH_HIGH_CITY_MAP_AUTHORITY_BUNDLE_V1",
+  "hashes_sha256": {
+    "candidates/refined_high_city_transition_candidates.v1.draft.json": "5700a1037d0ac91d89b6a6f3489ebd837817d132e03bcc332b18992e9eea6187",
+    "candidates/refined_high_city_transition_endpoints.v1.draft.json": "6bec474ee5f2a2d5a3ed957990912e8d728eb730a9de81ce689bc8c298fc55d7",
+    "candidates/refined_high_city_floor_change_bindings.v1.draft.json": "cd40dd3af48fbf019190432d6237f901d3f6c23ae9c8df231b5d0071fcdcb838",
+    "candidates/refined_high_city_transition_policy_candidates.v1.draft.json": "24fec65e437ceeff736db8455d8620cfeb3c0c3cdc3340b68c66c1114021790b",
+    "validation/negative_transition_fixture_candidate_cases.json": "08ec4a404f3822cf3bc55c705b671784ba2707467f5bbc4b3fe045f3c59dcd11",
+    "screenshots/01_transition_candidates_overview.png": "e157efb546e19f65bbcbc3e63a48741f946a5651cebf112d877a26c72d079da4",
+    "screenshots/02_sewer_transition_candidate.png": "c4126d3e3eb09ad4efbcf6596f59deeb11854271f84c8d1c0dd1b26efc75c564",
+    "screenshots/03_stair_or_floor_change_candidate.png": "87f02a0137aa561ae1c61fec94f146ae9f3e732a25e250d2227ba18a8bc3bc52",
+    "screenshots/04_gate_transition_candidate.png": "6f3d1739bfd43f8979d678cc98763366dce5a08036e8549953eeff169daf09ba",
+    "screenshots/05_reserved_conditionals_review.png": "49273c16245908239b6c4d575ce2b3d7dd42a6def3d8490a73b80b85324fe058",
+    "screenshots/06_combined_transition_candidate_review.png": "bfa3cf1c1c0867c3721af3b590c0d5b40ec968f6ee55211549a127927799616b",
+    "validation/transition_fixture_candidate_validation_report.json": "a945faa908ea046ca21bcfa8f9bfa8855630f31c922d126179bf292d112a4b1e"
+  },
+  "screenshot_capture": {
+    "status": "pass",
+    "mode": "generated_canvas_candidate_overlay",
+    "dimensions": "1024x1024",
+    "source": "draft transition candidate metadata, not runtime map renderer",
+    "screenshots": [
+      {
+        "file": "screenshots/01_transition_candidates_overview.png",
+        "title": "Transition candidates overview",
+        "sha256": "e157efb546e19f65bbcbc3e63a48741f946a5651cebf112d877a26c72d079da4"
+      },
+      {
+        "file": "screenshots/02_sewer_transition_candidate.png",
+        "title": "Sewer transition candidate",
+        "sha256": "c4126d3e3eb09ad4efbcf6596f59deeb11854271f84c8d1c0dd1b26efc75c564"
+      },
+      {
+        "file": "screenshots/03_stair_or_floor_change_candidate.png",
+        "title": "Stair or floor change candidate",
+        "sha256": "87f02a0137aa561ae1c61fec94f146ae9f3e732a25e250d2227ba18a8bc3bc52"
+      },
+      {
+        "file": "screenshots/04_gate_transition_candidate.png",
+        "title": "Gate transition candidate",
+        "sha256": "6f3d1739bfd43f8979d678cc98763366dce5a08036e8549953eeff169daf09ba"
+      },
+      {
+        "file": "screenshots/05_reserved_conditionals_review.png",
+        "title": "Reserved conditionals review",
+        "sha256": "49273c16245908239b6c4d575ce2b3d7dd42a6def3d8490a73b80b85324fe058"
+      },
+      {
+        "file": "screenshots/06_combined_transition_candidate_review.png",
+        "title": "Combined transition candidate review",
+        "sha256": "bfa3cf1c1c0867c3721af3b590c0d5b40ec968f6ee55211549a127927799616b"
+      }
+    ],
+    "notes": [
+      "Screenshots visualize draft transition authority fixture candidates only.",
+      "These images do not prove runtime rendering or gameplay authority."
+    ]
+  },
+  "screenshots": [
+    "screenshots/01_transition_candidates_overview.png",
+    "screenshots/02_sewer_transition_candidate.png",
+    "screenshots/03_stair_or_floor_change_candidate.png",
+    "screenshots/04_gate_transition_candidate.png",
+    "screenshots/05_reserved_conditionals_review.png",
+    "screenshots/06_combined_transition_candidate_review.png"
+  ],
+  "verification": {
+    "npm run verify:quick": "pass 9/9",
+    "protected_runtime_files_remain_unchanged": "pass"
+  },
+  "boundary_review": {
+    "status": "pass",
+    "protected_runtime_files_remain_unchanged": "pass",
+    "notes": [
+      "Protected runtime file status was checked after transition fixture candidate artifacts were generated.",
+      "This gate created draft docs metadata, validation artifacts, screenshots, and a receipt only.",
+      "No server, protocol, shared map, runtime transition, sewer entry, stair traversal, floor change, teleport, destination validation, spawn safety, collision, walkability, door, house, shop, dialogue, spawn, AI, combat, NPC, or mob behavior was introduced."
+    ]
+  },
+  "accepted_claim": "A draft, non-runtime transition authority fixture candidate exists for the refined high-city layout, preserving reserved conditionals and preventing transition authority leakage."
+}

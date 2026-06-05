@@ -1,0 +1,108 @@
+{
+  "id": "AKALYNTH_MAP_OBJECT_METADATA_DESIGN_V1",
+  "status": "accepted_map_object_metadata_design",
+  "scope": "metadata boundary design only",
+  "input_receipts": [
+    "AKALYNTH_HIGH_CITY_BLOCK_LAYOUT_REFINEMENT_V1"
+  ],
+  "purpose": "Design the metadata boundary between visual source assets, debug-client visual fixtures, future production map object metadata, future collision/walkability metadata, future interaction metadata, and future server authority.",
+  "artifacts": [
+    "map_object_metadata_design.md",
+    "authority_boundary_matrix.md",
+    "draft_schemas/visual_map_object.schema.draft.json",
+    "draft_schemas/visual_overlay_zone.schema.draft.json",
+    "draft_schemas/collision_layer.schema.draft.json",
+    "draft_schemas/interaction_layer.schema.draft.json",
+    "examples/refined_high_city_visual_objects.draft.json",
+    "examples/small_house_visual_objects.draft.json",
+    "examples/market_shop_visual_objects.draft.json",
+    "examples/castle_meeting_room_visual_objects.draft.json",
+    "examples/sewer_hint_visual_objects.draft.json",
+    "validation_plan.md"
+  ],
+  "planes_defined": [
+    "visual_object",
+    "overlay_presentation",
+    "collision",
+    "walkability",
+    "interaction",
+    "npc_mob_content",
+    "ownership_permission",
+    "production_map"
+  ],
+  "non_inference_rules": [
+    "A wall sprite does not imply collision.",
+    "A door sprite does not imply open or close behavior.",
+    "A shop stall sprite does not imply shop inventory.",
+    "A bed sprite does not imply sleep behavior.",
+    "A sewer grate sprite does not imply travel or teleport behavior.",
+    "A roof overlay does not imply house ownership or entry.",
+    "An NPC-looking sprite does not imply a server NPC.",
+    "A creature-looking sprite does not imply a server mob.",
+    "A visual footprint does not imply walkability or blocking."
+  ],
+  "claims": {
+    "metadata_planes_defined": true,
+    "visual_object_schema_drafted": true,
+    "overlay_zone_schema_drafted": true,
+    "collision_layer_reserved_for_future_gate": true,
+    "walkability_layer_reserved_for_future_gate": true,
+    "interaction_layer_reserved_for_future_gate": true,
+    "production_map_promoted": false,
+    "server_protocol_changed": false,
+    "shared_maps_changed": false,
+    "npc_behavior_added": false,
+    "mob_behavior_added": false,
+    "collision_changed": false,
+    "walkability_changed": false,
+    "ownership_or_door_permission_added": false,
+    "dialogue_changed": false,
+    "shop_changed": false,
+    "faction_changed": false,
+    "spawn_changed": false,
+    "ai_changed": false,
+    "combat_changed": false
+  },
+  "verification": {
+    "draft_schema_json_valid": "pass",
+    "draft_example_json_valid": "pass",
+    "draft_examples_visual_only_authority_none": "pass",
+    "npm run verify:quick": "pass 9/9"
+  },
+  "design_review": {
+    "status": "pass",
+    "acceptance_criteria": {
+      "visual_metadata_separated_from_gameplay_authority": "pass",
+      "collision_and_walkability_are_separate_future_planes": "pass",
+      "door_house_ownership_semantics_are_separate_future_planes": "pass",
+      "npc_mob_behavior_separate_from_visual_presets": "pass",
+      "production_map_promotion_not_performed": "pass",
+      "draft_schemas_reject_authority_leakage": "pass",
+      "examples_map_refined_city_block_visually_only": "pass",
+      "protected_runtime_files_remain_unchanged": "pass",
+      "npm_run_verify_quick_passes": "pass"
+    },
+    "notes": [
+      "Accepted as a metadata boundary design gate only.",
+      "Draft schemas remain design artifacts and are not promoted into shared runtime packages.",
+      "Production map promotion remains blocked pending separate visual fixture export, collision/walkability, door/house authority, and production map candidate gates.",
+      "Future schema validation should include negative fixtures proving that visual objects reject collision, walkability, shop, dialogue, spawn, AI, combat, ownership, and door-permission fields."
+    ]
+  },
+  "protected_files": [
+    "apps/server/src/world/npcs.ts",
+    "apps/server/src/world/mobs.ts",
+    "packages/shared/maps/*.json",
+    "packages/shared/types.ts",
+    "network protocol files",
+    "collision or walkability registries",
+    "house, ownership, access-list, shop, dialogue, faction, spawn, AI, or combat systems"
+  ],
+  "valid_accepted_status": "accepted_map_object_metadata_design",
+  "next_recommended_gate": "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1",
+  "notes": [
+    "Draft schemas are design artifacts only and are not written to shared runtime packages.",
+    "Examples use real current visual asset ids but remain draft visual-only examples.",
+    "Production map promotion remains blocked pending separate metadata and authority gates."
+  ]
+}

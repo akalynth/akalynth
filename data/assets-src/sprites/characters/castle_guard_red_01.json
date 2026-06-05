@@ -1,0 +1,54 @@
+{
+  "id": "castle_guard_red_01",
+  "asset_type": "character",
+  "source_kind": "spritesheet",
+  "image": "castle_guard_red_01.png",
+  "dimensions": {
+    "width": 256,
+    "height": 256
+  },
+  "frame": {
+    "width": 64,
+    "height": 64
+  },
+  "directions": {
+    "rows": [
+      "south",
+      "north",
+      "east",
+      "west"
+    ]
+  },
+  "animations": {
+    "walk": {
+      "columns": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "frames": 4
+    },
+    "idle": {
+      "column": 0
+    }
+  },
+  "rendering": {
+    "filtering": "nearest",
+    "display_only": true
+  },
+  "render_anchor": {
+    "feet": [
+      32,
+      54
+    ],
+    "unit": "source_pixels"
+  },
+  "mechanics": null,
+  "notes": [
+    "Visual preset only.",
+    "Does not create server NPC behavior.",
+    "Does not encode collision, walkability, trading, dialogue, faction, combat, or authority.",
+    "Imported sheet was normalized to the canonical row order south, north, east, west."
+  ]
+}

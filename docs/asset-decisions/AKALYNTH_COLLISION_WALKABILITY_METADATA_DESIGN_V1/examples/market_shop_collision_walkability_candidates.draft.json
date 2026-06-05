@@ -1,0 +1,137 @@
+{
+  "id": "market_shop_collision_walkability_candidates_v1",
+  "status": "draft_design_only",
+  "source_visual_layout_receipt": "AKALYNTH_HIGH_CITY_BLOCK_LAYOUT_REFINEMENT_V1",
+  "coordinate_system": {
+    "origin": "top_left",
+    "unit": "tile",
+    "tile_size_px": 32,
+    "axes": {
+      "x": "east",
+      "y": "south"
+    },
+    "floor": {
+      "default": 0,
+      "meaning": "visual/debug floor index only until production promotion"
+    }
+  },
+  "collision_cells": [
+    {
+      "tile": [
+        21,
+        12
+      ],
+      "floor": 0,
+      "collision_state": "blocked",
+      "category": "market_stall_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_market_food_stall_21_12"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        25,
+        17
+      ],
+      "floor": 0,
+      "collision_state": "reserved_conditional",
+      "category": "shop_threshold_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_market_door_25_17"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        25,
+        18
+      ],
+      "floor": 0,
+      "collision_state": "clear",
+      "category": "market_lane_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_market_floor_25_18"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    }
+  ],
+  "walkability_cells": [
+    {
+      "tile": [
+        21,
+        12
+      ],
+      "floor": 0,
+      "walkability_state": "not_walkable",
+      "category": "market_stall_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_market_food_stall_21_12"
+        ]
+      },
+      "notes": [
+        "Walkability candidate only.",
+        "Does not become runtime traversal authority until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        25,
+        17
+      ],
+      "floor": 0,
+      "walkability_state": "reserved_conditional",
+      "category": "shop_threshold_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_market_door_25_17"
+        ]
+      },
+      "notes": [
+        "Walkability candidate only.",
+        "Does not become runtime traversal authority until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        25,
+        18
+      ],
+      "floor": 0,
+      "walkability_state": "walkable",
+      "category": "market_lane_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_market_floor_25_18"
+        ]
+      },
+      "notes": [
+        "Walkability candidate only.",
+        "Does not become runtime traversal authority until promoted by a later gate."
+      ]
+    }
+  ],
+  "mechanics": null
+}

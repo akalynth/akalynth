@@ -1,0 +1,29 @@
+{
+  "id": "market_food_stall",
+  "asset_type": "world_object",
+  "source_kind": "sprite",
+  "image": "market_food_stall.png",
+  "frame": {
+    "width": 160,
+    "height": 128
+  },
+  "rendering": {
+    "filtering": "nearest",
+    "display_only": true,
+    "draw_scale": 0.9,
+    "anchor": {
+      "type": "bottom_center",
+      "source_pixels": [
+        80,
+        122
+      ]
+    },
+    "z_policy": "sort_by_anchor_y",
+    "layer": "object_overlay"
+  },
+  "mechanics": null,
+  "visual_notes": [
+    "Market stall visual only.",
+    "Does not encode shop behavior, collision, or inventory."
+  ]
+}

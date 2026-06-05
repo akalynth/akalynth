@@ -1,0 +1,58 @@
+{
+  "id": "sewer_grate_transition_candidate_v1",
+  "plane": "transition_authority",
+  "status": "draft_design_only",
+  "runtime_authority": false,
+  "server_authoritative": false,
+  "production_map_promoted": false,
+  "source_visual_object_ids": [
+    "vmo_1413_sewer_grate_25_26",
+    "vmo_1414_sewer_grate_28_26"
+  ],
+  "source": {
+    "tile": [
+      25,
+      26
+    ],
+    "floor": 0,
+    "map_region": "refined_high_city_visual_fixture",
+    "authority_status": "draft_placeholder"
+  },
+  "destination": {
+    "tile": [
+      0,
+      0
+    ],
+    "floor": -1,
+    "map_region": "future_sewer_region_placeholder",
+    "authority_status": "future_runtime_gate_required"
+  },
+  "directionality_reserved": "reserved_unknown",
+  "activation_rule_reserved": "step_on",
+  "policy": {
+    "activation": "step_on",
+    "directionality": "reserved_unknown",
+    "safety": [
+      "destination_must_exist",
+      "destination_must_be_walkable",
+      "destination_must_not_spawn_inside_blocker",
+      "destination_must_preserve_lockstep_authority"
+    ],
+    "authority_status": "future_gate_required",
+    "notes": [
+      "Draft policy only. No runtime activation is enabled."
+    ]
+  },
+  "mechanics": null,
+  "authority": {
+    "runtime_transition": "future_gate_required",
+    "destination_validity": "future_gate_required",
+    "floor_change": "future_gate_required_if_floor_changes",
+    "movement_resolution": "future_gate_required",
+    "server_receipt": "future_gate_required"
+  },
+  "notes": [
+    "Visual sewer grate evidence only.",
+    "Does not create a sewer transition, destination, or floor change."
+  ]
+}

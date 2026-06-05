@@ -1,0 +1,186 @@
+{
+  "id": "AKALYNTH_RUNTIME_MAP_PROJECTION_CONSUMER_SMOKE_TEST_V1_REPORT",
+  "status": "pass",
+  "generated_by": "tools/asset-gen/verify-runtime-projection-consumer-smoke.ts",
+  "checks": {
+    "projection_consumer_routes_present": "pass",
+    "projection_artifact_imported_by_debug_client": "pass",
+    "projection_counts_match_candidate_sources": "pass",
+    "debug_overlay_renderer_present": "pass",
+    "negative_projection_consumer_cases_flagged": "pass",
+    "screenshots_exist_and_are_nonblank_pngs": "pass",
+    "boundary_flags_zero": "pass"
+  },
+  "route_results": [
+    {
+      "route": "runtime_projection_overview",
+      "present": true
+    },
+    {
+      "route": "runtime_projection_collision_walkability",
+      "present": true
+    },
+    {
+      "route": "runtime_projection_door_house",
+      "present": true
+    },
+    {
+      "route": "runtime_projection_transitions",
+      "present": true
+    },
+    {
+      "route": "runtime_projection_overlay_visibility",
+      "present": true
+    },
+    {
+      "route": "runtime_projection_combined_review",
+      "present": true
+    }
+  ],
+  "count_checks": {
+    "overlay_zones_match": true,
+    "collision_cells_match": true,
+    "walkability_cells_match": true,
+    "door_candidates_match": true,
+    "house_candidates_match": true,
+    "transition_candidates_match": true
+  },
+  "negative_results": [
+    {
+      "id": "negative_consumer_loads_projection_as_production_map",
+      "expected_flags": [
+        "consumer_forbidden_field:production_map_loaded"
+      ],
+      "observed_flags": [
+        "consumer_forbidden_field:production_map_loaded"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_consumer_uses_shared_map_target",
+      "expected_flags": [
+        "consumer_forbidden_field:shared_map_path"
+      ],
+      "observed_flags": [
+        "consumer_forbidden_field:shared_map_path"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_consumer_marks_projection_runtime_authoritative",
+      "expected_flags": [
+        "consumer_forbidden_field:runtime_authority"
+      ],
+      "observed_flags": [
+        "consumer_forbidden_field:runtime_authority"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_consumer_activates_collision",
+      "expected_flags": [
+        "consumer_forbidden_field:runtime_collision_active"
+      ],
+      "observed_flags": [
+        "consumer_forbidden_field:runtime_collision_active"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_consumer_activates_walkability",
+      "expected_flags": [
+        "consumer_forbidden_field:runtime_walkability_active"
+      ],
+      "observed_flags": [
+        "consumer_forbidden_field:runtime_walkability_active"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_consumer_activates_door_house_transition_authority",
+      "expected_flags": [
+        "consumer_forbidden_field:runtime_doors_active",
+        "consumer_forbidden_field:runtime_houses_active",
+        "consumer_forbidden_field:runtime_transitions_active"
+      ],
+      "observed_flags": [
+        "consumer_forbidden_field:runtime_doors_active",
+        "consumer_forbidden_field:runtime_houses_active",
+        "consumer_forbidden_field:runtime_transitions_active"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_consumer_adds_content_behavior",
+      "expected_flags": [
+        "consumer_forbidden_field:npc_behavior",
+        "consumer_forbidden_field:mob_behavior",
+        "consumer_forbidden_field:shop",
+        "consumer_forbidden_field:dialogue",
+        "consumer_forbidden_field:spawn",
+        "consumer_forbidden_field:ai",
+        "consumer_forbidden_field:combat"
+      ],
+      "observed_flags": [
+        "consumer_forbidden_field:npc_behavior",
+        "consumer_forbidden_field:mob_behavior",
+        "consumer_forbidden_field:shop",
+        "consumer_forbidden_field:dialogue",
+        "consumer_forbidden_field:spawn",
+        "consumer_forbidden_field:ai",
+        "consumer_forbidden_field:combat"
+      ],
+      "result": "flagged"
+    }
+  ],
+  "screenshot_results": [
+    {
+      "file": "screenshots/01_projection_consumer_overview.png",
+      "exists": true,
+      "bytes": 23597,
+      "png": true,
+      "sha256": "412e6279bc98eb533be3de9fc16128a8f516d91d02f6f08cc1558ed078355b89"
+    },
+    {
+      "file": "screenshots/02_projection_consumer_collision_walkability.png",
+      "exists": true,
+      "bytes": 21927,
+      "png": true,
+      "sha256": "bbc108bf1f5d02d9fdae55f19d01033d3ae0269d022c95c14dfbe4bd21572b10"
+    },
+    {
+      "file": "screenshots/03_projection_consumer_door_house.png",
+      "exists": true,
+      "bytes": 23024,
+      "png": true,
+      "sha256": "22f999d9e80d5857c39cf608a7ea21b9b3cb361d3b1212bb996b3f1aba5ae0f4"
+    },
+    {
+      "file": "screenshots/04_projection_consumer_transitions.png",
+      "exists": true,
+      "bytes": 19649,
+      "png": true,
+      "sha256": "753b12832a1ff5969aa128ab92e3c9a3525abdc3f10a4cd15ff8e1f349494f84"
+    },
+    {
+      "file": "screenshots/05_projection_consumer_overlay_visibility.png",
+      "exists": true,
+      "bytes": 25311,
+      "png": true,
+      "sha256": "502df1cd4f5603a05ff9bdd235124b37d8c15f708ee0ec17d12151e3326307b8"
+    },
+    {
+      "file": "screenshots/06_projection_consumer_combined_review.png",
+      "exists": true,
+      "bytes": 25279,
+      "png": true,
+      "sha256": "b5d2054e9a7222ab1bc23cb351046c66f9cab58928fa649de765fca7d5aec0ba"
+    }
+  ],
+  "boundary_flags": [],
+  "notes": [
+    "Validator checks debug-client route wiring and projection/candidate metadata consistency.",
+    "Screenshots are deterministic reference canvas artifacts for the projection consumer review routes.",
+    "No production map, shared schema, server movement, collision, walkability, door, house, transition, or gameplay authority is created."
+  ]
+}

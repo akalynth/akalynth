@@ -1,0 +1,85 @@
+{
+  "id": "AKALYNTH_RUNTIME_MAP_PROJECTION_CONSUMER_SMOKE_TEST_V1_NEGATIVE_CASES",
+  "status": "draft_validation_fixture",
+  "cases": [
+    {
+      "id": "negative_consumer_loads_projection_as_production_map",
+      "expected_flags": [
+        "consumer_forbidden_field:production_map_loaded"
+      ],
+      "payload": {
+        "production_map_loaded": true
+      }
+    },
+    {
+      "id": "negative_consumer_uses_shared_map_target",
+      "expected_flags": [
+        "consumer_forbidden_field:shared_map_path"
+      ],
+      "payload": {
+        "shared_map_path": "packages/shared/maps/high_city.json"
+      }
+    },
+    {
+      "id": "negative_consumer_marks_projection_runtime_authoritative",
+      "expected_flags": [
+        "consumer_forbidden_field:runtime_authority"
+      ],
+      "payload": {
+        "runtime_authority": true
+      }
+    },
+    {
+      "id": "negative_consumer_activates_collision",
+      "expected_flags": [
+        "consumer_forbidden_field:runtime_collision_active"
+      ],
+      "payload": {
+        "runtime_collision_active": true
+      }
+    },
+    {
+      "id": "negative_consumer_activates_walkability",
+      "expected_flags": [
+        "consumer_forbidden_field:runtime_walkability_active"
+      ],
+      "payload": {
+        "runtime_walkability_active": true
+      }
+    },
+    {
+      "id": "negative_consumer_activates_door_house_transition_authority",
+      "expected_flags": [
+        "consumer_forbidden_field:runtime_doors_active",
+        "consumer_forbidden_field:runtime_houses_active",
+        "consumer_forbidden_field:runtime_transitions_active"
+      ],
+      "payload": {
+        "runtime_doors_active": true,
+        "runtime_houses_active": true,
+        "runtime_transitions_active": true
+      }
+    },
+    {
+      "id": "negative_consumer_adds_content_behavior",
+      "expected_flags": [
+        "consumer_forbidden_field:npc_behavior",
+        "consumer_forbidden_field:mob_behavior",
+        "consumer_forbidden_field:shop",
+        "consumer_forbidden_field:dialogue",
+        "consumer_forbidden_field:spawn",
+        "consumer_forbidden_field:ai",
+        "consumer_forbidden_field:combat"
+      ],
+      "payload": {
+        "npc_behavior": {},
+        "mob_behavior": {},
+        "shop": {},
+        "dialogue": {},
+        "spawn": {},
+        "ai": {},
+        "combat": {}
+      }
+    }
+  ]
+}

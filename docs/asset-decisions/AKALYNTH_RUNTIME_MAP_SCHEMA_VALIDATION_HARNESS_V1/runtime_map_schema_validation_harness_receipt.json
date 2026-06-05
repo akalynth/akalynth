@@ -1,0 +1,109 @@
+{
+  "id": "AKALYNTH_RUNTIME_MAP_SCHEMA_VALIDATION_HARNESS_V1",
+  "status": "accepted_runtime_map_schema_validation_harness",
+  "scope": "deterministic validation harness for draft runtime map authority schemas and examples",
+  "input_receipts": [
+    "AKALYNTH_RUNTIME_MAP_AUTHORITY_SCHEMA_DESIGN_V1",
+    "AKALYNTH_HIGH_CITY_MAP_AUTHORITY_BUNDLE_V1"
+  ],
+  "purpose": "Validate draft runtime map authority schemas, positive projection examples, and negative authority-leakage cases without promoting runtime maps or schemas into shared packages.",
+  "artifacts": [
+    "tools/asset-gen/verify-runtime-map-schema-drafts.ts",
+    "validation/runtime_schema_validation_report.json",
+    "validation/negative_runtime_schema_cases.json",
+    "validation/positive_runtime_schema_examples.json",
+    "validation/schema_validation_command_output.txt",
+    "examples/high_city_runtime_projection_positive.v1.draft.json",
+    "examples/high_city_runtime_projection_negative_authority_leak.v1.draft.json"
+  ],
+  "claims": {
+    "deterministic_runtime_schema_validation_harness_created": true,
+    "draft_runtime_schemas_parse": true,
+    "positive_examples_defined": true,
+    "negative_authority_leakage_cases_defined": true,
+    "runtime_schema_implemented_in_shared_packages": false,
+    "production_map_promoted": false,
+    "shared_maps_changed": false,
+    "shared_types_changed": false,
+    "server_movement_changed": false,
+    "runtime_collision_active": false,
+    "runtime_walkability_active": false,
+    "mechanics_null": true
+  },
+  "validation": {
+    "harness_command_passes": "pass",
+    "draft_runtime_schemas_parse": "pass",
+    "positive_projection_examples_pass": "pass",
+    "negative_leakage_cases_flagged": "pass",
+    "protected_runtime_shared_paths_remain_unchanged": "pass",
+    "npm_run_verify_quick_passes": "pass 9/9"
+  },
+  "review": {
+    "status": "pass",
+    "acceptance_criteria": {
+      "draft_runtime_schemas_parse": "pass",
+      "positive_runtime_schema_examples_pass": "pass",
+      "negative_authority_leakage_cases_flagged": "pass",
+      "runtime_visual_layer_cannot_grant_collision_or_walkability": "pass",
+      "collision_layer_cannot_grant_visual_rendering": "pass",
+      "walkability_layer_cannot_grant_transition_targets": "pass",
+      "door_house_layer_cannot_enforce_ownership_or_access": "pass",
+      "transition_layer_cannot_claim_promoted_destination": "pass",
+      "bundle_manifest_cannot_promote_production_map": "pass",
+      "protected_runtime_shared_paths_remain_unchanged": "pass",
+      "npm_run_verify_quick_passes": "pass"
+    },
+    "notes": [
+      "Accepted as a non-runtime draft schema validation harness.",
+      "The validator lives under tools/asset-gen and does not promote schemas into shared runtime packages.",
+      "No production map, shared runtime schema, shared map, protocol, server movement, collision, walkability, door, house, transition, or gameplay authority was introduced.",
+      "The local sandbox hit the known bwrap loopback issue; validator and quick verifier were rerun outside the sandbox and should be recorded as the execution environment for this receipt."
+    ]
+  },
+  "accepted_claim_if_reviewed": "A deterministic validation harness exists for draft runtime map authority schemas and examples, proving positive examples pass and negative authority-leakage cases are flagged without promoting runtime maps.",
+  "valid_accepted_status": "accepted_runtime_map_schema_validation_harness",
+  "non_claims": [
+    "Runtime schema is not implemented in shared packages.",
+    "Production map is not promoted.",
+    "Server movement is not changed.",
+    "Runtime collision and walkability are not active."
+  ],
+  "next_recommended_gate": "AKALYNTH_HIGH_CITY_RUNTIME_MAP_PROJECTION_CANDIDATE_V1",
+  "hashes_sha256": {
+    "tools/asset-gen/verify-runtime-map-schema-drafts.ts": "d098b603c69a86af6770a905080b6b1ddacd8854f1bf5af87cacda9fb70e2d7f",
+    "validation/runtime_schema_validation_report.json": "d68a3a6e1f279c9ac97d3e77c2bb6c809d53cbb2cf56c944e74b9d397ac8a33d",
+    "validation/negative_runtime_schema_cases.json": "478c51c0bc69d523e6554f82d26dcc899884bbfcaf4c7ed1cdce028b628042e5",
+    "validation/positive_runtime_schema_examples.json": "9ba9745b4142d15ede15733cedfb583e2e234e3b8fafffbb8ef1ebbd2b5fa9eb",
+    "validation/schema_validation_command_output.txt": "9cf2dcdb03cd4524e72365021f7ca03d9031e3e318368089814607f9cb3bf2e5",
+    "examples/high_city_runtime_projection_positive.v1.draft.json": "cbfcc10dbafb7618964f2fb5d9ed0211f3f79614eae227e970a0e052e0b0e22c",
+    "examples/high_city_runtime_projection_negative_authority_leak.v1.draft.json": "7a75942978661225f00d382934bd1d8c603bb08d060afd31b1809b4e73c57200"
+  },
+  "validation_report": "validation/runtime_schema_validation_report.json",
+  "verification": {
+    "npx tsx tools/asset-gen/verify-runtime-map-schema-drafts.ts --write-report": "pass",
+    "npm run verify:quick": "pass 9/9",
+    "protected_runtime_shared_paths_remain_unchanged": "pass"
+  },
+  "boundary_review": {
+    "status": "pass",
+    "protected_runtime_shared_paths_unchanged": "pass",
+    "notes": [
+      "Protected runtime and shared package file status was checked after harness artifacts were generated.",
+      "This gate created a non-runtime validation harness, draft examples, validation fixtures, command output, report, and receipt only.",
+      "No schemas were promoted into shared runtime packages, and no shared maps, protocol, server movement, runtime collision, runtime walkability, door, house, transition, production map, NPC, mob, shop, dialogue, spawn, AI, or combat behavior was introduced."
+    ]
+  },
+  "execution_environment_note": {
+    "sandbox_validator_run": "blocked",
+    "sandbox_error": "bwrap loopback issue",
+    "rerun_outside_sandbox": true,
+    "commands": [
+      "tools/asset-gen/verify-runtime-map-schema-drafts.ts",
+      "npm run verify:quick"
+    ],
+    "results": {
+      "runtime_schema_validation_harness": "pass",
+      "npm run verify:quick": "pass 9/9"
+    }
+  }
+}

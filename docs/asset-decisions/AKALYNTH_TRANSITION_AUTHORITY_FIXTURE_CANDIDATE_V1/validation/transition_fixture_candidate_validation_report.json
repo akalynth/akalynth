@@ -1,0 +1,147 @@
+{
+  "id": "AKALYNTH_TRANSITION_AUTHORITY_FIXTURE_CANDIDATE_V1_VALIDATION_REPORT",
+  "status": "pass",
+  "checks": {
+    "transition_candidate_json_valid": "pass",
+    "endpoint_candidate_json_valid": "pass",
+    "all_candidates_are_draft_non_runtime": "pass",
+    "all_mechanics_fields_are_null": "pass",
+    "runtime_authority_fields_none_or_false": "pass",
+    "source_tiles_link_to_reserved_conditionals": "pass",
+    "visual_object_ids_are_evidence_only": "pass",
+    "door_house_candidates_are_not_transition_authority": "pass",
+    "walkability_layer_does_not_contain_transition_to": "pass",
+    "collision_layer_does_not_contain_transition_to": "pass",
+    "candidate_endpoints_do_not_claim_runtime_destination_existence": "pass",
+    "floor_change_bindings_do_not_change_server_floor": "pass",
+    "transition_policies_do_not_grant_spawn_safety_or_behavior": "pass",
+    "negative_transition_fixture_candidate_cases_flagged": "pass",
+    "canvas_only_screenshots_captured": "pass",
+    "protected_runtime_files_remain_unchanged": "pass",
+    "npm_run_verify_quick_passes": "pass 9/9"
+  },
+  "candidate_summary": {
+    "transition_candidate_count": 4,
+    "endpoint_candidate_count": 4,
+    "floor_change_binding_candidate_count": 4,
+    "transition_policy_candidate_count": 3,
+    "reserved_conditional_source_tiles_used": 4,
+    "sewer_transition_candidates": 2,
+    "gate_transition_candidates": 1,
+    "environment_boundary_review_candidates": 1,
+    "door_house_candidates_excluded_as_authority": 4
+  },
+  "negative_case_results": [
+    {
+      "id": "negative_transition_candidate_runtime_enabled_true",
+      "expected_flags": [
+        "runtime_transition_enabled_forbidden"
+      ],
+      "observed_flags": [
+        "runtime_transition_enabled_forbidden"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_walkability_contains_transition_to",
+      "expected_flags": [
+        "walkability_layer_forbidden_field:transition_to"
+      ],
+      "observed_flags": [
+        "walkability_layer_forbidden_field:transition_to"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_collision_cell_contains_transition_to",
+      "expected_flags": [
+        "collision_layer_forbidden_field:transition_to"
+      ],
+      "observed_flags": [
+        "collision_layer_forbidden_field:transition_to"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_door_candidate_with_teleport_target",
+      "expected_flags": [
+        "door_house_candidate_forbidden_field:teleport_target"
+      ],
+      "observed_flags": [
+        "door_house_candidate_forbidden_field:teleport_target"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_sewer_visual_declares_destination",
+      "expected_flags": [
+        "visual_object_forbidden_field:destination"
+      ],
+      "observed_flags": [
+        "visual_object_forbidden_field:destination"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_endpoint_claims_destination_exists_true",
+      "expected_flags": [
+        "runtime_destination_existence_forbidden"
+      ],
+      "observed_flags": [
+        "runtime_destination_existence_forbidden"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_floor_change_binding_changes_server_floor",
+      "expected_flags": [
+        "server_floor_change_forbidden"
+      ],
+      "observed_flags": [
+        "server_floor_change_forbidden"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_transition_policy_grants_spawn_safety",
+      "expected_flags": [
+        "runtime_spawn_safety_forbidden"
+      ],
+      "observed_flags": [
+        "runtime_spawn_safety_forbidden"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_transition_policy_adds_combat_mob_spawn_behavior",
+      "expected_flags": [
+        "transition_policy_forbidden_field:combat",
+        "transition_policy_forbidden_field:mob_behavior",
+        "transition_policy_forbidden_field:spawn"
+      ],
+      "observed_flags": [
+        "transition_policy_forbidden_field:combat",
+        "transition_policy_forbidden_field:mob_behavior",
+        "transition_policy_forbidden_field:spawn"
+      ],
+      "result": "flagged"
+    }
+  ],
+  "hashes_sha256": {
+    "candidates/refined_high_city_transition_candidates.v1.draft.json": "5700a1037d0ac91d89b6a6f3489ebd837817d132e03bcc332b18992e9eea6187",
+    "candidates/refined_high_city_transition_endpoints.v1.draft.json": "6bec474ee5f2a2d5a3ed957990912e8d728eb730a9de81ce689bc8c298fc55d7",
+    "candidates/refined_high_city_floor_change_bindings.v1.draft.json": "cd40dd3af48fbf019190432d6237f901d3f6c23ae9c8df231b5d0071fcdcb838",
+    "candidates/refined_high_city_transition_policy_candidates.v1.draft.json": "24fec65e437ceeff736db8455d8620cfeb3c0c3cdc3340b68c66c1114021790b",
+    "validation/negative_transition_fixture_candidate_cases.json": "08ec4a404f3822cf3bc55c705b671784ba2707467f5bbc4b3fe045f3c59dcd11",
+    "screenshots/01_transition_candidates_overview.png": "e157efb546e19f65bbcbc3e63a48741f946a5651cebf112d877a26c72d079da4",
+    "screenshots/02_sewer_transition_candidate.png": "c4126d3e3eb09ad4efbcf6596f59deeb11854271f84c8d1c0dd1b26efc75c564",
+    "screenshots/03_stair_or_floor_change_candidate.png": "87f02a0137aa561ae1c61fec94f146ae9f3e732a25e250d2227ba18a8bc3bc52",
+    "screenshots/04_gate_transition_candidate.png": "6f3d1739bfd43f8979d678cc98763366dce5a08036e8549953eeff169daf09ba",
+    "screenshots/05_reserved_conditionals_review.png": "49273c16245908239b6c4d575ce2b3d7dd42a6def3d8490a73b80b85324fe058",
+    "screenshots/06_combined_transition_candidate_review.png": "bfa3cf1c1c0867c3721af3b590c0d5b40ec968f6ee55211549a127927799616b"
+  },
+  "notes": [
+    "Validation checks draft non-runtime transition candidate artifacts only.",
+    "No runtime sewer, stair, floor-change, teleport, gate transfer, destination validity, spawn safety, movement, collision, or walkability authority is created."
+  ]
+}

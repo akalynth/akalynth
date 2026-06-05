@@ -1,0 +1,29 @@
+{
+  "id": "wall_stone_south",
+  "asset_type": "wall_overlay",
+  "source_kind": "sprite",
+  "image": "wall_stone_south.png",
+  "frame": {
+    "width": 64,
+    "height": 64
+  },
+  "rendering": {
+    "filtering": "nearest",
+    "display_only": true,
+    "draw_scale": 1.1,
+    "anchor": {
+      "type": "bottom_center",
+      "source_pixels": [
+        32,
+        58
+      ]
+    },
+    "z_policy": "sort_by_anchor_y",
+    "layer": "object_overlay"
+  },
+  "mechanics": null,
+  "visual_notes": [
+    "Wall overlay visual only.",
+    "Does not encode collision or blocking."
+  ]
+}

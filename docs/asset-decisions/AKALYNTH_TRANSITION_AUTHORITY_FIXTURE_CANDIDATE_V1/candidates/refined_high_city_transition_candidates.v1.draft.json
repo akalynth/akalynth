@@ -1,0 +1,252 @@
+{
+  "id": "refined_high_city_transition_candidates_v1",
+  "plane": "transition_authority_candidate_set",
+  "status": "draft_non_runtime",
+  "source_receipts": [
+    "AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1",
+    "AKALYNTH_DOOR_HOUSE_AUTHORITY_FIXTURE_CANDIDATE_V1",
+    "AKALYNTH_TRANSITION_AUTHORITY_DESIGN_V1",
+    "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1"
+  ],
+  "runtime_authority": false,
+  "server_authoritative": false,
+  "production_map_promoted": false,
+  "coordinate_system": {
+    "origin": "top_left",
+    "unit": "tile",
+    "tile_size_px": 32,
+    "axes": {
+      "x": "east",
+      "y": "south"
+    },
+    "floor": {
+      "default": 0,
+      "meaning": "draft visual fixture floor index only; not production map floor authority"
+    }
+  },
+  "candidates": [
+    {
+      "id": "high_city_sewer_grate_transition_candidate_01",
+      "transition_kind": "sewer_entry_candidate",
+      "source_tiles": [
+        [
+          25,
+          26
+        ]
+      ],
+      "linked_reserved_conditional_ids": [
+        "reserved_conditional_25_26_floor0"
+      ],
+      "linked_visual_object_ids": [
+        "vmo_1413_sewer_grate_25_26"
+      ],
+      "candidate_endpoint_id": "candidate_endpoint_sewer_level_01_entry",
+      "policy_candidate_id": "policy_candidate_sewer_entry_step_on_reserved",
+      "floor_change_binding_id": "floor_change_binding_sewer_entry_down_candidate",
+      "authority": {
+        "runtime_transition": "none",
+        "runtime_floor_change": "none",
+        "runtime_destination_validation": "none",
+        "server_movement_authority": "none",
+        "spawn_safety": "none",
+        "collision_resolution": "none",
+        "walkability_resolution": "none",
+        "destination_map_promotion": "none"
+      },
+      "mechanics": null,
+      "notes": [
+        "Draft transition candidate only.",
+        "Does not make the sewer enterable.",
+        "Does not create a destination map.",
+        "Does not change walkability, collision, server position, or floor authority."
+      ],
+      "plane": "transition_authority_candidate",
+      "status": "draft_non_runtime",
+      "source_receipts": [
+        "AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1",
+        "AKALYNTH_DOOR_HOUSE_AUTHORITY_FIXTURE_CANDIDATE_V1",
+        "AKALYNTH_TRANSITION_AUTHORITY_DESIGN_V1",
+        "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1"
+      ],
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "source_tile_requirements": {
+        "collision_state_required": "reserved_conditional",
+        "walkability_state_required": "reserved_conditional"
+      }
+    },
+    {
+      "id": "high_city_sewer_grate_transition_candidate_02",
+      "transition_kind": "sewer_entry_candidate",
+      "source_tiles": [
+        [
+          28,
+          26
+        ]
+      ],
+      "linked_reserved_conditional_ids": [
+        "reserved_conditional_28_26_floor0"
+      ],
+      "linked_visual_object_ids": [
+        "vmo_1414_sewer_grate_28_26"
+      ],
+      "candidate_endpoint_id": "candidate_endpoint_sewer_level_01_alt_entry",
+      "policy_candidate_id": "policy_candidate_sewer_entry_step_on_reserved",
+      "floor_change_binding_id": "floor_change_binding_sewer_alt_entry_down_candidate",
+      "authority": {
+        "runtime_transition": "none",
+        "runtime_floor_change": "none",
+        "runtime_destination_validation": "none",
+        "server_movement_authority": "none",
+        "spawn_safety": "none",
+        "collision_resolution": "none",
+        "walkability_resolution": "none",
+        "destination_map_promotion": "none"
+      },
+      "mechanics": null,
+      "notes": [
+        "Draft alternate sewer transition candidate only.",
+        "Does not create travel, destination validity, or floor authority."
+      ],
+      "plane": "transition_authority_candidate",
+      "status": "draft_non_runtime",
+      "source_receipts": [
+        "AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1",
+        "AKALYNTH_DOOR_HOUSE_AUTHORITY_FIXTURE_CANDIDATE_V1",
+        "AKALYNTH_TRANSITION_AUTHORITY_DESIGN_V1",
+        "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1"
+      ],
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "source_tile_requirements": {
+        "collision_state_required": "reserved_conditional",
+        "walkability_state_required": "reserved_conditional"
+      }
+    },
+    {
+      "id": "high_city_slime_pool_edge_transition_review_candidate",
+      "transition_kind": "environment_boundary_review_candidate",
+      "source_tiles": [
+        [
+          30,
+          26
+        ]
+      ],
+      "linked_reserved_conditional_ids": [
+        "reserved_conditional_30_26_floor0"
+      ],
+      "linked_visual_object_ids": [
+        "vmo_1415_slime_pool_30_26"
+      ],
+      "candidate_endpoint_id": "candidate_endpoint_slime_edge_review_placeholder",
+      "policy_candidate_id": "policy_candidate_environment_boundary_reserved",
+      "floor_change_binding_id": "floor_change_binding_slime_edge_unknown_candidate",
+      "authority": {
+        "runtime_transition": "none",
+        "runtime_floor_change": "none",
+        "runtime_destination_validation": "none",
+        "server_movement_authority": "none",
+        "spawn_safety": "none",
+        "collision_resolution": "none",
+        "walkability_resolution": "none",
+        "destination_map_promotion": "none"
+      },
+      "mechanics": null,
+      "notes": [
+        "Draft transition-like review candidate only.",
+        "Does not classify the slime edge as a working transition or hazard."
+      ],
+      "plane": "transition_authority_candidate",
+      "status": "draft_non_runtime",
+      "source_receipts": [
+        "AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1",
+        "AKALYNTH_DOOR_HOUSE_AUTHORITY_FIXTURE_CANDIDATE_V1",
+        "AKALYNTH_TRANSITION_AUTHORITY_DESIGN_V1",
+        "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1"
+      ],
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "source_tile_requirements": {
+        "collision_state_required": "reserved_conditional",
+        "walkability_state_required": "reserved_conditional"
+      }
+    },
+    {
+      "id": "high_city_north_gate_region_transfer_candidate",
+      "transition_kind": "gate_region_transfer_candidate",
+      "source_tiles": [
+        [
+          15,
+          4
+        ]
+      ],
+      "linked_reserved_conditional_ids": [
+        "reserved_conditional_15_4_floor0"
+      ],
+      "linked_visual_object_ids": [
+        "vmo_0944_door_wood_open_south_15_4"
+      ],
+      "candidate_endpoint_id": "candidate_endpoint_north_gate_region_placeholder",
+      "policy_candidate_id": "policy_candidate_gate_region_transfer_reserved",
+      "floor_change_binding_id": "floor_change_binding_gate_same_floor_candidate",
+      "related_door_house_authority": "none",
+      "authority": {
+        "runtime_transition": "none",
+        "runtime_floor_change": "none",
+        "runtime_destination_validation": "none",
+        "server_movement_authority": "none",
+        "spawn_safety": "none",
+        "collision_resolution": "none",
+        "walkability_resolution": "none",
+        "destination_map_promotion": "none"
+      },
+      "mechanics": null,
+      "notes": [
+        "Draft gate/region transfer candidate only.",
+        "Does not use door/house candidate authority.",
+        "Does not create passability, teleport, or map transfer behavior."
+      ],
+      "plane": "transition_authority_candidate",
+      "status": "draft_non_runtime",
+      "source_receipts": [
+        "AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1",
+        "AKALYNTH_DOOR_HOUSE_AUTHORITY_FIXTURE_CANDIDATE_V1",
+        "AKALYNTH_TRANSITION_AUTHORITY_DESIGN_V1",
+        "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1"
+      ],
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "source_tile_requirements": {
+        "collision_state_required": "reserved_conditional",
+        "walkability_state_required": "reserved_conditional"
+      }
+    }
+  ],
+  "excluded_door_house_authority": [
+    {
+      "door_house_candidate_id": "high_city_gate_south_threshold_candidate",
+      "reason": "door/house candidate is not transition authority"
+    },
+    {
+      "door_house_candidate_id": "castle_meeting_hall_door_candidate",
+      "reason": "door/house candidate is not transition authority"
+    },
+    {
+      "door_house_candidate_id": "market_shop_front_door_candidate",
+      "reason": "door/house candidate is not transition authority"
+    },
+    {
+      "door_house_candidate_id": "small_house_01_front_door_candidate",
+      "reason": "door/house candidate is not transition authority"
+    }
+  ],
+  "mechanics": null,
+  "notes": [
+    "Transition-looking visual ids are evidence only.",
+    "This candidate set does not implement runtime transitions."
+  ]
+}

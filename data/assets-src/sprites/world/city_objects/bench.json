@@ -1,0 +1,29 @@
+{
+  "id": "bench",
+  "asset_type": "world_object",
+  "source_kind": "sprite",
+  "image": "bench.png",
+  "frame": {
+    "width": 96,
+    "height": 48
+  },
+  "rendering": {
+    "filtering": "nearest",
+    "display_only": true,
+    "draw_scale": 0.85,
+    "anchor": {
+      "type": "bottom_center",
+      "source_pixels": [
+        48,
+        42
+      ]
+    },
+    "z_policy": "sort_by_anchor_y",
+    "layer": "object_overlay"
+  },
+  "mechanics": null,
+  "visual_notes": [
+    "Bench visual only.",
+    "Does not encode sitting, collision, or interaction."
+  ]
+}

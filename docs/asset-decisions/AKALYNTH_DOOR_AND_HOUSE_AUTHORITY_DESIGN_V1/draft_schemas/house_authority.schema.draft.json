@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "akalynth.draft.house_authority.schema.v1",
+  "title": "Draft House Authority Boundary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "plane",
+    "status",
+    "runtime_authority",
+    "server_authoritative",
+    "production_map_promoted",
+    "region",
+    "mechanics",
+    "authority"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "plane": {
+      "const": "house_authority"
+    },
+    "status": {
+      "const": "draft_design_only"
+    },
+    "runtime_authority": {
+      "const": false
+    },
+    "server_authoritative": {
+      "const": false
+    },
+    "production_map_promoted": {
+      "const": false
+    },
+    "region": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "floor",
+        "tiles_source"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "inside_region_candidate",
+            "threshold_region_candidate"
+          ]
+        },
+        "floor": {
+          "type": "integer"
+        },
+        "tiles_source": {
+          "const": "explicit_future_authority_record_required"
+        }
+      }
+    },
+    "mechanics": {
+      "type": "null"
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "inside_outside_truth",
+        "ownership",
+        "access_lists",
+        "protection_zone",
+        "roof_overlay_trigger"
+      ],
+      "properties": {
+        "inside_outside_truth": {
+          "const": "future_gate_required"
+        },
+        "ownership": {
+          "const": "future_gate_required_if_owned"
+        },
+        "access_lists": {
+          "const": "future_gate_required_if_restricted"
+        },
+        "protection_zone": {
+          "const": "future_gate_required_if_supported"
+        },
+        "roof_overlay_trigger": {
+          "const": "future_binding_required"
+        }
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

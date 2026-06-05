@@ -1,0 +1,30 @@
+{
+  "id": "door_wood_open_east",
+  "asset_type": "door_overlay",
+  "source_kind": "sprite",
+  "image": "door_wood_open_east.png",
+  "frame": {
+    "width": 64,
+    "height": 64
+  },
+  "rendering": {
+    "filtering": "nearest",
+    "display_only": true,
+    "draw_scale": 1.15,
+    "anchor": {
+      "type": "bottom_center",
+      "source_pixels": [
+        32,
+        58
+      ]
+    },
+    "z_policy": "sort_by_anchor_y",
+    "layer": "object_overlay"
+  },
+  "mechanics": null,
+  "visual_notes": [
+    "Open door visual only.",
+    "Door does not grant entry behavior.",
+    "Door does not encode collision, lock state, ownership, or walkability."
+  ]
+}
