@@ -54,6 +54,7 @@ import type {
 } from '../../../packages/shared/http.js';
 import { handleHttp } from './api/http.js';
 import { parseCorsOrigins, corsHeadersFor, type CorsPolicy } from './api/cors.js';
+import { createEmailSender, buildAccountEmail } from './account/email.js';
 
 import { createAuditLogger } from './audit/logger.js';
 import { createReceiptsReader } from './audit/reader.js';
@@ -254,6 +255,18 @@ const CORS_POLICY: CorsPolicy = {
   allow: ACCOUNT_CORS_ORIGINS,
   allowLocalDev: DEBUG_MODE || ALLOW_INSECURE_LOCAL,
 };
+// Account email delivery (E3): provider-neutral. EMAIL_TRANSPORT=smtp sends via
+// nodemailer with any provider's SMTP creds (or a self-hosted relay); the
+// default 'console' just logs the link (dev). Verification/reset links point at
+// the portal (PORTAL_BASE_URL). Recipient email is PII — never receipted.
+const EMAIL_TRANSPORT: 'smtp' | 'console' = process.env.EMAIL_TRANSPORT === 'smtp' ? 'smtp' : 'console';
+const EMAIL_FROM = process.env.EMAIL_FROM || 'Akalynth <no-reply@akalynth.com>';
+const PORTAL_BASE_URL = process.env.PORTAL_BASE_URL || 'https://akalynth.com';
+const SMTP_HOST = process.env.SMTP_HOST || '';
+const SMTP_PORT = parseEnvInt(process.env.SMTP_PORT, 587, 1);
+const SMTP_SECURE = parseBoolEnv(process.env.SMTP_SECURE, SMTP_PORT === 465);
+const SMTP_USER = process.env.SMTP_USER || undefined;
+const SMTP_PASS = process.env.SMTP_PASS || undefined;
 const TRUST_PROXY = parseBoolEnv(process.env.TRUST_PROXY, false);
 const TRUST_PROXY_LOOPBACK_ONLY = parseBoolEnv(process.env.TRUST_PROXY_LOOPBACK_ONLY, true);
 const TRUST_PROXY_ALLOWLIST = process.env.TRUST_PROXY_ALLOWLIST ?? '';
@@ -1182,6 +1195,19 @@ const receiptsReader = createReceiptsReader(chainPaths.receiptsPath);
 // surface. Receipts are privacy-bounded (emitReceipt passes only event + opaque
 // account_id + redacted inputs to the audit chain). Account rows are written
 // directly to persist.db, not materialized from receipts.
+// Account email delivery (E3). Construction never throws (misconfigured SMTP
+// falls back to console); a TLS/prod context still on console means no real
+// email is going out, so warn loudly.
+const emailSender = createEmailSender({
+  transport: EMAIL_TRANSPORT,
+  smtp: { host: SMTP_HOST, port: SMTP_PORT, secure: SMTP_SECURE, user: SMTP_USER, pass: SMTP_PASS, from: EMAIL_FROM },
+});
+const emailLinks = { portalBaseUrl: PORTAL_BASE_URL, from: EMAIL_FROM };
+console.log(`[email] transport=${emailSender.transport} from="${EMAIL_FROM}" portal=${PORTAL_BASE_URL}`);
+if (REQUIRE_TLS && emailSender.transport === 'console') {
+  console.warn('[email] WARNING: console transport in a TLS/prod context — verification/reset emails are NOT being sent. Set EMAIL_TRANSPORT=smtp.');
+}
+
 const accountService = new AccountService({
   store: new AccountStore(persist.db),
   hashPassword,
@@ -1194,11 +1220,21 @@ const accountService = new AccountService({
     sessionTtlSec: 30 * 24 * 60 * 60,
     verificationTtlSec: 24 * 60 * 60,
     resetTtlSec: 60 * 60,
-    // No email delivery yet (E3): dev/insecure-local exposes verification/reset
-    // tokens in the response and logs them; production never exposes them.
+    // E3 delivers real email; dev/insecure-local ALSO exposes the token in the
+    // response (and logs it) for local testing. Production never exposes it.
     devExposeLinks: ALLOW_INSECURE_LOCAL,
   },
-  logLink: (kind, accountId, token) => console.log(`[account] ${kind} token for ${accountId}: ${token}`),
+  // Tokens are secrets: only log them under insecure-local dev, never in prod.
+  logLink: ALLOW_INSECURE_LOCAL
+    ? (kind, accountId, token) => console.log(`[account] ${kind} token for ${accountId}: ${token}`)
+    : undefined,
+  // Real delivery (E3): fire-and-forget so it never blocks the response or leaks
+  // timing; the recipient email reaches the transport only, never receipts.
+  deliverEmail: (m) => {
+    void emailSender
+      .send(buildAccountEmail(m.kind, m.email, m.token, emailLinks))
+      .catch((err) => console.error(`[email] failed to send ${m.kind} for account ${m.accountId}: ${String(err)}`));
+  },
 });
 const handleAccount = makeAccountRouter({
   service: accountService,
