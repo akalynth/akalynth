@@ -224,6 +224,19 @@ export class AccountService {
     return row;
   }
 
+  /**
+   * Public session→account resolver for other routers (e.g. the E4 character
+   * API): returns the opaque account_id + email_verified, or null if no valid
+   * session. Never exposes the session token or any PII.
+   */
+  sessionAccount(cookies: Record<string, string>): { accountId: string; emailVerified: boolean } | null {
+    const session = this.resolveSession({ cookies });
+    if (!session) return null;
+    const acct = this.d.store.findById(session.account_id);
+    if (!acct) return null;
+    return { accountId: acct.account_id, emailVerified: acct.email_verified === 1 };
+  }
+
   /** GET /v1/accounts/me — current account from the session cookie. */
   me(ctx: RequestCtx): AccountResponse {
     const session = this.resolveSession(ctx);

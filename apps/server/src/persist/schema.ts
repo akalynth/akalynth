@@ -7,7 +7,7 @@ import type Database from 'better-sqlite3';
 // Schema Version
 // ============================================================================
 
-export const SCHEMA_VERSION = 15;
+export const SCHEMA_VERSION = 16;
 
 // ============================================================================
 // DDL Statements
@@ -335,6 +335,23 @@ CREATE INDEX IF NOT EXISTS idx_acct_pw_resets_account ON account_password_resets
 CREATE UNIQUE INDEX IF NOT EXISTS idx_acct_pw_resets_token ON account_password_resets(token_hash);
 `;
 
+// Account Platform v1 (E4): characters bound to an account. character_id is the
+// player_id (the play entity); this table records the account linkage + the
+// chosen world / sex / outfit. Additive — it does not modify the players table.
+const DDL_ACCOUNT_CHARACTERS = `
+CREATE TABLE IF NOT EXISTS account_characters (
+  character_id    TEXT PRIMARY KEY,
+  account_id      TEXT NOT NULL,
+  name            TEXT NOT NULL,
+  world_id        TEXT NOT NULL,
+  sex             TEXT NOT NULL,
+  outfit_id       TEXT NOT NULL,
+  created_at      TEXT NOT NULL,
+  created_receipt TEXT DEFAULT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_account_characters_account ON account_characters(account_id);
+`;
+
 // ============================================================================
 // Schema Initialization
 // ============================================================================
@@ -452,6 +469,9 @@ function runMigration(db: Database.Database, version: number): void {
       break;
     case 15:
       migrateToV15(db);
+      break;
+    case 16:
+      migrateToV16(db);
       break;
     default:
       throw new Error(`Unknown schema version: ${version}`);
@@ -681,12 +701,24 @@ function migrateToV15(db: Database.Database): void {
   insertMeta.run('schema_version', '15');
 }
 
+function migrateToV16(db: Database.Database): void {
+  // Account Platform v1 (E4): account_characters linkage. Additive — does not
+  // touch players or any existing table.
+  db.exec(DDL_ACCOUNT_CHARACTERS);
+
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', '16');
+}
+
 // ============================================================================
 // Schema Utilities
 // ============================================================================
 
 export function resetSchema(db: Database.Database): void {
   // Drop all tables and recreate (for testing/recovery)
+  db.exec('DROP TABLE IF EXISTS account_characters');
   db.exec('DROP TABLE IF EXISTS account_password_resets');
   db.exec('DROP TABLE IF EXISTS account_sessions');
   db.exec('DROP TABLE IF EXISTS account_email_verifications');

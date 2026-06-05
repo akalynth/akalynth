@@ -70,6 +70,9 @@ import { AccountService } from './account/service.js';
 import { makeAccountRouter } from './account/router.js';
 import { RateLimiter } from './account/rateLimit.js';
 import { hashPassword, verifyPassword } from './account/password.js';
+import { CharacterStore } from './character/store.js';
+import { CharacterService } from './character/service.js';
+import { makeCharacterRouter } from './character/router.js';
 import { publicActorForReceipt, toPublicReceipt } from './audit/public_receipts.js';
 import {
   loadAuthKeyPair,
@@ -1187,6 +1190,30 @@ const handleAccount = makeAccountRouter({
   writeLimiter: new RateLimiter(5, 60 * 60 * 1000),
 });
 
+// Account Platform v1 (E4 / AKALYNTH_ACCOUNT_CHARACTER_V2_V1): catalogs +
+// account-gated character create/list/select. Reuses the core player+token
+// primitives via injection (createCharacterHandler + issuePlayTokenForPlayer,
+// both hoisted function declarations defined below). Privacy-bounded receipts.
+const characterService = new CharacterService({
+  store: new CharacterStore(persist.db),
+  mintCharacter: (name) => createCharacterHandler(name),
+  issuePlayToken: (characterId) => issuePlayTokenForPlayer(characterId),
+  emitReceipt: (e) =>
+    audit.write({
+      player_id: e.accountId,
+      action: e.action,
+      inputs: { character_id: e.characterId, ...(e.inputs ?? {}) },
+      result: e.result,
+    }),
+  now: () => Date.now(),
+  maxCharactersPerAccount: 5,
+});
+const handleCharacter = makeCharacterRouter({
+  service: characterService,
+  resolveAccount: (cookies) => accountService.sessionAccount(cookies),
+  requireVerifiedForCreate: true,
+});
+
 const antiCheatPriorStore = createAntiCheatPriorStore({
   enabled: DEBUG_MODE,
   filePath: ANTICHEAT_PRIORS_PATH,
@@ -2126,6 +2153,31 @@ function createCharacterHandler(name: string): CharacterCreateResult {
   };
 }
 
+// Account Platform v1 (E4): issue a fresh play token for an EXISTING character
+// (used by /v1/characters/select). Mirrors the createCharacterHandler token mint
+// without creating a new player. auth_token_issue captures the nonce for
+// determinism; no PII.
+function issuePlayTokenForPlayer(playerId: string): { token: string; expires_at: number } | null {
+  if (!authKeyPair) return null;
+  const now = Date.now();
+  const nonce = generateNonce();
+  const signed = signToken(playerId, authKeyPair.privateKey, { nowMs: now, nonce });
+  audit.write({
+    actor_id: playerId,
+    action: 'auth_token_issue',
+    inputs: {
+      token_id: signed.payload.token_id,
+      player_id: playerId,
+      issued_at: signed.payload.issued_at,
+      expires_at: signed.payload.expires_at,
+      nonce,
+      trigger: 'character_select',
+    },
+    result: 'ok',
+  });
+  return { token: signed.wire, expires_at: signed.payload.expires_at };
+}
+
 // HTTP control plane
 const httpServer = http.createServer((req, res) => {
   const devCors = applyDevCors(req, res);
@@ -2144,6 +2196,7 @@ const httpServer = http.createServer((req, res) => {
     getVersion: () => VERSION,
     getTickMs: () => TICK_MS,
     handleAccount,
+    handleCharacter,
     listMaps: () =>
       (Object.keys(worlds) as MapName[]).map((name) => ({
         name,
