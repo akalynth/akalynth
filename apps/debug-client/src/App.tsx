@@ -14,7 +14,10 @@ import { NearbyList } from './components/NearbyList';
 import { ExistenceShell } from './components/ExistenceShell';
 import { VisualSmokeReview } from './components/VisualSmokeReview';
 import { CharacterBar } from './components/CharacterBar';
+import { BackpackSheet } from './components/BackpackSheet';
+import { ProofSheet } from './components/ProofSheet';
 import { loadConfig } from './config';
+import type { ConnectionState, SessionInfo, UiStage } from './types';
 
 type ChronicleGroup = { day: string; items: ChronicleEvent[] };
 
@@ -213,6 +216,75 @@ function MobileLandscapeGate() {
   );
 }
 
+interface MobilePlayEntryProps {
+  session: SessionInfo;
+  stage: UiStage['stage'];
+  conn: ConnectionState;
+  hasWorldPlayer: boolean;
+  onCreate: (name: string) => Promise<{ ok: boolean; error?: string }>;
+  onSignOut: () => void;
+  onEnterPlay: () => void;
+}
+
+function MobilePlayEntry({
+  session,
+  stage,
+  conn,
+  hasWorldPlayer,
+  onCreate,
+  onSignOut,
+  onEnterPlay,
+}: MobilePlayEntryProps) {
+  const entryState =
+    !hasWorldPlayer ? 'Waiting for world' :
+    stage < 1 ? 'Ready to enter' :
+    'Ready';
+
+  return (
+    <div className="mobile-play-entry" role="region" aria-label="Mobile play entry">
+      <div className="mobile-play-entry__header">
+        <span>Akalynth</span>
+        <strong>{entryState}</strong>
+        <i>{conn.phase}</i>
+      </div>
+      <CharacterBar
+        session={session}
+        onCreate={onCreate}
+        onSignOut={onSignOut}
+      />
+      {stage < 1 && (
+        <button
+          type="button"
+          className="mobile-enter-play-btn"
+          onClick={onEnterPlay}
+          disabled={!hasWorldPlayer}
+          aria-label={hasWorldPlayer ? 'Enter play mode' : 'Waiting for world before entering play'}
+        >
+          {hasWorldPlayer ? 'Enter play' : 'Waiting'}
+        </button>
+      )}
+    </div>
+  );
+}
+
+interface MobileStatusRailProps {
+  name: string | null;
+  position: string;
+  health: string;
+  conn: ConnectionState;
+}
+
+function MobileStatusRail({ name, position, health, conn }: MobileStatusRailProps) {
+  return (
+    <div className="mobile-status-rail" aria-label="Mobile player status">
+      <span>{name ?? 'Guest'}</span>
+      <strong>{health}</strong>
+      <span>{position}</span>
+      <i>{conn.phase}</i>
+    </div>
+  );
+}
+
 export default function App() {
   // Hooks must run unconditionally and in a stable order, so call them before any
   // early return (rules of hooks).
@@ -240,6 +312,8 @@ function DebugApp() {
   const viewport = useViewportSize();
   const [state, api] = useGameClient(initialMap);
   const [chatOpen, setChatOpen] = useState(false);
+  const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [proofSheetOpen, setProofSheetOpen] = useState(false);
   const [proof, setProof] = useState<StudioProofState | null>(null);
   const [proofRunning, setProofRunning] = useState(false);
   const [proofError, setProofError] = useState<string | null>(null);
@@ -261,6 +335,8 @@ function DebugApp() {
       ? Math.max(0, Math.min(100, Math.round((meHp / meMaxHp) * 100)))
       : 100;
   const isDead = state.world.me?.status === 'dead';
+  const playerPositionLabel = state.world.me ? `${state.world.me.x},${state.world.me.y}` : '--';
+  const showMobilePlayEntry = phoneLandscape && (state.ui.stage < 1 || !state.world.me);
   // Latch a blocking death popup; only the player dismisses it by signing back in.
   useEffect(() => {
     if (isDead) setDeathModalOpen(true);
@@ -600,7 +676,7 @@ function DebugApp() {
             <div className="hud-card hud-card--stats">
               <div>
                 <span>Position</span>
-                <strong>{state.world.me ? `${state.world.me.x},${state.world.me.y}` : '--'}</strong>
+                <strong>{playerPositionLabel}</strong>
               </div>
               <div>
                 <span>Health</span>
@@ -618,6 +694,25 @@ function DebugApp() {
               </div>
             </div>
           </div>
+          {showMobilePlayEntry && (
+            <MobilePlayEntry
+              session={state.session}
+              stage={state.ui.stage}
+              conn={state.conn}
+              hasWorldPlayer={Boolean(state.world.me)}
+              onCreate={api.createCharacter}
+              onSignOut={api.signOut}
+              onEnterPlay={() => api.setStage(1)}
+            />
+          )}
+          {phoneLandscape && (
+            <MobileStatusRail
+              name={state.session.name}
+              position={playerPositionLabel}
+              health={healthLabel}
+              conn={state.conn}
+            />
+          )}
           <div className="hud hud-proof" aria-label="studio proof">
             <div className={`proof-chip objective-chip ${state.loop?.complete ? 'proof-chip--pass' : ''}`}>
               <span>Objective</span>
@@ -659,6 +754,7 @@ function DebugApp() {
           <div className="thumb-zone right">
             <ActionsPanel
               stage={state.ui.stage}
+              compact={phoneLandscape}
               onAttack={api.sendAttack}
               onRitual={api.castRunestone}
               onTalk={api.talkToNpc}
@@ -689,22 +785,53 @@ function DebugApp() {
             <button
               className="chat-toggle"
               aria-label="Open chat"
-              onClick={() => setChatOpen(true)}
+              onClick={() => {
+                setInventoryOpen(false);
+                setProofSheetOpen(false);
+                api.closeChronicle();
+                setChatOpen(true);
+              }}
             >
               Chat
             </button>
             <button
               className="chronicle-toggle"
-              aria-label="Open chronicle"
-              onClick={api.openChronicle}
+              aria-label="Open log"
+              onClick={() => {
+                setChatOpen(false);
+                setInventoryOpen(false);
+                setProofSheetOpen(false);
+                api.openChronicle();
+              }}
             >
               Log
             </button>
             <button
+              className="inventory-toggle"
+              aria-label="Open backpack"
+              onClick={() => {
+                setChatOpen(false);
+                setProofSheetOpen(false);
+                api.closeChronicle();
+                setInventoryOpen(true);
+              }}
+            >
+              Pack
+            </button>
+            <button
               className="proof-toggle"
-              aria-label={proofRunning ? 'Running proof' : 'Run proof'}
-              onClick={() => void runProofSmoke()}
-              disabled={proofRunning || !studioProofEnabled}
+              aria-label={phoneLandscape ? 'Open proof status' : proofRunning ? 'Running proof' : 'Run proof'}
+              onClick={() => {
+                if (phoneLandscape) {
+                  setChatOpen(false);
+                  setInventoryOpen(false);
+                  api.closeChronicle();
+                  setProofSheetOpen(true);
+                  return;
+                }
+                void runProofSmoke();
+              }}
+              disabled={!phoneLandscape && (proofRunning || !studioProofEnabled)}
             >
               {proofRunning ? 'Running' : 'Proof'}
             </button>
@@ -724,6 +851,25 @@ function DebugApp() {
         messages={state.chat}
         onClose={() => setChatOpen(false)}
         onSend={(msg) => api.sendChat(msg)}
+      />
+      <BackpackSheet
+        open={inventoryOpen}
+        inventory={state.inventory}
+        onClose={() => setInventoryOpen(false)}
+        onUseItem={(itemId) => api.useSkill('item:use:' + itemId)}
+      />
+      <ProofSheet
+        open={proofSheetOpen}
+        objectiveLabel={objectiveLabel}
+        playtestLabel={activePlaytestLabel}
+        smokeLabel={smokeLabel}
+        smokeState={smokeState}
+        lastSmoke={proof?.lastSmoke ?? null}
+        proofError={proofError}
+        proofRunning={proofRunning}
+        studioProofEnabled={studioProofEnabled}
+        onClose={() => setProofSheetOpen(false)}
+        onRunProof={() => void runProofSmoke()}
       />
     </div>
   );

@@ -213,6 +213,10 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.save();
     ctx.translate(-cameraX, -cameraY);
+    const followPlayerView = viewMode === 'follow-player';
+    const tileGlyphFontPx = followPlayerView ? 11 : 9;
+    const markerFontPx = followPlayerView ? 10 : 9;
+    const nameFontPx = followPlayerView ? 11 : 10;
 
     for (let y = 0; y < map.height; y++) {
       for (let x = 0; x < map.width; x++) {
@@ -229,7 +233,7 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
         const glyph = TILE_GLYPH[code];
         if (glyph) {
           ctx.fillStyle = '#f7e9a7';
-          ctx.font = 'bold 9px "Space Grotesk", sans-serif';
+          ctx.font = `bold ${tileGlyphFontPx}px "Space Grotesk", sans-serif`;
           ctx.fillText(glyph, x * TILE_SIZE + 3, y * TILE_SIZE + 9);
         }
       }
@@ -240,10 +244,10 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
       const cy = (box.y + box.height / 2) * TILE_SIZE;
       ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.arc(cx, cy, TILE_SIZE * 0.45, 0, Math.PI * 2);
+      ctx.arc(cx, cy, TILE_SIZE * (followPlayerView ? 0.5 : 0.45), 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = '#081018';
-      ctx.font = 'bold 9px "Space Grotesk", sans-serif';
+      ctx.font = `bold ${markerFontPx}px "Space Grotesk", sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(glyph, cx, cy + 0.5);
@@ -363,7 +367,7 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
       ctx.fillStyle = color;
       ctx.fillRect(p.x * TILE_SIZE, p.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
       ctx.fillStyle = dead ? '#8a93a5' : '#0b0c10';
-      ctx.font = '10px "DM Sans", sans-serif';
+      ctx.font = `${nameFontPx}px "DM Sans", sans-serif`;
       ctx.fillText(p.name, p.x * TILE_SIZE + 2, p.y * TILE_SIZE - 2);
       ctx.restore();
     };
@@ -410,7 +414,7 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
         FRAME_SIZE * CHARACTER_DRAW_SCALE,
       );
       ctx.fillStyle = p.status === 'dead' ? '#8a93a5' : '#0b0c10';
-      ctx.font = '10px "DM Sans", sans-serif';
+      ctx.font = `${nameFontPx}px "DM Sans", sans-serif`;
       ctx.fillText(p.name, p.x * TILE_SIZE + 2, p.y * TILE_SIZE - 2);
       ctx.restore();
     };

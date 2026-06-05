@@ -1,0 +1,38 @@
+{
+  "id": "AKALYNTH_MOBILE_CLASSIC_UI_POLISH_V1_COMPACT_844X390",
+  "status": "pass",
+  "result": {
+    "viewport": {
+      "width": 844,
+      "height": 390
+    },
+    "scroll": {
+      "scrollWidth": 844,
+      "scrollHeight": 390,
+      "bodyScrollWidth": 844,
+      "bodyScrollHeight": 390
+    },
+    "visibleSheets": [
+      ".proof-sheet"
+    ],
+    "canvasVisible": true,
+    "dpadVisible": true,
+    "dockVisible": true,
+    "chatRect": {
+      "x": 198,
+      "y": 70.8125,
+      "width": 448,
+      "height": 248,
+      "bottom": 318.8125,
+      "right": 646
+    },
+    "proofRect": {
+      "x": 515.203125,
+      "y": 18.421875,
+      "width": 320,
+      "height": 300.390625,
+      "bottom": 318.8125,
+      "right": 835.203125
+    }
+  }
+}
