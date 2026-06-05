@@ -65,6 +65,11 @@ import {
 } from '../../../packages/shared/paths.js';
 import { createPersistenceLayer, computeReceiptHash, generateItemId } from './persist/index.js';
 import type { InventoryItemRow, PersistenceLayer, WorldObjectRow } from './persist/index.js';
+import { AccountStore } from './account/store.js';
+import { AccountService } from './account/service.js';
+import { makeAccountRouter } from './account/router.js';
+import { RateLimiter } from './account/rateLimit.js';
+import { hashPassword, verifyPassword } from './account/password.js';
 import { publicActorForReceipt, toPublicReceipt } from './audit/public_receipts.js';
 import {
   loadAuthKeyPair,
@@ -1153,6 +1158,35 @@ const audit = createAuditLogger({
   },
 });
 const receiptsReader = createReceiptsReader(chainPaths.receiptsPath);
+
+// Account Platform v1 (E2 / AKALYNTH_ACCOUNT_AUTH_API_V1): the /v1/accounts/*
+// surface. Receipts are privacy-bounded (emitReceipt passes only event + opaque
+// account_id + redacted inputs to the audit chain). Account rows are written
+// directly to persist.db, not materialized from receipts.
+const accountService = new AccountService({
+  store: new AccountStore(persist.db),
+  hashPassword,
+  verifyPassword,
+  emitReceipt: (e) =>
+    audit.write({ player_id: e.accountId ?? 'system', action: e.action, inputs: e.inputs ?? {}, result: e.result }),
+  now: () => Date.now(),
+  config: {
+    secureCookies: REQUIRE_TLS,
+    sessionTtlSec: 30 * 24 * 60 * 60,
+    verificationTtlSec: 24 * 60 * 60,
+    resetTtlSec: 60 * 60,
+    // No email delivery yet (E3): dev/insecure-local exposes verification/reset
+    // tokens in the response and logs them; production never exposes them.
+    devExposeLinks: ALLOW_INSECURE_LOCAL,
+  },
+  logLink: (kind, accountId, token) => console.log(`[account] ${kind} token for ${accountId}: ${token}`),
+});
+const handleAccount = makeAccountRouter({
+  service: accountService,
+  loginLimiter: new RateLimiter(10, 5 * 60 * 1000),
+  writeLimiter: new RateLimiter(5, 60 * 60 * 1000),
+});
+
 const antiCheatPriorStore = createAntiCheatPriorStore({
   enabled: DEBUG_MODE,
   filePath: ANTICHEAT_PRIORS_PATH,
@@ -2109,6 +2143,7 @@ const httpServer = http.createServer((req, res) => {
   const handled = handleHttp(req, res, {
     getVersion: () => VERSION,
     getTickMs: () => TICK_MS,
+    handleAccount,
     listMaps: () =>
       (Object.keys(worlds) as MapName[]).map((name) => ({
         name,
