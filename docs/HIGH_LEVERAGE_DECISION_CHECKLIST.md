@@ -246,11 +246,11 @@ These tasks are **local optimizations**:
 | Protected slots | High | Force + Irreversible |
 | verify_mvp.sh harness | High | Multiplier + Force |
 
-### Missing High-Leverage Work (This Branch)
+### Remaining High-Leverage Work
 
 | Task | Tier | Why |
 |------|------|-----|
-| Unified Verification Spine API | Critical | Multiplier + Force + Irreversible |
+| Unified Verification Spine API | Critical | Implemented; continue enforcing verifier registration |
 | Protocol breaking-change detector | Critical | Force + Irreversible |
 | Receipt chain CLI (one-command verify) | Critical | Multiplier + Force |
 | Capability boundary enforcement | High | Force + Irreversible |
@@ -258,7 +258,7 @@ These tasks are **local optimizations**:
 
 ### Leverage Tier Mapping (Next Step)
 
-See: `docs/LEVERAGE_TIER_MAPPING.md` (created next)
+See: `docs/LEVERAGE_TIER_MAPPING.md`.
 
 ---
 

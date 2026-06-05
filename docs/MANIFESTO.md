@@ -32,9 +32,9 @@ Violence, judgment, generosity. The world remembers which one you reached for fi
 
 Rookguard is boring, painful, mandatory, corrective. It is the place you return to when you fail. It teaches distance and caution through repetition, but it does not become a grind loop. It is a filter, not a playground.
 
-## Azura Is Pressure
+## Akalynth Is Pressure
 
-Azura is both city and world. It offers high reward and sparse explanation. The danger is consistent, not constant. It does not explain itself, and it does not apologize for what it takes.
+Akalynth is the world. The first city after Rookguard carries its pressure: high reward, sparse explanation, and danger that is consistent rather than constant. It does not explain itself, and it does not apologize for what it takes.
 
 ## Truth Is Public, Meaning Is Private
 
@@ -59,5 +59,6 @@ Legends are born when memory is indisputable and interpretation is contested. Th
 > - **The Ledger** is the receipt chain — every meaningful action is appended to `audit/receipts.jsonl` and never overwritten (see `docs/WORLD_EVOLUTION.md`, "record change, don't overwrite truth").
 > - **Your First Act / Origin** is the Origin Act in `apps/server/src/world/origin.ts`: the first origin-worthy receipt (`combat_resolved`, `tem_witness_response`, `drop_item`) is sealed permanently and idempotently — discovered, not selected.
 > - **The Stone Exhales** is the runestone ritual in `apps/server/src/world/runestone.ts`: a server-authoritative roll over the six `Element` faces (`packages/shared/types.ts`), broadcast to nearby players, with the one-time "Trinity of Shadow" recognition.
+> - **World naming** is transitional: current runtime maps still use `Rookguard` and `Azura`; source/canon docs are moving the first-city language toward High City. No runtime rename is created by this manifesto.
 >
 > Where the manifesto outpaces the build (e.g. death returning players to "the Ledger," Rookguard as on-death exile), treat it as design intent. No mechanic is created or changed by this document.

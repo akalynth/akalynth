@@ -73,6 +73,7 @@ akalynth/
   tools/              # Tooling and validators
   infra/              # Deploy notes, CI/CD, Docker runtime, infrastructure
   data/               # Map/data sources
+  drop/               # Imported source material for future lore/gameplay/assets
 ```
 
 ## Docker Runtime
@@ -105,6 +106,7 @@ Showcase / driver packet:
 Design / production notes:
 
 - [Classic 32 Art And Mobile UI Direction](./CLASSIC_32_ART_AND_MOBILE_UI_DIRECTION.md) - old-school 32x32 art direction, OpenAI asset pipeline, and mobile HUD rules
+- [Asset Decision Packets](./asset-decisions/README.md) - receipt-backed asset/map/mobile decision-packet index and cleanup boundary
 
 Core docs:
 
@@ -119,6 +121,8 @@ Core docs:
 - [World: Azura](./WORLD_AZURA.md) - city layout, spawn zone, landmarks
 - [World: Rookguard](./WORLD_ROOKGUARD.md) - mandatory 32×32 onboarding/training map
 - [World Evolution](./WORLD_EVOLUTION.md) - epochs, sunsets, and founder-absence survival rules
+- [Akalynth Lore Bible](./AKALYNTH_LORE_BIBLE.md) - current lore authority and naming boundary
+- [Drop Source Index](./DROP_SOURCE_INDEX.md) - imported source material for future lore/gameplay/assets; not runtime authority
 - [Copilot Delegation](./COPILOT_DELEGATION.md) - custom agents, domain specialists, constraint enforcement
 
 Verification, governance, and proof docs:
@@ -126,20 +130,23 @@ Verification, governance, and proof docs:
 - [Verification Spine API v1](./VERIFICATION_SPINE_API.md) - the mandatory pre-merge verification system contract
 - [Spine Lock v1](./SPINE_V1.md) - locked spine surface and verifier registration rules
 - [Governance Invariants](./GOVERNANCE_INVARIANTS.md) - civil guarantees and auditability constraints
+- [Repo Hygiene Architecture](./REPO_HYGIENE_ARCHITECTURE.md) - root/doc/archive/drop cleanup rules
 - [Constitutional Amendment Process](./CONSTITUTIONAL_AMENDMENTS.md) - formal process for modifying constitutional files
 - [Proof Bundles](./PROOF_BUNDLES.md) - portable, immutable, independently verifiable proof packets
+- [RNG Outcome Verification](./RNG_OUTCOME_VERIFICATION.md) - offline verifier for receipt-recorded RNG outcomes and its caveats
 - [Simulate Without Lying](./SIMULATE_WITHOUT_LYING.md) - Fork/Replay system for counterfactuals isolated from truth
 - [MVP Verification Report v1](./archive/MVP_VERIFICATION_REPORT_v1.md) - **archived** point-in-time verification record (superseded by the verification spine)
+- [Archived Asset Decision Packets](./archive/asset-decisions/README.md) - **archived** superseded decision lanes
 - [Load Test Harness](./LOAD_TEST_HARNESS.md) - load-test spec (authorized local/staging only)
 - [High-Leverage Decision Checklist](./HIGH_LEVERAGE_DECISION_CHECKLIST.md) - checklist for high-leverage task selection
 - [Leverage Tier Mapping](./LEVERAGE_TIER_MAPPING.md) - current-state leverage tier mapping
 
 Monetization docs:
 
-- [Monetization Blueprint](./MONETIZATION_BLUEPRINT.md) - future-proof rules for non-competitive purchases
 - [Monetization Constitution](./MONETIZATION_CONSTITUTION.md) - formal, enforceable monetization policy
 - [Monetization Receipts](./MONETIZATION_RECEIPTS.md) - receipt schema for auditable, reversible monetization
 - [Monetization Justifications](./MONETIZATION_JUSTIFICATIONS.md) - registry of “not power” justification IDs
+- [Monetization Blueprint](./archive/MONETIZATION_BLUEPRINT.md) - **archived** pre-formalization design sketch; do not cite as policy
 
 UI / client docs:
 
@@ -153,6 +160,7 @@ Audits:
 
 - [System Audit — Post-Repair v1](./AUDITS/ARCHIVED/SYSTEM_AUDIT_POST_REPAIR_v1.md) - **archived** point-in-time audit result (superseded by the Codex audit procedure)
 - [System Audit — Codex Post-Repair](./AUDITS/SYSTEM_AUDIT_CODEX_POST_REPAIR.md) - Codex post-repair audit prompt
+- [Static Site Retirement](./archive/SITE_RETIRED_FROM_MONOREPO.md) - **archived** record of retiring the old monorepo static-site copy
 
 Frozen reference specs (WLA v1.0 — no further changes):
 

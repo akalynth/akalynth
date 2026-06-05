@@ -43,7 +43,7 @@ Only guarantees that are mechanically enforced today:
 
 These documents are informative or future-facing and are **not** v1 law:
 
-- `docs/MONETIZATION_BLUEPRINT.md`
+- `docs/archive/MONETIZATION_BLUEPRINT.md`
 - `docs/WORLD_EVOLUTION.md`
 - `apps/server/docs/PHASE6_WITNESS_INTERFACE.md`
 - `apps/server/docs/EVIDENCE_UI_SPEC.md`

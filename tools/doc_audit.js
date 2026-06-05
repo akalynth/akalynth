@@ -34,8 +34,6 @@ const includeRoots = [
   'README.md',
   'CLAUDE.md',
   'LICENSE',
-  'AUDIT_REPORT.md',
-  'CODEX_SIGNAL_REPORT.md',
 ];
 
 const ignoreDirs = new Set([

@@ -1,6 +1,6 @@
 # World: Azura
 
-> **Purpose:** Reference for the Azura city map — the first major destination after onboarding. Source of truth is `packages/shared/maps/azura.json`; this doc must stay consistent with it.
+> **Purpose:** Reference for the current Azura runtime city map — the first major destination after onboarding. Source of truth is `packages/shared/maps/azura.json`; this doc must stay consistent with it. Lore/canon naming is transitional: High City source material exists elsewhere, but the live runtime/protocol still names this map `Azura`.
 
 Azura is the **first major city** after players complete the Rookguard onboarding zone. All guests must clear the tutorial checklist in Rookguard before the server transfers them here.
 
@@ -49,15 +49,17 @@ Azura is the **first major city** after players complete the Rookguard onboardin
 - **Status**: Placeholder - building exists but no enter logic
 - **Future**: Guilds can claim and customize
 
-### House Plots (Placeholders)
+### House Plots
 
 | Plot | Coordinates | Status |
 |------|-------------|--------|
-| H1 | (10, 32) to (12, 34) | Placeholder |
-| H2 | (14, 32) to (16, 34) | Placeholder |
-| H3 | (18, 32) to (20, 34) | Placeholder |
+| H1 | (10, 32) to (12, 34) | Property plot |
+| H2 | (14, 32) to (16, 34) | Property plot |
+| H3 | (18, 32) to (20, 34) | Property plot |
 
-**Future**: Players can buy and enter houses.
+Players can buy, list, unlist, resell, and run resale auctions for property
+plots through server-authoritative property systems. Entering house interiors is
+still future work.
 
 ### Central Plaza
 
@@ -83,11 +85,13 @@ A hall raised before there were guilds to fill it. The doors do not open yet.
 
 ### The House Plots — `H1`–`H3`
 
-Three marked plots along the central residential row, just below the Guild Hall, waiting for owners.
+Three marked plots along the central residential row, just below the Guild Hall.
 
-- **Status:** placeholders. No buy, enter, or ownership mechanic exists yet. Reserved coordinates only.
+- **Status:** property coordinates. Ownership, resale listings, and resale auctions are server-authoritative gameplay/projection systems. Enter-house/interior logic is not implemented.
 
-Azura is intentionally unfinished. Its empty plots and silent hall are not gaps to apologize for — they are room left for players to become the reason a hall has a guild and a plot has a name.
+Azura is intentionally unfinished. Its silent hall and still-closed interiors are
+not gaps to apologize for — they are room left for players to become the reason a
+hall has a guild and a plot has a name.
 
 ## Tile Types
 

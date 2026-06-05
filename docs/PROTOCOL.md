@@ -278,22 +278,24 @@ Requests the ownership ledger (owner history + sale count) for a `property_id`.
 
 ### Property auctions
 
-> **Status (Step 4b): open / bid / cancel handlers are ACTIVE and emit receipts,
-> and the world-loop close→settle trigger is ACTIVE for resale auctions.** When an
+> **Status:** open / bid / cancel handlers are ACTIVE and emit receipts,
+> and the world-loop close→settle trigger is ACTIVE for resale auctions. When an
 > open auction passes its recorded close, the loop emits `property_auction_settled`
 > (and `house_auction_settled` broadcast); for a resale winner it also credits the
 > seller. **Wall-clock only decides *when* to emit — settlement truth is the
 > receipt; replay never recomputes the winner.** Clients are intent-only;
 > accepted amount/winner state is server-derived. Only **resale** auctions can be
 > opened today (owner-initiated); **primary/system auction opening is a separate
-> later lane**, and **durable persistence/materializer** of auctions is not yet
-> claimed (Step 5). `HousePlot.allocation_mode` (`'fixed' | 'auction'`, absent ⇒
+> later lane**. A durable auction projection/materializer is implemented and
+> covered by property-auction verifiers; a production restart proof run is still
+> not claimed. `HousePlot.allocation_mode` (`'fixed' | 'auction'`, absent ⇒
 > `fixed`) governs how an unowned plot is allocated in future steps.
 
 #### `open_house_auction`
 
 Owner opens a resale auction on an owned plot with `min_bid`, `min_increment_gold`,
-and `duration_s` (the requested window; settlement is not automatic in 4a).
+and `duration_s` (the requested window; settlement is emitted by the world-loop
+close→settle path after the recorded close time).
 Only the current owner may open; the plot must be `owned`.
 
 #### `place_house_bid`
