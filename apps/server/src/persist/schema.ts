@@ -7,7 +7,7 @@ import type Database from 'better-sqlite3';
 // Schema Version
 // ============================================================================
 
-export const SCHEMA_VERSION = 14;
+export const SCHEMA_VERSION = 15;
 
 // ============================================================================
 // DDL Statements
@@ -271,6 +271,71 @@ CREATE INDEX IF NOT EXISTS idx_property_auctions_status ON property_auctions(sta
 `;
 
 // ============================================================================
+// Account Platform v1 (E1): email-verified accounts.
+//
+// PII (email) and security material (Argon2id password hash, hashed tokens) live
+// ONLY in these tables — NEVER in chronicle receipts. These tables are written
+// directly by the account API (E2), not materialized from receipts. Every token
+// column stores a HASH at rest; plaintext tokens exist only in transit/email.
+// See docs/account-portal/AKALYNTH_ACCOUNT_PORTAL_PRODUCT_DECISION_V1/.
+// ============================================================================
+const DDL_ACCOUNTS = `
+CREATE TABLE IF NOT EXISTS accounts (
+  account_id      TEXT PRIMARY KEY,
+  email           TEXT NOT NULL,
+  email_lower     TEXT NOT NULL,
+  password_hash   TEXT NOT NULL,
+  email_verified  INTEGER NOT NULL DEFAULT 0,
+  status          TEXT NOT NULL DEFAULT 'registered_unverified',
+  created_at      TEXT NOT NULL,
+  created_receipt TEXT DEFAULT NULL,
+  updated_at      TEXT DEFAULT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_email_lower ON accounts(email_lower);
+`;
+
+const DDL_ACCOUNT_EMAIL_VERIFICATIONS = `
+CREATE TABLE IF NOT EXISTS account_email_verifications (
+  id          TEXT PRIMARY KEY,
+  account_id  TEXT NOT NULL,
+  token_hash  TEXT NOT NULL,
+  created_at  TEXT NOT NULL,
+  expires_at  TEXT NOT NULL,
+  consumed_at TEXT DEFAULT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_acct_email_verif_account ON account_email_verifications(account_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_acct_email_verif_token ON account_email_verifications(token_hash);
+`;
+
+const DDL_ACCOUNT_SESSIONS = `
+CREATE TABLE IF NOT EXISTS account_sessions (
+  session_id   TEXT PRIMARY KEY,
+  account_id   TEXT NOT NULL,
+  token_hash   TEXT NOT NULL,
+  client       TEXT DEFAULT NULL,
+  created_at   TEXT NOT NULL,
+  expires_at   TEXT NOT NULL,
+  last_seen_at TEXT DEFAULT NULL,
+  revoked_at   TEXT DEFAULT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_acct_sessions_account ON account_sessions(account_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_acct_sessions_token ON account_sessions(token_hash);
+`;
+
+const DDL_ACCOUNT_PASSWORD_RESETS = `
+CREATE TABLE IF NOT EXISTS account_password_resets (
+  id          TEXT PRIMARY KEY,
+  account_id  TEXT NOT NULL,
+  token_hash  TEXT NOT NULL,
+  created_at  TEXT NOT NULL,
+  expires_at  TEXT NOT NULL,
+  consumed_at TEXT DEFAULT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_acct_pw_resets_account ON account_password_resets(account_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_acct_pw_resets_token ON account_password_resets(token_hash);
+`;
+
+// ============================================================================
 // Schema Initialization
 // ============================================================================
 
@@ -384,6 +449,9 @@ function runMigration(db: Database.Database, version: number): void {
       break;
     case 14:
       migrateToV14(db);
+      break;
+    case 15:
+      migrateToV15(db);
       break;
     default:
       throw new Error(`Unknown schema version: ${version}`);
@@ -598,12 +666,31 @@ function migrateToV14(db: Database.Database): void {
   insertMeta.run('schema_version', '14');
 }
 
+function migrateToV15(db: Database.Database): void {
+  // Account Platform v1 (E1): email-verified accounts + sessions +
+  // verification/reset tokens (hashed at rest). Additive — does not touch any
+  // existing table or row. No PII/secrets ever leave these tables for receipts.
+  db.exec(DDL_ACCOUNTS);
+  db.exec(DDL_ACCOUNT_EMAIL_VERIFICATIONS);
+  db.exec(DDL_ACCOUNT_SESSIONS);
+  db.exec(DDL_ACCOUNT_PASSWORD_RESETS);
+
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', '15');
+}
+
 // ============================================================================
 // Schema Utilities
 // ============================================================================
 
 export function resetSchema(db: Database.Database): void {
   // Drop all tables and recreate (for testing/recovery)
+  db.exec('DROP TABLE IF EXISTS account_password_resets');
+  db.exec('DROP TABLE IF EXISTS account_sessions');
+  db.exec('DROP TABLE IF EXISTS account_email_verifications');
+  db.exec('DROP TABLE IF EXISTS accounts');
   db.exec('DROP TABLE IF EXISTS properties');
   db.exec('DROP TABLE IF EXISTS npc_talk_events');
   db.exec('DROP TABLE IF EXISTS player_anticheat_enforcement');

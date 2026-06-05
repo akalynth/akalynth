@@ -250,6 +250,63 @@ export interface ModerationReportRow {
 }
 
 // ============================================================================
+// Account Platform v1 (E1): account/auth row shapes.
+//
+// PII (email) and security material (password_hash + every *_hash token column)
+// live ONLY in the account DB, never in receipts. Token columns store HASHES at
+// rest. See docs/account-portal/AKALYNTH_ACCOUNT_PORTAL_PRODUCT_DECISION_V1/.
+// ============================================================================
+
+export type AccountStatus =
+  | 'registered_unverified'
+  | 'email_verified'
+  | 'active'
+  | 'locked'
+  | 'disabled'
+  | 'deletion_requested';
+
+export interface AccountRow {
+  account_id: string;
+  email: string; // PII — DB only, never receipted
+  email_lower: string; // normalized for lookup/uniqueness
+  password_hash: string; // Argon2id encoded string (salt + params embedded)
+  email_verified: number; // 0 | 1 (SQLite boolean)
+  status: AccountStatus;
+  created_at: string; // ISO8601
+  created_receipt: string | null; // account_created receipt hash
+  updated_at: string | null; // ISO8601
+}
+
+export interface AccountEmailVerificationRow {
+  id: string;
+  account_id: string;
+  token_hash: string; // hash of the verification token; plaintext only in the email
+  created_at: string; // ISO8601
+  expires_at: string; // ISO8601
+  consumed_at: string | null; // ISO8601 or null
+}
+
+export interface AccountSessionRow {
+  session_id: string;
+  account_id: string;
+  token_hash: string; // hash of the session token at rest
+  client: string | null; // redacted label, e.g. 'web' | 'android'
+  created_at: string; // ISO8601
+  expires_at: string; // ISO8601
+  last_seen_at: string | null; // ISO8601 or null
+  revoked_at: string | null; // ISO8601 or null
+}
+
+export interface AccountPasswordResetRow {
+  id: string;
+  account_id: string;
+  token_hash: string; // hash of the reset token at rest
+  created_at: string; // ISO8601
+  expires_at: string; // ISO8601
+  consumed_at: string | null; // ISO8601 or null
+}
+
+// ============================================================================
 // Receipt Taxonomy (Phase 1 + Phase 2)
 // ============================================================================
 
@@ -318,6 +375,22 @@ export const RECEIPT_ACTIONS = {
   PROPERTY_BID_REFUNDED: 'property_bid_refunded',
   PROPERTY_AUCTION_SETTLED: 'property_auction_settled',
   PROPERTY_AUCTION_CANCELLED: 'property_auction_cancelled',
+
+  // Account Platform v1 (E1): privacy-bounded account lifecycle. Receipts for
+  // these events carry ONLY event type + opaque account_id + timestamp/sequence
+  // + redacted metadata — NEVER email, password, or any verification/reset/
+  // session token (plaintext or hash). See docs/account-portal/ +
+  // RECEIPT_PRIVACY_BOUNDARY.md. Account rows themselves are written directly by
+  // the account API (E2), not materialized from these receipts.
+  ACCOUNT_CREATED: 'account_created',
+  ACCOUNT_EMAIL_VERIFICATION_REQUESTED: 'account_email_verification_requested',
+  ACCOUNT_EMAIL_VERIFIED: 'account_email_verified',
+  ACCOUNT_LOGIN_SUCCEEDED: 'account_login_succeeded',
+  ACCOUNT_LOGIN_FAILED: 'account_login_failed',
+  ACCOUNT_PASSWORD_RESET_REQUESTED: 'account_password_reset_requested',
+  ACCOUNT_PASSWORD_RESET_COMPLETED: 'account_password_reset_completed',
+  ACCOUNT_SESSION_ISSUED: 'account_session_issued',
+  ACCOUNT_SESSION_REVOKED: 'account_session_revoked',
 } as const;
 
 // Alias mapping for existing receipt actions
