@@ -41,6 +41,7 @@ interface Case {
   name: string;
   expectExit: number;
   lines: Array<Record<string, unknown>>;
+  fromSequence?: number;
 }
 
 const cases: Case[] = [
@@ -79,10 +80,38 @@ const cases: Case[] = [
     expectExit: 1,
     lines: [receipt(1, 'server_heartbeat'), receipt(2, 'server_boot')],
   },
+  {
+    name: 'scoped current lifecycle window ignores historical double boot',
+    expectExit: 0,
+    fromSequence: 10,
+    lines: [
+      receipt(1, 'server_boot'),
+      receipt(2, 'server_boot'),
+      receipt(3, 'server_shutdown'),
+      receipt(10, 'server_boot'),
+      receipt(11, 'server_heartbeat'),
+      receipt(12, 'server_shutdown'),
+    ],
+  },
+  {
+    name: 'scoped current lifecycle window still catches current double boot',
+    expectExit: 1,
+    fromSequence: 10,
+    lines: [
+      receipt(1, 'server_boot'),
+      receipt(2, 'server_shutdown'),
+      receipt(10, 'server_boot'),
+      receipt(11, 'server_boot'),
+    ],
+  },
 ];
 
-function runVerifier(chainFile: string): number {
-  const res = spawnSync('npx', ['--no-install', 'tsx', 'tools/verify-lifecycle.ts'], {
+function runVerifier(chainFile: string, fromSequence?: number): number {
+  const args = ['--no-install', 'tsx', 'tools/verify-lifecycle.ts'];
+  if (fromSequence !== undefined) {
+    args.push('--from-sequence', String(fromSequence));
+  }
+  const res = spawnSync('npx', args, {
     cwd: serverDir,
     env: { ...process.env, AKALYNTH_RECEIPT_CHAIN_PATH: chainFile, NODE_ENV: 'test' },
     encoding: 'utf8',
@@ -100,7 +129,7 @@ try {
   for (const c of cases) {
     const file = path.join(tmpDir, `${c.name.replace(/\W+/g, '_')}.jsonl`);
     fs.writeFileSync(file, c.lines.map((l) => JSON.stringify(l)).join('\n') + '\n');
-    const code = runVerifier(file);
+    const code = runVerifier(file, c.fromSequence);
     const passed = code === c.expectExit;
     console.log(`${passed ? 'PASS' : 'FAIL'}  [exit ${code}, want ${c.expectExit}]  ${c.name}`);
     if (!passed) failed++;
