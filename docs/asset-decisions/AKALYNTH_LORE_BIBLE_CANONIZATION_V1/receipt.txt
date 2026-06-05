@@ -1,0 +1,64 @@
+AKALYNTH_LORE_BIBLE_CANONIZATION_V1
+status: implemented_pending_review
+scope: docs-only canon lore bible promotion
+
+Closure target:
+- closed_lore_bible_canonized_no_runtime_migration
+
+Primary artifact:
+- docs/AKALYNTH_LORE_BIBLE.md
+
+Supporting artifacts:
+- docs/asset-decisions/AKALYNTH_LORE_BIBLE_CANONIZATION_V1/FOLLOW_UP_REGISTER.md
+- docs/asset-decisions/AKALYNTH_LORE_BIBLE_CANONIZATION_V1/receipt.txt
+
+Canon decisions recorded:
+- Akalynth is the World-Mind / Guardian of Temporal Insight.
+- VaultCore Prime is the canon world name formerly called Azura.
+- Rookguard remains the tutorial/onboarding zone.
+- The Chronicle is both the mechanical receipt chain and mythic world memory.
+- Tem is the anti-bot guardian and present-moment witness.
+- Server authority and lore principle are unified: the world resolves what truly happened.
+- Observe is the current pre-alpha era.
+- No NFTs, no token economics, no pay-to-win, no premium currency.
+
+Observed state:
+- Observed against live build v0.1.0 on 2026-06-05.
+- Identifier migration remains pending.
+
+Claims:
+- lore_bible_canonized: true
+- primary_lore_artifact_created: true
+- follow_up_register_created: true
+- azura_to_vaultcore_prime_canon_decision_recorded: true
+- rookguard_name_preserved: true
+- chronicle_tem_akalynth_canon_recorded: true
+- runtime_identifier_migration_performed: false
+- map_rename_performed: false
+- server_changed: false
+- protocol_changed: false
+- shared_maps_changed: false
+- shared_types_changed: false
+- android_changed: false
+- browser_changed: false
+- collision_changed: false
+- walkability_changed: false
+- npc_behavior_added: false
+- mob_behavior_added: false
+- economy_changed: false
+- deploy_performed: false
+- public_claim_that_identifiers_migrated: false
+
+Verification:
+- docs/AKALYNTH_LORE_BIBLE.md created
+- follow-up register created
+- observed-state wording used instead of live-build verification claim
+- runtime migration marked pending
+- forbidden runtime migration claims absent
+- npm run verify:quick PASS 9/9
+
+Valid accepted status after review:
+- accepted_lore_bible_canonization
+
+Next recommended lane:
+- AKALYNTH_AZURA_IDENTIFIER_MIGRATION_PLAN_V1
