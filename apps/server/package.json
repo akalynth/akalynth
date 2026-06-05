@@ -49,7 +49,8 @@
     "verify:property-auction-settle": "tsx tools/verify-property-auction-settle.ts",
     "verify:property-auction-persistence": "tsx tools/verify-property-auction-persistence.ts",
     "test:account-auth": "tsx tools/verify-account-auth.test.ts",
-    "test:character-v2": "tsx tools/verify-character-v2.test.ts"
+    "test:character-v2": "tsx tools/verify-character-v2.test.ts",
+    "test:cors": "tsx tools/verify-cors.test.ts"
   },
   "dependencies": {
     "@akalynth/coordination-kernel": "file:../../packages/coordination-kernel",

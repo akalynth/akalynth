@@ -53,6 +53,7 @@ import type {
   WorldStateResult,
 } from '../../../packages/shared/http.js';
 import { handleHttp } from './api/http.js';
+import { parseCorsOrigins, corsHeadersFor, type CorsPolicy } from './api/cors.js';
 
 import { createAuditLogger } from './audit/logger.js';
 import { createReceiptsReader } from './audit/reader.js';
@@ -238,6 +239,21 @@ const ANTICHEAT_PRIORS_PATH = process.env.AKALYNTH_ANTICHEAT_PRIORS_PATH;
 const DEV_MINT_ENABLED = parseBoolEnv(process.env.AKALYNTH_DEV_MINT, false);
 const REQUIRE_TLS = parseBoolEnv(process.env.REQUIRE_TLS, true);
 const ALLOW_INSECURE_LOCAL = parseBoolEnv(process.env.ALLOW_INSECURE_LOCAL, false);
+// Account portal CORS (E5 companion): the static website is a separate origin
+// from this API and uses cookie sessions (`credentials: 'include'`), so the API
+// must reflect an explicit allowlisted Origin — never `*`. ACCOUNT_CORS_ORIGINS
+// (comma-separated) overrides these production defaults; localhost dev origins
+// are additionally allowed under DEBUG/insecure-local.
+const DEFAULT_WEBSITE_ORIGINS = [
+  'https://akalynth.com',
+  'https://www.akalynth.com',
+  'https://beta.akalynth.com',
+] as const;
+const ACCOUNT_CORS_ORIGINS = parseCorsOrigins(process.env.ACCOUNT_CORS_ORIGINS, DEFAULT_WEBSITE_ORIGINS);
+const CORS_POLICY: CorsPolicy = {
+  allow: ACCOUNT_CORS_ORIGINS,
+  allowLocalDev: DEBUG_MODE || ALLOW_INSECURE_LOCAL,
+};
 const TRUST_PROXY = parseBoolEnv(process.env.TRUST_PROXY, false);
 const TRUST_PROXY_LOOPBACK_ONLY = parseBoolEnv(process.env.TRUST_PROXY_LOOPBACK_ONLY, true);
 const TRUST_PROXY_ALLOWLIST = process.env.TRUST_PROXY_ALLOWLIST ?? '';
@@ -2180,8 +2196,8 @@ function issuePlayTokenForPlayer(playerId: string): { token: string; expires_at:
 
 // HTTP control plane
 const httpServer = http.createServer((req, res) => {
-  const devCors = applyDevCors(req, res);
-  if ((req.method ?? '').toUpperCase() === 'OPTIONS' && devCors) {
+  const corsApplied = applyCors(req, res);
+  if ((req.method ?? '').toUpperCase() === 'OPTIONS' && corsApplied) {
     res.statusCode = 204;
     res.end();
     return;
@@ -2591,28 +2607,14 @@ function send(ws: WebSocket, message: ServerMessage) {
   if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(message));
 }
 
-function isLocalDevOrigin(origin: string): boolean {
-  try {
-    const url = new URL(origin);
-    return (
-      (url.protocol === 'http:' || url.protocol === 'https:') &&
-      (url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname === '::1')
-    );
-  } catch {
-    return false;
-  }
-}
-
-function applyDevCors(req: IncomingMessage, res: ServerResponse): boolean {
-  if (!DEBUG_MODE && !ALLOW_INSECURE_LOCAL) return false;
-  const origin = req.headers.origin;
-  if (typeof origin !== 'string' || !isLocalDevOrigin(origin)) return false;
-
-  res.setHeader('access-control-allow-origin', origin);
-  res.setHeader('access-control-allow-methods', 'GET,POST,OPTIONS');
-  res.setHeader('access-control-allow-headers', 'authorization,content-type');
-  res.setHeader('access-control-max-age', '600');
-  res.setHeader('vary', 'Origin');
+// Apply the account-portal CORS allowlist (see api/cors.ts). Reflects an
+// explicit allowlisted Origin with credentials enabled, or no CORS headers at
+// all for disallowed origins. Returns true when headers were set so the OPTIONS
+// preflight can short-circuit with 204.
+function applyCors(req: IncomingMessage, res: ServerResponse): boolean {
+  const headers = corsHeadersFor(req.headers.origin, CORS_POLICY);
+  if (!headers) return false;
+  for (const [key, value] of Object.entries(headers)) res.setHeader(key, value);
   return true;
 }
 
