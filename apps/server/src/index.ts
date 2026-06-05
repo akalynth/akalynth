@@ -493,7 +493,7 @@ function redactedActorForPlayerId(playerId: string, timestamp: string): string {
  * Runs verify:lifecycle tool and returns success/failure.
  * In production, failure exits with code 2 (operator/environmental error).
  */
-function verifyLifecycle(phase: 'boot' | 'shutdown'): boolean {
+function verifyLifecycle(phase: 'boot' | 'shutdown', fromSequence?: number): boolean {
   if (!LIFECYCLE_VERIFY_ON_BOOT) {
     console.log(`[lifecycle] Verification disabled (AKALYNTH_LIFECYCLE_VERIFY=0)`);
     return true;
@@ -504,6 +504,12 @@ function verifyLifecycle(phase: 'boot' | 'shutdown'): boolean {
       cwd: process.cwd(),
       stdio: 'pipe',
       timeout: 30_000, // 30s max
+      env: {
+        ...process.env,
+        ...(fromSequence
+          ? { AKALYNTH_LIFECYCLE_FROM_SEQUENCE: String(fromSequence) }
+          : {}),
+      },
     });
     console.log(`[lifecycle] Verification passed (${phase})`);
     return true;
@@ -1277,15 +1283,16 @@ const lifecycleInputs = {
   receipts_path: chainPaths.receiptsPath,
   pid: process.pid,
 };
-audit.write({
+const bootReceipt = audit.write({
   actor_id: 'server',
   action: 'server_boot',
   inputs: lifecycleInputs,
   result: 'ok',
 });
+const lifecycleWindowStartSequence = bootReceipt.sequence;
 
 // Runtime Witness Loop: verify lifecycle after boot receipt
-verifyLifecycle('boot');
+verifyLifecycle('boot', lifecycleWindowStartSequence);
 
 // Runtime Witness Loop: Periodic heartbeat for observability
 const heartbeatPathHash = receiptsPathHash(chainPaths.receiptsPath);
@@ -1315,7 +1322,7 @@ function emitShutdown(signal: string) {
       result: 'ok',
     });
     // Runtime Witness Loop: verify lifecycle after shutdown receipt
-    verifyLifecycle('shutdown');
+    verifyLifecycle('shutdown', lifecycleWindowStartSequence);
   } catch (error) {
     console.error(`[audit] Failed to write server_shutdown receipt: ${String(error)}`);
   } finally {

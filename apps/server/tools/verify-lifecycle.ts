@@ -14,6 +14,11 @@
  *   0 - PASS
  *   1 - FAIL (violations)
  *   2 - error (malformed input, missing file)
+ *
+ * By default this verifier is strict over the full chain. Runtime boot/shutdown
+ * checks may pass `--from-sequence <n>` (or AKALYNTH_LIFECYCLE_FROM_SEQUENCE)
+ * to validate only the current lifecycle window without erasing older audit
+ * violations from full-chain review.
  */
 
 import * as fs from 'node:fs';
@@ -52,6 +57,22 @@ function receiptsArg(): string | null {
 }
 const RECEIPTS_OVERRIDE = receiptsArg();
 
+function fromSequenceArg(): number | null {
+  const argv = process.argv.slice(2);
+  let raw = process.env.AKALYNTH_LIFECYCLE_FROM_SEQUENCE ?? null;
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === '--from-sequence' && argv[i + 1]) raw = argv[i + 1];
+    if (a.startsWith('--from-sequence=')) raw = a.slice('--from-sequence='.length);
+  }
+  if (raw === null || raw === '') return null;
+  const parsed = Number(raw);
+  if (!Number.isSafeInteger(parsed) || parsed < 1) {
+    errorOut(`invalid --from-sequence value: ${raw}`);
+  }
+  return parsed;
+}
+
 function errorOut(msg: string): never {
   console.error(`[verify-lifecycle] ERROR: ${msg}`);
   process.exit(2);
@@ -83,6 +104,16 @@ function parseReceipts(file: string): AuditReceipt[] {
     }
   }
   return receipts;
+}
+
+function scopeReceipts(receipts: AuditReceipt[], fromSequence: number | null): AuditReceipt[] {
+  if (fromSequence === null) return receipts;
+  const scoped = receipts.filter((r) => typeof r.sequence === 'number' && r.sequence >= fromSequence);
+  if (scoped.length === 0) {
+    errorOut(`no receipts found at or after sequence ${fromSequence}`);
+  }
+  ok(`scoped lifecycle window from sequence ${fromSequence}`);
+  return scoped;
 }
 
 function isServerReceipt(r: AuditReceipt): boolean {
@@ -134,7 +165,7 @@ function verifyLifecycle(receipts: AuditReceipt[]): string[] {
 }
 
 const absReceipts = path.resolve(process.cwd(), RECEIPTS_OVERRIDE ?? RECEIPTS_PATH);
-const receipts = parseReceipts(absReceipts);
+const receipts = scopeReceipts(parseReceipts(absReceipts), fromSequenceArg());
 const violations = verifyLifecycle(receipts);
 
 if (violations.length > 0) {
