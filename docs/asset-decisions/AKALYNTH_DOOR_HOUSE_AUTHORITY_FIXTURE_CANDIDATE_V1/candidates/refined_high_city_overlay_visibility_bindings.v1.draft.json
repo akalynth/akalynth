@@ -1,0 +1,180 @@
+{
+  "id": "refined_high_city_overlay_visibility_bindings_v1",
+  "plane": "overlay_visibility_binding_candidate_set",
+  "status": "draft_non_runtime",
+  "runtime_authority": false,
+  "server_authoritative": false,
+  "production_map_promoted": false,
+  "candidates": [
+    {
+      "id": "castle_meeting_hall_overlay_visibility_binding_candidate",
+      "house_candidate_id": "castle_meeting_hall_house_candidate",
+      "overlay_zone_id": "overlay_01_roof_castle_overlay_3_5",
+      "plane": "overlay_visibility_binding_candidate",
+      "status": "draft_non_runtime",
+      "source_overlay_asset_id": "roof_castle_overlay",
+      "source_overlay_position": {
+        "tile": [
+          3,
+          5
+        ],
+        "floor": 1
+      },
+      "source_review_context": {
+        "interior_footprint": {
+          "x": 4,
+          "y": 5,
+          "width": 14,
+          "height": 10
+        },
+        "doorway_tiles": [
+          [
+            10,
+            14
+          ],
+          [
+            10,
+            15
+          ]
+        ]
+      },
+      "visibility_modes_reserved": [
+        "visible",
+        "faded",
+        "hidden"
+      ],
+      "visibility_trigger_source": "future_authoritative_inside_outside_state_required",
+      "authority": {
+        "real_player_inside_outside": "none",
+        "runtime_overlay_visibility": "none",
+        "house_entry": "none",
+        "ownership": "none",
+        "collision": "none",
+        "walkability": "none"
+      },
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "mechanics": null,
+      "notes": [
+        "Draft overlay binding candidate only.",
+        "Does not bind roof visibility to real player state or house entry authority."
+      ]
+    },
+    {
+      "id": "market_shop_overlay_visibility_binding_candidate",
+      "house_candidate_id": "market_shop_house_candidate",
+      "overlay_zone_id": "overlay_02_market_awning_overlay_19_8",
+      "plane": "overlay_visibility_binding_candidate",
+      "status": "draft_non_runtime",
+      "source_overlay_asset_id": "market_awning_overlay",
+      "source_overlay_position": {
+        "tile": [
+          19,
+          8
+        ],
+        "floor": 1
+      },
+      "source_review_context": {
+        "interior_footprint": {
+          "x": 20,
+          "y": 8,
+          "width": 10,
+          "height": 10
+        },
+        "doorway_tiles": [
+          [
+            25,
+            17
+          ],
+          [
+            25,
+            18
+          ]
+        ]
+      },
+      "visibility_modes_reserved": [
+        "visible",
+        "faded",
+        "hidden"
+      ],
+      "visibility_trigger_source": "future_authoritative_inside_outside_state_required",
+      "authority": {
+        "real_player_inside_outside": "none",
+        "runtime_overlay_visibility": "none",
+        "house_entry": "none",
+        "ownership": "none",
+        "collision": "none",
+        "walkability": "none"
+      },
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "mechanics": null,
+      "notes": [
+        "Draft overlay binding candidate only.",
+        "Does not bind roof visibility to real player state or house entry authority."
+      ]
+    },
+    {
+      "id": "small_house_01_overlay_visibility_binding_candidate",
+      "house_candidate_id": "small_house_01_house_candidate",
+      "overlay_zone_id": "overlay_03_roof_red_small_overlay_3_16",
+      "plane": "overlay_visibility_binding_candidate",
+      "status": "draft_non_runtime",
+      "source_overlay_asset_id": "roof_red_small_overlay",
+      "source_overlay_position": {
+        "tile": [
+          3,
+          16
+        ],
+        "floor": 1
+      },
+      "source_review_context": {
+        "interior_footprint": {
+          "x": 4,
+          "y": 17,
+          "width": 7,
+          "height": 6
+        },
+        "doorway_tiles": [
+          [
+            7,
+            22
+          ],
+          [
+            7,
+            23
+          ]
+        ]
+      },
+      "visibility_modes_reserved": [
+        "visible",
+        "faded",
+        "hidden"
+      ],
+      "visibility_trigger_source": "future_authoritative_inside_outside_state_required",
+      "authority": {
+        "real_player_inside_outside": "none",
+        "runtime_overlay_visibility": "none",
+        "house_entry": "none",
+        "ownership": "none",
+        "collision": "none",
+        "walkability": "none"
+      },
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "mechanics": null,
+      "notes": [
+        "Draft overlay binding candidate only.",
+        "Does not bind roof visibility to real player state or house entry authority."
+      ]
+    }
+  ],
+  "mechanics": null,
+  "notes": [
+    "Overlay bindings reserve a future connection to authoritative inside/outside state.",
+    "They do not create runtime roof hiding or house entry detection."
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "id": "high_city_authority_bundle_index_v1",
+  "status": "draft_non_runtime_bundle_index",
+  "bundle_path": "bundle/high_city_authority_bundle.v1.draft.json",
+  "receipts": {
+    "visual_fixture_export": {
+      "id": "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1",
+      "status": "accepted_draft_visual_fixture_export",
+      "path": "docs/asset-decisions/AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1/visual_map_object_fixture_export_receipt.json",
+      "sha256": "1319db28d531920a30e60361b98fb782e5ea563508ed1fe800965019b2e7d52b"
+    },
+    "collision_walkability_candidate": {
+      "id": "AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1",
+      "status": "accepted_collision_walkability_fixture_candidate",
+      "path": "docs/asset-decisions/AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1/collision_walkability_fixture_candidate_receipt.json",
+      "sha256": "a28ea87a4bbe784e74462a6491add5589b0244a1f2c1ce31023f6d2492e2eb78"
+    },
+    "door_house_candidate": {
+      "id": "AKALYNTH_DOOR_HOUSE_AUTHORITY_FIXTURE_CANDIDATE_V1",
+      "status": "accepted_door_house_authority_fixture_candidate",
+      "path": "docs/asset-decisions/AKALYNTH_DOOR_HOUSE_AUTHORITY_FIXTURE_CANDIDATE_V1/door_house_authority_fixture_candidate_receipt.json",
+      "sha256": "921fa5cf5eccc23b14cd6005a7bdb3788640e61d281324975b863c741f6e7cdb"
+    },
+    "transition_candidate": {
+      "id": "AKALYNTH_TRANSITION_AUTHORITY_FIXTURE_CANDIDATE_V1",
+      "status": "accepted_transition_authority_fixture_candidate",
+      "path": "docs/asset-decisions/AKALYNTH_TRANSITION_AUTHORITY_FIXTURE_CANDIDATE_V1/transition_authority_fixture_candidate_receipt.json",
+      "sha256": "0f9df366e7459b1a3d81a3ab18aef26c6cd1f3a847d6a2d8bf70dc1a85dff0e3"
+    },
+    "map_object_design": {
+      "id": "AKALYNTH_MAP_OBJECT_METADATA_DESIGN_V1",
+      "status": "accepted_map_object_metadata_design",
+      "path": "docs/asset-decisions/AKALYNTH_MAP_OBJECT_METADATA_DESIGN_V1/map_object_metadata_design_receipt.json",
+      "sha256": "dc6fbfb717b29521f37443cef4679a368ec4cc22b82a648ec05b30b655dc198c"
+    },
+    "collision_walkability_design": {
+      "id": "AKALYNTH_COLLISION_WALKABILITY_METADATA_DESIGN_V1",
+      "status": "accepted_collision_walkability_metadata_design",
+      "path": "docs/asset-decisions/AKALYNTH_COLLISION_WALKABILITY_METADATA_DESIGN_V1/collision_walkability_metadata_design_receipt.json",
+      "sha256": "f7a22caa6da8a74b2d4c26c896ca09b93206a23712cdeacd8839bfe7aaa0cda7"
+    },
+    "door_house_design": {
+      "id": "AKALYNTH_DOOR_AND_HOUSE_AUTHORITY_DESIGN_V1",
+      "status": "accepted_door_and_house_authority_design",
+      "path": "docs/asset-decisions/AKALYNTH_DOOR_AND_HOUSE_AUTHORITY_DESIGN_V1/door_house_authority_design_receipt.json",
+      "sha256": "a2788dcc80c08ffde06fd191908dedc06d3809fcd0f112ba0d2c0aad2379ec6d"
+    },
+    "transition_design": {
+      "id": "AKALYNTH_TRANSITION_AUTHORITY_DESIGN_V1",
+      "status": "accepted_transition_authority_design",
+      "path": "docs/asset-decisions/AKALYNTH_TRANSITION_AUTHORITY_DESIGN_V1/transition_authority_design_receipt.json",
+      "sha256": "1aa07234afaa8569612e738c29b2ca3362fcefe894e3b292905a297cdd7c24a8"
+    }
+  },
+  "artifacts": {
+    "visual_objects": {
+      "path": "docs/asset-decisions/AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1/exports/refined_high_city_visual_objects.v1.draft.json",
+      "sha256": "aeead8b86fb1bdfc6ecd84e66b49f55b0597949e6048aee7aca5747b2d389b45"
+    },
+    "overlay_zones": {
+      "path": "docs/asset-decisions/AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1/exports/refined_high_city_overlay_zones.v1.draft.json",
+      "sha256": "ece3bce846770a25d50acb8a18caab0cec5cb30dcf3ddf544dad3c76d05d67d8"
+    },
+    "collision_candidates": {
+      "path": "docs/asset-decisions/AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1/candidates/refined_high_city_collision_candidates.v1.draft.json",
+      "sha256": "e086e1391f80a2ed81346123217ebbbdba3401215e5e8f7fa29dbf004d05e628"
+    },
+    "walkability_candidates": {
+      "path": "docs/asset-decisions/AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1/candidates/refined_high_city_walkability_candidates.v1.draft.json",
+      "sha256": "7c94fcaa639e43e4c4475a3d9431a41d0547e877b3002662f45b4410ecf4668d"
+    },
+    "collision_walkability_consistency": {
+      "path": "docs/asset-decisions/AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1/candidates/refined_high_city_collision_walkability_consistency.v1.json",
+      "sha256": "fef4dfa44ec3ee561484029758fcf4bab0e8d5dd2112a989079d402d263a60b1"
+    },
+    "door_candidates": {
+      "path": "docs/asset-decisions/AKALYNTH_DOOR_HOUSE_AUTHORITY_FIXTURE_CANDIDATE_V1/candidates/refined_high_city_door_candidates.v1.draft.json",
+      "sha256": "e1f6fa7039b2bde72ed1238c505a3990f9c68226d1d223f5f966fb5545edb331"
+    },
+    "house_candidates": {
+      "path": "docs/asset-decisions/AKALYNTH_DOOR_HOUSE_AUTHORITY_FIXTURE_CANDIDATE_V1/candidates/refined_high_city_house_candidates.v1.draft.json",
+      "sha256": "f9b1037aa0a160b094155fb264d96412a2832fa9069447a44d1f3a297fb25aa3"
+    },
+    "access_policy_candidates": {
+      "path": "docs/asset-decisions/AKALYNTH_DOOR_HOUSE_AUTHORITY_FIXTURE_CANDIDATE_V1/candidates/refined_high_city_access_policy_candidates.v1.draft.json",
+      "sha256": "1a4c1e59c59774258ffe55d4858a6f3bfd4c0246771349b04dd3d75ebf996c19"
+    },
+    "overlay_binding_candidates": {
+      "path": "docs/asset-decisions/AKALYNTH_DOOR_HOUSE_AUTHORITY_FIXTURE_CANDIDATE_V1/candidates/refined_high_city_overlay_visibility_bindings.v1.draft.json",
+      "sha256": "79afba9ee57a050f90ec1db434268a89d99f6a1d7fa987f9d24ae383b76f5281"
+    },
+    "transition_candidates": {
+      "path": "docs/asset-decisions/AKALYNTH_TRANSITION_AUTHORITY_FIXTURE_CANDIDATE_V1/candidates/refined_high_city_transition_candidates.v1.draft.json",
+      "sha256": "5700a1037d0ac91d89b6a6f3489ebd837817d132e03bcc332b18992e9eea6187"
+    },
+    "transition_endpoints": {
+      "path": "docs/asset-decisions/AKALYNTH_TRANSITION_AUTHORITY_FIXTURE_CANDIDATE_V1/candidates/refined_high_city_transition_endpoints.v1.draft.json",
+      "sha256": "6bec474ee5f2a2d5a3ed957990912e8d728eb730a9de81ce689bc8c298fc55d7"
+    },
+    "floor_change_bindings": {
+      "path": "docs/asset-decisions/AKALYNTH_TRANSITION_AUTHORITY_FIXTURE_CANDIDATE_V1/candidates/refined_high_city_floor_change_bindings.v1.draft.json",
+      "sha256": "cd40dd3af48fbf019190432d6237f901d3f6c23ae9c8df231b5d0071fcdcb838"
+    },
+    "transition_policy_candidates": {
+      "path": "docs/asset-decisions/AKALYNTH_TRANSITION_AUTHORITY_FIXTURE_CANDIDATE_V1/candidates/refined_high_city_transition_policy_candidates.v1.draft.json",
+      "sha256": "24fec65e437ceeff736db8455d8620cfeb3c0c3cdc3340b68c66c1114021790b"
+    }
+  },
+  "cross_plane_link_counts": {
+    "door_to_reserved_conditionals": 4,
+    "transition_to_reserved_conditionals": 4,
+    "overlay_bindings_to_house_candidates": 3,
+    "house_to_doors_and_overlays": 3,
+    "transition_to_endpoints_policies_and_floor": 4
+  },
+  "production_map_promoted": false,
+  "mechanics": null
+}

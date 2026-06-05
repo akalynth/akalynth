@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "akalynth.draft.overlay_visibility_binding.schema.v1",
+  "title": "Draft Overlay Visibility Binding Boundary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "plane",
+    "status",
+    "runtime_authority",
+    "server_authoritative",
+    "production_map_promoted",
+    "overlay_asset_id",
+    "visibility_source",
+    "mechanics",
+    "authority"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "plane": {
+      "const": "overlay_visibility_binding"
+    },
+    "status": {
+      "const": "draft_design_only"
+    },
+    "runtime_authority": {
+      "const": false
+    },
+    "server_authoritative": {
+      "const": false
+    },
+    "production_map_promoted": {
+      "const": false
+    },
+    "overlay_asset_id": {
+      "type": "string"
+    },
+    "visibility_modes_reserved": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "visible",
+          "faded",
+          "hidden"
+        ]
+      }
+    },
+    "visibility_source": {
+      "const": "future_authoritative_inside_outside_state_required"
+    },
+    "mechanics": {
+      "type": "null"
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "house_entry",
+        "ownership",
+        "permission",
+        "collision",
+        "walkability"
+      ],
+      "properties": {
+        "house_entry": {
+          "const": "none"
+        },
+        "ownership": {
+          "const": "none"
+        },
+        "permission": {
+          "const": "none"
+        },
+        "collision": {
+          "const": "none"
+        },
+        "walkability": {
+          "const": "none"
+        }
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

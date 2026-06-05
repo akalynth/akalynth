@@ -1,0 +1,585 @@
+{
+  "id": "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1_NEGATIVE_AUTHORITY_LEAKAGE_CASES",
+  "status": "draft_negative_cases",
+  "expected_result": "rejected_or_flagged",
+  "cases": [
+    {
+      "id": "negative_visual_blocking_top_level",
+      "expected_flags": [
+        "forbidden_top_level_field:blocking"
+      ],
+      "payload": {
+        "id": "negative_visual_blocking_top_level",
+        "asset_id": "floor_cobble_01",
+        "plane": "visual",
+        "position": {
+          "tile": [
+            3,
+            4
+          ],
+          "floor": 0
+        },
+        "render": {
+          "layer": "terrain",
+          "anchor": "tile_top_left",
+          "z_policy": "fixed_layer",
+          "draw_scale": 0.5
+        },
+        "mechanics": null,
+        "authority": {
+          "collision": "none",
+          "walkability": "none",
+          "interaction": "none",
+          "server_entity": "none",
+          "ownership": "none",
+          "door_permissions": "none",
+          "npc_behavior": "none",
+          "mob_behavior": "none",
+          "shop": "none",
+          "dialogue": "none",
+          "spawn": "none",
+          "ai": "none",
+          "combat": "none"
+        },
+        "notes": [
+          "Visual terrain tile only.",
+          "Does not encode walkability or collision."
+        ],
+        "blocking": true
+      }
+    },
+    {
+      "id": "negative_visual_walkable_top_level",
+      "expected_flags": [
+        "forbidden_top_level_field:walkable"
+      ],
+      "payload": {
+        "id": "negative_visual_walkable_top_level",
+        "asset_id": "floor_cobble_01",
+        "plane": "visual",
+        "position": {
+          "tile": [
+            4,
+            4
+          ],
+          "floor": 0
+        },
+        "render": {
+          "layer": "terrain",
+          "anchor": "tile_top_left",
+          "z_policy": "fixed_layer",
+          "draw_scale": 0.5
+        },
+        "mechanics": null,
+        "authority": {
+          "collision": "none",
+          "walkability": "none",
+          "interaction": "none",
+          "server_entity": "none",
+          "ownership": "none",
+          "door_permissions": "none",
+          "npc_behavior": "none",
+          "mob_behavior": "none",
+          "shop": "none",
+          "dialogue": "none",
+          "spawn": "none",
+          "ai": "none",
+          "combat": "none"
+        },
+        "notes": [
+          "Visual terrain tile only.",
+          "Does not encode walkability or collision."
+        ],
+        "walkable": false
+      }
+    },
+    {
+      "id": "negative_visual_collision_authority",
+      "expected_flags": [
+        "authority_not_none:collision"
+      ],
+      "payload": {
+        "id": "negative_visual_collision_authority",
+        "asset_id": "floor_cobble_01",
+        "plane": "visual",
+        "position": {
+          "tile": [
+            5,
+            4
+          ],
+          "floor": 0
+        },
+        "render": {
+          "layer": "terrain",
+          "anchor": "tile_top_left",
+          "z_policy": "fixed_layer",
+          "draw_scale": 0.5
+        },
+        "mechanics": null,
+        "authority": {
+          "collision": "blocked",
+          "walkability": "none",
+          "interaction": "none",
+          "server_entity": "none",
+          "ownership": "none",
+          "door_permissions": "none",
+          "npc_behavior": "none",
+          "mob_behavior": "none",
+          "shop": "none",
+          "dialogue": "none",
+          "spawn": "none",
+          "ai": "none",
+          "combat": "none"
+        },
+        "notes": [
+          "Visual terrain tile only.",
+          "Does not encode walkability or collision."
+        ]
+      }
+    },
+    {
+      "id": "negative_visual_shop_inventory",
+      "expected_flags": [
+        "forbidden_top_level_field:shop_inventory"
+      ],
+      "payload": {
+        "id": "negative_visual_shop_inventory",
+        "asset_id": "floor_cobble_01",
+        "plane": "visual",
+        "position": {
+          "tile": [
+            6,
+            4
+          ],
+          "floor": 0
+        },
+        "render": {
+          "layer": "terrain",
+          "anchor": "tile_top_left",
+          "z_policy": "fixed_layer",
+          "draw_scale": 0.5
+        },
+        "mechanics": null,
+        "authority": {
+          "collision": "none",
+          "walkability": "none",
+          "interaction": "none",
+          "server_entity": "none",
+          "ownership": "none",
+          "door_permissions": "none",
+          "npc_behavior": "none",
+          "mob_behavior": "none",
+          "shop": "none",
+          "dialogue": "none",
+          "spawn": "none",
+          "ai": "none",
+          "combat": "none"
+        },
+        "notes": [
+          "Visual terrain tile only.",
+          "Does not encode walkability or collision."
+        ],
+        "shop_inventory": [
+          "apple"
+        ]
+      }
+    },
+    {
+      "id": "negative_visual_dialogue_tree",
+      "expected_flags": [
+        "forbidden_top_level_field:dialogue_tree"
+      ],
+      "payload": {
+        "id": "negative_visual_dialogue_tree",
+        "asset_id": "floor_cobble_01",
+        "plane": "visual",
+        "position": {
+          "tile": [
+            7,
+            4
+          ],
+          "floor": 0
+        },
+        "render": {
+          "layer": "terrain",
+          "anchor": "tile_top_left",
+          "z_policy": "fixed_layer",
+          "draw_scale": 0.5
+        },
+        "mechanics": null,
+        "authority": {
+          "collision": "none",
+          "walkability": "none",
+          "interaction": "none",
+          "server_entity": "none",
+          "ownership": "none",
+          "door_permissions": "none",
+          "npc_behavior": "none",
+          "mob_behavior": "none",
+          "shop": "none",
+          "dialogue": "none",
+          "spawn": "none",
+          "ai": "none",
+          "combat": "none"
+        },
+        "notes": [
+          "Visual terrain tile only.",
+          "Does not encode walkability or collision."
+        ],
+        "dialogue_tree": "merchant_greeting"
+      }
+    },
+    {
+      "id": "negative_visual_spawn_table",
+      "expected_flags": [
+        "forbidden_top_level_field:spawn_table"
+      ],
+      "payload": {
+        "id": "negative_visual_spawn_table",
+        "asset_id": "floor_cobble_01",
+        "plane": "visual",
+        "position": {
+          "tile": [
+            8,
+            4
+          ],
+          "floor": 0
+        },
+        "render": {
+          "layer": "terrain",
+          "anchor": "tile_top_left",
+          "z_policy": "fixed_layer",
+          "draw_scale": 0.5
+        },
+        "mechanics": null,
+        "authority": {
+          "collision": "none",
+          "walkability": "none",
+          "interaction": "none",
+          "server_entity": "none",
+          "ownership": "none",
+          "door_permissions": "none",
+          "npc_behavior": "none",
+          "mob_behavior": "none",
+          "shop": "none",
+          "dialogue": "none",
+          "spawn": "none",
+          "ai": "none",
+          "combat": "none"
+        },
+        "notes": [
+          "Visual terrain tile only.",
+          "Does not encode walkability or collision."
+        ],
+        "spawn_table": "rats"
+      }
+    },
+    {
+      "id": "negative_visual_ai",
+      "expected_flags": [
+        "authority_not_none:ai"
+      ],
+      "payload": {
+        "id": "negative_visual_ai",
+        "asset_id": "floor_cobble_01",
+        "plane": "visual",
+        "position": {
+          "tile": [
+            9,
+            4
+          ],
+          "floor": 0
+        },
+        "render": {
+          "layer": "terrain",
+          "anchor": "tile_top_left",
+          "z_policy": "fixed_layer",
+          "draw_scale": 0.5
+        },
+        "mechanics": null,
+        "authority": {
+          "collision": "none",
+          "walkability": "none",
+          "interaction": "none",
+          "server_entity": "none",
+          "ownership": "none",
+          "door_permissions": "none",
+          "npc_behavior": "none",
+          "mob_behavior": "none",
+          "shop": "none",
+          "dialogue": "none",
+          "spawn": "none",
+          "ai": "patrol",
+          "combat": "none"
+        },
+        "notes": [
+          "Visual terrain tile only.",
+          "Does not encode walkability or collision."
+        ]
+      }
+    },
+    {
+      "id": "negative_visual_combat",
+      "expected_flags": [
+        "authority_not_none:combat"
+      ],
+      "payload": {
+        "id": "negative_visual_combat",
+        "asset_id": "floor_cobble_01",
+        "plane": "visual",
+        "position": {
+          "tile": [
+            10,
+            4
+          ],
+          "floor": 0
+        },
+        "render": {
+          "layer": "terrain",
+          "anchor": "tile_top_left",
+          "z_policy": "fixed_layer",
+          "draw_scale": 0.5
+        },
+        "mechanics": null,
+        "authority": {
+          "collision": "none",
+          "walkability": "none",
+          "interaction": "none",
+          "server_entity": "none",
+          "ownership": "none",
+          "door_permissions": "none",
+          "npc_behavior": "none",
+          "mob_behavior": "none",
+          "shop": "none",
+          "dialogue": "none",
+          "spawn": "none",
+          "ai": "none",
+          "combat": "enabled"
+        },
+        "notes": [
+          "Visual terrain tile only.",
+          "Does not encode walkability or collision."
+        ]
+      }
+    },
+    {
+      "id": "negative_visual_ownership",
+      "expected_flags": [
+        "authority_not_none:ownership"
+      ],
+      "payload": {
+        "id": "negative_visual_ownership",
+        "asset_id": "floor_cobble_01",
+        "plane": "visual",
+        "position": {
+          "tile": [
+            11,
+            4
+          ],
+          "floor": 0
+        },
+        "render": {
+          "layer": "terrain",
+          "anchor": "tile_top_left",
+          "z_policy": "fixed_layer",
+          "draw_scale": 0.5
+        },
+        "mechanics": null,
+        "authority": {
+          "collision": "none",
+          "walkability": "none",
+          "interaction": "none",
+          "server_entity": "none",
+          "ownership": "house_owner",
+          "door_permissions": "none",
+          "npc_behavior": "none",
+          "mob_behavior": "none",
+          "shop": "none",
+          "dialogue": "none",
+          "spawn": "none",
+          "ai": "none",
+          "combat": "none"
+        },
+        "notes": [
+          "Visual terrain tile only.",
+          "Does not encode walkability or collision."
+        ]
+      }
+    },
+    {
+      "id": "negative_visual_door_permissions",
+      "expected_flags": [
+        "authority_not_none:door_permissions"
+      ],
+      "payload": {
+        "id": "negative_visual_door_permissions",
+        "asset_id": "floor_cobble_01",
+        "plane": "visual",
+        "position": {
+          "tile": [
+            12,
+            4
+          ],
+          "floor": 0
+        },
+        "render": {
+          "layer": "terrain",
+          "anchor": "tile_top_left",
+          "z_policy": "fixed_layer",
+          "draw_scale": 0.5
+        },
+        "mechanics": null,
+        "authority": {
+          "collision": "none",
+          "walkability": "none",
+          "interaction": "none",
+          "server_entity": "none",
+          "ownership": "none",
+          "door_permissions": "owner_only",
+          "npc_behavior": "none",
+          "mob_behavior": "none",
+          "shop": "none",
+          "dialogue": "none",
+          "spawn": "none",
+          "ai": "none",
+          "combat": "none"
+        },
+        "notes": [
+          "Visual terrain tile only.",
+          "Does not encode walkability or collision."
+        ]
+      }
+    },
+    {
+      "id": "negative_overlay_access_list",
+      "expected_flags": [
+        "forbidden_top_level_field:access_list"
+      ],
+      "payload": {
+        "id": "negative_overlay_access_list",
+        "plane": "presentation_overlay",
+        "asset_id": "roof_castle_overlay",
+        "position": {
+          "tile": [
+            3,
+            5
+          ],
+          "floor": 1
+        },
+        "render": {
+          "layer": "floor_overlay",
+          "z_policy": "fixed_above_building",
+          "visibility_modes": [
+            "visible",
+            "faded",
+            "hidden"
+          ]
+        },
+        "review_visibility": {
+          "outside": "visible",
+          "threshold": "faded",
+          "inside": "hidden"
+        },
+        "review_only_context": {
+          "interior_footprint": {
+            "x": 4,
+            "y": 5,
+            "width": 14,
+            "height": 10
+          },
+          "doorway_tiles": [
+            [
+              10,
+              14
+            ],
+            [
+              10,
+              15
+            ]
+          ]
+        },
+        "exported_review_state": "faded",
+        "mechanics": null,
+        "authority": {
+          "house_entry": "none",
+          "ownership": "none",
+          "door_permissions": "none",
+          "collision": "none",
+          "walkability": "none",
+          "server_floor_visibility": "none"
+        },
+        "notes": [
+          "Visual presentation overlay only.",
+          "Does not encode floor-stack, ownership, entry, collision, or walkability."
+        ],
+        "access_list": [
+          "player_1"
+        ]
+      }
+    },
+    {
+      "id": "negative_overlay_ownership_authority",
+      "expected_flags": [
+        "overlay_authority_not_none:ownership"
+      ],
+      "payload": {
+        "id": "negative_overlay_ownership_authority",
+        "plane": "presentation_overlay",
+        "asset_id": "market_awning_overlay",
+        "position": {
+          "tile": [
+            19,
+            8
+          ],
+          "floor": 1
+        },
+        "render": {
+          "layer": "floor_overlay",
+          "z_policy": "fixed_above_building",
+          "visibility_modes": [
+            "visible",
+            "faded",
+            "hidden"
+          ]
+        },
+        "review_visibility": {
+          "outside": "visible",
+          "threshold": "faded",
+          "inside": "hidden"
+        },
+        "review_only_context": {
+          "interior_footprint": {
+            "x": 20,
+            "y": 8,
+            "width": 10,
+            "height": 10
+          },
+          "doorway_tiles": [
+            [
+              25,
+              17
+            ],
+            [
+              25,
+              18
+            ]
+          ]
+        },
+        "exported_review_state": "faded",
+        "mechanics": null,
+        "authority": {
+          "house_entry": "none",
+          "ownership": "guild",
+          "door_permissions": "none",
+          "collision": "none",
+          "walkability": "none",
+          "server_floor_visibility": "none"
+        },
+        "notes": [
+          "Visual presentation overlay only.",
+          "Does not encode floor-stack, ownership, entry, collision, or walkability."
+        ]
+      }
+    }
+  ]
+}

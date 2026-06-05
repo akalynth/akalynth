@@ -1,0 +1,122 @@
+{
+  "id": "AKALYNTH_HIGH_CITY_MAP_AUTHORITY_BUNDLE_V1_NEGATIVE_CASES",
+  "status": "draft_non_runtime_validation_fixture",
+  "cases": [
+    {
+      "id": "negative_door_candidate_references_non_reserved_tile",
+      "expected_flags": [
+        "door_candidate_non_reserved_tile"
+      ],
+      "payload": {
+        "plane": "door_house_authority_candidate",
+        "threshold_tiles": [
+          [
+            1,
+            1
+          ]
+        ]
+      }
+    },
+    {
+      "id": "negative_transition_candidate_references_non_gate_door_threshold_as_transition_authority",
+      "expected_flags": [
+        "transition_candidate_uses_door_threshold_without_gate_kind"
+      ],
+      "payload": {
+        "plane": "transition_authority_candidate",
+        "transition_kind": "sewer_entry_candidate",
+        "source_tiles": [
+          [
+            7,
+            22
+          ]
+        ]
+      }
+    },
+    {
+      "id": "negative_overlay_binding_references_missing_house_candidate",
+      "expected_flags": [
+        "overlay_binding_missing_house_candidate"
+      ],
+      "payload": {
+        "plane": "overlay_visibility_binding_candidate",
+        "house_candidate_id": "missing_house_candidate",
+        "overlay_zone_id": "overlay_01_roof_castle_overlay_3_5"
+      }
+    },
+    {
+      "id": "negative_collision_walkability_conflict",
+      "expected_flags": [
+        "collision_walkability_conflict:blocked_and_walkable"
+      ],
+      "payload": {
+        "tile": [
+          9,
+          9
+        ],
+        "collision_state": "blocked",
+        "walkability_state": "walkable"
+      }
+    },
+    {
+      "id": "negative_visual_object_id_missing",
+      "expected_flags": [
+        "missing_visual_object_id"
+      ],
+      "payload": {
+        "linked_visual_object_ids": [
+          "vmo_missing_9999"
+        ]
+      }
+    },
+    {
+      "id": "negative_candidate_artifact_hash_mismatch",
+      "expected_flags": [
+        "artifact_hash_mismatch"
+      ],
+      "payload": {
+        "path": "docs/asset-decisions/AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1/candidates/refined_high_city_collision_candidates.v1.draft.json",
+        "expected_sha256": "bad_hash"
+      }
+    },
+    {
+      "id": "negative_bundle_references_unaccepted_receipt",
+      "expected_flags": [
+        "receipt_not_accepted"
+      ],
+      "payload": {
+        "receipt_status": "implemented_pending_review"
+      }
+    },
+    {
+      "id": "negative_bundle_sets_production_map_promoted_true",
+      "expected_flags": [
+        "production_map_promoted_forbidden"
+      ],
+      "payload": {
+        "production_map_promoted": true
+      }
+    },
+    {
+      "id": "negative_bundle_includes_runtime_enabled_true",
+      "expected_flags": [
+        "runtime_enabled_forbidden"
+      ],
+      "payload": {
+        "runtime_enabled": true
+      }
+    },
+    {
+      "id": "negative_bundle_includes_shared_map_path",
+      "expected_flags": [
+        "shared_map_path_forbidden"
+      ],
+      "payload": {
+        "shared_map_path": "packages/shared/maps/high_city.json"
+      }
+    }
+  ],
+  "notes": [
+    "Negative cases document cross-plane mismatch and authority leakage that this bundle must reject."
+  ]
+}

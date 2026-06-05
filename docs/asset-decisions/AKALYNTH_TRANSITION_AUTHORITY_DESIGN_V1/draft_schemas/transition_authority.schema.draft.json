@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "akalynth.draft.transition_authority.schema.v1",
+  "title": "Draft Transition Authority Boundary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "plane",
+    "status",
+    "runtime_authority",
+    "server_authoritative",
+    "production_map_promoted",
+    "source",
+    "destination",
+    "policy",
+    "mechanics",
+    "authority"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "plane": {
+      "const": "transition_authority"
+    },
+    "status": {
+      "const": "draft_design_only"
+    },
+    "runtime_authority": {
+      "const": false
+    },
+    "server_authoritative": {
+      "const": false
+    },
+    "production_map_promoted": {
+      "const": false
+    },
+    "source": {
+      "$ref": "transition_endpoint.schema.draft.json"
+    },
+    "destination": {
+      "$ref": "transition_endpoint.schema.draft.json"
+    },
+    "directionality_reserved": {
+      "enum": [
+        "one_way",
+        "two_way",
+        "gated_by_state",
+        "gated_by_permission",
+        "reserved_unknown"
+      ]
+    },
+    "activation_rule_reserved": {
+      "enum": [
+        "step_on",
+        "use_action",
+        "scripted_event",
+        "reserved_unknown"
+      ]
+    },
+    "policy": {
+      "$ref": "transition_policy.schema.draft.json"
+    },
+    "mechanics": {
+      "type": "null"
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runtime_transition",
+        "destination_validity",
+        "floor_change",
+        "movement_resolution",
+        "server_receipt"
+      ],
+      "properties": {
+        "runtime_transition": {
+          "const": "future_gate_required"
+        },
+        "destination_validity": {
+          "const": "future_gate_required"
+        },
+        "floor_change": {
+          "const": "future_gate_required_if_floor_changes"
+        },
+        "movement_resolution": {
+          "const": "future_gate_required"
+        },
+        "server_receipt": {
+          "const": "future_gate_required"
+        }
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

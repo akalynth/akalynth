@@ -1,0 +1,94 @@
+{
+  "id": "AKALYNTH_DOOR_AND_HOUSE_AUTHORITY_DESIGN_V1_NEGATIVE_CASES",
+  "status": "draft_design_only",
+  "cases": [
+    {
+      "id": "negative_visual_door_declares_open_state",
+      "expected_flags": [
+        "visual_object_forbidden_field:door_state"
+      ],
+      "payload": {
+        "plane": "visual",
+        "asset_id": "door_wood_closed_south",
+        "door_state": "open"
+      }
+    },
+    {
+      "id": "negative_roof_overlay_declares_house_ownership",
+      "expected_flags": [
+        "overlay_forbidden_field:ownership"
+      ],
+      "payload": {
+        "plane": "presentation_overlay",
+        "asset_id": "roof_red_small_overlay_01",
+        "ownership": "player_owned"
+      }
+    },
+    {
+      "id": "negative_collision_candidate_resolves_door_passability",
+      "expected_flags": [
+        "door_authority_required_for_threshold_resolution"
+      ],
+      "payload": {
+        "plane": "collision",
+        "tile": [
+          8,
+          24
+        ],
+        "collision_state": "clear",
+        "category": "building_door_threshold"
+      }
+    },
+    {
+      "id": "negative_walkability_candidate_resolves_door_passability",
+      "expected_flags": [
+        "door_authority_required_for_threshold_resolution"
+      ],
+      "payload": {
+        "plane": "walkability",
+        "tile": [
+          8,
+          24
+        ],
+        "walkability_state": "walkable",
+        "category": "building_door_threshold"
+      }
+    },
+    {
+      "id": "negative_house_region_derived_from_roof_overlay",
+      "expected_flags": [
+        "house_authority_forbidden_source:roof_overlay"
+      ],
+      "payload": {
+        "plane": "house_authority",
+        "region_source": "roof_overlay",
+        "overlay_asset_id": "roof_red_small_overlay_01"
+      }
+    },
+    {
+      "id": "negative_access_policy_implied_by_lock_state",
+      "expected_flags": [
+        "access_policy_cannot_be_implied_by_lock_state"
+      ],
+      "payload": {
+        "plane": "door_authority",
+        "lock_state": "locked",
+        "access_policy": "owner_only"
+      }
+    },
+    {
+      "id": "negative_overlay_visibility_uses_debug_fixture_as_runtime_source",
+      "expected_flags": [
+        "overlay_visibility_runtime_source_forbidden:debug_fixture"
+      ],
+      "payload": {
+        "plane": "overlay_visibility_binding",
+        "visibility_source": "debug_client_review_fixture"
+      }
+    }
+  ],
+  "notes": [
+    "Negative cases document intended future validation behavior.",
+    "They are not runtime tests and do not promote any authority."
+  ]
+}

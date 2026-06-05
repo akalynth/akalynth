@@ -1,0 +1,42 @@
+{
+  "id": "high_city_runtime_map_projection_manifest_v1",
+  "status": "draft_non_runtime_projection_manifest",
+  "projection_path": "projection/high_city_runtime_map_projection.v1.draft.json",
+  "source_receipts": {
+    "high_city_authority_bundle": {
+      "id": "AKALYNTH_HIGH_CITY_MAP_AUTHORITY_BUNDLE_V1",
+      "status": "accepted_high_city_map_authority_bundle",
+      "path": "docs/asset-decisions/AKALYNTH_HIGH_CITY_MAP_AUTHORITY_BUNDLE_V1/high_city_map_authority_bundle_receipt.json",
+      "sha256": "c15177b42dc63140c967e7508e702f020a96187311db00af6833fe6f5e45aa49"
+    },
+    "runtime_map_authority_schema_design": {
+      "id": "AKALYNTH_RUNTIME_MAP_AUTHORITY_SCHEMA_DESIGN_V1",
+      "status": "accepted_runtime_map_authority_schema_design",
+      "path": "docs/asset-decisions/AKALYNTH_RUNTIME_MAP_AUTHORITY_SCHEMA_DESIGN_V1/runtime_map_authority_schema_design_receipt.json",
+      "sha256": "727415dd14e5e827bfad920ced76421919f418eec99622dc0eaa1acd692cae17"
+    },
+    "runtime_map_schema_validation_harness": {
+      "id": "AKALYNTH_RUNTIME_MAP_SCHEMA_VALIDATION_HARNESS_V1",
+      "status": "accepted_runtime_map_schema_validation_harness",
+      "path": "docs/asset-decisions/AKALYNTH_RUNTIME_MAP_SCHEMA_VALIDATION_HARNESS_V1/runtime_map_schema_validation_harness_receipt.json",
+      "sha256": "2f929fcb4993b1147bdcba8d11899094c9e947cd06f13425d8430143850d2705"
+    }
+  },
+  "source_bundle": {
+    "path": "docs/asset-decisions/AKALYNTH_HIGH_CITY_MAP_AUTHORITY_BUNDLE_V1/bundle/high_city_authority_bundle.v1.draft.json",
+    "sha256": "4f67d068eb745af2a0a064787ab0ed8a1cf0a2922c9209dde341aaf5ff8248bb"
+  },
+  "artifact_hashes": {
+    "projection/high_city_runtime_map_projection.v1.draft.json": "39a72f831b950efea759770f0484878d10652ec5bc2273ab30fb8da5e3986393",
+    "projection/high_city_runtime_map_layers_summary.v1.json": "2e85f3cb3473d43fb05b069600631db0377f83eee4b7f0fd9d78f495ab534a1b"
+  },
+  "runtime_authority": false,
+  "server_authoritative": false,
+  "production_map_promoted": false,
+  "shared_map_path": "none",
+  "mechanics": null,
+  "notes": [
+    "Manifest is a draft docs artifact only.",
+    "No packages/shared map path is used as an active runtime target."
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "id": "small_house_front_door_authority_candidate_v1",
+  "plane": "door_authority",
+  "status": "draft_design_only",
+  "runtime_authority": false,
+  "server_authoritative": false,
+  "production_map_promoted": false,
+  "source_candidate_receipt": "AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1",
+  "threshold": {
+    "tile": [
+      8,
+      24
+    ],
+    "floor": 0,
+    "candidate_state_required": "reserved_conditional"
+  },
+  "states_reserved": [
+    "open",
+    "closed",
+    "locked",
+    "permission_gated"
+  ],
+  "mechanics": null,
+  "authority": {
+    "runtime_door_state": "future_gate_required",
+    "collision_resolution": "future_gate_required",
+    "walkability_resolution": "future_gate_required",
+    "ownership": "none",
+    "access_policy": "future_gate_required_if_permissioned"
+  },
+  "notes": [
+    "Draft design example only.",
+    "Does not make the small house door passable, blocked, open, closed, locked, owned, or permissioned."
+  ]
+}

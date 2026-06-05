@@ -1,0 +1,131 @@
+{
+  "id": "AKALYNTH_TRANSITION_AUTHORITY_DESIGN_V1",
+  "status": "accepted_transition_authority_design",
+  "scope": "transition authority boundary design only",
+  "input_receipts": [
+    "AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1",
+    "AKALYNTH_DOOR_HOUSE_AUTHORITY_FIXTURE_CANDIDATE_V1",
+    "AKALYNTH_DOOR_AND_HOUSE_AUTHORITY_DESIGN_V1"
+  ],
+  "purpose": "Design future transition authority boundaries for sewer entrances, stairs, ladders, floor changes, gates to underground areas, teleport-like transitions, and interior/exterior transfer points without implementing runtime behavior.",
+  "artifacts": [
+    "transition_authority_design.md",
+    "transition_boundary_matrix.md",
+    "floor_change_authority_model.md",
+    "validation_plan.md",
+    "draft_schemas/transition_authority.schema.draft.json",
+    "draft_schemas/transition_endpoint.schema.draft.json",
+    "draft_schemas/transition_policy.schema.draft.json",
+    "draft_schemas/floor_change_binding.schema.draft.json",
+    "examples/sewer_grate_transition_candidate.draft.json",
+    "examples/stair_transition_candidate.draft.json",
+    "examples/gate_transition_candidate.draft.json",
+    "validation/negative_transition_authority_cases.json",
+    "validation/transition_authority_validation_report.json"
+  ],
+  "claims": {
+    "transition_authority_boundary_drafted": true,
+    "transition_endpoint_schema_drafted": true,
+    "transition_policy_schema_drafted": true,
+    "floor_change_binding_schema_drafted": true,
+    "negative_transition_authority_cases_added": true,
+    "visual_objects_do_not_grant_transition_authority": true,
+    "walkability_does_not_grant_transition_authority": true,
+    "door_house_candidates_do_not_grant_transition_authority": true,
+    "destination_validity_reserved_for_future_gate": true,
+    "runtime_transitions_added": false,
+    "sewers_work": false,
+    "stairs_work": false,
+    "floor_changes_work": false,
+    "teleports_work": false,
+    "runtime_collision_changed": false,
+    "runtime_walkability_changed": false,
+    "server_protocol_changed": false,
+    "shared_maps_changed": false,
+    "production_map_promoted": false,
+    "npc_behavior_added": false,
+    "mob_behavior_added": false,
+    "shop_changed": false,
+    "dialogue_changed": false,
+    "spawn_changed": false,
+    "ai_changed": false,
+    "combat_changed": false,
+    "mechanics_null": true
+  },
+  "verification": {
+    "draft_schema_json_valid": "pass",
+    "draft_example_json_valid": "pass",
+    "negative_transition_authority_cases_flagged": "pass",
+    "examples_remain_design_only": "pass",
+    "npm run verify:quick": "pass 9/9",
+    "protected_runtime_files_remain_unchanged": "pass"
+  },
+  "design_review": {
+    "status": "pass",
+    "acceptance_criteria": {
+      "transition_authority_is_separate_from_visuals": "pass",
+      "transition_authority_is_separate_from_walkability": "pass",
+      "transition_authority_is_separate_from_door_house_authority": "pass",
+      "transition_endpoints_are_explicit_design_artifacts": "pass",
+      "floor_change_policy_is_drafted": "pass",
+      "runtime_enabled_transitions_are_not_added": "pass",
+      "negative_transition_authority_cases_flagged": "pass",
+      "protected_runtime_paths_remain_unchanged": "pass",
+      "npm_run_verify_quick_passes": "pass"
+    },
+    "notes": [
+      "Accepted as a transition authority boundary design gate only.",
+      "No runtime sewer, stair, floor-change, teleport, or gate transition behavior was added.",
+      "Visual transition cues remain evidence or presentation only.",
+      "Walkability and collision layers do not grant transition authority.",
+      "Door and house candidates do not grant transfer authority.",
+      "Destination validity, floor-change behavior, activation policy, and server authority remain reserved for later fixture and runtime gates."
+    ]
+  },
+  "accepted_claim_if_reviewed": "Akalynth has an accepted draft design for transition authority boundaries, keeping sewer/stair/floor-change behavior separate from visuals, walkability, doors, houses, and production maps.",
+  "valid_accepted_status": "accepted_transition_authority_design",
+  "validation_report": "validation/transition_authority_validation_report.json",
+  "non_claims": [
+    "Runtime transitions are not implemented.",
+    "Sewers do not work.",
+    "Stairs do not work.",
+    "Floor changes do not work.",
+    "Teleports do not work.",
+    "Gate transfers do not work.",
+    "Destination maps are not valid.",
+    "Server floor authority is not changed.",
+    "Shared maps are not changed.",
+    "Server protocol is not changed.",
+    "Collision and walkability do not resolve transitions.",
+    "Door and house authority does not resolve transitions.",
+    "Production map is not promoted.",
+    "NPC, mob, shop, dialogue, spawn, AI, and combat behavior is not added."
+  ],
+  "next_recommended_gate": "AKALYNTH_TRANSITION_AUTHORITY_FIXTURE_CANDIDATE_V1",
+  "hashes_sha256": {
+    "transition_authority_design.md": "bde4ff2ebbe63517a6b40fc4cbeaaead6a88733e1f193a9afbde33c616287441",
+    "transition_boundary_matrix.md": "e1219064cbd5f17eb7db093e38bd269dc2514b33ccfb1d131021a897e8fd6da1",
+    "floor_change_authority_model.md": "c709a66e07c3fe6ea3134b2219506dda931e62e63f2ea3d99b0d9cfaa0d37b2d",
+    "validation_plan.md": "d6e2273600f7aaf98c82f7dd895c87a3e461f7220ab912b84f0c5e31d397ca0e",
+    "draft_schemas/transition_authority.schema.draft.json": "e9c56fe00d2d8627326917452c976b5fbc0467bf231475d1213e9e12e98bc9d1",
+    "draft_schemas/transition_endpoint.schema.draft.json": "e0dfe2e87bf539db8b96629067e793cb001f178ff42b096733e3904964b39a31",
+    "draft_schemas/transition_policy.schema.draft.json": "72b1fafffa342ccbd8441ad8db957440901305cb2fde8445bc61feac6cda35c0",
+    "draft_schemas/floor_change_binding.schema.draft.json": "4bc06278912ab9f92708014b223ecead1c502028d7dcf24d5f46b0806dcb3139",
+    "examples/sewer_grate_transition_candidate.draft.json": "5977bc17274de0a959965d313ee4af31a500e2c661f7b7296e5a70f399fd2a1c",
+    "examples/stair_transition_candidate.draft.json": "17f4e7a3286bbd50e7b63e0285fd38afb50972f002eddcf4c4aae83d3d300fde",
+    "examples/gate_transition_candidate.draft.json": "c1bec779fc66d143a879657cdb9882a554dc5cc50e1de24bf32f5dbd91eea90a",
+    "validation/negative_transition_authority_cases.json": "5786a85c46efdd36ab3d143269721274354e27630a0cde482c6faf251e04469e",
+    "validation/transition_authority_validation_report.json": "ea7f0a14fa07b27b5add87bbcf0f39b2968a0c11b4d4cda2b3719175e3b3c830",
+    "transition_authority_design_receipt.json": "dab00112115b81e106ff7decc37339a5da83886a2cfbcee9a9705854df238b9b"
+  },
+  "boundary_review": {
+    "status": "pass",
+    "protected_runtime_files_remain_unchanged": "pass",
+    "notes": [
+      "Protected runtime file status was checked after the transition design artifacts were generated.",
+      "This gate created docs, draft schemas, examples, validation fixtures, and a receipt only.",
+      "No server, protocol, shared map, runtime transition, sewer, stair, floor-change, teleport, collision, walkability, door, house, ownership, access-list, shop, dialogue, spawn, AI, combat, NPC, or mob behavior was introduced."
+    ]
+  },
+  "accepted_claim": "Akalynth has an accepted draft design for transition authority boundaries, keeping sewer, stair, floor-change, gate, and teleport-like behavior separate from visuals, walkability, doors, houses, and production maps."
+}

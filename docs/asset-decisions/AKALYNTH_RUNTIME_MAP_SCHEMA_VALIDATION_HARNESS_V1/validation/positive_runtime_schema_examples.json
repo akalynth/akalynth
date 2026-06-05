@@ -1,0 +1,27 @@
+{
+  "id": "AKALYNTH_RUNTIME_MAP_SCHEMA_VALIDATION_HARNESS_V1_POSITIVE_EXAMPLES",
+  "status": "draft_validation_fixture",
+  "cases": [
+    {
+      "id": "positive_high_city_runtime_projection",
+      "path": "examples/high_city_runtime_projection_positive.v1.draft.json"
+    },
+    {
+      "id": "positive_minimal_runtime_manifest_boundary",
+      "payload": {
+        "id": "positive_minimal_manifest",
+        "status": "draft_schema_only",
+        "runtime_authority": false,
+        "server_authoritative": false,
+        "production_map_promoted": false,
+        "source_bundle_receipt": "AKALYNTH_HIGH_CITY_MAP_AUTHORITY_BUNDLE_V1",
+        "promotion": {
+          "production_promotion_receipt": "future_gate_required",
+          "shared_map_path": "none",
+          "server_movement_verified": false
+        },
+        "mechanics": null
+      }
+    }
+  ]
+}

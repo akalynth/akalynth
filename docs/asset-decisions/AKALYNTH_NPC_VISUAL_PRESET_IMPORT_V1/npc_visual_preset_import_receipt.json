@@ -1,0 +1,135 @@
+{
+  "id": "AKALYNTH_NPC_VISUAL_PRESET_IMPORT_V1",
+  "status": "accepted_visual_preset_import",
+  "scope": "visual-only NPC and creature preset sprites rendered in deterministic debug-client scenes",
+  "input_receipts": [
+    "AKALYNTH_ENGINE_IMPORT_SMOKE_TEST_V1",
+    "AKALYNTH_CHARACTER_VISUAL_PLACEMENT_REVIEW_V1"
+  ],
+  "imported_visual_presets": {
+    "characters": [
+      "castle_guard_red_01",
+      "merchant_food_01",
+      "merchant_cloth_01",
+      "blacksmith_01",
+      "priest_01",
+      "noble_male_01",
+      "sewer_worker_01",
+      "rat_hunter_01"
+    ],
+    "creatures": [
+      "rat_small_01",
+      "rat_large_01",
+      "diseased_rat_01",
+      "dog_01",
+      "cat_01"
+    ]
+  },
+  "sheet_contract": {
+    "dimensions": {
+      "width": 256,
+      "height": 256
+    },
+    "frame": {
+      "width": 64,
+      "height": 64
+    },
+    "walk_columns": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "row_order": [
+      "south",
+      "north",
+      "east",
+      "west"
+    ],
+    "mechanics": null,
+    "render_authority": "debug-client only"
+  },
+  "scenes": [
+    "?visual-smoke=npc_presets_lineup",
+    "?visual-smoke=npc_presets_market",
+    "?visual-smoke=npc_presets_castle",
+    "?visual-smoke=npc_presets_sewer",
+    "?visual-smoke=npc_presets_creatures",
+    "?visual-smoke=npc_presets_crowd_scale"
+  ],
+  "screenshots": [
+    "screenshots/01_npc_presets_lineup.png",
+    "screenshots/02_npc_presets_market.png",
+    "screenshots/03_npc_presets_castle.png",
+    "screenshots/04_npc_presets_sewer.png",
+    "screenshots/05_npc_presets_creatures.png",
+    "screenshots/06_npc_presets_crowd_scale.png"
+  ],
+  "checks": {
+    "sidecars_present": "pass",
+    "mechanics_null": "pass",
+    "canonical_row_order": "pass",
+    "deterministic_debug_scenes": "pass",
+    "nearest_neighbor": "pass",
+    "no_cropping": "pass",
+    "scale_acceptable": "pass",
+    "creature_readability": "pass",
+    "crowd_legibility": "pass",
+    "no_server_protocol_map_content_changes": "pass"
+  },
+  "claims": {
+    "visual_presets_imported": true,
+    "debug_client_can_render_visual_presets": true,
+    "visual_review_completed": true,
+    "production_map_promoted": false,
+    "server_npc_behavior_added": false,
+    "server_mob_behavior_added": false,
+    "collision_changed": false,
+    "walkability_changed": false,
+    "server_protocol_changed": false,
+    "combat_changed": false,
+    "dialogue_changed": false,
+    "shop_changed": false,
+    "quest_changed": false,
+    "spawn_changed": false,
+    "mechanics_changed": false
+  },
+  "notes": [
+    "Visual preset import only; NPC means NPC-looking visual sprite preset in this lane.",
+    "Imported source sheets were normalized to 256x256, first four columns, row order south, north, east, west.",
+    "Review maps are local debug-client fixtures and do not modify shared map JSON.",
+    "No server NPCs, mobs, behavior, collision, walkability, shop, dialogue, quest, spawn, combat, or protocol authority is introduced."
+  ],
+  "outcome": "accepted_visual_preset_import",
+  "accepted_claim": "The debug client can render the imported visual-only NPC and creature preset sprites in deterministic review scenes without adding server behavior or gameplay authority.",
+  "visual_review": {
+    "status": "pass",
+    "method": "captured debug-client screenshots with live canvas checks",
+    "evidence": {
+      "screenshot_dimensions": "900x700",
+      "canvas_dimensions": "384x384",
+      "image_smoothing_enabled": false,
+      "css_image_rendering": "pixelated",
+      "expected_sprite_rectangles_in_bounds": true,
+      "expected_sprite_rectangles_visible": true,
+      "screenshots_distinct": true
+    },
+    "notes": [
+      "Screenshots were captured from http://localhost:5173/ using the requested npc_presets visual-smoke routes.",
+      "Review used captured screenshot artifacts plus live canvas pixel checks."
+    ]
+  },
+  "non_claims": [
+    "Server-authoritative NPC entities are not claimed.",
+    "Server-authoritative mobs are not claimed.",
+    "NPC behavior, mob behavior, dialogue, shops, quests, combat, loot, spawns, collision, walkability, and protocol semantics are not claimed.",
+    "Production map promotion is not claimed.",
+    "Combat, cast, hurt, and death animation support is not claimed by this lane."
+  ],
+  "automated_verification": {
+    "npm run verify:assets": "pass",
+    "npm run build:client": "pass",
+    "npm run build:server": "pass",
+    "npm run verify:quick": "pass 9/9"
+  }
+}

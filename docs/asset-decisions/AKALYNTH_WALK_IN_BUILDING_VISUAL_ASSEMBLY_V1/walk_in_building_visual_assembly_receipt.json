@@ -1,0 +1,155 @@
+{
+  "id": "AKALYNTH_WALK_IN_BUILDING_VISUAL_ASSEMBLY_V1",
+  "status": "accepted_walk_in_building_visual_assembly",
+  "scope": "debug-client visual-only modular building assembly",
+  "input_receipts": [
+    "AKALYNTH_ENGINE_IMPORT_SMOKE_TEST_V1",
+    "AKALYNTH_CHARACTER_VISUAL_PLACEMENT_REVIEW_V1",
+    "AKALYNTH_DEBUG_CLIENT_VISUAL_SCALE_TUNING_V1",
+    "AKALYNTH_WORLD_OBJECT_VISUAL_SCALE_AUDIT_V1"
+  ],
+  "accepted_claim": "The debug client can assemble readable walk-in building review scenes from existing modular floor, wall, door, and prop visual assets beside the accepted tuned character scale.",
+  "not_claimed": [
+    "roof hiding",
+    "door interaction",
+    "house entry",
+    "collision correctness",
+    "walkability correctness",
+    "lock state",
+    "ownership",
+    "server object placement",
+    "production map promotion",
+    "NPC behavior",
+    "mob behavior"
+  ],
+  "scenes": [
+    "building_small_house",
+    "building_small_house_door_threshold",
+    "building_market_shop",
+    "building_castle_meeting_hall",
+    "building_z_order_wall_door",
+    "building_character_walk_space"
+  ],
+  "assembled_buildings": [
+    "small_house_01",
+    "market_shop_01",
+    "castle_meeting_hall_01"
+  ],
+  "assets_used": {
+    "source_root": "data/assets-src/sprites/world/",
+    "floors": [
+      "floor_wood_01",
+      "floor_stone_01",
+      "floor_cobble_01"
+    ],
+    "walls": [
+      "wall_stone_north",
+      "wall_stone_south",
+      "wall_stone_corner_ne",
+      "wall_stone_corner_nw",
+      "stone_column"
+    ],
+    "doors": [
+      "door_wood_closed_south",
+      "door_wood_open_south"
+    ],
+    "props": [
+      "bed_single",
+      "table_small",
+      "chair_wood",
+      "chest_small",
+      "bookshelf",
+      "fireplace",
+      "bench",
+      "notice_board",
+      "market_food_stall",
+      "market_cloth_stall",
+      "throne",
+      "weapon_rack",
+      "prison_bars",
+      "banner_blue",
+      "banner_red"
+    ]
+  },
+  "render_contract": {
+    "tile_size_canvas_px": 32,
+    "character_draw_canvas_px": 80,
+    "terrain_behavior": "terrain/floor patches remain tile-bound visual layers",
+    "building_behavior": "modular visual objects are assembled through render-only debug-client placements",
+    "z_policy": "object_overlay renderables are sorted by anchor y with characters",
+    "filtering": "nearest",
+    "mechanics": null
+  },
+  "automated_verification": {
+    "npm run verify:assets": "pass",
+    "npm run build:client": "pass",
+    "npm run build:server": "pass",
+    "npm run verify:quick": "pass 9/9"
+  },
+  "visual_review": {
+    "status": "pass",
+    "screenshot_viewport": "900x700",
+    "canvas_dimensions": {
+      "width": 1024,
+      "height": 1024
+    },
+    "displayed_canvas_at_review_viewport": {
+      "width": 864,
+      "height": 864
+    },
+    "measurements": {
+      "displayed_scale": 0.8438,
+      "character_height_displayed_px": 67.5,
+      "door_height_displayed_px": 62.1
+    },
+    "checks": {
+      "characters_remain_at_accepted_scale": true,
+      "doors_remain_human_passable": true,
+      "furniture_reads_at_plausible_size": true,
+      "walls_read_as_vertical_boundaries": true,
+      "rooms_are_visibly_walk_in_spaces": true,
+      "floor_area_is_readable": true,
+      "wall_corners_connect_acceptably": true,
+      "doors_align_with_wall_openings": true,
+      "door_threshold_is_visually_clear": true,
+      "props_do_not_block_visual_navigation_unintentionally": true,
+      "nearest_neighbor": true,
+      "image_smoothing_disabled": true,
+      "no_canvas_squashing": true,
+      "no_sprite_cropping_observed": true,
+      "z_order_acceptable_near_walls_doors_props": true,
+      "characters_remain_visible_and_anchored": true
+    },
+    "screenshots": [
+      "screenshots/01_building_small_house.png",
+      "screenshots/02_building_small_house_door_threshold.png",
+      "screenshots/03_building_market_shop.png",
+      "screenshots/04_building_castle_meeting_hall.png",
+      "screenshots/05_building_z_order_wall_door.png",
+      "screenshots/06_building_character_walk_space.png"
+    ]
+  },
+  "claims": {
+    "walk_in_buildings_visually_assembled": true,
+    "doors_visually_human_passable": true,
+    "rooms_visually_readable": true,
+    "modular_floor_wall_door_prop_layout_reviewed": true,
+    "mechanics_null": true,
+    "server_protocol_changed": false,
+    "server_changed": false,
+    "shared_maps_changed": false,
+    "collision_changed": false,
+    "walkability_changed": false,
+    "npc_behavior_changed": false,
+    "mob_behavior_changed": false,
+    "roof_hiding_added": false,
+    "production_map_promoted": false
+  },
+  "notes": [
+    "This receipt accepts only debug-client visual building assembly proof.",
+    "Scenes use existing visual source assets and render-only object placements.",
+    "Door thresholds are visual only and do not encode entry, collision, locks, ownership, or walkability.",
+    "Roof overlay hiding remains a separate future gate.",
+    "No server/protocol/shared map/NPC/mob behavior is introduced here."
+  ]
+}

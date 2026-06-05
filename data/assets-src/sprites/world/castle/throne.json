@@ -1,0 +1,29 @@
+{
+  "id": "throne",
+  "asset_type": "world_object",
+  "source_kind": "sprite",
+  "image": "throne.png",
+  "frame": {
+    "width": 64,
+    "height": 96
+  },
+  "rendering": {
+    "filtering": "nearest",
+    "display_only": true,
+    "draw_scale": 1,
+    "anchor": {
+      "type": "bottom_center",
+      "source_pixels": [
+        32,
+        90
+      ]
+    },
+    "z_policy": "sort_by_anchor_y",
+    "layer": "object_overlay"
+  },
+  "mechanics": null,
+  "visual_notes": [
+    "Throne visual only.",
+    "Does not encode authority, interaction, or collision."
+  ]
+}

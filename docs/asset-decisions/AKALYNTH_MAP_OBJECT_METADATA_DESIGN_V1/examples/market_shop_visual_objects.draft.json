@@ -1,0 +1,83 @@
+{
+  "id": "market_shop_visual_objects_draft",
+  "status": "draft_visual_only_example",
+  "source_receipt": "AKALYNTH_HIGH_CITY_BLOCK_LAYOUT_REFINEMENT_V1",
+  "visual_objects": [
+    {
+      "id": "vis_market_food_stall_01",
+      "asset_id": "market_food_stall",
+      "plane": "visual",
+      "position": {
+        "tile": [
+          21,
+          10
+        ],
+        "floor": 0
+      },
+      "render": {
+        "layer": "object_overlay",
+        "anchor": "bottom_center",
+        "z_policy": "sort_by_anchor_y",
+        "draw_scale": 1
+      },
+      "mechanics": null,
+      "authority": {
+        "collision": "none",
+        "walkability": "none",
+        "interaction": "none",
+        "server_entity": "none",
+        "ownership": "none",
+        "door_permissions": "none",
+        "npc_behavior": "none",
+        "mob_behavior": "none",
+        "shop": "none",
+        "dialogue": "none",
+        "spawn": "none",
+        "ai": "none",
+        "combat": "none"
+      },
+      "notes": [
+        "Visual food stall only.",
+        "Does not create shop inventory or transactions."
+      ]
+    },
+    {
+      "id": "vis_market_awning_01",
+      "asset_id": "market_awning_overlay",
+      "plane": "visual",
+      "position": {
+        "tile": [
+          21,
+          8
+        ],
+        "floor": 0
+      },
+      "render": {
+        "layer": "floor_overlay",
+        "anchor": "bottom_center",
+        "z_policy": "fixed_above_building",
+        "draw_scale": 1
+      },
+      "mechanics": null,
+      "authority": {
+        "collision": "none",
+        "walkability": "none",
+        "interaction": "none",
+        "server_entity": "none",
+        "ownership": "none",
+        "door_permissions": "none",
+        "npc_behavior": "none",
+        "mob_behavior": "none",
+        "shop": "none",
+        "dialogue": "none",
+        "spawn": "none",
+        "ai": "none",
+        "combat": "none"
+      },
+      "notes": [
+        "Visual awning only.",
+        "Does not create protected area, roof authority, or shop behavior."
+      ]
+    }
+  ]
+}

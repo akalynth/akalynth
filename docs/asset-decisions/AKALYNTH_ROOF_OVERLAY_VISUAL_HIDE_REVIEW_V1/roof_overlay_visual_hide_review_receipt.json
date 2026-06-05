@@ -1,0 +1,135 @@
+{
+  "id": "AKALYNTH_ROOF_OVERLAY_VISUAL_HIDE_REVIEW_V1",
+  "status": "accepted_roof_overlay_visual_hide_review",
+  "scope": "debug-client visual-only roof overlay presentation review",
+  "input_receipts": [
+    "AKALYNTH_ENGINE_IMPORT_SMOKE_TEST_V1",
+    "AKALYNTH_CHARACTER_VISUAL_PLACEMENT_REVIEW_V1",
+    "AKALYNTH_DEBUG_CLIENT_VISUAL_SCALE_TUNING_V1",
+    "AKALYNTH_WORLD_OBJECT_VISUAL_SCALE_AUDIT_V1",
+    "AKALYNTH_WALK_IN_BUILDING_VISUAL_ASSEMBLY_V1"
+  ],
+  "accepted_claim": "The debug client can present visual-only roof overlays for accepted modular walk-in buildings, including visible, hidden, and faded review states.",
+  "not_claimed": [
+    "houses are implemented",
+    "roofs hide during real gameplay",
+    "entry detection is implemented",
+    "interiors are server-authoritative",
+    "server house zones",
+    "door behavior",
+    "ownership",
+    "lock state",
+    "collision correctness",
+    "walkability correctness",
+    "protocol fields",
+    "production map promotion",
+    "NPC behavior",
+    "mob behavior"
+  ],
+  "scenes": [
+    "roof_small_house_outside",
+    "roof_small_house_hidden",
+    "roof_small_house_faded",
+    "roof_market_shop_outside",
+    "roof_castle_meeting_hall_outside",
+    "roof_z_order_entry_threshold"
+  ],
+  "roof_visual_assets": {
+    "source_root": "data/assets-src/sprites/world/roofs/",
+    "assets": [
+      "roof_red_small_overlay",
+      "roof_red_large_overlay",
+      "roof_castle_overlay",
+      "market_awning_overlay"
+    ],
+    "asset_type": "roof_overlay",
+    "visibility_modes": [
+      "visible",
+      "hidden",
+      "faded"
+    ],
+    "mechanics": null
+  },
+  "render_contract": {
+    "tile_size_canvas_px": 32,
+    "character_draw_canvas_px": 80,
+    "layer": "roof_overlay",
+    "z_policy": "fixed_above_building",
+    "visibility": {
+      "visible": "draw roof overlay above assembled building in review mode",
+      "hidden": "skip drawing roof overlay in review mode",
+      "faded": "draw roof overlay at alpha 0.38 in review mode"
+    },
+    "filtering": "nearest",
+    "mechanics": null
+  },
+  "automated_verification": {
+    "npm run verify:assets": "pass",
+    "npm run build:client": "pass",
+    "npm run build:server": "pass",
+    "npm run verify:quick": "pass 9/9"
+  },
+  "visual_review": {
+    "status": "pass",
+    "screenshot_viewport": "900x700",
+    "canvas_dimensions": {
+      "width": 1024,
+      "height": 1024
+    },
+    "displayed_canvas_at_review_viewport": {
+      "width": 864,
+      "height": 864
+    },
+    "measurements": {
+      "displayed_scale": 0.8438,
+      "character_height_displayed_px": 67.5,
+      "door_height_displayed_px": 62.1
+    },
+    "checks": {
+      "roof_aligns_with_accepted_building_footprint": true,
+      "roof_does_not_break_pixel_crispness": true,
+      "roof_hides_cleanly_in_review_mode": true,
+      "roof_fades_cleanly_in_review_mode": true,
+      "hidden_mode_exposes_walk_in_interior": true,
+      "faded_mode_exposes_walk_in_interior": true,
+      "door_threshold_remains_readable": true,
+      "characters_remain_visible_and_anchored": true,
+      "z_order_acceptable_around_wall_tops_and_doors": true,
+      "nearest_neighbor": true,
+      "image_smoothing_disabled": true,
+      "no_canvas_squashing": true
+    },
+    "screenshots": [
+      "screenshots/01_roof_small_house_outside.png",
+      "screenshots/02_roof_small_house_hidden.png",
+      "screenshots/03_roof_small_house_faded.png",
+      "screenshots/04_roof_market_shop_outside.png",
+      "screenshots/05_roof_castle_meeting_hall_outside.png",
+      "screenshots/06_roof_z_order_entry_threshold.png"
+    ]
+  },
+  "claims": {
+    "visual_roof_overlays_imported": true,
+    "roof_overlay_renderer_added": true,
+    "visible_hidden_faded_review_states_supported": true,
+    "accepted_building_assemblies_reused": true,
+    "mechanics_null": true,
+    "server_changed": false,
+    "server_protocol_changed": false,
+    "shared_maps_changed": false,
+    "collision_changed": false,
+    "walkability_changed": false,
+    "ownership_or_lock_state_added": false,
+    "house_zone_logic_added": false,
+    "door_behavior_added": false,
+    "npc_behavior_changed": false,
+    "mob_behavior_changed": false,
+    "production_map_promoted": false
+  },
+  "notes": [
+    "This receipt accepts only debug-client roof overlay presentation proof.",
+    "Inside/hidden/faded states are deterministic review modes, not server-authoritative entry state.",
+    "Roof overlays do not encode house ownership, entry, collision, protection zone, access list, or door permissions.",
+    "No server/protocol/shared map/NPC/mob behavior is introduced here."
+  ]
+}

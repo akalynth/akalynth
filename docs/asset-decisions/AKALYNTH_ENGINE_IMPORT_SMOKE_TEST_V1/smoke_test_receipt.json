@@ -1,0 +1,118 @@
+{
+  "id": "AKALYNTH_ENGINE_IMPORT_SMOKE_TEST_V1",
+  "status": "accepted_display_only_smoke_test",
+  "row_order": [
+    "south",
+    "north",
+    "east",
+    "west"
+  ],
+  "scope": "debug-client visual-only character sheet rendering",
+  "input_assets": [
+    "base_human_male_01",
+    "guard_city_01",
+    "mage_apprentice_01",
+    "skeleton_warrior_01"
+  ],
+  "source": {
+    "pack": "_TEMP/_extracted/AKALYNTH_CHARACTER_WALK_ANIMATION_V1/AKALYNTH_CHARACTER_WALK_ANIMATION_V1",
+    "sheet_kind": "native_64_walk_4dir_4f",
+    "frame_size_px": [
+      64,
+      64
+    ],
+    "sheet_size_px": [
+      256,
+      256
+    ],
+    "direction_rows": [
+      "south",
+      "north",
+      "east",
+      "west"
+    ],
+    "walk_columns": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "feet_anchor_px": [
+      32,
+      54
+    ]
+  },
+  "automated_verification": {
+    "npm run verify:assets": "pass",
+    "npm run build:client": "pass",
+    "npm run build:server": "pass",
+    "npm run verify:quick": "pass"
+  },
+  "manual_visual_review": {
+    "status": "pass",
+    "screenshots": [
+      "screenshots/01_idle_south.png",
+      "screenshots/02_walk_south.png",
+      "screenshots/03_walk_north.png",
+      "screenshots/04_walk_east.png",
+      "screenshots/05_walk_west.png",
+      "screenshots/06_scale_on_map.png"
+    ],
+    "checks": {
+      "nearest_neighbor": true,
+      "no_cropping": true,
+      "correct_direction_rows": true,
+      "correct_walk_columns": true,
+      "stable_feet_anchor": true,
+      "map_alignment_acceptable": true
+    },
+    "evidence": {
+      "screenshot_viewport_px": [
+        900,
+        700
+      ],
+      "canvas_source_px": [
+        384,
+        384
+      ],
+      "captured_from": "http://localhost:5173/?visual-smoke=<scenario>",
+      "canvas_contract_check": [
+        "walk_south matched south row column 2",
+        "walk_north matched north row column 2",
+        "walk_east matched east row column 2",
+        "walk_west matched west row column 2",
+        "idle_south screenshot captured; renderer code forces south row 0 and column 0"
+      ]
+    }
+  },
+  "claims": {
+    "visual_source_assets_imported": true,
+    "debug_client_can_render_character_sheets": true,
+    "mechanics_null": true,
+    "server_protocol_changed": false,
+    "collision_changed": false,
+    "walkability_changed": false,
+    "npc_behavior_changed": false,
+    "mob_behavior_changed": false,
+    "production_map_promoted": false
+  },
+  "accepted_claim": "debug-client can render imported 64x64 4-direction walk sheets as display-only visual assets",
+  "non_claims": [
+    "production character system",
+    "NPC behavior",
+    "mob behavior",
+    "combat animation",
+    "cast animation",
+    "hurt/death animation",
+    "server-facing direction",
+    "map placement semantics",
+    "collision semantics",
+    "world tile promotion"
+  ],
+  "notes": [
+    "Accepted walk-pack row order is south, north, east, west.",
+    "Visual source manifests keep mechanics null.",
+    "No collision, walkability, combat, facing protocol, NPC behavior, or runtime authority is encoded by these visual assets.",
+    "Direction inference and visual-smoke frame overrides are debug-client local display logic only."
+  ]
+}
