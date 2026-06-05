@@ -33,6 +33,8 @@ const USAGE = `Akalynth Asset Factory — generate one raw asset.
   --prompt    path to a prompt file (data/assets-src/prompts/<class>/<name>.txt)
   --id        asset_id (akalynth_<type>_<name>_NNN); names the raw output
   --size      OpenAI image size (default 1024x1024; downscaled to 32px later, by hand)
+  --background  transparent | opaque | auto (default transparent). Use 'opaque' for
+              seamless terrain TILES (a tile is a full fill, not a cut-out object).
   --dry-run   print the request that WOULD be made; no network call
   --help      this help
 
@@ -51,9 +53,14 @@ if (has('--help') || process.argv.length <= 2) {
 const promptFile = arg('--prompt');
 const assetId = arg('--id');
 const size = arg('--size') || '1024x1024';
+const background = arg('--background') || 'transparent';
 if (!promptFile || !assetId) {
   console.error('error: --prompt and --id are required.\n');
   console.error(USAGE);
+  process.exit(1);
+}
+if (!['transparent', 'opaque', 'auto'].includes(background)) {
+  console.error(`error: --background must be transparent | opaque | auto (got '${background}').`);
   process.exit(1);
 }
 const promptPath = path.isAbsolute(promptFile) ? promptFile : path.join(REPO_ROOT, promptFile);
@@ -69,6 +76,7 @@ if (has('--dry-run')) {
   console.log('[asset-gen] DRY RUN — no network call.');
   console.log(`  model:  ${MODEL}`);
   console.log(`  size:   ${size}`);
+  console.log(`  bg:     ${background}`);
   console.log(`  prompt: ${promptPath}`);
   console.log(`  ${prompt.split('\n')[0]} …`);
   console.log(`  would POST ${ENDPOINT}`);
@@ -91,7 +99,7 @@ async function main() {
   const res = await fetch(ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({ model: MODEL, prompt, size, n: 1, background: 'transparent' }),
+    body: JSON.stringify({ model: MODEL, prompt, size, n: 1, background }),
   });
   if (!res.ok) {
     console.error(`error: image API ${res.status}: ${(await res.text()).slice(0, 400)}`);
