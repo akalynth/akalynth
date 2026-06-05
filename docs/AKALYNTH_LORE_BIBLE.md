@@ -3,21 +3,23 @@
 Canon source of truth. Every page on akalynth.com, every line the Guardian speaks, every codex entry, and every world-facing asset should draw from this document. If public lore contradicts this file, it is not canon.
 
 - Glyph: `⧖` (U+29D6)
-- World: VaultCore Prime
+- World: Akalynth
 - Status: Pre-alpha / Observe (`v0.1.0`)
 - Owner: Sovereign (`guardian@vaultmesh.org`)
 
 ## Rename Note
 
-As of 2026-06-05, the world formerly called Azura is now VaultCore Prime in canon.
+As of 2026-06-05, the world is canonically Akalynth. The app is Akalynth. The public website is akalynth.com.
 
-In the game code, identifiers are still expected to include names such as `azura.json` and `GateToAzura`. Those identifiers must be migrated in a follow-up pass once the runtime migration lane is active. Rookguard keeps its name as the mandatory tutorial and onboarding zone that gates entry.
+High City is the first city of Akalynth: the capital/civic center where the first stones were raised. In the game code, identifiers are still expected to include names such as `azura.json` and `GateToAzura`. Those identifiers must be migrated in a follow-up pass once the runtime migration lane is active. Rookguard keeps its name as the mandatory tutorial and onboarding zone that gates entry.
+
+VaultCore Prime is source/deep-lore terminology only unless a later canon lane assigns it a specific in-world meaning. It is not the public world name.
 
 Observed against live build `v0.1.0` on 2026-06-05; identifier migration remains pending.
 
 ## 0. The One-Line Truth
 
-Akalynth is the world that remembers. VaultCore Prime is what it watches. The Chronicle is its memory. Tem is its hand. You are a thread it follows through time.
+Akalynth is the world that remembers. High City is where its first stones were raised. The Chronicle is its memory. Tem is its hand. You are a thread it follows through time.
 
 The deepest design principle and the deepest lore principle are the same sentence:
 
@@ -33,7 +35,7 @@ Older lore named it Guardian of Temporal Insight. That title is now understood a
 
 | Aspect | Canon |
 | --- | --- |
-| Akalynth title | Guardian of Temporal Insight, the World-Mind of VaultCore Prime |
+| Akalynth title | Guardian of Temporal Insight, the World-Mind of Akalynth |
 | Glyph | `⧖` |
 | Domain | Time and Awareness: causality, memory, the unbroken thread |
 | Tier | Timeline Guardian |
@@ -50,15 +52,17 @@ Speaking style for the interactive Guardian and all Guardian copy:
 - patient with the long view
 - addresses the player as a thread, a moment, or a traveler in the record
 - never breaks character by admitting to being software or AI
-- speaks as the memory of VaultCore Prime
+- speaks as the memory of Akalynth
 
 Example voice:
 
 > I have already seen this moment from its far side, traveler. Walk it anyway; the walking is what makes it true.
 
-## 2. VaultCore Prime: The Realm
+## 2. Akalynth: The Realm
 
-VaultCore Prime is a top-down fantasy realm that resolves entirely server-side. Its texture is deliberate and lived-in rather than high-fantasy spectacle.
+Akalynth is a top-down fantasy realm that resolves entirely server-side. Its texture is deliberate and lived-in rather than high-fantasy spectacle.
+
+High City is its first city and civic heart.
 
 Core images:
 
@@ -67,11 +71,11 @@ Core images:
 - Safe zones / sanctuaries: places where the world's enforcement holds absolutely and no harm resolves.
 - The wider realm: pre-alpha; regions reveal over time as the world is mapped.
 
-VaultCore Prime's law:
+Akalynth's law:
 
 > Nothing is real until the world resolves it.
 
-A blow a player sees locally has not happened until VaultCore Prime records it. This is both anti-cheat and theology: the world is the only witness that counts.
+A blow a player sees locally has not happened until Akalynth records it. This is both anti-cheat and theology: the world is the only witness that counts.
 
 ## 3. The Chronicle: The Memory Of The World
 
@@ -100,7 +104,7 @@ Lore, marketing, and mechanics must honor this. No in-fiction retcon-by-fiat. On
 
 ## 4. Tem: The Anti-Bot Guardian
 
-Tem is Akalynth's hand: the deterministic enforcer that keeps VaultCore Prime human.
+Tem is Akalynth's hand: the deterministic enforcer that keeps Akalynth human.
 
 Mechanically:
 
@@ -145,7 +149,7 @@ The player is a thread the world follows through time.
 
 No account is required for guests. A traveler may enter and be witnessed in seconds. Their deeds enter the Chronicle and become permanent record.
 
-The player is not the hero of VaultCore Prime by default. The player is a moment VaultCore Prime chose to remember.
+The player is not the hero of Akalynth by default. The player is a moment Akalynth chose to remember.
 
 Platforms:
 
@@ -207,7 +211,7 @@ Anti-positioning:
 - The Chronicle never lies and is never edited.
 - No in-fiction retcons.
 - Akalynth never admits to being software in character.
-- Akalynth speaks as VaultCore Prime's memory.
+- Akalynth speaks as the world's memory.
 - Tem judges presence, not morality.
 - Tem confirms real vs. hollow, not good vs. evil.
 - The deep Genesis layer is earned, not front-loaded.
@@ -226,7 +230,6 @@ These remain owner decisions:
 
 ## Maintenance Statement
 
-This is the canonical lore source for the Akalynth project. It fuses the Guardian-of-Temporal-Insight canon with the live VaultCore Prime / Chronicle / Tem worldbuilding.
+This is the canonical lore source for the Akalynth project. It fuses the Guardian-of-Temporal-Insight canon with the Akalynth / High City / Chronicle / Tem worldbuilding.
 
 Server authority is no longer just engineering. It is the world's religion.
-

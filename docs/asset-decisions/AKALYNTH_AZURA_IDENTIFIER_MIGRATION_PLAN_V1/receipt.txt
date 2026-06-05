@@ -1,0 +1,64 @@
+AKALYNTH_AZURA_IDENTIFIER_MIGRATION_PLAN_V1
+status: implemented_pending_review
+scope: docs-only identifier migration plan
+
+Primary input:
+- docs/AKALYNTH_LORE_BIBLE.md
+
+Created docs:
+- AZURA_IDENTIFIER_INVENTORY.md
+- AZURA_IDENTIFIER_MIGRATION_PLAN.md
+- COMPATIBILITY_AND_ALIAS_STRATEGY.md
+- VALIDATION_AND_ROLLOUT_PLAN.md
+- CLAIM_BOUNDARY.md
+- receipt.txt
+
+Canon decision carried forward:
+- Akalynth is the world/app/site.
+- High City is the first city of Akalynth.
+- Rookguard keeps its name.
+- Azura remains an old runtime city/map identifier pending migration.
+
+Planning decisions:
+- display city name: High City
+- canonical map/city id: high_city
+- new wire map name: HighCity
+- future map file: high_city.json
+- future gate tile symbol: GateToHighCity
+- legacy aliases: Azura, azura, azura.json, GateToAzura, gate_to_azura, Azura:H*
+- protocol bump recommended when server starts emitting HighCity: 1.2.0
+
+Claims:
+- azura_identifier_surface_inventoried: true
+- future_canonical_names_selected: true
+- akalynth_world_name_preserved: true
+- high_city_first_city_name_selected: true
+- alias_strategy_defined: true
+- migration_phases_defined: true
+- validation_plan_defined: true
+- runtime_identifier_migration_performed: false
+- map_file_renamed: false
+- gate_tile_renamed: false
+- protocol_changed: false
+- shared_maps_changed: false
+- shared_types_changed: false
+- server_changed: false
+- android_changed: false
+- browser_changed: false
+- deploy_performed: false
+- production_promoted: false
+
+Verification:
+- Azura identifier inventory completed from tracked repo references
+- docs-only migration plan created
+- canon hierarchy correction applied: Akalynth is the world/app/site and High City is the first city
+- stale VaultCore Prime migration target references absent
+- forbidden runtime migration claims absent
+- runtime/shared/server/browser/Android/phone/studio/data diffs absent for this lane
+- npm run verify:quick PASS 9/9
+
+Valid accepted status after review:
+- accepted_azura_identifier_migration_plan
+
+Next recommended lane:
+- AKALYNTH_HIGH_CITY_ALIAS_COMPAT_PREP_V1
