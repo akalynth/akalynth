@@ -12,6 +12,9 @@ Used by automation and operations only.
 - `infra/docker/akalynth-container-entrypoint` — container entrypoint script.
 - `infra/systemd/akalynth.service` — systemd unit for the direct Node runtime.
 - `infra/systemd/akalynth-docker.service` — systemd unit for the Docker Compose runtime.
+- `infra/systemd/akalynth-beta.service.d/10-crashloop-guard.conf` — beta start-limit
+  drop-in (audit #144): widens `StartLimitIntervalSec` to 60s so a slow crash-loop
+  trips the limit and parks the unit instead of restarting forever.
 - `infra/deploy_beta.sh` — beta deploy helper.
 - `infra/caddy/Caddyfile.example` — reverse-proxy template for the prod box.
 - `infra/PROVISIONING.md` — runbook for provisioning the prod and dev/Android boxes.
