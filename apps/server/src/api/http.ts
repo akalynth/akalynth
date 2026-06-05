@@ -56,6 +56,11 @@ export interface ApiDeps {
   // Property Ownership v0 (public, anonymized)
   getPropertyMarket?: () => PropertyMarketResponse;
   getPropertyLedger?: (property_id: string) => PropertyLedgerResponse | null;
+  // Account Platform v1 (E2): self-contained router for /v1/accounts/*.
+  handleAccount?: (req: IncomingMessage, res: ServerResponse) => boolean | Promise<boolean>;
+  // Account Platform v1 (E4): catalogs + account-gated character endpoints
+  // (/v1/worlds, /v1/outfits, /v1/characters, /v1/characters/select).
+  handleCharacter?: (req: IncomingMessage, res: ServerResponse) => boolean | Promise<boolean>;
 }
 
 function json(res: ServerResponse, status: number, body: unknown) {
@@ -144,6 +149,21 @@ export function handleHttp(
   const url = new URL(req.url ?? '/', 'http://localhost');
   const path = url.pathname;
   const method = (req.method ?? 'GET').toUpperCase();
+
+  // Account Platform v1 (E2): delegate the whole /v1/accounts/* surface to the
+  // self-contained account router (parses body/cookies/CSRF, sets Set-Cookie).
+  if (path.startsWith('/v1/accounts/') && deps.handleAccount) {
+    return deps.handleAccount(req, res);
+  }
+
+  // Account Platform v1 (E4): catalogs + account-gated character surface.
+  // (Legacy /v1/characters/create is NOT delegated — it stays guest-era.)
+  if (
+    deps.handleCharacter &&
+    (path === '/v1/worlds' || path === '/v1/outfits' || path === '/v1/characters' || path === '/v1/characters/select')
+  ) {
+    return deps.handleCharacter(req, res);
+  }
 
   // Health
   if (method === 'GET' && path === '/v1/health') {
