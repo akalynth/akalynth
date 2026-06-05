@@ -1,0 +1,78 @@
+AKALYNTH_HIGH_CITY_CANONICAL_WORLD_DECISION_V1
+status: implemented_pending_review
+scope: docs-only canonical-world decision record (no runtime mutation)
+
+Closure target:
+- closed_high_city_canonical_world_decided_no_runtime_mutation
+
+Decision:
+- Akalynth is the world/app/site (not a city name).
+- High City is a city inside Akalynth and is the canonical first city.
+- VaultCore Prime is High City's old/source name (deep lore only).
+- Azura remains a legacy runtime identifier; rename deferred to a later lane.
+- Rookguard keeps its name as the onboarding gate.
+
+Owner canonical district tree (authoritative):
+- Sky Spires
+- Dream Sanctums
+- Trinity Nexus
+- Market District
+- Archive Vaults
+- Undercity
+- Ley Core
+
+Inputs:
+- source-material/cosmic-root/AKALYNTH_LORE_BIBLE.md
+- docs/asset-decisions/AKALYNTH_VAULTCORE_WORLD_BIBLE_EXTRACTION_V1/
+- docs/asset-decisions/AKALYNTH_AZURA_IDENTIFIER_MIGRATION_PLAN_V1/
+- existing AKALYNTH_HIGH_CITY_* map/authority lanes
+- VaultCore source commit: 7c096353218ff9e2114d1e0b2226eee3f75a5d9e
+
+Created docs:
+- CANONICAL_WORLD_DECISION.md
+- DECISION_INPUTS_AND_PRECEDENT.md
+- SCOPE_AND_CONSEQUENCES.md
+- CLAIM_BOUNDARY.md
+- receipt.txt
+
+Open reconciliation items (deferred, recorded not resolved):
+- flamebound_emberworks_district_placement: open
+- sky_spires_lore_role: open
+- ley_core_lore_role: open
+- world_bible_district_name_alignment: open
+
+Claims:
+- high_city_ratified_as_canonical_first_city: true
+- akalynth_is_world_not_city: true
+- vaultcore_prime_preserved_as_old_source_name: true
+- owner_canonical_district_tree_recorded: true
+- open_items_recorded_not_silently_resolved: true
+- promotion_explicitly_deferred: true
+- azura_runtime_renamed: false
+- shared_maps_changed: false
+- shared_types_changed: false
+- protocol_changed: false
+- protocol_version_bumped: false
+- server_changed: false
+- collision_changed: false
+- walkability_changed: false
+- map_object_changed: false
+- npc_behavior_added: false
+- economy_changed: false
+- character_creation_changed: false
+- production_map_promoted: false
+- cosmic_root_code_imported: false
+- vaultcore_scripts_executed: false
+- deploy_performed: false
+
+Verification:
+- required docs created
+- canonical decision statement present
+- forbidden runtime claims absent
+- npm run verify:quick: PASS 9/9
+
+Valid accepted status after review:
+- accepted_high_city_canonical_world_decision
+
+Next recommended lane:
+- AKALYNTH_HIGH_CITY_DISTRICT_RECONCILIATION_V1
