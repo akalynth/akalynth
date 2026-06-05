@@ -38,6 +38,20 @@ interface AuditReceipt {
 const chainPaths = resolveChainPaths(path.resolve(process.cwd()));
 const RECEIPTS_PATH = chainPaths.receiptsPath;
 
+// CLI override: `--receipts <path>` / `--receipts=<path>` runs the verifier
+// against any supplied chain (CI fixtures, the live beta chain). Priority:
+// flag > AKALYNTH_RECEIPT_CHAIN_PATH (resolveChainPaths) > default.
+function receiptsArg(): string | null {
+  const argv = process.argv.slice(2);
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === '--receipts' && argv[i + 1]) return argv[i + 1];
+    if (a.startsWith('--receipts=')) return a.slice('--receipts='.length);
+  }
+  return null;
+}
+const RECEIPTS_OVERRIDE = receiptsArg();
+
 function errorOut(msg: string): never {
   console.error(`[verify-lifecycle] ERROR: ${msg}`);
   process.exit(2);
@@ -119,7 +133,7 @@ function verifyLifecycle(receipts: AuditReceipt[]): string[] {
   return violations;
 }
 
-const absReceipts = path.resolve(process.cwd(), RECEIPTS_PATH);
+const absReceipts = path.resolve(process.cwd(), RECEIPTS_OVERRIDE ?? RECEIPTS_PATH);
 const receipts = parseReceipts(absReceipts);
 const violations = verifyLifecycle(receipts);
 

@@ -1,0 +1,3 @@
+{"sequence":1,"timestamp":"2026-01-01T00:00:00.000Z","actor_id":"server","action":"server_boot","result":"ok"}
+{"sequence":2,"timestamp":"2026-01-01T00:00:01.000Z","actor_id":"server","action":"server_heartbeat","result":"ok"}
+{"sequence":3,"timestamp":"2026-01-01T00:00:02.000Z","actor_id":"server","action":"server_boot","result":"ok"}

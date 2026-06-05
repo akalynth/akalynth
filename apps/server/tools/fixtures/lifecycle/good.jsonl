@@ -1,0 +1,7 @@
+{"sequence":1,"timestamp":"2026-01-01T00:00:00.000Z","actor_id":"server","action":"server_boot","result":"ok"}
+{"sequence":2,"timestamp":"2026-01-01T00:00:01.000Z","actor_id":"server","action":"server_heartbeat","result":"ok"}
+{"sequence":3,"timestamp":"2026-01-01T00:00:02.000Z","actor_id":"p_fixture","action":"login","result":"ok"}
+{"sequence":4,"timestamp":"2026-01-01T00:00:03.000Z","actor_id":"system","action":"character_create","result":"ok"}
+{"sequence":5,"timestamp":"2026-01-01T00:00:04.000Z","actor_id":"server","action":"server_shutdown","result":"ok"}
+{"sequence":6,"timestamp":"2026-01-01T00:00:05.000Z","actor_id":"server","action":"server_boot","result":"ok"}
+{"sequence":7,"timestamp":"2026-01-01T00:00:06.000Z","actor_id":"server","action":"server_shutdown","result":"ok"}

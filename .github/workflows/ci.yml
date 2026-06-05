@@ -277,6 +277,15 @@ jobs:
           npm run verify:item-pickup-type
           npm run verify:anticheat-persistence
 
+      - name: Lifecycle fixtures (boot/shutdown invariant, negative-case gate)
+        # Fast, dependency-free: runs verify-lifecycle against committed good +
+        # double-boot fixtures via --receipts. Proves the verifier FAILS on a
+        # double-boot chain (audit #146) — the good-only generated fixtures above
+        # never exercise the negative case. No DB/server/chronicle key needed.
+        run: |
+          cd apps/server
+          npm run test:lifecycle-fixtures
+
       - name: DB-backed verifiers (Phase 2)
         # Verify the SQLite projection (materialized above) matches the
         # canonical receipts. rate-limits is excluded here: it is an
