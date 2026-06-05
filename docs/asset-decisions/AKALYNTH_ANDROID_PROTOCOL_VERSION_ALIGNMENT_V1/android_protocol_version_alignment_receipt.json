@@ -1,0 +1,70 @@
+{
+  "id": "AKALYNTH_ANDROID_PROTOCOL_VERSION_ALIGNMENT_V1",
+  "status": "closed_android_protocol_version_aligned_local_debug_no_gameplay_authority_change",
+  "scope": "Android debug client and local development server protocol-version alignment only",
+  "purpose": "Make the Android debug client and current-source local development server agree on protocol version so emulator testing can proceed.",
+  "classification": {
+    "shared_protocol_version": "1.1.0",
+    "android_protocol_version": "1.1.0",
+    "server_health_app_version": "0.1.0",
+    "mismatch_cause": [
+      "Server welcome frames used the server app VERSION constant instead of the shared protocol PROTOCOL_VERSION.",
+      "Local port 3000 was already occupied, so current-source validation used an isolated local server on port 3010."
+    ],
+    "decision": "Use the shared protocol PROTOCOL_VERSION for WebSocket welcome frames. Leave the server app VERSION used by health/build reporting unchanged."
+  },
+  "implementation": {
+    "server_welcome_uses_shared_protocol_version": true,
+    "android_protocol_constant_changed": false,
+    "shared_protocol_constant_changed": false,
+    "protocol_message_shape_changed": false,
+    "android_ui_parity_started": false,
+    "production_deploy_mutated": false
+  },
+  "android_validation": {
+    "emulator": "akalynth_pixel_api35",
+    "apk": "apps/android/app/build/outputs/apk/debug/app-debug.apk",
+    "debug_server_url_used": "ws://10.0.2.2:3010",
+    "url_set_by": "existing Android debug client saved server_url setting",
+    "result": "connected",
+    "screenshot": "screenshots/04_android_connected_protocol_aligned.png",
+    "notes": [
+      "The first Android retry reached the server and showed not_authenticated due to a stale guest token, not a protocol mismatch.",
+      "After clearing only the stale guest token, Android connected as a fresh guest.",
+      "No cleartext policy error appeared.",
+      "No protocol mismatch appeared."
+    ]
+  },
+  "verification": {
+    "shared_protocol_version_recorded": "pass",
+    "android_protocol_version_recorded": "pass",
+    "server_welcome_probe": "pass: {\"type\":\"welcome\",\"version\":\"1.1.0\"}",
+    "android_emulator_connected_without_protocol_mismatch": "pass",
+    "screenshots_captured": "pass",
+    "./scripts/verify_protocol_sync.sh": "pass",
+    "npm -w apps/server run build": "pass",
+    "npm run verify:quick": "pass 9/9"
+  },
+  "claims": {
+    "android_emulator_can_connect_to_local_debug_server_with_matching_protocol_version": true,
+    "gameplay_semantics_changed": false,
+    "protocol_message_shape_changed": false,
+    "production_deploy_changed": false,
+    "beta_or_staging_mutated": false,
+    "release_network_policy_changed": false,
+    "android_ui_parity_started": false,
+    "server_authority_changed_beyond_version_alignment": false
+  },
+  "protected_boundary": {
+    "server_gameplay_authority_changed": false,
+    "protocol_shape_changed": false,
+    "shared_maps_changed": false,
+    "shared_types_changed": false,
+    "collision_changed": false,
+    "walkability_changed": false,
+    "npc_or_mob_behavior_changed": false,
+    "economy_or_combat_changed": false,
+    "runtime_deploy_mutated": false
+  },
+  "closure": "closed_android_protocol_version_aligned_local_debug_no_gameplay_authority_change"
+}

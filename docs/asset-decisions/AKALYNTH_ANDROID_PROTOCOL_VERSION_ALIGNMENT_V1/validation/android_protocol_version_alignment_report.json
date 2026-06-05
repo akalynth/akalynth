@@ -1,0 +1,38 @@
+{
+  "id": "AKALYNTH_ANDROID_PROTOCOL_VERSION_ALIGNMENT_V1_VALIDATION",
+  "status": "pass",
+  "version_sources": {
+    "packages/shared/protocol.ts": "1.1.0",
+    "apps/android/app/src/main/java/com/akalynth/client/protocol/Protocol.kt": "1.1.0",
+    "apps/android/app/src/test/java/com/akalynth/client/protocol/ProtocolParityTest.kt": "expects 1.1.0",
+    "docs/PROTOCOL.md": "documents 1.1.0"
+  },
+  "server_probe": {
+    "url": "ws://127.0.0.1:3010",
+    "welcome": {
+      "type": "welcome",
+      "version": "1.1.0"
+    },
+    "result": "pass"
+  },
+  "android_probe": {
+    "emulator": "akalynth_pixel_api35",
+    "url": "ws://10.0.2.2:3010",
+    "result": "pass",
+    "visible_state": "Connected",
+    "screenshot": "../screenshots/04_android_connected_protocol_aligned.png"
+  },
+  "authority_boundary": {
+    "gameplay_semantics_changed": false,
+    "protocol_message_shape_changed": false,
+    "shared_maps_changed": false,
+    "shared_types_changed": false,
+    "runtime_deploy_mutated": false,
+    "android_ui_parity_started": false
+  },
+  "verification": {
+    "./scripts/verify_protocol_sync.sh": "pass",
+    "npm -w apps/server run build": "pass",
+    "npm run verify:quick": "pass 9/9"
+  }
+}
