@@ -140,15 +140,23 @@ function main() {
     process.exit(0);
   }
 
+  // Chain path priority: `--receipts <path>` / `--receipts=<path>` > positional
+  // path arg > CHRONICLE_LOG_PATH env. The flag lets the verifier run against any
+  // supplied chronicle log (CI fixtures, an exported chain) without env juggling.
+  const argv = process.argv.slice(2);
+  let flagPath: string | undefined;
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--receipts' && argv[i + 1]) { flagPath = argv[i + 1]; break; }
+    if (argv[i].startsWith('--receipts=')) { flagPath = argv[i].slice('--receipts='.length); break; }
+  }
+  const argPath = argv.find((arg) => !arg.startsWith('--'));
   const envLogPath = process.env.CHRONICLE_LOG_PATH?.trim();
-  if (!envLogPath) {
-    logFail('CHRONICLE_LOG_PATH not set');
+  const chosenPath = flagPath ?? argPath ?? envLogPath;
+  if (!chosenPath) {
+    logFail('no chronicle log path: pass --receipts <path>, a positional path, or set CHRONICLE_LOG_PATH');
     process.exit(1);
   }
-
-  // Find file path argument (skip flags starting with --)
-  const argPath = process.argv.slice(2).find((arg) => !arg.startsWith('--'));
-  const filePath = path.resolve(process.cwd(), argPath ?? envLogPath);
+  const filePath = path.resolve(process.cwd(), chosenPath);
   if (!fs.existsSync(filePath)) {
     logFail(`chronicle log missing at ${filePath}`);
     process.exit(1);
