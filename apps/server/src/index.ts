@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 import http from 'node:http';
-import { execSync } from 'node:child_process';
 import { blake3 } from '@noble/hashes/blake3';
 import stringify from 'fast-json-stable-stringify';
 import type { IncomingMessage, ServerResponse } from 'node:http';
@@ -58,6 +57,10 @@ import { parseCorsOrigins, corsHeadersFor, type CorsPolicy } from './api/cors.js
 import { createEmailSender, buildAccountEmail } from './account/email.js';
 
 import { createAuditLogger } from './audit/logger.js';
+import {
+  LifecycleVerifierError,
+  verifyLifecycleReceiptFile,
+} from './audit/lifecycleVerifier.js';
 import { createReceiptsReader } from './audit/reader.js';
 import path from 'node:path';
 import {
@@ -500,22 +503,15 @@ function verifyLifecycle(phase: 'boot' | 'shutdown', fromSequence?: number): boo
   }
 
   try {
-    execSync('npm run verify:lifecycle', {
-      cwd: process.cwd(),
-      stdio: 'pipe',
-      timeout: 30_000, // 30s max
-      env: {
-        ...process.env,
-        ...(fromSequence
-          ? { AKALYNTH_LIFECYCLE_FROM_SEQUENCE: String(fromSequence) }
-          : {}),
-      },
-    });
+    const result = verifyLifecycleReceiptFile(chainPaths.receiptsPath, { fromSequence });
+    if (result.violations.length > 0) {
+      throw new LifecycleVerifierError(result.violations.join('; '));
+    }
     console.log(`[lifecycle] Verification passed (${phase})`);
     return true;
   } catch (error) {
-    const exitCode = (error as { status?: number }).status ?? 1;
-    console.error(`[lifecycle] Verification FAILED (${phase}), exit code: ${exitCode}`);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`[lifecycle] Verification FAILED (${phase}): ${message}`);
 
     if (isProductionMode()) {
       console.error('[lifecycle] FATAL: Lifecycle verification failed in production');
