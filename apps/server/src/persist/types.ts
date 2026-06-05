@@ -156,6 +156,7 @@ export type ChronicleEventKind =
   | 'legendary_obtained'
   | 'legendary_lost'
   | 'origin_sealed'
+  | 'world_event'
   | 'property_acquired';
 
 // Phase 4.4 E2: Evidence reference for forensic linkage
@@ -376,6 +377,11 @@ export const RECEIPT_ACTIONS = {
 
   // Dialogue Contract v1: durable NPC talk counter (seeds dialogue variation)
   NPC_TALKED: 'npc_talked',
+
+  // World Events v0: server-authoritative event signals and contributions
+  WORLD_EVENT_STARTED: 'world_event_started',
+  WORLD_EVENT_CONTRIBUTION: 'world_event_contribution',
+  WORLD_EVENT_RESOLVED: 'world_event_resolved',
 
   // Property Ownership v0: house registry
   PROPERTY_CREATED: 'property_created',

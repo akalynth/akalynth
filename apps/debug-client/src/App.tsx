@@ -762,6 +762,7 @@ function DebugApp() {
               onStartWork={api.startWork}
               onTickWork={api.tickWork}
               onBuy={api.useSkill}
+              onWorldEventAction={api.useSkill}
               onUseItem={(itemId) => api.useSkill('item:use:' + itemId)}
               attackReady={attackReady}
               ritualReady={ritualReady}

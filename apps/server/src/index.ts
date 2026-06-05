@@ -205,6 +205,13 @@ import {
   failContract,
   getActiveContract,
 } from './world/work_contracts.js';
+import {
+  createWitnessMothBloomRuntime,
+  parseWitnessMothBloomSkillId,
+  recordWitnessMothBloomContribution,
+  startWitnessMothBloom,
+  witnessMothBloomPublicState,
+} from './world/world-events.js';
 import { chronicleAppend } from './witness/chronicleAdapter.js';
 import { verifyRulebookOrExit } from './rulebook/verifyRulebook.js';
 import {
@@ -1669,6 +1676,7 @@ const worlds = {
   Rookguard: createWorldState(loadSharedMap('rookguard.json')),
   Azura: createWorldState(loadSharedMap('azura.json')),
 } as const;
+const witnessMothBloom = createWitnessMothBloomRuntime();
 
 // Register place boundaries for presence tracking
 registerMapPlaces(worlds.Rookguard.map, 'Rookguard');
@@ -2663,6 +2671,7 @@ function applyCors(req: IncomingMessage, res: ServerResponse): boolean {
 
 function playLoopFor(s: Session) {
   const gateOpen = s.tutorial.move && s.tutorial.chat && s.tutorial.tem;
+  const bloom = witnessMothBloomPublicState(witnessMothBloom);
   let objective = 'Step onto the move rune';
 
   if (!s.tutorial.move) objective = 'Step onto the move rune';
@@ -2670,12 +2679,14 @@ function playLoopFor(s: Session) {
   else if (!s.tutorial.tem) objective = 'Answer Tem: AZURA';
   else if (!s.tutorial.gate) objective = 'Enter the Azura gate';
   else if (!s.heraldMet) objective = 'Seek the Azura herald in the southern plaza';
+  else if (bloom.phase === 'signal' || bloom.phase === 'investigation') objective = 'Help resolve the Witness Moth Bloom above Azura';
   else objective = 'Talk to the steward at guild hall';
 
   return {
     ...s.tutorial,
     gateOpen,
     objective,
+    lastEvent: bloom.phase === 'idle' ? null : `witness_moth_bloom_${bloom.phase}`,
   };
 }
 
@@ -5556,6 +5567,14 @@ function processSessionQueue(s: Session, now: number) {
 
         if (msg.npc_id === 'azura_herald' && !s.heraldMet) {
           s.heraldMet = true;
+          const bloomStart = startWitnessMothBloom(
+            witnessMothBloom,
+            { player_id: s.player!.id, map: s.currentMap, now_ms: Date.now() },
+            (receipt) => audit.write(receipt)
+          );
+          if (bloomStart.ok && bloomStart.started) {
+            broadcastToMap('Azura', ServerMessages.chatBroadcast('system', 'Witness Bloom', bloomStart.message));
+          }
           sendLoopUpdate(s, 'herald_met');
         }
         break;
@@ -5678,6 +5697,37 @@ function processSessionQueue(s: Session, now: number) {
           send(s.ws, ServerMessages.inventorySnapshot(invItems));
           if (hpChanged) sendWorldStateRefresh(s);
           send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { effect: effectMsg, item_type: itemType } }));
+          break;
+        }
+
+        const witnessMothContributionId = parseWitnessMothBloomSkillId(msg.skill_id);
+        if (witnessMothContributionId) {
+          if (!s.inWorld) {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_target', payload: { error: 'not_in_world' } }));
+            break;
+          }
+
+          const result = recordWitnessMothBloomContribution(
+            witnessMothBloom,
+            {
+              player_id: s.player.id,
+              map: s.currentMap,
+              contribution_id: witnessMothContributionId,
+              now_ms: Date.now(),
+            },
+            (receipt) => audit.write(receipt)
+          );
+
+          if (!result.ok) {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: result.reason, payload: result.payload }));
+            break;
+          }
+
+          send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: result.payload }));
+          sendLoopUpdate(s, result.resolved ? 'witness_moth_bloom_resolved' : 'witness_moth_bloom_progress');
+          if (result.recorded) {
+            broadcastToMap('Azura', ServerMessages.chatBroadcast('system', 'Witness Bloom', result.message));
+          }
           break;
         }
 

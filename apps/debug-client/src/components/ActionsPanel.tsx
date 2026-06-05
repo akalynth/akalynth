@@ -21,6 +21,12 @@ const SHOP_DEFS = [
   { skill_id: 'shop:healing_herb', label: 'Healing Herb', price: 5 },
 ] as const;
 
+const WITNESS_MOTH_ACTIONS = [
+  { skill_id: 'event:witness_moth_bloom:verify_testimony', label: 'Verify testimony', short: 'Read' },
+  { skill_id: 'event:witness_moth_bloom:craft_lantern_frame', label: 'Frame lantern', short: 'Frame' },
+  { skill_id: 'event:witness_moth_bloom:defend_scribes', label: 'Defend scribes', short: 'Guard' },
+] as const;
+
 interface ActionsPanelProps {
   stage: 0 | 1 | 2 | 3;
   compact?: boolean;
@@ -31,6 +37,7 @@ interface ActionsPanelProps {
   onStartWork: () => void;
   onTickWork: () => void;
   onBuy: (skillId: string) => void;
+  onWorldEventAction: (skillId: string) => void;
   onUseItem: (itemId: string) => void;
   attackReady: boolean;
   ritualReady: boolean;
@@ -55,6 +62,7 @@ export function ActionsPanel({
   onStartWork,
   onTickWork,
   onBuy,
+  onWorldEventAction,
   onUseItem,
   attackReady,
   ritualReady,
@@ -69,6 +77,10 @@ export function ActionsPanel({
   gold,
 }: ActionsPanelProps) {
   const inGuildHall = nearbyNpc?.npc_id === 'azura_steward';
+  const witnessMothOpen =
+    stage >= 3 &&
+    !!loop?.lastEvent?.startsWith('witness_moth_bloom_') &&
+    loop.lastEvent !== 'witness_moth_bloom_resolved';
   const sweepRemainSec = workContract ? Math.ceil(workContract.remaining_ms / 1000) : 0;
   const hotbarItems = inventory.slice(0, 3);
 
@@ -134,6 +146,16 @@ export function ActionsPanel({
                 Work
               </button>
             )}
+            {witnessMothOpen && WITNESS_MOTH_ACTIONS.map((action) => (
+              <button
+                key={action.skill_id}
+                className="action-btn mobile-hotbar-btn ritual-btn"
+                onClick={() => onWorldEventAction(action.skill_id)}
+                aria-label={action.label}
+              >
+                {action.short}
+              </button>
+            ))}
             {stage >= 2 && hotbarItems.map((item) => {
               const usable = isUsableItemType(item.item_type);
               const label = itemLabel(item.item_type);
@@ -255,6 +277,20 @@ export function ActionsPanel({
                   disabled={gold < item.price}
                 >
                   {item.label} ({item.price}g)
+                </button>
+              ))}
+            </div>
+          )}
+          {witnessMothOpen && (
+            <div className="shop-section">
+              <div className="shop-header">Witness Moth Bloom</div>
+              {WITNESS_MOTH_ACTIONS.map(action => (
+                <button
+                  key={action.skill_id}
+                  className="action-btn shop-btn"
+                  onClick={() => onWorldEventAction(action.skill_id)}
+                >
+                  {action.label}
                 </button>
               ))}
             </div>

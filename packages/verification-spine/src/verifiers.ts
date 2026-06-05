@@ -1,5 +1,5 @@
 /**
- * All Akalynth Verifiers (24 total + 3 prerequisites)
+ * All Akalynth Verifiers
  *
  * Dependency graph and registration for the verification spine.
  */
@@ -459,6 +459,18 @@ export function createDefaultRegistry(): VerifierRegistry {
     },
   };
 
+  const worldEventsVerifier: VerifierSpec = {
+    id: 'world-events',
+    title: 'World Events',
+    description: 'Verifies receipt-backed server-authoritative world event transitions',
+    phase: 2,
+    dependsOn: ['build'],
+    auditSafe: true,
+    async run(ctx) {
+      return runLegacyVerifier('apps/server/tools/verify-world-events.ts', 'world-events', ctx);
+    },
+  };
+
   const propertyVerifier: VerifierSpec = {
     id: 'property',
     title: 'Property Ownership',
@@ -552,6 +564,7 @@ export function createDefaultRegistry(): VerifierRegistry {
   registry.register(rateLimitsVerifier);
   registry.register(treasuryVerifier);
   registry.register(workContractsVerifier);
+  registry.register(worldEventsVerifier);
   registry.register(propertyVerifier);
 
   // Phase 3

@@ -1427,6 +1427,34 @@ export function materializeChronicle(
       break;
     }
 
+    // World event prototype: each accepted server-side event transition becomes
+    // a player Chronicle row. The event receipt stays canonical; SQLite is only
+    // the derived read model.
+    case RECEIPT_ACTIONS.WORLD_EVENT_STARTED:
+    case RECEIPT_ACTIONS.WORLD_EVENT_CONTRIBUTION:
+    case RECEIPT_ACTIONS.WORLD_EVENT_RESOLVED: {
+      const eventId = inputs.event_id as string | undefined;
+      if (!eventId || !playerId) break;
+      const zone = (inputs.map as string) ?? null;
+      const phase = (inputs.phase as string) ?? null;
+      const contributionId = (inputs.contribution_id as string) ?? null;
+      const outcome = (inputs.outcome as string) ?? null;
+      const entityId = contributionId
+        ? `${eventId}:${contributionId}`
+        : outcome
+          ? `${eventId}:${outcome}`
+          : `${eventId}:${phase ?? 'event'}`;
+      insertChronicleEvent(db, playerId, 'world_event', timestamp, originalAction, receiptHash, zone, null, null, entityId, {
+        event_id: eventId,
+        phase,
+        contribution_id: contributionId,
+        outcome,
+        accepted_count: inputs.accepted_count ?? null,
+        required_count: inputs.required_count ?? null,
+      });
+      break;
+    }
+
     default:
       // Not a chronicle-worthy event
       break;
