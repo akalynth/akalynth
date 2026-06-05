@@ -10,7 +10,11 @@ Used by automation and operations only.
 - `infra/docker/compose.server.example.yml` — Compose template (loopback bind).
 - `infra/docker/compose.host.example.yml` — host-side Compose example.
 - `infra/docker/akalynth-container-entrypoint` — container entrypoint script.
-- `infra/systemd/akalynth.service` — systemd unit for the direct Node runtime.
+- `infra/systemd/akalynth.service` — systemd unit for the direct Node runtime
+  (sandbox hardened, issue #147; `systemd-analyze security` ~1.4 "OK").
+- `infra/systemd/akalynth-beta.service.d/20-hardening.conf` — drop-in that applies
+  the same sandbox to the hand-managed beta unit (audit #147). `MemoryDenyWriteExecute`
+  stays false (Node's V8 JIT needs W^X memory).
 - `infra/systemd/akalynth-docker.service` — systemd unit for the Docker Compose runtime.
 - `infra/deploy_beta.sh` — beta deploy helper.
 - `infra/caddy/Caddyfile.example` — reverse-proxy template for the prod box.
