@@ -1,0 +1,108 @@
+{
+  "id": "AKALYNTH_ACCOUNT_CHARACTER_ENTRY_PARITY_V1",
+  "status": "implemented_pending_review",
+  "scope": "Android and browser/debug-client account-character entry presentation parity",
+  "purpose": "Make the Android debug client expose a cold-start create/connect/enter-play path comparable to the accepted browser mobile shell, without changing authentication, protocol, or gameplay authority.",
+  "input_receipts": [
+    "AKALYNTH_MOBILE_CORE_PLAY_SURFACE_V1",
+    "AKALYNTH_MOBILE_INVENTORY_BACKPACK_SHEET_V1",
+    "AKALYNTH_MOBILE_CHAT_LOG_PROOF_SHEETS_V1",
+    "AKALYNTH_MOBILE_PLAYABLE_SMOKE_SCRIPT_V1",
+    "AKALYNTH_MOBILE_CLASSIC_UI_POLISH_V1",
+    "AKALYNTH_ANDROID_DEBUG_LOCAL_CLEARTEXT_POLICY_V1",
+    "AKALYNTH_ANDROID_PROTOCOL_VERSION_ALIGNMENT_V1",
+    "AKALYNTH_ANDROID_MOBILE_CLASSIC_SHELL_PARITY_V1"
+  ],
+  "claim": {
+    "android_cold_start_entry_path_visible": true,
+    "android_create_character_path_visible": true,
+    "android_connect_entry_path_visible": true,
+    "android_saved_character_entry_hint_visible": true,
+    "android_character_create_returns_to_main_client": true,
+    "android_create_success_auto_connects_with_existing_intent_path": true,
+    "browser_debug_client_reference_surface_preserved": true,
+    "auth_authority_changed": false,
+    "protocol_changed": false,
+    "server_changed": false,
+    "shared_types_changed": false,
+    "shared_maps_changed": false,
+    "gameplay_authority_changed": false,
+    "production_deploy_changed": false,
+    "runtime_service_mutated": false
+  },
+  "implementation": {
+    "android_entry_surface": [
+      "Login screen now exposes Create Character and Connect/Enter Play affordances from cold start.",
+      "Login screen shows whether a saved character or saved guest session is available.",
+      "Create Character launches the existing character creation flow.",
+      "Successful character creation returns to MainActivity and triggers the existing connect intent path."
+    ],
+    "test_infrastructure": [
+      "Added a focused LoginScreen entry parity regression test.",
+      "Moved FakeDataStore from androidTest to test source set so existing unit tests can compile against the helper.",
+      "Enabled Android unit-test resource inclusion for Robolectric/Compose tests."
+    ],
+    "authority_boundary": [
+      "No token issuance, token persistence, account semantics, protocol message shape, movement, collision, walkability, combat, pickup, inventory, NPC, mob, economy, or server authority was changed.",
+      "Android still dispatches existing connect and character creation flows; it does not create client-side gameplay truth."
+    ]
+  },
+  "screenshots": [
+    {
+      "path": "screenshots/01_android_cold_start_entry.png",
+      "sha256": "6136486472a1a9e747c170014f0f31ea144e3960673e2c6af7f8adda66b77a15",
+      "notes": "Android landscape cold start shows Create Character, Server, entry hint, and Connect."
+    },
+    {
+      "path": "screenshots/02_android_bad_saved_url_recovery.png",
+      "sha256": "11c2da388c33d8e89acd33de0fceed1c7764b3be5a0dfcfa4cbeefd42245089a",
+      "notes": "Android recovery evidence for a saved bad local server URL."
+    },
+    {
+      "path": "screenshots/03_android_default_cold_start_entry.png",
+      "sha256": "c0b8c8c20e54a20e1f9ab1c62df7aad75e17874305fb0f16c5ddb8a1ca37e574",
+      "notes": "Default Android cold-start entry state after clearing app data."
+    },
+    {
+      "path": "screenshots/04_android_connected_world.png",
+      "sha256": "2c755cfb83a6ac602d9b0c434757f8b8aca5498564e142df24ac3a11d966838e",
+      "notes": "Android connected world state against current-source local debug server on port 3010."
+    }
+  ],
+  "execution_environment_note": {
+    "local_port_3000": "occupied_by_existing_runtime_listener_reporting_protocol_0.1.0",
+    "local_source_current_server": {
+      "port": 3010,
+      "runtime_paths": "/tmp/akalynth-entry-parity.*",
+      "allow_insecure_local": true,
+      "welcome_version": "1.1.0"
+    },
+    "protected_runtime_listener_on_3000": "not killed or modified"
+  },
+  "verification": {
+    "node_ws_welcome_127_0_0_1_3010": "pass version 1.1.0",
+    "android_debug_apk_installs": "pass",
+    "android_emulator_connects_to_local_source_server": "pass",
+    "./gradlew testDebugUnitTest --tests com.akalynth.client.ui.regression.LoginScreenEntryParityTest": "pass",
+    "./gradlew assembleDebug": "pass",
+    "npm -w apps/debug-client run build": "pass",
+    "./scripts/verify_protocol_sync.sh": "pass",
+    "npm run verify:quick": "pass 9/9"
+  },
+  "review": {
+    "status": "pending_review",
+    "acceptance_criteria": {
+      "android_cold_start_has_create_character_affordance": null,
+      "android_cold_start_has_connect_or_enter_play_affordance": null,
+      "saved_character_hint_is_visible": null,
+      "character_create_returns_to_main_client": null,
+      "connected_world_reachable_from_cold_start": null,
+      "browser_debug_client_reference_surface_preserved": null,
+      "protocol_unchanged": null,
+      "server_runtime_untouched": null,
+      "gameplay_authority_unchanged": null,
+      "verification_passes": null
+    }
+  },
+  "closure_target": "closed_account_character_entry_parity_no_auth_no_protocol_no_gameplay_authority_change"
+}

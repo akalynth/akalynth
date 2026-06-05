@@ -51,8 +51,8 @@ class FakeDataStore(
     }
 
     /**
-     * Get current preferences synchronously (for test assertions).
-     * Note: For race-free assertions, prefer collecting from data Flow.
+     * Get current preferences synchronously for test assertions.
+     * For race-free assertions, prefer collecting from data Flow.
      */
     fun currentPreferences(): Preferences = _data.value
 }

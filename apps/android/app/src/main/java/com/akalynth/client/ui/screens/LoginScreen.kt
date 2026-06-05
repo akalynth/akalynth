@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -38,13 +39,20 @@ import com.akalynth.client.ui.theme.ClassicShellColors
 @Composable
 fun LoginScreen(
     state: GameState,
-    onEvent: (GameEvent) -> Unit
+    onEvent: (GameEvent) -> Unit,
+    onCreateCharacter: () -> Unit
 ) {
     var serverUrlInput by remember(state.session.serverUrl) {
         mutableStateOf(state.session.serverUrl)
     }
     var showAdvanced by remember { mutableStateOf(false) }
     val keyboardController = LocalSoftwareKeyboardController.current
+    val savedCharacterName = state.session.playerName ?: state.session.savedCharacterName
+    val entryHint = when {
+        savedCharacterName != null -> "Saved character: $savedCharacterName"
+        state.session.guestToken != null -> "Saved guest session"
+        else -> "Connect as guest or create a character"
+    }
 
     Box(
         modifier = Modifier
@@ -76,14 +84,30 @@ fun LoginScreen(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                ClassicButton(
+                    text = "Create Character",
+                    onClick = onCreateCharacter,
+                    compact = true,
+                    modifier = Modifier.testTag("LoginScreen_CreateCharacter")
+                )
                 ClassicButton(
                     text = if (showAdvanced) "Hide Server" else "Server",
                     onClick = { showAdvanced = !showAdvanced },
-                    compact = true
+                    compact = true,
+                    modifier = Modifier.testTag("LoginScreen_ServerToggle")
                 )
             }
+
+            Text(
+                text = entryHint,
+                style = MaterialTheme.typography.bodySmall,
+                color = ClassicShellColors.Rune,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.testTag("LoginScreen_EntryHint")
+            )
 
             if (showAdvanced) {
                 OutlinedTextField(
@@ -158,9 +182,11 @@ fun LoginScreen(
             when (val conn = state.connection) {
                 is ConnectionState.Idle -> {
                     ClassicButton(
-                        text = "Connect",
+                        text = if (savedCharacterName != null) "Enter Play" else "Connect",
                         onClick = { onEvent(GameEvent.Connect) },
-                        modifier = Modifier.fillMaxWidth(0.72f)
+                        modifier = Modifier
+                            .fillMaxWidth(0.72f)
+                            .testTag("LoginScreen_Connect")
                     )
                 }
                 is ConnectionState.Connecting -> {
@@ -182,7 +208,9 @@ fun LoginScreen(
                     ClassicButton(
                         text = "Reconnect",
                         onClick = { onEvent(GameEvent.Connect) },
-                        modifier = Modifier.fillMaxWidth(0.72f)
+                        modifier = Modifier
+                            .fillMaxWidth(0.72f)
+                            .testTag("LoginScreen_Reconnect")
                     )
                 }
                 is ConnectionState.Error -> {
@@ -195,7 +223,9 @@ fun LoginScreen(
                     ClassicButton(
                         text = "Retry",
                         onClick = { onEvent(GameEvent.Connect) },
-                        modifier = Modifier.fillMaxWidth(0.72f)
+                        modifier = Modifier
+                            .fillMaxWidth(0.72f)
+                            .testTag("LoginScreen_Retry")
                     )
                 }
                 else -> {

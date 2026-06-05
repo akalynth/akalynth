@@ -41,6 +41,7 @@ class GameStore(
             it.copy(
                 session = it.session.copy(
                     guestToken = savedToken,
+                    savedCharacterName = identityStore.getPlayerName(),
                     serverUrl = savedUrl
                 )
             )
@@ -377,6 +378,7 @@ class GameStore(
                     guestToken = msg.guestToken?.takeIf { token -> token.isNotBlank() },
                     playerId = msg.playerId,
                     playerName = msg.name,
+                    savedCharacterName = identityStore.getPlayerName(),
                     serverUrl = currentServerUrl
                 )
             )
