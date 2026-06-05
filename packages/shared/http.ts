@@ -18,6 +18,10 @@ export interface HealthResponse {
   version: string;
   tick_ms: number;
   now_iso: string;
+  /** Git commit (full SHA) of the built tree; 'unknown' for non-git builds. Additive (#145). */
+  commit?: string;
+  /** ISO 8601 build timestamp; 'unknown' if not a built tree. Additive (#145). */
+  built_at?: string;
 }
 
 export interface MapsListResponse {
