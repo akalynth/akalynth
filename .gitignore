@@ -53,6 +53,7 @@ apps/server/core.*
 
 # Local IDE/agent state
 .continue/
+.agents/skills/
 packages/shared/*.js
 tools/*.js
 apps/server/.tmp_chain.*/
