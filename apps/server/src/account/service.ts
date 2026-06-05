@@ -31,7 +31,7 @@ export interface AccountConfig {
   sessionTtlSec: number;
   verificationTtlSec: number;
   resetTtlSec: number;
-  /** Dev mode returns verification/reset links in the response (no real email yet — E3). */
+  /** Dev mode returns verification/reset links in the response (alongside real email delivery — E3). */
   devExposeLinks: boolean;
 }
 
@@ -44,6 +44,13 @@ export interface AccountServiceDeps {
   now: () => number;
   config: AccountConfig;
   logLink?: (kind: string, accountId: string, token: string) => void;
+  /**
+   * Fire-and-forget email delivery (E3). Carries the recipient email so the
+   * transport can address the message; the implementation MUST NOT block the
+   * request (a slow/awaited send would also become an enumeration timing
+   * oracle) and MUST swallow its own errors. The email is PII — never receipted.
+   */
+  deliverEmail?: (msg: { kind: 'verify' | 'reset'; accountId: string; email: string; token: string }) => void;
 }
 
 export interface RequestCtx {
@@ -149,6 +156,7 @@ export class AccountService {
     });
     this.d.emitReceipt({ action: RECEIPT_ACTIONS.ACCOUNT_EMAIL_VERIFICATION_REQUESTED, accountId, result: 'ok' });
     this.d.logLink?.('verify', accountId, token);
+    this.d.deliverEmail?.({ kind: 'verify', accountId, email: norm.email, token });
 
     return this.d.config.devExposeLinks
       ? { status: 200, body: { ...(uniform.body as object), dev_verification_token: token } }
@@ -281,6 +289,7 @@ export class AccountService {
     });
     this.d.emitReceipt({ action: RECEIPT_ACTIONS.ACCOUNT_PASSWORD_RESET_REQUESTED, accountId: acct.account_id, result: 'ok' });
     this.d.logLink?.('reset', acct.account_id, token);
+    this.d.deliverEmail?.({ kind: 'reset', accountId: acct.account_id, email: acct.email, token });
     return this.d.config.devExposeLinks ? { status: 200, body: { ...(uniform.body as object), dev_reset_token: token } } : uniform;
   }
 
