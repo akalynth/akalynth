@@ -11,7 +11,7 @@ User=akalynth
 Group=akalynth
 WorkingDirectory=/opt/akalynth/apps/server
 Environment=HOME=/var/lib/akalynth
-UMask=027
+UMask=0077
 
 # Runtime paths (NO repo writes)
 Environment=AKALYNTH_RECEIPT_CHAIN_PATH=/var/lib/akalynth/audit/receipts.jsonl
@@ -52,7 +52,10 @@ TimeoutStopSec=20
 
 LimitNOFILE=65536
 
-# Hardening (safe set)
+# Hardening (issue #147). systemd-analyze security: this set scores ~1.4 "OK".
+# MemoryDenyWriteExecute stays FALSE: Node's V8 JIT needs writable+executable
+# memory and crashes under MDWX=true. The beta lane gets the same set via
+# infra/systemd/akalynth-beta.service.d/20-hardening.conf.
 NoNewPrivileges=true
 PrivateTmp=true
 PrivateDevices=true
@@ -60,13 +63,30 @@ ProtectSystem=full
 ProtectHome=true
 ReadWritePaths=/var/lib/akalynth
 
+# Loopback :3000 is unprivileged -> drop all capabilities.
+CapabilityBoundingSet=
+AmbientCapabilities=
+# TCP (INET/INET6) + AF_UNIX + AF_NETLINK (Node uses netlink for iface/DNS info).
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+# Curated service syscall allowlist minus privileged/resource-control families.
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged
+SystemCallFilter=~@resources
+SystemCallErrorNumber=EPERM
+SystemCallArchitectures=native
+
+ProtectClock=true
+ProtectHostname=true
+ProtectKernelLogs=true
 ProtectKernelTunables=true
 ProtectKernelModules=true
 ProtectControlGroups=true
-LockPersonality=true
-RestrictSUIDSGID=true
+ProtectProc=invisible
 RestrictNamespaces=true
-SystemCallArchitectures=native
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RemoveIPC=true
 MemoryDenyWriteExecute=false
 
 [Install]

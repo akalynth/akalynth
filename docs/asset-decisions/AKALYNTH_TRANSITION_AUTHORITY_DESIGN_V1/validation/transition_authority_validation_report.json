@@ -1,0 +1,109 @@
+{
+  "id": "AKALYNTH_TRANSITION_AUTHORITY_DESIGN_V1_VALIDATION_REPORT",
+  "status": "pass",
+  "checks": {
+    "draft_schema_json_valid": "pass",
+    "draft_example_json_valid": "pass",
+    "negative_transition_authority_cases_flagged": "pass",
+    "examples_remain_design_only": "pass",
+    "visual_objects_do_not_grant_transition_authority": "pass",
+    "walkability_does_not_grant_transition_authority": "pass",
+    "door_house_candidates_do_not_grant_transition_authority": "pass",
+    "destination_validity_reserved_for_future_gate": "pass",
+    "floor_change_policy_reserved_for_future_gate": "pass",
+    "runtime_transition_not_added": "pass",
+    "production_map_promoted_false": "pass",
+    "protected_runtime_files_remain_unchanged": "pass",
+    "npm_run_verify_quick_passes": "pass 9/9"
+  },
+  "negative_case_results": [
+    {
+      "id": "negative_visual_sewer_object_declares_transition_to",
+      "expected_flags": [
+        "visual_object_forbidden_field:transition_to"
+      ],
+      "observed_flags": [
+        "visual_object_forbidden_field:transition_to"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_walkability_layer_contains_transition_to",
+      "expected_flags": [
+        "walkability_layer_forbidden_field:transition_to"
+      ],
+      "observed_flags": [
+        "walkability_layer_forbidden_field:transition_to"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_door_candidate_declares_teleport_target",
+      "expected_flags": [
+        "door_house_candidate_forbidden_field:teleport_target"
+      ],
+      "observed_flags": [
+        "door_house_candidate_forbidden_field:teleport_target"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_transition_candidate_lacks_destination",
+      "expected_flags": [
+        "transition_candidate_missing_destination"
+      ],
+      "observed_flags": [
+        "transition_candidate_missing_destination"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_transition_candidate_changes_floor_without_floor_policy",
+      "expected_flags": [
+        "floor_change_without_policy"
+      ],
+      "observed_flags": [
+        "floor_change_without_policy"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_transition_candidate_runtime_enabled_true",
+      "expected_flags": [
+        "runtime_transition_enabled_forbidden"
+      ],
+      "observed_flags": [
+        "transition_candidate_missing_destination",
+        "runtime_transition_enabled_forbidden"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_transition_candidate_references_unknown_destination_map",
+      "expected_flags": [
+        "destination_map_unknown_without_future_gate"
+      ],
+      "observed_flags": [
+        "destination_map_unknown_without_future_gate"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_transition_candidate_grants_spawn_ai_behavior",
+      "expected_flags": [
+        "transition_candidate_forbidden_field:spawn",
+        "transition_candidate_forbidden_field:ai"
+      ],
+      "observed_flags": [
+        "transition_candidate_missing_destination",
+        "transition_candidate_forbidden_field:spawn",
+        "transition_candidate_forbidden_field:ai"
+      ],
+      "result": "flagged"
+    }
+  ],
+  "notes": [
+    "Validation report is design-only and records draft artifact consistency.",
+    "Future implementation gates must replace these draft checks with executable schema validation and runtime boundary tests."
+  ]
+}

@@ -1,0 +1,178 @@
+{
+  "id": "AKALYNTH_HIGH_CITY_RUNTIME_MAP_PROJECTION_CANDIDATE_V1_REPORT",
+  "status": "pass",
+  "generated_by": "tools/asset-gen/verify-high-city-runtime-map-projection.ts",
+  "checks": {
+    "projection_json_valid": "pass",
+    "projection_conforms_to_draft_runtime_boundary": "pass",
+    "layers_summary_json_valid": "pass",
+    "projection_manifest_json_valid": "pass",
+    "source_receipts_accepted": "pass",
+    "source_artifact_hashes_match": "pass",
+    "candidate_planes_remain_non_runtime": "pass",
+    "authority_fields_remain_none_false_unpromoted": "pass",
+    "negative_projection_cases_flagged": "pass",
+    "no_shared_map_path_used_as_production_target": "pass"
+  },
+  "projection_flags": [],
+  "summary_flags": [],
+  "manifest_flags": [],
+  "source_receipt_results": [
+    {
+      "id": "AKALYNTH_HIGH_CITY_MAP_AUTHORITY_BUNDLE_V1",
+      "file": "docs/asset-decisions/AKALYNTH_HIGH_CITY_MAP_AUTHORITY_BUNDLE_V1/high_city_map_authority_bundle_receipt.json",
+      "status": "accepted_high_city_map_authority_bundle",
+      "accepted": true,
+      "hash_matches": true
+    },
+    {
+      "id": "AKALYNTH_RUNTIME_MAP_AUTHORITY_SCHEMA_DESIGN_V1",
+      "file": "docs/asset-decisions/AKALYNTH_RUNTIME_MAP_AUTHORITY_SCHEMA_DESIGN_V1/runtime_map_authority_schema_design_receipt.json",
+      "status": "accepted_runtime_map_authority_schema_design",
+      "accepted": true,
+      "hash_matches": true
+    },
+    {
+      "id": "AKALYNTH_RUNTIME_MAP_SCHEMA_VALIDATION_HARNESS_V1",
+      "file": "docs/asset-decisions/AKALYNTH_RUNTIME_MAP_SCHEMA_VALIDATION_HARNESS_V1/runtime_map_schema_validation_harness_receipt.json",
+      "status": "accepted_runtime_map_schema_validation_harness",
+      "accepted": true,
+      "hash_matches": true
+    }
+  ],
+  "manifest_hash_results": [
+    {
+      "file": "projection/high_city_runtime_map_projection.v1.draft.json",
+      "exists": true,
+      "expected": "39a72f831b950efea759770f0484878d10652ec5bc2273ab30fb8da5e3986393",
+      "actual": "39a72f831b950efea759770f0484878d10652ec5bc2273ab30fb8da5e3986393",
+      "result": "pass"
+    },
+    {
+      "file": "projection/high_city_runtime_map_layers_summary.v1.json",
+      "exists": true,
+      "expected": "2e85f3cb3473d43fb05b069600631db0377f83eee4b7f0fd9d78f495ab534a1b",
+      "actual": "2e85f3cb3473d43fb05b069600631db0377f83eee4b7f0fd9d78f495ab534a1b",
+      "result": "pass"
+    }
+  ],
+  "negative_results": [
+    {
+      "id": "negative_projection_sets_production_map_promoted_true",
+      "expected_flags": [
+        "production_map_promoted_forbidden"
+      ],
+      "observed_flags": [
+        "production_map_promoted_forbidden"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_projection_sets_server_authoritative_true",
+      "expected_flags": [
+        "server_authoritative_forbidden"
+      ],
+      "observed_flags": [
+        "server_authoritative_forbidden"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_projection_references_shared_map_active_target",
+      "expected_flags": [
+        "shared_map_path_forbidden"
+      ],
+      "observed_flags": [
+        "shared_map_path_forbidden"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_collision_layer_includes_visual_render_fields",
+      "expected_flags": [
+        "runtime_collision_layer_forbidden_field:render"
+      ],
+      "observed_flags": [
+        "runtime_collision_layer_forbidden_field:render"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_walkability_layer_includes_transition_to",
+      "expected_flags": [
+        "runtime_walkability_layer_forbidden_field:transition_to"
+      ],
+      "observed_flags": [
+        "runtime_walkability_layer_forbidden_field:transition_to"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_door_house_layer_enforces_access_list",
+      "expected_flags": [
+        "runtime_door_house_layer_forbidden_field:access_list_enforced"
+      ],
+      "observed_flags": [
+        "runtime_door_house_layer_forbidden_field:access_list_enforced"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_transition_layer_claims_destination_exists",
+      "expected_flags": [
+        "runtime_destination_existence_forbidden"
+      ],
+      "observed_flags": [
+        "runtime_destination_existence_forbidden"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_projection_contains_content_behavior",
+      "expected_flags": [
+        "runtime_schema_forbidden_field:npc_behavior",
+        "runtime_schema_forbidden_field:mob_behavior",
+        "runtime_schema_forbidden_field:shop",
+        "runtime_schema_forbidden_field:dialogue",
+        "runtime_schema_forbidden_field:spawn",
+        "runtime_schema_forbidden_field:ai",
+        "runtime_schema_forbidden_field:combat"
+      ],
+      "observed_flags": [
+        "runtime_schema_forbidden_field:npc_behavior",
+        "runtime_schema_forbidden_field:mob_behavior",
+        "runtime_schema_forbidden_field:shop",
+        "runtime_schema_forbidden_field:dialogue",
+        "runtime_schema_forbidden_field:spawn",
+        "runtime_schema_forbidden_field:ai",
+        "runtime_schema_forbidden_field:combat"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_projection_references_unaccepted_receipt",
+      "expected_flags": [
+        "source_receipt_not_accepted"
+      ],
+      "observed_flags": [
+        "source_receipt_not_accepted"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_projection_hash_mismatch",
+      "expected_flags": [
+        "artifact_hash_mismatch"
+      ],
+      "observed_flags": [
+        "artifact_hash_mismatch"
+      ],
+      "result": "flagged"
+    }
+  ],
+  "notes": [
+    "Projection candidate validates docs artifacts only.",
+    "No runtime map is loaded and no shared production map is promoted.",
+    "No server movement, collision, walkability, door, house, transition, or gameplay authority is created."
+  ]
+}

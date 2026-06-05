@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "akalynth.draft.transition_endpoint.schema.v1",
+  "title": "Draft Transition Endpoint",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tile",
+    "floor",
+    "map_region",
+    "authority_status"
+  ],
+  "properties": {
+    "tile": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "integer"
+      }
+    },
+    "floor": {
+      "type": "integer"
+    },
+    "map_region": {
+      "type": "string"
+    },
+    "authority_status": {
+      "enum": [
+        "draft_placeholder",
+        "future_runtime_gate_required"
+      ]
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

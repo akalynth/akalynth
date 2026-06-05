@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "akalynth.draft.runtime_overlay_presentation_layer.schema.v1",
+  "title": "Draft Runtime Overlay Presentation Layer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "layer",
+    "status",
+    "runtime_authority",
+    "server_authoritative",
+    "production_map_promoted",
+    "overlays",
+    "mechanics"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "layer": {
+      "const": "runtime_overlay_presentation_layer"
+    },
+    "status": {
+      "const": "draft_schema_only"
+    },
+    "runtime_authority": {
+      "const": false
+    },
+    "server_authoritative": {
+      "const": false
+    },
+    "production_map_promoted": {
+      "const": false
+    },
+    "overlays": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "asset_id",
+          "visibility_binding_source"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "asset_id": {
+            "type": "string"
+          },
+          "visibility_binding_source": {
+            "enum": [
+              "presentation_only",
+              "future_runtime_binding_required"
+            ]
+          }
+        }
+      }
+    },
+    "mechanics": {
+      "type": "null"
+    }
+  }
+}

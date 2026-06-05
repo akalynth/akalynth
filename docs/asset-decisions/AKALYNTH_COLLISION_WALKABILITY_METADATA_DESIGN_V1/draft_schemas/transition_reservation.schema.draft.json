@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "akalynth://draft-schemas/transition_reservation.schema.draft.json",
+  "title": "Akalynth Transition Reservation Draft Schema",
+  "description": "Reserved future design schema for stairs, sewer, floor-stack, gate, and underpass review slots. No travel authority is implemented here.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "plane",
+    "source_receipts",
+    "reservations",
+    "authority",
+    "mechanics"
+  ],
+  "properties": {
+    "status": {
+      "const": "draft_reserved_for_future_gate"
+    },
+    "plane": {
+      "const": "transition_reservation"
+    },
+    "source_receipts": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^AKALYNTH_[A-Z0-9_]+_V[0-9]+$"
+      },
+      "minItems": 1
+    },
+    "mechanics": {
+      "type": "null"
+    },
+    "reservations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "tile",
+          "floor",
+          "reservation_kind",
+          "requires_future_gate"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "tile": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "integer",
+                "minimum": 0
+              }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "floor": {
+            "type": "integer"
+          },
+          "reservation_kind": {
+            "enum": [
+              "door_threshold",
+              "stairs",
+              "sewer_transition",
+              "gate_transition",
+              "underpass",
+              "bridge",
+              "floor_change"
+            ]
+          },
+          "requires_future_gate": {
+            "enum": [
+              "AKALYNTH_DOOR_AND_HOUSE_AUTHORITY_DESIGN_V1",
+              "AKALYNTH_TRANSITION_AND_FLOOR_STACK_DESIGN_V1",
+              "AKALYNTH_PRODUCTION_MAP_PROMOTION_CANDIDATE_V1"
+            ]
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "travel",
+        "teleport",
+        "door_permissions",
+        "house_entry",
+        "floor_stack",
+        "collision",
+        "walkability"
+      ],
+      "properties": {
+        "travel": {
+          "const": "none"
+        },
+        "teleport": {
+          "const": "none"
+        },
+        "door_permissions": {
+          "const": "none"
+        },
+        "house_entry": {
+          "const": "none"
+        },
+        "floor_stack": {
+          "const": "none"
+        },
+        "collision": {
+          "const": "none"
+        },
+        "walkability": {
+          "const": "none"
+        }
+      }
+    }
+  }
+}

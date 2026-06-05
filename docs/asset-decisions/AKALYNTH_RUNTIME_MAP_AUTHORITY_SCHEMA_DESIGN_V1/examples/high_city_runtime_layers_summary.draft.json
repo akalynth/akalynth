@@ -1,0 +1,23 @@
+{
+  "id": "high_city_runtime_layers_summary_v1_draft",
+  "status": "draft_schema_summary_only",
+  "source_bundle_receipt": "AKALYNTH_HIGH_CITY_MAP_AUTHORITY_BUNDLE_V1",
+  "layer_counts": {
+    "visual_objects": 1416,
+    "overlays": 3,
+    "collision_cells": 28,
+    "walkability_cells": 28,
+    "door_records": 0,
+    "house_records": 0,
+    "transition_records": 0
+  },
+  "candidate_counts_waiting_for_future_runtime_gates": {
+    "door_candidates": 4,
+    "house_candidates": 3,
+    "transition_candidates": 4,
+    "endpoint_placeholders": 4
+  },
+  "runtime_authority": false,
+  "production_map_promoted": false,
+  "mechanics": null
+}

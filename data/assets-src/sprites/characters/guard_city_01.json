@@ -1,0 +1,54 @@
+{
+  "id": "guard_city_01",
+  "asset_type": "character",
+  "source_kind": "spritesheet",
+  "image": "guard_city_01.png",
+  "dimensions": {
+    "width": 256,
+    "height": 256
+  },
+  "frame": {
+    "width": 64,
+    "height": 64
+  },
+  "directions": {
+    "rows": [
+      "south",
+      "north",
+      "east",
+      "west"
+    ]
+  },
+  "animations": {
+    "walk": {
+      "columns": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "frames": 4
+    },
+    "idle": {
+      "column": 0
+    }
+  },
+  "rendering": {
+    "filtering": "nearest",
+    "display_only": true
+  },
+  "render_anchor": {
+    "feet": [
+      32,
+      54
+    ],
+    "unit": "source_pixels"
+  },
+  "mechanics": null,
+  "notes": [
+    "Visual source asset only.",
+    "Accepted walk-pack row order is south, north, east, west.",
+    "No collision, walkability, combat, facing protocol, NPC behavior, or runtime authority encoded here.",
+    "Debug client may infer local facing direction from position deltas for smoke-test rendering only."
+  ]
+}

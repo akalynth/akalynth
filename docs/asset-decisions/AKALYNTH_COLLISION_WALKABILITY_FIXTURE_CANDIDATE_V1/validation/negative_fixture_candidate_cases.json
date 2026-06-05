@@ -1,0 +1,124 @@
+{
+  "id": "AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1_NEGATIVE_CASES",
+  "status": "draft_negative_cases",
+  "expected_result": "flagged",
+  "cases": [
+    {
+      "id": "negative_blocked_walkable_tile",
+      "expected_flags": [
+        "collision_walkability_conflict:blocked_and_walkable"
+      ],
+      "payload": {
+        "tile": [
+          9,
+          9
+        ],
+        "floor": 0,
+        "collision_state": "blocked",
+        "walkability_state": "walkable"
+      }
+    },
+    {
+      "id": "negative_visual_object_directly_declares_blocking",
+      "expected_flags": [
+        "visual_object_forbidden_field:collision"
+      ],
+      "payload": {
+        "id": "visual_wall_bad_01",
+        "plane": "visual",
+        "asset_id": "wall_stone_north",
+        "collision": "blocked"
+      }
+    },
+    {
+      "id": "negative_visual_object_directly_declares_walkable",
+      "expected_flags": [
+        "visual_object_forbidden_field:walkability"
+      ],
+      "payload": {
+        "id": "visual_floor_bad_01",
+        "plane": "visual",
+        "asset_id": "floor_cobble_01",
+        "walkable": true
+      }
+    },
+    {
+      "id": "negative_door_clear_walkable_with_open_state",
+      "expected_flags": [
+        "door_authority_without_gate",
+        "threshold_not_reserved_conditional"
+      ],
+      "payload": {
+        "tile": [
+          15,
+          4
+        ],
+        "floor": 0,
+        "asset_id": "door_wood_open_south",
+        "collision_state": "clear",
+        "walkability_state": "walkable",
+        "door_state": "open"
+      }
+    },
+    {
+      "id": "negative_sewer_tile_with_transition_to",
+      "expected_flags": [
+        "transition_authority_in_walkability_layer"
+      ],
+      "payload": {
+        "tile": [
+          25,
+          26
+        ],
+        "floor": 0,
+        "walkability_state": "walkable",
+        "transition_to": "sewer_level_01"
+      }
+    },
+    {
+      "id": "negative_collision_layer_contains_shop_dialogue_spawn_ai_combat",
+      "expected_flags": [
+        "collision_layer_forbidden_field:shop",
+        "collision_layer_forbidden_field:dialogue",
+        "collision_layer_forbidden_field:spawn",
+        "collision_layer_forbidden_field:ai",
+        "collision_layer_forbidden_field:combat"
+      ],
+      "payload": {
+        "plane": "collision",
+        "tile": [
+          21,
+          12
+        ],
+        "floor": 0,
+        "collision_state": "blocked",
+        "shop": "food",
+        "dialogue": "merchant",
+        "spawn": "rat",
+        "ai": "patrol",
+        "combat": "enabled"
+      }
+    },
+    {
+      "id": "negative_walkability_layer_contains_ownership_or_door_permissions",
+      "expected_flags": [
+        "walkability_layer_forbidden_field:ownership",
+        "walkability_layer_forbidden_field:door_permissions"
+      ],
+      "payload": {
+        "plane": "walkability",
+        "tile": [
+          7,
+          22
+        ],
+        "floor": 0,
+        "walkability_state": "walkable",
+        "ownership": "house_owner",
+        "door_permissions": "owner_only"
+      }
+    }
+  ],
+  "notes": [
+    "Negative cases prove candidate validation flags authority leakage, not only that positive candidates parse."
+  ]
+}

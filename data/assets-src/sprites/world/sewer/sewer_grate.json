@@ -1,0 +1,29 @@
+{
+  "id": "sewer_grate",
+  "asset_type": "world_object",
+  "source_kind": "sprite",
+  "image": "sewer_grate.png",
+  "frame": {
+    "width": 64,
+    "height": 64
+  },
+  "rendering": {
+    "filtering": "nearest",
+    "display_only": true,
+    "draw_scale": 0.8,
+    "anchor": {
+      "type": "bottom_center",
+      "source_pixels": [
+        32,
+        58
+      ]
+    },
+    "z_policy": "sort_by_anchor_y",
+    "layer": "object_overlay"
+  },
+  "mechanics": null,
+  "visual_notes": [
+    "Sewer grate visual only.",
+    "Does not encode traversal, blocking, or walkability."
+  ]
+}

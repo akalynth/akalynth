@@ -1,0 +1,461 @@
+{
+  "id": "high_city_runtime_map_projection_v1_draft",
+  "gate": "AKALYNTH_HIGH_CITY_RUNTIME_MAP_PROJECTION_CANDIDATE_V1",
+  "status": "draft_non_runtime_projection",
+  "scope": "draft high-city runtime map projection candidate only",
+  "source_receipts": {
+    "high_city_authority_bundle": {
+      "id": "AKALYNTH_HIGH_CITY_MAP_AUTHORITY_BUNDLE_V1",
+      "status": "accepted_high_city_map_authority_bundle",
+      "path": "docs/asset-decisions/AKALYNTH_HIGH_CITY_MAP_AUTHORITY_BUNDLE_V1/high_city_map_authority_bundle_receipt.json",
+      "sha256": "c15177b42dc63140c967e7508e702f020a96187311db00af6833fe6f5e45aa49"
+    },
+    "runtime_map_authority_schema_design": {
+      "id": "AKALYNTH_RUNTIME_MAP_AUTHORITY_SCHEMA_DESIGN_V1",
+      "status": "accepted_runtime_map_authority_schema_design",
+      "path": "docs/asset-decisions/AKALYNTH_RUNTIME_MAP_AUTHORITY_SCHEMA_DESIGN_V1/runtime_map_authority_schema_design_receipt.json",
+      "sha256": "727415dd14e5e827bfad920ced76421919f418eec99622dc0eaa1acd692cae17"
+    },
+    "runtime_map_schema_validation_harness": {
+      "id": "AKALYNTH_RUNTIME_MAP_SCHEMA_VALIDATION_HARNESS_V1",
+      "status": "accepted_runtime_map_schema_validation_harness",
+      "path": "docs/asset-decisions/AKALYNTH_RUNTIME_MAP_SCHEMA_VALIDATION_HARNESS_V1/runtime_map_schema_validation_harness_receipt.json",
+      "sha256": "2f929fcb4993b1147bdcba8d11899094c9e947cd06f13425d8430143850d2705"
+    }
+  },
+  "source_bundle": {
+    "path": "docs/asset-decisions/AKALYNTH_HIGH_CITY_MAP_AUTHORITY_BUNDLE_V1/bundle/high_city_authority_bundle.v1.draft.json",
+    "sha256": "4f67d068eb745af2a0a064787ab0ed8a1cf0a2922c9209dde341aaf5ff8248bb"
+  },
+  "runtime_authority": false,
+  "server_authoritative": false,
+  "production_map_promoted": false,
+  "shared_map_path": "none",
+  "coordinate_system": {
+    "origin": "top_left",
+    "unit": "tile",
+    "tile_size_px": 32,
+    "axes": {
+      "x": "east",
+      "y": "south"
+    },
+    "floor_meaning": "draft candidate floor index only; not production map floor authority"
+  },
+  "bounds": {
+    "visual_fixture": {
+      "x": 0,
+      "y": 0,
+      "width": 32,
+      "height": 32,
+      "floor": 0,
+      "mode": "draft_visual_fixture"
+    },
+    "collision_walkability": {
+      "x": 0,
+      "y": 0,
+      "width": 32,
+      "height": 32,
+      "floor": 0
+    },
+    "door_house": {
+      "x": 0,
+      "y": 0,
+      "width": 32,
+      "height": 32,
+      "floor": 0,
+      "mode": "partial_candidate"
+    },
+    "transition": {
+      "x": 0,
+      "y": 0,
+      "width": 32,
+      "height": 32,
+      "floor": 0,
+      "mode": "partial_candidate"
+    }
+  },
+  "layers": {
+    "visual_object_layer": {
+      "layer": "runtime_visual_object_layer",
+      "status": "draft_projection_only",
+      "source_artifact": {
+        "path": "docs/asset-decisions/AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1/exports/refined_high_city_visual_objects.v1.draft.json",
+        "sha256": "aeead8b86fb1bdfc6ecd84e66b49f55b0597949e6048aee7aca5747b2d389b45"
+      },
+      "source_count": 1416,
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "shared_map_path": "none",
+      "authority": {
+        "collision": "none",
+        "walkability": "none",
+        "interaction": "none",
+        "server_entity": "none"
+      },
+      "mechanics": null
+    },
+    "overlay_presentation_layer": {
+      "layer": "runtime_overlay_presentation_layer",
+      "status": "draft_projection_only",
+      "source_artifact": {
+        "path": "docs/asset-decisions/AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1/exports/refined_high_city_overlay_zones.v1.draft.json",
+        "sha256": "ece3bce846770a25d50acb8a18caab0cec5cb30dcf3ddf544dad3c76d05d67d8"
+      },
+      "source_count": 3,
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "shared_map_path": "none",
+      "authority": {
+        "house_entry": "none",
+        "server_floor_truth": "none",
+        "ownership": "none"
+      },
+      "mechanics": null
+    },
+    "collision_layer": {
+      "layer": "runtime_collision_layer",
+      "status": "draft_projection_only",
+      "source_artifact": {
+        "path": "docs/asset-decisions/AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1/candidates/refined_high_city_collision_candidates.v1.draft.json",
+        "sha256": "e086e1391f80a2ed81346123217ebbbdba3401215e5e8f7fa29dbf004d05e628"
+      },
+      "source_count": 28,
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "shared_map_path": "none",
+      "authority": {
+        "runtime_collision": "none",
+        "runtime_movement": "none"
+      },
+      "mechanics": null
+    },
+    "walkability_layer": {
+      "layer": "runtime_walkability_layer",
+      "status": "draft_projection_only",
+      "source_artifact": {
+        "path": "docs/asset-decisions/AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1/candidates/refined_high_city_walkability_candidates.v1.draft.json",
+        "sha256": "7c94fcaa639e43e4c4475a3d9431a41d0547e877b3002662f45b4410ecf4668d"
+      },
+      "source_count": 28,
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "shared_map_path": "none",
+      "authority": {
+        "runtime_walkability": "none",
+        "transition_targets": "none"
+      },
+      "mechanics": null
+    },
+    "door_house_layer": {
+      "layer": "runtime_door_house_layer",
+      "status": "draft_projection_only",
+      "source_artifacts": {
+        "door_candidates": {
+          "path": "docs/asset-decisions/AKALYNTH_DOOR_HOUSE_AUTHORITY_FIXTURE_CANDIDATE_V1/candidates/refined_high_city_door_candidates.v1.draft.json",
+          "sha256": "e1f6fa7039b2bde72ed1238c505a3990f9c68226d1d223f5f966fb5545edb331"
+        },
+        "house_candidates": {
+          "path": "docs/asset-decisions/AKALYNTH_DOOR_HOUSE_AUTHORITY_FIXTURE_CANDIDATE_V1/candidates/refined_high_city_house_candidates.v1.draft.json",
+          "sha256": "f9b1037aa0a160b094155fb264d96412a2832fa9069447a44d1f3a297fb25aa3"
+        },
+        "access_policy_candidates": {
+          "path": "docs/asset-decisions/AKALYNTH_DOOR_HOUSE_AUTHORITY_FIXTURE_CANDIDATE_V1/candidates/refined_high_city_access_policy_candidates.v1.draft.json",
+          "sha256": "1a4c1e59c59774258ffe55d4858a6f3bfd4c0246771349b04dd3d75ebf996c19"
+        },
+        "overlay_binding_candidates": {
+          "path": "docs/asset-decisions/AKALYNTH_DOOR_HOUSE_AUTHORITY_FIXTURE_CANDIDATE_V1/candidates/refined_high_city_overlay_visibility_bindings.v1.draft.json",
+          "sha256": "79afba9ee57a050f90ec1db434268a89d99f6a1d7fa987f9d24ae383b76f5281"
+        }
+      },
+      "source_counts": {
+        "door_candidates": 4,
+        "house_candidates": 3,
+        "access_policy_candidates": 4,
+        "overlay_binding_candidates": 3
+      },
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "shared_map_path": "none",
+      "authority": {
+        "runtime_doors": "none",
+        "runtime_houses": "none",
+        "ownership": "none",
+        "access_policy_enforcement": "none",
+        "collision_resolution": "none",
+        "walkability_resolution": "none"
+      },
+      "mechanics": null
+    },
+    "transition_layer": {
+      "layer": "runtime_transition_layer",
+      "status": "draft_projection_only",
+      "source_artifacts": {
+        "transition_candidates": {
+          "path": "docs/asset-decisions/AKALYNTH_TRANSITION_AUTHORITY_FIXTURE_CANDIDATE_V1/candidates/refined_high_city_transition_candidates.v1.draft.json",
+          "sha256": "5700a1037d0ac91d89b6a6f3489ebd837817d132e03bcc332b18992e9eea6187"
+        },
+        "transition_endpoints": {
+          "path": "docs/asset-decisions/AKALYNTH_TRANSITION_AUTHORITY_FIXTURE_CANDIDATE_V1/candidates/refined_high_city_transition_endpoints.v1.draft.json",
+          "sha256": "6bec474ee5f2a2d5a3ed957990912e8d728eb730a9de81ce689bc8c298fc55d7"
+        },
+        "floor_change_bindings": {
+          "path": "docs/asset-decisions/AKALYNTH_TRANSITION_AUTHORITY_FIXTURE_CANDIDATE_V1/candidates/refined_high_city_floor_change_bindings.v1.draft.json",
+          "sha256": "cd40dd3af48fbf019190432d6237f901d3f6c23ae9c8df231b5d0071fcdcb838"
+        },
+        "transition_policy_candidates": {
+          "path": "docs/asset-decisions/AKALYNTH_TRANSITION_AUTHORITY_FIXTURE_CANDIDATE_V1/candidates/refined_high_city_transition_policy_candidates.v1.draft.json",
+          "sha256": "24fec65e437ceeff736db8455d8620cfeb3c0c3cdc3340b68c66c1114021790b"
+        }
+      },
+      "source_counts": {
+        "transition_candidates": 4,
+        "transition_endpoint_candidates": 4,
+        "floor_change_binding_candidates": 4,
+        "transition_policy_candidates": 3
+      },
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "shared_map_path": "none",
+      "authority": {
+        "runtime_transitions": "none",
+        "runtime_floor_change": "none",
+        "destination_validity": "none",
+        "server_movement_authority": "none"
+      },
+      "endpoint_policy": {
+        "destination_exists": false,
+        "promoted_destination_receipt": "future_gate_required"
+      },
+      "mechanics": null
+    }
+  },
+  "promotion": {
+    "production_promotion_receipt": "future_gate_required",
+    "shared_map_path": "none",
+    "server_movement_verified": false,
+    "runtime_schema_promotion": false
+  },
+  "cross_plane_reference_summary": {
+    "door_to_reserved_conditionals": [
+      {
+        "id": "high_city_gate_south_threshold_candidate",
+        "threshold_tiles": [
+          [
+            15,
+            4
+          ]
+        ],
+        "reserved_keys": [
+          "15,4:0"
+        ],
+        "linked_visual_object_ids": [
+          "vmo_0944_door_wood_open_south_15_4"
+        ]
+      },
+      {
+        "id": "castle_meeting_hall_door_candidate",
+        "threshold_tiles": [
+          [
+            10,
+            14
+          ]
+        ],
+        "reserved_keys": [
+          "10,14:0"
+        ],
+        "linked_visual_object_ids": [
+          "vmo_1134_door_wood_open_south_10_14"
+        ]
+      },
+      {
+        "id": "market_shop_front_door_candidate",
+        "threshold_tiles": [
+          [
+            25,
+            17
+          ]
+        ],
+        "reserved_keys": [
+          "25,17:0"
+        ],
+        "linked_visual_object_ids": [
+          "vmo_1284_door_wood_open_south_25_17"
+        ]
+      },
+      {
+        "id": "small_house_01_front_door_candidate",
+        "threshold_tiles": [
+          [
+            7,
+            22
+          ]
+        ],
+        "reserved_keys": [
+          "7,22:0"
+        ],
+        "linked_visual_object_ids": [
+          "vmo_1357_door_wood_open_south_7_22"
+        ]
+      }
+    ],
+    "transition_to_reserved_conditionals": [
+      {
+        "id": "high_city_sewer_grate_transition_candidate_01",
+        "source_tiles": [
+          [
+            25,
+            26
+          ]
+        ],
+        "reserved_keys": [
+          "25,26:0"
+        ],
+        "linked_visual_object_ids": [
+          "vmo_1413_sewer_grate_25_26"
+        ]
+      },
+      {
+        "id": "high_city_sewer_grate_transition_candidate_02",
+        "source_tiles": [
+          [
+            28,
+            26
+          ]
+        ],
+        "reserved_keys": [
+          "28,26:0"
+        ],
+        "linked_visual_object_ids": [
+          "vmo_1414_sewer_grate_28_26"
+        ]
+      },
+      {
+        "id": "high_city_slime_pool_edge_transition_review_candidate",
+        "source_tiles": [
+          [
+            30,
+            26
+          ]
+        ],
+        "reserved_keys": [
+          "30,26:0"
+        ],
+        "linked_visual_object_ids": [
+          "vmo_1415_slime_pool_30_26"
+        ]
+      },
+      {
+        "id": "high_city_north_gate_region_transfer_candidate",
+        "source_tiles": [
+          [
+            15,
+            4
+          ]
+        ],
+        "reserved_keys": [
+          "15,4:0"
+        ],
+        "linked_visual_object_ids": [
+          "vmo_0944_door_wood_open_south_15_4"
+        ]
+      }
+    ],
+    "overlay_bindings_to_house_candidates": [
+      {
+        "id": "castle_meeting_hall_overlay_visibility_binding_candidate",
+        "house_candidate_id": "castle_meeting_hall_house_candidate",
+        "overlay_zone_id": "overlay_01_roof_castle_overlay_3_5"
+      },
+      {
+        "id": "market_shop_overlay_visibility_binding_candidate",
+        "house_candidate_id": "market_shop_house_candidate",
+        "overlay_zone_id": "overlay_02_market_awning_overlay_19_8"
+      },
+      {
+        "id": "small_house_01_overlay_visibility_binding_candidate",
+        "house_candidate_id": "small_house_01_house_candidate",
+        "overlay_zone_id": "overlay_03_roof_red_small_overlay_3_16"
+      }
+    ],
+    "house_to_doors_and_overlays": [
+      {
+        "id": "castle_meeting_hall_house_candidate",
+        "door_candidate_ids": [
+          "castle_meeting_hall_door_candidate"
+        ],
+        "overlay_binding_candidate_ids": [
+          "castle_meeting_hall_overlay_visibility_binding_candidate"
+        ]
+      },
+      {
+        "id": "market_shop_house_candidate",
+        "door_candidate_ids": [
+          "market_shop_front_door_candidate"
+        ],
+        "overlay_binding_candidate_ids": [
+          "market_shop_overlay_visibility_binding_candidate"
+        ]
+      },
+      {
+        "id": "small_house_01_house_candidate",
+        "door_candidate_ids": [
+          "small_house_01_front_door_candidate"
+        ],
+        "overlay_binding_candidate_ids": [
+          "small_house_01_overlay_visibility_binding_candidate"
+        ]
+      }
+    ],
+    "transition_to_endpoints_policies_and_floor": [
+      {
+        "id": "high_city_sewer_grate_transition_candidate_01",
+        "endpoint_id": "candidate_endpoint_sewer_level_01_entry",
+        "policy_candidate_id": "policy_candidate_sewer_entry_step_on_reserved",
+        "floor_change_binding_id": "floor_change_binding_sewer_entry_down_candidate"
+      },
+      {
+        "id": "high_city_sewer_grate_transition_candidate_02",
+        "endpoint_id": "candidate_endpoint_sewer_level_01_alt_entry",
+        "policy_candidate_id": "policy_candidate_sewer_entry_step_on_reserved",
+        "floor_change_binding_id": "floor_change_binding_sewer_alt_entry_down_candidate"
+      },
+      {
+        "id": "high_city_slime_pool_edge_transition_review_candidate",
+        "endpoint_id": "candidate_endpoint_slime_edge_review_placeholder",
+        "policy_candidate_id": "policy_candidate_environment_boundary_reserved",
+        "floor_change_binding_id": "floor_change_binding_slime_edge_unknown_candidate"
+      },
+      {
+        "id": "high_city_north_gate_region_transfer_candidate",
+        "endpoint_id": "candidate_endpoint_north_gate_region_placeholder",
+        "policy_candidate_id": "policy_candidate_gate_region_transfer_reserved",
+        "floor_change_binding_id": "floor_change_binding_gate_same_floor_candidate"
+      }
+    ]
+  },
+  "unresolved_authority_summary": {
+    "runtime_movement": "none",
+    "runtime_collision": "none",
+    "runtime_walkability": "none",
+    "runtime_doors": "none",
+    "runtime_houses": "none",
+    "runtime_access_policy": "none",
+    "runtime_overlay_visibility": "none",
+    "runtime_transitions": "none",
+    "production_map": "none",
+    "server_protocol": "none"
+  },
+  "mechanics": null,
+  "notes": [
+    "Draft runtime map projection candidate only.",
+    "Does not create runtime-readable shared map data.",
+    "Does not change server movement, collision, walkability, doors, houses, transitions, NPCs, mobs, shops, dialogue, spawns, AI, or combat.",
+    "All visual, movement, door/house, and transition authority remains non-runtime and unpromoted."
+  ]
+}

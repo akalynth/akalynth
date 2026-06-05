@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "akalynth://draft-schemas/visual_overlay_zone.schema.draft.json",
+  "title": "Akalynth Visual Overlay Zone Draft Schema",
+  "description": "Draft design schema for presentation-only overlay visibility review metadata. Not a runtime schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "plane",
+    "asset_id",
+    "position",
+    "render",
+    "review_visibility",
+    "review_only_context",
+    "mechanics",
+    "authority",
+    "notes"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$"
+    },
+    "plane": {
+      "const": "presentation_overlay"
+    },
+    "asset_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$"
+    },
+    "position": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tile",
+        "floor"
+      ],
+      "properties": {
+        "tile": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "integer",
+              "minimum": 0
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "floor": {
+          "type": "integer",
+          "default": 1
+        }
+      }
+    },
+    "render": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layer",
+        "z_policy",
+        "visibility_modes"
+      ],
+      "properties": {
+        "layer": {
+          "const": "floor_overlay"
+        },
+        "z_policy": {
+          "const": "fixed_above_building"
+        },
+        "visibility_modes": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "visible",
+              "faded",
+              "hidden"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
+    },
+    "review_visibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outside",
+        "threshold",
+        "inside"
+      ],
+      "properties": {
+        "outside": {
+          "const": "visible"
+        },
+        "threshold": {
+          "const": "faded"
+        },
+        "inside": {
+          "const": "hidden"
+        }
+      }
+    },
+    "review_only_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "interior_footprint",
+        "doorway_tiles"
+      ],
+      "properties": {
+        "interior_footprint": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "x",
+            "y",
+            "width",
+            "height"
+          ],
+          "properties": {
+            "x": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "y": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "width": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "doorway_tiles": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "integer",
+                "minimum": 0
+              }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+          }
+        }
+      }
+    },
+    "mechanics": {
+      "type": "null"
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "house_entry",
+        "ownership",
+        "door_permissions",
+        "collision",
+        "walkability",
+        "server_floor_visibility"
+      ],
+      "properties": {
+        "house_entry": {
+          "const": "none"
+        },
+        "ownership": {
+          "const": "none"
+        },
+        "door_permissions": {
+          "const": "none"
+        },
+        "collision": {
+          "const": "none"
+        },
+        "walkability": {
+          "const": "none"
+        },
+        "server_floor_visibility": {
+          "const": "none"
+        }
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

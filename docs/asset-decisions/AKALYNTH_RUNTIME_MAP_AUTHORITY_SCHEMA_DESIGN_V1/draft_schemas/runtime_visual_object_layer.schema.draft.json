@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "akalynth.draft.runtime_visual_object_layer.schema.v1",
+  "title": "Draft Runtime Visual Object Layer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "layer",
+    "status",
+    "runtime_authority",
+    "server_authoritative",
+    "production_map_promoted",
+    "objects",
+    "mechanics"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "layer": {
+      "const": "runtime_visual_object_layer"
+    },
+    "status": {
+      "const": "draft_schema_only"
+    },
+    "runtime_authority": {
+      "const": false
+    },
+    "server_authoritative": {
+      "const": false
+    },
+    "production_map_promoted": {
+      "const": false
+    },
+    "objects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "asset_id",
+          "tile",
+          "floor",
+          "render_layer"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "asset_id": {
+            "type": "string"
+          },
+          "tile": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "integer"
+            }
+          },
+          "floor": {
+            "type": "integer"
+          },
+          "render_layer": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "mechanics": {
+      "type": "null"
+    }
+  }
+}

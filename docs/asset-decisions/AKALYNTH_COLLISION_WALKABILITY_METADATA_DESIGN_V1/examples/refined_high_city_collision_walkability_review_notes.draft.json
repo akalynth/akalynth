@@ -1,0 +1,138 @@
+{
+  "id": "refined_high_city_collision_walkability_review_notes_draft",
+  "status": "draft_review_annotations_only",
+  "source_receipts": [
+    "AKALYNTH_HIGH_CITY_BLOCK_LAYOUT_REFINEMENT_V1",
+    "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1"
+  ],
+  "purpose": "Identify visual locations that deserve later collision/walkability review without asserting movement authority.",
+  "review_annotations": [
+    {
+      "id": "review_gate_wall_line_01",
+      "visual_hint": "north wall and gate approach",
+      "tiles": [
+        [
+          4,
+          4
+        ],
+        [
+          15,
+          4
+        ],
+        [
+          29,
+          4
+        ]
+      ],
+      "review_questions": [
+        "inspect_for_collision",
+        "inspect_for_threshold_exception"
+      ],
+      "authority": "none"
+    },
+    {
+      "id": "review_small_house_threshold_01",
+      "visual_hint": "small house door threshold",
+      "tiles": [
+        [
+          7,
+          22
+        ],
+        [
+          7,
+          23
+        ]
+      ],
+      "review_questions": [
+        "inspect_for_threshold_exception",
+        "inspect_for_walkability"
+      ],
+      "authority": "none"
+    },
+    {
+      "id": "review_market_stalls_01",
+      "visual_hint": "market stalls and lane furniture",
+      "tiles": [
+        [
+          21,
+          12
+        ],
+        [
+          27,
+          12
+        ],
+        [
+          20,
+          17
+        ],
+        [
+          28,
+          17
+        ]
+      ],
+      "review_questions": [
+        "inspect_for_collision",
+        "inspect_for_walkability"
+      ],
+      "authority": "none"
+    },
+    {
+      "id": "review_castle_meeting_room_01",
+      "visual_hint": "castle walls, columns, and meeting-room props",
+      "tiles": [
+        [
+          3,
+          5
+        ],
+        [
+          10,
+          14
+        ],
+        [
+          17,
+          14
+        ]
+      ],
+      "review_questions": [
+        "inspect_for_collision",
+        "inspect_for_walkability"
+      ],
+      "authority": "none"
+    },
+    {
+      "id": "review_sewer_hint_01",
+      "visual_hint": "sewer grate and undercity edge",
+      "tiles": [
+        [
+          25,
+          26
+        ],
+        [
+          28,
+          26
+        ],
+        [
+          30,
+          26
+        ]
+      ],
+      "review_questions": [
+        "inspect_for_transition_reservation",
+        "inspect_for_collision"
+      ],
+      "authority": "none"
+    }
+  ],
+  "mechanics": null,
+  "claims": {
+    "collision_defined": false,
+    "walkability_defined": false,
+    "transitions_defined": false,
+    "production_map_promoted": false
+  },
+  "notes": [
+    "These are review candidates only.",
+    "A reviewer may use them to plan future collision/walkability inspection.",
+    "They do not change movement rules or server authority."
+  ]
+}

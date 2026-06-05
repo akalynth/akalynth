@@ -1,0 +1,40 @@
+{
+  "id": "high_city_runtime_projection_negative_authority_leak_v1_draft",
+  "status": "negative_example_expected_to_be_flagged",
+  "payload": {
+    "production_map_promoted": true,
+    "shared_map_path": "packages/shared/maps/high_city.json",
+    "server_authoritative": true,
+    "layers": {
+      "visual_object_layer": {
+        "object": {
+          "id": "bad_visual",
+          "collision": "blocked",
+          "walkability": "walkable"
+        }
+      },
+      "walkability_layer": {
+        "cell": {
+          "tile": [
+            25,
+            26
+          ],
+          "transition_to": "sewer_level_01"
+        }
+      },
+      "transition_layer": {
+        "runtime_enabled": true,
+        "destination_validated": false
+      }
+    }
+  },
+  "expected_flags": [
+    "production_map_promoted_forbidden",
+    "shared_map_path_forbidden",
+    "server_authoritative_forbidden",
+    "runtime_visual_layer_forbidden_field:collision",
+    "runtime_visual_layer_forbidden_field:walkability",
+    "runtime_walkability_layer_forbidden_field:transition_to",
+    "runtime_transition_enabled_without_destination_validation"
+  ]
+}

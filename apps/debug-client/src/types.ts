@@ -26,6 +26,10 @@ export interface SessionInfo {
   playerId: string | null;
   name: string | null;
   status: PlayerStatus;
+  // Identity v0.1 (#148): signed auth token when logged in as a created
+  // character; null for guest play. `authenticated` distinguishes the two.
+  token: string | null;
+  authenticated: boolean;
 }
 
 export interface MoveIntent {
@@ -143,6 +147,10 @@ export interface GameClientApi {
   setStage: (stage: UiStage['stage']) => void;
   toggleMap: (map: MapName) => void;
   relog: () => void;
+  // Identity v0.1 (#148): create a character (mints a signed token), then play
+  // as that character. signOut clears the stored token and falls back to guest.
+  createCharacter: (name: string) => Promise<{ ok: boolean; error?: string }>;
+  signOut: () => void;
   openChat: () => void;
   closeChat: () => void;
   // Property Ownership v0

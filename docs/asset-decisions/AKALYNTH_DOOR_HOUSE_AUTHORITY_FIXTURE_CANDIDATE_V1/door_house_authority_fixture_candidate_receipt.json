@@ -1,0 +1,193 @@
+{
+  "id": "AKALYNTH_DOOR_HOUSE_AUTHORITY_FIXTURE_CANDIDATE_V1",
+  "status": "accepted_door_house_authority_fixture_candidate",
+  "scope": "draft non-runtime door/house authority fixture candidate for accepted refined high-city layout",
+  "input_receipts": [
+    "AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1",
+    "AKALYNTH_DOOR_AND_HOUSE_AUTHORITY_DESIGN_V1",
+    "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1"
+  ],
+  "purpose": "Create draft non-runtime metadata marking which reserved conditional tiles in the refined high-city fixture are intended to become door, house, access-policy, and overlay-visibility authority candidates later.",
+  "artifacts": [
+    "candidates/refined_high_city_door_candidates.v1.draft.json",
+    "candidates/refined_high_city_house_candidates.v1.draft.json",
+    "candidates/refined_high_city_access_policy_candidates.v1.draft.json",
+    "candidates/refined_high_city_overlay_visibility_bindings.v1.draft.json",
+    "validation/door_house_fixture_candidate_validation_report.json",
+    "validation/negative_door_house_fixture_candidate_cases.json",
+    "screenshots/01_door_threshold_candidates.png",
+    "screenshots/02_house_candidate_bounds.png",
+    "screenshots/03_overlay_visibility_binding_candidates.png",
+    "screenshots/04_access_policy_candidate_review.png",
+    "screenshots/05_reserved_conditionals_review.png",
+    "screenshots/06_combined_door_house_candidate_review.png"
+  ],
+  "candidate_summary": {
+    "door_candidate_count": 4,
+    "house_candidate_count": 3,
+    "access_policy_candidate_count": 4,
+    "overlay_visibility_binding_candidate_count": 3,
+    "reserved_conditional_threshold_tiles_used": 4,
+    "excluded_transition_or_non_door_conditionals": 3
+  },
+  "claims": {
+    "draft_door_candidates_created": true,
+    "draft_house_candidates_created": true,
+    "draft_access_policy_candidates_created": true,
+    "draft_overlay_visibility_binding_candidates_created": true,
+    "reserved_conditionals_preserved": true,
+    "runtime_door_behavior_added": false,
+    "runtime_entry_added": false,
+    "runtime_ownership_added": false,
+    "runtime_access_enforcement_added": false,
+    "runtime_collision_resolution_added": false,
+    "runtime_walkability_resolution_added": false,
+    "roof_visibility_bound_to_real_player_state": false,
+    "server_protocol_changed": false,
+    "shared_maps_changed": false,
+    "production_map_promoted": false,
+    "npc_behavior_added": false,
+    "mob_behavior_added": false,
+    "shop_changed": false,
+    "dialogue_changed": false,
+    "spawn_changed": false,
+    "ai_changed": false,
+    "combat_changed": false,
+    "mechanics_null": true
+  },
+  "validation": {
+    "door_candidates_reference_reserved_conditional_tiles": "pass",
+    "door_candidates_do_not_set_runtime_open_closed_authority": "pass",
+    "house_candidates_do_not_create_ownership_access_or_protection_zones": "pass",
+    "overlay_bindings_do_not_create_entry_detection_authority": "pass",
+    "access_policy_candidates_are_draft_only_and_unenforced": "pass",
+    "collision_walkability_remain_unresolved_for_threshold_tiles": "pass",
+    "mechanics_null": "pass",
+    "negative_door_house_fixture_candidate_cases_flagged": "pass",
+    "canvas_only_screenshots_captured": "pass",
+    "protected_runtime_files_remain_unchanged": "pass",
+    "npm_run_verify_quick_passes": "pass 9/9"
+  },
+  "review": {
+    "status": "pass",
+    "acceptance_criteria": {
+      "door_or_gate_candidates_exist": "pass",
+      "house_candidates_exist": "pass",
+      "access_policy_candidates_are_unenforced": "pass",
+      "overlay_visibility_binding_candidates_exist": "pass",
+      "reserved_door_threshold_conditionals_used": "pass",
+      "transition_like_conditionals_excluded_for_later_gate": "pass",
+      "negative_authority_leakage_cases_flagged": "pass",
+      "screenshots_generated_nonblank": "pass",
+      "protected_runtime_paths_remain_unchanged": "pass",
+      "npm_run_verify_quick_passes": "pass"
+    },
+    "notes": [
+      "Accepted as a draft, non-runtime door/house authority fixture candidate.",
+      "Door/gate candidates do not implement runtime open/close behavior.",
+      "House candidates do not implement ownership, access lists, protection zones, or entry permissions.",
+      "Access-policy candidates are draft and unenforced.",
+      "Overlay visibility bindings remain candidates and do not derive from real player state.",
+      "Collision and walkability remain unresolved for threshold tiles.",
+      "Sewer/slime transition-like conditionals remain excluded for a later transition authority gate."
+    ]
+  },
+  "accepted_claim_if_reviewed": "A draft, non-runtime door/house authority fixture candidate exists for the refined high-city layout, preserving reserved conditionals and preventing runtime authority leakage.",
+  "valid_accepted_status": "accepted_door_house_authority_fixture_candidate",
+  "validation_report": "validation/door_house_fixture_candidate_validation_report.json",
+  "non_claims": [
+    "Runtime doors are not implemented.",
+    "Door open/close behavior is not implemented.",
+    "House entry is not implemented.",
+    "House ownership is not implemented.",
+    "Access lists are not enforced.",
+    "Lock state is not implemented.",
+    "Door permissions are not implemented.",
+    "Collision is not resolved through door candidates.",
+    "Walkability is not resolved through door candidates.",
+    "Roof visibility is not driven by real server player state.",
+    "Shared maps are not changed.",
+    "Server protocol is not changed.",
+    "Production map is not promoted.",
+    "NPC, mob, shop, dialogue, spawn, AI, and combat behavior is not added."
+  ],
+  "next_recommended_gate": "AKALYNTH_TRANSITION_AUTHORITY_DESIGN_V1",
+  "hashes_sha256": {
+    "candidates/refined_high_city_door_candidates.v1.draft.json": "e1f6fa7039b2bde72ed1238c505a3990f9c68226d1d223f5f966fb5545edb331",
+    "candidates/refined_high_city_house_candidates.v1.draft.json": "f9b1037aa0a160b094155fb264d96412a2832fa9069447a44d1f3a297fb25aa3",
+    "candidates/refined_high_city_access_policy_candidates.v1.draft.json": "1a4c1e59c59774258ffe55d4858a6f3bfd4c0246771349b04dd3d75ebf996c19",
+    "candidates/refined_high_city_overlay_visibility_bindings.v1.draft.json": "79afba9ee57a050f90ec1db434268a89d99f6a1d7fa987f9d24ae383b76f5281",
+    "validation/negative_door_house_fixture_candidate_cases.json": "9b3d79a2d8b001a577305580d0e68c2af65b4a9330271e9623a429de7fa2b08f",
+    "screenshots/01_door_threshold_candidates.png": "b5c1f7a774692af9b3c8e7114ae00c11872b0edb451a63db59528519fbeebb2d",
+    "screenshots/02_house_candidate_bounds.png": "dbcb6e0f86d04b93455ddec79533f2bcd967dd9f1c7c8c70950cc32bc0dc85c2",
+    "screenshots/03_overlay_visibility_binding_candidates.png": "813e58e2968193f6275ac71425316834d7b7589faa8d4c3fc8cf6318823b75c5",
+    "screenshots/04_access_policy_candidate_review.png": "529248c461820e0b0b3127e59d46099572d26e9d47c0ab2c8b445fab1cf6925d",
+    "screenshots/05_reserved_conditionals_review.png": "77c4b18a9bf87e03a027345602227d18d73c0fdabe470efca5c8e354424d7b83",
+    "screenshots/06_combined_door_house_candidate_review.png": "f8144d6b5d36837f684c0995ee5eab18b8058d2a95a08dbe29fb4645804b15a3",
+    "validation/door_house_fixture_candidate_validation_report.json": "50bf58d5a228cc70cabff5e998b6bd6166525c9d33f16a68ea80737612f9768c"
+  },
+  "screenshot_capture": {
+    "status": "pass",
+    "mode": "generated_canvas_candidate_overlay",
+    "dimensions": "1024x1024",
+    "source": "draft door/house candidate metadata, not runtime map renderer",
+    "screenshots": [
+      {
+        "file": "screenshots/01_door_threshold_candidates.png",
+        "title": "Door threshold candidates",
+        "sha256": "b5c1f7a774692af9b3c8e7114ae00c11872b0edb451a63db59528519fbeebb2d"
+      },
+      {
+        "file": "screenshots/02_house_candidate_bounds.png",
+        "title": "House candidate bounds",
+        "sha256": "dbcb6e0f86d04b93455ddec79533f2bcd967dd9f1c7c8c70950cc32bc0dc85c2"
+      },
+      {
+        "file": "screenshots/03_overlay_visibility_binding_candidates.png",
+        "title": "Overlay visibility binding candidates",
+        "sha256": "813e58e2968193f6275ac71425316834d7b7589faa8d4c3fc8cf6318823b75c5"
+      },
+      {
+        "file": "screenshots/04_access_policy_candidate_review.png",
+        "title": "Access policy candidate review",
+        "sha256": "529248c461820e0b0b3127e59d46099572d26e9d47c0ab2c8b445fab1cf6925d"
+      },
+      {
+        "file": "screenshots/05_reserved_conditionals_review.png",
+        "title": "Reserved conditionals review",
+        "sha256": "77c4b18a9bf87e03a027345602227d18d73c0fdabe470efca5c8e354424d7b83"
+      },
+      {
+        "file": "screenshots/06_combined_door_house_candidate_review.png",
+        "title": "Combined door house candidate review",
+        "sha256": "f8144d6b5d36837f684c0995ee5eab18b8058d2a95a08dbe29fb4645804b15a3"
+      }
+    ],
+    "notes": [
+      "Screenshots visualize draft door/house authority fixture candidates only.",
+      "These images do not prove runtime rendering or gameplay authority."
+    ]
+  },
+  "screenshots": [
+    "screenshots/01_door_threshold_candidates.png",
+    "screenshots/02_house_candidate_bounds.png",
+    "screenshots/03_overlay_visibility_binding_candidates.png",
+    "screenshots/04_access_policy_candidate_review.png",
+    "screenshots/05_reserved_conditionals_review.png",
+    "screenshots/06_combined_door_house_candidate_review.png"
+  ],
+  "verification": {
+    "npm run verify:quick": "pass 9/9",
+    "protected_runtime_files_remain_unchanged": "pass"
+  },
+  "boundary_review": {
+    "status": "pass",
+    "protected_runtime_files_remain_unchanged": "pass",
+    "notes": [
+      "Protected runtime file status was checked after candidate artifacts were generated.",
+      "This gate created draft docs metadata, validation artifacts, screenshots, and a receipt only.",
+      "No server, protocol, shared map, runtime door behavior, runtime house entry, ownership, access-list enforcement, collision resolution, walkability resolution, shop, dialogue, spawn, AI, combat, NPC, or mob behavior was introduced."
+    ]
+  },
+  "accepted_claim": "A draft, non-runtime door/house authority fixture candidate exists for the refined high-city layout, preserving reserved conditionals and preventing runtime authority leakage."
+}

@@ -1,0 +1,24 @@
+{
+  "id": "market_shop_public_access_policy_candidate_v1",
+  "plane": "access_policy",
+  "status": "draft_design_only",
+  "runtime_authority": false,
+  "server_authoritative": false,
+  "production_map_promoted": false,
+  "policy_subject": "house_region",
+  "allowed_policy_shapes_reserved": [
+    "public",
+    "owner_only",
+    "allow_list"
+  ],
+  "mechanics": null,
+  "authority": {
+    "permission_evaluation": "future_gate_required",
+    "owner_identity": "future_gate_required_if_owned",
+    "role_source": "future_gate_required_if_role_based"
+  },
+  "notes": [
+    "Market visuals do not create shop access, trading, inventory, ownership, or public-use authority.",
+    "This is a boundary example only."
+  ]
+}

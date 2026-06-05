@@ -1,0 +1,125 @@
+{
+  "id": "AKALYNTH_EXPERIMENTAL_HIGH_CITY_BLOCK_PREVIEW_V1",
+  "status": "accepted_with_visual_adjustments_required",
+  "scope": "debug-client visual-only experimental high city block preview",
+  "input_receipts": [
+    "AKALYNTH_ENGINE_IMPORT_SMOKE_TEST_V1",
+    "AKALYNTH_CHARACTER_VISUAL_PLACEMENT_REVIEW_V1",
+    "AKALYNTH_DEBUG_CLIENT_VISUAL_SCALE_TUNING_V1",
+    "AKALYNTH_WORLD_OBJECT_VISUAL_SCALE_AUDIT_V1",
+    "AKALYNTH_WALK_IN_BUILDING_VISUAL_ASSEMBLY_V1",
+    "AKALYNTH_FLOOR_OVERLAY_VISIBILITY_REVIEW_V1",
+    "AKALYNTH_NPC_VISUAL_PRESET_IMPORT_V1"
+  ],
+  "purpose": "Combine accepted visual-only characters, NPC-looking presets, creature presets, walk-in buildings, world-object scale, and floor-overlay visibility into a first deterministic high-city block preview.",
+  "scenes": [
+    "?visual-smoke=high_city_block_overview",
+    "?visual-smoke=high_city_block_gate_public_space",
+    "?visual-smoke=high_city_block_market_shop",
+    "?visual-smoke=high_city_block_house_threshold",
+    "?visual-smoke=high_city_block_castle_room",
+    "?visual-smoke=high_city_block_sewer_hint"
+  ],
+  "screenshots": [
+    "screenshots/01_high_city_block_overview.png",
+    "screenshots/02_high_city_gate_public_space.png",
+    "screenshots/03_high_city_market_shop.png",
+    "screenshots/04_high_city_house_threshold.png",
+    "screenshots/05_high_city_castle_room.png",
+    "screenshots/06_high_city_sewer_hint.png"
+  ],
+  "screenshot_capture": {
+    "mode": "canvas_region_only",
+    "dimensions": "1024x1024",
+    "css_image_rendering": "pixelated",
+    "scrollbar_artifact_avoided": true,
+    "hashes_sha256": {
+      "screenshots/01_high_city_block_overview.png": "4ac87eaecb5a2042a507714027c2ad38bdac319af6dbd14fc7c2f5f412851e63",
+      "screenshots/02_high_city_gate_public_space.png": "e7f51eed609462afd6b0ffb0fecc6cf5b13fc9a7223f289b5ca913b289287d24",
+      "screenshots/03_high_city_market_shop.png": "822c3fa3c5b50591bb6368f8e7c71bfa641f161bf333cc132000a6254a52889f",
+      "screenshots/04_high_city_house_threshold.png": "ef6d261f07d62438bd9f5c2a0c76708e38923ba9a62b3914b8834a51f8e10131",
+      "screenshots/05_high_city_castle_room.png": "6bb87722652d181c4d0a4ff08126d6757e1b1ff53e131818d76aacac7aa78a1a",
+      "screenshots/06_high_city_sewer_hint.png": "d99e21438e51467bc3c5c428023e7007604dedc3c1e01266bf28eed5f828fbd0"
+    }
+  },
+  "visual_elements_previewed": {
+    "wall_and_gate": true,
+    "public_space": true,
+    "walk_in_house": true,
+    "market_shop": true,
+    "castle_meeting_room": true,
+    "floor_overlay_visible_faded_hidden_states": true,
+    "accepted_characters": true,
+    "npc_visual_presets": true,
+    "creature_visual_presets": true,
+    "sewer_hint": true
+  },
+  "claims": {
+    "debug_client_can_compose_high_city_visual_block": true,
+    "preview_uses_existing_visual_only_assets": true,
+    "deterministic_visual_smoke_routes_added": true,
+    "canvas_only_screenshots_captured": true,
+    "visual_review_completed": true,
+    "mechanics_null": true,
+    "server_protocol_changed": false,
+    "shared_maps_changed": false,
+    "production_map_promoted": false,
+    "npc_behavior_added": false,
+    "mob_behavior_added": false,
+    "collision_changed": false,
+    "walkability_changed": false,
+    "dialogue_changed": false,
+    "shop_changed": false,
+    "faction_changed": false,
+    "spawn_changed": false,
+    "ai_changed": false,
+    "combat_changed": false,
+    "ownership_or_door_permission_added": false,
+    "accepted_as_experimental_visual_preview": true,
+    "accepted_as_final_city_layout": false
+  },
+  "verification": {
+    "npm run verify:assets": "pass",
+    "npm run build:client": "pass",
+    "npm run build:server": "pass",
+    "npm run verify:quick": "pass 9/9"
+  },
+  "manual_review": {
+    "status": "pass_with_visual_adjustments_required",
+    "checks": {
+      "block_reads_as_city_preview": "pass",
+      "wall_gate_public_space_readable": "pass",
+      "walk_in_house_and_overlay_threshold_readable": "pass",
+      "market_shop_readable": "pass",
+      "castle_meeting_room_readable": "pass",
+      "sewer_hint_readable": "pass",
+      "characters_and_presets_remain_legible": "pass",
+      "crowd_spacing_acceptable": "needs_adjustment",
+      "z_order_acceptable": "pass",
+      "nearest_neighbor_preserved": "pass",
+      "canvas_only_capture": "pass",
+      "boundary_preserved": "pass"
+    },
+    "visual_adjustments_required": [
+      "Reduce dense debug-collage feel before any production map candidate.",
+      "Create clearer public path from gate to central meeting space.",
+      "Separate house, market, castle, and sewer zones with more breathing room.",
+      "Reduce roof/building mass dominance in the overview.",
+      "Make sewer entrance/hint more intentionally placed and readable.",
+      "Recheck z-order after spacing changes."
+    ]
+  },
+  "non_claims": [
+    "Accepted as experimental visual composition proof only.",
+    "Not accepted as a final city layout.",
+    "Not accepted for production map promotion.",
+    "This does not create server-authoritative NPCs, mobs, spawns, shops, dialogue, factions, AI, combat, collision, walkability, ownership, access lists, lock state, door permissions, or house entry.",
+    "This does not add protocol fields or shared map metadata."
+  ],
+  "notes": [
+    "The preview is assembled from debug-client review fixtures and existing visual-only source assets.",
+    "Screenshots are canvas-region captures to avoid browser scrollbar artifacts.",
+    "Review routes are deterministic and remain separate from shared production map JSON.",
+    "Manual review accepted the experimental composition proof with visual adjustments required before any production-map candidate."
+  ]
+}

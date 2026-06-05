@@ -1,0 +1,164 @@
+{
+  "id": "refined_high_city_house_candidates_v1",
+  "plane": "house_authority_candidate_set",
+  "status": "draft_non_runtime",
+  "source_receipts": [
+    "AKALYNTH_DOOR_AND_HOUSE_AUTHORITY_DESIGN_V1",
+    "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1"
+  ],
+  "runtime_authority": false,
+  "server_authoritative": false,
+  "production_map_promoted": false,
+  "coordinate_system": {
+    "origin": "top_left",
+    "unit": "tile",
+    "tile_size_px": 32,
+    "axes": {
+      "x": "east",
+      "y": "south"
+    },
+    "floor": {
+      "default": 0,
+      "meaning": "draft visual fixture floor index only; not production map floor authority"
+    }
+  },
+  "candidates": [
+    {
+      "id": "castle_meeting_hall_house_candidate",
+      "kind": "meeting_hall_candidate",
+      "display_name": "Castle meeting hall visual candidate",
+      "interior_candidate_bounds": {
+        "x": 4,
+        "y": 5,
+        "width": 14,
+        "height": 10,
+        "floor": 0
+      },
+      "door_candidate_ids": [
+        "castle_meeting_hall_door_candidate"
+      ],
+      "overlay_binding_candidate_ids": [
+        "castle_meeting_hall_overlay_visibility_binding_candidate"
+      ],
+      "source_overlay_zone_ids": [
+        "overlay_01_roof_castle_overlay_3_5"
+      ],
+      "authority": {
+        "runtime_house_zone": "none",
+        "ownership": "none",
+        "access_lists": "none",
+        "protection_zone": "none",
+        "entry_permissions": "none",
+        "inside_outside_truth": "none",
+        "server_entity": "none"
+      },
+      "mechanics": null,
+      "notes": [
+        "Draft house/room authority candidate only.",
+        "Does not create restricted room behavior or protection zone."
+      ],
+      "plane": "house_authority_candidate",
+      "status": "draft_non_runtime",
+      "source_receipts": [
+        "AKALYNTH_DOOR_AND_HOUSE_AUTHORITY_DESIGN_V1",
+        "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1"
+      ],
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false
+    },
+    {
+      "id": "market_shop_house_candidate",
+      "kind": "shop_interior_candidate",
+      "display_name": "Market shop visual candidate",
+      "interior_candidate_bounds": {
+        "x": 20,
+        "y": 8,
+        "width": 10,
+        "height": 10,
+        "floor": 0
+      },
+      "door_candidate_ids": [
+        "market_shop_front_door_candidate"
+      ],
+      "overlay_binding_candidate_ids": [
+        "market_shop_overlay_visibility_binding_candidate"
+      ],
+      "source_overlay_zone_ids": [
+        "overlay_02_market_awning_overlay_19_8"
+      ],
+      "authority": {
+        "runtime_house_zone": "none",
+        "ownership": "none",
+        "access_lists": "none",
+        "protection_zone": "none",
+        "entry_permissions": "none",
+        "inside_outside_truth": "none",
+        "server_entity": "none"
+      },
+      "mechanics": null,
+      "notes": [
+        "Draft shop-building authority candidate only.",
+        "Does not create shop interaction, ownership, inventory, or access enforcement."
+      ],
+      "plane": "house_authority_candidate",
+      "status": "draft_non_runtime",
+      "source_receipts": [
+        "AKALYNTH_DOOR_AND_HOUSE_AUTHORITY_DESIGN_V1",
+        "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1"
+      ],
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false
+    },
+    {
+      "id": "small_house_01_house_candidate",
+      "kind": "house_candidate",
+      "display_name": "Small house visual candidate",
+      "interior_candidate_bounds": {
+        "x": 4,
+        "y": 17,
+        "width": 7,
+        "height": 6,
+        "floor": 0
+      },
+      "door_candidate_ids": [
+        "small_house_01_front_door_candidate"
+      ],
+      "overlay_binding_candidate_ids": [
+        "small_house_01_overlay_visibility_binding_candidate"
+      ],
+      "source_overlay_zone_ids": [
+        "overlay_03_roof_red_small_overlay_3_16"
+      ],
+      "authority": {
+        "runtime_house_zone": "none",
+        "ownership": "none",
+        "access_lists": "none",
+        "protection_zone": "none",
+        "entry_permissions": "none",
+        "inside_outside_truth": "none",
+        "server_entity": "none"
+      },
+      "mechanics": null,
+      "notes": [
+        "Draft house authority candidate only.",
+        "Does not create player ownership, access lists, entry permissions, or protected area semantics."
+      ],
+      "plane": "house_authority_candidate",
+      "status": "draft_non_runtime",
+      "source_receipts": [
+        "AKALYNTH_DOOR_AND_HOUSE_AUTHORITY_DESIGN_V1",
+        "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1"
+      ],
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false
+    }
+  ],
+  "mechanics": null,
+  "notes": [
+    "Interior bounds are draft candidate bounds only.",
+    "They do not create runtime house zones, ownership, entry, or protection zones."
+  ]
+}

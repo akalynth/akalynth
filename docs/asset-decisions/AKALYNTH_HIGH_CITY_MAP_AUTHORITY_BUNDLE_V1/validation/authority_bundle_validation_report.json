@@ -1,0 +1,181 @@
+{
+  "id": "AKALYNTH_HIGH_CITY_MAP_AUTHORITY_BUNDLE_V1_VALIDATION_REPORT",
+  "status": "pass",
+  "checks": {
+    "referenced_artifact_files_exist": "pass",
+    "referenced_artifact_hashes_match": "pass",
+    "referenced_receipts_are_accepted": "pass",
+    "coordinate_systems_match_across_planes": "pass",
+    "bounds_match_or_are_explicitly_partial": "pass",
+    "visual_object_ids_referenced_by_candidates_exist": "pass",
+    "door_candidates_reference_reserved_conditional_tiles": "pass",
+    "transition_candidates_reference_reserved_conditional_tiles": "pass",
+    "sewer_conditionals_not_resolved_by_door_house_candidates": "pass",
+    "door_house_candidates_not_used_as_transition_authority": "pass",
+    "overlay_bindings_reference_known_visual_overlays_and_house_candidates": "pass",
+    "house_candidates_reference_known_doors_and_overlays": "pass",
+    "transition_candidates_reference_known_endpoints_policies_and_floor_bindings": "pass",
+    "collision_walkability_candidate_conflicts_remain_zero": "pass",
+    "negative_cross_plane_mismatch_cases_flagged": "pass",
+    "production_map_promoted_false": "pass",
+    "bundle_remains_non_runtime": "pass",
+    "canvas_only_screenshots_captured": "pass",
+    "protected_runtime_files_remain_unchanged": "pass",
+    "npm_run_verify_quick_passes": "pass 9/9"
+  },
+  "bundle_summary": {
+    "counts_by_plane": {
+      "visual_objects": 1416,
+      "overlay_zones": 3,
+      "collision_cells": 28,
+      "walkability_cells": 28,
+      "door_candidates": 4,
+      "house_candidates": 3,
+      "access_policy_candidates": 4,
+      "overlay_binding_candidates": 3,
+      "transition_candidates": 4,
+      "transition_endpoint_candidates": 4,
+      "floor_change_binding_candidates": 4,
+      "transition_policy_candidates": 3
+    },
+    "cross_plane_link_counts": {
+      "door_to_reserved_conditionals": 4,
+      "transition_to_reserved_conditionals": 4,
+      "overlay_bindings_to_house_candidates": 3,
+      "house_to_doors_and_overlays": 3,
+      "transition_to_endpoints_policies_and_floor": 4
+    },
+    "reserved_conditionals": 7,
+    "unresolved_authority_summary": {
+      "runtime_movement": "none",
+      "runtime_collision": "none",
+      "runtime_walkability": "none",
+      "runtime_doors": "none",
+      "runtime_houses": "none",
+      "runtime_access_policy": "none",
+      "runtime_overlay_visibility": "none",
+      "runtime_transitions": "none",
+      "production_map": "none",
+      "server_protocol": "none"
+    }
+  },
+  "negative_case_results": [
+    {
+      "id": "negative_door_candidate_references_non_reserved_tile",
+      "expected_flags": [
+        "door_candidate_non_reserved_tile"
+      ],
+      "observed_flags": [
+        "door_candidate_non_reserved_tile"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_transition_candidate_references_non_gate_door_threshold_as_transition_authority",
+      "expected_flags": [
+        "transition_candidate_uses_door_threshold_without_gate_kind"
+      ],
+      "observed_flags": [
+        "transition_candidate_uses_door_threshold_without_gate_kind"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_overlay_binding_references_missing_house_candidate",
+      "expected_flags": [
+        "overlay_binding_missing_house_candidate"
+      ],
+      "observed_flags": [
+        "overlay_binding_missing_house_candidate"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_collision_walkability_conflict",
+      "expected_flags": [
+        "collision_walkability_conflict:blocked_and_walkable"
+      ],
+      "observed_flags": [
+        "collision_walkability_conflict:blocked_and_walkable"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_visual_object_id_missing",
+      "expected_flags": [
+        "missing_visual_object_id"
+      ],
+      "observed_flags": [
+        "missing_visual_object_id"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_candidate_artifact_hash_mismatch",
+      "expected_flags": [
+        "artifact_hash_mismatch"
+      ],
+      "observed_flags": [
+        "artifact_hash_mismatch"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_bundle_references_unaccepted_receipt",
+      "expected_flags": [
+        "receipt_not_accepted"
+      ],
+      "observed_flags": [
+        "receipt_not_accepted"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_bundle_sets_production_map_promoted_true",
+      "expected_flags": [
+        "production_map_promoted_forbidden"
+      ],
+      "observed_flags": [
+        "production_map_promoted_forbidden"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_bundle_includes_runtime_enabled_true",
+      "expected_flags": [
+        "runtime_enabled_forbidden"
+      ],
+      "observed_flags": [
+        "runtime_enabled_forbidden"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_bundle_includes_shared_map_path",
+      "expected_flags": [
+        "shared_map_path_forbidden"
+      ],
+      "observed_flags": [
+        "shared_map_path_forbidden"
+      ],
+      "result": "flagged"
+    }
+  ],
+  "hashes_sha256": {
+    "bundle/high_city_authority_bundle.v1.draft.json": "4f67d068eb745af2a0a064787ab0ed8a1cf0a2922c9209dde341aaf5ff8248bb",
+    "bundle/high_city_authority_bundle.index.v1.json": "bdc673066280c99bcc88b6b90382c2baa1561565276368e92ecf1f3b2a1a0056",
+    "bundle/high_city_authority_bundle.summary.v1.json": "5fddd35e884cc15bb72bfd21ea7c38d75bd1aa675d2565771db01caec9bb687f",
+    "bundle/high_city_authority_bundle.sha256": "5488e867b52066f37589e88f18d3e359cf552fd55c4bda0fe54fd525e506d5eb",
+    "validation/negative_cross_plane_mismatch_cases.json": "ea95dfcaf5ad130cf1add7f47c110820808f3dd22a788ad9e08d25ecabf6b8a9",
+    "screenshots/01_bundle_visual_overview.png": "412e6279bc98eb533be3de9fc16128a8f516d91d02f6f08cc1558ed078355b89",
+    "screenshots/02_bundle_collision_walkability_overlay.png": "bbc108bf1f5d02d9fdae55f19d01033d3ae0269d022c95c14dfbe4bd21572b10",
+    "screenshots/03_bundle_door_house_overlay.png": "22f999d9e80d5857c39cf608a7ea21b9b3cb361d3b1212bb996b3f1aba5ae0f4",
+    "screenshots/04_bundle_transition_overlay.png": "753b12832a1ff5969aa128ab92e3c9a3525abdc3f10a4cd15ff8e1f349494f84",
+    "screenshots/05_bundle_reserved_conditionals_overlay.png": "502df1cd4f5603a05ff9bdd235124b37d8c15f708ee0ec17d12151e3326307b8",
+    "screenshots/06_bundle_combined_review.png": "b5d2054e9a7222ab1bc23cb351046c66f9cab58928fa649de765fca7d5aec0ba"
+  },
+  "notes": [
+    "Validation checks draft non-runtime bundle consistency only.",
+    "No runtime map, movement, collision, walkability, door, house, transition, or production-map authority is created."
+  ]
+}

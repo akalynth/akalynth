@@ -1,0 +1,119 @@
+{
+  "id": "AKALYNTH_COLLISION_WALKABILITY_METADATA_DESIGN_V1",
+  "status": "accepted_collision_walkability_metadata_design",
+  "scope": "collision and walkability metadata boundary design only",
+  "input_receipts": [
+    "AKALYNTH_MAP_OBJECT_METADATA_DESIGN_V1",
+    "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1"
+  ],
+  "purpose": "Design separate draft collision and walkability metadata planes without deriving movement authority from visual objects.",
+  "artifacts": [
+    "collision_walkability_metadata_design.md",
+    "tile_authority_model.md",
+    "collision_walkability_decision_table.md",
+    "validation_plan.md",
+    "draft_schemas/collision_layer.schema.draft.json",
+    "draft_schemas/walkability_layer.schema.draft.json",
+    "draft_schemas/collision_walkability_consistency.schema.draft.json",
+    "examples/refined_high_city_collision_candidates.draft.json",
+    "examples/refined_high_city_walkability_candidates.draft.json",
+    "examples/small_house_collision_walkability_candidates.draft.json",
+    "examples/market_shop_collision_walkability_candidates.draft.json",
+    "examples/castle_meeting_collision_walkability_candidates.draft.json",
+    "examples/sewer_hint_collision_walkability_candidates.draft.json",
+    "validation/negative_collision_walkability_cases.json",
+    "validation/collision_walkability_validation_report.json"
+  ],
+  "coordinate_system": {
+    "origin": "top_left",
+    "unit": "tile",
+    "tile_size_px": 32,
+    "axes": {
+      "x": "east",
+      "y": "south"
+    },
+    "floor": {
+      "default": 0,
+      "meaning": "visual/debug floor index only until production promotion"
+    }
+  },
+  "claims": {
+    "collision_plane_drafted": true,
+    "walkability_plane_drafted": true,
+    "collision_walkability_consistency_rules_drafted": true,
+    "negative_authority_leakage_cases_added": true,
+    "visual_objects_do_not_grant_collision": true,
+    "visual_objects_do_not_grant_walkability": true,
+    "door_and_transition_authority_reserved_for_future_gates": true,
+    "production_map_promoted": false,
+    "server_protocol_changed": false,
+    "shared_maps_changed": false,
+    "collision_changed": false,
+    "walkability_changed": false,
+    "door_authority_added": false,
+    "house_ownership_added": false,
+    "npc_behavior_added": false,
+    "mob_behavior_added": false,
+    "shop_changed": false,
+    "dialogue_changed": false,
+    "spawn_changed": false,
+    "ai_changed": false,
+    "combat_changed": false
+  },
+  "verification": {
+    "draft_schema_json_valid": "pass",
+    "draft_example_json_valid": "pass",
+    "negative_collision_walkability_cases_flagged": "pass",
+    "protected_runtime_files_unchanged": "pass",
+    "npm run verify:quick": "pass 9/9"
+  },
+  "design_review": {
+    "status": "pass",
+    "acceptance_criteria": {
+      "collision_and_walkability_are_separate_planes": "pass",
+      "visual_metadata_does_not_grant_movement_authority": "pass",
+      "door_authority_reserved_for_future_gate": "pass",
+      "transition_authority_reserved_for_future_gate": "pass",
+      "conflicting_blocked_and_walkable_tiles_are_flagged": "pass",
+      "examples_remain_draft_non_runtime_candidates": "pass",
+      "protected_runtime_files_remain_unchanged": "pass",
+      "npm_run_verify_quick_passes": "pass"
+    },
+    "notes": [
+      "Accepted as a metadata boundary design gate only.",
+      "Collision and walkability remain draft future planes, not runtime authority.",
+      "Visual object references are evidence pointers only.",
+      "Doors, houses, sewers, stairs, transitions, ownership, permissions, and runtime map promotion remain reserved for later gates.",
+      "Negative leakage cases correctly cover visual objects declaring collision/walkability, blocked+walkable conflicts, unauthorized door authority, and transition authority leaking into walkability."
+    ]
+  },
+  "valid_accepted_status": "accepted_collision_walkability_metadata_design",
+  "next_recommended_gate": "AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1",
+  "non_claims": [
+    "Runtime collision is not implemented.",
+    "Runtime walkability is not implemented.",
+    "Production map is not updated.",
+    "Doors do not work.",
+    "Houses do not work.",
+    "Sewers do not transition.",
+    "NPCs and mobs do not interact.",
+    "Shared maps are not updated.",
+    "Production map is not promoted.",
+    "Doors, houses, sewers, stairs, NPCs, mobs, shops, dialogue, spawns, AI, and combat are not implemented by this gate."
+  ],
+  "validation_report": "validation/collision_walkability_validation_report.json",
+  "validation_hashes_sha256": {
+    "draft_schemas/collision_layer.schema.draft.json": "81fbd68e4dc68cd7f0f47739dff6d297cc4535f5e285e368fe0a832c5ec87a0e",
+    "draft_schemas/walkability_layer.schema.draft.json": "15b78d9cd6f665195fa026c3ca98ab9150e22c2d3d04697209c0f94d0648cd2b",
+    "draft_schemas/collision_walkability_consistency.schema.draft.json": "813e05f76149df4db6e49d4a90f19c65ef8cae2164086f41a4c20e9cd7f80d64",
+    "examples/refined_high_city_collision_candidates.draft.json": "ade33a284808deefdbab0129e822ab0a9b7d8ecee1d98061e5b9eb64b9e7e10b",
+    "examples/refined_high_city_walkability_candidates.draft.json": "0c2655e077c0360234289b38fdb84f292f6753e62378c1fa4e24fc5aca998d89",
+    "examples/small_house_collision_walkability_candidates.draft.json": "4489c51965d76b6d2e368052ed451170df5be0d8f9a9a0de1f692042206197af",
+    "examples/market_shop_collision_walkability_candidates.draft.json": "f8d0a7dd0ed808da3e3ce416bdf5296a78c5e6795f0d5c7dd2fec8712c0cd80c",
+    "examples/castle_meeting_collision_walkability_candidates.draft.json": "55252dc7b6ee2584a3eea947fce6113e686c97ea398b89597d83956d94b91462",
+    "examples/sewer_hint_collision_walkability_candidates.draft.json": "4cc208465d5c0043baae61b86fcc1e9a5c5f79cf59ef97d3e3324e9a7c3439c1",
+    "validation/negative_collision_walkability_cases.json": "26eed63d54f584d03f8d9ddeb24e8c51676b3c67aa841c29a25464f8b982adbf",
+    "validation/collision_walkability_validation_report.json": "84924e8a60df66e1e67b676b3a122696045670debb182b57e51196677cc65a32"
+  },
+  "accepted_claim": "Akalynth has an accepted draft design for separate collision and walkability metadata planes, with explicit rules preventing visual objects from granting movement authority."
+}

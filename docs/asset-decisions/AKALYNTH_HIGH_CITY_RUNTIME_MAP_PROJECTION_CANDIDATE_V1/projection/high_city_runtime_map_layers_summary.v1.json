@@ -1,0 +1,27 @@
+{
+  "id": "high_city_runtime_map_layers_summary_v1",
+  "status": "draft_non_runtime_projection_summary",
+  "source_projection": "projection/high_city_runtime_map_projection.v1.draft.json",
+  "source_bundle_receipt": "AKALYNTH_HIGH_CITY_MAP_AUTHORITY_BUNDLE_V1",
+  "source_schema_design_receipt": "AKALYNTH_RUNTIME_MAP_AUTHORITY_SCHEMA_DESIGN_V1",
+  "source_validation_harness_receipt": "AKALYNTH_RUNTIME_MAP_SCHEMA_VALIDATION_HARNESS_V1",
+  "counts_by_layer": {
+    "visual_object_layer": 1416,
+    "overlay_presentation_layer": 3,
+    "collision_layer": 28,
+    "walkability_layer": 28,
+    "door_candidates": 4,
+    "house_candidates": 3,
+    "access_policy_candidates": 4,
+    "overlay_binding_candidates": 3,
+    "transition_candidates": 4,
+    "transition_endpoint_candidates": 4,
+    "floor_change_binding_candidates": 4,
+    "transition_policy_candidates": 3
+  },
+  "runtime_authority": false,
+  "server_authoritative": false,
+  "production_map_promoted": false,
+  "shared_map_path": "none",
+  "mechanics": null
+}

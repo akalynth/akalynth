@@ -1,0 +1,111 @@
+{
+  "id": "refined_high_city_access_policy_candidates_v1",
+  "plane": "access_policy_candidate_set",
+  "status": "draft_non_runtime",
+  "runtime_authority": false,
+  "server_authoritative": false,
+  "production_map_promoted": false,
+  "candidates": [
+    {
+      "id": "high_city_gate_public_passage_policy_candidate",
+      "subject_candidate_id": "high_city_gate_south_threshold_candidate",
+      "policy_shape_reserved": "public_passage_future_gate",
+      "authority": {
+        "runtime_enforcement": false,
+        "owner_account_id": "none",
+        "access_list": "none",
+        "permission_evaluation": "none",
+        "lock_state": "none",
+        "shop_authority": "none",
+        "dialogue_authority": "none"
+      },
+      "notes": [
+        "Draft public passage policy candidate only.",
+        "Does not grant runtime passage."
+      ],
+      "plane": "access_policy_candidate",
+      "status": "draft_non_runtime",
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "mechanics": null
+    },
+    {
+      "id": "castle_meeting_hall_restricted_access_policy_candidate",
+      "subject_candidate_id": "castle_meeting_hall_house_candidate",
+      "policy_shape_reserved": "restricted_role_or_story_gate_future_gate",
+      "authority": {
+        "runtime_enforcement": false,
+        "owner_account_id": "none",
+        "access_list": "none",
+        "permission_evaluation": "none",
+        "lock_state": "none",
+        "shop_authority": "none",
+        "dialogue_authority": "none"
+      },
+      "notes": [
+        "Draft restricted access policy candidate only.",
+        "No role, faction, or story access is enforced."
+      ],
+      "plane": "access_policy_candidate",
+      "status": "draft_non_runtime",
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "mechanics": null
+    },
+    {
+      "id": "market_shop_public_access_policy_candidate",
+      "subject_candidate_id": "market_shop_house_candidate",
+      "policy_shape_reserved": "public_shop_entry_future_gate",
+      "authority": {
+        "runtime_enforcement": false,
+        "owner_account_id": "none",
+        "access_list": "none",
+        "permission_evaluation": "none",
+        "lock_state": "none",
+        "shop_authority": "none",
+        "dialogue_authority": "none"
+      },
+      "notes": [
+        "Draft public shop-entry policy candidate only.",
+        "Does not create shop behavior or entry enforcement."
+      ],
+      "plane": "access_policy_candidate",
+      "status": "draft_non_runtime",
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "mechanics": null
+    },
+    {
+      "id": "small_house_01_private_access_policy_candidate",
+      "subject_candidate_id": "small_house_01_house_candidate",
+      "policy_shape_reserved": "private_house_future_gate",
+      "authority": {
+        "runtime_enforcement": false,
+        "owner_account_id": "none",
+        "access_list": "none",
+        "permission_evaluation": "none",
+        "lock_state": "none",
+        "shop_authority": "none",
+        "dialogue_authority": "none"
+      },
+      "notes": [
+        "Draft private house policy candidate only.",
+        "Does not create ownership or access list enforcement."
+      ],
+      "plane": "access_policy_candidate",
+      "status": "draft_non_runtime",
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "mechanics": null
+    }
+  ],
+  "mechanics": null,
+  "notes": [
+    "Access policy candidates are unenforced.",
+    "No owner account ids, access lists, factions, shop behavior, or permission checks are created."
+  ]
+}

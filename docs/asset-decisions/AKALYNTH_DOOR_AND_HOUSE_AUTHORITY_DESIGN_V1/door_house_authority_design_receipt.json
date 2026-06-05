@@ -1,0 +1,131 @@
+{
+  "id": "AKALYNTH_DOOR_AND_HOUSE_AUTHORITY_DESIGN_V1",
+  "status": "accepted_door_and_house_authority_design",
+  "scope": "door, threshold, and house authority boundary design only",
+  "input_receipts": [
+    "AKALYNTH_MAP_OBJECT_METADATA_DESIGN_V1",
+    "AKALYNTH_COLLISION_WALKABILITY_METADATA_DESIGN_V1",
+    "AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1"
+  ],
+  "purpose": "Design future authority boundaries for door thresholds, open/closed state, house entry, inside/outside context, overlay visibility trigger source, ownership, access lists, lock state, and permission boundaries without implementing runtime behavior.",
+  "artifacts": [
+    "door_house_authority_design.md",
+    "threshold_authority_model.md",
+    "permission_boundary_matrix.md",
+    "validation_plan.md",
+    "draft_schemas/door_authority.schema.draft.json",
+    "draft_schemas/house_authority.schema.draft.json",
+    "draft_schemas/access_policy.schema.draft.json",
+    "draft_schemas/overlay_visibility_binding.schema.draft.json",
+    "examples/small_house_door_authority.draft.json",
+    "examples/market_shop_access_policy.draft.json",
+    "examples/castle_meeting_hall_access_policy.draft.json",
+    "examples/reserved_conditionals_from_high_city.draft.json",
+    "validation/negative_door_house_authority_cases.json",
+    "validation/door_house_authority_validation_report.json"
+  ],
+  "claims": {
+    "door_authority_boundary_drafted": true,
+    "house_authority_boundary_drafted": true,
+    "access_policy_boundary_drafted": true,
+    "overlay_visibility_binding_boundary_drafted": true,
+    "reserved_conditionals_preserved_for_future_gates": true,
+    "visual_doors_do_not_grant_door_authority": true,
+    "roof_overlays_do_not_grant_house_authority": true,
+    "runtime_door_behavior_added": false,
+    "runtime_house_entry_added": false,
+    "runtime_ownership_added": false,
+    "runtime_access_lists_added": false,
+    "runtime_lock_state_added": false,
+    "collision_changed": false,
+    "walkability_changed": false,
+    "server_protocol_changed": false,
+    "shared_maps_changed": false,
+    "production_map_promoted": false,
+    "npc_behavior_added": false,
+    "mob_behavior_added": false,
+    "shop_changed": false,
+    "dialogue_changed": false,
+    "spawn_changed": false,
+    "ai_changed": false,
+    "combat_changed": false
+  },
+  "verification": {
+    "draft_schema_json_valid": "pass",
+    "draft_example_json_valid": "pass",
+    "negative_door_house_authority_cases_added": "pass",
+    "npm run verify:quick": "pass 9/9",
+    "negative_door_house_authority_cases_flagged": "pass",
+    "examples_remain_design_only": "pass",
+    "reserved_conditionals_remain_unresolved": "pass",
+    "protected_runtime_files_remain_unchanged": "pass"
+  },
+  "design_review": {
+    "status": "pass",
+    "acceptance_criteria": {
+      "door_authority_is_separate_from_door_visuals": "pass",
+      "house_authority_is_separate_from_building_visuals": "pass",
+      "ownership_and_access_lists_are_separate_future_authority": "pass",
+      "lock_state_does_not_come_from_sprite_state": "pass",
+      "threshold_authority_model_drafted": "pass",
+      "overlay_visibility_binding_drafted_as_separate_presentation_binding": "pass",
+      "reserved_conditionals_remain_unresolved_until_future_gate": "pass",
+      "negative_door_house_authority_cases_flagged": "pass",
+      "protected_runtime_files_remain_unchanged": "pass",
+      "npm_run_verify_quick_passes": "pass"
+    },
+    "notes": [
+      "Accepted as a door and house authority boundary design gate only.",
+      "No runtime door behavior, house entry, ownership, access lists, lock state, collision, walkability, or production map promotion was added.",
+      "Door sprites, roof overlays, building interiors, and visual footprints remain evidence or presentation only.",
+      "Reserved conditional tiles from the collision/walkability candidate remain unresolved until a later non-runtime fixture candidate and then a separate runtime gate."
+    ]
+  },
+  "accepted_claim_if_reviewed": "Akalynth has a draft design for door, threshold, and house authority boundaries, reserving ownership, permissions, lock state, and entry behavior for explicit future runtime gates.",
+  "valid_accepted_status": "accepted_door_and_house_authority_design",
+  "non_claims": [
+    "Runtime doors are not implemented.",
+    "Door open/close behavior is not implemented.",
+    "House entry is not implemented.",
+    "House ownership is not implemented.",
+    "Access lists are not implemented.",
+    "Lock state is not implemented.",
+    "Door permissions are not implemented.",
+    "Roof visibility is not bound to real player state.",
+    "Collision is not resolved through doors.",
+    "Walkability is not resolved through doors.",
+    "Shared maps are not updated.",
+    "Server protocol is not changed.",
+    "Production map is not promoted.",
+    "NPC, mob, shop, dialogue, spawn, AI, and combat behavior are not added."
+  ],
+  "next_recommended_gate": "AKALYNTH_DOOR_HOUSE_AUTHORITY_FIXTURE_CANDIDATE_V1",
+  "hashes_sha256": {
+    "door_house_authority_design.md": "69ad869ccaf8c94062cf2cf64c438f44d992bcb2ed77db44663e647044993372",
+    "threshold_authority_model.md": "b4482697441187a90501128ef0201ab8174621bca91cc308a68b84926383096b",
+    "permission_boundary_matrix.md": "ff0949e21c1f9e8a6346fbc615e7193139f87e48e4cf62f5fba33f0520986f0f",
+    "validation_plan.md": "6a1d1d59c88625b656849f11cc647d29bc44ccc580af1b4620f543324bfb5811",
+    "draft_schemas/door_authority.schema.draft.json": "0f94754b51a6e28cdb5f1bd6916b23c42aa79e2dca51c5ddac1441bb1ad90552",
+    "draft_schemas/house_authority.schema.draft.json": "9007ac5dc34faf4de646cb0cbac278e7f2dcc5760ea97394fdb40ec6ae972614",
+    "draft_schemas/access_policy.schema.draft.json": "81bc66d0b5a3a72d143ce0f6c81df69638908cef91a4fd48900ca508e150cbc4",
+    "draft_schemas/overlay_visibility_binding.schema.draft.json": "568836a63291a9e443a4ade71614be3053ebc29d148bc4209f82a8dc75632ff9",
+    "examples/small_house_door_authority.draft.json": "ffb8f6969fcdfe1145d2848ad1185357162012ce033ff0832cab8a104a7cca7a",
+    "examples/market_shop_access_policy.draft.json": "fd955a9b0c61397d2110daaa697e4abe52c260979b58427097c74152586a6611",
+    "examples/castle_meeting_hall_access_policy.draft.json": "5d42cc9bed51d9dcaa86b39d74bd4bc7fd1dd6895aa01b44f7deabde6ebc389b",
+    "examples/reserved_conditionals_from_high_city.draft.json": "aa826f45194bec7e2c1deb9e62c062516608d4bb30c174aadd810bcba4e5b9a0",
+    "validation/negative_door_house_authority_cases.json": "5c74c39ccbb5b383a98a2e8f530e5e43e6ca04d9a8090d2f95c7b61368f62e96",
+    "validation/door_house_authority_validation_report.json": "a02cdd0fe46c9313d61d3d6031ffbfdd498e8f3d11e865a4a62398425859940c",
+    "door_house_authority_design_receipt.json": "c1d05744cdfc604d6d911902eb608840e61b4ac64d06c0765d5e8eabe2adb731"
+  },
+  "validation_report": "validation/door_house_authority_validation_report.json",
+  "boundary_review": {
+    "status": "pass",
+    "protected_runtime_files_remain_unchanged": "pass",
+    "notes": [
+      "Protected runtime file status was checked after the design artifacts were generated.",
+      "This gate created docs, draft schemas, examples, validation fixtures, and a receipt only.",
+      "No server, protocol, shared map, runtime collision, runtime walkability, door, house, ownership, access-list, shop, dialogue, spawn, AI, combat, NPC, or mob behavior was introduced."
+    ]
+  },
+  "accepted_claim": "Akalynth has an accepted draft design for door, threshold, house, ownership, access-policy, lock-state, and overlay-visibility authority boundaries, without implementing runtime door or house behavior."
+}

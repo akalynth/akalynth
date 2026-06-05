@@ -1,0 +1,114 @@
+{
+  "id": "AKALYNTH_DOOR_HOUSE_AUTHORITY_FIXTURE_CANDIDATE_V1_VALIDATION_REPORT",
+  "status": "pass",
+  "checks": {
+    "door_candidates_reference_reserved_conditional_tiles": "pass",
+    "door_candidates_do_not_set_runtime_open_closed_authority": "pass",
+    "house_candidates_do_not_create_ownership_access_or_protection_zones": "pass",
+    "overlay_bindings_do_not_create_entry_detection_authority": "pass",
+    "access_policy_candidates_are_draft_only_and_unenforced": "pass",
+    "collision_walkability_remain_unresolved_for_threshold_tiles": "pass",
+    "mechanics_null": "pass",
+    "negative_door_house_fixture_candidate_cases_flagged": "pass",
+    "canvas_only_screenshots_captured": "pass",
+    "protected_runtime_files_remain_unchanged": "pass",
+    "npm_run_verify_quick_passes": "pass 9/9"
+  },
+  "candidate_summary": {
+    "door_candidate_count": 4,
+    "house_candidate_count": 3,
+    "access_policy_candidate_count": 4,
+    "overlay_visibility_binding_candidate_count": 3,
+    "reserved_conditional_threshold_tiles_used": 4,
+    "excluded_transition_or_non_door_conditionals": 3
+  },
+  "negative_case_results": [
+    {
+      "id": "negative_door_candidate_with_runtime_open_state",
+      "expected_flags": [
+        "runtime_door_state_forbidden"
+      ],
+      "observed_flags": [
+        "runtime_door_state_forbidden"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_door_candidate_resolves_collision_clear",
+      "expected_flags": [
+        "runtime_collision_resolution_forbidden"
+      ],
+      "observed_flags": [
+        "runtime_collision_resolution_forbidden"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_door_candidate_resolves_walkability_walkable",
+      "expected_flags": [
+        "runtime_walkability_resolution_forbidden"
+      ],
+      "observed_flags": [
+        "runtime_walkability_resolution_forbidden"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_house_candidate_with_owner_account_id",
+      "expected_flags": [
+        "runtime_ownership_forbidden"
+      ],
+      "observed_flags": [
+        "runtime_ownership_forbidden"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_house_candidate_with_enforced_access_list",
+      "expected_flags": [
+        "runtime_access_list_forbidden"
+      ],
+      "observed_flags": [
+        "runtime_access_list_forbidden"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_overlay_binding_claims_real_player_inside_outside_authority",
+      "expected_flags": [
+        "real_player_inside_outside_authority_forbidden"
+      ],
+      "observed_flags": [
+        "real_player_inside_outside_authority_forbidden"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_access_policy_runtime_enforcement_true",
+      "expected_flags": [
+        "runtime_access_policy_enforcement_forbidden"
+      ],
+      "observed_flags": [
+        "runtime_access_policy_enforcement_forbidden"
+      ],
+      "result": "flagged"
+    }
+  ],
+  "hashes_sha256": {
+    "candidates/refined_high_city_door_candidates.v1.draft.json": "e1f6fa7039b2bde72ed1238c505a3990f9c68226d1d223f5f966fb5545edb331",
+    "candidates/refined_high_city_house_candidates.v1.draft.json": "f9b1037aa0a160b094155fb264d96412a2832fa9069447a44d1f3a297fb25aa3",
+    "candidates/refined_high_city_access_policy_candidates.v1.draft.json": "1a4c1e59c59774258ffe55d4858a6f3bfd4c0246771349b04dd3d75ebf996c19",
+    "candidates/refined_high_city_overlay_visibility_bindings.v1.draft.json": "79afba9ee57a050f90ec1db434268a89d99f6a1d7fa987f9d24ae383b76f5281",
+    "validation/negative_door_house_fixture_candidate_cases.json": "9b3d79a2d8b001a577305580d0e68c2af65b4a9330271e9623a429de7fa2b08f",
+    "screenshots/01_door_threshold_candidates.png": "b5c1f7a774692af9b3c8e7114ae00c11872b0edb451a63db59528519fbeebb2d",
+    "screenshots/02_house_candidate_bounds.png": "dbcb6e0f86d04b93455ddec79533f2bcd967dd9f1c7c8c70950cc32bc0dc85c2",
+    "screenshots/03_overlay_visibility_binding_candidates.png": "813e58e2968193f6275ac71425316834d7b7589faa8d4c3fc8cf6318823b75c5",
+    "screenshots/04_access_policy_candidate_review.png": "529248c461820e0b0b3127e59d46099572d26e9d47c0ab2c8b445fab1cf6925d",
+    "screenshots/05_reserved_conditionals_review.png": "77c4b18a9bf87e03a027345602227d18d73c0fdabe470efca5c8e354424d7b83",
+    "screenshots/06_combined_door_house_candidate_review.png": "f8144d6b5d36837f684c0995ee5eab18b8058d2a95a08dbe29fb4645804b15a3"
+  },
+  "notes": [
+    "Validation checks draft non-runtime candidate artifacts only.",
+    "No runtime door, house, ownership, access, collision, walkability, or overlay authority is created."
+  ]
+}

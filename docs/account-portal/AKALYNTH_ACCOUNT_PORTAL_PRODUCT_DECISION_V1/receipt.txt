@@ -1,0 +1,47 @@
+AKALYNTH LANE RECEIPT
+=====================
+lane: AKALYNTH_ACCOUNT_PORTAL_PRODUCT_DECISION_V1
+epic: E0 (decision record before implementation)
+recorded_at: 2026-06-05T04:31:36Z
+operator: Claude Code (akalynth-ops)
+
+PURPOSE
+  Record the production account-portal + character-platform architecture and
+  boundaries before any implementation.
+
+DECISIONS RECORDED
+  - auth: email + password, email-verified; Argon2id; verification + reset;
+          login throttling/rate limits; session issuance; NO account enumeration.
+  - economy: in-game currency first; NO Stripe / real-money in V1.
+  - appearance: discrete full sprites first (male/female base + finished outfits);
+                layered clothing later.
+  - proof model: privacy-bounded receipts; receipt account/character/economy
+                 lifecycle events; NEVER receipt plaintext email, passwords,
+                 reset/session tokens, or secrets.
+  - website: account portal; static frontend; no secrets/authority; calls api.akalynth.com.
+  - android: parity required for account create / sign in / character create / world /
+             sex+outfit / enter game.
+  - default entry: title screen first -> sign in/create -> verify -> create character
+                   -> choose world -> first-sign-in sex + outfit -> enter game.
+
+OUTPUTS (this directory)
+  - README.md
+  - ACCOUNT_PORTAL_DECISION.md
+  - ACCOUNT_AUTH_SECURITY_MODEL.md
+  - ACCOUNT_CHARACTER_WORLD_MODEL.md
+  - WEBSITE_PORTAL_ROLE.md
+  - ANDROID_PARITY_REQUIREMENTS.md
+  - ECONOMY_AND_PAYMENT_BOUNDARY.md
+  - RECEIPT_PRIVACY_BOUNDARY.md
+  - IMPLEMENTATION_SEQUENCE.md
+  - receipt.txt
+
+BOUNDARY
+  Documentation only. No schema, endpoints, UI, art, email, or payments were
+  created. No server/client/site/runtime behavior changed. No secrets recorded.
+
+NEXT LANE
+  E1 AKALYNTH_ACCOUNT_AUTH_SCHEMA_V1 (account tables + types + receipt event defs).
+
+CLOSURE
+  closed_account_portal_product_decision_recorded_no_implementation
