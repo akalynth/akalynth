@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "akalynth://draft-schemas/collision_walkability_consistency.schema.draft.json",
+  "title": "Collision Walkability Consistency Rules Draft",
+  "status": "draft_design_only",
+  "mechanics": null,
+  "rules": [
+    {
+      "id": "blocked_and_walkable_invalid",
+      "condition": "collision_state=blocked AND walkability_state=walkable",
+      "result": "invalid",
+      "note": "A tile cannot be statically blocked and directly walkable."
+    },
+    {
+      "id": "clear_and_not_walkable_allowed_with_reason",
+      "condition": "collision_state=clear AND walkability_state=not_walkable",
+      "result": "allowed_with_reason",
+      "note": "Can represent non-blocking but non-traversable design restrictions."
+    },
+    {
+      "id": "unknown_collision_warning",
+      "condition": "collision_state=unknown AND walkability_state is present",
+      "result": "warning",
+      "note": "Draft warning; production should resolve collision."
+    },
+    {
+      "id": "walkable_without_collision_warning",
+      "condition": "walkability_state=walkable AND no collision entry",
+      "result": "warning",
+      "note": "Draft warning; production candidate should require a collision entry."
+    },
+    {
+      "id": "doorway_blocked_warning",
+      "condition": "doorway candidate AND collision_state=blocked",
+      "result": "warning",
+      "note": "Doorway and threshold tiles should remain reserved_conditional until door authority exists."
+    },
+    {
+      "id": "sewer_transition_reserved",
+      "condition": "sewer entrance candidate",
+      "result": "warning",
+      "note": "Sewer entrance should remain reserved_conditional until transition authority exists."
+    }
+  ]
+}

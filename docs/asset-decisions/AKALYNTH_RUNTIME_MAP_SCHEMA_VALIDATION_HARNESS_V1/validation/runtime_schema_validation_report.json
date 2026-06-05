@@ -1,0 +1,190 @@
+{
+  "id": "AKALYNTH_RUNTIME_MAP_SCHEMA_VALIDATION_HARNESS_V1_REPORT",
+  "status": "pass",
+  "generated_by": "tools/asset-gen/verify-runtime-map-schema-drafts.ts",
+  "checks": {
+    "draft_runtime_schemas_parse": "pass",
+    "positive_projection_examples_pass": "pass",
+    "negative_leakage_cases_flagged": "pass",
+    "visual_layer_cannot_declare_collision_or_walkability": "pass",
+    "collision_layer_cannot_embed_render_fields": "pass",
+    "walkability_layer_cannot_embed_transition_targets": "pass",
+    "door_house_layers_cannot_enforce_authority_yet": "pass",
+    "transition_layer_cannot_claim_destination_exists_without_promotion": "pass",
+    "bundle_manifest_cannot_promote_production_map": "pass",
+    "promoted_shared_map_paths_forbidden_in_draft_harness": "pass",
+    "content_behavior_fields_forbidden": "pass"
+  },
+  "schema_results": [
+    {
+      "file": "docs/asset-decisions/AKALYNTH_RUNTIME_MAP_AUTHORITY_SCHEMA_DESIGN_V1/draft_schemas/runtime_visual_object_layer.schema.draft.json",
+      "result": "pass",
+      "sha256": "f070fe612bfa861aac6639670efcfc32c07c661f9b2954f25caffa9a4f4629a5"
+    },
+    {
+      "file": "docs/asset-decisions/AKALYNTH_RUNTIME_MAP_AUTHORITY_SCHEMA_DESIGN_V1/draft_schemas/runtime_collision_layer.schema.draft.json",
+      "result": "pass",
+      "sha256": "c5de468b7023000a8d06c5854f42591e801e9369f75f43f16020dee4f6998798"
+    },
+    {
+      "file": "docs/asset-decisions/AKALYNTH_RUNTIME_MAP_AUTHORITY_SCHEMA_DESIGN_V1/draft_schemas/runtime_walkability_layer.schema.draft.json",
+      "result": "pass",
+      "sha256": "1df0611d3ba1b23c5840e8be81c9c533c68b57987d8e5da914e5cde4b55bfcbb"
+    },
+    {
+      "file": "docs/asset-decisions/AKALYNTH_RUNTIME_MAP_AUTHORITY_SCHEMA_DESIGN_V1/draft_schemas/runtime_overlay_presentation_layer.schema.draft.json",
+      "result": "pass",
+      "sha256": "27f010103b8753f5105702f89443f8676b12e11a10e7b84d6eb7b796e8c1dc5d"
+    },
+    {
+      "file": "docs/asset-decisions/AKALYNTH_RUNTIME_MAP_AUTHORITY_SCHEMA_DESIGN_V1/draft_schemas/runtime_door_house_layer.schema.draft.json",
+      "result": "pass",
+      "sha256": "301e8d0cf393d0ed90a12f34f1fd8177fd8e636d775ebf2efa146f05c6926ca3"
+    },
+    {
+      "file": "docs/asset-decisions/AKALYNTH_RUNTIME_MAP_AUTHORITY_SCHEMA_DESIGN_V1/draft_schemas/runtime_transition_layer.schema.draft.json",
+      "result": "pass",
+      "sha256": "c450905d1c5bc439feb3dc20f13a2a937756fe3410d22f92f44e9aac8c55ae70"
+    },
+    {
+      "file": "docs/asset-decisions/AKALYNTH_RUNTIME_MAP_AUTHORITY_SCHEMA_DESIGN_V1/draft_schemas/runtime_map_bundle_manifest.schema.draft.json",
+      "result": "pass",
+      "sha256": "84bb17844027bea89ac8f9ec0912a435fe88c6e6f41545f6621e030a3e0614a4"
+    }
+  ],
+  "positive_results": [
+    {
+      "id": "positive_high_city_runtime_projection",
+      "observed_flags": [],
+      "result": "pass"
+    },
+    {
+      "id": "positive_minimal_runtime_manifest_boundary",
+      "observed_flags": [],
+      "result": "pass"
+    }
+  ],
+  "negative_results": [
+    {
+      "id": "negative_visual_runtime_layer_declares_blocked_walkable",
+      "expected_flags": [
+        "runtime_visual_layer_forbidden_field:collision",
+        "runtime_visual_layer_forbidden_field:walkability"
+      ],
+      "observed_flags": [
+        "runtime_visual_layer_forbidden_field:collision",
+        "runtime_visual_layer_forbidden_field:walkability"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_collision_layer_embeds_sprite_render_fields",
+      "expected_flags": [
+        "runtime_collision_layer_forbidden_field:sprite",
+        "runtime_collision_layer_forbidden_field:render"
+      ],
+      "observed_flags": [
+        "runtime_collision_layer_forbidden_field:sprite",
+        "runtime_collision_layer_forbidden_field:render"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_walkability_layer_embeds_transition_to",
+      "expected_flags": [
+        "runtime_walkability_layer_forbidden_field:transition_to"
+      ],
+      "observed_flags": [
+        "runtime_walkability_layer_forbidden_field:transition_to"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_door_layer_enforces_access_list",
+      "expected_flags": [
+        "runtime_door_house_layer_forbidden_field:access_list_enforced"
+      ],
+      "observed_flags": [
+        "runtime_door_house_layer_forbidden_field:access_list_enforced"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_house_layer_declares_owner_account",
+      "expected_flags": [
+        "runtime_door_house_layer_forbidden_field:owner_account_id"
+      ],
+      "observed_flags": [
+        "runtime_door_house_layer_forbidden_field:owner_account_id"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_transition_endpoint_destination_exists_without_promotion",
+      "expected_flags": [
+        "runtime_destination_existence_forbidden"
+      ],
+      "observed_flags": [
+        "runtime_destination_existence_forbidden"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_bundle_manifest_sets_production_promoted_true",
+      "expected_flags": [
+        "production_map_promoted_forbidden"
+      ],
+      "observed_flags": [
+        "production_map_promoted_forbidden"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_schema_artifact_references_shared_map_promoted_target",
+      "expected_flags": [
+        "shared_map_path_forbidden"
+      ],
+      "observed_flags": [
+        "shared_map_path_forbidden"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_runtime_map_bundle_declares_server_authoritative_true",
+      "expected_flags": [
+        "server_authoritative_forbidden"
+      ],
+      "observed_flags": [
+        "server_authoritative_forbidden"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_runtime_map_schema_contains_content_behavior",
+      "expected_flags": [
+        "runtime_schema_forbidden_field:npc_behavior",
+        "runtime_schema_forbidden_field:mob_behavior",
+        "runtime_schema_forbidden_field:shop",
+        "runtime_schema_forbidden_field:dialogue",
+        "runtime_schema_forbidden_field:spawn",
+        "runtime_schema_forbidden_field:ai",
+        "runtime_schema_forbidden_field:combat"
+      ],
+      "observed_flags": [
+        "runtime_schema_forbidden_field:npc_behavior",
+        "runtime_schema_forbidden_field:mob_behavior",
+        "runtime_schema_forbidden_field:shop",
+        "runtime_schema_forbidden_field:dialogue",
+        "runtime_schema_forbidden_field:spawn",
+        "runtime_schema_forbidden_field:ai",
+        "runtime_schema_forbidden_field:combat"
+      ],
+      "result": "flagged"
+    }
+  ],
+  "notes": [
+    "Harness validates draft docs artifacts only.",
+    "No schemas are promoted into shared runtime packages.",
+    "No runtime map, movement, collision, walkability, door, house, transition, or production-map authority is created."
+  ]
+}

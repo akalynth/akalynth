@@ -1,0 +1,83 @@
+{
+  "id": "sewer_hint_visual_objects_draft",
+  "status": "draft_visual_only_example",
+  "source_receipt": "AKALYNTH_HIGH_CITY_BLOCK_LAYOUT_REFINEMENT_V1",
+  "visual_objects": [
+    {
+      "id": "vis_sewer_grate_01",
+      "asset_id": "sewer_grate",
+      "plane": "visual",
+      "position": {
+        "tile": [
+          27,
+          24
+        ],
+        "floor": 0
+      },
+      "render": {
+        "layer": "object_overlay",
+        "anchor": "bottom_center",
+        "z_policy": "sort_by_anchor_y",
+        "draw_scale": 1
+      },
+      "mechanics": null,
+      "authority": {
+        "collision": "none",
+        "walkability": "none",
+        "interaction": "none",
+        "server_entity": "none",
+        "ownership": "none",
+        "door_permissions": "none",
+        "npc_behavior": "none",
+        "mob_behavior": "none",
+        "shop": "none",
+        "dialogue": "none",
+        "spawn": "none",
+        "ai": "none",
+        "combat": "none"
+      },
+      "notes": [
+        "Visual sewer hint only.",
+        "Does not create travel, teleport, entry, collision, walkability, mob spawn, or AI behavior."
+      ]
+    },
+    {
+      "id": "vis_sewer_pipe_01",
+      "asset_id": "sewer_pipe",
+      "plane": "visual",
+      "position": {
+        "tile": [
+          25,
+          24
+        ],
+        "floor": 0
+      },
+      "render": {
+        "layer": "object_overlay",
+        "anchor": "bottom_center",
+        "z_policy": "sort_by_anchor_y",
+        "draw_scale": 1
+      },
+      "mechanics": null,
+      "authority": {
+        "collision": "none",
+        "walkability": "none",
+        "interaction": "none",
+        "server_entity": "none",
+        "ownership": "none",
+        "door_permissions": "none",
+        "npc_behavior": "none",
+        "mob_behavior": "none",
+        "shop": "none",
+        "dialogue": "none",
+        "spawn": "none",
+        "ai": "none",
+        "combat": "none"
+      },
+      "notes": [
+        "Visual sewer decoration only.",
+        "Does not encode pipe traversal or blocking."
+      ]
+    }
+  ]
+}

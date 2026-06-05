@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "akalynth://draft-schemas/walkability_layer.schema.draft.json",
+  "title": "Akalynth Draft Walkability Layer Candidate Schema",
+  "description": "Design-only schema for draft walkability candidates. Not a runtime schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "plane",
+    "status",
+    "source_visual_layout_receipt",
+    "runtime_authority",
+    "server_authoritative",
+    "production_map_promoted",
+    "coordinate_system",
+    "coverage",
+    "cells",
+    "mechanics"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "plane": {
+      "const": "walkability"
+    },
+    "status": {
+      "const": "draft_design_only"
+    },
+    "source_visual_layout_receipt": {
+      "const": "AKALYNTH_HIGH_CITY_BLOCK_LAYOUT_REFINEMENT_V1"
+    },
+    "runtime_authority": {
+      "const": false
+    },
+    "server_authoritative": {
+      "const": false
+    },
+    "production_map_promoted": {
+      "const": false
+    },
+    "coordinate_system": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origin",
+        "unit",
+        "tile_size_px"
+      ],
+      "properties": {
+        "origin": {
+          "const": "top_left"
+        },
+        "unit": {
+          "const": "tile"
+        },
+        "tile_size_px": {
+          "const": 32
+        },
+        "axes": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "x": {
+              "const": "east"
+            },
+            "y": {
+              "const": "south"
+            }
+          }
+        },
+        "floor": {
+          "type": "object"
+        }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "bounds"
+      ],
+      "properties": {
+        "mode": {
+          "const": "partial_candidate"
+        },
+        "bounds": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "x",
+            "y",
+            "width",
+            "height",
+            "floor"
+          ],
+          "properties": {
+            "x": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "y": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "width": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "floor": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "cells": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tile",
+          "floor",
+          "walkability_state",
+          "category",
+          "evidence"
+        ],
+        "properties": {
+          "tile": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "integer",
+                "minimum": 0
+              }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "floor": {
+            "type": "integer"
+          },
+          "walkability_state": {
+            "enum": [
+              "walkable",
+              "not_walkable",
+              "reserved_conditional",
+              "unknown"
+            ]
+          },
+          "category": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "source",
+              "linked_visual_object_ids"
+            ],
+            "properties": {
+              "source": {
+                "enum": [
+                  "manual_design_review",
+                  "visual_fixture_export_reference",
+                  "future_validator"
+                ]
+              },
+              "linked_visual_object_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "mechanics": {
+      "type": "null"
+    }
+  }
+}

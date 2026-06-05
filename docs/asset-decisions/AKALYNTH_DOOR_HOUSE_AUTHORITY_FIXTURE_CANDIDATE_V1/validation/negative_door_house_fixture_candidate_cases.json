@@ -1,0 +1,89 @@
+{
+  "id": "AKALYNTH_DOOR_HOUSE_AUTHORITY_FIXTURE_CANDIDATE_V1_NEGATIVE_CASES",
+  "status": "draft_non_runtime_validation_fixture",
+  "cases": [
+    {
+      "id": "negative_door_candidate_with_runtime_open_state",
+      "expected_flags": [
+        "runtime_door_state_forbidden"
+      ],
+      "payload": {
+        "plane": "door_house_authority_candidate",
+        "status": "draft_non_runtime",
+        "runtime_open_state": "open"
+      }
+    },
+    {
+      "id": "negative_door_candidate_resolves_collision_clear",
+      "expected_flags": [
+        "runtime_collision_resolution_forbidden"
+      ],
+      "payload": {
+        "plane": "door_house_authority_candidate",
+        "authority": {
+          "runtime_collision_resolution": "clear"
+        }
+      }
+    },
+    {
+      "id": "negative_door_candidate_resolves_walkability_walkable",
+      "expected_flags": [
+        "runtime_walkability_resolution_forbidden"
+      ],
+      "payload": {
+        "plane": "door_house_authority_candidate",
+        "authority": {
+          "runtime_walkability_resolution": "walkable"
+        }
+      }
+    },
+    {
+      "id": "negative_house_candidate_with_owner_account_id",
+      "expected_flags": [
+        "runtime_ownership_forbidden"
+      ],
+      "payload": {
+        "plane": "house_authority_candidate",
+        "owner_account_id": "acct_player_001"
+      }
+    },
+    {
+      "id": "negative_house_candidate_with_enforced_access_list",
+      "expected_flags": [
+        "runtime_access_list_forbidden"
+      ],
+      "payload": {
+        "plane": "house_authority_candidate",
+        "access_list": [
+          "acct_player_001"
+        ],
+        "runtime_enforcement": true
+      }
+    },
+    {
+      "id": "negative_overlay_binding_claims_real_player_inside_outside_authority",
+      "expected_flags": [
+        "real_player_inside_outside_authority_forbidden"
+      ],
+      "payload": {
+        "plane": "overlay_visibility_binding_candidate",
+        "visibility_trigger_source": "real_player_inside_outside_state"
+      }
+    },
+    {
+      "id": "negative_access_policy_runtime_enforcement_true",
+      "expected_flags": [
+        "runtime_access_policy_enforcement_forbidden"
+      ],
+      "payload": {
+        "plane": "access_policy_candidate",
+        "authority": {
+          "runtime_enforcement": true
+        }
+      }
+    }
+  ],
+  "notes": [
+    "Negative cases prove candidate metadata must not leak into runtime door, house, ownership, access, collision, or walkability authority."
+  ]
+}

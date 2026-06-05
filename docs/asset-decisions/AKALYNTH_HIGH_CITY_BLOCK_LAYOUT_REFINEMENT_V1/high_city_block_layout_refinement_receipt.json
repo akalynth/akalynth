@@ -1,0 +1,134 @@
+{
+  "id": "AKALYNTH_HIGH_CITY_BLOCK_LAYOUT_REFINEMENT_V1",
+  "status": "accepted_with_minor_visual_notes",
+  "scope": "debug-client visual-only high-city block layout refinement",
+  "input_receipts": [
+    "AKALYNTH_ENGINE_IMPORT_SMOKE_TEST_V1",
+    "AKALYNTH_CHARACTER_VISUAL_PLACEMENT_REVIEW_V1",
+    "AKALYNTH_DEBUG_CLIENT_VISUAL_SCALE_TUNING_V1",
+    "AKALYNTH_WORLD_OBJECT_VISUAL_SCALE_AUDIT_V1",
+    "AKALYNTH_WALK_IN_BUILDING_VISUAL_ASSEMBLY_V1",
+    "AKALYNTH_FLOOR_OVERLAY_VISIBILITY_REVIEW_V1",
+    "AKALYNTH_NPC_VISUAL_PRESET_IMPORT_V1",
+    "AKALYNTH_EXPERIMENTAL_HIGH_CITY_BLOCK_PREVIEW_V1"
+  ],
+  "purpose": "Refine the accepted experimental high-city block into a clearer visual city-block layout while remaining debug-client visual-only.",
+  "layout_intent": {
+    "north_west": "old wall and gate approach",
+    "center": "public meeting plaza with fountain, notice board, benches, and banners",
+    "lower_left": "small walk-in house cluster",
+    "right_upper": "market/shop lane",
+    "upper_inner": "castle meeting hall / guard post",
+    "lower_right": "sewer hint / undercity edge"
+  },
+  "route_hierarchy": "gate -> plaza -> market / house / castle -> sewer hint",
+  "scenes": [
+    "?visual-smoke=high_city_refined_overview",
+    "?visual-smoke=high_city_refined_gate_to_plaza",
+    "?visual-smoke=high_city_refined_market_lane",
+    "?visual-smoke=high_city_refined_house_block",
+    "?visual-smoke=high_city_refined_castle_meeting",
+    "?visual-smoke=high_city_refined_sewer_hint"
+  ],
+  "screenshots": [
+    "screenshots/01_refined_high_city_overview.png",
+    "screenshots/02_refined_gate_to_plaza.png",
+    "screenshots/03_refined_market_lane.png",
+    "screenshots/04_refined_house_block.png",
+    "screenshots/05_refined_castle_meeting.png",
+    "screenshots/06_refined_sewer_hint.png"
+  ],
+  "screenshot_capture": {
+    "mode": "canvas_region_only",
+    "dimensions": "1024x1024",
+    "css_image_rendering": "pixelated",
+    "scrollbar_artifact_avoided": true,
+    "hashes_sha256": {
+      "screenshots/01_refined_high_city_overview.png": "f0c4e49ff2883433093298e75671e337f45ae9a14187c8a024ecd254267ccb9d",
+      "screenshots/02_refined_gate_to_plaza.png": "38d77550ceff80d1a4b25c8650403abfe3b26bc1cc3e118911c9b66a5f8e0e4c",
+      "screenshots/03_refined_market_lane.png": "e975664f9443444a35ab07437b7ba2e3781caff6f5519cb621987257b8ac6eea",
+      "screenshots/04_refined_house_block.png": "669fd506a2b6bfb2fa475004542869bb5522d5cc84b30a2d28069ef59a2e9905",
+      "screenshots/05_refined_castle_meeting.png": "afa2161db164da183d4ff354ceec6cd3e80c749eba878c1404f39682d72bc63a",
+      "screenshots/06_refined_sewer_hint.png": "f4c2dfdb48a100d314fb24a777a2b8b4f8d9d65843c6f33d2545a73e3f52b669"
+    }
+  },
+  "refinements_attempted": [
+    "Reduced dense debug-collage feel by separating house, market, castle, plaza, and sewer zones.",
+    "Created a clearer gate-to-plaza path using central floor/path emphasis.",
+    "Moved house cluster to lower-left and market lane to upper/right.",
+    "Used faded/hidden overlays in focused routes to reduce roof/building mass dominance.",
+    "Placed sewer hint on the lower-right edge as a distinct undercity cue.",
+    "Retained canvas-only captures for cleaner review evidence."
+  ],
+  "claims": {
+    "debug_client_can_compose_refined_high_city_visual_block": true,
+    "layout_readability_review_completed": true,
+    "accepted_as_visual_layout_candidate": true,
+    "accepted_as_production_map": false,
+    "deterministic_visual_smoke_routes_added": true,
+    "canvas_only_screenshots_captured": true,
+    "mechanics_null": true,
+    "server_protocol_changed": false,
+    "shared_maps_changed": false,
+    "production_map_promoted": false,
+    "npc_behavior_added": false,
+    "mob_behavior_added": false,
+    "collision_changed": false,
+    "walkability_changed": false,
+    "ownership_or_door_permission_added": false,
+    "dialogue_changed": false,
+    "shop_changed": false,
+    "faction_changed": false,
+    "spawn_changed": false,
+    "ai_changed": false,
+    "combat_changed": false
+  },
+  "verification": {
+    "npm run verify:assets": "pass",
+    "npm run build:client": "pass",
+    "npm run build:server": "pass",
+    "npm run verify:quick": "pass 9/9"
+  },
+  "manual_review": {
+    "status": "pass_with_minor_visual_notes",
+    "checks": {
+      "city_block_reads_as_intentional_layout": "pass",
+      "gate_to_plaza_route_readable": "pass",
+      "public_meeting_space_readable": "pass",
+      "house_zone_readable": "pass",
+      "market_zone_readable": "pass",
+      "castle_zone_readable": "pass",
+      "sewer_hint_readable": "pass",
+      "characters_and_presets_remain_legible": "pass",
+      "roof_mass_reduced_vs_previous_preview": "pass",
+      "z_order_acceptable": "pass",
+      "nearest_neighbor_preserved": "pass",
+      "canvas_only_screenshots_captured": "pass",
+      "boundary_preserved": "pass"
+    },
+    "minor_visual_notes": [
+      "Large cobble areas still have heavy tile repetition.",
+      "Gate-to-plaza route is readable but could later be emphasized with clearer path treatment.",
+      "Sewer corner is readable but could use a stronger landmark or darker ground treatment.",
+      "Central fountain/plaza area may benefit from slightly more breathing room in a later art pass.",
+      "Recheck z-order after any future spacing or object-placement changes."
+    ]
+  },
+  "valid_outcomes": [
+    "accepted_refined_visual_city_block",
+    "accepted_with_minor_visual_notes",
+    "needs_second_refinement_pass",
+    "rejected_for_layout_readability"
+  ],
+  "non_claims": [
+    "This is not a production map promotion.",
+    "This does not add map object metadata, collision, walkability, ownership, access lists, lock state, door permissions, house entry, dialogue, shops, factions, spawns, AI, combat, NPC behavior, or mob behavior.",
+    "This does not add protocol fields or shared map JSON changes.",
+    "This accepts the refined block as a visual layout candidate with minor visual notes, not as a final production city layout."
+  ],
+  "notes": [
+    "The refined block is assembled from debug-client review fixtures and existing visual-only source assets.",
+    "Review routes are deterministic and remain separate from shared production map JSON.",
+    "The next gate can proceed as a design gate for map/object metadata separation; production map promotion remains out of scope."
+  ]
+}

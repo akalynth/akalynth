@@ -1,0 +1,127 @@
+{
+  "id": "refined_high_city_transition_endpoints_v1",
+  "plane": "transition_endpoint_candidate_set",
+  "status": "draft_non_runtime",
+  "runtime_authority": false,
+  "server_authoritative": false,
+  "production_map_promoted": false,
+  "candidates": [
+    {
+      "id": "candidate_endpoint_sewer_level_01_entry",
+      "endpoint_kind": "region_placeholder",
+      "target": {
+        "map_id": "unpromoted_sewer_level_01_candidate",
+        "tile": null,
+        "floor": -1
+      },
+      "source_transition_candidate_ids": [
+        "high_city_sewer_grate_transition_candidate_01"
+      ],
+      "authority": {
+        "runtime_destination": "none",
+        "destination_exists": false,
+        "server_authoritative": false,
+        "production_map_promoted": false
+      },
+      "notes": [
+        "Placeholder endpoint only.",
+        "No runtime sewer destination exists yet."
+      ],
+      "plane": "transition_endpoint_candidate",
+      "status": "draft_non_runtime",
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "mechanics": null
+    },
+    {
+      "id": "candidate_endpoint_sewer_level_01_alt_entry",
+      "endpoint_kind": "region_placeholder",
+      "target": {
+        "map_id": "unpromoted_sewer_level_01_candidate",
+        "tile": null,
+        "floor": -1
+      },
+      "source_transition_candidate_ids": [
+        "high_city_sewer_grate_transition_candidate_02"
+      ],
+      "authority": {
+        "runtime_destination": "none",
+        "destination_exists": false,
+        "server_authoritative": false,
+        "production_map_promoted": false
+      },
+      "notes": [
+        "Alternate placeholder endpoint only.",
+        "No runtime destination exists yet."
+      ],
+      "plane": "transition_endpoint_candidate",
+      "status": "draft_non_runtime",
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "mechanics": null
+    },
+    {
+      "id": "candidate_endpoint_slime_edge_review_placeholder",
+      "endpoint_kind": "none_review_placeholder",
+      "target": {
+        "map_id": null,
+        "tile": null,
+        "floor": null
+      },
+      "source_transition_candidate_ids": [
+        "high_city_slime_pool_edge_transition_review_candidate"
+      ],
+      "authority": {
+        "runtime_destination": "none",
+        "destination_exists": false,
+        "server_authoritative": false,
+        "production_map_promoted": false
+      },
+      "notes": [
+        "Review placeholder only.",
+        "This does not declare the slime edge as a destination or hazard."
+      ],
+      "plane": "transition_endpoint_candidate",
+      "status": "draft_non_runtime",
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "mechanics": null
+    },
+    {
+      "id": "candidate_endpoint_north_gate_region_placeholder",
+      "endpoint_kind": "region_placeholder",
+      "target": {
+        "map_id": "unpromoted_north_high_city_gate_region_candidate",
+        "tile": null,
+        "floor": 0
+      },
+      "source_transition_candidate_ids": [
+        "high_city_north_gate_region_transfer_candidate"
+      ],
+      "authority": {
+        "runtime_destination": "none",
+        "destination_exists": false,
+        "server_authoritative": false,
+        "production_map_promoted": false
+      },
+      "notes": [
+        "Gate region placeholder only.",
+        "Does not create map transfer or passability."
+      ],
+      "plane": "transition_endpoint_candidate",
+      "status": "draft_non_runtime",
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "mechanics": null
+    }
+  ],
+  "mechanics": null,
+  "notes": [
+    "Endpoint candidates are placeholders only.",
+    "Destination existence remains false until a future promotion gate."
+  ]
+}

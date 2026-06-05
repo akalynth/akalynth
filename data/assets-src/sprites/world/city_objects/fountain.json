@@ -1,0 +1,29 @@
+{
+  "id": "fountain",
+  "asset_type": "world_object",
+  "source_kind": "sprite",
+  "image": "fountain.png",
+  "frame": {
+    "width": 128,
+    "height": 128
+  },
+  "rendering": {
+    "filtering": "nearest",
+    "display_only": true,
+    "draw_scale": 0.9,
+    "anchor": {
+      "type": "bottom_center",
+      "source_pixels": [
+        64,
+        122
+      ]
+    },
+    "z_policy": "sort_by_anchor_y",
+    "layer": "object_overlay"
+  },
+  "mechanics": null,
+  "visual_notes": [
+    "Fountain visual only.",
+    "Does not encode interaction or blocking."
+  ]
+}

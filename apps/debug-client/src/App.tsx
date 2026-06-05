@@ -12,6 +12,7 @@ import { ChatSheet } from './components/ChatSheet';
 import { TopBar } from './components/TopBar';
 import { NearbyList } from './components/NearbyList';
 import { ExistenceShell } from './components/ExistenceShell';
+import { VisualSmokeReview } from './components/VisualSmokeReview';
 import { CharacterBar } from './components/CharacterBar';
 import { loadConfig } from './config';
 
@@ -142,7 +143,14 @@ function useNow(interval = 200) {
 }
 
 export default function App() {
+  // Hooks must run unconditionally and in a stable order, so call them before any
+  // early return (rules of hooks).
   const existenceMode = useExistenceMode();
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('visual-smoke')) {
+    return <VisualSmokeReview />;
+  }
 
   // Existence mode: minimal truth viewer
   if (existenceMode) {

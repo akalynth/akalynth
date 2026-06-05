@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
 import { TileCode } from '@shared/types';
+import { useImagePreloader } from './useImagePreloader';
 
 // Classic-32 tile art served from public/tiles/. Only the tile codes that have
 // committed art appear here; codes without a sprite fall back to flat color +
@@ -21,6 +21,11 @@ const TILE_SPRITE_SRC: Partial<Record<TileCode, string>> = {
   [TileCode.GateToAzura]: '/tiles/ground__stone_floor.png',
 };
 
+const TILE_SPRITE_ENTRIES = Object.entries(TILE_SPRITE_SRC).map(([code, src]) => ({
+  key: Number(code),
+  src: src as string,
+}));
+
 /**
  * Loads the committed Classic-32 tile sprites once and returns them keyed by
  * TileCode. `ready` increments as each image finishes loading so consumers can
@@ -28,24 +33,5 @@ const TILE_SPRITE_SRC: Partial<Record<TileCode, string>> = {
  * mutable Map plus a version counter is the simplest way to trigger redraws).
  */
 export function useTileSprites(): { images: Map<number, HTMLImageElement>; ready: number } {
-  const imagesRef = useRef<Map<number, HTMLImageElement>>(new Map());
-  const [ready, setReady] = useState(0);
-
-  useEffect(() => {
-    let cancelled = false;
-    for (const [code, src] of Object.entries(TILE_SPRITE_SRC)) {
-      const img = new Image();
-      img.onload = () => {
-        if (cancelled) return;
-        imagesRef.current.set(Number(code), img);
-        setReady((n) => n + 1);
-      };
-      img.src = src;
-    }
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  return { images: imagesRef.current, ready };
+  return useImagePreloader<number>(TILE_SPRITE_ENTRIES);
 }

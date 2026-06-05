@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "akalynth://draft-schemas/object_footprint_review.schema.draft.json",
+  "title": "Akalynth Object Footprint Review Annotation Draft Schema",
+  "description": "Review-only annotation schema. These annotations are questions, not collision or walkability facts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "plane",
+    "source_visual_receipt",
+    "annotations",
+    "authority",
+    "mechanics"
+  ],
+  "properties": {
+    "status": {
+      "const": "draft_review_annotations_only"
+    },
+    "plane": {
+      "const": "review_annotation"
+    },
+    "source_visual_receipt": {
+      "type": "string",
+      "pattern": "^AKALYNTH_[A-Z0-9_]+_V[0-9]+$"
+    },
+    "mechanics": {
+      "type": "null"
+    },
+    "annotations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "visual_object_id",
+          "asset_id",
+          "tile",
+          "floor",
+          "review_questions"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "visual_object_id": {
+            "type": "string"
+          },
+          "asset_id": {
+            "type": "string"
+          },
+          "tile": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "integer",
+                "minimum": 0
+              }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "floor": {
+            "type": "integer"
+          },
+          "review_questions": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "inspect_for_collision",
+                "inspect_for_walkability",
+                "inspect_for_threshold_exception",
+                "inspect_for_transition_reservation"
+              ]
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "collision",
+        "walkability",
+        "interaction",
+        "door_state",
+        "transition",
+        "server_entity"
+      ],
+      "properties": {
+        "collision": {
+          "const": "none"
+        },
+        "walkability": {
+          "const": "none"
+        },
+        "interaction": {
+          "const": "none"
+        },
+        "door_state": {
+          "const": "none"
+        },
+        "transition": {
+          "const": "none"
+        },
+        "server_entity": {
+          "const": "none"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,206 @@
+{
+  "id": "refined_high_city_overlay_zones_v1_draft",
+  "status": "draft_visual_only_export",
+  "source_receipts": [
+    "AKALYNTH_HIGH_CITY_BLOCK_LAYOUT_REFINEMENT_V1",
+    "AKALYNTH_MAP_OBJECT_METADATA_DESIGN_V1"
+  ],
+  "coordinate_system": {
+    "unit": "tile",
+    "origin": "debug-client review map top-left",
+    "floor": 0
+  },
+  "source_debug_routes": [
+    "?visual-smoke=high_city_refined_overview",
+    "?visual-smoke=high_city_refined_gate_to_plaza",
+    "?visual-smoke=high_city_refined_market_lane",
+    "?visual-smoke=high_city_refined_house_block",
+    "?visual-smoke=high_city_refined_castle_meeting",
+    "?visual-smoke=high_city_refined_sewer_hint"
+  ],
+  "export_rules": [
+    "Visual objects reference existing visual asset ids only.",
+    "Visual objects use mechanics: null.",
+    "Visual objects carry explicit none authority for gameplay planes.",
+    "This export is draft metadata under docs only, not shared production map JSON."
+  ],
+  "overlay_count": 3,
+  "overlay_zones": [
+    {
+      "id": "overlay_01_roof_castle_overlay_3_5",
+      "plane": "presentation_overlay",
+      "asset_id": "roof_castle_overlay",
+      "position": {
+        "tile": [
+          3,
+          5
+        ],
+        "floor": 1
+      },
+      "render": {
+        "layer": "floor_overlay",
+        "z_policy": "fixed_above_building",
+        "visibility_modes": [
+          "visible",
+          "faded",
+          "hidden"
+        ]
+      },
+      "review_visibility": {
+        "outside": "visible",
+        "threshold": "faded",
+        "inside": "hidden"
+      },
+      "review_only_context": {
+        "interior_footprint": {
+          "x": 4,
+          "y": 5,
+          "width": 14,
+          "height": 10
+        },
+        "doorway_tiles": [
+          [
+            10,
+            14
+          ],
+          [
+            10,
+            15
+          ]
+        ]
+      },
+      "mechanics": null,
+      "authority": {
+        "house_entry": "none",
+        "ownership": "none",
+        "door_permissions": "none",
+        "collision": "none",
+        "walkability": "none",
+        "server_floor_visibility": "none"
+      },
+      "notes": [
+        "Visual presentation overlay only.",
+        "Does not encode floor-stack, ownership, entry, collision, or walkability."
+      ]
+    },
+    {
+      "id": "overlay_02_market_awning_overlay_19_8",
+      "plane": "presentation_overlay",
+      "asset_id": "market_awning_overlay",
+      "position": {
+        "tile": [
+          19,
+          8
+        ],
+        "floor": 1
+      },
+      "render": {
+        "layer": "floor_overlay",
+        "z_policy": "fixed_above_building",
+        "visibility_modes": [
+          "visible",
+          "faded",
+          "hidden"
+        ]
+      },
+      "review_visibility": {
+        "outside": "visible",
+        "threshold": "faded",
+        "inside": "hidden"
+      },
+      "review_only_context": {
+        "interior_footprint": {
+          "x": 20,
+          "y": 8,
+          "width": 10,
+          "height": 10
+        },
+        "doorway_tiles": [
+          [
+            25,
+            17
+          ],
+          [
+            25,
+            18
+          ]
+        ]
+      },
+      "mechanics": null,
+      "authority": {
+        "house_entry": "none",
+        "ownership": "none",
+        "door_permissions": "none",
+        "collision": "none",
+        "walkability": "none",
+        "server_floor_visibility": "none"
+      },
+      "notes": [
+        "Visual presentation overlay only.",
+        "Does not encode floor-stack, ownership, entry, collision, or walkability."
+      ]
+    },
+    {
+      "id": "overlay_03_roof_red_small_overlay_3_16",
+      "plane": "presentation_overlay",
+      "asset_id": "roof_red_small_overlay",
+      "position": {
+        "tile": [
+          3,
+          16
+        ],
+        "floor": 1
+      },
+      "render": {
+        "layer": "floor_overlay",
+        "z_policy": "fixed_above_building",
+        "visibility_modes": [
+          "visible",
+          "faded",
+          "hidden"
+        ]
+      },
+      "review_visibility": {
+        "outside": "visible",
+        "threshold": "faded",
+        "inside": "hidden"
+      },
+      "review_only_context": {
+        "interior_footprint": {
+          "x": 4,
+          "y": 17,
+          "width": 7,
+          "height": 6
+        },
+        "doorway_tiles": [
+          [
+            7,
+            22
+          ],
+          [
+            7,
+            23
+          ]
+        ]
+      },
+      "mechanics": null,
+      "authority": {
+        "house_entry": "none",
+        "ownership": "none",
+        "door_permissions": "none",
+        "collision": "none",
+        "walkability": "none",
+        "server_floor_visibility": "none"
+      },
+      "notes": [
+        "Visual presentation overlay only.",
+        "Does not encode floor-stack, ownership, entry, collision, or walkability."
+      ]
+    }
+  ],
+  "exported_review_states": {
+    "overlay_01_roof_castle_overlay_3_5": "faded",
+    "overlay_02_market_awning_overlay_19_8": "faded",
+    "overlay_03_roof_red_small_overlay_3_16": "visible"
+  }
+}

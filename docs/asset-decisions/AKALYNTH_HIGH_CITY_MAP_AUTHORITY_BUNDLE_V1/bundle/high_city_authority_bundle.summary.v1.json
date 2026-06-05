@@ -1,0 +1,74 @@
+{
+  "id": "high_city_authority_bundle_summary_v1",
+  "status": "draft_non_runtime_bundle_summary",
+  "accepted_inputs": [
+    {
+      "id": "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1",
+      "status": "accepted_draft_visual_fixture_export"
+    },
+    {
+      "id": "AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1",
+      "status": "accepted_collision_walkability_fixture_candidate"
+    },
+    {
+      "id": "AKALYNTH_DOOR_HOUSE_AUTHORITY_FIXTURE_CANDIDATE_V1",
+      "status": "accepted_door_house_authority_fixture_candidate"
+    },
+    {
+      "id": "AKALYNTH_TRANSITION_AUTHORITY_FIXTURE_CANDIDATE_V1",
+      "status": "accepted_transition_authority_fixture_candidate"
+    },
+    {
+      "id": "AKALYNTH_MAP_OBJECT_METADATA_DESIGN_V1",
+      "status": "accepted_map_object_metadata_design"
+    },
+    {
+      "id": "AKALYNTH_COLLISION_WALKABILITY_METADATA_DESIGN_V1",
+      "status": "accepted_collision_walkability_metadata_design"
+    },
+    {
+      "id": "AKALYNTH_DOOR_AND_HOUSE_AUTHORITY_DESIGN_V1",
+      "status": "accepted_door_and_house_authority_design"
+    },
+    {
+      "id": "AKALYNTH_TRANSITION_AUTHORITY_DESIGN_V1",
+      "status": "accepted_transition_authority_design"
+    }
+  ],
+  "counts_by_plane": {
+    "visual_objects": 1416,
+    "overlay_zones": 3,
+    "collision_cells": 28,
+    "walkability_cells": 28,
+    "door_candidates": 4,
+    "house_candidates": 3,
+    "access_policy_candidates": 4,
+    "overlay_binding_candidates": 3,
+    "transition_candidates": 4,
+    "transition_endpoint_candidates": 4,
+    "floor_change_binding_candidates": 4,
+    "transition_policy_candidates": 3
+  },
+  "validation_targets": [
+    "artifact existence and hash checks",
+    "accepted receipt status checks",
+    "coordinate and bounds compatibility checks",
+    "visual id reference checks",
+    "reserved conditional cross-plane checks",
+    "authority leakage negative checks"
+  ],
+  "unresolved_authority_summary": {
+    "runtime_movement": "none",
+    "runtime_collision": "none",
+    "runtime_walkability": "none",
+    "runtime_doors": "none",
+    "runtime_houses": "none",
+    "runtime_access_policy": "none",
+    "runtime_overlay_visibility": "none",
+    "runtime_transitions": "none",
+    "production_map": "none",
+    "server_protocol": "none"
+  },
+  "production_map_promoted": false,
+  "mechanics": null
+}

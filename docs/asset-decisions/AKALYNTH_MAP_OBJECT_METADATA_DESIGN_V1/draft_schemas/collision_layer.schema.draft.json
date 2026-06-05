@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "akalynth://draft-schemas/collision_layer.schema.draft.json",
+  "title": "Akalynth Collision Layer Reserved Draft Schema",
+  "description": "Reserved future design shape. This gate does not implement collision metadata.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "plane",
+    "authority_owner",
+    "requires_future_gate",
+    "map_id",
+    "tiles",
+    "must_not_own"
+  ],
+  "properties": {
+    "status": {
+      "const": "draft_reserved_for_future_gate"
+    },
+    "plane": {
+      "const": "collision"
+    },
+    "authority_owner": {
+      "const": "future_server_or_map_authority_gate"
+    },
+    "requires_future_gate": {
+      "const": "AKALYNTH_COLLISION_WALKABILITY_METADATA_DESIGN_V1"
+    },
+    "map_id": {
+      "type": "string"
+    },
+    "tiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tile",
+          "floor",
+          "collision"
+        ],
+        "properties": {
+          "tile": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "integer",
+                "minimum": 0
+              }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "floor": {
+            "type": "integer"
+          },
+          "collision": {
+            "enum": [
+              "blocked",
+              "edge_blocked",
+              "open"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "must_not_own": {
+      "type": "array",
+      "contains": {
+        "const": "visual_asset_placement"
+      },
+      "items": {
+        "enum": [
+          "visual_asset_placement",
+          "shop_behavior",
+          "dialogue_behavior",
+          "ownership",
+          "npc_behavior",
+          "mob_behavior"
+        ]
+      }
+    }
+  }
+}

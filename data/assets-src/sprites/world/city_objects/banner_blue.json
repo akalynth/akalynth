@@ -1,0 +1,29 @@
+{
+  "id": "banner_blue",
+  "asset_type": "world_object",
+  "source_kind": "sprite",
+  "image": "banner_blue.png",
+  "frame": {
+    "width": 64,
+    "height": 96
+  },
+  "rendering": {
+    "filtering": "nearest",
+    "display_only": true,
+    "draw_scale": 0.75,
+    "anchor": {
+      "type": "bottom_center",
+      "source_pixels": [
+        32,
+        90
+      ]
+    },
+    "z_policy": "sort_by_anchor_y",
+    "layer": "object_overlay"
+  },
+  "mechanics": null,
+  "visual_notes": [
+    "Banner visual only.",
+    "Does not encode faction, ownership, or mechanics."
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "id": "AKALYNTH_DOOR_AND_HOUSE_AUTHORITY_DESIGN_V1_VALIDATION_REPORT",
+  "status": "pass",
+  "checks": {
+    "draft_schema_json_valid": "pass",
+    "draft_example_json_valid": "pass",
+    "negative_door_house_authority_cases_added": "pass",
+    "visual_door_sprites_do_not_grant_door_authority": "pass",
+    "roof_overlays_do_not_grant_house_authority": "pass",
+    "reserved_conditionals_remain_unresolved": "pass",
+    "runtime_authority_not_added": "pass",
+    "production_map_promoted_false": "pass",
+    "negative_door_house_authority_cases_flagged": "pass",
+    "examples_remain_design_only": "pass",
+    "protected_runtime_files_remain_unchanged": "pass",
+    "npm_run_verify_quick_passes": "pass 9/9"
+  },
+  "notes": [
+    "Validation report is design-only and records draft artifact consistency.",
+    "Future implementation gates must replace these draft checks with executable schema validation and runtime boundary tests."
+  ],
+  "negative_case_results": [
+    {
+      "id": "negative_visual_door_declares_open_state",
+      "expected_flags": [
+        "visual_object_forbidden_field:door_state"
+      ],
+      "observed_flags": [
+        "visual_object_forbidden_field:door_state"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_roof_overlay_declares_house_ownership",
+      "expected_flags": [
+        "overlay_forbidden_field:ownership"
+      ],
+      "observed_flags": [
+        "overlay_forbidden_field:ownership"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_collision_candidate_resolves_door_passability",
+      "expected_flags": [
+        "door_authority_required_for_threshold_resolution"
+      ],
+      "observed_flags": [
+        "door_authority_required_for_threshold_resolution"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_walkability_candidate_resolves_door_passability",
+      "expected_flags": [
+        "door_authority_required_for_threshold_resolution"
+      ],
+      "observed_flags": [
+        "door_authority_required_for_threshold_resolution"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_house_region_derived_from_roof_overlay",
+      "expected_flags": [
+        "house_authority_forbidden_source:roof_overlay"
+      ],
+      "observed_flags": [
+        "house_authority_forbidden_source:roof_overlay"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_access_policy_implied_by_lock_state",
+      "expected_flags": [
+        "access_policy_cannot_be_implied_by_lock_state"
+      ],
+      "observed_flags": [
+        "access_policy_cannot_be_implied_by_lock_state"
+      ],
+      "result": "flagged"
+    },
+    {
+      "id": "negative_overlay_visibility_uses_debug_fixture_as_runtime_source",
+      "expected_flags": [
+        "overlay_visibility_runtime_source_forbidden:debug_fixture"
+      ],
+      "observed_flags": [
+        "overlay_visibility_runtime_source_forbidden:debug_fixture"
+      ],
+      "result": "flagged"
+    }
+  ],
+  "hashes_sha256": {
+    "draft_schemas/door_authority.schema.draft.json": "0f94754b51a6e28cdb5f1bd6916b23c42aa79e2dca51c5ddac1441bb1ad90552",
+    "draft_schemas/house_authority.schema.draft.json": "9007ac5dc34faf4de646cb0cbac278e7f2dcc5760ea97394fdb40ec6ae972614",
+    "draft_schemas/access_policy.schema.draft.json": "81bc66d0b5a3a72d143ce0f6c81df69638908cef91a4fd48900ca508e150cbc4",
+    "draft_schemas/overlay_visibility_binding.schema.draft.json": "568836a63291a9e443a4ade71614be3053ebc29d148bc4209f82a8dc75632ff9",
+    "examples/small_house_door_authority.draft.json": "ffb8f6969fcdfe1145d2848ad1185357162012ce033ff0832cab8a104a7cca7a",
+    "examples/market_shop_access_policy.draft.json": "fd955a9b0c61397d2110daaa697e4abe52c260979b58427097c74152586a6611",
+    "examples/castle_meeting_hall_access_policy.draft.json": "5d42cc9bed51d9dcaa86b39d74bd4bc7fd1dd6895aa01b44f7deabde6ebc389b",
+    "examples/reserved_conditionals_from_high_city.draft.json": "aa826f45194bec7e2c1deb9e62c062516608d4bb30c174aadd810bcba4e5b9a0",
+    "validation/negative_door_house_authority_cases.json": "5c74c39ccbb5b383a98a2e8f530e5e43e6ca04d9a8090d2f95c7b61368f62e96"
+  }
+}

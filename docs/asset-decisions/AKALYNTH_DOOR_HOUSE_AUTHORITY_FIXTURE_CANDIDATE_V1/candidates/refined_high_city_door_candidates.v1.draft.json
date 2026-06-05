@@ -1,0 +1,239 @@
+{
+  "id": "refined_high_city_door_candidates_v1",
+  "plane": "door_house_authority_candidate_set",
+  "status": "draft_non_runtime",
+  "source_receipts": [
+    "AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1",
+    "AKALYNTH_DOOR_AND_HOUSE_AUTHORITY_DESIGN_V1",
+    "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1"
+  ],
+  "runtime_authority": false,
+  "server_authoritative": false,
+  "production_map_promoted": false,
+  "coordinate_system": {
+    "origin": "top_left",
+    "unit": "tile",
+    "tile_size_px": 32,
+    "axes": {
+      "x": "east",
+      "y": "south"
+    },
+    "floor": {
+      "default": 0,
+      "meaning": "draft visual fixture floor index only; not production map floor authority"
+    }
+  },
+  "candidates": [
+    {
+      "id": "high_city_gate_south_threshold_candidate",
+      "label": "high city gate threshold",
+      "kind": "city_gate_threshold_candidate",
+      "threshold_tiles": [
+        [
+          15,
+          4
+        ]
+      ],
+      "source_visual_object_ids": [
+        "vmo_0944_door_wood_open_south_15_4"
+      ],
+      "linked_house_candidate_id": null,
+      "linked_access_policy_candidate_id": "high_city_gate_public_passage_policy_candidate",
+      "intended_future_authority": "gate_or_passage_authority_future_gate",
+      "authority": {
+        "runtime_door_behavior": "none",
+        "runtime_entry": "none",
+        "runtime_collision_resolution": "none",
+        "runtime_walkability_resolution": "none",
+        "ownership": "none",
+        "access_policy_enforcement": "none",
+        "server_entity": "none"
+      },
+      "mechanics": null,
+      "notes": [
+        "Draft gate threshold candidate only.",
+        "Does not make the gate passable, blocked, open, closed, locked, or permissioned."
+      ],
+      "plane": "door_house_authority_candidate",
+      "status": "draft_non_runtime",
+      "source_receipts": [
+        "AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1",
+        "AKALYNTH_DOOR_AND_HOUSE_AUTHORITY_DESIGN_V1",
+        "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1"
+      ],
+      "threshold_requirements": {
+        "collision_state_required": "reserved_conditional",
+        "walkability_state_required": "reserved_conditional"
+      },
+      "production_map_promoted": false,
+      "runtime_authority": false,
+      "server_authoritative": false
+    },
+    {
+      "id": "castle_meeting_hall_door_candidate",
+      "label": "castle meeting hall door threshold",
+      "kind": "building_door_threshold_candidate",
+      "threshold_tiles": [
+        [
+          10,
+          14
+        ]
+      ],
+      "source_visual_object_ids": [
+        "vmo_1134_door_wood_open_south_10_14"
+      ],
+      "linked_house_candidate_id": "castle_meeting_hall_house_candidate",
+      "linked_access_policy_candidate_id": "castle_meeting_hall_restricted_access_policy_candidate",
+      "intended_future_authority": "door_and_room_access_authority_future_gate",
+      "authority": {
+        "runtime_door_behavior": "none",
+        "runtime_entry": "none",
+        "runtime_collision_resolution": "none",
+        "runtime_walkability_resolution": "none",
+        "ownership": "none",
+        "access_policy_enforcement": "none",
+        "server_entity": "none"
+      },
+      "mechanics": null,
+      "notes": [
+        "Draft castle door candidate only.",
+        "Does not create restricted access, house entry, collision resolution, or walkability resolution."
+      ],
+      "plane": "door_house_authority_candidate",
+      "status": "draft_non_runtime",
+      "source_receipts": [
+        "AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1",
+        "AKALYNTH_DOOR_AND_HOUSE_AUTHORITY_DESIGN_V1",
+        "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1"
+      ],
+      "threshold_requirements": {
+        "collision_state_required": "reserved_conditional",
+        "walkability_state_required": "reserved_conditional"
+      },
+      "production_map_promoted": false,
+      "runtime_authority": false,
+      "server_authoritative": false
+    },
+    {
+      "id": "market_shop_front_door_candidate",
+      "label": "market shop front door threshold",
+      "kind": "building_door_threshold_candidate",
+      "threshold_tiles": [
+        [
+          25,
+          17
+        ]
+      ],
+      "source_visual_object_ids": [
+        "vmo_1284_door_wood_open_south_25_17"
+      ],
+      "linked_house_candidate_id": "market_shop_house_candidate",
+      "linked_access_policy_candidate_id": "market_shop_public_access_policy_candidate",
+      "intended_future_authority": "door_and_shop_access_authority_future_gate",
+      "authority": {
+        "runtime_door_behavior": "none",
+        "runtime_entry": "none",
+        "runtime_collision_resolution": "none",
+        "runtime_walkability_resolution": "none",
+        "ownership": "none",
+        "access_policy_enforcement": "none",
+        "server_entity": "none"
+      },
+      "mechanics": null,
+      "notes": [
+        "Draft market door candidate only.",
+        "Does not create shop behavior, public entry, collision resolution, or walkability resolution."
+      ],
+      "plane": "door_house_authority_candidate",
+      "status": "draft_non_runtime",
+      "source_receipts": [
+        "AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1",
+        "AKALYNTH_DOOR_AND_HOUSE_AUTHORITY_DESIGN_V1",
+        "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1"
+      ],
+      "threshold_requirements": {
+        "collision_state_required": "reserved_conditional",
+        "walkability_state_required": "reserved_conditional"
+      },
+      "production_map_promoted": false,
+      "runtime_authority": false,
+      "server_authoritative": false
+    },
+    {
+      "id": "small_house_01_front_door_candidate",
+      "label": "small house front door threshold",
+      "kind": "building_door_threshold_candidate",
+      "threshold_tiles": [
+        [
+          7,
+          22
+        ]
+      ],
+      "source_visual_object_ids": [
+        "vmo_1357_door_wood_open_south_7_22"
+      ],
+      "linked_house_candidate_id": "small_house_01_house_candidate",
+      "linked_access_policy_candidate_id": "small_house_01_private_access_policy_candidate",
+      "intended_future_authority": "door_and_house_access_authority_future_gate",
+      "authority": {
+        "runtime_door_behavior": "none",
+        "runtime_entry": "none",
+        "runtime_collision_resolution": "none",
+        "runtime_walkability_resolution": "none",
+        "ownership": "none",
+        "access_policy_enforcement": "none",
+        "server_entity": "none"
+      },
+      "mechanics": null,
+      "notes": [
+        "Draft small-house door candidate only.",
+        "Does not create ownership, access enforcement, collision resolution, or walkability resolution."
+      ],
+      "plane": "door_house_authority_candidate",
+      "status": "draft_non_runtime",
+      "source_receipts": [
+        "AKALYNTH_COLLISION_WALKABILITY_FIXTURE_CANDIDATE_V1",
+        "AKALYNTH_DOOR_AND_HOUSE_AUTHORITY_DESIGN_V1",
+        "AKALYNTH_VISUAL_MAP_OBJECT_FIXTURE_EXPORT_V1"
+      ],
+      "threshold_requirements": {
+        "collision_state_required": "reserved_conditional",
+        "walkability_state_required": "reserved_conditional"
+      },
+      "production_map_promoted": false,
+      "runtime_authority": false,
+      "server_authoritative": false
+    }
+  ],
+  "excluded_reserved_conditionals": [
+    {
+      "tile": [
+        25,
+        26
+      ],
+      "floor": 0,
+      "reason": "sewer transition candidate belongs to AKALYNTH_TRANSITION_AUTHORITY_DESIGN_V1"
+    },
+    {
+      "tile": [
+        28,
+        26
+      ],
+      "floor": 0,
+      "reason": "sewer transition candidate belongs to AKALYNTH_TRANSITION_AUTHORITY_DESIGN_V1"
+    },
+    {
+      "tile": [
+        30,
+        26
+      ],
+      "floor": 0,
+      "reason": "slime-pool edge remains reserved and is not a door/house candidate"
+    }
+  ],
+  "mechanics": null,
+  "notes": [
+    "Door-looking visual ids are evidence only.",
+    "This candidate set does not implement runtime door behavior."
+  ]
+}

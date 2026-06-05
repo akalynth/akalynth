@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { characterSpriteById, characterSpriteForPlayer, DIRECTION_ROW, FEET_ANCHOR, FRAME_SIZE, type Direction, type CharacterSpriteId } from '../data/characterSprites';
+import { useCharacterSprites } from '../hooks/useCharacterSprites';
 import { useTileSprites } from '../hooks/useTileSprites';
+import { useWorldVisualAssets } from '../hooks/useWorldVisualAssets';
+import { WORLD_VISUAL_ASSETS, type WorldVisualObjectPlacement, type WorldVisualAssetDef } from '../data/worldVisualAssets';
 import type { MapData, PlayerPublic } from '@shared/types';
 import { TileCode } from '@shared/types';
 import type { FloatingText } from '../types';
@@ -14,6 +18,22 @@ import {
 
 interface GroundItem { item_id: string; item_type: string; x: number; y: number }
 
+export interface CharacterFrameOverride {
+  direction: Direction;
+  frameColumn: number;
+}
+
+export interface MapDebugOverlay {
+  id: string;
+  x: number;
+  y: number;
+  width?: number;
+  height?: number;
+  fill: string;
+  stroke: string;
+  label?: string;
+}
+
 interface MapCanvasProps {
   map: MapData;
   me: PlayerPublic | null;
@@ -25,9 +45,24 @@ interface MapCanvasProps {
   groundItems?: Map<string, GroundItem>;
   // Property Ownership v0: keyed by plot_id (e.g. "H1") → ownership label info.
   propertyByPlot?: Map<string, { status: string; owner_name: string | null; listed_price_gold: number | null }>;
+  characterFrameOverrides?: Map<string, CharacterFrameOverride>;
+  characterSpriteOverrides?: Map<string, CharacterSpriteId>;
+  worldVisualObjects?: WorldVisualObjectPlacement[];
+  debugOverlays?: MapDebugOverlay[];
 }
 
-const TILE_SIZE = 12;
+const TILE_SIZE = 32;
+const CHARACTER_DRAW_SCALE = 1.25;
+const WALK_FRAME_MS = 140;
+// How long after the last tile change a character keeps playing its walk cycle.
+// Positions arrive one tile at a time, so without this window the cycle would
+// only ever see a single moving frame and freeze on column 0.
+const WALK_ACTIVE_MS = 240;
+const OVERLAY_ALPHA = { visible: 1, faded: 0.35, hidden: 0 } as const;
+// Stable empty defaults so omitting these props doesn't allocate a new array
+// (and re-trigger the draw effect) on every render.
+const EMPTY_WORLD_OBJECTS: WorldVisualObjectPlacement[] = [];
+const EMPTY_DEBUG_OVERLAYS: MapDebugOverlay[] = [];
 
 const TILE_COLOR: Record<number, string> = {
   [TileCode.Grass]: '#19351f',
@@ -49,6 +84,7 @@ const TILE_GLYPH: Record<number, string> = {
 };
 
 type LandmarkBox = { x: number; y: number; width: number; height: number };
+type CharacterMotion = { x: number; y: number; direction: Direction; movedAtMs: number };
 
 function landmarkBox(value: unknown): LandmarkBox | null {
   if (!value || typeof value !== 'object') return null;
@@ -96,9 +132,34 @@ function loreAt(map: MapData, hitBoxes: LoreHitBox[], tx: number, ty: number): L
   return TILE_LORE[map.tiles[ty * map.width + tx] as TileCode] ?? null;
 }
 
-export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget, groundItems, propertyByPlot }: MapCanvasProps) {
+function inferDirection(
+  previous: { x: number; y: number } | null,
+  current: { x: number; y: number },
+  fallback: Direction = 'south',
+): Direction {
+  if (!previous) return fallback;
+  const dx = current.x - previous.x;
+  const dy = current.y - previous.y;
+  if (Math.abs(dx) > Math.abs(dy)) {
+    return dx > 0 ? 'east' : 'west';
+  }
+  if (dy !== 0) {
+    return dy > 0 ? 'south' : 'north';
+  }
+  return fallback;
+}
+
+function getWalkColumn(isMoving: boolean, tick: number): number {
+  if (!isMoving) return 0;
+  return tick % 4;
+}
+
+export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget, groundItems, propertyByPlot, characterFrameOverrides, characterSpriteOverrides, worldVisualObjects = EMPTY_WORLD_OBJECTS, debugOverlays = EMPTY_DEBUG_OVERLAYS }: MapCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { images: tileSprites, ready: spritesReady } = useTileSprites();
+  const { images: characterSprites, ready: charactersReady } = useCharacterSprites();
+  const { images: worldVisualImages, ready: worldVisualsReady } = useWorldVisualAssets();
+  const characterMotionRef = useRef<Map<string, CharacterMotion>>(new Map());
   const [tooltip, setTooltip] = useState<{ lore: LoreEntry; x: number; y: number } | null>(null);
   const othersById = useMemo(() => {
     const m = new Map<string, PlayerPublic>();
@@ -226,7 +287,52 @@ export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget
       }
     }
 
-    const drawPlayer = (p: PlayerPublic, color: string) => {
+    const worldVisualAnchor = (placement: WorldVisualObjectPlacement, def: WorldVisualAssetDef) => {
+      const tileLeft = placement.x * TILE_SIZE;
+      const tileTop = placement.y * TILE_SIZE;
+      if (def.rendering.anchor.type === 'tile_top_left') return { x: tileLeft, y: tileTop };
+      if (def.rendering.anchor.type === 'bottom_left') return { x: tileLeft, y: tileTop + TILE_SIZE };
+      if (def.rendering.anchor.type === 'center') return { x: tileLeft + TILE_SIZE / 2, y: tileTop + TILE_SIZE / 2 };
+      return { x: tileLeft + TILE_SIZE / 2, y: tileTop + TILE_SIZE };
+    };
+
+    const drawWorldVisualObject = (placement: WorldVisualObjectPlacement, def: WorldVisualAssetDef) => {
+      if (placement.visibility === 'hidden') return;
+      const image = worldVisualImages.get(def.id);
+      if (!image) return;
+      const anchor = worldVisualAnchor(placement, def);
+      const [sourceAnchorX, sourceAnchorY] = def.rendering.anchor.sourcePixels;
+      const scale = def.rendering.drawScale;
+      const dx = Math.round(anchor.x - sourceAnchorX * scale);
+      const dy = Math.round(anchor.y - sourceAnchorY * scale);
+      ctx.save();
+      ctx.globalAlpha = OVERLAY_ALPHA[placement.visibility ?? 'visible'];
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(
+        image,
+        0,
+        0,
+        def.frame.width,
+        def.frame.height,
+        dx,
+        dy,
+        def.frame.width * scale,
+        def.frame.height * scale,
+      );
+      ctx.restore();
+    };
+
+    // Resolve each placement's def once, dropping any unknown assetId so a bad id
+    // skips that object instead of throwing and aborting the whole canvas render.
+    const resolvedWorldObjects = worldVisualObjects
+      .map((placement) => ({ placement, def: WORLD_VISUAL_ASSETS[placement.assetId] as WorldVisualAssetDef | undefined }))
+      .filter((entry): entry is { placement: WorldVisualObjectPlacement; def: WorldVisualAssetDef } => Boolean(entry.def));
+
+    for (const { placement, def } of resolvedWorldObjects) {
+      if (def.rendering.layer === 'terrain') drawWorldVisualObject(placement, def);
+    }
+
+    const drawPlayerFallback = (p: PlayerPublic, color: string) => {
       const dead = p.status === 'dead';
       ctx.save();
       if (dead) ctx.globalAlpha = 0.4;
@@ -238,8 +344,93 @@ export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget
       ctx.restore();
     };
 
-    others.forEach((p) => drawPlayer(p, p.status === 'dead' ? '#4b5563' : '#d2d7ff'));
-    if (me) drawPlayer(me, '#ffe08a');
+    const drawCharacter = (p: PlayerPublic, color: string, isSelf: boolean) => {
+      const spriteOverride = characterSpriteOverrides?.get(p.id) ?? null;
+      const sprite = spriteOverride ? characterSpriteById(spriteOverride) : characterSpriteForPlayer(p.id, isSelf);
+      const previousMotion = characterMotionRef.current.get(p.id) ?? null;
+      const previousPosition = previousMotion ? { x: previousMotion.x, y: previousMotion.y } : null;
+      const override = characterFrameOverrides?.get(p.id) ?? null;
+      const direction = override?.direction ?? inferDirection(previousPosition, p, previousMotion?.direction ?? 'south');
+      const moved = !!previousMotion && (p.x !== previousMotion.x || p.y !== previousMotion.y);
+      // movedAtMs marks the last tile change so the walk cycle keeps animating for a
+      // short window after each step instead of freezing on the idle frame.
+      const movedAtMs = moved ? nowMs : previousMotion?.movedAtMs ?? Number.NEGATIVE_INFINITY;
+      const isMoving = override ? override.frameColumn !== 0 : nowMs - movedAtMs < WALK_ACTIVE_MS;
+      characterMotionRef.current.set(p.id, { x: p.x, y: p.y, direction, movedAtMs });
+
+      const image = characterSprites.get(sprite.id);
+      if (!image) {
+        drawPlayerFallback(p, color);
+        return;
+      }
+
+      const tick = Math.floor(nowMs / WALK_FRAME_MS);
+      const frameColumn = override?.frameColumn ?? getWalkColumn(isMoving, tick);
+      const feetX = p.x * TILE_SIZE + TILE_SIZE / 2;
+      const feetY = p.y * TILE_SIZE + TILE_SIZE;
+      const dx = Math.round(feetX - FEET_ANCHOR.x * CHARACTER_DRAW_SCALE);
+      const dy = Math.round(feetY - FEET_ANCHOR.y * CHARACTER_DRAW_SCALE);
+
+      ctx.save();
+      if (p.status === 'dead') ctx.globalAlpha = 0.4;
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(
+        image,
+        frameColumn * FRAME_SIZE,
+        DIRECTION_ROW[direction] * FRAME_SIZE,
+        FRAME_SIZE,
+        FRAME_SIZE,
+        dx,
+        dy,
+        FRAME_SIZE * CHARACTER_DRAW_SCALE,
+        FRAME_SIZE * CHARACTER_DRAW_SCALE,
+      );
+      ctx.fillStyle = p.status === 'dead' ? '#8a93a5' : '#0b0c10';
+      ctx.font = '10px "DM Sans", sans-serif';
+      ctx.fillText(p.name, p.x * TILE_SIZE + 2, p.y * TILE_SIZE - 2);
+      ctx.restore();
+    };
+
+    const renderables: Array<{ anchorY: number; draw: () => void }> = [];
+    for (const { placement, def } of resolvedWorldObjects) {
+      if (def.rendering.layer !== 'object_overlay') continue;
+      const anchor = worldVisualAnchor(placement, def);
+      renderables.push({ anchorY: anchor.y, draw: () => drawWorldVisualObject(placement, def) });
+    }
+    for (const p of others) {
+      renderables.push({
+        anchorY: p.y * TILE_SIZE + TILE_SIZE,
+        draw: () => drawCharacter(p, p.status === 'dead' ? '#4b5563' : '#d2d7ff', false),
+      });
+    }
+    if (me) {
+      renderables.push({ anchorY: me.y * TILE_SIZE + TILE_SIZE, draw: () => drawCharacter(me, '#ffe08a', true) });
+    }
+    renderables.sort((a, b) => a.anchorY - b.anchorY).forEach((item) => item.draw());
+
+    for (const { placement, def } of resolvedWorldObjects) {
+      if (def.rendering.layer === 'floor_overlay') drawWorldVisualObject(placement, def);
+    }
+
+    for (const overlay of debugOverlays) {
+      const width = overlay.width ?? 1;
+      const height = overlay.height ?? 1;
+      const px = overlay.x * TILE_SIZE;
+      const py = overlay.y * TILE_SIZE;
+      ctx.save();
+      ctx.imageSmoothingEnabled = false;
+      ctx.fillStyle = overlay.fill;
+      ctx.strokeStyle = overlay.stroke;
+      ctx.lineWidth = 2;
+      ctx.fillRect(px + 2, py + 2, width * TILE_SIZE - 4, height * TILE_SIZE - 4);
+      ctx.strokeRect(px + 2, py + 2, width * TILE_SIZE - 4, height * TILE_SIZE - 4);
+      if (overlay.label) {
+        ctx.fillStyle = overlay.stroke;
+        ctx.font = 'bold 8px "Space Grotesk", sans-serif';
+        ctx.fillText(overlay.label, px + 4, py + 10);
+      }
+      ctx.restore();
+    }
 
     const target = targetId ? othersById.get(targetId) ?? null : null;
     if (target) {
@@ -263,7 +454,7 @@ export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget
       ctx.fillText(f.text, f.x * TILE_SIZE + 2, f.y * TILE_SIZE - lift);
       ctx.restore();
     }
-  }, [map, me, others, nowMs, targetId, fx, othersById, groundItems, propertyByPlot, tileSprites, spritesReady]);
+  }, [map, me, others, nowMs, targetId, fx, othersById, groundItems, propertyByPlot, characterFrameOverrides, characterSpriteOverrides, worldVisualObjects, debugOverlays, tileSprites, spritesReady, characterSprites, charactersReady, worldVisualImages, worldVisualsReady]);
 
   return (
     <>

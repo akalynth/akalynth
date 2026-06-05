@@ -1,0 +1,109 @@
+{
+  "id": "refined_high_city_transition_policy_candidates_v1",
+  "plane": "transition_policy_candidate_set",
+  "status": "draft_non_runtime",
+  "runtime_authority": false,
+  "server_authoritative": false,
+  "production_map_promoted": false,
+  "candidates": [
+    {
+      "id": "policy_candidate_sewer_entry_step_on_reserved",
+      "activation_reserved": "step_on",
+      "directionality_reserved": "reserved_unknown",
+      "transition_candidate_ids": [
+        "high_city_sewer_grate_transition_candidate_01",
+        "high_city_sewer_grate_transition_candidate_02"
+      ],
+      "plane": "transition_policy_candidate",
+      "status": "draft_non_runtime",
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "safety_reserved": [
+        "destination_must_exist",
+        "destination_must_be_walkable",
+        "destination_must_not_spawn_inside_blocker",
+        "destination_must_preserve_lockstep_authority"
+      ],
+      "authority": {
+        "runtime_activation": "none",
+        "spawn_safety": "none",
+        "combat": "none",
+        "mob_behavior": "none",
+        "ai": "none"
+      },
+      "mechanics": null,
+      "notes": [
+        "Draft transition policy candidate only.",
+        "Does not enable runtime activation or grant spawn safety."
+      ]
+    },
+    {
+      "id": "policy_candidate_environment_boundary_reserved",
+      "activation_reserved": "reserved_unknown",
+      "directionality_reserved": "reserved_unknown",
+      "transition_candidate_ids": [
+        "high_city_slime_pool_edge_transition_review_candidate"
+      ],
+      "plane": "transition_policy_candidate",
+      "status": "draft_non_runtime",
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "safety_reserved": [
+        "destination_must_exist",
+        "destination_must_be_walkable",
+        "destination_must_not_spawn_inside_blocker",
+        "destination_must_preserve_lockstep_authority"
+      ],
+      "authority": {
+        "runtime_activation": "none",
+        "spawn_safety": "none",
+        "combat": "none",
+        "mob_behavior": "none",
+        "ai": "none"
+      },
+      "mechanics": null,
+      "notes": [
+        "Draft transition policy candidate only.",
+        "Does not enable runtime activation or grant spawn safety."
+      ]
+    },
+    {
+      "id": "policy_candidate_gate_region_transfer_reserved",
+      "activation_reserved": "step_on",
+      "directionality_reserved": "two_way",
+      "transition_candidate_ids": [
+        "high_city_north_gate_region_transfer_candidate"
+      ],
+      "plane": "transition_policy_candidate",
+      "status": "draft_non_runtime",
+      "runtime_authority": false,
+      "server_authoritative": false,
+      "production_map_promoted": false,
+      "safety_reserved": [
+        "destination_must_exist",
+        "destination_must_be_walkable",
+        "destination_must_not_spawn_inside_blocker",
+        "destination_must_preserve_lockstep_authority"
+      ],
+      "authority": {
+        "runtime_activation": "none",
+        "spawn_safety": "none",
+        "combat": "none",
+        "mob_behavior": "none",
+        "ai": "none"
+      },
+      "mechanics": null,
+      "notes": [
+        "Draft transition policy candidate only.",
+        "Does not enable runtime activation or grant spawn safety."
+      ]
+    }
+  ],
+  "mechanics": null,
+  "notes": [
+    "Transition policy candidates are unenforced.",
+    "No spawn safety, combat, mob, AI, or runtime activation behavior is created."
+  ]
+}

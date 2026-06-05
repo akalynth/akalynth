@@ -1,0 +1,129 @@
+{
+  "id": "small_house_visual_objects_draft",
+  "status": "draft_visual_only_example",
+  "source_receipt": "AKALYNTH_WALK_IN_BUILDING_VISUAL_ASSEMBLY_V1",
+  "visual_objects": [
+    {
+      "id": "vis_small_house_door_01",
+      "asset_id": "door_wood_closed_south",
+      "plane": "visual",
+      "position": {
+        "tile": [
+          8,
+          23
+        ],
+        "floor": 0
+      },
+      "render": {
+        "layer": "object_overlay",
+        "anchor": "bottom_center",
+        "z_policy": "sort_by_anchor_y",
+        "draw_scale": 1
+      },
+      "mechanics": null,
+      "authority": {
+        "collision": "none",
+        "walkability": "none",
+        "interaction": "none",
+        "server_entity": "none",
+        "ownership": "none",
+        "door_permissions": "none",
+        "npc_behavior": "none",
+        "mob_behavior": "none",
+        "shop": "none",
+        "dialogue": "none",
+        "spawn": "none",
+        "ai": "none",
+        "combat": "none"
+      },
+      "notes": [
+        "Visual door only.",
+        "Does not open, close, lock, grant entry, or block movement."
+      ]
+    },
+    {
+      "id": "vis_small_house_table_01",
+      "asset_id": "table_small",
+      "plane": "visual",
+      "position": {
+        "tile": [
+          7,
+          20
+        ],
+        "floor": 0
+      },
+      "render": {
+        "layer": "object_overlay",
+        "anchor": "bottom_center",
+        "z_policy": "sort_by_anchor_y",
+        "draw_scale": 1
+      },
+      "mechanics": null,
+      "authority": {
+        "collision": "none",
+        "walkability": "none",
+        "interaction": "none",
+        "server_entity": "none",
+        "ownership": "none",
+        "door_permissions": "none",
+        "npc_behavior": "none",
+        "mob_behavior": "none",
+        "shop": "none",
+        "dialogue": "none",
+        "spawn": "none",
+        "ai": "none",
+        "combat": "none"
+      },
+      "notes": [
+        "Visual furniture only.",
+        "Does not block movement or create use behavior."
+      ]
+    }
+  ],
+  "overlay_zones": [
+    {
+      "id": "overlay_small_house_roof_01",
+      "plane": "presentation_overlay",
+      "asset_id": "roof_red_small_overlay",
+      "position": {
+        "tile": [
+          5,
+          18
+        ],
+        "floor": 1
+      },
+      "review_visibility": {
+        "outside": "visible",
+        "threshold": "faded",
+        "inside": "hidden"
+      },
+      "review_only_context": {
+        "interior_footprint": {
+          "x": 5,
+          "y": 18,
+          "width": 7,
+          "height": 5
+        },
+        "doorway_tiles": [
+          [
+            8,
+            23
+          ]
+        ]
+      },
+      "mechanics": null,
+      "authority": {
+        "house_entry": "none",
+        "ownership": "none",
+        "door_permissions": "none",
+        "collision": "none",
+        "walkability": "none",
+        "server_floor_visibility": "none"
+      },
+      "notes": [
+        "Visual overlay only.",
+        "Review footprint is presentation metadata, not a house zone."
+      ]
+    }
+  ]
+}

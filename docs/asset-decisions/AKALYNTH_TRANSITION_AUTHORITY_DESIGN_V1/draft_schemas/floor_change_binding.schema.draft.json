@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "akalynth.draft.floor_change_binding.schema.v1",
+  "title": "Draft Floor Change Binding",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "plane",
+    "status",
+    "runtime_authority",
+    "source_floor",
+    "destination_floor",
+    "floor_delta_reserved",
+    "mechanics",
+    "authority"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "plane": {
+      "const": "floor_change_binding"
+    },
+    "status": {
+      "const": "draft_design_only"
+    },
+    "runtime_authority": {
+      "const": false
+    },
+    "source_floor": {
+      "type": "integer"
+    },
+    "destination_floor": {
+      "type": "integer"
+    },
+    "floor_delta_reserved": {
+      "enum": [
+        "up",
+        "down",
+        "same_floor",
+        "unknown"
+      ]
+    },
+    "mechanics": {
+      "type": "null"
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "server_floor_change",
+        "visibility_change",
+        "collision_walkability_resolution"
+      ],
+      "properties": {
+        "server_floor_change": {
+          "const": "future_gate_required"
+        },
+        "visibility_change": {
+          "const": "future_binding_required"
+        },
+        "collision_walkability_resolution": {
+          "const": "future_gate_required"
+        }
+      }
+    }
+  }
+}

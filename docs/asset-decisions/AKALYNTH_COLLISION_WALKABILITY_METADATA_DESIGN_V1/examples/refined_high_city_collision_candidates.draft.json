@@ -1,0 +1,130 @@
+{
+  "id": "refined_high_city_collision_candidates_v1",
+  "plane": "collision",
+  "status": "draft_design_only",
+  "source_visual_layout_receipt": "AKALYNTH_HIGH_CITY_BLOCK_LAYOUT_REFINEMENT_V1",
+  "runtime_authority": false,
+  "server_authoritative": false,
+  "production_map_promoted": false,
+  "coordinate_system": {
+    "origin": "top_left",
+    "unit": "tile",
+    "tile_size_px": 32,
+    "axes": {
+      "x": "east",
+      "y": "south"
+    },
+    "floor": {
+      "default": 0,
+      "meaning": "visual/debug floor index only until production promotion"
+    }
+  },
+  "coverage": {
+    "mode": "partial_candidate",
+    "bounds": {
+      "x": 0,
+      "y": 0,
+      "width": 32,
+      "height": 32,
+      "floor": 0
+    }
+  },
+  "cells": [
+    {
+      "tile": [
+        15,
+        4
+      ],
+      "floor": 0,
+      "collision_state": "reserved_conditional",
+      "category": "gate_threshold_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_gate_door_open_south_15_4"
+        ]
+      },
+      "notes": [
+        "Gate candidate only.",
+        "Door/gate authority is reserved for a future gate."
+      ]
+    },
+    {
+      "tile": [
+        15,
+        14
+      ],
+      "floor": 0,
+      "collision_state": "clear",
+      "category": "plaza_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_plaza_fountain_context_15_14"
+        ]
+      },
+      "notes": [
+        "Clear collision candidate only.",
+        "Walkability must still be declared separately."
+      ]
+    },
+    {
+      "tile": [
+        4,
+        4
+      ],
+      "floor": 0,
+      "collision_state": "blocked",
+      "category": "wall_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_wall_stone_north_4_4"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        21,
+        12
+      ],
+      "floor": 0,
+      "collision_state": "blocked",
+      "category": "market_stall_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_market_food_stall_21_12"
+        ]
+      },
+      "notes": [
+        "Candidate only.",
+        "Does not become runtime collision until promoted by a later gate."
+      ]
+    },
+    {
+      "tile": [
+        25,
+        26
+      ],
+      "floor": 0,
+      "collision_state": "reserved_conditional",
+      "category": "sewer_transition_candidate",
+      "evidence": {
+        "source": "manual_design_review",
+        "linked_visual_object_ids": [
+          "vmo_sewer_grate_25_26"
+        ]
+      },
+      "notes": [
+        "Sewer candidate only.",
+        "Transition authority is reserved for a future gate."
+      ]
+    }
+  ],
+  "mechanics": null
+}
