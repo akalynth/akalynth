@@ -10,7 +10,7 @@ import org.junit.Test
 
 /**
  * Protocol parity coverage for the Android client vs `packages/shared/protocol.ts`
- * (PROTOCOL_VERSION 1.1.0).
+ * (PROTOCOL_VERSION 2.0.0).
  *
  * Asserts that:
  *  - every ClientMessage subtype encodes to a frame with the correct `type` discriminator,
@@ -29,14 +29,14 @@ class ProtocolParityTest {
 
     @Test
     fun protocolVersionMatchesContract() {
-        assertEquals("1.1.0", Protocol.PROTOCOL_VERSION)
+        assertEquals("2.0.0", Protocol.PROTOCOL_VERSION)
     }
 
     @Test
     fun versionExactMatchIsCompatible() {
         assertEquals(
             Protocol.VersionCompatibility.MATCH,
-            Protocol.versionCompatibility("1.1.0")
+            Protocol.versionCompatibility("2.0.0")
         )
     }
 
@@ -44,11 +44,11 @@ class ProtocolParityTest {
     fun minorOrPatchSkewIsTolerated() {
         assertEquals(
             Protocol.VersionCompatibility.MINOR_MISMATCH,
-            Protocol.versionCompatibility("1.2.0")
+            Protocol.versionCompatibility("2.1.0")
         )
         assertEquals(
             Protocol.VersionCompatibility.MINOR_MISMATCH,
-            Protocol.versionCompatibility("1.1.5")
+            Protocol.versionCompatibility("2.0.5")
         )
     }
 
@@ -56,7 +56,7 @@ class ProtocolParityTest {
     fun majorDivergenceOrGarbageIsIncompatible() {
         assertEquals(
             Protocol.VersionCompatibility.INCOMPATIBLE,
-            Protocol.versionCompatibility("2.0.0")
+            Protocol.versionCompatibility("1.1.0")
         )
         assertEquals(
             Protocol.VersionCompatibility.INCOMPATIBLE,
@@ -102,10 +102,13 @@ class ProtocolParityTest {
             ListHouseMessage("prop1", 100) to "list_house",
             UnlistHouseMessage("prop1") to "unlist_house",
             GetPropertyLedgerMessage("prop1") to "get_property_ledger",
+            OpenHouseAuctionMessage("prop1", minBid = 500, minIncrementGold = 50, durationS = 3600) to "open_house_auction",
+            PlaceHouseBidMessage("prop1", amount = 600) to "place_house_bid",
+            CancelHouseAuctionMessage("prop1") to "cancel_house_auction",
         )
 
-        // 33 client message types in protocol.ts ClientMessage union.
-        assertEquals(33, cases.size)
+        // 36 client message types in protocol.ts ClientMessage union.
+        assertEquals(36, cases.size)
         for ((msg, expectedType) in cases) {
             val frame = MessageSerializer.encodeClient(msg)
             assertEquals("wrong type for ${msg::class.simpleName}", expectedType, typeOf(frame))
@@ -147,7 +150,7 @@ class ProtocolParityTest {
     @Test
     fun everyServerMessageTypeDecodesToConcreteClass() {
         val frames: List<Pair<String, Class<out ServerMessage>>> = listOf(
-            """{"type":"welcome","version":"1.1.0"}""" to WelcomeMessage::class.java,
+            """{"type":"welcome","version":"2.0.0"}""" to WelcomeMessage::class.java,
             """{"type":"login_ack","player_id":"p","name":"n","ok":true}""" to LoginAckMessage::class.java,
             """{"type":"world_state","map":"Rookguard","player":{"id":"p","name":"n","x":1,"y":1},"nearby_players":[]}""" to WorldStateMessage::class.java,
             """{"type":"move_result","ok":true,"x":1,"y":2,"reason":null}""" to MoveResultMessage::class.java,
@@ -188,10 +191,12 @@ class ProtocolParityTest {
             """{"type":"house_sold","property_id":"pr","plot_id":"pl","zone":"z","buyer_name":"b","seller_name":null,"price":100,"sale_count":1}""" to HouseSoldMessage::class.java,
             """{"type":"property_result","action":"buy_house","success":true,"property_id":"pr"}""" to PropertyResultMessage::class.java,
             """{"type":"property_ledger","property_id":"pr","owner_history":[],"sale_count":0}""" to PropertyLedgerMessage::class.java,
+            """{"type":"property_auction_state","property_id":"pr","kind":"resale","current_high":600,"high_bidder_name":"Ari","min_next":650,"scheduled_close":1760000000000}""" to PropertyAuctionStateMessage::class.java,
+            """{"type":"house_auction_settled","property_id":"pr","plot_id":"pl","zone":"z","winner_name":"Ari","seller_name":"Sol","price":600,"sale_count":2}""" to HouseAuctionSettledMessage::class.java,
         )
 
-        // 41 server message types in protocol.ts ServerMessage union.
-        assertEquals(41, frames.size)
+        // 43 server message types in protocol.ts ServerMessage union.
+        assertEquals(43, frames.size)
         for ((frame, cls) in frames) {
             val decoded = MessageSerializer.decodeServer(frame)
             assertEquals("wrong decode for $frame", cls, decoded.javaClass)
@@ -200,9 +205,9 @@ class ProtocolParityTest {
 
     @Test
     fun welcomeDecodesVersion() {
-        val decoded = MessageSerializer.decodeServer("""{"type":"welcome","version":"1.1.0"}""")
+        val decoded = MessageSerializer.decodeServer("""{"type":"welcome","version":"2.0.0"}""")
         assertTrue(decoded is WelcomeMessage)
-        assertEquals("1.1.0", (decoded as WelcomeMessage).version)
+        assertEquals("2.0.0", (decoded as WelcomeMessage).version)
     }
 
     @Test
@@ -233,7 +238,7 @@ class ProtocolParityTest {
 
     @Test
     fun missingTypeDecodesToUnknownMessage() {
-        val decoded = MessageSerializer.decodeServer("""{"version":"1.1.0"}""")
+        val decoded = MessageSerializer.decodeServer("""{"version":"2.0.0"}""")
         assertTrue(decoded is UnknownMessage)
         assertNull((decoded as UnknownMessage).type)
     }

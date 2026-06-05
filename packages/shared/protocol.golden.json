@@ -1,12 +1,12 @@
 {
-  "version": "1.1.0",
-  "generatedAt": "2026-05-30T19:58:40.841Z",
+  "version": "2.0.0",
+  "generatedAt": "2026-06-05T22:26:08.999Z",
   "source": {
-    "path": "/opt/akalynth/packages/shared/protocol.ts",
-    "hash": "sha256:224feaa763faa22be9960b47d694ba32f10a31796ff09a626445326150e00e2c"
+    "path": "/home/sovereign/akalynth-ops/repos/akalynth/packages/shared/protocol.ts",
+    "hash": "sha256:b98f66a6eeb9ea7780c6a40b8947d2c4fa241dd1f776bd0876288270b8ac2cd4"
   },
   "surface": {
-    "version": "1.1.0",
+    "version": "2.0.0",
     "messages": {
       "client": {
         "AttackIntentMessage": {
@@ -34,6 +34,21 @@
             },
             "type": {
               "type": "'buy_house'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "CancelHouseAuctionMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "property_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'cancel_house_auction'",
               "optional": false,
               "readonly": false
             }
@@ -389,6 +404,36 @@
             }
           }
         },
+        "OpenHouseAuctionMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "duration_s": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "min_bid": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "min_increment_gold": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "property_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'open_house_auction'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
         "PayTitheMessage": {
           "extends": "BaseMessage",
           "fields": {
@@ -414,6 +459,26 @@
             },
             "type": {
               "type": "'pickup_item'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "PlaceHouseBidMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "amount": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "property_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'place_house_bid'",
               "optional": false,
               "readonly": false
             }
@@ -801,6 +866,51 @@
             },
             "type": {
               "type": "'evidence_snapshot'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "HouseAuctionSettledMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "plot_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "price": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "property_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "sale_count": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "seller_name": {
+              "type": "null | string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'house_auction_settled'",
+              "optional": false,
+              "readonly": false
+            },
+            "winner_name": {
+              "type": "null | string",
+              "optional": false,
+              "readonly": false
+            },
+            "zone": {
+              "type": "string",
               "optional": false,
               "readonly": false
             }
@@ -1206,6 +1316,46 @@
             }
           }
         },
+        "PropertyAuctionStateMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "current_high": {
+              "type": "null | number",
+              "optional": false,
+              "readonly": false
+            },
+            "high_bidder_name": {
+              "type": "null | string",
+              "optional": false,
+              "readonly": false
+            },
+            "kind": {
+              "type": "PropertyAuctionKind",
+              "optional": false,
+              "readonly": false
+            },
+            "min_next": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "property_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "scheduled_close": {
+              "type": "null | number",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'property_auction_state'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
         "PropertyLedgerMessage": {
           "extends": "BaseMessage",
           "fields": {
@@ -1235,7 +1385,7 @@
           "extends": "BaseMessage",
           "fields": {
             "action": {
-              "type": "'buy_house' | 'list_house' | 'unlist_house'",
+              "type": "'buy_house' | 'cancel_house_auction' | 'list_house' | 'open_house_auction' | 'place_house_bid' | 'unlist_house'",
               "optional": false,
               "readonly": false
             },
@@ -1245,7 +1395,7 @@
               "readonly": false
             },
             "reason": {
-              "type": "PropertyDenialReason",
+              "type": "PropertyAuctionDenialReason | PropertyDenialReason",
               "optional": true,
               "readonly": false
             },

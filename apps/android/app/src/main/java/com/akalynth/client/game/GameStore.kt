@@ -129,6 +129,8 @@ class GameStore(
             is HouseSoldMessage -> "${msg.plotId} -> ${msg.buyerName}"
             is PropertyResultMessage -> "${msg.action} ok=${msg.success}"
             is PropertyLedgerMessage -> "${msg.propertyId}: ${msg.ownerHistory.size} entries"
+            is PropertyAuctionStateMessage -> "${msg.propertyId} next=${msg.minNext}"
+            is HouseAuctionSettledMessage -> "${msg.plotId} price=${msg.price}"
             is UnknownMessage -> (msg.type?.let { "$it " } ?: "") + msg.raw.take(50)
         }
         val entry = DebugLogEntry(
@@ -304,6 +306,8 @@ class GameStore(
             is HouseSoldMessage -> {}
             is PropertyResultMessage -> {}
             is PropertyLedgerMessage -> {}
+            is PropertyAuctionStateMessage -> {}
+            is HouseAuctionSettledMessage -> {}
             is UnknownMessage -> {} // Ignore unknown
         }
     }

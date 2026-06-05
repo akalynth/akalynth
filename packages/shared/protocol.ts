@@ -9,7 +9,7 @@ import type { MapName } from './http.js';
 // Protocol Version
 // ============================================================================
 
-export const PROTOCOL_VERSION = '1.1.0';
+export const PROTOCOL_VERSION = '2.0.0';
 
 // ============================================================================
 // Base Message
@@ -895,9 +895,8 @@ export interface PropertyAuctionStateMessage extends BaseMessage {
   scheduled_close: number | null;  // display hint (epoch ms), NOT authoritative
 }
 
-// Server → Client (RESERVED for 4b — settlement lane): broadcast when an auction
-// settles. NOT emitted in 4a (no automatic close yet) and intentionally NOT in
-// the active ServerMessage union until 4b. See docs/PROTOCOL.md.
+// Server → Client: broadcast when an auction closes and settles. The live
+// world-loop decides when to emit; the settlement receipt is authoritative.
 export interface HouseAuctionSettledMessage extends BaseMessage {
   type: 'house_auction_settled';
   property_id: string;

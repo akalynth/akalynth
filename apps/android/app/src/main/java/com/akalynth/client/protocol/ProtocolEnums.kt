@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 /**
  * Shared protocol enums + string-constant tables.
  *
- * Values mirror `packages/shared/protocol.ts` / `types.ts` (PROTOCOL_VERSION 1.1.0). The TS contract
+ * Values mirror `packages/shared/protocol.ts` / `types.ts` (PROTOCOL_VERSION 2.0.0). The TS contract
  * is authoritative; do not diverge. Reason/status fields that are open-ended on the server are kept
  * as plain [String] on the message classes (with the known values catalogued here) so an
  * unrecognised future value never crashes decode.
@@ -88,10 +88,32 @@ object PropertyDenialReason {
     const val INVALID_PRICE = "invalid_price"
 }
 
+object PropertyAuctionDenialReason {
+    const val UNKNOWN_PLOT = "unknown_plot"
+    const val NOT_OWNER = "not_owner"
+    const val ALREADY_LISTED = "already_listed"
+    const val NOT_AUCTIONING = "not_auctioning"
+    const val ALREADY_AUCTIONING = "already_auctioning"
+    const val CANNOT_BID_OWN = "cannot_bid_own"
+    const val BID_TOO_LOW = "bid_too_low"
+    const val INSUFFICIENT_GOLD = "insufficient_gold"
+    const val HAS_BIDS = "has_bids"
+    const val AUCTION_CLOSED = "auction_closed"
+    const val INVALID_PRICE = "invalid_price"
+}
+
 object PropertyAction {
     const val BUY_HOUSE = "buy_house"
     const val LIST_HOUSE = "list_house"
     const val UNLIST_HOUSE = "unlist_house"
+    const val OPEN_HOUSE_AUCTION = "open_house_auction"
+    const val PLACE_HOUSE_BID = "place_house_bid"
+    const val CANCEL_HOUSE_AUCTION = "cancel_house_auction"
+}
+
+object PropertyAuctionKind {
+    const val PRIMARY = "primary"
+    const val RESALE = "resale"
 }
 
 object NpcRecognitionTier {

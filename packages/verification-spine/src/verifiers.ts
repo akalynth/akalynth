@@ -6,10 +6,98 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { VerifierSpec } from './types.js';
+import { VerifierSpec, VerifyContext, VerifyResult } from './types.js';
 import { runLegacyVerifier } from './adapters/common.js';
 import { VerifierRegistry } from './registry.js';
 import { protocolDriftVerifier } from './verifiers/protocol-drift.js';
+
+const DEFAULT_DB_PATH = 'apps/server/data/akalynth.db';
+const DEFAULT_RECEIPTS_PATH = 'apps/server/audit/receipts.jsonl';
+
+function verifierDbPath(ctx: VerifyContext): string {
+  return ctx.env.AKALYNTH_DB_PATH ?? DEFAULT_DB_PATH;
+}
+
+function verifierDbExists(ctx: VerifyContext, dbPath: string): boolean {
+  const dbAbsPath = path.isAbsolute(dbPath) ? dbPath : path.join(ctx.repoRoot, dbPath);
+  return fs.existsSync(dbAbsPath);
+}
+
+function skipMissingDb(verifierId: string, dbPath: string): VerifyResult {
+  return {
+    ok: true,
+    verifierId,
+    startedAt: new Date().toISOString(),
+    finishedAt: new Date().toISOString(),
+    findings: [
+      {
+        code: `${verifierId.toUpperCase().replace(/-/g, '_')}_DB_NOT_FOUND`,
+        severity: 'info',
+        message: `Database not found at ${dbPath} (fresh install?)`,
+      },
+    ],
+  };
+}
+
+function runDbBackedLegacyVerifier(
+  scriptPath: string,
+  verifierId: string,
+  ctx: VerifyContext
+): VerifyResult {
+  const dbPath = verifierDbPath(ctx);
+  if (!verifierDbExists(ctx, dbPath)) return skipMissingDb(verifierId, dbPath);
+
+  return runLegacyVerifier(scriptPath, verifierId, ctx, {
+    AKALYNTH_DB_PATH: dbPath,
+  });
+}
+
+function verifierReceiptsPath(ctx: VerifyContext): string {
+  return (
+    ctx.env.AKALYNTH_RECEIPT_CHAIN_PATH ??
+    ctx.env.AKALYNTH_RECEIPTS_PATH ??
+    DEFAULT_RECEIPTS_PATH
+  );
+}
+
+function verifierReceiptsExist(ctx: VerifyContext, receiptsPath: string): boolean {
+  const receiptsAbsPath = path.isAbsolute(receiptsPath)
+    ? receiptsPath
+    : path.join(ctx.repoRoot, receiptsPath);
+  return fs.existsSync(receiptsAbsPath);
+}
+
+function skipMissingReceipts(verifierId: string, receiptsPath: string): VerifyResult {
+  return {
+    ok: true,
+    verifierId,
+    startedAt: new Date().toISOString(),
+    finishedAt: new Date().toISOString(),
+    findings: [
+      {
+        code: `${verifierId.toUpperCase().replace(/-/g, '_')}_RECEIPTS_NOT_FOUND`,
+        severity: 'info',
+        message: `Receipts not found at ${receiptsPath} (fresh install?)`,
+      },
+    ],
+  };
+}
+
+function runReceiptBackedLegacyVerifier(
+  scriptPath: string,
+  verifierId: string,
+  ctx: VerifyContext
+): VerifyResult {
+  const receiptsPath = verifierReceiptsPath(ctx);
+  if (!verifierReceiptsExist(ctx, receiptsPath)) {
+    return skipMissingReceipts(verifierId, receiptsPath);
+  }
+
+  return runLegacyVerifier(scriptPath, verifierId, ctx, {
+    AKALYNTH_RECEIPT_CHAIN_PATH: receiptsPath,
+    AKALYNTH_RECEIPTS_PATH: receiptsPath,
+  });
+}
 
 /**
  * Create the default verifier registry with all 24 verifiers
@@ -199,7 +287,7 @@ export function createDefaultRegistry(): VerifierRegistry {
     dependsOn: ['receipts-exist'],
     auditSafe: true,
     async run(ctx) {
-      return runLegacyVerifier('apps/server/tools/verify-chronicle.ts', 'chronicle', ctx);
+      return runDbBackedLegacyVerifier('apps/server/tools/verify-chronicle.ts', 'chronicle', ctx);
     },
   };
 
@@ -235,7 +323,7 @@ export function createDefaultRegistry(): VerifierRegistry {
     dependsOn: ['receipts-exist'],
     auditSafe: true,
     async run(ctx) {
-      return runLegacyVerifier('apps/server/tools/verify-evidence.ts', 'evidence', ctx);
+      return runDbBackedLegacyVerifier('apps/server/tools/verify-evidence.ts', 'evidence', ctx);
     },
   };
 
@@ -247,7 +335,7 @@ export function createDefaultRegistry(): VerifierRegistry {
     dependsOn: ['db-exists', 'receipts-exist'],
     auditSafe: true,
     async run(ctx) {
-      return runLegacyVerifier('apps/server/tools/verify-heat.ts', 'heat', ctx);
+      return runDbBackedLegacyVerifier('apps/server/tools/verify-heat.ts', 'heat', ctx);
     },
   };
 
@@ -259,7 +347,7 @@ export function createDefaultRegistry(): VerifierRegistry {
     dependsOn: ['receipts-exist'],
     auditSafe: true,
     async run(ctx) {
-      return runLegacyVerifier('apps/server/tools/verify-lifecycle.ts', 'lifecycle', ctx);
+      return runReceiptBackedLegacyVerifier('apps/server/tools/verify-lifecycle.ts', 'lifecycle', ctx);
     },
   };
 
@@ -271,7 +359,7 @@ export function createDefaultRegistry(): VerifierRegistry {
     dependsOn: ['receipts-exist'],
     auditSafe: true,
     async run(ctx) {
-      return runLegacyVerifier('apps/server/tools/verify-metrics.ts', 'metrics', ctx);
+      return runDbBackedLegacyVerifier('apps/server/tools/verify-metrics.ts', 'metrics', ctx);
     },
   };
 
@@ -283,7 +371,7 @@ export function createDefaultRegistry(): VerifierRegistry {
     dependsOn: ['receipts-exist'],
     auditSafe: true,
     async run(ctx) {
-      return runLegacyVerifier('apps/server/tools/verify-monetization.ts', 'monetization', ctx);
+      return runReceiptBackedLegacyVerifier('apps/server/tools/verify-monetization.ts', 'monetization', ctx);
     },
   };
 
@@ -331,7 +419,7 @@ export function createDefaultRegistry(): VerifierRegistry {
     dependsOn: ['db-exists', 'receipts-exist'],
     auditSafe: true,
     async run(ctx) {
-      return runLegacyVerifier('apps/server/tools/verify-protected.ts', 'protected', ctx);
+      return runDbBackedLegacyVerifier('apps/server/tools/verify-protected.ts', 'protected', ctx);
     },
   };
 

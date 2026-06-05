@@ -11,7 +11,7 @@ The protocol authority is:
 - `packages/shared/protocol.golden.json`
 - `scripts/verify_protocol_sync.sh`
 
-`packages/shared/protocol.ts` exports `PROTOCOL_VERSION = '1.1.0'`. v1.1.0 is an **additive, non-breaking** bump over v1.0.0 (Property Ownership v0 messages); no existing message changed, so the frozen `CLIENT_CONTRACT_V0_1` wire compatibility holds.
+`packages/shared/protocol.ts` exports `PROTOCOL_VERSION = '2.0.0'`. v2.0.0 accepts the house-auction protocol surface: auction open/bid/cancel client intents, auction state and settlement server broadcasts, and widened `property_result` action/reason values. Clients with exhaustive `property_result.action` or `property_result.reason` handling must tolerate the auction values listed here.
 
 This document is documentation only. It does not change shared types, runtime handlers, generated artifacts, clients, deployment state, or live service behavior.
 
