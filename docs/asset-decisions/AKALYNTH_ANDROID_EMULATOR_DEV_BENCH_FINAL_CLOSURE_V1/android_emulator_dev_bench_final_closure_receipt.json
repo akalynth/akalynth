@@ -1,0 +1,37 @@
+{
+  "id": "AKALYNTH_ANDROID_EMULATOR_DEV_BENCH_FINAL_CLOSURE_V1",
+  "status": "closed_android_emulator_dev_bench_ready_no_app_behavior_change",
+  "scope": "follow-up closure receipt for the Android emulator developer bench",
+  "input_receipts": [
+    "AKALYNTH_ANDROID_EMULATOR_DEV_BENCH_V1",
+    "AKALYNTH_ANDROID_DEBUG_LOCAL_CLEARTEXT_POLICY_V1"
+  ],
+  "claims": {
+    "emulator_bench_ready": true,
+    "avd_boots": true,
+    "debug_apk_builds": true,
+    "debug_apk_installs": true,
+    "app_launches": true,
+    "debug_app_can_reach_local_server": true,
+    "release_network_policy_weakened": false,
+    "android_ui_parity_started": false,
+    "server_changed": false,
+    "protocol_changed": false,
+    "shared_maps_changed": false,
+    "shared_types_changed": false,
+    "gameplay_authority_changed": false,
+    "deploy_or_runtime_mutated": false
+  },
+  "verification": {
+    "./gradlew assembleDebug": "pass",
+    "npm run verify:quick": "pass 9/9"
+  },
+  "remaining_findings": [
+    {
+      "id": "android_protocol_version_mismatch_after_connection",
+      "status": "separate_future_lane",
+      "observed_message": "Protocol mismatch: server v0.1.0, client v1.1.0. Update the app."
+    }
+  ],
+  "next_recommended_gate": "AKALYNTH_ANDROID_MOBILE_CLASSIC_SHELL_PARITY_V1"
+}

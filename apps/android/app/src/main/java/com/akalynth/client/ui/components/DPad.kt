@@ -1,6 +1,7 @@
 package com.akalynth.client.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -20,6 +21,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import com.akalynth.client.protocol.Direction
+import com.akalynth.client.ui.theme.ClassicShellColors
+import com.akalynth.client.ui.theme.classicPanelBrush
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
@@ -33,8 +36,9 @@ fun DPad(
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(Color.Black.copy(alpha = 0.4f))
-            .padding(8.dp),
+            .background(classicPanelBrush())
+            .border(1.dp, ClassicShellColors.IronBright.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+            .padding(10.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // North
@@ -45,7 +49,7 @@ fun DPad(
         )
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(48.dp)
+            horizontalArrangement = Arrangement.spacedBy(44.dp)
         ) {
             // West
             DirectionButton(
@@ -91,11 +95,16 @@ private fun DirectionButton(
 
     Box(
         modifier = Modifier
-            .size(56.dp)
+            .size(60.dp)
             .clip(CircleShape)
             .background(
-                if (isPressed) Color.White.copy(alpha = 0.3f)
-                else Color.White.copy(alpha = 0.15f)
+                if (isPressed) ClassicShellColors.Brass.copy(alpha = 0.72f)
+                else ClassicShellColors.Iron.copy(alpha = 0.72f)
+            )
+            .border(
+                1.dp,
+                if (isPressed) ClassicShellColors.Warning else ClassicShellColors.IronBright.copy(alpha = 0.72f),
+                CircleShape
             )
             .pointerInput(Unit) {
                 detectTapGestures(
@@ -111,8 +120,8 @@ private fun DirectionButton(
         Icon(
             imageVector = icon,
             contentDescription = direction.name,
-            tint = Color.White,
-            modifier = Modifier.size(32.dp)
+            tint = if (isPressed) ClassicShellColors.Iron else Color.White,
+            modifier = Modifier.size(34.dp)
         )
     }
 }

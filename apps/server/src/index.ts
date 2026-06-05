@@ -9,7 +9,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { createHash, randomUUID } from 'node:crypto';
 
 import type { ClientMessage, LostItemSummary, ServerMessage, PropertyPublic, PropertyOwnerHistoryEntry } from '../../../packages/shared/protocol.js';
-import { ServerMessages, parseClientMessage } from '../../../packages/shared/protocol.js';
+import { PROTOCOL_VERSION, ServerMessages, parseClientMessage } from '../../../packages/shared/protocol.js';
 import type { Player, TutorialProgress } from '../../../packages/shared/types.js';
 import { loadBuildInfo } from './build-info.js';
 import {
@@ -2905,7 +2905,7 @@ wss.on('connection', (ws, req: IncomingMessage) => {
 
   sessions.set(connId, s);
   audit.write({ player_id: connId, action: 'connect', inputs: {}, result: 'connected' });
-  send(ws, ServerMessages.welcome(VERSION));
+  send(ws, ServerMessages.welcome(PROTOCOL_VERSION));
 
   ws.on('message', (raw) => {
     let parsed: unknown;
@@ -3053,7 +3053,7 @@ function processSessionQueue(s: Session, now: number) {
       case 'connect': {
         // idempotent
         audit.write({ player_id: s.player?.id ?? s.connId, action: 'connect', inputs: {}, result: 'ok' });
-        send(s.ws, ServerMessages.welcome(VERSION));
+        send(s.ws, ServerMessages.welcome(PROTOCOL_VERSION));
         break;
       }
 

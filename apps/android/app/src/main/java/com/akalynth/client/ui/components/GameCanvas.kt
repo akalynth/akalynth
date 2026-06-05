@@ -19,17 +19,17 @@ import com.akalynth.client.protocol.PlayerStatus
 import com.akalynth.client.protocol.TileCode
 
 // Tile colors keyed by the canonical TileCode (mirrors packages/shared/types.ts TileCode).
-private val TILE_GRASS = Color(0xFF2D5A27)
-private val TILE_STONE = Color(0xFF6B6B6B)
-private val TILE_WALL = Color(0xFF3D3D3D)
-private val TILE_WATER = Color(0xFF1E5F8A)
-private val TILE_DOOR = Color(0xFF8B4513)
-private val TILE_TUTORIAL = Color(0xFF4A6741)
-private val TILE_GATE = Color(0xFFD4AF37)
-private val TILE_UNKNOWN = Color(0xFF222222)
+private val TILE_GRASS = Color(0xFF275522)
+private val TILE_STONE = Color(0xFF595C55)
+private val TILE_WALL = Color(0xFF2A2D2B)
+private val TILE_WATER = Color(0xFF185B77)
+private val TILE_DOOR = Color(0xFF7A4A24)
+private val TILE_TUTORIAL = Color(0xFF435D39)
+private val TILE_GATE = Color(0xFFCDAF4A)
+private val TILE_UNKNOWN = Color(0xFF111313)
 
-private val PLAYER_SELF = Color(0xFF4CAF50)
-private val PLAYER_OTHER = Color(0xFF2196F3)
+private val PLAYER_SELF = Color(0xFF42E66B)
+private val PLAYER_OTHER = Color(0xFF8FD3D6)
 private val PLAYER_DEAD = Color(0xFF9E9E9E)
 
 private fun colorFor(tile: TileCode): Color = when (tile) {
@@ -64,9 +64,9 @@ fun GameCanvas(
     val mapData: MapData? = remember(map) { MapRepository.load(context, map) }
 
     Canvas(
-        modifier = modifier.background(Color(0xFF1A1A1A))
+        modifier = modifier.background(Color(0xFF090A0A))
     ) {
-        val tileSize = 32.dp.toPx()
+        val tileSize = 36.dp.toPx()
         val centerX = size.width / 2
         val centerY = size.height / 2
 
@@ -112,7 +112,7 @@ fun GameCanvas(
             drawPlayer(
                 x = centerX,
                 y = centerY,
-                radius = tileSize / 3,
+                radius = tileSize / 2.7f,
                 isDead = player.status == PlayerStatus.DEAD,
                 isSelf = true
             )

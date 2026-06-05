@@ -1,0 +1,19 @@
+{
+  "id": "AKALYNTH_ANDROID_WRITE_CAPABILITY_PROBE_V1",
+  "status": "closed_android_write_capability_probe_passed_no_source_change",
+  "scope": "write-capability probe only",
+  "probe": {
+    "created": ".write-probe.tmp",
+    "readback": "AKALYNTH_ANDROID_WRITE_CAPABILITY_PROBE_V1",
+    "removed": ".write-probe.tmp",
+    "git_status_returned_to_prior_state": true
+  },
+  "claims": {
+    "write_capability_available": true,
+    "probe_file_left_behind": false,
+    "android_source_changed_by_probe": false,
+    "server_protocol_shared_changed_by_probe": false,
+    "runtime_deploy_mutated": false
+  },
+  "next_lane_unblocked": "AKALYNTH_ANDROID_MOBILE_CLASSIC_SHELL_PARITY_V1"
+}

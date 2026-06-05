@@ -1,0 +1,54 @@
+{
+  "id": "AKALYNTH_ANDROID_MOBILE_CLASSIC_SHELL_PARITY_V1",
+  "status": "closed_android_mobile_classic_shell_parity_no_protocol_no_gameplay_authority_change",
+  "scope": "Android UI/presentation parity only",
+  "reference_surface": [
+    "AKALYNTH_MOBILE_CORE_PLAY_SURFACE_V1",
+    "AKALYNTH_MOBILE_INVENTORY_BACKPACK_SHEET_V1",
+    "AKALYNTH_MOBILE_CHAT_LOG_PROOF_SHEETS_V1",
+    "AKALYNTH_MOBILE_PLAYABLE_SMOKE_SCRIPT_V1",
+    "AKALYNTH_MOBILE_CLASSIC_UI_POLISH_V1"
+  ],
+  "changes": {
+    "classic_android_shell_theme_added": true,
+    "title_screen_styled": true,
+    "world_hud_styled": true,
+    "dpad_control_dock_styled": true,
+    "chat_dock_and_sheet_styled": true,
+    "debug_drawer_styled": true,
+    "map_canvas_visual_readability_tuned": true
+  },
+  "verification": {
+    "write_probe": "pass",
+    "./gradlew assembleDebug": "pass",
+    "npm run verify:quick": "pass 9/9",
+    "apk_installed_in_emulator": "pass",
+    "app_launched": "pass",
+    "local_debug_server_connection": "pass via ws://10.0.2.2:3010",
+    "protocol_mismatch": "not observed"
+  },
+  "screenshots": {
+    "01_android_classic_title.png": "e9718abf260432c4e248f09ec59a924275177e85f64a3be673af821669f734bd",
+    "02_android_classic_connected_world.png": "94cf21f4aaf307a0adee5bfd52cef2bdbca5264203314a44483e92f9a61d45aa",
+    "03_android_classic_debug_sheet.png": "740e2b5803253ddd2642df1e3ff32ffa53b0dc24aac16ec078afd25d643ab42a",
+    "04_android_classic_chat_sheet.png": "e491e5fdce8399c52026f5f28bf2ba418611e5748a01990479c7830e14e1c4ef"
+  },
+  "claims": {
+    "android_compose_client_closer_to_browser_mobile_classic_shell": true,
+    "presentation_only": true,
+    "protocol_changed": false,
+    "server_changed": false,
+    "shared_type_or_map_changed": false,
+    "gameplay_authority_changed": false,
+    "account_system_changed": false,
+    "release_signing_changed": false,
+    "production_deploy_changed": false,
+    "beta_or_staging_mutated": false
+  },
+  "notes": [
+    "Validation used an isolated current-source local server on port 3010 because port 3000 was already occupied.",
+    "The emulator showed one transient System UI wait dialog during cold startup; the app continued normally after Wait.",
+    "No copied Tibia, OTClient, or third-party layout art/assets were introduced."
+  ],
+  "closure": "closed_android_mobile_classic_shell_parity_no_protocol_no_gameplay_authority_change"
+}

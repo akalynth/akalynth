@@ -1,0 +1,45 @@
+{
+  "id": "AKALYNTH_ANDROID_EMULATOR_DEV_BENCH_V1_VALIDATION_REPORT",
+  "status": "pass_with_app_cleartext_policy_blocker",
+  "scope": "local Android emulator developer bench validation",
+  "environment": {
+    "android_sdk_path": "/home/sovereign/Android/Sdk",
+    "avd_name": "akalynth_pixel_api35",
+    "target": "Android API 35 Google APIs x86_64",
+    "adb_version": "1.0.41 / 37.0.0-14910828",
+    "emulator_version": "36.6.11.0",
+    "sdkmanager_version": "12.0",
+    "gradle_version": "8.9"
+  },
+  "checks": {
+    "dev_kvm_present": "pass",
+    "cpu_virtualization_present": "pass",
+    "sovereign_added_to_kvm_group": "pass",
+    "current_session_kvm_access_via_sg": "pass",
+    "android_sdk_tools_available": "pass",
+    "avd_created": "pass",
+    "emulator_boots": "pass",
+    "debug_apk_builds": "pass",
+    "debug_apk_installs": "pass",
+    "android_app_launches": "pass",
+    "emulator_can_reach_10_0_2_2_3000": "pass",
+    "android_app_can_connect_to_10_0_2_2_3000": "blocked",
+    "protected_runtime_paths_unchanged": "pass",
+    "npm_run_verify_quick": "pass 9/9",
+    "production_runtime_mutated": "false"
+  },
+  "app_connectivity_blocker": {
+    "status": "blocked",
+    "observed_error": "CLEARTEXT communication to 10.0.2.2 not permitted by network security policy",
+    "classification": "debug Android app network security configuration blocker",
+    "notes": [
+      "The emulator itself can reach http://10.0.2.2:3000/v1/health.",
+      "The APK launches and focuses MainActivity.",
+      "No Android app behavior change was made in this bench lane."
+    ]
+  },
+  "screenshots": [
+    "screenshots/02_android_app_main_activity.png",
+    "screenshots/04_android_after_connect_button.png"
+  ]
+}

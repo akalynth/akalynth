@@ -1,0 +1,71 @@
+{
+  "id": "AKALYNTH_ANDROID_EMULATOR_DEV_BENCH_V1",
+  "status": "implemented_with_app_cleartext_policy_blocker",
+  "scope": "local Android emulator development bench only",
+  "closure_target": "closed_android_emulator_dev_bench_ready_no_app_behavior_change",
+  "closure_target_met": false,
+  "purpose": "Set up and validate a local Android emulator bench for later Akalynth Android parity testing without changing Android app behavior or production runtime.",
+  "claims": {
+    "android_sdk_tools_installed": true,
+    "kvm_available": true,
+    "user_added_to_kvm_group": true,
+    "current_session_kvm_access_via_sg": true,
+    "avd_created": true,
+    "emulator_boots": true,
+    "debug_apk_builds": true,
+    "debug_apk_installs": true,
+    "app_launches": true,
+    "emulator_can_reach_local_server_via_10_0_2_2": true,
+    "android_app_can_connect_to_local_server_via_10_0_2_2": false,
+    "android_app_behavior_changed": false,
+    "server_changed": false,
+    "protocol_changed": false,
+    "shared_maps_changed": false,
+    "shared_types_changed": false,
+    "production_deploy_changed": false,
+    "beta_or_staging_mutated": false,
+    "release_signing_added": false,
+    "gameplay_authority_changed": false
+  },
+  "validation": {
+    "dev_kvm": "pass",
+    "cpu_virtualization": "pass",
+    "adb_available": "pass",
+    "emulator_available": "pass",
+    "sdkmanager_available": "pass",
+    "avdmanager_available": "pass",
+    "avd_created": "pass",
+    "emulator_boot": "pass",
+    "gradle_assemble_debug": "pass",
+    "apk_install": "pass",
+    "app_launch": "pass",
+    "emulator_to_host_health_check": "pass",
+    "app_level_local_connection": "blocked_by_android_cleartext_policy",
+    "protected_runtime_paths_unchanged": "pass",
+    "npm run verify:quick": "pass 9/9"
+  },
+  "blocker": {
+    "id": "android_debug_cleartext_10_0_2_2_policy",
+    "layer": "android_debug_app_network_security_config",
+    "observed_error": "CLEARTEXT communication to 10.0.2.2 not permitted by network security policy",
+    "meaning": "The emulator bench is installed and the local server is reachable from the emulator, but the Android debug app cannot yet connect to the local cleartext development endpoint.",
+    "resolution_lane": "AKALYNTH_ANDROID_DEBUG_LOCAL_CLEAR_TEXT_POLICY_V1"
+  },
+  "evidence": {
+    "android_sdk_path": "/home/sovereign/Android/Sdk",
+    "avd_name": "akalynth_pixel_api35",
+    "debug_apk": "apps/android/app/build/outputs/apk/debug/app-debug.apk",
+    "screenshots": [
+      "screenshots/02_android_app_main_activity.png",
+      "screenshots/04_android_after_connect_button.png"
+    ],
+    "validation_report": "validation/android_emulator_dev_bench_report.json"
+  },
+  "notes": [
+    "Accepted as a developer bench setup with an app-level cleartext connectivity blocker recorded.",
+    "No Android app behavior changes were made in this lane.",
+    "No server, protocol, shared map, shared type, production runtime, beta/staging deploy, release signing, Play Store, or gameplay authority changes were made.",
+    "A new login/session or fresh terminal will naturally include the kvm group; this run used sg kvm for current-session access."
+  ],
+  "next_recommended_gate": "AKALYNTH_ANDROID_DEBUG_LOCAL_CLEAR_TEXT_POLICY_V1"
+}
