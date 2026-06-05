@@ -1,0 +1,80 @@
+AKALYNTH_VAULTCORE_WORLD_BIBLE_EXTRACTION_V1
+status: implemented_pending_review
+scope: docs-only VaultCore civilization extraction and Akalynth world-bible adaptation
+
+Closure target:
+- closed_vaultcore_world_bible_extracted_no_code_import_no_runtime_mutation
+
+Source custody:
+- durable source path: /home/sovereign/akalynth-ops/repos/source-material/cosmic-root
+- source remote: https://github.com/akalynth/COSMIC_ROOT.git
+- source commit: 7c096353218ff9e2114d1e0b2226eee3f75a5d9e
+
+Source files read:
+- VaultCore/civilization/cities/vaultcore_prime.json
+- VaultCore/civilization/cities/vaultcore_prime.yaml
+- VaultCore/civilization/vaultcore_prime.yaml
+- VaultCore/civilization/cultural_memory.json
+- VaultCore/civilization/first_city_design.py
+- VaultCore/civilization/second_city_design.py
+- VaultCore/civilization/third_city_design.py
+- VaultCore/civilization/dreamforged_species.yaml
+- VaultCore/civilization/flamebound_species.yaml
+- VaultCore/civilization/codexborn_species.yaml
+- VaultCore/civilization/species_registry.yaml
+- VaultCore/civilization/codexborn_citadel.yaml
+- VaultCore/civilization/flamebound_haven.yaml
+- VaultCore/civilization/sacred_professions.json
+- VaultCore/civilization/professions/sacred_professions.json
+- VaultCore/civilization/professions/sacred_professions.yaml
+
+Created docs:
+- VAULTCORE_SOURCE_REGISTER.md
+- AKALYNTH_WORLD_BIBLE_V1.md
+- HIGH_CITY_FIRST_CITY_DESIGN.md
+- FACTION_REGISTER.md
+- DISTRICT_REGISTER.md
+- MYTHS_RITES_AND_DOCTRINES.md
+- SACRED_NUMBERS_AND_PUZZLES.md
+- SOURCE_TO_GAME_TERM_MAPPING.md
+- CLAIM_BOUNDARY.md
+- receipt.txt
+
+Claims:
+- vaultcore_civilization_source_inspected: true
+- durable_extraction_source_created: true
+- high_city_first_city_world_bible_created: true
+- vaultcore_prime_preserved_as_old_source_name: true
+- dreamforged_flamebound_codexborn_mapped_as_lore_orders: true
+- sacred_numbers_mapped_as_lore_and_puzzle_seeds: true
+- system_language_translated_to_game_facing_lore: true
+- vaultcore_scripts_executed: false
+- cosmic_root_code_imported: false
+- runtime_map_renamed: false
+- server_changed: false
+- protocol_changed: false
+- shared_maps_changed: false
+- shared_types_changed: false
+- collision_changed: false
+- walkability_changed: false
+- npc_behavior_added: false
+- mob_behavior_added: false
+- economy_changed: false
+- quest_system_changed: false
+- character_creation_changed: false
+- production_map_promoted: false
+- deploy_performed: false
+
+Verification:
+- source clone remote verified
+- source clone commit verified
+- required docs created
+- canonical High City framing present
+- forbidden runtime claims absent
+- npm run verify:quick PASS 9/9
+
+Valid accepted status after review:
+- accepted_vaultcore_world_bible_extraction
+
+Next recommended lane:
+- AKALYNTH_HIGH_CITY_CANONICAL_WORLD_DECISION_V1
