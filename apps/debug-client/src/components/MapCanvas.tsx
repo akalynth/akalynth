@@ -38,6 +38,8 @@ interface MapCanvasProps {
   map: MapData;
   me: PlayerPublic | null;
   others: PlayerPublic[];
+  viewMode?: 'full-map' | 'follow-player';
+  viewportPixels?: { width: number; height: number };
   nowMs: number;
   targetId: string | null;
   fx: FloatingText[];
@@ -54,6 +56,7 @@ interface MapCanvasProps {
 const TILE_SIZE = 32;
 const CHARACTER_DRAW_SCALE = 1.25;
 const WALK_FRAME_MS = 140;
+const FOLLOW_VIEWPORT_FALLBACK = { width: 960, height: 540 };
 // How long after the last tile change a character keeps playing its walk cycle.
 // Positions arrive one tile at a time, so without this window the cycle would
 // only ever see a single moving frame and freeze on column 0.
@@ -63,6 +66,10 @@ const OVERLAY_ALPHA = { visible: 1, faded: 0.35, hidden: 0 } as const;
 // (and re-trigger the draw effect) on every render.
 const EMPTY_WORLD_OBJECTS: WorldVisualObjectPlacement[] = [];
 const EMPTY_DEBUG_OVERLAYS: MapDebugOverlay[] = [];
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}
 
 const TILE_COLOR: Record<number, string> = {
   [TileCode.Grass]: '#19351f',
@@ -154,8 +161,9 @@ function getWalkColumn(isMoving: boolean, tick: number): number {
   return tick % 4;
 }
 
-export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget, groundItems, propertyByPlot, characterFrameOverrides, characterSpriteOverrides, worldVisualObjects = EMPTY_WORLD_OBJECTS, debugOverlays = EMPTY_DEBUG_OVERLAYS }: MapCanvasProps) {
+export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixels, nowMs, targetId, fx, onSelectTarget, groundItems, propertyByPlot, characterFrameOverrides, characterSpriteOverrides, worldVisualObjects = EMPTY_WORLD_OBJECTS, debugOverlays = EMPTY_DEBUG_OVERLAYS }: MapCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const cameraRef = useRef({ x: 0, y: 0 });
   const { images: tileSprites, ready: spritesReady } = useTileSprites();
   const { images: characterSprites, ready: charactersReady } = useCharacterSprites();
   const { images: worldVisualImages, ready: worldVisualsReady } = useWorldVisualAssets();
@@ -174,14 +182,28 @@ export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget
     const rect = canvas.getBoundingClientRect();
     const px = (e.clientX - rect.left) * (canvas.width / rect.width);
     const py = (e.clientY - rect.top) * (canvas.height / rect.height);
-    return { tx: Math.floor(px / TILE_SIZE), ty: Math.floor(py / TILE_SIZE) };
+    const camera = cameraRef.current;
+    return { tx: Math.floor((px + camera.x) / TILE_SIZE), ty: Math.floor((py + camera.y) / TILE_SIZE) };
   };
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    canvas.width = map.width * TILE_SIZE;
-    canvas.height = map.height * TILE_SIZE;
+    const worldWidth = map.width * TILE_SIZE;
+    const worldHeight = map.height * TILE_SIZE;
+    const followWidth = viewportPixels?.width ?? FOLLOW_VIEWPORT_FALLBACK.width;
+    const followHeight = viewportPixels?.height ?? FOLLOW_VIEWPORT_FALLBACK.height;
+    canvas.width = viewMode === 'follow-player' ? followWidth : worldWidth;
+    canvas.height = viewMode === 'follow-player' ? followHeight : worldHeight;
+    const centerX = me ? me.x * TILE_SIZE + TILE_SIZE / 2 : map.spawn.x * TILE_SIZE + TILE_SIZE / 2;
+    const centerY = me ? me.y * TILE_SIZE + TILE_SIZE / 2 : map.spawn.y * TILE_SIZE + TILE_SIZE / 2;
+    const cameraX = viewMode === 'follow-player'
+      ? clamp(centerX - canvas.width / 2, 0, Math.max(0, worldWidth - canvas.width))
+      : 0;
+    const cameraY = viewMode === 'follow-player'
+      ? clamp(centerY - canvas.height / 2, 0, Math.max(0, worldHeight - canvas.height))
+      : 0;
+    cameraRef.current = { x: cameraX, y: cameraY };
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     // Pixel-art tiles: keep hard edges when scaling 32px sprites to TILE_SIZE.
@@ -189,6 +211,8 @@ export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget
 
     ctx.fillStyle = '#0d1117';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.translate(-cameraX, -cameraY);
 
     for (let y = 0; y < map.height; y++) {
       for (let x = 0; x < map.width; x++) {
@@ -454,7 +478,8 @@ export function MapCanvas({ map, me, others, nowMs, targetId, fx, onSelectTarget
       ctx.fillText(f.text, f.x * TILE_SIZE + 2, f.y * TILE_SIZE - lift);
       ctx.restore();
     }
-  }, [map, me, others, nowMs, targetId, fx, othersById, groundItems, propertyByPlot, characterFrameOverrides, characterSpriteOverrides, worldVisualObjects, debugOverlays, tileSprites, spritesReady, characterSprites, charactersReady, worldVisualImages, worldVisualsReady]);
+    ctx.restore();
+  }, [map, me, others, viewMode, viewportPixels?.height, viewportPixels?.width, nowMs, targetId, fx, othersById, groundItems, propertyByPlot, characterFrameOverrides, characterSpriteOverrides, worldVisualObjects, debugOverlays, tileSprites, spritesReady, characterSprites, charactersReady, worldVisualImages, worldVisualsReady]);
 
   return (
     <>

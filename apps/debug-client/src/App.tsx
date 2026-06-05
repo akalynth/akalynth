@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { MapName } from '@shared/http';
 import type { ChronicleEvent } from '@shared/protocol';
 import type { MapData, PlayerPublic } from '@shared/types';
@@ -142,6 +142,77 @@ function useNow(interval = 200) {
   return now;
 }
 
+function useMediaQuery(query: string): boolean {
+  const read = useCallback(() => window.matchMedia(query).matches, [query]);
+  const [matches, setMatches] = useState(read);
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    const update = () => setMatches(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, [query]);
+
+  return matches;
+}
+
+function useViewportSize() {
+  const read = useCallback(() => ({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  }), []);
+  const [size, setSize] = useState(read);
+
+  useEffect(() => {
+    const update = () => setSize(read());
+    window.addEventListener('resize', update);
+    window.addEventListener('orientationchange', update);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('orientationchange', update);
+    };
+  }, [read]);
+
+  return size;
+}
+
+type LockableScreenOrientation = ScreenOrientation & {
+  lock?: (orientation: 'landscape') => Promise<void>;
+};
+
+async function requestLandscapeMode() {
+  try {
+    if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+      await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
+    }
+  } catch (error) {
+    console.log('[debug-client] fullscreen request unavailable', error);
+  }
+
+  try {
+    const orientation = screen.orientation as LockableScreenOrientation | undefined;
+    await orientation?.lock?.('landscape');
+  } catch (error) {
+    console.log('[debug-client] landscape lock unavailable', error);
+  }
+}
+
+function MobileLandscapeGate() {
+  return (
+    <div className="mobile-rotate-gate" role="dialog" aria-modal="true" aria-label="Landscape required">
+      <div className="mobile-rotate-panel">
+        <div className="mobile-rotate-icon" aria-hidden="true" />
+        <div className="mobile-rotate-title">Landscape required</div>
+        <div className="mobile-rotate-copy">Turn the phone sideways for the play surface.</div>
+        <button type="button" className="mobile-rotate-button" onClick={() => void requestLandscapeMode()}>
+          Enter landscape
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   // Hooks must run unconditionally and in a stable order, so call them before any
   // early return (rules of hooks).
@@ -165,6 +236,8 @@ function DebugApp() {
   const initialMap: MapName = 'Rookguard';
   const config = useMemo(() => loadConfig(), []);
   const studioProofEnabled = import.meta.env.VITE_ENABLE_STUDIO_PROOF === '1';
+  const phoneLandscape = useMediaQuery('(max-width: 950px) and (orientation: landscape)');
+  const viewport = useViewportSize();
   const [state, api] = useGameClient(initialMap);
   const [chatOpen, setChatOpen] = useState(false);
   const [proof, setProof] = useState<StudioProofState | null>(null);
@@ -198,6 +271,13 @@ function DebugApp() {
     smokeState === 'fail' ? 'failed' :
     smokeState === 'offline' ? 'offline' :
     'ready';
+  const mobileViewport = useMemo(() => {
+    if (!phoneLandscape) return undefined;
+    return {
+      width: Math.max(640, Math.round(viewport.width)),
+      height: Math.max(320, Math.round(viewport.height)),
+    };
+  }, [phoneLandscape, viewport.height, viewport.width]);
 
   const hasAutoTarget = useMemo(() => {
     if (!state.world.me) return false;
@@ -337,6 +417,7 @@ function DebugApp() {
 
   return (
     <div className="app-shell">
+      <MobileLandscapeGate />
       <TopBar
         stage={state.ui.stage}
         onStageChange={api.setStage}
@@ -471,6 +552,8 @@ function DebugApp() {
             map={state.world.map}
             me={state.world.me}
             others={others}
+            viewMode={phoneLandscape ? 'follow-player' : 'full-map'}
+            viewportPixels={mobileViewport}
             nowMs={now}
             targetId={state.combat.targetId}
             fx={state.combat.fx}
@@ -601,28 +684,11 @@ function DebugApp() {
 
         <section
           className={`stage stage-bottom command-dock proof-${smokeState}`}
-          style={{
-            display: 'block',
-            left: '0.55rem',
-            maxWidth: 'calc(100vw - 1.1rem)',
-            right: 'auto',
-            width: 'calc(100vw - 1.1rem)',
-          }}
         >
-          <div
-            className="bottom-actions"
-            style={{
-              display: 'grid',
-              gap: '0.42rem',
-              gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-              minWidth: 0,
-              width: '100%',
-            }}
-          >
+          <div className="bottom-actions">
             <button
               className="chat-toggle"
               aria-label="Open chat"
-              style={{ minWidth: 0, width: '100%' }}
               onClick={() => setChatOpen(true)}
             >
               Chat
@@ -630,7 +696,6 @@ function DebugApp() {
             <button
               className="chronicle-toggle"
               aria-label="Open chronicle"
-              style={{ minWidth: 0, width: '100%' }}
               onClick={api.openChronicle}
             >
               Log
@@ -638,7 +703,6 @@ function DebugApp() {
             <button
               className="proof-toggle"
               aria-label={proofRunning ? 'Running proof' : 'Run proof'}
-              style={{ minWidth: 0, width: '100%' }}
               onClick={() => void runProofSmoke()}
               disabled={proofRunning || !studioProofEnabled}
             >

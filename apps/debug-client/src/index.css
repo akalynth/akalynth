@@ -1955,6 +1955,386 @@ button {
 }
 
 /* ============================================================================
+   AKALYNTH_MOBILE_LANDSCAPE_CLIENT_SHELL_V1
+   ============================================================================ */
+
+.mobile-rotate-gate {
+  display: none;
+}
+
+@media (max-width: 950px) and (orientation: portrait) {
+  .mobile-rotate-gate {
+    position: fixed;
+    inset: 0;
+    z-index: 220;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+    background:
+      radial-gradient(circle at 50% 24%, rgba(97, 216, 198, 0.18), transparent 38%),
+      linear-gradient(145deg, rgba(5, 8, 15, 0.98), rgba(9, 18, 26, 0.98));
+  }
+
+  .mobile-rotate-panel {
+    width: min(23rem, 88vw);
+    display: grid;
+    justify-items: center;
+    gap: 0.75rem;
+    padding: 1.25rem;
+    border: 1px solid rgba(240, 200, 60, 0.28);
+    border-radius: 18px;
+    background: rgba(8, 13, 22, 0.9);
+    box-shadow: 0 24px 72px rgba(0, 0, 0, 0.55);
+    text-align: center;
+  }
+
+  .mobile-rotate-icon {
+    width: 4.5rem;
+    height: 2.65rem;
+    border: 3px solid var(--accent);
+    border-radius: 14px;
+    box-shadow: 0 0 26px rgba(240, 200, 60, 0.18);
+  }
+
+  .mobile-rotate-title {
+    color: var(--accent-strong);
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  .mobile-rotate-copy {
+    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.35;
+  }
+
+  .mobile-rotate-button {
+    min-height: 44px;
+    padding: 0.65rem 1rem;
+    border: 1px solid rgba(97, 216, 198, 0.42);
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(97, 216, 198, 0.2), rgba(16, 24, 36, 0.94));
+    color: var(--text);
+    font-weight: 700;
+  }
+}
+
+@media (max-width: 950px) and (orientation: landscape) {
+  html,
+  body,
+  #root,
+  .app-shell {
+    width: 100vw;
+    height: 100dvh;
+    min-height: 100dvh;
+    overflow: hidden;
+  }
+
+  .app-shell {
+    background: #05070d;
+  }
+
+  .top-bar {
+    top: max(0.45rem, env(safe-area-inset-top));
+    left: max(0.45rem, env(safe-area-inset-left));
+    right: auto;
+    width: auto;
+    max-width: min(16rem, 34vw);
+    grid-template-columns: auto auto;
+    gap: 0.35rem;
+    padding: 0.36rem;
+    border-radius: 13px;
+  }
+
+  .brand {
+    min-height: 30px;
+    padding: 0 0.42rem;
+    font-size: 0.78rem;
+  }
+
+  .brand::before {
+    width: 0.42rem;
+    height: 0.42rem;
+    margin-right: 0.34rem;
+  }
+
+  .stage-gates {
+    display: none;
+  }
+
+  .conn-pill {
+    min-height: 30px;
+    padding: 0.24rem 0.48rem;
+    font-size: 0.68rem;
+  }
+
+  .main {
+    height: 100dvh;
+    min-height: 100dvh;
+    padding: 0;
+  }
+
+  .stage-map {
+    position: fixed;
+    inset: 0;
+    display: block;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .map-canvas {
+    width: 100vw;
+    height: 100dvh;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    display: block;
+  }
+
+  .scene-vignette {
+    background:
+      linear-gradient(180deg, rgba(5, 8, 14, 0.44), transparent 22%, transparent 68%, rgba(5, 8, 14, 0.62)),
+      radial-gradient(ellipse at center, transparent 42%, rgba(0, 0, 0, 0.24) 100%);
+  }
+
+  .hud-primary {
+    position: fixed;
+    top: max(0.45rem, env(safe-area-inset-top));
+    left: 50%;
+    right: auto;
+    bottom: auto;
+    transform: translateX(-50%);
+  }
+
+  .hud-card--identity {
+    display: none;
+  }
+
+  .hud-card--stats {
+    display: grid;
+    width: min(15.5rem, 34vw);
+    min-width: 13.75rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.42rem;
+    padding: 0.42rem 0.55rem;
+    border-radius: 13px;
+    font-size: 0.68rem;
+  }
+
+  .hud-card span,
+  .hud-kicker,
+  .proof-chip span {
+    font-size: 0.62rem;
+  }
+
+  .hud-card strong,
+  .proof-chip strong {
+    font-size: 0.78rem;
+    line-height: 1.08;
+  }
+
+  .hud-proof {
+    top: max(0.45rem, env(safe-area-inset-top));
+    right: max(0.45rem, env(safe-area-inset-right));
+    bottom: auto;
+    gap: 0;
+  }
+
+  .hud-proof .proof-chip:not(.objective-chip) {
+    display: none;
+  }
+
+  .objective-chip {
+    width: min(12rem, 26vw);
+    max-width: min(12rem, 26vw);
+    padding: 0.42rem 0.55rem;
+    border-radius: 13px;
+  }
+
+  .dead-zone,
+  .nearby-card {
+    display: none;
+  }
+
+  .stage-controls {
+    position: fixed;
+    left: max(0.55rem, env(safe-area-inset-left));
+    right: max(0.55rem, env(safe-area-inset-right));
+    bottom: max(0.55rem, env(safe-area-inset-bottom));
+    z-index: 26;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.5rem;
+    pointer-events: none;
+  }
+
+  .thumb-zone {
+    width: auto;
+    min-height: 0;
+    padding: 0.42rem;
+    border-radius: 15px;
+    background: rgba(8, 13, 22, 0.62);
+    pointer-events: auto;
+  }
+
+  .thumb-zone.right {
+    justify-self: auto;
+    width: min(12rem, 28vw);
+    padding: 0.42rem;
+  }
+
+  .actions-panel {
+    max-height: calc(100dvh - 1.1rem);
+    gap: 0.35rem;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+
+  .actions-panel::-webkit-scrollbar {
+    display: none;
+  }
+
+  .actions-panel .mission-card,
+  .gold-display,
+  .legend-stone-hint,
+  .target-line,
+  .action-hint,
+  .ritual-line,
+  .npc-line,
+  .sweep-line,
+  .shop-section,
+  .hotbar {
+    display: none;
+  }
+
+  .action-locked {
+    max-width: 9rem;
+    padding: 0.35rem 0.45rem;
+    color: var(--accent-strong);
+    font-size: 0.72rem;
+    line-height: 1.15;
+    text-align: center;
+  }
+
+  .action-btn {
+    width: 100%;
+    min-height: 44px;
+    padding: 0.46rem 0.58rem;
+    border-radius: 11px;
+    font-size: 0.76rem;
+  }
+
+  .dpad {
+    grid-template-columns: repeat(3, 48px);
+    grid-template-rows: repeat(3, 48px);
+    gap: 0.25rem;
+  }
+
+  .dpad-btn {
+    min-height: 48px;
+    border-radius: 11px;
+    font-size: 1.05rem;
+  }
+
+  .dpad-stop {
+    display: none;
+  }
+
+  .stage-bottom {
+    left: 50% !important;
+    right: auto !important;
+    bottom: max(0.55rem, env(safe-area-inset-bottom));
+    z-index: 27;
+    width: min(18rem, 32vw) !important;
+    max-width: min(18rem, 32vw) !important;
+    min-height: 0;
+    padding: 0.35rem;
+    border-radius: 15px;
+    transform: translateX(-50%);
+  }
+
+  .bottom-actions {
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.32rem;
+  }
+
+  .chat-toggle,
+  .chronicle-toggle,
+  .proof-toggle {
+    width: 100%;
+    min-width: 0;
+    min-height: 40px;
+    padding: 0.34rem 0.38rem;
+    border-radius: 11px;
+    overflow: hidden;
+    font-size: 0.7rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .status-pills {
+    display: none;
+  }
+
+  .toast {
+    top: 3.8rem;
+    right: max(0.55rem, env(safe-area-inset-right));
+    max-width: min(18rem, 44vw);
+  }
+
+  .chat-sheet,
+  .chronicle-sheet,
+  .recap-sheet {
+    width: min(32rem, 82vw);
+    max-height: 88dvh;
+  }
+}
+
+@media (max-width: 950px) and (orientation: landscape) and (max-height: 430px) {
+  .top-bar,
+  .hud-card--stats,
+  .objective-chip,
+  .thumb-zone,
+  .stage-bottom {
+    backdrop-filter: blur(10px);
+  }
+
+  .dpad {
+    grid-template-columns: repeat(3, 42px);
+    grid-template-rows: repeat(3, 42px);
+    gap: 0.22rem;
+  }
+
+  .dpad-btn {
+    min-height: 42px;
+    font-size: 0.96rem;
+  }
+
+  .stage-bottom {
+    width: min(16rem, 30vw) !important;
+    max-width: min(16rem, 30vw) !important;
+  }
+
+  .chat-toggle,
+  .chronicle-toggle,
+  .proof-toggle {
+    min-height: 38px;
+    font-size: 0.66rem;
+  }
+
+  .action-btn {
+    min-height: 40px;
+    font-size: 0.7rem;
+  }
+}
+
+/* ============================================================================
    Existence Mode - Minimal truth viewer
    ============================================================================ */
 
