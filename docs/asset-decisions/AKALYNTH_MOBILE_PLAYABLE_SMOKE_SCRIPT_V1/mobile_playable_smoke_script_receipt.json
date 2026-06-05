@@ -1,0 +1,88 @@
+{
+  "id": "AKALYNTH_MOBILE_PLAYABLE_SMOKE_SCRIPT_V1",
+  "status": "closed_mobile_playable_smoke_script_recorded_no_gameplay_authority_change",
+  "scope": "debug-client mobile browser playability smoke script and evidence only",
+  "input_receipts": [
+    "AKALYNTH_MOBILE_CORE_PLAY_SURFACE_V1",
+    "AKALYNTH_MOBILE_INVENTORY_BACKPACK_SHEET_V1",
+    "AKALYNTH_MOBILE_CHAT_LOG_PROOF_SHEETS_V1"
+  ],
+  "script": {
+    "path": "apps/debug-client/scripts/mobile-playable-smoke.mjs",
+    "npm_command": "npm -w apps/debug-client run smoke:mobile -- --base-url http://127.0.0.1:5174/play/",
+    "automation_dependency_added": false,
+    "uses_chrome_devtools_protocol": true
+  },
+  "flow": {
+    "portrait_rotate_gate_checked": true,
+    "mobile_landscape_entry_checked": true,
+    "cold_start_enter_play_checked": true,
+    "dpad_press_release_leave_cancel_stop_checked": true,
+    "pack_sheet_checked": true,
+    "chat_sheet_checked": true,
+    "log_chronicle_sheet_checked": true,
+    "proof_sheet_checked": true,
+    "clean_play_surface_restored_checked": true,
+    "desktop_debug_mode_checked": true
+  },
+  "validation": {
+    "report": "validation/mobile_playable_smoke_report.json",
+    "result": "pass",
+    "main_surface_scrollbars": "pass",
+    "single_active_sheet_rule": "pass",
+    "screenshots_generated": "pass"
+  },
+  "verification": {
+    "npm -w apps/debug-client run smoke:mobile -- --base-url http://127.0.0.1:5174/play/": "pass",
+    "npm -w apps/debug-client run build": "pass",
+    "npm run verify:quick": "pass 9/9"
+  },
+  "screenshots": [
+    "screenshots/01_portrait_rotate_gate_390x844.png",
+    "screenshots/02_landscape_entry_play_surface_932x430.png",
+    "screenshots/03_dpad_press_release_cancel_932x430.png",
+    "screenshots/04_pack_sheet_932x430.png",
+    "screenshots/05_chat_sheet_932x430.png",
+    "screenshots/06_log_sheet_932x430.png",
+    "screenshots/07_proof_sheet_932x430.png",
+    "screenshots/08_clean_play_surface_restored_932x430.png",
+    "screenshots/09_desktop_debug_mode_1440x900.png"
+  ],
+  "acceptance": {
+    "portrait_rotate_gate_visible": "pass",
+    "mobile_landscape_entry_visible": "pass",
+    "player_surface_visible_after_entry": "pass",
+    "dpad_press_release_cancel_stop_exercised": "pass",
+    "pack_sheet_accessible": "pass",
+    "chat_sheet_accessible": "pass",
+    "log_chronicle_sheet_accessible": "pass",
+    "proof_sheet_accessible": "pass",
+    "closing_sheets_restores_clean_play_surface": "pass",
+    "main_surface_scrollbars_absent": "pass",
+    "desktop_debug_mode_remains_usable": "pass",
+    "build_passes": "pass",
+    "verify_quick_passes": "pass",
+    "protected_server_protocol_shared_android_deploy_paths_unchanged": "pass"
+  },
+  "claims": {
+    "repeatable_mobile_browser_smoke_script_added": true,
+    "smoke_screenshots_captured": true,
+    "gameplay_authority_changed": false,
+    "chat_protocol_changed": false,
+    "receipt_proof_semantics_changed": false,
+    "server_protocol_changed": false,
+    "shared_types_changed": false,
+    "android_native_changed": false,
+    "deploy_runtime_changed": false,
+    "new_control_dependency_added": false
+  },
+  "notes": [
+    "Accepted as a repeatable browser debug-client mobile playability smoke only.",
+    "The DPad step exercises existing pointer handlers and does not prove server-side movement semantics.",
+    "Pack, Chat, Log, and Proof steps use existing data and callbacks.",
+    "The script verifies only one mobile sheet is visible during each sheet step.",
+    "No protocol, server, shared type, Android/native, deployment, or gameplay authority behavior was changed."
+  ],
+  "closure": "closed_mobile_playable_smoke_script_recorded_no_gameplay_authority_change",
+  "next_recommended_gate": "AKALYNTH_MOBILE_CLASSIC_UI_POLISH_V1"
+}

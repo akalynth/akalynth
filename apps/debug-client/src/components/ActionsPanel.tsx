@@ -1,7 +1,12 @@
 import type { PlayLoopProgress } from '@shared/types';
+import {
+  isUsableItemType,
+  itemLabel,
+  shortItemLabel,
+  type InventoryItemRef,
+} from '../data/inventoryPresentation';
 
 interface NpcRef { npc_id: string; label: string }
-interface ItemRef { item_id: string; item_type: string; slot?: string | null }
 interface GroundItem { item_id: string; item_type: string; x: number; y: number }
 interface WorkContractRef {
   contract_id: string;
@@ -16,10 +21,9 @@ const SHOP_DEFS = [
   { skill_id: 'shop:healing_herb', label: 'Healing Herb', price: 5 },
 ] as const;
 
-const USABLE_TYPES = new Set(['healing_herb', 'training_slime_goo', 'city_rat_goo']);
-
 interface ActionsPanelProps {
   stage: 0 | 1 | 2 | 3;
+  compact?: boolean;
   onAttack: () => void;
   onRitual: () => void;
   onTalk: (npcId: string) => void;
@@ -37,18 +41,13 @@ interface ActionsPanelProps {
   workContract: WorkContractRef | null;
   targetName: string | null;
   loop: PlayLoopProgress | null;
-  inventory: ItemRef[];
+  inventory: InventoryItemRef[];
   gold: number;
-}
-
-function itemLabel(item_type: string): string {
-  return item_type
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, c => c.toUpperCase());
 }
 
 export function ActionsPanel({
   stage,
+  compact = false,
   onAttack,
   onRitual,
   onTalk,
@@ -72,6 +71,102 @@ export function ActionsPanel({
   const inGuildHall = nearbyNpc?.npc_id === 'azura_steward';
   const sweepRemainSec = workContract ? Math.ceil(workContract.remaining_ms / 1000) : 0;
   const hotbarItems = inventory.slice(0, 3);
+
+  if (compact) {
+    return (
+      <div className="actions-panel actions-panel--compact" aria-label="Quick actions">
+        {stage < 1 && (
+          <div className="action-locked action-locked--compact">
+            <strong>Locked</strong>
+            <span>Tap Enter play</span>
+          </div>
+        )}
+        {stage >= 1 && (
+          <div className="mobile-hotbar" role="group" aria-label="Primary actions">
+            <button
+              className={`action-btn mobile-hotbar-btn attack-btn ${attackReady ? '' : 'cooling'}`}
+              onClick={() => attackReady && onAttack()}
+              disabled={!attackReady}
+              aria-label={targetName ? `Attack ${targetName}` : 'Attack nearest available target'}
+            >
+              Atk
+            </button>
+            <button
+              className={`action-btn mobile-hotbar-btn ritual-btn ${ritualReady ? '' : 'cooling'}`}
+              onClick={() => ritualReady && onRitual()}
+              disabled={!ritualReady}
+              aria-label={ritualHint}
+            >
+              Rune
+            </button>
+            {nearbyNpc && (
+              <button
+                className="action-btn mobile-hotbar-btn talk-btn"
+                onClick={() => onTalk(nearbyNpc.npc_id)}
+                aria-label={`Talk to ${nearbyNpc.label}`}
+              >
+                Talk
+              </button>
+            )}
+            {groundItemHere && (
+              <button
+                className="action-btn mobile-hotbar-btn pickup-btn"
+                onClick={() => onPickup(groundItemHere.item_id)}
+                aria-label={`Pick up ${itemLabel(groundItemHere.item_type)}`}
+              >
+                Pick
+              </button>
+            )}
+            {workContract ? (
+              <button
+                className="action-btn mobile-hotbar-btn sweep-btn"
+                onClick={onTickWork}
+                aria-label={`Work tick ${workContract.ticks_observed} of ${workContract.ticks_required}${sweepRemainSec > 0 ? `, ${sweepRemainSec} seconds left` : ''}`}
+              >
+                Tick
+              </button>
+            ) : inGuildHall && (
+              <button
+                className="action-btn mobile-hotbar-btn sweep-btn"
+                onClick={onStartWork}
+                aria-label="Start temple sweep work"
+              >
+                Work
+              </button>
+            )}
+            {stage >= 2 && hotbarItems.map((item) => {
+              const usable = isUsableItemType(item.item_type);
+              const label = itemLabel(item.item_type);
+              if (usable) {
+                return (
+                  <button
+                    key={item.item_id}
+                    className={`hotbar-slot mobile-hotbar-btn active usable${item.slot === 'protected' ? ' protected' : ''}`}
+                    title={`Use ${label}`}
+                    onClick={() => onUseItem(item.item_id)}
+                    aria-label={`Use ${label}`}
+                  >
+                    {shortItemLabel(item.item_type)}
+                  </button>
+                );
+              }
+              return (
+                <div
+                  key={item.item_id}
+                  className={`hotbar-slot mobile-hotbar-btn active${item.slot === 'protected' ? ' protected' : ''}`}
+                  title={label}
+                  aria-label={label}
+                  role="img"
+                >
+                  {shortItemLabel(item.item_type)}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="actions-panel" aria-label="Actions">
@@ -170,7 +265,7 @@ export function ActionsPanel({
         <div className="hotbar">
           {hotbarItems.length > 0
             ? hotbarItems.map(item => {
-                const usable = USABLE_TYPES.has(item.item_type);
+                const usable = isUsableItemType(item.item_type);
                 return usable ? (
                   <button
                     key={item.item_id}

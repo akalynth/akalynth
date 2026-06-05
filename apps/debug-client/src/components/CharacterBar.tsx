@@ -7,15 +7,15 @@ if (typeof document !== 'undefined' && !document.getElementById(STYLE_ID)) {
   const el = document.createElement('style');
   el.id = STYLE_ID;
   el.textContent = `
-    .character-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
-    .character-bar-kicker { width: 100%; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: #9aa6bd; }
-    .character-bar-name { color: #f7e9a7; font-weight: 700; }
-    .character-bar-input { flex: 1 1 110px; min-width: 0; padding: 4px 8px; border-radius: 8px; border: 1px solid rgba(226,183,20,0.28); background: rgba(8,12,18,0.7); color: #e7ecf5; font: inherit; font-size: 12px; }
-    .character-bar-input:focus { outline: none; border-color: rgba(240,200,60,0.6); }
-    .character-bar-btn { padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(240,200,60,0.45); background: linear-gradient(180deg,#f7e9a7,#f0c83c); color: #0b0c10; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .character-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 7px; }
+    .character-bar-kicker { width: 100%; font-size: 10px; letter-spacing: 0; text-transform: uppercase; color: #b9b4aa; text-shadow: 0 1px #050505; }
+    .character-bar-name { color: #f0c83c; font-weight: 700; text-shadow: 0 1px #050505; }
+    .character-bar-input { flex: 1 1 110px; min-width: 0; padding: 4px 7px; border-radius: 3px; border: 1px solid #55534d; background: #1b1b1a; color: #e7e0d1; font: inherit; font-size: 12px; box-shadow: inset 0 1px 2px #050505; }
+    .character-bar-input:focus { outline: none; border-color: #b6922a; }
+    .character-bar-btn { padding: 4px 9px; border-radius: 3px; border: 1px solid #6b5a2a; background: linear-gradient(180deg,#5b533f,#262522); color: #f0c83c; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; text-shadow: 0 1px #050505; box-shadow: inset 0 1px #78746a, 0 1px 0 #050505; }
     .character-bar-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .character-bar--signed .character-bar-btn { background: transparent; color: #f7e9a7; }
-    .character-bar-error { width: 100%; font-size: 11px; color: #ff9a9a; }
+    .character-bar--signed .character-bar-btn { background: linear-gradient(180deg,#423f39,#1f1f1d); color: #f0c83c; }
+    .character-bar-error { width: 100%; font-size: 11px; color: #ff6b62; text-shadow: 0 1px #050505; }
   `;
   document.head.appendChild(el);
 }

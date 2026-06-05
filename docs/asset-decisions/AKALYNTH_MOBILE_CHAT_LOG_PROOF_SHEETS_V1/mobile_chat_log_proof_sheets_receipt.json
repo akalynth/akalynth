@@ -1,0 +1,66 @@
+{
+  "id": "AKALYNTH_MOBILE_CHAT_LOG_PROOF_SHEETS_V1",
+  "status": "closed_mobile_chat_log_proof_sheets_no_protocol_no_proof_semantics_change",
+  "scope": "debug-client mobile chat, log, and proof sheet presentation only",
+  "input_receipts": [
+    "AKALYNTH_MOBILE_CORE_PLAY_SURFACE_V1",
+    "AKALYNTH_MOBILE_INVENTORY_BACKPACK_SHEET_V1"
+  ],
+  "changes": {
+    "mobile_chat_sheet_accessible_from_dock": true,
+    "mobile_log_sheet_accessible_from_dock": true,
+    "mobile_proof_sheet_accessible_from_dock": true,
+    "desktop_debug_chat_log_visibility_preserved": true,
+    "desktop_proof_button_behavior_preserved": true,
+    "single_mobile_sheet_open_at_a_time": true,
+    "mobile_play_surface_remains_clean_when_sheets_are_closed": true,
+    "proof_sheet_uses_existing_debug_proof_state": true
+  },
+  "verification": {
+    "npm -w apps/debug-client run build": "pass",
+    "npm run verify:quick": "pass 9/9"
+  },
+  "screenshots": [
+    "screenshots/01_desktop_debug_1440x900.png",
+    "screenshots/02_mobile_portrait_rotate_gate_390x844.png",
+    "screenshots/03_mobile_landscape_sheets_closed_932x430.png",
+    "screenshots/04_mobile_landscape_chat_sheet_932x430.png",
+    "screenshots/05_mobile_landscape_log_sheet_932x430.png",
+    "screenshots/06_mobile_landscape_proof_sheet_932x430.png"
+  ],
+  "acceptance": {
+    "mobile_landscape_has_chat_log_and_proof_affordances": "pass",
+    "chat_opens_as_sheet_not_permanent_panel": "pass",
+    "log_opens_as_sheet_not_permanent_panel": "pass",
+    "proof_opens_as_sheet_not_permanent_panel": "pass",
+    "play_surface_clean_when_sheets_closed": "pass",
+    "sheets_readable_on_932x430": "pass",
+    "close_behavior_clear": "pass",
+    "desktop_debug_mode_remains_usable": "pass",
+    "build_passes": "pass",
+    "verify_quick_passes": "pass",
+    "protected_server_protocol_shared_android_deploy_paths_unchanged": "pass"
+  },
+  "claims": {
+    "debug_client_mobile_chat_sheet_added": true,
+    "debug_client_mobile_log_sheet_added": true,
+    "debug_client_mobile_proof_sheet_added": true,
+    "chat_protocol_changed": false,
+    "receipt_proof_semantics_changed": false,
+    "server_protocol_changed": false,
+    "shared_types_changed": false,
+    "android_native_changed": false,
+    "deploy_runtime_changed": false,
+    "gameplay_authority_changed": false
+  },
+  "notes": [
+    "Accepted as debug-client presentation-only chat, log, and proof access.",
+    "Mobile dock opens one sheet at a time so verbose content does not permanently occupy the phone play surface.",
+    "Chat uses the existing chat state and send callback.",
+    "Log uses the existing chronicle/log surface.",
+    "Proof status uses existing proof/debug state and does not implement mobile proof verification.",
+    "No chat protocol, receipt/proof semantics, server, shared type, Android/native, deployment, or runtime authority behavior was changed."
+  ],
+  "closure": "closed_mobile_chat_log_proof_sheets_no_protocol_no_proof_semantics_change",
+  "next_recommended_gate": "AKALYNTH_MOBILE_PLAYABLE_SMOKE_SCRIPT_V1"
+}

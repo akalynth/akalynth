@@ -1,0 +1,59 @@
+{
+  "id": "AKALYNTH_MOBILE_INVENTORY_BACKPACK_SHEET_V1",
+  "status": "closed_mobile_inventory_backpack_sheet_no_inventory_authority_change",
+  "scope": "debug-client mobile backpack sheet presentation only",
+  "input_receipts": [
+    "AKALYNTH_MOBILE_CORE_PLAY_SURFACE_V1"
+  ],
+  "changes": {
+    "mobile_backpack_sheet_added": true,
+    "mobile_pack_affordance_added": true,
+    "desktop_debug_inventory_behavior_preserved": true,
+    "inventory_display_uses_existing_client_data": true,
+    "usable_item_buttons_reuse_existing_item_use_intent": true,
+    "classic_stone_iron_backpack_styling_added": true,
+    "main_mobile_play_surface_remains_uncluttered_when_closed": true
+  },
+  "verification": {
+    "npm -w apps/debug-client run build": "pass",
+    "npm run verify:quick": "pass 9/9"
+  },
+  "screenshots": [
+    "screenshots/01_desktop_debug_inventory_1440x900.png",
+    "screenshots/02_mobile_portrait_rotate_gate_390x844.png",
+    "screenshots/03_mobile_landscape_backpack_closed_932x430.png",
+    "screenshots/04_mobile_landscape_backpack_open_932x430.png"
+  ],
+  "acceptance": {
+    "mobile_landscape_has_clear_backpack_affordance": "pass",
+    "inventory_opens_as_sheet_not_permanent_panel": "pass",
+    "play_surface_visible_and_usable_when_closed": "pass",
+    "main_play_surface_has_no_scrollbars": "pass",
+    "touch_targets_practical_on_932x430": "pass",
+    "desktop_debug_mode_remains_usable": "pass",
+    "build_passes": "pass",
+    "verify_quick_passes": "pass",
+    "protected_server_protocol_shared_android_deploy_paths_unchanged": "pass"
+  },
+  "claims": {
+    "debug_client_mobile_inventory_sheet_added": true,
+    "inventory_authority_changed": false,
+    "item_semantics_changed": false,
+    "drop_protocol_added": false,
+    "equip_protocol_added": false,
+    "use_protocol_changed": false,
+    "server_protocol_changed": false,
+    "shared_types_changed": false,
+    "economy_changed": false,
+    "android_native_changed": false,
+    "deploy_runtime_changed": false
+  },
+  "notes": [
+    "Accepted as debug-client presentation-only inventory access.",
+    "The backpack sheet groups existing inventory items for display and count readability.",
+    "Known usable item buttons dispatch the same existing item use intent path already used by the debug-client hotbar.",
+    "No inventory authority, item semantics, drop, equip, server, protocol, economy, Android/native, or deployment behavior was changed."
+  ],
+  "closure": "closed_mobile_inventory_backpack_sheet_no_inventory_authority_change",
+  "next_recommended_gate": "AKALYNTH_MOBILE_CHAT_LOG_PROOF_SHEETS_V1"
+}

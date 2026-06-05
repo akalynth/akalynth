@@ -1,0 +1,64 @@
+{
+  "id": "AKALYNTH_MOBILE_CORE_PLAY_SURFACE_V1",
+  "status": "closed_mobile_core_play_surface_playable_from_cold_start_no_gameplay_authority_change",
+  "scope": "debug-client mobile landscape core play surface presentation",
+  "input_receipts": [
+    "AKALYNTH_MOBILE_PLAYABILITY_AUDIT_V1"
+  ],
+  "changes": {
+    "mobile_landscape_entry_surface_added": true,
+    "mobile_create_character_path_visible": true,
+    "mobile_enter_play_path_visible": true,
+    "mobile_status_rail_added": true,
+    "compact_hotbar_locked_state_has_remedy_hint": true,
+    "keypad_stop_affordance_made_visible": true,
+    "mobile_map_marker_readability_tuned": true,
+    "debug_client_manifest_preserved": true
+  },
+  "verification": {
+    "npm -w apps/debug-client run build": "pass",
+    "npm run verify:quick": "pass 9/9"
+  },
+  "screenshots": [
+    "screenshots/01_desktop_1440x900.png",
+    "screenshots/02_mobile_portrait_rotate_gate_390x844.png",
+    "screenshots/03_mobile_landscape_cold_entry_932x430.png",
+    "screenshots/04_mobile_landscape_entered_play_932x430.png"
+  ],
+  "acceptance": {
+    "cold_mobile_landscape_has_visible_create_or_enter_play_path": "pass",
+    "portrait_rotate_gate_visible": "pass",
+    "mobile_landscape_has_no_blocking_hidden_sign_in_state": "pass",
+    "player_visible_after_entry": "pass",
+    "canvas_fills_safe_area_aware_play_surface": "pass",
+    "keypad_release_leave_cancel_cannot_stick": "pass",
+    "compact_hotbar_visible_when_actions_available": "pass",
+    "locked_action_panel_has_visible_remedy": "pass",
+    "desktop_debug_mode_remains_usable": "pass",
+    "server_protocol_shared_files_unchanged": "pass"
+  },
+  "claims": {
+    "debug_client_mobile_core_play_surface_improved": true,
+    "playable_from_cold_start_path_visible": true,
+    "existing_intent_callbacks_preserved": true,
+    "server_protocol_changed": false,
+    "shared_maps_changed": false,
+    "shared_types_changed": false,
+    "collision_changed": false,
+    "walkability_changed": false,
+    "npc_behavior_changed": false,
+    "mob_behavior_changed": false,
+    "economy_changed": false,
+    "combat_authority_changed": false,
+    "android_native_changed": false,
+    "emulator_setup_changed": false,
+    "deploy_runtime_changed": false
+  },
+  "notes": [
+    "Accepted as debug-client presentation-only core play surface work.",
+    "The mobile entry surface exposes existing character creation and a UI-stage Enter play path.",
+    "Enter play does not alter server movement, map, collision, walkability, inventory, combat, or economy authority.",
+    "Inventory/backpack sheet work remains deferred to AKALYNTH_MOBILE_INVENTORY_BACKPACK_SHEET_V1."
+  ],
+  "closure": "closed_mobile_core_play_surface_playable_from_cold_start_no_gameplay_authority_change"
+}

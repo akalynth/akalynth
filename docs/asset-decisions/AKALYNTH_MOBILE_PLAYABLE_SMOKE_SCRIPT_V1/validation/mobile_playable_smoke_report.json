@@ -1,0 +1,386 @@
+{
+  "id": "AKALYNTH_MOBILE_PLAYABLE_SMOKE_SCRIPT_V1",
+  "status": "pass",
+  "started_at": "2026-06-05T14:19:49.351Z",
+  "base_url": "http://127.0.0.1:5174/play/",
+  "screenshots": [
+    {
+      "file": "screenshots/01_portrait_rotate_gate_390x844.png",
+      "label": "Portrait rotate gate"
+    },
+    {
+      "file": "screenshots/02_landscape_entry_play_surface_932x430.png",
+      "label": "Landscape play surface after entry"
+    },
+    {
+      "file": "screenshots/03_dpad_press_release_cancel_932x430.png",
+      "label": "DPad press/release/cancel smoke"
+    },
+    {
+      "file": "screenshots/04_pack_sheet_932x430.png",
+      "label": "Pack sheet"
+    },
+    {
+      "file": "screenshots/05_chat_sheet_932x430.png",
+      "label": "Chat sheet"
+    },
+    {
+      "file": "screenshots/06_log_sheet_932x430.png",
+      "label": "Log sheet"
+    },
+    {
+      "file": "screenshots/07_proof_sheet_932x430.png",
+      "label": "Proof sheet"
+    },
+    {
+      "file": "screenshots/08_clean_play_surface_restored_932x430.png",
+      "label": "Clean play surface restored"
+    },
+    {
+      "file": "screenshots/09_desktop_debug_mode_1440x900.png",
+      "label": "Desktop debug mode"
+    }
+  ],
+  "checks": [
+    {
+      "id": "debug_client_url_available",
+      "status": "pass",
+      "details": {
+        "url": "http://127.0.0.1:5174/play/"
+      }
+    },
+    {
+      "id": "portrait_rotate_gate_visible",
+      "status": "pass",
+      "details": {
+        "selector": ".mobile-rotate-gate",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 844,
+          "bottom": 844,
+          "right": 390
+        }
+      }
+    },
+    {
+      "id": "mobile_landscape_cold_start_entry_visible",
+      "status": "pass",
+      "details": {
+        "selector": ".mobile-enter-play-btn",
+        "rect": {
+          "x": 14.265625,
+          "y": 184.8125,
+          "width": 253.84375,
+          "height": 44,
+          "bottom": 228.8125,
+          "right": 268.109375
+        }
+      }
+    },
+    {
+      "id": "mobile_enter_play_clicked",
+      "status": "pass",
+      "details": {
+        "selector": ".mobile-enter-play-btn"
+      }
+    },
+    {
+      "id": "map_canvas_visible_after_entry",
+      "status": "pass",
+      "details": {
+        "selector": ".map-canvas",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 932,
+          "height": 430,
+          "bottom": 430,
+          "right": 932
+        }
+      }
+    },
+    {
+      "id": "dpad_visible_after_entry",
+      "status": "pass",
+      "details": {
+        "selector": ".dpad",
+        "rect": {
+          "x": 13.625,
+          "y": 274.71875,
+          "width": 141.65625,
+          "height": 141.65625,
+          "bottom": 416.375,
+          "right": 155.28125
+        }
+      }
+    },
+    {
+      "id": "mobile_dock_visible_after_entry",
+      "status": "pass",
+      "details": {
+        "selector": ".command-dock",
+        "rect": {
+          "x": 316,
+          "y": 372.59375,
+          "width": 300,
+          "height": 50.21875,
+          "bottom": 422.8125,
+          "right": 616
+        }
+      }
+    },
+    {
+      "id": "landscape_play_surface_has_no_main_scrollbars",
+      "status": "pass",
+      "details": {
+        "innerWidth": 932,
+        "innerHeight": 430,
+        "scrollWidth": 932,
+        "scrollHeight": 430,
+        "bodyScrollWidth": 932,
+        "bodyScrollHeight": 430
+      }
+    },
+    {
+      "id": "dpad_press_release_leave_cancel_and_stop_exercised",
+      "status": "pass",
+      "details": {
+        "ok": true,
+        "activeElement": null
+      }
+    },
+    {
+      "id": "pack_dock_clicked",
+      "status": "pass",
+      "details": {
+        "selector": ".inventory-toggle"
+      }
+    },
+    {
+      "id": "pack_sheet_visible",
+      "status": "pass",
+      "details": {
+        "selector": ".backpack-sheet",
+        "rect": {
+          "x": 635.203125,
+          "y": 99.5625,
+          "width": 288,
+          "height": 259.25,
+          "bottom": 358.8125,
+          "right": 923.203125
+        }
+      }
+    },
+    {
+      "id": "only_pack_sheet_visible",
+      "status": "pass",
+      "details": {
+        "visible": [
+          ".backpack-sheet"
+        ]
+      }
+    },
+    {
+      "id": "pack_sheet_closed",
+      "status": "pass",
+      "details": {
+        "selector": ".backpack-sheet__header button"
+      }
+    },
+    {
+      "id": "no_sheets_after_pack_close",
+      "status": "pass",
+      "details": {
+        "visible": []
+      }
+    },
+    {
+      "id": "chat_dock_clicked",
+      "status": "pass",
+      "details": {
+        "selector": ".chat-toggle"
+      }
+    },
+    {
+      "id": "chat_sheet_visible",
+      "status": "pass",
+      "details": {
+        "selector": ".chat-sheet",
+        "rect": {
+          "x": 242,
+          "y": 110.8125,
+          "width": 448,
+          "height": 248,
+          "bottom": 358.8125,
+          "right": 690
+        }
+      }
+    },
+    {
+      "id": "only_chat_sheet_visible",
+      "status": "pass",
+      "details": {
+        "visible": [
+          ".chat-sheet"
+        ]
+      }
+    },
+    {
+      "id": "chat_sheet_closed",
+      "status": "pass",
+      "details": {
+        "selector": ".chat-sheet__header button"
+      }
+    },
+    {
+      "id": "no_sheets_after_chat_close",
+      "status": "pass",
+      "details": {
+        "visible": []
+      }
+    },
+    {
+      "id": "log_dock_clicked",
+      "status": "pass",
+      "details": {
+        "selector": ".chronicle-toggle"
+      }
+    },
+    {
+      "id": "log_sheet_visible",
+      "status": "pass",
+      "details": {
+        "selector": ".chronicle-sheet",
+        "rect": {
+          "x": 226,
+          "y": 16.8125,
+          "width": 480,
+          "height": 342,
+          "bottom": 358.8125,
+          "right": 706
+        }
+      }
+    },
+    {
+      "id": "only_log_sheet_visible",
+      "status": "pass",
+      "details": {
+        "visible": [
+          ".chronicle-sheet"
+        ]
+      }
+    },
+    {
+      "id": "log_sheet_closed",
+      "status": "pass",
+      "details": {
+        "selector": ".chronicle-close"
+      }
+    },
+    {
+      "id": "no_sheets_after_log_close",
+      "status": "pass",
+      "details": {
+        "visible": []
+      }
+    },
+    {
+      "id": "proof_dock_clicked",
+      "status": "pass",
+      "details": {
+        "selector": ".proof-toggle"
+      }
+    },
+    {
+      "id": "proof_sheet_visible",
+      "status": "pass",
+      "details": {
+        "selector": ".proof-sheet",
+        "rect": {
+          "x": 571.203125,
+          "y": 44.25,
+          "width": 352,
+          "height": 314.5625,
+          "bottom": 358.8125,
+          "right": 923.203125
+        }
+      }
+    },
+    {
+      "id": "only_proof_sheet_visible",
+      "status": "pass",
+      "details": {
+        "visible": [
+          ".proof-sheet"
+        ]
+      }
+    },
+    {
+      "id": "proof_sheet_closed",
+      "status": "pass",
+      "details": {
+        "selector": ".proof-sheet__header button"
+      }
+    },
+    {
+      "id": "no_sheets_after_proof_close",
+      "status": "pass",
+      "details": {
+        "visible": []
+      }
+    },
+    {
+      "id": "clean_play_surface_has_no_main_scrollbars_after_sheet_flow",
+      "status": "pass",
+      "details": {
+        "innerWidth": 932,
+        "innerHeight": 430,
+        "scrollWidth": 932,
+        "scrollHeight": 430,
+        "bodyScrollWidth": 932,
+        "bodyScrollHeight": 430
+      }
+    },
+    {
+      "id": "desktop_debug_map_canvas_visible",
+      "status": "pass",
+      "details": {
+        "selector": ".map-canvas",
+        "rect": {
+          "x": 208,
+          "y": 139.03125,
+          "width": 1024,
+          "height": 1024,
+          "bottom": 1163.03125,
+          "right": 1232
+        }
+      }
+    },
+    {
+      "id": "desktop_debug_does_not_show_rotate_gate",
+      "status": "pass",
+      "details": {
+        "visible": false,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "bottom": 0,
+          "right": 0
+        },
+        "display": "none",
+        "visibility": "visible"
+      }
+    }
+  ],
+  "notes": [
+    "Debug-client presentation smoke only.",
+    "Does not change gameplay authority, protocol, server, shared types, Android/native, runtime, or deploy state."
+  ],
+  "chrome": "/home/sovereign/.cache/ms-playwright/chromium-1223/chrome-linux64/chrome",
+  "devtools_port": 41287,
+  "finished_at": "2026-06-05T14:20:10.289Z"
+}

@@ -1,0 +1,51 @@
+AKALYNTH_MOBILE_PLAYABILITY_AUDIT_V1
+
+status: closed_mobile_playability_audit_no_code_change
+
+scope:
+  read-only audit / screenshots / notes only
+
+inspected:
+  desktop 1440x900
+  mobile portrait 390x844
+  mobile landscape 932x430
+  MapCanvas readability
+  DPad/keypad behavior
+  ActionsPanel/hotbar clarity
+  inventory/shop/debug/proof panel placement
+  chat/log visibility
+  scrollbars/overflow
+  safe-area behavior
+  player visibility
+
+outputs:
+  MOBILE_PLAYABILITY_AUDIT.md
+  SCREENSHOT_REGISTER.md
+  PRIORITY_FIX_LIST.md
+  receipt.txt
+  screenshots/01_desktop_1440x900.png
+  screenshots/02_mobile_portrait_390x844.png
+  screenshots/03_mobile_landscape_932x430.png
+
+claims:
+  current_mobile_playability_state_captured: true
+  desktop_screenshot_captured: true
+  portrait_rotate_gate_screenshot_captured: true
+  landscape_shell_screenshot_captured: true
+  priority_fix_list_created: true
+  code_changed_by_this_audit: false
+  css_changed_by_this_audit: false
+  server_protocol_changed: false
+  shared_maps_changed: false
+  shared_types_changed: false
+  android_native_changed: false
+  deploy_runtime_changed: false
+  gameplay_authority_changed: false
+
+notes:
+  The mobile classic shell is visually improved, but the cold mobile landscape state is not yet a complete playable surface.
+  The next lane should be AKALYNTH_MOBILE_CORE_PLAY_SURFACE_V1.
+  Inventory/backpack work should remain deferred until after the core play surface is corrected.
+
+closure:
+  closed_mobile_playability_audit_no_code_change
