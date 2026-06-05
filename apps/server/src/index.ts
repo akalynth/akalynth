@@ -514,8 +514,29 @@ function verifyLifecycle(phase: 'boot' | 'shutdown', fromSequence?: number): boo
     console.log(`[lifecycle] Verification passed (${phase})`);
     return true;
   } catch (error) {
-    const exitCode = (error as { status?: number }).status ?? 1;
+    const lifecycleError = error as {
+      status?: number;
+      signal?: NodeJS.Signals;
+      stdout?: Buffer | string;
+      stderr?: Buffer | string;
+      message?: string;
+    };
+    const exitCode = lifecycleError.status ?? 1;
     console.error(`[lifecycle] Verification FAILED (${phase}), exit code: ${exitCode}`);
+    if (lifecycleError.signal) {
+      console.error(`[lifecycle] Verification signal (${phase}): ${lifecycleError.signal}`);
+    }
+    if (lifecycleError.message) {
+      console.error(`[lifecycle] Verification error (${phase}): ${lifecycleError.message}`);
+    }
+    const stdout = lifecycleError.stdout?.toString().trim();
+    if (stdout) {
+      console.error(`[lifecycle] Verification stdout (${phase}):\n${stdout}`);
+    }
+    const stderr = lifecycleError.stderr?.toString().trim();
+    if (stderr) {
+      console.error(`[lifecycle] Verification stderr (${phase}):\n${stderr}`);
+    }
 
     if (isProductionMode()) {
       console.error('[lifecycle] FATAL: Lifecycle verification failed in production');
