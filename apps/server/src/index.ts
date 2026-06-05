@@ -11,6 +11,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import type { ClientMessage, LostItemSummary, ServerMessage, PropertyPublic, PropertyOwnerHistoryEntry } from '../../../packages/shared/protocol.js';
 import { ServerMessages, parseClientMessage } from '../../../packages/shared/protocol.js';
 import type { Player, TutorialProgress } from '../../../packages/shared/types.js';
+import { loadBuildInfo } from './build-info.js';
 import {
   PROPERTY_CREATED_ACTION,
   PROPERTY_LISTED_ACTION,
@@ -209,6 +210,8 @@ import type { SovereignVocation, PrefixGrantSource, WalletCreditReason, WalletDe
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const HOST = process.env.HOST || '0.0.0.0';
 const VERSION = '0.1.0';
+// Deploy provenance (#145): written at build time, served on /v1/health.
+const BUILD_INFO = loadBuildInfo();
 const AUTH_KEY_DERIVATION = `blake3(${getAuthKeyDomain()} || chronicle_seed)`;
 const DEFAULT_GUEST_SESSION_TTL_MS = 10 * 60 * 1000;
 const DEFAULT_GUEST_SESSION_CLEANUP_MS = 60 * 1000;
@@ -2108,6 +2111,7 @@ const httpServer = http.createServer((req, res) => {
   }
   const handled = handleHttp(req, res, {
     getVersion: () => VERSION,
+    getBuildInfo: () => BUILD_INFO,
     getTickMs: () => TICK_MS,
     listMaps: () =>
       (Object.keys(worlds) as MapName[]).map((name) => ({
@@ -5763,4 +5767,5 @@ httpServer.listen(PORT, HOST, () => {
   console.log(`HTTP+WS listening on ${HOST}:${PORT}`);
   console.log(`HTTP health: http://${HOST}:${PORT}/v1/health`);
   console.log(`WS: ws://${HOST}:${PORT}`);
+  console.log(`build: ${BUILD_INFO.commit_short} (${BUILD_INFO.ref}) built ${BUILD_INFO.built_at}`);
 });

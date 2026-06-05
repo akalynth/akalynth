@@ -24,6 +24,7 @@ import type {
   PropertyMarketResponse,
   PropertyLedgerResponse,
 } from '../../../../packages/shared/http.js';
+import type { BuildInfo } from '../build-info.js';
 
 type GuestSessionMintResult = GuestSessionResponse | { error: string; status?: number };
 type SessionMeResult = SessionMeResponse | { error: string; status: number };
@@ -50,6 +51,7 @@ export interface ApiDeps {
   queryPublicReceiptsRaw?: (params: PublicReceiptsQueryParams) => PublicReceiptsRawResult;
   queryPublicRumors?: (params: PublicRumorsQueryParams) => PublicRumorsResponse;
   getTransparency?: () => TransparencyResponse;
+  getBuildInfo?: () => BuildInfo;
   queryAntiCheatPrior?: (playerId: string) => AntiCheatPriorResult;
   // Identity v0.1: Character creation
   createCharacter?: (name: string) => CharacterCreateResult;
@@ -147,11 +149,14 @@ export function handleHttp(
 
   // Health
   if (method === 'GET' && path === '/v1/health') {
+    const build = deps.getBuildInfo?.();
     const body: HealthResponse = {
       ok: true,
       version: deps.getVersion(),
       tick_ms: deps.getTickMs(),
       now_iso: new Date().toISOString(),
+      commit: build?.commit ?? 'unknown',
+      built_at: build?.built_at ?? 'unknown',
     };
     json(res, 200, body);
     return true;
