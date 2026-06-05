@@ -12,6 +12,7 @@ import { ChatSheet } from './components/ChatSheet';
 import { TopBar } from './components/TopBar';
 import { NearbyList } from './components/NearbyList';
 import { ExistenceShell } from './components/ExistenceShell';
+import { CharacterBar } from './components/CharacterBar';
 import { loadConfig } from './config';
 
 type ChronicleGroup = { day: string; items: ChronicleEvent[] };
@@ -499,6 +500,11 @@ function DebugApp() {
               <span className="hud-kicker">Akalynth</span>
               <strong>{state.session.name ?? 'Phone guest'}</strong>
               <span>{state.world.map.name}</span>
+              <CharacterBar
+                session={state.session}
+                onCreate={api.createCharacter}
+                onSignOut={api.signOut}
+              />
             </div>
             <div className="hud-card hud-card--stats">
               <div>
