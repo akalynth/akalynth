@@ -85,6 +85,11 @@ build_and_verify() {
     npm run build:packages
 
     log "Building server..."
+    # Deploy provenance (#145): pass the deployed SHA to the build so the
+    # generated BUILD_INFO.json (served on /v1/health) is correct even if the
+    # build tree has no .git.
+    export AKALYNTH_BUILD_COMMIT="$(git rev-parse HEAD 2>/dev/null || echo unknown)"
+    export AKALYNTH_BUILD_REF="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
     npm -w apps/server run build
 
     if [[ ! -f "$REPO_ROOT/dist/server/apps/server/src/index.js" ]]; then
@@ -92,6 +97,19 @@ build_and_verify() {
         return 1
     fi
     log "Build verified"
+
+    # Provenance: confirm BUILD_INFO.json was generated and pins the deployed SHA.
+    local build_info="$REPO_ROOT/dist/server/BUILD_INFO.json"
+    if [[ -f "$build_info" ]]; then
+        local bi_commit
+        bi_commit=$(node -e "process.stdout.write((require('$build_info').commit)||'unknown')" 2>/dev/null || echo unknown)
+        log "Deployed build commit: $bi_commit (served on /v1/health)"
+        if [[ "$bi_commit" != "$(git rev-parse HEAD 2>/dev/null)" ]]; then
+            warn "BUILD_INFO commit ($bi_commit) does not match HEAD — provenance may be stale"
+        fi
+    else
+        warn "BUILD_INFO.json not generated; /v1/health will report commit=unknown"
+    fi
 }
 
 # Restart the service, wait out the startup grace, then poll the health endpoint.
