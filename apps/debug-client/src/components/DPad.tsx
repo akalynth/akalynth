@@ -65,9 +65,14 @@ export function DPad({ onMove, onRelease, onStopAll }: DPadProps) {
         <button
           key={idx}
           className="dpad-btn"
+          aria-label={b.dir ? `Move ${b.dir.replace('_', ' ')}` : 'Stop movement'}
           onPointerDown={(e) => {
             e.preventDefault();
-            if (b.dir) onMove(b.dir);
+            if (b.dir) {
+              onMove(b.dir);
+            } else {
+              onStopAll();
+            }
           }}
           onPointerUp={(e) => {
             e.preventDefault();
