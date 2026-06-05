@@ -3,12 +3,10 @@ package com.akalynth.client.ui.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -18,11 +16,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.akalynth.client.game.ChatEntry
+import com.akalynth.client.ui.theme.ClassicPanel
+import com.akalynth.client.ui.theme.ClassicShellColors
 
 @Composable
 fun ChatOverlay(
@@ -48,15 +46,13 @@ fun ChatOverlay(
         exit = slideOutVertically { it },
         modifier = modifier
     ) {
-        Column(
+        ClassicPanel(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(300.dp)
-                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                .background(Color.Black.copy(alpha = 0.85f))
-                .padding(8.dp)
+                .widthIn(max = 680.dp)
+                .height(288.dp),
+            contentPadding = PaddingValues(10.dp)
         ) {
-            // Header with close button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -65,18 +61,17 @@ fun ChatOverlay(
                 Text(
                     text = "Chat",
                     style = MaterialTheme.typography.titleSmall,
-                    color = Color.White
+                    color = ClassicShellColors.Brass
                 )
                 IconButton(onClick = onClose) {
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Close",
-                        tint = Color.White
+                        tint = ClassicShellColors.Text
                     )
                 }
             }
 
-            // Messages list
             LazyColumn(
                 state = listState,
                 modifier = Modifier
@@ -113,10 +108,12 @@ fun ChatOverlay(
                         }
                     ),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = Color.Gray
+                        focusedTextColor = ClassicShellColors.Text,
+                        unfocusedTextColor = ClassicShellColors.Text,
+                        focusedBorderColor = ClassicShellColors.Brass,
+                        unfocusedBorderColor = ClassicShellColors.IronBright,
+                        focusedContainerColor = ClassicShellColors.Iron.copy(alpha = 0.72f),
+                        unfocusedContainerColor = ClassicShellColors.Iron.copy(alpha = 0.72f)
                     )
                 )
 
@@ -131,7 +128,7 @@ fun ChatOverlay(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Send,
                         contentDescription = "Send",
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = ClassicShellColors.Brass
                     )
                 }
             }
@@ -142,10 +139,10 @@ fun ChatOverlay(
 @Composable
 private fun ChatMessageItem(entry: ChatEntry) {
     val color = when (entry.from) {
-        "system" -> Color.Yellow
-        "combat" -> Color.Red
-        "tem" -> Color.Magenta
-        else -> Color.White
+        "system" -> ClassicShellColors.Warning
+        "combat" -> ClassicShellColors.Danger
+        "tem" -> ClassicShellColors.Rune
+        else -> ClassicShellColors.Text
     }
 
     Text(

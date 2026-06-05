@@ -1,0 +1,44 @@
+{
+  "id": "AKALYNTH_ANDROID_DEBUG_LOCAL_CLEARTEXT_POLICY_V1",
+  "status": "closed_android_debug_local_cleartext_allowed_debug_only_no_release_policy_weakened",
+  "scope": "Android debug configuration only",
+  "purpose": "Allow Android debug builds to connect to the local development server at 10.0.2.2:3000 without weakening release network policy.",
+  "claims": {
+    "debug_build_can_use_local_cleartext_10_0_2_2": true,
+    "cleartext_policy_limited_to_debug_source_set": true,
+    "cleartext_policy_limited_to_10_0_2_2": true,
+    "release_network_policy_weakened": false,
+    "production_api_downgraded": false,
+    "android_ui_parity_started": false,
+    "server_changed": false,
+    "protocol_changed": false,
+    "shared_maps_changed": false,
+    "shared_types_changed": false,
+    "gameplay_authority_changed": false,
+    "deploy_or_runtime_mutated": false
+  },
+  "validation": {
+    "./gradlew assembleDebug": "pass",
+    "npm run verify:quick": "pass 9/9",
+    "debug_apk_install": "pass",
+    "app_launch": "pass",
+    "emulator_to_host_health_check": "pass",
+    "cleartext_blocker_removed": "pass",
+    "app_reaches_connected_state": "pass",
+    "debug_manifest_merge_contains_network_security_config": "pass",
+    "release_manifest_cleartext_reference": "none",
+    "main_or_beta_cleartext_reference": "none"
+  },
+  "remaining_findings": [
+    {
+      "id": "android_protocol_version_mismatch_after_connection",
+      "status": "not_part_of_this_lane",
+      "observed_message": "Protocol mismatch: server v0.1.0, client v1.1.0. Update the app."
+    }
+  ],
+  "evidence": {
+    "validation_report": "validation/android_debug_local_cleartext_policy_report.json",
+    "accepted_screenshot": "screenshots/03_debug_connect_clean_retest.png"
+  },
+  "next_recommended_gate": "AKALYNTH_ANDROID_EMULATOR_DEV_BENCH_FINAL_CLOSURE_V1"
+}

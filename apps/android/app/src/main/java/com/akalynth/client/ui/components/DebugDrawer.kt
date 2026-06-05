@@ -5,6 +5,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,7 +19,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
@@ -28,6 +28,8 @@ import com.akalynth.client.game.DebugLogEntry
 import com.akalynth.client.game.GameState
 import com.akalynth.client.network.ConnectionState
 import com.akalynth.client.protocol.PlayerPublic
+import com.akalynth.client.ui.theme.ClassicShellColors
+import com.akalynth.client.ui.theme.classicPanelBrush
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -54,10 +56,10 @@ fun DebugDrawer(
             .fillMaxWidth()
             .fillMaxHeight(0.6f)
             .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-            .background(Color(0xF0121212))
-            .padding(8.dp)
+            .background(classicPanelBrush())
+            .border(1.dp, ClassicShellColors.IronBright.copy(alpha = 0.55f), RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+            .padding(10.dp)
     ) {
-        // Header row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -66,7 +68,7 @@ fun DebugDrawer(
             Text(
                 text = "Debug Console",
                 style = MaterialTheme.typography.titleMedium,
-                color = Color.White
+                color = ClassicShellColors.Brass
             )
 
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -83,7 +85,7 @@ fun DebugDrawer(
                     onClick = { copyLogToClipboard(context, state.ui.debugLog) },
                     contentPadding = PaddingValues(horizontal = 8.dp)
                 ) {
-                    Text("Copy", color = Color.Cyan, style = MaterialTheme.typography.labelSmall)
+                    Text("Copy", color = ClassicShellColors.Rune, style = MaterialTheme.typography.labelSmall)
                 }
 
                 // Clear button
@@ -91,7 +93,7 @@ fun DebugDrawer(
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Clear",
-                        tint = Color.Red.copy(alpha = 0.7f),
+                        tint = ClassicShellColors.Danger.copy(alpha = 0.8f),
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -101,14 +103,14 @@ fun DebugDrawer(
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Close",
-                        tint = Color.White,
+                        tint = ClassicShellColors.Text,
                         modifier = Modifier.size(18.dp)
                     )
                 }
             }
         }
 
-        HorizontalDivider(color = Color.Gray.copy(alpha = 0.3f))
+        HorizontalDivider(color = ClassicShellColors.IronBright.copy(alpha = 0.32f))
 
         // Player info row
         state.world.me?.let { me ->
@@ -121,7 +123,7 @@ fun DebugDrawer(
             diagnostics = state.ui.connectionDiagnostics
         )
 
-        HorizontalDivider(color = Color.Gray.copy(alpha = 0.3f))
+        HorizontalDivider(color = ClassicShellColors.IronBright.copy(alpha = 0.32f))
 
         // Debug log
         LazyColumn(
@@ -146,21 +148,21 @@ fun DebugDrawer(
             Text(
                 text = "Entries: ${state.ui.debugLog.size}/100",
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
+                color = ClassicShellColors.MutedText
             )
             Text(
                 text = "Players: ${state.world.otherPlayers.size}",
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
+                color = ClassicShellColors.MutedText
             )
             Text(
                 text = state.connection::class.simpleName ?: "?",
                 style = MaterialTheme.typography.bodySmall,
                 color = when (state.connection::class.simpleName) {
-                    "InWorld" -> Color.Green
-                    "Connected", "Authenticating" -> Color.Yellow
-                    "Error" -> Color.Red
-                    else -> Color.Gray
+                    "InWorld" -> ClassicShellColors.Good
+                    "Connected", "Authenticating" -> ClassicShellColors.Warning
+                    "Error" -> ClassicShellColors.Danger
+                    else -> ClassicShellColors.MutedText
                 }
             )
         }
@@ -202,12 +204,12 @@ private fun InfoChip(label: String, value: String) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = Color.Gray
+            color = ClassicShellColors.MutedText
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodySmall,
-            color = Color.White,
+            color = ClassicShellColors.Text,
             fontFamily = FontFamily.Monospace
         )
     }
@@ -282,9 +284,9 @@ private fun DebugLogRow(entry: DebugLogEntry) {
     val timestamp = timeFormat.format(Date(entry.timestamp))
 
     val dirColor = when (entry.direction) {
-        "\u2192" -> Color(0xFF4CAF50) // Green for sent
-        "\u2190" -> Color(0xFF2196F3) // Blue for received
-        else -> Color.Yellow // System
+        "\u2192" -> ClassicShellColors.Good
+        "\u2190" -> ClassicShellColors.Rune
+        else -> ClassicShellColors.Warning
     }
 
     Row(
@@ -296,7 +298,7 @@ private fun DebugLogRow(entry: DebugLogEntry) {
         Text(
             text = timestamp,
             style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
-            color = Color.Gray,
+            color = ClassicShellColors.MutedText,
             fontFamily = FontFamily.Monospace
         )
 
@@ -311,7 +313,7 @@ private fun DebugLogRow(entry: DebugLogEntry) {
             Text(
                 text = entry.messageType,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.Cyan,
+                color = ClassicShellColors.Rune,
                 fontFamily = FontFamily.Monospace
             )
         }
@@ -319,7 +321,7 @@ private fun DebugLogRow(entry: DebugLogEntry) {
         Text(
             text = entry.preview,
             style = MaterialTheme.typography.bodySmall,
-            color = Color.White.copy(alpha = 0.8f),
+            color = ClassicShellColors.Text.copy(alpha = 0.84f),
             fontFamily = FontFamily.Monospace,
             maxLines = 1
         )

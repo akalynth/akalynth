@@ -1,0 +1,44 @@
+{
+  "id": "AKALYNTH_ANDROID_DEBUG_LOCAL_CLEARTEXT_POLICY_V1_VALIDATION_REPORT",
+  "status": "pass",
+  "scope": "Android debug-only local cleartext policy validation",
+  "changed_files": [
+    "apps/android/app/src/debug/AndroidManifest.xml",
+    "apps/android/app/src/debug/res/xml/network_security_config.xml"
+  ],
+  "checks": {
+    "debug_network_security_config_added": "pass",
+    "cleartext_limited_to_10_0_2_2": "pass",
+    "network_security_config_under_src_debug_only": "pass",
+    "debug_manifest_references_network_security_config": "pass",
+    "merged_debug_manifest_references_network_security_config": "pass",
+    "main_source_set_cleartext_reference": "none",
+    "beta_source_set_cleartext_reference": "none",
+    "merged_release_manifest_cleartext_reference": "none",
+    "gradle_assemble_debug": "pass",
+    "npm_run_verify_quick": "pass 9/9",
+    "debug_apk_installs": "pass",
+    "app_launches": "pass",
+    "emulator_can_reach_10_0_2_2_3000": "pass",
+    "cleartext_policy_blocker_no_longer_appears": "pass",
+    "app_reaches_connected_state": "pass",
+    "release_policy_weakened": "false",
+    "server_changed": "false",
+    "protocol_changed": "false",
+    "shared_maps_changed": "false",
+    "shared_types_changed": "false",
+    "deploy_or_runtime_mutated": "false",
+    "android_ui_parity_started": "false"
+  },
+  "remaining_findings": [
+    {
+      "id": "android_protocol_version_mismatch_after_connection",
+      "status": "separate_future_lane",
+      "observed_message": "Protocol mismatch: server v0.1.0, client v1.1.0. Update the app.",
+      "classification": "protocol compatibility issue after local debug connection succeeds"
+    }
+  ],
+  "screenshots": [
+    "screenshots/03_debug_connect_clean_retest.png"
+  ]
+}
