@@ -11,6 +11,9 @@ import com.akalynth.client.snapshot.InventoryDelta
 import com.akalynth.client.snapshot.SnapshotEvidence
 import org.junit.Assert.*
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.annotation.Config
+import org.robolectric.RobolectricTestRunner
 
 /**
  * Tests for ProofBundle (PR 6C-4).
@@ -23,6 +26,8 @@ import org.junit.Test
  * 5. Text/Markdown export
  * 6. Builder from timeline entry
  */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
 class ProofBundleTest {
 
     // =========================================================================

@@ -5,11 +5,13 @@ import com.akalynth.client.protocol.Direction
 import com.akalynth.client.ui.state.ChronicleEventKind
 import com.akalynth.client.ui.state.EventSource
 import com.akalynth.client.ui.state.EventStatus
+import kotlinx.coroutines.async
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Before
@@ -213,10 +215,8 @@ class ChronicleCoordinatorTest {
 
     @Test
     fun `W4 - death event emits notice`() = runTest {
-        var receivedNotice: com.akalynth.client.ui.state.DeathNotice? = null
-        val job = launch {
-            receivedNotice = coordinator.deathNotices.first()
-        }
+        val receivedNotice = backgroundScope.async { coordinator.deathNotices.first() }
+        runCurrent()
 
         val json = """
             {
@@ -237,13 +237,13 @@ class ChronicleCoordinatorTest {
         """.trimIndent()
 
         coordinator.processMessage(json)
-        job.join()
+        testScope.testScheduler.advanceUntilIdle()
 
-        assertNotNull(receivedNotice)
-        assertEquals("TestKiller", receivedNotice?.killerName)
-        assertEquals("Rookguard", receivedNotice?.zone)
-        assertEquals(listOf("Sword", "Shield"), receivedNotice?.itemsLost)
-        assertEquals("evt_death_1", receivedNotice?.chronicleEventId)
+        val notice = receivedNotice.await()
+        assertEquals("TestKiller", notice.killerName)
+        assertEquals("Rookguard", notice.zone)
+        assertEquals(listOf("Sword", "Shield"), notice.itemsLost)
+        assertEquals("evt_death_1", notice.chronicleEventId)
     }
 
     @Test

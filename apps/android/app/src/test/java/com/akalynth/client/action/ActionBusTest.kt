@@ -1,8 +1,10 @@
 package com.akalynth.client.action
 
 import com.akalynth.client.protocol.Direction
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Before
@@ -18,6 +20,7 @@ import org.junit.Test
  * - A4: ActionBus completion/rejection lifecycle
  * - A5: ActionBus cleanup for expired actions
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class ActionBusTest {
 
     private lateinit var actionBus: ActionBus
@@ -88,16 +91,13 @@ class ActionBusTest {
     @Test
     fun `A2 - dispatch emits action to flow`() = runTest {
         val intent = ActionIntent.Move(Direction.EAST)
-        var receivedIntent: ActionIntent? = null
 
-        val job = launch {
-            receivedIntent = actionBus.actions.first()
-        }
+        val receivedIntent = backgroundScope.async { actionBus.actions.first() }
+        runCurrent()
 
         actionBus.dispatch(intent)
-        job.join()
 
-        assertEquals(intent, receivedIntent)
+        assertEquals(intent, receivedIntent.await())
     }
 
     @Test

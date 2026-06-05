@@ -3,8 +3,10 @@ package com.akalynth.client.store
 import com.akalynth.client.ui.state.ChronicleEventKind
 import com.akalynth.client.ui.state.EventSource
 import com.akalynth.client.ui.state.EventStatus
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Before
@@ -20,6 +22,7 @@ import org.junit.Test
  * - R4: Parse receipt_reject messages
  * - R5: Emit parsed messages to flow
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class ReceiptStreamTest {
 
     private lateinit var stream: ReceiptStream
@@ -374,16 +377,12 @@ class ReceiptStreamTest {
             }
         """.trimIndent()
 
-        var receivedMessage: ReceiptMessage? = null
-        val job = launch {
-            receivedMessage = stream.messages.first()
-        }
+        val receivedMessage = backgroundScope.async { stream.messages.first() }
+        runCurrent()
 
         stream.process(json)
-        job.join()
 
-        assertNotNull(receivedMessage)
-        assertTrue(receivedMessage is ReceiptMessage.Event)
+        assertTrue(receivedMessage.await() is ReceiptMessage.Event)
     }
 
     @Test
