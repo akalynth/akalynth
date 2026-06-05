@@ -307,6 +307,11 @@ private fun getEventTitle(event: ChronicleEvent): String = when (event.kind) {
     }
     ChronicleEventKind.TUTORIAL_COMPLETE -> "Completed tutorial"
     ChronicleEventKind.CHARACTER_CREATED -> "Character created"
+    ChronicleEventKind.WORLD_EVENT -> {
+        val eventId = event.details.eventId?.replace("_", " ") ?: "world event"
+        val outcome = event.details.outcome?.replace("_", " ")
+        if (outcome != null) "$eventId resolved: $outcome" else eventId
+    }
     ChronicleEventKind.UNKNOWN -> "Unknown event"
 }
 

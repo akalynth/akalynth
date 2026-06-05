@@ -118,6 +118,7 @@ enum class ChronicleEventKind {
     @SerialName("combat_kill") COMBAT_KILL,
     @SerialName("tutorial_complete") TUTORIAL_COMPLETE,
     @SerialName("character_created") CHARACTER_CREATED,
+    @SerialName("world_event") WORLD_EVENT,
     @SerialName("unknown") UNKNOWN;
 
     /**
@@ -131,6 +132,7 @@ enum class ChronicleEventKind {
         COMBAT_KILL -> "⚔"
         TUTORIAL_COMPLETE -> "🎓"
         CHARACTER_CREATED -> "✨"
+        WORLD_EVENT -> "✦"
         UNKNOWN -> "❓"
     }
 
@@ -159,7 +161,19 @@ data class ChronicleEventDetails(
     val victimName: String? = null,
 
     /** Zone enter: previous zone */
-    val fromZone: String? = null
+    val fromZone: String? = null,
+
+    /** World event: event identifier */
+    val eventId: String? = null,
+
+    /** World event: current/event receipt phase */
+    val phase: String? = null,
+
+    /** World event: accepted contribution id */
+    val contributionId: String? = null,
+
+    /** World event: final outcome */
+    val outcome: String? = null
 )
 
 /**

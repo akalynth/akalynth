@@ -206,9 +206,10 @@ import {
   getActiveContract,
 } from './world/work_contracts.js';
 import {
+  WITNESS_MOTH_BLOOM_EVENT_ID,
   createWitnessMothBloomRuntime,
-  parseWitnessMothBloomSkillId,
-  recordWitnessMothBloomContribution,
+  handleWitnessMothBloomSkillIntent,
+  hydrateWitnessMothBloomRuntime,
   startWitnessMothBloom,
   witnessMothBloomPublicState,
 } from './world/world-events.js';
@@ -1677,6 +1678,9 @@ const worlds = {
   Azura: createWorldState(loadSharedMap('azura.json')),
 } as const;
 const witnessMothBloom = createWitnessMothBloomRuntime();
+if (hydrateWitnessMothBloomRuntime(witnessMothBloom, persist.getWorldEvent(WITNESS_MOTH_BLOOM_EVENT_ID))) {
+  console.log(`[world-events] Hydrated ${WITNESS_MOTH_BLOOM_EVENT_ID} phase=${witnessMothBloom.phase}`);
+}
 
 // Register place boundaries for presence tracking
 registerMapPlaces(worlds.Rookguard.map, 'Rookguard');
@@ -5700,19 +5704,18 @@ function processSessionQueue(s: Session, now: number) {
           break;
         }
 
-        const witnessMothContributionId = parseWitnessMothBloomSkillId(msg.skill_id);
-        if (witnessMothContributionId) {
+        if (msg.skill_id.startsWith('event:witness_moth_bloom:')) {
           if (!s.inWorld) {
             send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_target', payload: { error: 'not_in_world' } }));
             break;
           }
 
-          const result = recordWitnessMothBloomContribution(
+          const result = handleWitnessMothBloomSkillIntent(
             witnessMothBloom,
             {
               player_id: s.player.id,
               map: s.currentMap,
-              contribution_id: witnessMothContributionId,
+              skill_id: msg.skill_id,
               now_ms: Date.now(),
             },
             (receipt) => audit.write(receipt)

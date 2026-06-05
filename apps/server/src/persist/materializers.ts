@@ -72,6 +72,10 @@ const HANDLERS: Record<string, Handler> = {
   [RECEIPT_ACTIONS.AUTH_TOKEN_ISSUE]: handleAuthTokenIssue,
   // Dialogue Contract v1
   [RECEIPT_ACTIONS.NPC_TALKED]: handleNpcTalked,
+  // World Events v0
+  [RECEIPT_ACTIONS.WORLD_EVENT_STARTED]: handleWorldEventStarted,
+  [RECEIPT_ACTIONS.WORLD_EVENT_CONTRIBUTION]: handleWorldEventContribution,
+  [RECEIPT_ACTIONS.WORLD_EVENT_RESOLVED]: handleWorldEventResolved,
   // Property Ownership v0
   [RECEIPT_ACTIONS.PROPERTY_CREATED]: handlePropertyCreated,
   [RECEIPT_ACTIONS.PROPERTY_LISTED]: handlePropertyListed,
@@ -1184,6 +1188,116 @@ function handleNpcTalked(
     INSERT OR IGNORE INTO npc_talk_events (player_id, npc_id, tier, timestamp, receipt_hash)
     VALUES (?, ?, ?, ?, ?)
   `).run(playerId, npcId, tier, receipt.timestamp, receiptHash);
+}
+
+// ============================================================================
+// World Events v0
+// ============================================================================
+
+function handleWorldEventStarted(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const inputs = receipt.inputs ?? {};
+  const eventId = inputs.event_id as string | undefined;
+  const map = inputs.map as string | undefined;
+  const phase = (inputs.phase as string | undefined) ?? 'signal';
+  if (!eventId || !map) return;
+
+  db.prepare(`
+    INSERT OR IGNORE INTO world_events (
+      event_id, map, phase, started_by, started_at, resolved_by, resolved_at,
+      outcome, contributions_json, last_receipt
+    ) VALUES (?, ?, ?, ?, ?, NULL, NULL, NULL, '{}', ?)
+  `).run(eventId, map, phase, receipt.actor_id, receipt.timestamp, receiptHash);
+}
+
+function handleWorldEventContribution(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const inputs = receipt.inputs ?? {};
+  const eventId = inputs.event_id as string | undefined;
+  const map = inputs.map as string | undefined;
+  const contributionId = inputs.contribution_id as string | undefined;
+  if (!eventId || !map || !contributionId) return;
+
+  const row = db.prepare(`SELECT phase, contributions_json FROM world_events WHERE event_id = ?`).get(eventId) as
+    | { phase: string; contributions_json: string }
+    | undefined;
+  if (row?.phase === 'resolved') return;
+
+  const contributions = parseWorldEventContributions(row?.contributions_json);
+  contributions[contributionId] = {
+    contribution_id: contributionId,
+    player_id: receipt.actor_id,
+    recorded_at_ms: safeTimestampMs(receipt.timestamp),
+  };
+
+  if (!row) {
+    db.prepare(`
+      INSERT INTO world_events (
+        event_id, map, phase, started_by, started_at, resolved_by, resolved_at,
+        outcome, contributions_json, last_receipt
+      ) VALUES (?, ?, 'investigation', NULL, NULL, NULL, NULL, NULL, ?, ?)
+    `).run(eventId, map, JSON.stringify(contributions), receiptHash);
+    return;
+  }
+
+  db.prepare(`
+    UPDATE world_events
+    SET phase = 'investigation', contributions_json = ?, last_receipt = ?
+    WHERE event_id = ?
+  `).run(JSON.stringify(contributions), receiptHash, eventId);
+}
+
+function handleWorldEventResolved(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const inputs = receipt.inputs ?? {};
+  const eventId = inputs.event_id as string | undefined;
+  const map = inputs.map as string | undefined;
+  if (!eventId || !map) return;
+  const outcome = (inputs.outcome as string | undefined) ?? null;
+  const row = db.prepare(`SELECT contributions_json FROM world_events WHERE event_id = ?`).get(eventId) as
+    | { contributions_json: string }
+    | undefined;
+  const contributionsJson = row?.contributions_json ?? '{}';
+
+  db.prepare(`
+    INSERT INTO world_events (
+      event_id, map, phase, started_by, started_at, resolved_by, resolved_at,
+      outcome, contributions_json, last_receipt
+    ) VALUES (?, ?, 'resolved', NULL, NULL, ?, ?, ?, ?, ?)
+    ON CONFLICT(event_id) DO UPDATE SET
+      phase = 'resolved',
+      resolved_by = excluded.resolved_by,
+      resolved_at = excluded.resolved_at,
+      outcome = excluded.outcome,
+      contributions_json = excluded.contributions_json,
+      last_receipt = excluded.last_receipt
+  `).run(eventId, map, receipt.actor_id, receipt.timestamp, outcome, contributionsJson, receiptHash);
+}
+
+function parseWorldEventContributions(raw: string | null | undefined): Record<string, unknown> {
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? parsed as Record<string, unknown>
+      : {};
+  } catch {
+    return {};
+  }
+}
+
+function safeTimestampMs(timestamp: string): number {
+  const parsed = Date.parse(timestamp);
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 // ============================================================================

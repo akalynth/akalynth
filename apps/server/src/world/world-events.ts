@@ -29,6 +29,18 @@ export interface WitnessMothBloomRuntime {
   contributions: Partial<Record<WitnessMothBloomContributionId, WitnessMothBloomContribution>>;
 }
 
+export interface WitnessMothBloomHydrationRow {
+  event_id: string;
+  map: string;
+  phase: string;
+  started_by: string | null;
+  started_at: string | null;
+  resolved_by: string | null;
+  resolved_at: string | null;
+  outcome: string | null;
+  contributions_json: string;
+}
+
 type WriteReceiptInput = {
   player_id: string;
   action: string;
@@ -76,6 +88,23 @@ export function witnessMothBloomPublicState(runtime: WitnessMothBloomRuntime) {
     required_count: WITNESS_MOTH_BLOOM_CONTRIBUTIONS.length,
     outcome: runtime.outcome,
   };
+}
+
+export function hydrateWitnessMothBloomRuntime(
+  runtime: WitnessMothBloomRuntime,
+  row: WitnessMothBloomHydrationRow | null
+): boolean {
+  if (!row || row.event_id !== runtime.event_id || row.map !== runtime.map) return false;
+  if (!isWitnessMothBloomPhase(row.phase)) return false;
+
+  runtime.phase = row.phase;
+  runtime.started_by = row.started_by;
+  runtime.started_at_ms = timestampMs(row.started_at);
+  runtime.resolved_by = row.resolved_by;
+  runtime.resolved_at_ms = timestampMs(row.resolved_at);
+  runtime.outcome = row.outcome === 'controlled_release' ? row.outcome : null;
+  runtime.contributions = parseHydratedContributions(row.contributions_json);
+  return true;
 }
 
 export type StartWitnessMothBloomResult =
@@ -275,8 +304,75 @@ export function recordWitnessMothBloomContribution(
   };
 }
 
+export function handleWitnessMothBloomSkillIntent(
+  runtime: WitnessMothBloomRuntime,
+  input: {
+    player_id: string;
+    map: MapName;
+    skill_id: string;
+    now_ms: number;
+  },
+  writeReceipt: WriteReceipt
+): RecordWitnessMothContributionResult {
+  const contributionId = parseWitnessMothBloomSkillId(input.skill_id);
+  if (!contributionId) {
+    return {
+      ok: false,
+      reason: 'invalid_skill',
+      payload: { error: 'invalid_world_event_skill', event_id: runtime.event_id },
+    };
+  }
+
+  return recordWitnessMothBloomContribution(
+    runtime,
+    {
+      player_id: input.player_id,
+      map: input.map,
+      contribution_id: contributionId,
+      now_ms: input.now_ms,
+    },
+    writeReceipt
+  );
+}
+
 function isWitnessMothBloomContributionId(value: string): value is WitnessMothBloomContributionId {
   return WITNESS_MOTH_BLOOM_CONTRIBUTIONS.some((entry) => entry.contribution_id === value);
+}
+
+function isWitnessMothBloomPhase(value: string): value is WitnessMothBloomPhase {
+  return value === 'idle' || value === 'signal' || value === 'investigation' || value === 'resolved';
+}
+
+function timestampMs(value: string | null): number | null {
+  if (!value) return null;
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function parseHydratedContributions(raw: string): WitnessMothBloomRuntime['contributions'] {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return {};
+  }
+
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+  const contributions: WitnessMothBloomRuntime['contributions'] = {};
+  for (const [key, value] of Object.entries(parsed as Record<string, unknown>)) {
+    if (!isWitnessMothBloomContributionId(key)) continue;
+    if (!value || typeof value !== 'object' || Array.isArray(value)) continue;
+    const rawContribution = value as Record<string, unknown>;
+    const playerId = rawContribution.player_id;
+    const recordedAt = rawContribution.recorded_at_ms;
+    if (typeof playerId !== 'string' || typeof recordedAt !== 'number') continue;
+    contributions[key] = {
+      contribution_id: key,
+      player_id: playerId,
+      recorded_at_ms: recordedAt,
+    };
+  }
+  return contributions;
 }
 
 function messageForPhase(phase: WitnessMothBloomPhase): string {

@@ -51,9 +51,11 @@ Runtime behavior:
 - Completion emits `world_event_resolved` with the deterministic prototype
   outcome `controlled_release`.
 - Chronicle rows are derived as `world_event` events from those receipts.
+- SQLite schema v17 materializes the event into `world_events`, and startup
+  hydration restores the Bloom runtime from that projection.
 
 This promotion adds no new WebSocket message shape, no new client truth claim,
-no economy reward, no new map name, and no raw `drop/` import.
+no economy reward, no new map name, and no raw drop-source import.
 
 ## Deferred Source
 
@@ -78,5 +80,6 @@ The promoted slice is verified by:
 - `npm run verify`
 
 The verifier proves event order, receipt coverage, Chronicle materialization,
-and the no-raw-drop runtime import boundary. It does not claim a content-alpha
-or production-ready world-events system.
+idempotent SQLite projection, startup hydration, and the no-raw-drop runtime
+import boundary. It does not claim a content-alpha or production-ready
+world-events system.

@@ -211,6 +211,19 @@ class ActionBusTest {
     }
 
     @Test
+    fun `C - world event contribution sends intent but does NOT create chronicle event`() = runTest {
+        val intent = bus.dispatchWorldEventContribution(
+            WorldEventSkillIds.WITNESS_MOTH_BLOOM,
+            WorldEventSkillIds.VERIFY_TESTIMONY
+        )
+
+        assertEquals("a-0001", intent.actionId)
+        assertTrue(transport.lastSent is ActionIntent.WorldEventContribution)
+        assertEquals(0, chronicle.count())
+        assertEquals("event:witness_moth_bloom:verify_testimony", intent.skillId)
+    }
+
+    @Test
     fun `C - pending event keyed by actionId prefix`() = runTest {
         val intent = bus.dispatchDropHotbarSlot(0, "sword", "Sword", ItemRarity.COMMON)
 
@@ -377,6 +390,19 @@ class ActionBusTest {
         )
 
         val event = PendingEventMapper.map(intent, clock, "Rookguard", 10, 20)
+
+        assertNull(event)
+    }
+
+    @Test
+    fun `PendingEventMapper - world event contribution returns null`() {
+        val intent = ActionIntent.WorldEventContribution(
+            actionId = "test-005",
+            eventId = WorldEventSkillIds.WITNESS_MOTH_BLOOM,
+            contributionId = WorldEventSkillIds.DEFEND_SCRIBES
+        )
+
+        val event = PendingEventMapper.map(intent, clock, "Azura", 10, 20)
 
         assertNull(event)
     }

@@ -158,8 +158,8 @@ class ReceiptStream {
         val kindStr = payload["kind"]?.jsonPrimitive?.contentOrNull ?: return null
         val timestamp = payload["timestamp"]?.jsonPrimitive?.contentOrNull ?: return null
         val zone = payload["zone"]?.jsonPrimitive?.contentOrNull ?: return null
-        val x = payload["x"]?.jsonPrimitive?.intOrNull ?: return null
-        val y = payload["y"]?.jsonPrimitive?.intOrNull ?: return null
+        val x = payload["x"]?.jsonPrimitive?.intOrNull ?: 0
+        val y = payload["y"]?.jsonPrimitive?.intOrNull ?: 0
 
         val kind = parseEventKind(kindStr)
         val details = parseEventDetails(payload["details"]?.jsonObject)
@@ -191,6 +191,10 @@ class ReceiptStream {
             "combat_kill" -> ChronicleEventKind.COMBAT_KILL
             "tutorial_complete" -> ChronicleEventKind.TUTORIAL_COMPLETE
             "character_created" -> ChronicleEventKind.CHARACTER_CREATED
+            "world_event",
+            "world_event_started",
+            "world_event_contribution",
+            "world_event_resolved" -> ChronicleEventKind.WORLD_EVENT
             else -> ChronicleEventKind.UNKNOWN
         }
     }
@@ -208,7 +212,11 @@ class ReceiptStream {
             },
             itemName = detailsObj["item_name"]?.jsonPrimitive?.contentOrNull,
             victimName = detailsObj["victim_name"]?.jsonPrimitive?.contentOrNull,
-            fromZone = detailsObj["from_zone"]?.jsonPrimitive?.contentOrNull
+            fromZone = detailsObj["from_zone"]?.jsonPrimitive?.contentOrNull,
+            eventId = detailsObj["event_id"]?.jsonPrimitive?.contentOrNull,
+            phase = detailsObj["phase"]?.jsonPrimitive?.contentOrNull,
+            contributionId = detailsObj["contribution_id"]?.jsonPrimitive?.contentOrNull,
+            outcome = detailsObj["outcome"]?.jsonPrimitive?.contentOrNull
         )
     }
 }

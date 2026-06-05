@@ -16,6 +16,7 @@ import type {
   ModerationReportRow,
   PropertyRow,
   AuctionRow,
+  WorldEventRow,
 } from './types.js';
 
 // ============================================================================
@@ -292,6 +293,21 @@ export function getOpenAuctions(db: Database.Database): AuctionRow[] {
   return db
     .prepare(`SELECT * FROM property_auctions WHERE status = 'open' ORDER BY property_id`)
     .all() as AuctionRow[];
+}
+
+// ============================================================================
+// World Event Queries
+// ============================================================================
+
+export function getWorldEvent(db: Database.Database, eventId: string): WorldEventRow | null {
+  return (
+    (db.prepare(`SELECT * FROM world_events WHERE event_id = ?`).get(eventId) as WorldEventRow) ??
+    null
+  );
+}
+
+export function getWorldEvents(db: Database.Database): WorldEventRow[] {
+  return db.prepare(`SELECT * FROM world_events ORDER BY event_id`).all() as WorldEventRow[];
 }
 
 // ============================================================================

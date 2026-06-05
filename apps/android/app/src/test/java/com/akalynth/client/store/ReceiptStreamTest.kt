@@ -204,6 +204,38 @@ class ReceiptStreamTest {
         assertEquals(ChronicleEventKind.UNKNOWN, event.kind)
     }
 
+    @Test
+    fun `R1 - parse world event`() = runTest {
+        val json = """
+            {
+                "type": "chronicle_event",
+                "payload": {
+                    "id": "evt_world_event_123",
+                    "kind": "world_event",
+                    "timestamp": "2026-01-21T12:00:00Z",
+                    "zone": "Azura",
+                    "details": {
+                        "event_id": "witness_moth_bloom",
+                        "phase": "resolved",
+                        "contribution_id": "defend_scribes",
+                        "outcome": "controlled_release"
+                    }
+                }
+            }
+        """.trimIndent()
+
+        val message = stream.process(json)
+
+        assertTrue(message is ReceiptMessage.Event)
+        val event = (message as ReceiptMessage.Event).event
+        assertEquals(ChronicleEventKind.WORLD_EVENT, event.kind)
+        assertEquals("Azura", event.zone)
+        assertEquals("witness_moth_bloom", event.details.eventId)
+        assertEquals("resolved", event.details.phase)
+        assertEquals("defend_scribes", event.details.contributionId)
+        assertEquals("controlled_release", event.details.outcome)
+    }
+
     // =========================================================================
     // R2: Parse chronicle_snapshot messages
     // =========================================================================

@@ -67,6 +67,7 @@ object PendingEventMapper {
             is ActionIntent.DropHotbarSlot -> mapDrop(intent, clock, zone, x, y)
             is ActionIntent.PickupItem -> mapPickup(intent, clock, zone)
             is ActionIntent.CreateCharacter -> mapCreateCharacter(intent, clock, zone, x, y)
+            is ActionIntent.WorldEventContribution -> null // Server receipt is the only event truth
         }
     }
 

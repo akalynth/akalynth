@@ -221,6 +221,21 @@ export interface AuctionRow {
   last_receipt: string;
 }
 
+// World Events v0: durable mirror of server-authoritative event state.
+// contributions_json is a JSON object keyed by contribution_id.
+export interface WorldEventRow {
+  event_id: string;
+  map: string;
+  phase: string;
+  started_by: string | null;
+  started_at: string | null;
+  resolved_by: string | null;
+  resolved_at: string | null;
+  outcome: string | null;
+  contributions_json: string;
+  last_receipt: string;
+}
+
 // Dialogue Contract v1: append-only NPC talk event (durable variation nonce source)
 export interface NpcTalkEventRow {
   id: number;
@@ -534,6 +549,10 @@ export interface PersistenceLayer {
   // Read queries - Property Auction Lane (durable auction projection)
   getAuction(property_id: string): AuctionRow | null;
   getOpenAuctions(): AuctionRow[];
+
+  // Read queries - World Events v0
+  getWorldEvent(event_id: string): WorldEventRow | null;
+  getWorldEvents(): WorldEventRow[];
 
   // Read queries - Chronicle (Phase 4)
   getChronicleForPlayer(player_id: string, limit?: number, before?: string): ChronicleEventRow[];

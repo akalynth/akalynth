@@ -6,6 +6,7 @@
 // - the server starts/advances/resolves the Bloom;
 // - every accepted state transition emits a receipt;
 // - Chronicle rows are derived from those receipts;
+// - the SQLite world_events projection hydrates runtime state after restart;
 // - runtime code does not import raw drop/ source packages.
 
 import * as fs from 'node:fs';
@@ -21,6 +22,8 @@ import {
   WITNESS_MOTH_BLOOM_EVENT_ID,
   WITNESS_MOTH_BLOOM_SKILL_PREFIX,
   createWitnessMothBloomRuntime,
+  handleWitnessMothBloomSkillIntent,
+  hydrateWitnessMothBloomRuntime,
   parseWitnessMothBloomSkillId,
   recordWitnessMothBloomContribution,
   startWitnessMothBloom,
@@ -163,6 +166,54 @@ function verifyReducerAndReceipts(): AuditReceipt[] {
   return writer.receipts;
 }
 
+function verifyIntentDrivenPlayablePath(): void {
+  const runtime = createWitnessMothBloomRuntime();
+  const writer = makeChainWriter();
+
+  const start = startWitnessMothBloom(runtime, { player_id: 'p_kael', map: 'Azura', now_ms: 10 }, writer.write);
+  assert(start.ok && start.started, 'Azura herald should start the playable Bloom path');
+
+  const invalid = handleWitnessMothBloomSkillIntent(
+    runtime,
+    { player_id: 'p_kael', map: 'Azura', skill_id: `${WITNESS_MOTH_BLOOM_SKILL_PREFIX}client_truth_claim`, now_ms: 11 },
+    writer.write
+  );
+  assert(!invalid.ok && invalid.reason === 'invalid_skill', 'unknown event skill must be rejected as invalid_skill');
+  assert(writer.receipts.length === 1, 'invalid event skill must not emit a receipt');
+
+  const offMap = handleWitnessMothBloomSkillIntent(
+    runtime,
+    { player_id: 'p_kael', map: 'Rookguard', skill_id: `${WITNESS_MOTH_BLOOM_SKILL_PREFIX}verify_testimony`, now_ms: 12 },
+    writer.write
+  );
+  assert(!offMap.ok && offMap.reason === 'invalid_target', 'off-map event skill must be rejected as invalid_target');
+  assert(writer.receipts.length === 1, 'off-map event skill must not emit a receipt');
+
+  const steps = [
+    `${WITNESS_MOTH_BLOOM_SKILL_PREFIX}verify_testimony`,
+    `${WITNESS_MOTH_BLOOM_SKILL_PREFIX}craft_lantern_frame`,
+    `${WITNESS_MOTH_BLOOM_SKILL_PREFIX}defend_scribes`,
+  ];
+  for (let i = 0; i < steps.length; i += 1) {
+    const result = handleWitnessMothBloomSkillIntent(
+      runtime,
+      { player_id: 'p_kael', map: 'Azura', skill_id: steps[i], now_ms: 20 + i },
+      writer.write
+    );
+    assert(result.ok && result.recorded, `playable contribution ${steps[i]} should be recorded`);
+  }
+
+  assert(runtime.phase === 'resolved', 'playable path should resolve the Bloom');
+  assert(writer.receipts.map((receipt) => receipt.action).join(',') === [
+    RECEIPT_ACTIONS.WORLD_EVENT_STARTED,
+    RECEIPT_ACTIONS.WORLD_EVENT_CONTRIBUTION,
+    RECEIPT_ACTIONS.WORLD_EVENT_CONTRIBUTION,
+    RECEIPT_ACTIONS.WORLD_EVENT_CONTRIBUTION,
+    RECEIPT_ACTIONS.WORLD_EVENT_RESOLVED,
+  ].join(','), 'playable path should emit the expected receipt sequence');
+  ok('playable intent path rejects bad intents and resolves via use_skill ids');
+}
+
 function verifyChronicleMaterialization(receipts: AuditReceipt[]): void {
   const db = freshDb();
   for (const receipt of receipts) materialize(db, receipt);
@@ -184,6 +235,46 @@ function verifyChronicleMaterialization(receipts: AuditReceipt[]): void {
   ok('world event receipts materialize into Chronicle rows');
 }
 
+function verifyProjectionAndHydration(receipts: AuditReceipt[]): void {
+  const db = freshDb();
+  for (const receipt of receipts) materialize(db, receipt);
+  for (const receipt of receipts) materialize(db, receipt);
+
+  const row = db.prepare(`
+    SELECT event_id, map, phase, started_by, started_at, resolved_by, resolved_at,
+           outcome, contributions_json, last_receipt
+    FROM world_events
+    WHERE event_id = ?
+  `).get(WITNESS_MOTH_BLOOM_EVENT_ID) as
+    | {
+        event_id: string;
+        map: string;
+        phase: string;
+        started_by: string | null;
+        started_at: string | null;
+        resolved_by: string | null;
+        resolved_at: string | null;
+        outcome: string | null;
+        contributions_json: string;
+        last_receipt: string;
+      }
+    | undefined;
+
+  assert(row, 'world_events projection row should exist');
+  assert(row.phase === 'resolved', `world_events row should be resolved, got ${row.phase}`);
+  assert(row.outcome === 'controlled_release', `world_events outcome should be controlled_release, got ${row.outcome}`);
+  const contributions = JSON.parse(row.contributions_json) as Record<string, unknown>;
+  assert(Object.keys(contributions).length === 3, 'world_events row should retain all three contributions');
+
+  const hydrated = createWitnessMothBloomRuntime();
+  assert(hydrateWitnessMothBloomRuntime(hydrated, row), 'world_events row should hydrate runtime');
+  assert(hydrated.phase === 'resolved', 'hydrated runtime should be resolved');
+  assert(hydrated.outcome === 'controlled_release', 'hydrated runtime should preserve outcome');
+  assert(Object.keys(hydrated.contributions).length === 3, 'hydrated runtime should preserve contributions');
+  db.close();
+  ok('world event projection is idempotent and hydrates runtime state');
+}
+
 function verifyNoRawDropRuntimeImport(): void {
   const modulePath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../src/world/world-events.ts');
   const source = fs.readFileSync(modulePath, 'utf8');
@@ -195,7 +286,9 @@ function verifyNoRawDropRuntimeImport(): void {
 function main(): void {
   verifyIntentSurface();
   const receipts = verifyReducerAndReceipts();
+  verifyIntentDrivenPlayablePath();
   verifyChronicleMaterialization(receipts);
+  verifyProjectionAndHydration(receipts);
   verifyNoRawDropRuntimeImport();
   console.log('\n[verify-world-events] All checks passed.');
 }

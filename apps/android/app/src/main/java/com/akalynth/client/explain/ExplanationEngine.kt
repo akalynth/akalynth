@@ -425,6 +425,11 @@ object ExplanationEngine {
                 "Character created"
             )
 
+            ChronicleEventKind.WORLD_EVENT -> Pair(
+                emptyList(),
+                "World event recorded"
+            )
+
             ChronicleEventKind.UNKNOWN -> Pair(
                 emptyList(),
                 "Event recorded"

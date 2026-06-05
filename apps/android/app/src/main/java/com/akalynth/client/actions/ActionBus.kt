@@ -137,6 +137,24 @@ class ActionBus(
     }
 
     /**
+     * Dispatch a world-event contribution intent.
+     *
+     * The server is the only authority for event phase/progress; this sends
+     * only an existing use_skill-style intent and creates no pending event.
+     */
+    suspend fun dispatchWorldEventContribution(
+        eventId: String,
+        contributionId: String
+    ): ActionIntent.WorldEventContribution {
+        val intent = ActionIntent.WorldEventContribution(
+            actionId = ids.nextId(),
+            eventId = eventId,
+            contributionId = contributionId
+        )
+        return dispatch(intent)
+    }
+
+    /**
      * Update player position (call from game state sync).
      */
     fun updatePosition(zone: String?, x: Int?, y: Int?) {

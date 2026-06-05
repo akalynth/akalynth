@@ -116,6 +116,29 @@ class CanonicalContractTest {
     }
 
     @Test
+    fun `A - world event receipt maps to WORLD_EVENT kind`() {
+        val receipt = Receipt(
+            receiptId = "receipt_world_event",
+            actionId = null,
+            type = "world_event_resolved",
+            timestampMs = 1705838400000,
+            payload = mapOf(
+                "zone" to "Azura",
+                "event_id" to "witness_moth_bloom",
+                "phase" to "resolved",
+                "outcome" to "controlled_release"
+            )
+        )
+
+        val event = ReceiptToChronicleEvent.map(receipt)
+
+        assertEquals(ChronicleEventKind.WORLD_EVENT, event.kind)
+        assertEquals("witness_moth_bloom", event.worldEventId)
+        assertEquals("resolved", event.worldEventPhase)
+        assertEquals("controlled_release", event.worldEventOutcome)
+    }
+
+    @Test
     fun `A - optional fields extracted correctly when present`() {
         val receipt = Receipt(
             receiptId = "receipt_full",

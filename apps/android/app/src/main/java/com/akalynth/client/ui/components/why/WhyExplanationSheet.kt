@@ -319,6 +319,7 @@ private fun getEventTitle(event: ChronicleEvent): String {
         com.akalynth.client.ui.state.ChronicleEventKind.COMBAT_KILL -> "Defeated ${event.details.victimName ?: "an enemy"}"
         com.akalynth.client.ui.state.ChronicleEventKind.TUTORIAL_COMPLETE -> "Completed tutorial"
         com.akalynth.client.ui.state.ChronicleEventKind.CHARACTER_CREATED -> "Character created"
+        com.akalynth.client.ui.state.ChronicleEventKind.WORLD_EVENT -> "World event recorded"
         com.akalynth.client.ui.state.ChronicleEventKind.UNKNOWN -> "Unknown event"
     }
 }
@@ -340,6 +341,11 @@ private fun getEventExplanation(event: ChronicleEvent): String {
         com.akalynth.client.ui.state.ChronicleEventKind.COMBAT_KILL -> "Victory in combat"
         com.akalynth.client.ui.state.ChronicleEventKind.TUTORIAL_COMPLETE -> "Ready for the real game"
         com.akalynth.client.ui.state.ChronicleEventKind.CHARACTER_CREATED -> "Your journey begins"
+        com.akalynth.client.ui.state.ChronicleEventKind.WORLD_EVENT -> {
+            event.details.outcome?.let { "Outcome: ${it.replace("_", " ")}" }
+                ?: event.details.contributionId?.let { "Contribution: ${it.replace("_", " ")}" }
+                ?: "The server recorded this world event step"
+        }
         com.akalynth.client.ui.state.ChronicleEventKind.UNKNOWN -> "Something happened"
     }
 }

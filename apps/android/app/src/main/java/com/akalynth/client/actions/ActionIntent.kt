@@ -3,6 +3,15 @@ package com.akalynth.client.actions
 import com.akalynth.client.ui.components.character.CharacterSex
 import com.akalynth.client.ui.components.hotbar.ItemRarity
 
+object WorldEventSkillIds {
+    const val WITNESS_MOTH_BLOOM = "witness_moth_bloom"
+    const val VERIFY_TESTIMONY = "verify_testimony"
+    const val CRAFT_LANTERN_FRAME = "craft_lantern_frame"
+    const val DEFEND_SCRIBES = "defend_scribes"
+
+    fun skillId(eventId: String, contributionId: String): String = "event:$eventId:$contributionId"
+}
+
 /**
  * Sealed interface for player action intents.
  *
@@ -72,4 +81,18 @@ sealed interface ActionIntent {
         val name: String,
         val sex: CharacterSex
     ) : ActionIntent
+
+    /**
+     * Contribute to a server-authoritative world event.
+     * The client sends only an intent skill id; the server validates event state.
+     * Chronicle rows are read back from server receipts, so this creates no
+     * optimistic pending event.
+     */
+    data class WorldEventContribution(
+        override val actionId: String,
+        val eventId: String,
+        val contributionId: String
+    ) : ActionIntent {
+        val skillId: String = WorldEventSkillIds.skillId(eventId, contributionId)
+    }
 }
