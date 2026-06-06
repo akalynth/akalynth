@@ -233,6 +233,8 @@ export interface WorldEventRow {
   resolved_at: string | null;
   outcome: string | null;
   contributions_json: string;
+  evidence_json: string;
+  teaser_json: string;
   last_receipt: string;
 }
 
@@ -395,8 +397,10 @@ export const RECEIPT_ACTIONS = {
 
   // World Events v0: server-authoritative event signals and contributions
   WORLD_EVENT_STARTED: 'world_event_started',
+  WORLD_EVENT_EVIDENCE_RECOVERED: 'world_event_evidence_recovered',
   WORLD_EVENT_CONTRIBUTION: 'world_event_contribution',
   WORLD_EVENT_RESOLVED: 'world_event_resolved',
+  WORLD_EVENT_TEASER_UNLOCKED: 'world_event_teaser_unlocked',
 
   // Property Ownership v0: house registry
   PROPERTY_CREATED: 'property_created',

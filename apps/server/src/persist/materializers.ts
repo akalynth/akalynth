@@ -74,8 +74,10 @@ const HANDLERS: Record<string, Handler> = {
   [RECEIPT_ACTIONS.NPC_TALKED]: handleNpcTalked,
   // World Events v0
   [RECEIPT_ACTIONS.WORLD_EVENT_STARTED]: handleWorldEventStarted,
+  [RECEIPT_ACTIONS.WORLD_EVENT_EVIDENCE_RECOVERED]: handleWorldEventEvidenceRecovered,
   [RECEIPT_ACTIONS.WORLD_EVENT_CONTRIBUTION]: handleWorldEventContribution,
   [RECEIPT_ACTIONS.WORLD_EVENT_RESOLVED]: handleWorldEventResolved,
+  [RECEIPT_ACTIONS.WORLD_EVENT_TEASER_UNLOCKED]: handleWorldEventTeaserUnlocked,
   // Property Ownership v0
   [RECEIPT_ACTIONS.PROPERTY_CREATED]: handlePropertyCreated,
   [RECEIPT_ACTIONS.PROPERTY_LISTED]: handlePropertyListed,
@@ -1208,9 +1210,49 @@ function handleWorldEventStarted(
   db.prepare(`
     INSERT OR IGNORE INTO world_events (
       event_id, map, phase, started_by, started_at, resolved_by, resolved_at,
-      outcome, contributions_json, last_receipt
-    ) VALUES (?, ?, ?, ?, ?, NULL, NULL, NULL, '{}', ?)
+      outcome, contributions_json, evidence_json, teaser_json, last_receipt
+    ) VALUES (?, ?, ?, ?, ?, NULL, NULL, NULL, '{}', '{}', '{}', ?)
   `).run(eventId, map, phase, receipt.actor_id, receipt.timestamp, receiptHash);
+}
+
+function handleWorldEventEvidenceRecovered(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const inputs = receipt.inputs ?? {};
+  const eventId = inputs.event_id as string | undefined;
+  const map = inputs.map as string | undefined;
+  const evidenceId = inputs.evidence_id as string | undefined;
+  if (!eventId || !map || !evidenceId) return;
+
+  const row = db.prepare(`SELECT evidence_json FROM world_events WHERE event_id = ?`).get(eventId) as
+    | { evidence_json: string }
+    | undefined;
+
+  const evidence = parseWorldEventJsonRecord(row?.evidence_json);
+  evidence[evidenceId] = {
+    evidence_id: evidenceId,
+    player_id: receipt.actor_id,
+    recovered_at_ms: safeTimestampMs(receipt.timestamp),
+  };
+
+  if (!row) {
+    const phase = (inputs.phase as string | undefined) ?? 'signal';
+    db.prepare(`
+      INSERT INTO world_events (
+        event_id, map, phase, started_by, started_at, resolved_by, resolved_at,
+        outcome, contributions_json, evidence_json, teaser_json, last_receipt
+      ) VALUES (?, ?, ?, NULL, NULL, NULL, NULL, NULL, '{}', ?, '{}', ?)
+    `).run(eventId, map, phase, JSON.stringify(evidence), receiptHash);
+    return;
+  }
+
+  db.prepare(`
+    UPDATE world_events
+    SET evidence_json = ?, last_receipt = ?
+    WHERE event_id = ?
+  `).run(JSON.stringify(evidence), receiptHash, eventId);
 }
 
 function handleWorldEventContribution(
@@ -1229,7 +1271,7 @@ function handleWorldEventContribution(
     | undefined;
   if (row?.phase === 'resolved') return;
 
-  const contributions = parseWorldEventContributions(row?.contributions_json);
+  const contributions = parseWorldEventJsonRecord(row?.contributions_json);
   contributions[contributionId] = {
     contribution_id: contributionId,
     player_id: receipt.actor_id,
@@ -1240,8 +1282,8 @@ function handleWorldEventContribution(
     db.prepare(`
       INSERT INTO world_events (
         event_id, map, phase, started_by, started_at, resolved_by, resolved_at,
-        outcome, contributions_json, last_receipt
-      ) VALUES (?, ?, 'investigation', NULL, NULL, NULL, NULL, NULL, ?, ?)
+        outcome, contributions_json, evidence_json, teaser_json, last_receipt
+      ) VALUES (?, ?, 'investigation', NULL, NULL, NULL, NULL, NULL, ?, '{}', '{}', ?)
     `).run(eventId, map, JSON.stringify(contributions), receiptHash);
     return;
   }
@@ -1263,27 +1305,69 @@ function handleWorldEventResolved(
   const map = inputs.map as string | undefined;
   if (!eventId || !map) return;
   const outcome = (inputs.outcome as string | undefined) ?? null;
-  const row = db.prepare(`SELECT contributions_json FROM world_events WHERE event_id = ?`).get(eventId) as
-    | { contributions_json: string }
+  const row = db.prepare(`SELECT contributions_json, evidence_json, teaser_json FROM world_events WHERE event_id = ?`).get(eventId) as
+    | { contributions_json: string; evidence_json: string; teaser_json: string }
     | undefined;
   const contributionsJson = row?.contributions_json ?? '{}';
+  const evidenceJson = row?.evidence_json ?? '{}';
+  const teaserJson = row?.teaser_json ?? '{}';
 
   db.prepare(`
     INSERT INTO world_events (
       event_id, map, phase, started_by, started_at, resolved_by, resolved_at,
-      outcome, contributions_json, last_receipt
-    ) VALUES (?, ?, 'resolved', NULL, NULL, ?, ?, ?, ?, ?)
+      outcome, contributions_json, evidence_json, teaser_json, last_receipt
+    ) VALUES (?, ?, 'resolved', NULL, NULL, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(event_id) DO UPDATE SET
       phase = 'resolved',
       resolved_by = excluded.resolved_by,
       resolved_at = excluded.resolved_at,
       outcome = excluded.outcome,
       contributions_json = excluded.contributions_json,
+      evidence_json = excluded.evidence_json,
+      teaser_json = excluded.teaser_json,
       last_receipt = excluded.last_receipt
-  `).run(eventId, map, receipt.actor_id, receipt.timestamp, outcome, contributionsJson, receiptHash);
+  `).run(eventId, map, receipt.actor_id, receipt.timestamp, outcome, contributionsJson, evidenceJson, teaserJson, receiptHash);
 }
 
-function parseWorldEventContributions(raw: string | null | undefined): Record<string, unknown> {
+function handleWorldEventTeaserUnlocked(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const inputs = receipt.inputs ?? {};
+  const eventId = inputs.event_id as string | undefined;
+  const map = inputs.map as string | undefined;
+  const teaserId = inputs.teaser_id as string | undefined;
+  if (!eventId || !map || !teaserId) return;
+
+  const row = db.prepare(`SELECT contributions_json, evidence_json FROM world_events WHERE event_id = ?`).get(eventId) as
+    | { contributions_json: string; evidence_json: string }
+    | undefined;
+  const teaser = {
+    id: teaserId,
+    unlocked: true,
+    unlocked_by: receipt.actor_id,
+    unlocked_at_ms: safeTimestampMs(receipt.timestamp),
+  };
+
+  if (!row) {
+    db.prepare(`
+      INSERT INTO world_events (
+        event_id, map, phase, started_by, started_at, resolved_by, resolved_at,
+        outcome, contributions_json, evidence_json, teaser_json, last_receipt
+      ) VALUES (?, ?, 'resolved', NULL, NULL, ?, ?, NULL, '{}', '{}', ?, ?)
+    `).run(eventId, map, receipt.actor_id, receipt.timestamp, JSON.stringify(teaser), receiptHash);
+    return;
+  }
+
+  db.prepare(`
+    UPDATE world_events
+    SET teaser_json = ?, last_receipt = ?
+    WHERE event_id = ?
+  `).run(JSON.stringify(teaser), receiptHash, eventId);
+}
+
+function parseWorldEventJsonRecord(raw: string | null | undefined): Record<string, unknown> {
   if (!raw) return {};
   try {
     const parsed = JSON.parse(raw);
@@ -1545,26 +1629,39 @@ export function materializeChronicle(
     // a player Chronicle row. The event receipt stays canonical; SQLite is only
     // the derived read model.
     case RECEIPT_ACTIONS.WORLD_EVENT_STARTED:
+    case RECEIPT_ACTIONS.WORLD_EVENT_EVIDENCE_RECOVERED:
     case RECEIPT_ACTIONS.WORLD_EVENT_CONTRIBUTION:
-    case RECEIPT_ACTIONS.WORLD_EVENT_RESOLVED: {
+    case RECEIPT_ACTIONS.WORLD_EVENT_RESOLVED:
+    case RECEIPT_ACTIONS.WORLD_EVENT_TEASER_UNLOCKED: {
       const eventId = inputs.event_id as string | undefined;
       if (!eventId || !playerId) break;
       const zone = (inputs.map as string) ?? null;
       const phase = (inputs.phase as string) ?? null;
+      const evidenceId = (inputs.evidence_id as string) ?? null;
       const contributionId = (inputs.contribution_id as string) ?? null;
       const outcome = (inputs.outcome as string) ?? null;
+      const teaserId = (inputs.teaser_id as string) ?? null;
       const entityId = contributionId
         ? `${eventId}:${contributionId}`
-        : outcome
-          ? `${eventId}:${outcome}`
-          : `${eventId}:${phase ?? 'event'}`;
+        : evidenceId
+          ? `${eventId}:evidence:${evidenceId}`
+          : teaserId
+            ? `${eventId}:teaser:${teaserId}`
+            : outcome
+              ? `${eventId}:${outcome}`
+              : `${eventId}:${phase ?? 'event'}`;
       insertChronicleEvent(db, playerId, 'world_event', timestamp, originalAction, receiptHash, zone, null, null, entityId, {
         event_id: eventId,
         phase,
+        evidence_id: evidenceId,
         contribution_id: contributionId,
         outcome,
+        teaser_id: teaserId,
         accepted_count: inputs.accepted_count ?? null,
         required_count: inputs.required_count ?? null,
+        recovered_count: inputs.recovered_count ?? null,
+        required_evidence_count: inputs.required_evidence_count ?? null,
+        unlocked: inputs.unlocked ?? null,
       });
       break;
     }

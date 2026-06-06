@@ -36,6 +36,7 @@
     "verify:treasury": "tsx tools/verify-treasury.ts",
     "verify:work-contracts": "tsx tools/verify-work-contracts.ts",
     "verify:world-events": "tsx tools/verify-world-events.ts",
+    "verify:evidence-loop": "tsx tools/verify-evidence-loop.ts",
     "verify:property": "tsx tools/verify-property.ts",
     "verify:property-auction": "tsx tools/verify-property-auction.ts",
     "verify:property-auction-wallet-escrow": "tsx tools/verify-property-auction-wallet-escrow.ts",

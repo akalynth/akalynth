@@ -90,6 +90,10 @@ export interface PlayLoopProgress extends TutorialProgress {
   gateOpen: boolean;
   objective: string;
   lastEvent?: string | null;
+  teaser?: {
+    id: 'ember_road_marker';
+    unlocked: boolean;
+  };
 }
 
 export interface PlayerPublic {
