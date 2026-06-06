@@ -154,7 +154,7 @@ class ActionBus {
 
         synchronized(pendingLock) {
             pending.entries.forEach { (id, action) ->
-                if (now - action.dispatchedAt > maxAgeMs) {
+                if (now - action.dispatchedAt >= maxAgeMs) {
                     expired.add(id)
                 }
             }
@@ -186,7 +186,7 @@ data class PendingAction(
      * Check if this action has expired.
      */
     fun isExpired(maxAgeMs: Long = 30_000): Boolean {
-        return System.currentTimeMillis() - dispatchedAt > maxAgeMs
+        return System.currentTimeMillis() - dispatchedAt >= maxAgeMs
     }
 
     /**

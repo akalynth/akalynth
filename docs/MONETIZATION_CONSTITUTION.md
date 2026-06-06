@@ -4,7 +4,9 @@
 > **Change control:** Amendments only; see Article VII.  
 > **Governs:** Any value-entry system (money/crypto) and its “not power” proof surface.
 
-This document turns `docs/MONETIZATION_BLUEPRINT.md` into enforceable, audit-friendly policy language.
+This document turns the archived pre-formalization blueprint
+(`docs/archive/MONETIZATION_BLUEPRINT.md`) into enforceable, audit-friendly
+policy language.
 
 Implementation references:
 
@@ -157,9 +159,11 @@ Every monetization action (purchase, grant, revoke, refund) must emit immutable 
 Changing any prohibition in Article III requires:
 
 1. Update `docs/MONETIZATION_CONSTITUTION.md`
-2. Update `docs/MONETIZATION_BLUEPRINT.md`
-3. Publish a player-facing change note (plain language)
-4. Add an explicit “Why this is not power” argument per change
+2. Publish a player-facing change note (plain language)
+3. Add an explicit “Why this is not power” argument per change
+
+Do not update the archived blueprint as policy; it is retained only as design
+history.
 
 If a change cannot pass the “not power” test, it is not an amendment — it is a breach.
 

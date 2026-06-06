@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { MapName } from '@shared/http';
+import { displayMapName } from '@shared/http';
 import type { ChronicleEvent } from '@shared/protocol';
 import type { MapData, PlayerPublic } from '@shared/types';
 import { useGameClient } from './hooks/useGameClient';
@@ -666,7 +667,7 @@ function DebugApp() {
             <div className="hud-card hud-card--identity">
               <span className="hud-kicker">Akalynth</span>
               <strong>{state.session.name ?? 'Phone guest'}</strong>
-              <span>{state.world.map.name}</span>
+              <span>{displayMapName(state.world.map.name)}</span>
               <CharacterBar
                 session={state.session}
                 onCreate={api.createCharacter}
@@ -762,6 +763,7 @@ function DebugApp() {
               onStartWork={api.startWork}
               onTickWork={api.tickWork}
               onBuy={api.useSkill}
+              onWorldEventAction={api.useSkill}
               onUseItem={(itemId) => api.useSkill('item:use:' + itemId)}
               attackReady={attackReady}
               ritualReady={ritualReady}

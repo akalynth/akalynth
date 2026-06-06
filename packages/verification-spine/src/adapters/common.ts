@@ -19,7 +19,8 @@ import { VerifyContext, VerifyResult } from '../types.js';
 export function runLegacyVerifier(
   scriptPath: string,
   verifierId: string,
-  ctx: VerifyContext
+  ctx: VerifyContext,
+  envOverrides: NodeJS.ProcessEnv = {}
 ): VerifyResult {
   const startedAt = new Date().toISOString();
 
@@ -38,11 +39,19 @@ export function runLegacyVerifier(
 
   ctx.log(`[adapter] Running: ${args.join(' ')} (cwd: ${cwd})`);
 
+  const env = {
+    ...ctx.env,
+    AKALYNTH_DB_PATH: ctx.env.AKALYNTH_DB_PATH ?? 'apps/server/data/akalynth.db',
+    AKALYNTH_REPLAY_MARKER_PATH:
+      ctx.env.AKALYNTH_REPLAY_MARKER_PATH ?? 'apps/server/data/replay_marker.json',
+    ...envOverrides,
+  };
+
   const result = spawnSync(args[0], args.slice(1), {
     cwd,
     encoding: 'utf-8',
     stdio: ctx.verbose ? 'inherit' : 'pipe',
-    env: ctx.env,
+    env,
   });
 
   const finishedAt = new Date().toISOString();

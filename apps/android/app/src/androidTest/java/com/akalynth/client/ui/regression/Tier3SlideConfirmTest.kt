@@ -15,8 +15,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.Assert.*
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
+import androidx.test.ext.junit.runners.AndroidJUnit4
 
 /**
  * Regression tests for Tier 3 (slide >= 90%) confirmation.
@@ -29,8 +28,7 @@ import org.robolectric.annotation.Config
  * Note: These tests use Compose's test clock for deterministic timing.
  * swipeRight with endX controls slide position.
  */
-@RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
+@RunWith(AndroidJUnit4::class)
 class Tier3SlideConfirmTest {
 
     @get:Rule
@@ -42,7 +40,7 @@ class Tier3SlideConfirmTest {
     // =========================================================================
 
     @Test
-    fun `D3 - slide above threshold confirms`() {
+    fun test_d3_slide_above_threshold_confirms() {
         var confirmed = false
 
         composeTestRule.setContent {
@@ -68,7 +66,7 @@ class Tier3SlideConfirmTest {
     }
 
     @Test
-    fun `D3 - slide exactly at 90 percent confirms`() {
+    fun test_d3_slide_exactly_at_90_percent_confirms() {
         var confirmed = false
 
         composeTestRule.setContent {
@@ -93,7 +91,7 @@ class Tier3SlideConfirmTest {
     }
 
     @Test
-    fun `D3 - slide at 89 percent does not confirm`() {
+    fun test_d3_slide_at_89_percent_does_not_confirm() {
         var confirmed = false
 
         composeTestRule.setContent {
@@ -119,7 +117,7 @@ class Tier3SlideConfirmTest {
     }
 
     @Test
-    fun `D3 - confirm callback fires exactly once`() {
+    fun test_d3_confirm_callback_fires_exactly_once() {
         var confirmCount = 0
 
         composeTestRule.setContent {
@@ -148,7 +146,7 @@ class Tier3SlideConfirmTest {
     // =========================================================================
 
     @Test
-    fun `D4 - slide below threshold snaps back`() {
+    fun test_d4_slide_below_threshold_snaps_back() {
         var confirmed = false
 
         composeTestRule.setContent {
@@ -177,7 +175,7 @@ class Tier3SlideConfirmTest {
     }
 
     @Test
-    fun `D4 - snap back animation completes within 200ms`() {
+    fun test_d4_snap_back_animation_completes_within_200ms() {
         var confirmed = false
 
         composeTestRule.setContent {
@@ -204,7 +202,7 @@ class Tier3SlideConfirmTest {
     }
 
     @Test
-    fun `D4 - snap back is smooth animation not instant`() {
+    fun test_d4_snap_back_is_smooth_animation_not_instant() {
         composeTestRule.setContent {
             Tier3SlideConfirm(
                 label = "Test",
@@ -237,7 +235,7 @@ class Tier3SlideConfirmTest {
     // =========================================================================
 
     @Test
-    fun `D5 - dismiss closes without confirm`() {
+    fun test_d5_dismiss_closes_without_confirm() {
         var confirmed = false
         var dismissed = false
 
@@ -264,7 +262,7 @@ class Tier3SlideConfirmTest {
     // =========================================================================
 
     @Test
-    fun `track width measured at runtime not hardcoded`() {
+    fun test_track_width_measured_at_runtime_not_hardcoded() {
         var confirmed1 = false
         var confirmed2 = false
 
@@ -306,7 +304,7 @@ class Tier3SlideConfirmTest {
     }
 
     @Test
-    fun `works on small screen 360dp width`() {
+    fun test_works_on_small_screen_360dp_width() {
         var confirmed = false
 
         composeTestRule.setContent {
@@ -333,7 +331,7 @@ class Tier3SlideConfirmTest {
     // =========================================================================
 
     @Test
-    fun `track fill matches slide progress`() {
+    fun test_track_fill_matches_slide_progress() {
         composeTestRule.setContent {
             Tier3SlideConfirm(
                 label = "Test",
@@ -347,7 +345,7 @@ class Tier3SlideConfirmTest {
     }
 
     @Test
-    fun `thumb position matches slide progress`() {
+    fun test_thumb_position_matches_slide_progress() {
         composeTestRule.setContent {
             Tier3SlideConfirm(
                 label = "Test",
@@ -361,7 +359,7 @@ class Tier3SlideConfirmTest {
     }
 
     @Test
-    fun `text updates based on threshold`() {
+    fun test_text_updates_based_on_threshold() {
         composeTestRule.setContent {
             Tier3SlideConfirm(
                 label = "Test",
@@ -391,7 +389,7 @@ class Tier3SlideConfirmTest {
     // =========================================================================
 
     @Test
-    fun `confirmed latch prevents multiple callbacks`() {
+    fun test_confirmed_latch_prevents_multiple_callbacks() {
         var confirmCount = 0
 
         composeTestRule.setContent {
@@ -426,7 +424,7 @@ class Tier3SlideConfirmTest {
     }
 
     @Test
-    fun `text shows Confirmed after successful slide`() {
+    fun test_text_shows_confirmed_after_successful_slide() {
         composeTestRule.setContent {
             Tier3SlideConfirm(
                 label = "Test",
@@ -453,7 +451,7 @@ class Tier3SlideConfirmTest {
     // =========================================================================
 
     @Test
-    fun `tap without drag does not confirm`() {
+    fun test_tap_without_drag_does_not_confirm() {
         var confirmed = false
 
         composeTestRule.setContent {
@@ -476,7 +474,7 @@ class Tier3SlideConfirmTest {
     }
 
     @Test
-    fun `very small drag does not confirm`() {
+    fun test_very_small_drag_does_not_confirm() {
         var confirmed = false
 
         composeTestRule.setContent {
@@ -501,13 +499,13 @@ class Tier3SlideConfirmTest {
     }
 
     @Test
-    fun `threshold constant matches spec`() {
+    fun test_threshold_constant_matches_spec() {
         // Verify the constant matches the regression matrix
         assertEquals("SLIDE_THRESHOLD should be 0.9", 0.9f, SLIDE_THRESHOLD)
     }
 
     @Test
-    fun `snap back constant matches spec`() {
+    fun test_snap_back_constant_matches_spec() {
         // Verify the constant matches the regression matrix
         assertEquals("SNAP_BACK_MS should be 200", 200L, SNAP_BACK_MS)
     }

@@ -148,6 +148,7 @@ object ProofBundleBuilder {
         ChronicleEventKind.ITEM_PICKUP -> BundleType.PICKUP_PROOF
         ChronicleEventKind.COMBAT_KILL -> BundleType.COMBAT_PROOF
         ChronicleEventKind.ZONE_ENTER -> BundleType.ZONE_TRANSITION_PROOF
+        ChronicleEventKind.WORLD_EVENT -> BundleType.EVENT_PROOF
         else -> BundleType.EVENT_PROOF
     }
 

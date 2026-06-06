@@ -1,0 +1,53 @@
+AKALYNTH_WORLD_CANON_HIERARCHY_CORRECTION_V1
+status: implemented_pending_review
+scope: docs-only canon hierarchy correction
+
+Correction:
+- Akalynth is the world.
+- Akalynth is the app name.
+- akalynth.com is the public website.
+- High City is the first city of Akalynth.
+- VaultCore Prime is not the public world name.
+- Azura remains an old runtime city/map identifier pending migration.
+
+Canonical phrase:
+- Akalynth is the world that remembers. High City is where its first stones were raised.
+
+Docs updated:
+- docs/AKALYNTH_LORE_BIBLE.md
+- docs/asset-decisions/AKALYNTH_AZURA_IDENTIFIER_MIGRATION_PLAN_V1/AZURA_IDENTIFIER_INVENTORY.md
+- docs/asset-decisions/AKALYNTH_AZURA_IDENTIFIER_MIGRATION_PLAN_V1/AZURA_IDENTIFIER_MIGRATION_PLAN.md
+- docs/asset-decisions/AKALYNTH_AZURA_IDENTIFIER_MIGRATION_PLAN_V1/COMPATIBILITY_AND_ALIAS_STRATEGY.md
+- docs/asset-decisions/AKALYNTH_AZURA_IDENTIFIER_MIGRATION_PLAN_V1/VALIDATION_AND_ROLLOUT_PLAN.md
+- docs/asset-decisions/AKALYNTH_AZURA_IDENTIFIER_MIGRATION_PLAN_V1/CLAIM_BOUNDARY.md
+- docs/asset-decisions/AKALYNTH_AZURA_IDENTIFIER_MIGRATION_PLAN_V1/receipt.txt
+
+Claims:
+- akalynth_world_name_locked: true
+- high_city_first_city_name_locked: true
+- app_name_akalynth_locked: true
+- website_name_akalynth_dot_com_locked: true
+- vaultcore_prime_public_world_name_rejected: true
+- runtime_identifier_migration_performed: false
+- map_file_renamed: false
+- gate_tile_renamed: false
+- protocol_changed: false
+- shared_maps_changed: false
+- shared_types_changed: false
+- server_changed: false
+- android_changed: false
+- browser_changed: false
+- deploy_performed: false
+
+Verification:
+- stale VaultCore Prime public-world references absent from the corrected canon and migration-plan docs
+- High City confirmed as the future first-city migration target where runtime names are discussed
+- forbidden runtime migration claims absent
+- runtime/shared/server/browser/Android/phone/studio/data diffs absent
+- npm run verify:quick PASS 9/9
+
+Valid accepted status after review:
+- accepted_world_canon_hierarchy_correction
+
+Next recommended lane:
+- AKALYNTH_HIGH_CITY_ALIAS_COMPAT_PREP_V1

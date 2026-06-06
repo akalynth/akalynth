@@ -23,9 +23,11 @@ This document applies the **High-Leverage Decision Checklist** scoring system to
 
 ---
 
-## Part 1: Already Shipped (Validation)
+## Part 1: Implemented Or Validated In Repo
 
-These are high-leverage tasks **already in production**. This validates past architectural decisions.
+These are high-leverage tasks already implemented or validated in the repo. This
+does not assert production deployment readiness; see `CURRENT_STAGE.md` for the
+binding claim boundary.
 
 ### Critical Tier (7-9 points) ✅
 
@@ -55,7 +57,7 @@ These are high-leverage tasks **already in production**. This validates past arc
 
 ---
 
-## Part 2: Missing Critical Work (Gaps)
+## Part 2: Remaining Critical Work (Gaps)
 
 These are **high-leverage tasks not yet built** but score Critical (7-9). These are the **priority targets**.
 
@@ -63,7 +65,7 @@ These are **high-leverage tasks not yet built** but score Critical (7-9). These 
 
 | Task | Score | Multiplier | Force | Irreversible | Priority | Why Missing |
 |------|-------|------------|-------|--------------|----------|-------------|
-| **Unified Verification Spine API** | 9 | +3 (unifies 18 scattered tools) | +3 (eliminates "which verifier?" questions) | +3 (makes verification first-class) | **P0** | No central orchestrator |
+| **Unified Verification Spine API** | 9 | +3 (unifies scattered tools) | +3 (eliminates "which verifier?" questions) | +3 (makes verification first-class) | **Done / monitor** | Implemented as `packages/verification-spine/`; keep expanding coverage through registered verifiers |
 | **Receipt Chain CLI (one-command verify)** | 8 | +3 (enables all external audits) | +3 (eliminates manual chain inspection) | +2 (establishes verification UX) | **P0** | No standalone tool |
 | **Protocol Breaking-Change Detector** | 8 | +2 (prevents all future API breakages) | +3 (eliminates manual review) | +3 (makes drift detectable) | **P0** | Only has warning hook |
 | **Capability Boundary Enforcement** | 7 | +2 (enables agent isolation) | +2 (reduces privilege escalation risk) | +3 (makes violations mechanical) | **P1** | CAPS_ENABLED exists but not enforced universally |
@@ -100,7 +102,7 @@ These are **documented but not yet started** features. Scored to determine prior
 | Mail MMO System | 2 | Medium | No — speculative feature |
 | Appeals Workflow | 3 | Medium | No — moderation prerequisite |
 
-### From MONETIZATION_BLUEPRINT.md (Future Features)
+### From Archived MONETIZATION_BLUEPRINT.md (Future Features)
 
 | Task | Score | Tier | Should Prioritize? |
 |------|-------|------|---------------------|
@@ -131,14 +133,15 @@ Tasks that **might seem urgent but score low**. These are traps.
 
 ---
 
-## Part 5: Concrete Next Steps (This Branch)
+## Part 5: Concrete Next Steps
 
-Based on this audit, here are the **immediate high-leverage tasks** for `claude/high-leverage-tasks-6Kz2Z`:
+Based on this audit, these are the immediate high-leverage task categories. This
+section is not branch-specific.
 
 ### Phase 1: Document the Decision Engine ✅
 - [x] Create HIGH_LEVERAGE_DECISION_CHECKLIST.md ✅
 - [x] Create LEVERAGE_TIER_MAPPING.md (this file) ✅
-- [ ] Create VERIFICATION_SPINE_API.md (next)
+- [x] Create VERIFICATION_SPINE_API.md ✅
 
 ### Phase 2: Build Critical Infrastructure 🎯
 
@@ -149,7 +152,7 @@ Based on this audit, here are the **immediate high-leverage tasks** for `claude/
    - Single entry point: `npm run verify` or `akalynth-verify`
    - Output: pass/fail + actionable errors
    - Files: `packages/verification-spine/` (new package)
-   - **ETA:** 1 design doc + 1 implementation session
+   - **Next:** keep new verification surfaces registered instead of creating standalone one-off scripts.
 
 2. **Receipt Chain CLI** (Score: 8)
    - One-command verification: `akalynth-verify-chain receipts.jsonl`

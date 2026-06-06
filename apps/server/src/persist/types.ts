@@ -156,6 +156,7 @@ export type ChronicleEventKind =
   | 'legendary_obtained'
   | 'legendary_lost'
   | 'origin_sealed'
+  | 'world_event'
   | 'property_acquired';
 
 // Phase 4.4 E2: Evidence reference for forensic linkage
@@ -217,6 +218,21 @@ export interface AuctionRow {
   status: string; // 'open' | 'settled' | 'cancelled'
   scheduled_close_ms: number | null;
   opened_receipt: string;
+  last_receipt: string;
+}
+
+// World Events v0: durable mirror of server-authoritative event state.
+// contributions_json is a JSON object keyed by contribution_id.
+export interface WorldEventRow {
+  event_id: string;
+  map: string;
+  phase: string;
+  started_by: string | null;
+  started_at: string | null;
+  resolved_by: string | null;
+  resolved_at: string | null;
+  outcome: string | null;
+  contributions_json: string;
   last_receipt: string;
 }
 
@@ -377,6 +393,11 @@ export const RECEIPT_ACTIONS = {
   // Dialogue Contract v1: durable NPC talk counter (seeds dialogue variation)
   NPC_TALKED: 'npc_talked',
 
+  // World Events v0: server-authoritative event signals and contributions
+  WORLD_EVENT_STARTED: 'world_event_started',
+  WORLD_EVENT_CONTRIBUTION: 'world_event_contribution',
+  WORLD_EVENT_RESOLVED: 'world_event_resolved',
+
   // Property Ownership v0: house registry
   PROPERTY_CREATED: 'property_created',
   PROPERTY_LISTED: 'property_listed',
@@ -528,6 +549,10 @@ export interface PersistenceLayer {
   // Read queries - Property Auction Lane (durable auction projection)
   getAuction(property_id: string): AuctionRow | null;
   getOpenAuctions(): AuctionRow[];
+
+  // Read queries - World Events v0
+  getWorldEvent(event_id: string): WorldEventRow | null;
+  getWorldEvents(): WorldEventRow[];
 
   // Read queries - Chronicle (Phase 4)
   getChronicleForPlayer(player_id: string, limit?: number, before?: string): ChronicleEventRow[];

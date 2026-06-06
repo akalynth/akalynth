@@ -18,8 +18,7 @@ import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
+import androidx.test.ext.junit.runners.AndroidJUnit4
 
 /**
  * Regression tests for death toast notification.
@@ -31,8 +30,7 @@ import org.robolectric.annotation.Config
  *
  * Tests use Compose test clock via mainClock.advanceTimeBy() for deterministic timing.
  */
-@RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
+@RunWith(AndroidJUnit4::class)
 class DeathToastTest {
 
     @get:Rule
@@ -44,7 +42,7 @@ class DeathToastTest {
     // =========================================================================
 
     @Test
-    fun `X1 - appears when visible is true`() {
+    fun test_x1_appears_when_visible_is_true() {
         composeTestRule.setContent {
             DeathToast(
                 notice = createTestNotice(),
@@ -61,7 +59,7 @@ class DeathToastTest {
     }
 
     @Test
-    fun `X1 - shows items lost list`() {
+    fun test_x1_shows_items_lost_list() {
         val itemsLost = listOf("Flame Sword", "Ration", "Ration")
 
         composeTestRule.setContent {
@@ -81,7 +79,7 @@ class DeathToastTest {
     }
 
     @Test
-    fun `X1 - shows you died message`() {
+    fun test_x1_shows_you_died_message() {
         composeTestRule.setContent {
             DeathToast(
                 notice = createTestNotice(),
@@ -97,7 +95,7 @@ class DeathToastTest {
     }
 
     @Test
-    fun `X1 - shows skull icon`() {
+    fun test_x1_shows_skull_icon() {
         composeTestRule.setContent {
             DeathToast(
                 notice = createTestNotice(),
@@ -114,7 +112,7 @@ class DeathToastTest {
     }
 
     @Test
-    fun `X1 - handles empty items lost`() {
+    fun test_x1_handles_empty_items_lost() {
         val itemsLost = emptyList<String>()
 
         composeTestRule.setContent {
@@ -136,7 +134,7 @@ class DeathToastTest {
     }
 
     @Test
-    fun `X1 - tap for details text shown`() {
+    fun test_x1_tap_for_details_text_shown() {
         composeTestRule.setContent {
             DeathToast(
                 notice = createTestNotice(),
@@ -157,7 +155,7 @@ class DeathToastTest {
     // =========================================================================
 
     @Test
-    fun `X2 - auto dismisses at 5000ms`() {
+    fun test_x2_auto_dismisses_at_5000ms() {
         var dismissed = false
 
         composeTestRule.setContent {
@@ -181,7 +179,7 @@ class DeathToastTest {
     }
 
     @Test
-    fun `X2 - does not dismiss before 4750ms`() {
+    fun test_x2_does_not_dismiss_before_4750ms() {
         var dismissed = false
 
         composeTestRule.setContent {
@@ -201,7 +199,7 @@ class DeathToastTest {
     }
 
     @Test
-    fun `X2 - dismisses by 5250ms`() {
+    fun test_x2_dismisses_by_5250ms() {
         var dismissed = false
 
         composeTestRule.setContent {
@@ -221,7 +219,7 @@ class DeathToastTest {
     }
 
     @Test
-    fun `X2 - disappears without interaction`() {
+    fun test_x2_disappears_without_interaction() {
         var dismissed = false
 
         composeTestRule.setContent {
@@ -246,7 +244,7 @@ class DeathToastTest {
     // =========================================================================
 
     @Test
-    fun `X3 - tap calls onTap callback`() {
+    fun test_x3_tap_calls_ontap_callback() {
         var recapOpened = false
 
         composeTestRule.setContent {
@@ -267,7 +265,7 @@ class DeathToastTest {
     }
 
     @Test
-    fun `X3 - tap triggers only onTap not onDismiss`() {
+    fun test_x3_tap_triggers_only_ontap_not_ondismiss() {
         var tapCalled = false
         var dismissCalled = false
 
@@ -294,7 +292,7 @@ class DeathToastTest {
     // =========================================================================
 
     @Test
-    fun `not displayed when visible is false`() {
+    fun test_not_displayed_when_visible_is_false() {
         composeTestRule.setContent {
             DeathToast(
                 notice = createTestNotice(),
@@ -311,7 +309,7 @@ class DeathToastTest {
     }
 
     @Test
-    fun `visibility state controls display`() {
+    fun test_visibility_state_controls_display() {
         var visible by mutableStateOf(true)
 
         composeTestRule.setContent {
@@ -341,7 +339,7 @@ class DeathToastTest {
     // =========================================================================
 
     @Test
-    fun `uses slide animation for enter`() {
+    fun test_uses_slide_animation_for_enter() {
         composeTestRule.setContent {
             DeathToast(
                 notice = createTestNotice(),
@@ -363,7 +361,7 @@ class DeathToastTest {
     // =========================================================================
 
     @Test
-    fun `timeout does not fire onDismiss after tap`() {
+    fun test_timeout_does_not_fire_ondismiss_after_tap() {
         // This tests the double overlay contention fix:
         // If user taps toast (transitioning to Recap), the timeout should NOT
         // call onDismiss, which would clear the Recap state.
@@ -399,17 +397,17 @@ class DeathToastTest {
     // =========================================================================
 
     @Test
-    fun `TOAST_APPEAR_MS matches spec`() {
+    fun test_toast_appear_ms_matches_spec() {
         assertEquals("TOAST_APPEAR_MS should be 500", 500L, TOAST_APPEAR_MS)
     }
 
     @Test
-    fun `TOAST_DURATION_MS matches spec`() {
+    fun test_toast_duration_ms_matches_spec() {
         assertEquals("TOAST_DURATION_MS should be 5000", 5000L, TOAST_DURATION_MS)
     }
 
     @Test
-    fun `TOAST_DURATION_TOLERANCE_MS matches spec`() {
+    fun test_toast_duration_tolerance_ms_matches_spec() {
         assertEquals("TOAST_DURATION_TOLERANCE_MS should be 250", 250L, TOAST_DURATION_TOLERANCE_MS)
     }
 

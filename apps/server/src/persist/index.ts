@@ -31,6 +31,7 @@ import type {
   ModerationReportRow,
   PropertyRow,
   AuctionRow,
+  WorldEventRow,
 } from './types.js';
 export type { DeathRow, ModerationReportRow } from './types.js';
 import { initSchema } from './schema.js';
@@ -198,6 +199,15 @@ export function createPersistenceLayer(
 
     getOpenAuctions(): AuctionRow[] {
       return queries.getOpenAuctions(db);
+    },
+
+    // World event queries (World Events v0)
+    getWorldEvent(eventId: string): WorldEventRow | null {
+      return queries.getWorldEvent(db, eventId);
+    },
+
+    getWorldEvents(): WorldEventRow[] {
+      return queries.getWorldEvents(db);
     },
 
     // Chronicle queries (Phase 4)

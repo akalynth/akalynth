@@ -27,6 +27,10 @@ apps/server/data/
 # Draft/proposal folders
 __*/
 
+# Imported source drops stay local unless a reviewed source-custody decision
+# promotes selected material elsewhere.
+drop/
+
 # OS files
 .DS_Store
 

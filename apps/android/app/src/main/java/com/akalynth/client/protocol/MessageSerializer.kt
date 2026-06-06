@@ -10,7 +10,7 @@ import kotlinx.serialization.json.put
 /**
  * Encodes outgoing [ClientMessage]s and decodes incoming [ServerMessage]s.
  *
- * Wire format follows `packages/shared/protocol.ts` (PROTOCOL_VERSION 1.1.0) exactly. Outgoing
+ * Wire format follows `packages/shared/protocol.ts` (PROTOCOL_VERSION 2.0.0) exactly. Outgoing
  * frames are built explicitly (per the existing client convention) rather than via polymorphic
  * kotlinx serialization, which keeps the `type` discriminator unambiguous and lets us omit absent
  * optional fields. Decoding dispatches on the `type` field; anything unknown or malformed becomes an
@@ -143,6 +143,22 @@ object MessageSerializer {
             is GetPropertyLedgerMessage -> obj("get_property_ledger") {
                 put("property_id", msg.propertyId)
             }
+
+            is OpenHouseAuctionMessage -> obj("open_house_auction") {
+                put("property_id", msg.propertyId)
+                put("min_bid", msg.minBid)
+                put("min_increment_gold", msg.minIncrementGold)
+                put("duration_s", msg.durationS)
+            }
+
+            is PlaceHouseBidMessage -> obj("place_house_bid") {
+                put("property_id", msg.propertyId)
+                put("amount", msg.amount)
+            }
+
+            is CancelHouseAuctionMessage -> obj("cancel_house_auction") {
+                put("property_id", msg.propertyId)
+            }
         }
         return json.encodeToString(JsonObject.serializer(), obj)
     }
@@ -194,6 +210,8 @@ object MessageSerializer {
                 "house_sold" -> json.decodeFromString<HouseSoldMessage>(raw)
                 "property_result" -> json.decodeFromString<PropertyResultMessage>(raw)
                 "property_ledger" -> json.decodeFromString<PropertyLedgerMessage>(raw)
+                "property_auction_state" -> json.decodeFromString<PropertyAuctionStateMessage>(raw)
+                "house_auction_settled" -> json.decodeFromString<HouseAuctionSettledMessage>(raw)
                 else -> UnknownMessage(raw, type)
             }
         } catch (e: Exception) {

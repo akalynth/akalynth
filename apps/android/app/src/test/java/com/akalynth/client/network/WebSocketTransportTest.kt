@@ -1,6 +1,7 @@
 package com.akalynth.client.network
 
 import com.akalynth.client.actions.ActionIntent
+import com.akalynth.client.actions.WorldEventSkillIds
 import com.akalynth.client.ui.components.character.CharacterSex
 import com.akalynth.client.ui.components.hotbar.ItemRarity
 import kotlinx.coroutines.test.runTest
@@ -157,6 +158,27 @@ class WebSocketTransportTest {
         val payload = sent["payload"]?.jsonObject
         assertEquals("TestHero", payload?.get("name")?.jsonPrimitive?.content)
         assertEquals("female", payload?.get("sex")?.jsonPrimitive?.content)
+    }
+
+    @Test
+    fun `world event contribution serializes as use skill intent`() = runTest {
+        connection.connect()
+        val intent = ActionIntent.WorldEventContribution(
+            actionId = "test-action-007",
+            eventId = WorldEventSkillIds.WITNESS_MOTH_BLOOM,
+            contributionId = WorldEventSkillIds.CRAFT_LANTERN_FRAME
+        )
+
+        transport.send(intent)
+
+        val sent = json.parseToJsonElement(connection.lastSent!!).jsonObject
+        assertEquals("use_skill", sent["type"]?.jsonPrimitive?.content)
+        assertEquals("test-action-007", sent["action_id"]?.jsonPrimitive?.content)
+        assertEquals(
+            "event:witness_moth_bloom:craft_lantern_frame",
+            sent["skill_id"]?.jsonPrimitive?.content
+        )
+        assertNull(sent["payload"])
     }
 
     // =========================================================================

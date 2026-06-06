@@ -7,7 +7,7 @@ import type Database from 'better-sqlite3';
 // Schema Version
 // ============================================================================
 
-export const SCHEMA_VERSION = 16;
+export const SCHEMA_VERSION = 17;
 
 // ============================================================================
 // DDL Statements
@@ -214,6 +214,25 @@ CREATE TABLE IF NOT EXISTS npc_talk_events (
   receipt_hash  TEXT NOT NULL UNIQUE
 );
 CREATE INDEX IF NOT EXISTS idx_npc_talk_player_npc_tier ON npc_talk_events(player_id, npc_id, tier);
+`;
+
+// World Events v0: durable projection of server-authoritative event state.
+// Receipts remain canonical; this table lets runtime hydrate active/resolved
+// event state after restart without trusting client claims.
+const DDL_WORLD_EVENTS = `
+CREATE TABLE IF NOT EXISTS world_events (
+  event_id           TEXT PRIMARY KEY,
+  map                TEXT NOT NULL,
+  phase              TEXT NOT NULL,
+  started_by         TEXT DEFAULT NULL,
+  started_at         TEXT DEFAULT NULL,
+  resolved_by        TEXT DEFAULT NULL,
+  resolved_at        TEXT DEFAULT NULL,
+  outcome            TEXT DEFAULT NULL,
+  contributions_json TEXT NOT NULL DEFAULT '{}',
+  last_receipt       TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_world_events_map_phase ON world_events(map, phase);
 `;
 
 // Property Registry v0: durable house ownership projection.
@@ -473,6 +492,9 @@ function runMigration(db: Database.Database, version: number): void {
     case 16:
       migrateToV16(db);
       break;
+    case 17:
+      migrateToV17(db);
+      break;
     default:
       throw new Error(`Unknown schema version: ${version}`);
   }
@@ -712,12 +734,24 @@ function migrateToV16(db: Database.Database): void {
   insertMeta.run('schema_version', '16');
 }
 
+function migrateToV17(db: Database.Database): void {
+  // World Events v0: durable projection/hydration support. Additive — no
+  // existing tables or receipt rows are modified.
+  db.exec(DDL_WORLD_EVENTS);
+
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', '17');
+}
+
 // ============================================================================
 // Schema Utilities
 // ============================================================================
 
 export function resetSchema(db: Database.Database): void {
   // Drop all tables and recreate (for testing/recovery)
+  db.exec('DROP TABLE IF EXISTS world_events');
   db.exec('DROP TABLE IF EXISTS account_characters');
   db.exec('DROP TABLE IF EXISTS account_password_resets');
   db.exec('DROP TABLE IF EXISTS account_sessions');
@@ -744,7 +778,7 @@ export function resetSchema(db: Database.Database): void {
 export function getTableCounts(
   db: Database.Database
 ): Record<string, number> {
-  const tables = ['players', 'reputation_events', 'deaths', 'world_objects', 'items', 'inventory_items', 'legendary_heat', 'player_heat', 'player_anticheat_enforcement', 'chronicle_events', 'moderation_reports', 'npc_talk_events', 'properties'];
+  const tables = ['players', 'reputation_events', 'deaths', 'world_objects', 'items', 'inventory_items', 'legendary_heat', 'player_heat', 'player_anticheat_enforcement', 'chronicle_events', 'moderation_reports', 'npc_talk_events', 'world_events', 'properties'];
   const counts: Record<string, number> = {};
 
   for (const table of tables) {

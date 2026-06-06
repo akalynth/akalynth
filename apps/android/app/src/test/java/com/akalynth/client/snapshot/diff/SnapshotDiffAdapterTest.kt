@@ -125,8 +125,9 @@ class SnapshotDiffAdapterTest {
 
         val diff = SnapshotDiffAdapter.diff(prev, curr)
 
-        assertEquals(1, diff.modified.size)
-        val entry = diff.modified.first()
+        val inventoryModified = diff.modified.filter { it.category == DiffCategory.INVENTORY }
+        assertEquals(1, inventoryModified.size)
+        val entry = inventoryModified.first()
         assertEquals("potion_1", entry.key)
         assertEquals(5, entry.prevValue)
         assertEquals(3, entry.currValue)

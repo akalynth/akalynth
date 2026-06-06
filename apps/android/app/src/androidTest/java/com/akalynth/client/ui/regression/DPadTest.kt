@@ -3,7 +3,6 @@ package com.akalynth.client.ui.regression
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.assertExists
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.unit.dp
 import com.akalynth.client.protocol.Direction
@@ -33,7 +32,7 @@ class DPadTest {
     // =========================================================================
 
     @Test
-    fun `M1 - all eight directions map correctly`() {
+    fun test_m1_all_eight_directions_map_correctly() {
         val directions = mutableListOf<Direction>()
 
         composeTestRule.setContent {
@@ -72,7 +71,7 @@ class DPadTest {
     }
 
     @Test
-    fun `M1 - north direction maps correctly`() {
+    fun test_m1_north_direction_maps_correctly() {
         var receivedDirection: Direction? = null
 
         composeTestRule.setContent {
@@ -93,7 +92,7 @@ class DPadTest {
     }
 
     @Test
-    fun `M1 - northeast diagonal maps correctly`() {
+    fun test_m1_northeast_diagonal_maps_correctly() {
         var receivedDirection: Direction? = null
 
         composeTestRule.setContent {
@@ -114,7 +113,7 @@ class DPadTest {
     }
 
     @Test
-    fun `M1 - holding direction maintains movement`() {
+    fun test_m1_holding_direction_maintains_movement() {
         var startCalled = false
         var endCalled = false
 
@@ -138,7 +137,7 @@ class DPadTest {
     }
 
     @Test
-    fun `M1 - press emits exactly once`() {
+    fun test_m1_press_emits_exactly_once() {
         var pressCount = 0
 
         composeTestRule.setContent {
@@ -164,7 +163,7 @@ class DPadTest {
     // =========================================================================
 
     @Test
-    fun `M2 - releasing stops movement`() {
+    fun test_m2_releasing_stops_movement() {
         var endCalled = false
 
         composeTestRule.setContent {
@@ -185,7 +184,7 @@ class DPadTest {
     }
 
     @Test
-    fun `M2 - no stuck movement after release`() {
+    fun test_m2_no_stuck_movement_after_release() {
         var startCount = 0
         var endCount = 0
 
@@ -209,7 +208,7 @@ class DPadTest {
     }
 
     @Test
-    fun `M2 - drag off button triggers release`() {
+    fun test_m2_drag_off_button_triggers_release() {
         var endCalled = false
 
         composeTestRule.setContent {
@@ -233,7 +232,7 @@ class DPadTest {
     }
 
     @Test
-    fun `M2 - release emits exactly once`() {
+    fun test_m2_release_emits_exactly_once() {
         var releaseCount = 0
 
         composeTestRule.setContent {
@@ -259,7 +258,7 @@ class DPadTest {
     // =========================================================================
 
     @Test
-    fun `M3 - all buttons have minimum 44dp hitbox`() {
+    fun test_m3_all_buttons_have_minimum_44dp_hitbox() {
         composeTestRule.setContent {
             DPad(
                 onDirection = {},
@@ -295,7 +294,7 @@ class DPadTest {
     }
 
     @Test
-    fun `M3 - center spacer does not capture input`() {
+    fun test_m3_center_spacer_does_not_capture_input() {
         var anyDirectionCalled = false
 
         composeTestRule.setContent {
@@ -320,7 +319,7 @@ class DPadTest {
     }
 
     @Test
-    fun `M3 - center is a plain Spacer`() {
+    fun test_m3_center_is_a_plain_spacer() {
         composeTestRule.setContent {
             DPad(
                 onDirection = {},
@@ -337,7 +336,7 @@ class DPadTest {
     // =========================================================================
 
     @Test
-    fun `south direction maps correctly`() {
+    fun test_south_direction_maps_correctly() {
         var receivedDirection: Direction? = null
 
         composeTestRule.setContent {
@@ -356,7 +355,7 @@ class DPadTest {
     }
 
     @Test
-    fun `east direction maps correctly`() {
+    fun test_east_direction_maps_correctly() {
         var receivedDirection: Direction? = null
 
         composeTestRule.setContent {
@@ -375,7 +374,7 @@ class DPadTest {
     }
 
     @Test
-    fun `west direction maps correctly`() {
+    fun test_west_direction_maps_correctly() {
         var receivedDirection: Direction? = null
 
         composeTestRule.setContent {
@@ -394,7 +393,7 @@ class DPadTest {
     }
 
     @Test
-    fun `southeast direction maps correctly`() {
+    fun test_southeast_direction_maps_correctly() {
         var receivedDirection: Direction? = null
 
         composeTestRule.setContent {
@@ -413,7 +412,7 @@ class DPadTest {
     }
 
     @Test
-    fun `southwest direction maps correctly`() {
+    fun test_southwest_direction_maps_correctly() {
         var receivedDirection: Direction? = null
 
         composeTestRule.setContent {
@@ -432,7 +431,7 @@ class DPadTest {
     }
 
     @Test
-    fun `northwest direction maps correctly`() {
+    fun test_northwest_direction_maps_correctly() {
         var receivedDirection: Direction? = null
 
         composeTestRule.setContent {
@@ -455,7 +454,7 @@ class DPadTest {
     // =========================================================================
 
     @Test
-    fun `MIN_HITBOX_DP matches spec`() {
+    fun test_min_hitbox_dp_matches_spec() {
         assertEquals("MIN_HITBOX_DP should be 44dp", 44.dp, MIN_HITBOX_DP)
     }
 }

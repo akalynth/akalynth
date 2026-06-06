@@ -3,8 +3,10 @@ package com.akalynth.client.store
 import com.akalynth.client.ui.state.ChronicleEventKind
 import com.akalynth.client.ui.state.EventSource
 import com.akalynth.client.ui.state.EventStatus
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Before
@@ -20,6 +22,7 @@ import org.junit.Test
  * - R4: Parse receipt_reject messages
  * - R5: Emit parsed messages to flow
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class ReceiptStreamTest {
 
     private lateinit var stream: ReceiptStream
@@ -201,6 +204,38 @@ class ReceiptStreamTest {
         assertEquals(ChronicleEventKind.UNKNOWN, event.kind)
     }
 
+    @Test
+    fun `R1 - parse world event`() = runTest {
+        val json = """
+            {
+                "type": "chronicle_event",
+                "payload": {
+                    "id": "evt_world_event_123",
+                    "kind": "world_event",
+                    "timestamp": "2026-01-21T12:00:00Z",
+                    "zone": "Azura",
+                    "details": {
+                        "event_id": "witness_moth_bloom",
+                        "phase": "resolved",
+                        "contribution_id": "defend_scribes",
+                        "outcome": "controlled_release"
+                    }
+                }
+            }
+        """.trimIndent()
+
+        val message = stream.process(json)
+
+        assertTrue(message is ReceiptMessage.Event)
+        val event = (message as ReceiptMessage.Event).event
+        assertEquals(ChronicleEventKind.WORLD_EVENT, event.kind)
+        assertEquals("Azura", event.zone)
+        assertEquals("witness_moth_bloom", event.details.eventId)
+        assertEquals("resolved", event.details.phase)
+        assertEquals("defend_scribes", event.details.contributionId)
+        assertEquals("controlled_release", event.details.outcome)
+    }
+
     // =========================================================================
     // R2: Parse chronicle_snapshot messages
     // =========================================================================
@@ -374,16 +409,12 @@ class ReceiptStreamTest {
             }
         """.trimIndent()
 
-        var receivedMessage: ReceiptMessage? = null
-        val job = launch {
-            receivedMessage = stream.messages.first()
-        }
+        val receivedMessage = backgroundScope.async { stream.messages.first() }
+        runCurrent()
 
         stream.process(json)
-        job.join()
 
-        assertNotNull(receivedMessage)
-        assertTrue(receivedMessage is ReceiptMessage.Event)
+        assertTrue(receivedMessage.await() is ReceiptMessage.Event)
     }
 
     @Test

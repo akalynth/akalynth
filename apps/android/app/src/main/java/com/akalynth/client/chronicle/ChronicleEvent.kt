@@ -37,6 +37,7 @@ enum class ChronicleEventKind {
     COMBAT_KILL,
     TUTORIAL_COMPLETE,
     CHARACTER_CREATED,
+    WORLD_EVENT,
     UNKNOWN;
 
     /** Icon for display in chronicle feed */
@@ -48,6 +49,7 @@ enum class ChronicleEventKind {
         COMBAT_KILL -> "⚔"
         TUTORIAL_COMPLETE -> "🎓"
         CHARACTER_CREATED -> "✨"
+        WORLD_EVENT -> "✦"
         UNKNOWN -> "❓"
     }
 
@@ -121,6 +123,18 @@ data class ChronicleEvent(
 
     /** Zone enter: previous zone */
     val fromZone: String? get() = details["from_zone"] as? String
+
+    /** World event: event identifier */
+    val worldEventId: String? get() = details["event_id"] as? String
+
+    /** World event: current/event receipt phase */
+    val worldEventPhase: String? get() = details["phase"] as? String
+
+    /** World event: accepted contribution id */
+    val worldEventContributionId: String? get() = details["contribution_id"] as? String
+
+    /** World event: final outcome */
+    val worldEventOutcome: String? get() = details["outcome"] as? String
 
     companion object {
         /**

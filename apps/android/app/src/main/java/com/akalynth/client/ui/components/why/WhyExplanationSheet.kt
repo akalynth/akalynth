@@ -29,6 +29,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.akalynth.client.ui.components.displayOptionalZoneName
+import com.akalynth.client.ui.components.displayZoneName
 import com.akalynth.client.ui.state.ChronicleEvent
 import com.akalynth.client.ui.state.WhyContext
 
@@ -213,7 +215,7 @@ private fun ZoneContextSection(
                 color = Color.Gray
             )
             Text(
-                text = zone,
+                text = displayZoneName(zone),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color.White
@@ -313,12 +315,13 @@ private fun getEventTitle(event: ChronicleEvent): String {
             val killer = event.details.killerName ?: "the environment"
             "Died to $killer"
         }
-        com.akalynth.client.ui.state.ChronicleEventKind.ZONE_ENTER -> "Entered ${event.zone}"
+        com.akalynth.client.ui.state.ChronicleEventKind.ZONE_ENTER -> "Entered ${displayZoneName(event.zone)}"
         com.akalynth.client.ui.state.ChronicleEventKind.ITEM_PICKUP -> "Picked up ${event.details.itemName ?: "an item"}"
         com.akalynth.client.ui.state.ChronicleEventKind.ITEM_DROP -> "Dropped ${event.details.itemName ?: "an item"}"
         com.akalynth.client.ui.state.ChronicleEventKind.COMBAT_KILL -> "Defeated ${event.details.victimName ?: "an enemy"}"
         com.akalynth.client.ui.state.ChronicleEventKind.TUTORIAL_COMPLETE -> "Completed tutorial"
         com.akalynth.client.ui.state.ChronicleEventKind.CHARACTER_CREATED -> "Character created"
+        com.akalynth.client.ui.state.ChronicleEventKind.WORLD_EVENT -> "World event recorded"
         com.akalynth.client.ui.state.ChronicleEventKind.UNKNOWN -> "Unknown event"
     }
 }
@@ -333,13 +336,18 @@ private fun getEventExplanation(event: ChronicleEvent): String {
             if (itemCount > 0) "Lost $itemCount item(s) on death" else "No items lost"
         }
         com.akalynth.client.ui.state.ChronicleEventKind.ZONE_ENTER -> {
-            event.details.fromZone?.let { "Came from $it" } ?: "Entered a new area"
+            displayOptionalZoneName(event.details.fromZone)?.let { "Came from $it" } ?: "Entered a new area"
         }
         com.akalynth.client.ui.state.ChronicleEventKind.ITEM_PICKUP -> "Added to inventory"
         com.akalynth.client.ui.state.ChronicleEventKind.ITEM_DROP -> "Removed from inventory"
         com.akalynth.client.ui.state.ChronicleEventKind.COMBAT_KILL -> "Victory in combat"
         com.akalynth.client.ui.state.ChronicleEventKind.TUTORIAL_COMPLETE -> "Ready for the real game"
         com.akalynth.client.ui.state.ChronicleEventKind.CHARACTER_CREATED -> "Your journey begins"
+        com.akalynth.client.ui.state.ChronicleEventKind.WORLD_EVENT -> {
+            event.details.outcome?.let { "Outcome: ${it.replace("_", " ")}" }
+                ?: event.details.contributionId?.let { "Contribution: ${it.replace("_", " ")}" }
+                ?: "The server recorded this world event step"
+        }
         com.akalynth.client.ui.state.ChronicleEventKind.UNKNOWN -> "Something happened"
     }
 }
@@ -352,7 +360,7 @@ private fun getTopicHelp(topic: String): String {
         "death" -> "When you die, you may lose some items. Rare items are less likely to drop. Check your Chronicle for details."
         "combat" -> "Combat is turn-based. Higher level players deal more damage. Use potions to heal during battle."
         "inventory" -> "Long-press items in your hotbar to drop them. Legendary items require a slide to confirm."
-        "zones" -> "Different zones have different dangers. Rookguard is safe for beginners. Azura is more challenging."
+        "zones" -> "Different zones have different dangers. Rookguard is safe for beginners. High City is more challenging."
         else -> "Check your Chronicle for a history of events. Tap death events for detailed explanations."
     }
 }

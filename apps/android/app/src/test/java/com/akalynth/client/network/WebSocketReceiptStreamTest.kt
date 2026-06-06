@@ -1,7 +1,11 @@
 package com.akalynth.client.network
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Before
@@ -10,6 +14,7 @@ import org.junit.Test
 /**
  * Tests for WebSocketReceiptStream parsing.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class WebSocketReceiptStreamTest {
 
     private lateinit var connection: FakeWebSocketConnection
@@ -21,6 +26,9 @@ class WebSocketReceiptStreamTest {
         stream = WebSocketReceiptStream(connection)
     }
 
+    private fun TestScope.captureNextReceipt() =
+        backgroundScope.async { stream.receipts().first() }.also { runCurrent() }
+
     // =========================================================================
     // chronicle_event parsing
     // =========================================================================
@@ -29,14 +37,7 @@ class WebSocketReceiptStreamTest {
     fun `parses death event`() = runTest {
         connection.connect()
 
-        val job = launch {
-            val receipt = stream.receipts().first()
-            assertEquals("evt_death_123", receipt.receiptId)
-            assertEquals("death", receipt.type)
-            assertEquals("Rookguard", receipt.payload["zone"])
-            assertEquals(10, receipt.payload["x"])
-            assertEquals(20, receipt.payload["y"])
-        }
+        val receipt = captureNextReceipt()
 
         connection.receiveFromServer("""
             {
@@ -52,17 +53,19 @@ class WebSocketReceiptStreamTest {
             }
         """.trimIndent())
 
-        job.join()
+        val actual = receipt.await()
+        assertEquals("evt_death_123", actual.receiptId)
+        assertEquals("death", actual.type)
+        assertEquals("Rookguard", actual.payload["zone"])
+        assertEquals(10, actual.payload["x"])
+        assertEquals(20, actual.payload["y"])
     }
 
     @Test
     fun `parses event with actionId`() = runTest {
         connection.connect()
 
-        val job = launch {
-            val receipt = stream.receipts().first()
-            assertEquals("action_client_456", receipt.actionId)
-        }
+        val receipt = captureNextReceipt()
 
         connection.receiveFromServer("""
             {
@@ -79,17 +82,14 @@ class WebSocketReceiptStreamTest {
             }
         """.trimIndent())
 
-        job.join()
+        assertEquals("action_client_456", receipt.await().actionId)
     }
 
     @Test
     fun `parses event without actionId`() = runTest {
         connection.connect()
 
-        val job = launch {
-            val receipt = stream.receipts().first()
-            assertNull(receipt.actionId)
-        }
+        val receipt = captureNextReceipt()
 
         connection.receiveFromServer("""
             {
@@ -105,17 +105,14 @@ class WebSocketReceiptStreamTest {
             }
         """.trimIndent())
 
-        job.join()
+        assertNull(receipt.await().actionId)
     }
 
     @Test
     fun `parses timestamp_ms field`() = runTest {
         connection.connect()
 
-        val job = launch {
-            val receipt = stream.receipts().first()
-            assertEquals(1705838400000L, receipt.timestampMs)
-        }
+        val receipt = captureNextReceipt()
 
         connection.receiveFromServer("""
             {
@@ -128,18 +125,14 @@ class WebSocketReceiptStreamTest {
             }
         """.trimIndent())
 
-        job.join()
+        assertEquals(1705838400000L, receipt.await().timestampMs)
     }
 
     @Test
     fun `parses ISO timestamp string`() = runTest {
         connection.connect()
 
-        val job = launch {
-            val receipt = stream.receipts().first()
-            // 2026-01-21T12:00:00Z = 1769083200000
-            assertTrue(receipt.timestampMs > 0)
-        }
+        val receipt = captureNextReceipt()
 
         connection.receiveFromServer("""
             {
@@ -152,7 +145,8 @@ class WebSocketReceiptStreamTest {
             }
         """.trimIndent())
 
-        job.join()
+        // 2026-01-21T12:00:00Z = 1769083200000
+        assertTrue(receipt.await().timestampMs > 0)
     }
 
     // =========================================================================
@@ -240,9 +234,10 @@ class WebSocketReceiptStreamTest {
         connection.connect()
 
         var receiptCount = 0
-        val job = launch {
+        val job = backgroundScope.launch {
             stream.receipts().collect { receiptCount++ }
         }
+        runCurrent()
 
         connection.receiveFromServer("""
             {
@@ -254,8 +249,7 @@ class WebSocketReceiptStreamTest {
             }
         """.trimIndent())
 
-        // Give time for any emission
-        kotlinx.coroutines.delay(100)
+        runCurrent()
 
         assertEquals(0, receiptCount)
         job.cancel()
@@ -266,9 +260,10 @@ class WebSocketReceiptStreamTest {
         connection.connect()
 
         var receiptCount = 0
-        val job = launch {
+        val job = backgroundScope.launch {
             stream.receipts().collect { receiptCount++ }
         }
+        runCurrent()
 
         connection.receiveFromServer("""
             {
@@ -277,7 +272,7 @@ class WebSocketReceiptStreamTest {
             }
         """.trimIndent())
 
-        kotlinx.coroutines.delay(100)
+        runCurrent()
 
         assertEquals(0, receiptCount)
         job.cancel()
@@ -288,13 +283,14 @@ class WebSocketReceiptStreamTest {
         connection.connect()
 
         var receiptCount = 0
-        val job = launch {
+        val job = backgroundScope.launch {
             stream.receipts().collect { receiptCount++ }
         }
+        runCurrent()
 
         connection.receiveFromServer("not valid json")
 
-        kotlinx.coroutines.delay(100)
+        runCurrent()
 
         assertEquals(0, receiptCount)
         job.cancel()

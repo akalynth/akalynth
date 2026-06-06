@@ -129,6 +129,8 @@ class GameStore(
             is HouseSoldMessage -> "${msg.plotId} -> ${msg.buyerName}"
             is PropertyResultMessage -> "${msg.action} ok=${msg.success}"
             is PropertyLedgerMessage -> "${msg.propertyId}: ${msg.ownerHistory.size} entries"
+            is PropertyAuctionStateMessage -> "${msg.propertyId} next=${msg.minNext}"
+            is HouseAuctionSettledMessage -> "${msg.plotId} price=${msg.price}"
             is UnknownMessage -> (msg.type?.let { "$it " } ?: "") + msg.raw.take(50)
         }
         val entry = DebugLogEntry(
@@ -182,6 +184,7 @@ class GameStore(
             is GameEvent.SendChat -> sendChat(event.message)
             is GameEvent.ToggleChat -> toggleChat()
             is GameEvent.Attack -> sendAttack(event.targetId)
+            is GameEvent.WorldEventContribution -> sendWorldEventContribution(event.contributionId)
             is GameEvent.AnswerTemChallenge -> sendTemResponse(event.response)
             is GameEvent.AnswerWitness -> sendWitnessResponse(event.requestId, event.response)
             is GameEvent.DismissError -> clearError()
@@ -304,6 +307,8 @@ class GameStore(
             is HouseSoldMessage -> {}
             is PropertyResultMessage -> {}
             is PropertyLedgerMessage -> {}
+            is PropertyAuctionStateMessage -> {}
+            is HouseAuctionSettledMessage -> {}
             is UnknownMessage -> {} // Ignore unknown
         }
     }
@@ -546,6 +551,12 @@ class GameStore(
     private fun sendAttack(targetId: String) {
         wsClient.send(AttackIntentMessage(targetId))
         logSent("attack_intent", targetId)
+    }
+
+    private fun sendWorldEventContribution(contributionId: String) {
+        val skillId = "event:witness_moth_bloom:$contributionId"
+        wsClient.send(UseSkillMessage(skillId = skillId))
+        logSent("use_skill", skillId)
     }
 
     private fun sendTemResponse(response: String) {

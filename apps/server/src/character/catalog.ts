@@ -12,8 +12,12 @@ export interface WorldOption {
 
 export const WORLDS: WorldOption[] = [
   { world_id: 'rookguard', name: 'Rookguard', description: 'The threshold keep where every journey begins.' },
-  { world_id: 'azura', name: 'Azura', description: 'The city of plazas, halls, and landmarks beyond the gate.' },
+  { world_id: 'high_city', name: 'High City', description: 'The city of plazas, halls, and landmarks beyond the gate.' },
 ];
+
+const LEGACY_WORLD_ID_ALIASES: Record<string, string> = {
+  azura: 'high_city',
+};
 
 export interface OutfitOption {
   outfit_id: string;
@@ -38,8 +42,12 @@ export const SEXES: CharacterSex[] = ['male', 'female'];
 export function isSex(v: unknown): v is CharacterSex {
   return v === 'male' || v === 'female';
 }
+export function normalizeWorldId(id: string): string {
+  return LEGACY_WORLD_ID_ALIASES[id] ?? id;
+}
 export function worldById(id: string): WorldOption | undefined {
-  return WORLDS.find((w) => w.world_id === id);
+  const normalized = normalizeWorldId(id);
+  return WORLDS.find((w) => w.world_id === normalized);
 }
 export function outfitById(id: string): OutfitOption | undefined {
   return OUTFITS.find((o) => o.outfit_id === id);

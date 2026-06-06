@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.akalynth.client.ui.components.displayZoneName
 import com.akalynth.client.ui.state.ChronicleEvent
 import com.akalynth.client.ui.state.ChronicleEventKind
 
@@ -133,7 +134,7 @@ fun DeathRecapSheet(
         // Location info
         DetailRow(
             label = "Location:",
-            value = "${event.zone} (${event.x}, ${event.y})",
+            value = "${displayZoneName(event.zone)} (${event.x}, ${event.y})",
             testTag = "DeathRecapSheet_Location"
         )
 

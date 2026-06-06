@@ -2,7 +2,7 @@
 //
 // Display-only flavor. This data is never sent to the server and changes no
 // mechanic — it mirrors the world docs (docs/WORLD_ROOKGUARD.md,
-// docs/WORLD_AZURA.md) and accurately describes existing server behavior.
+// docs/WORLD_HIGH_CITY.md) and accurately describes existing server behavior.
 
 import { TileCode } from '@shared/types';
 
@@ -52,7 +52,11 @@ export const SPAWN_LORE: Record<string, LoreEntry> = {
   },
   Azura: {
     title: 'Spawn',
-    body: 'The center of the city, where new arrivals appear after clearing Rookguard.',
+    body: 'The center of High City, where new arrivals appear after clearing Rookguard.',
+  },
+  HighCity: {
+    title: 'Spawn',
+    body: 'The center of High City, where new arrivals appear after clearing Rookguard.',
   },
 };
 
@@ -94,7 +98,7 @@ export const TILE_LORE: Partial<Record<TileCode, LoreEntry>> = {
     body: 'A friendly Tem challenge. Pass it to continue.',
   },
   [TileCode.GateToAzura]: {
-    title: 'Gate to Azura',
-    body: 'Opens once the tutorial checklist is complete. Step through to enter Azura.',
+    title: 'Gate to High City',
+    body: 'Opens once the tutorial checklist is complete. Step through to enter High City.',
   },
 };

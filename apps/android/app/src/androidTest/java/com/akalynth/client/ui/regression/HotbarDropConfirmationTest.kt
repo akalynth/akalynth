@@ -15,8 +15,7 @@ import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
+import androidx.test.ext.junit.runners.AndroidJUnit4
 
 /**
  * Regression tests for hotbar drop confirmation wiring.
@@ -30,8 +29,7 @@ import org.robolectric.annotation.Config
  * - D6: Overlay prevents interaction with underlying UI
  * - D7: Item name and rarity displayed clearly
  */
-@RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
+@RunWith(AndroidJUnit4::class)
 class HotbarDropConfirmationTest {
 
     @get:Rule
@@ -42,7 +40,7 @@ class HotbarDropConfirmationTest {
     // =========================================================================
 
     @Test
-    fun `D1 - overlay displays with scrim`() {
+    fun test_d1_overlay_displays_with_scrim() {
         composeTestRule.setContent {
             DropConfirmationOverlay(
                 slotIndex = 0,
@@ -61,7 +59,7 @@ class HotbarDropConfirmationTest {
     }
 
     @Test
-    fun `D1 - overlay shows warning icon`() {
+    fun test_d1_overlay_shows_warning_icon() {
         composeTestRule.setContent {
             DropConfirmationOverlay(
                 slotIndex = 0,
@@ -79,7 +77,7 @@ class HotbarDropConfirmationTest {
     }
 
     @Test
-    fun `D1 - overlay shows title`() {
+    fun test_d1_overlay_shows_title() {
         composeTestRule.setContent {
             DropConfirmationOverlay(
                 slotIndex = 0,
@@ -101,7 +99,7 @@ class HotbarDropConfirmationTest {
     // =========================================================================
 
     @Test
-    fun `D2 - normal item shows Tier2 hold button`() {
+    fun test_d2_normal_item_shows_tier2_hold_button() {
         composeTestRule.setContent {
             DropConfirmationOverlay(
                 slotIndex = 0,
@@ -119,7 +117,7 @@ class HotbarDropConfirmationTest {
     }
 
     @Test
-    fun `D2 - normal item does not show Tier3`() {
+    fun test_d2_normal_item_does_not_show_tier3() {
         composeTestRule.setContent {
             DropConfirmationOverlay(
                 slotIndex = 0,
@@ -141,7 +139,7 @@ class HotbarDropConfirmationTest {
     // =========================================================================
 
     @Test
-    fun `D3 - legendary item shows Tier3 slide confirm`() {
+    fun test_d3_legendary_item_shows_tier3_slide_confirm() {
         composeTestRule.setContent {
             DropConfirmationOverlay(
                 slotIndex = 0,
@@ -159,7 +157,7 @@ class HotbarDropConfirmationTest {
     }
 
     @Test
-    fun `D3 - legendary item does not show Tier2`() {
+    fun test_d3_legendary_item_does_not_show_tier2() {
         composeTestRule.setContent {
             DropConfirmationOverlay(
                 slotIndex = 0,
@@ -177,7 +175,7 @@ class HotbarDropConfirmationTest {
     }
 
     @Test
-    fun `D3 - legendary item shows legendary badge`() {
+    fun test_d3_legendary_item_shows_legendary_badge() {
         composeTestRule.setContent {
             DropConfirmationOverlay(
                 slotIndex = 0,
@@ -200,7 +198,7 @@ class HotbarDropConfirmationTest {
     // =========================================================================
 
     @Test
-    fun `D4 - Tier2 confirm triggers callback with correct params`() {
+    fun test_d4_tier2_confirm_triggers_callback_with_correct_params() {
         var confirmedSlot: Int? = null
         var confirmedItemId: String? = null
 
@@ -238,7 +236,7 @@ class HotbarDropConfirmationTest {
     }
 
     @Test
-    fun `D4 - Tier3 confirm triggers callback with correct params`() {
+    fun test_d4_tier3_confirm_triggers_callback_with_correct_params() {
         var confirmedSlot: Int? = null
         var confirmedItemId: String? = null
 
@@ -275,7 +273,7 @@ class HotbarDropConfirmationTest {
     // =========================================================================
 
     @Test
-    fun `D5 - cancel button fires onCancel`() {
+    fun test_d5_cancel_button_fires_oncancel() {
         var cancelCalled = false
 
         composeTestRule.setContent {
@@ -297,7 +295,7 @@ class HotbarDropConfirmationTest {
     }
 
     @Test
-    fun `D5 - scrim tap fires onCancel`() {
+    fun test_d5_scrim_tap_fires_oncancel() {
         var cancelCalled = false
 
         composeTestRule.setContent {
@@ -324,7 +322,7 @@ class HotbarDropConfirmationTest {
     // =========================================================================
 
     @Test
-    fun `D7 - displays item name`() {
+    fun test_d7_displays_item_name() {
         composeTestRule.setContent {
             DropConfirmationOverlay(
                 slotIndex = 0,
@@ -343,7 +341,7 @@ class HotbarDropConfirmationTest {
     }
 
     @Test
-    fun `D7 - normal item does not show legendary badge`() {
+    fun test_d7_normal_item_does_not_show_legendary_badge() {
         composeTestRule.setContent {
             DropConfirmationOverlay(
                 slotIndex = 0,
@@ -365,7 +363,7 @@ class HotbarDropConfirmationTest {
     // =========================================================================
 
     @Test
-    fun `ConfirmDrop state holds correct data`() {
+    fun test_confirmdrop_state_holds_correct_data() {
         val state = UiOverlayState.ConfirmDrop(
             slotIndex = 2,
             itemId = "item_123",
@@ -380,7 +378,7 @@ class HotbarDropConfirmationTest {
     }
 
     @Test
-    fun `ConfirmDrop is distinct overlay state`() {
+    fun test_confirmdrop_is_distinct_overlay_state() {
         val none = UiOverlayState.None
         val confirmDrop = UiOverlayState.ConfirmDrop(0, "id", "name", false)
 

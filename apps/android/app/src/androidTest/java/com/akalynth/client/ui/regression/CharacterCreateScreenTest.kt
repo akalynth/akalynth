@@ -17,8 +17,7 @@ import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
+import androidx.test.ext.junit.runners.AndroidJUnit4
 
 /**
  * Regression tests for character creation screen.
@@ -30,8 +29,7 @@ import org.robolectric.annotation.Config
  * - N3: Sprite preview swaps on sex change
  * - N4: Create button enabled only when valid
  */
-@RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
+@RunWith(AndroidJUnit4::class)
 class CharacterCreateScreenTest {
 
     @get:Rule
@@ -43,7 +41,7 @@ class CharacterCreateScreenTest {
     // =========================================================================
 
     @Test
-    fun `N1 - name input field is displayed`() {
+    fun test_n1_name_input_field_is_displayed() {
         composeTestRule.setContent {
             CharacterCreateScreen(onCreate = { _, _ -> })
         }
@@ -54,7 +52,7 @@ class CharacterCreateScreenTest {
     }
 
     @Test
-    fun `N1 - name input accepts text`() {
+    fun test_n1_name_input_accepts_text() {
         var capturedName: String? = null
         var capturedSex: CharacterSex? = null
 
@@ -81,7 +79,7 @@ class CharacterCreateScreenTest {
     }
 
     @Test
-    fun `N1 - name max length is 16 characters`() {
+    fun test_n1_name_max_length_is_16_characters() {
         composeTestRule.setContent {
             CharacterCreateScreen(onCreate = { _, _ -> })
         }
@@ -99,7 +97,7 @@ class CharacterCreateScreenTest {
     }
 
     @Test
-    fun `N1 - blank name keeps create button disabled`() {
+    fun test_n1_blank_name_keeps_create_button_disabled() {
         composeTestRule.setContent {
             CharacterCreateScreen(onCreate = { _, _ -> })
         }
@@ -115,7 +113,7 @@ class CharacterCreateScreenTest {
     }
 
     @Test
-    fun `N1 - empty name keeps create button disabled`() {
+    fun test_n1_empty_name_keeps_create_button_disabled() {
         composeTestRule.setContent {
             CharacterCreateScreen(onCreate = { _, _ -> })
         }
@@ -128,7 +126,7 @@ class CharacterCreateScreenTest {
     }
 
     @Test
-    fun `N1 - character count displays correctly`() {
+    fun test_n1_character_count_displays_correctly() {
         composeTestRule.setContent {
             CharacterCreateScreen(onCreate = { _, _ -> })
         }
@@ -148,7 +146,7 @@ class CharacterCreateScreenTest {
     }
 
     @Test
-    fun `N1 - name is trimmed on create`() {
+    fun test_n1_name_is_trimmed_on_create() {
         var capturedName: String? = null
 
         composeTestRule.setContent {
@@ -170,7 +168,7 @@ class CharacterCreateScreenTest {
     }
 
     @Test
-    fun `N1 - exactly 16 characters allowed`() {
+    fun test_n1_exactly_16_characters_allowed() {
         var capturedName: String? = null
 
         composeTestRule.setContent {
@@ -199,7 +197,7 @@ class CharacterCreateScreenTest {
     // =========================================================================
 
     @Test
-    fun `N2 - sex selector is displayed`() {
+    fun test_n2_sex_selector_is_displayed() {
         composeTestRule.setContent {
             CharacterCreateScreen(onCreate = { _, _ -> })
         }
@@ -212,7 +210,7 @@ class CharacterCreateScreenTest {
     }
 
     @Test
-    fun `N2 - male is default selection`() {
+    fun test_n2_male_is_default_selection() {
         var capturedSex: CharacterSex? = null
 
         composeTestRule.setContent {
@@ -234,7 +232,7 @@ class CharacterCreateScreenTest {
     }
 
     @Test
-    fun `N2 - can select female`() {
+    fun test_n2_can_select_female() {
         var capturedSex: CharacterSex? = null
 
         composeTestRule.setContent {
@@ -260,7 +258,7 @@ class CharacterCreateScreenTest {
     }
 
     @Test
-    fun `N2 - can toggle back to male after selecting female`() {
+    fun test_n2_can_toggle_back_to_male_after_selecting_female() {
         var capturedSex: CharacterSex? = null
 
         composeTestRule.setContent {
@@ -286,7 +284,7 @@ class CharacterCreateScreenTest {
     }
 
     @Test
-    fun `N2 - sex selection is mutually exclusive`() {
+    fun test_n2_sex_selection_is_mutually_exclusive() {
         var capturedSex: CharacterSex? = null
 
         composeTestRule.setContent {
@@ -316,7 +314,7 @@ class CharacterCreateScreenTest {
     // =========================================================================
 
     @Test
-    fun `N3 - sprite preview is displayed`() {
+    fun test_n3_sprite_preview_is_displayed() {
         composeTestRule.setContent {
             CharacterCreateScreen(onCreate = { _, _ -> })
         }
@@ -327,7 +325,7 @@ class CharacterCreateScreenTest {
     }
 
     @Test
-    fun `N3 - male sprite shown by default`() {
+    fun test_n3_male_sprite_shown_by_default() {
         composeTestRule.setContent {
             CharacterCreateScreen(onCreate = { _, _ -> })
         }
@@ -339,7 +337,7 @@ class CharacterCreateScreenTest {
     }
 
     @Test
-    fun `N3 - sprite swaps to female on selection`() {
+    fun test_n3_sprite_swaps_to_female_on_selection() {
         composeTestRule.setContent {
             CharacterCreateScreen(onCreate = { _, _ -> })
         }
@@ -359,7 +357,7 @@ class CharacterCreateScreenTest {
     }
 
     @Test
-    fun `N3 - sprite swaps back to male`() {
+    fun test_n3_sprite_swaps_back_to_male() {
         composeTestRule.setContent {
             CharacterCreateScreen(onCreate = { _, _ -> })
         }
@@ -381,7 +379,7 @@ class CharacterCreateScreenTest {
     // =========================================================================
 
     @Test
-    fun `N4 - create button disabled initially`() {
+    fun test_n4_create_button_disabled_initially() {
         composeTestRule.setContent {
             CharacterCreateScreen(onCreate = { _, _ -> })
         }
@@ -393,7 +391,7 @@ class CharacterCreateScreenTest {
     }
 
     @Test
-    fun `N4 - create button enabled with valid name`() {
+    fun test_n4_create_button_enabled_with_valid_name() {
         composeTestRule.setContent {
             CharacterCreateScreen(onCreate = { _, _ -> })
         }
@@ -408,7 +406,7 @@ class CharacterCreateScreenTest {
     }
 
     @Test
-    fun `N4 - create button disabled when name cleared`() {
+    fun test_n4_create_button_disabled_when_name_cleared() {
         composeTestRule.setContent {
             CharacterCreateScreen(onCreate = { _, _ -> })
         }
@@ -433,7 +431,7 @@ class CharacterCreateScreenTest {
     }
 
     @Test
-    fun `N4 - create emits correct name and sex`() {
+    fun test_n4_create_emits_correct_name_and_sex() {
         var capturedName: String? = null
         var capturedSex: CharacterSex? = null
         var callCount = 0
@@ -462,7 +460,7 @@ class CharacterCreateScreenTest {
     }
 
     @Test
-    fun `N4 - disabled create button does not emit`() {
+    fun test_n4_disabled_create_button_does_not_emit() {
         var callCount = 0
 
         composeTestRule.setContent {
@@ -481,7 +479,7 @@ class CharacterCreateScreenTest {
     }
 
     @Test
-    fun `N4 - callback fires exactly once per click`() {
+    fun test_n4_callback_fires_exactly_once_per_click() {
         var callCount = 0
 
         composeTestRule.setContent {
@@ -506,7 +504,7 @@ class CharacterCreateScreenTest {
     // =========================================================================
 
     @Test
-    fun `screen displays title`() {
+    fun test_screen_displays_title() {
         composeTestRule.setContent {
             CharacterCreateScreen(onCreate = { _, _ -> })
         }
@@ -521,7 +519,7 @@ class CharacterCreateScreenTest {
     }
 
     @Test
-    fun `screen has proper structure`() {
+    fun test_screen_has_proper_structure() {
         composeTestRule.setContent {
             CharacterCreateScreen(onCreate = { _, _ -> })
         }
@@ -538,7 +536,7 @@ class CharacterCreateScreenTest {
     }
 
     @Test
-    fun `create button has correct text`() {
+    fun test_create_button_has_correct_text() {
         composeTestRule.setContent {
             CharacterCreateScreen(onCreate = { _, _ -> })
         }
@@ -553,7 +551,7 @@ class CharacterCreateScreenTest {
     // =========================================================================
 
     @Test
-    fun `MAX_NAME_LENGTH matches spec`() {
+    fun test_max_name_length_matches_spec() {
         assertEquals("MAX_NAME_LENGTH should be 16", 16, MAX_NAME_LENGTH)
     }
 }

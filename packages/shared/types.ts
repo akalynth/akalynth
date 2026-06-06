@@ -147,10 +147,8 @@ export interface HousePlot extends Landmark {
   // Property Ownership v0: addressable district label + primary (treasury) sale price.
   district?: string;
   primary_price_gold?: number;
-  // RESERVED (Property Auction Lane, types-only): how an UNOWNED plot is
-  // allocated. Absent/`'fixed'` ⇒ current v0 fixed-price primary buy (no change).
-  // `'auction'` is reserved for the future auction lane and is NOT yet honored by
-  // any server behavior. See docs/PROTOCOL.md "Property auctions (reserved)".
+  // How an UNOWNED plot is allocated. Absent/`'fixed'` means fixed-price primary
+  // buy; `'auction'` is the future primary/system auction allocation mode.
   allocation_mode?: PropertyAllocationMode;
 }
 
@@ -253,7 +251,7 @@ export const CAPABILITY_GATED_ACTION = 'capability_gated';
 
 export type DeathReceiptAction = 'death' | 'respawn' | 'death_penalty_applied';
 
-export const TEM_CHALLENGE_RESPONSE = 'AZURA';
+export const TEM_CHALLENGE_RESPONSE = 'AKALYNTH';
 export const THROTTLE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 export const SIGNAL_DECAY_MS = 60 * 1000; // 60 seconds
 
@@ -406,9 +404,8 @@ export type WalletCreditReason =
   | 'work_contract'              // Faucet: earned through labor (future)
   | 'debug_grant'                // Debug-only: admin grant
   | `property_sale:${string}`    // Resale: seller credited (property_sale:<property_id>)
-  // RESERVED (Property Auction Lane): not emitted by runtime yet. Escrow is
-  // represented by receipt sequence + derived balance state, not a treasury
-  // escrow ledger.
+  // Auction lane: escrow is represented by receipt sequence + derived balance
+  // state, not a treasury escrow ledger.
   | `auction_refund:${string}`   // Outbid bidder made whole (auction_refund:<property_id>)
   | `auction_sale:${string}`;    // Resale auction: seller credited on settle (auction_sale:<property_id>)
 
@@ -418,8 +415,8 @@ export type WalletDebitReason =
   | `action_cost:${string}`         // Costed action: action_cost:<action_type>
   | `property_purchase:${string}`   // Primary sale sink (property_purchase:<property_id>)
   | `property_transfer:${string}`   // Resale buyer debit (property_transfer:<property_id>)
-  // RESERVED (Property Auction Lane): not emitted by runtime yet. A bid escrows
-  // the bidder's gold (debit); being outbid refunds it (credit). No escrow ledger.
+  // Auction lane: a bid escrows the bidder's gold (debit); being outbid refunds
+  // it (credit). No escrow ledger.
   | `auction_escrow:${string}`;     // Bid escrow debit (auction_escrow:<property_id>)
 
 // ============================================================================
@@ -453,14 +450,10 @@ export type PropertyDenialReason =
   | 'invalid_price';
 
 // ============================================================================
-// Property Auctions — RESERVED (types only; NOT implemented, NOT behavior-active)
+// Property Auctions
 // ============================================================================
-// These constants/types describe the planned auction lane so protocol and type
-// surfaces can be agreed in advance. There is intentionally NO reducer, handler,
-// wallet/escrow, settlement, or persistence behavior in this change. The auction
-// message interfaces in protocol.ts are likewise reserved and are NOT yet part of
-// the active ClientMessage/ServerMessage unions. Auctions are NOT live, NOT
-// implemented, and NOT verified. See docs/PROTOCOL.md "Property auctions (reserved)".
+// Resale open/bid/cancel and close-to-settle are active. Primary/system auction
+// opening remains a later lane.
 
 // How an unowned plot is allocated. Absent/'fixed' = current v0 fixed-price buy.
 export type PropertyAllocationMode = 'fixed' | 'auction';

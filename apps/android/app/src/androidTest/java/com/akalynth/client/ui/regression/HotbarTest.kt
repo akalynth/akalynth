@@ -36,7 +36,7 @@ class HotbarTest {
     // =========================================================================
 
     @Test
-    fun `hotbar displays 4 slots`() {
+    fun test_hotbar_displays_4_slots() {
         composeTestRule.setContent {
             Hotbar(
                 slots = emptySlots(),
@@ -55,7 +55,7 @@ class HotbarTest {
     }
 
     @Test
-    fun `empty slots show slot numbers`() {
+    fun test_empty_slots_show_slot_numbers() {
         composeTestRule.setContent {
             Hotbar(
                 slots = emptySlots(),
@@ -73,7 +73,7 @@ class HotbarTest {
     }
 
     @Test
-    fun `filled slot shows item icon`() {
+    fun test_filled_slot_shows_item_icon() {
         val slots = listOf(
             createTestItem("Sword"),
             null,
@@ -96,7 +96,7 @@ class HotbarTest {
     }
 
     @Test
-    fun `stackable item shows count`() {
+    fun test_stackable_item_shows_count() {
         val slots = listOf(
             createTestItem("Potion", stackCount = 5),
             null,
@@ -122,7 +122,7 @@ class HotbarTest {
     // =========================================================================
 
     @Test
-    fun `tap slot fires onSlotTap`() {
+    fun test_tap_slot_fires_onslottap() {
         var tappedSlot: Int? = null
 
         val slots = listOf(
@@ -148,7 +148,7 @@ class HotbarTest {
     }
 
     @Test
-    fun `tap different slots fires correct index`() {
+    fun test_tap_different_slots_fires_correct_index() {
         val tappedSlots = mutableListOf<Int>()
 
         val slots = listOf(
@@ -175,7 +175,7 @@ class HotbarTest {
     }
 
     @Test
-    fun `tap empty slot does not fire onSlotTap`() {
+    fun test_tap_empty_slot_does_not_fire_onslottap() {
         var tapCount = 0
 
         composeTestRule.setContent {
@@ -198,7 +198,7 @@ class HotbarTest {
     // =========================================================================
 
     @Test
-    fun `long press slot fires onSlotLongPress`() {
+    fun test_long_press_slot_fires_onslotlongpress() {
         var longPressedSlot: Int? = null
 
         val slots = listOf(
@@ -230,7 +230,7 @@ class HotbarTest {
     }
 
     @Test
-    fun `long press empty slot does not fire`() {
+    fun test_long_press_empty_slot_does_not_fire() {
         var longPressCount = 0
 
         composeTestRule.setContent {
@@ -254,7 +254,7 @@ class HotbarTest {
     }
 
     @Test
-    fun `long press does not fire tap`() {
+    fun test_long_press_does_not_fire_tap() {
         var tapCount = 0
         var longPressCount = 0
 
@@ -291,7 +291,7 @@ class HotbarTest {
     // =========================================================================
 
     @Test
-    fun `legendary item has distinct styling`() {
+    fun test_legendary_item_has_distinct_styling() {
         val slots = listOf(
             createTestItem("Legendary Sword", rarity = ItemRarity.LEGENDARY),
             createTestItem("Common Sword", rarity = ItemRarity.COMMON),
@@ -319,22 +319,22 @@ class HotbarTest {
     // =========================================================================
 
     @Test
-    fun `HOTBAR_SLOT_COUNT is 4`() {
+    fun test_hotbar_slot_count_is_4() {
         assertEquals(4, HOTBAR_SLOT_COUNT)
     }
 
     @Test
-    fun `HOTBAR_SLOT_SIZE is 48dp`() {
+    fun test_hotbar_slot_size_is_48dp() {
         assertEquals(48.dp, HOTBAR_SLOT_SIZE)
     }
 
     @Test
-    fun `HOTBAR_SLOT_GAP is 10dp`() {
+    fun test_hotbar_slot_gap_is_10dp() {
         assertEquals(10.dp, HOTBAR_SLOT_GAP)
     }
 
     @Test
-    fun `LONG_PRESS_THRESHOLD_MS is 500`() {
+    fun test_long_press_threshold_ms_is_500() {
         assertEquals(500L, LONG_PRESS_THRESHOLD_MS)
     }
 
@@ -343,22 +343,22 @@ class HotbarTest {
     // =========================================================================
 
     @Test
-    fun `legendary requires Tier3 confirm`() {
+    fun test_legendary_requires_tier3_confirm() {
         assertTrue(ItemRarity.LEGENDARY.requiresTier3Confirm)
     }
 
     @Test
-    fun `common does not require Tier3 confirm`() {
+    fun test_common_does_not_require_tier3_confirm() {
         assertFalse(ItemRarity.COMMON.requiresTier3Confirm)
     }
 
     @Test
-    fun `uncommon does not require Tier3 confirm`() {
+    fun test_uncommon_does_not_require_tier3_confirm() {
         assertFalse(ItemRarity.UNCOMMON.requiresTier3Confirm)
     }
 
     @Test
-    fun `rare does not require Tier3 confirm`() {
+    fun test_rare_does_not_require_tier3_confirm() {
         assertFalse(ItemRarity.RARE.requiresTier3Confirm)
     }
 

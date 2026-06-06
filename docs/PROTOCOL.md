@@ -11,7 +11,7 @@ The protocol authority is:
 - `packages/shared/protocol.golden.json`
 - `scripts/verify_protocol_sync.sh`
 
-`packages/shared/protocol.ts` exports `PROTOCOL_VERSION = '1.1.0'`. v1.1.0 is an **additive, non-breaking** bump over v1.0.0 (Property Ownership v0 messages); no existing message changed, so the frozen `CLIENT_CONTRACT_V0_1` wire compatibility holds.
+`packages/shared/protocol.ts` exports `PROTOCOL_VERSION = '2.0.0'`. v2.0.0 accepts the house-auction protocol surface: auction open/bid/cancel client intents, auction state and settlement server broadcasts, and widened `property_result` action/reason values. Clients with exhaustive `property_result.action` or `property_result.reason` handling must tolerate the auction values listed here.
 
 This document is documentation only. It does not change shared types, runtime handlers, generated artifacts, clients, deployment state, or live service behavior.
 
@@ -166,7 +166,9 @@ Submits a chat message. Chat may satisfy an active Tem challenge when the conten
 
 #### `tem_response`
 
-Responds directly to an active Tem challenge.
+Responds directly to an active Tem challenge. Clients should submit the
+player-entered answer and must not hardcode the expected phrase; the server owns
+the prompt and validation.
 
 #### `kill_self`
 
@@ -278,22 +280,24 @@ Requests the ownership ledger (owner history + sale count) for a `property_id`.
 
 ### Property auctions
 
-> **Status (Step 4b): open / bid / cancel handlers are ACTIVE and emit receipts,
-> and the world-loop close→settle trigger is ACTIVE for resale auctions.** When an
+> **Status:** open / bid / cancel handlers are ACTIVE and emit receipts,
+> and the world-loop close→settle trigger is ACTIVE for resale auctions. When an
 > open auction passes its recorded close, the loop emits `property_auction_settled`
 > (and `house_auction_settled` broadcast); for a resale winner it also credits the
 > seller. **Wall-clock only decides *when* to emit — settlement truth is the
 > receipt; replay never recomputes the winner.** Clients are intent-only;
 > accepted amount/winner state is server-derived. Only **resale** auctions can be
 > opened today (owner-initiated); **primary/system auction opening is a separate
-> later lane**, and **durable persistence/materializer** of auctions is not yet
-> claimed (Step 5). `HousePlot.allocation_mode` (`'fixed' | 'auction'`, absent ⇒
+> later lane**. A durable auction projection/materializer is implemented and
+> covered by property-auction verifiers; a production restart proof run is still
+> not claimed. `HousePlot.allocation_mode` (`'fixed' | 'auction'`, absent ⇒
 > `fixed`) governs how an unowned plot is allocated in future steps.
 
 #### `open_house_auction`
 
 Owner opens a resale auction on an owned plot with `min_bid`, `min_increment_gold`,
-and `duration_s` (the requested window; settlement is not automatic in 4a).
+and `duration_s` (the requested window; settlement is emitted by the world-loop
+close→settle path after the recorded close time).
 Only the current owner may open; the plot must be `owned`.
 
 #### `place_house_bid`
@@ -345,7 +349,8 @@ Broadcast chat message.
 
 #### `tem_challenge`
 
-Tem challenge with challenge id, prompt, and timeout seconds.
+Tem challenge with challenge id, prompt, and timeout seconds. Clients should
+display the server-provided `message` verbatim.
 
 #### `error`
 

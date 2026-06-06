@@ -21,7 +21,22 @@ Used by automation and operations only.
   trips the limit and parks the unit instead of restarting forever.
 - `infra/deploy_beta.sh` — beta deploy helper.
 - `infra/caddy/Caddyfile.example` — reverse-proxy template for the prod box.
+- `infra/caddy/Caddyfile.ops-dev-01` — checked-in Caddy source for the beta
+  and staging Android lanes on ops-dev-01.
+- `infra/web/beta/index.html` and `infra/web/staging/index.html` — static APK
+  download pages served by the beta and staging site hosts.
 - `infra/PROVISIONING.md` — runbook for provisioning the prod and dev/Android boxes.
+
+## Content Drop Boundary
+
+`infra/web/beta/index.html` and `infra/web/staging/index.html` are operational
+APK download pages for lane access. Website-update prompts inside `drop/`
+packages target public product/design routes, not these lane pages.
+
+Do not copy raw `drop/` JSON, Markdown, or registry files into `infra/web`, and
+do not use the lane pages to imply that a source package is live gameplay.
+Promote content through reviewed docs, runtime code, receipts, and verifiers
+first.
 
 ## Docker Server Runtime
 

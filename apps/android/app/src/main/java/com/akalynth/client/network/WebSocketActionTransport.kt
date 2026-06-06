@@ -83,6 +83,12 @@ class WebSocketActionTransport(
                     put("sex", intent.sex.name.lowercase())
                 }
             }
+
+            is ActionIntent.WorldEventContribution -> buildJsonObject {
+                put("type", "use_skill")
+                put("action_id", intent.actionId)
+                put("skill_id", intent.skillId)
+            }
         }
 
         return json.encodeToString(jsonObject)

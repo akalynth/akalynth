@@ -27,7 +27,7 @@ export function issueTemChallenge(state: AntiCheatState, now: number): TemOutcom
     outcome: 'issued',
     challenge: {
       challenge_id,
-      message: `Hi! 👋 type AZURA in chat within ${TEM_TIMEOUT_SECONDS} seconds`,
+      message: `Hi! 👋 type ${TEM_CHALLENGE_RESPONSE} in chat within ${TEM_TIMEOUT_SECONDS} seconds`,
       timeout_seconds: TEM_TIMEOUT_SECONDS,
     },
   };
@@ -61,4 +61,3 @@ export function applyThrottle(state: AntiCheatState, now: number): void {
 export function isThrottled(state: AntiCheatState, now: number): boolean {
   return state.throttleUntil !== null && now < state.throttleUntil;
 }
-

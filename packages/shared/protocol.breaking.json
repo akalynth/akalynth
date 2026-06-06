@@ -1,0 +1,16 @@
+{
+  "version": "2.0.0",
+  "changes": [
+    {
+      "kind": "field_type_changed",
+      "field": "PropertyResultMessage:action",
+      "reason": "House auction intents reuse property_result and extend action with open_house_auction, place_house_bid, and cancel_house_auction."
+    },
+    {
+      "kind": "field_type_changed",
+      "field": "PropertyResultMessage:reason",
+      "reason": "House auction denials reuse property_result and extend reason with PropertyAuctionDenialReason values."
+    }
+  ],
+  "migrationNotes": "Clients with exhaustive property_result action or reason handling must tolerate the auction actions and auction denial reasons. Unknown future action/reason values should be surfaced as strings, not treated as client authority."
+}

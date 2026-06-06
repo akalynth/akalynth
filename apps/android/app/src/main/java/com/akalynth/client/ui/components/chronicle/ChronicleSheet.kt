@@ -32,6 +32,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.akalynth.client.ui.components.displayOptionalZoneName
+import com.akalynth.client.ui.components.displayZoneName
 import com.akalynth.client.ui.state.ChronicleEvent
 import com.akalynth.client.ui.state.ChronicleEventKind
 import java.time.LocalDate
@@ -263,7 +265,7 @@ private fun EventRow(
             )
 
             Text(
-                text = "${event.zone} • ${formatTime(event.timestamp)}",
+                text = "${displayZoneName(event.zone)} • ${formatTime(event.timestamp)}",
                 color = Color(0xFF9E9E9E),
                 fontSize = 12.sp
             )
@@ -290,7 +292,7 @@ private fun getEventTitle(event: ChronicleEvent): String = when (event.kind) {
         "Killed by $killer"
     }
     ChronicleEventKind.ZONE_ENTER -> {
-        val from = event.details.fromZone
+        val from = displayOptionalZoneName(event.details.fromZone)
         if (from != null) "Entered from $from" else "Entered zone"
     }
     ChronicleEventKind.ITEM_PICKUP -> {
@@ -307,6 +309,11 @@ private fun getEventTitle(event: ChronicleEvent): String = when (event.kind) {
     }
     ChronicleEventKind.TUTORIAL_COMPLETE -> "Completed tutorial"
     ChronicleEventKind.CHARACTER_CREATED -> "Character created"
+    ChronicleEventKind.WORLD_EVENT -> {
+        val eventId = event.details.eventId?.replace("_", " ") ?: "world event"
+        val outcome = event.details.outcome?.replace("_", " ")
+        if (outcome != null) "$eventId resolved: $outcome" else eventId
+    }
     ChronicleEventKind.UNKNOWN -> "Unknown event"
 }
 

@@ -1,0 +1,54 @@
+AKALYNTH_COSMIC_ROOT_FIRST_CITY_EXTRACTION_V1
+status: implemented_pending_review
+scope: docs-only source extraction and first-city design adaptation
+
+Decision:
+- High City is the proposed first city of Akalynth.
+- Akalynth remains the world/game/project brand.
+- Azura is not used as the new first-city name.
+- VaultCore/COSMIC_ROOT is source inspiration only.
+
+Source inspected:
+- https://github.com/akalynth/COSMIC_ROOT/tree/main/VaultCore
+- commit: 7c096353218ff9e2114d1e0b2226eee3f75a5d9e
+
+Created docs:
+- HIGH_CITY_SOURCE_EXTRACTION.md
+- HIGH_CITY_WORLD_DESIGN.md
+- HIGH_CITY_DISTRICTS.md
+- HIGH_CITY_LANDMARKS.md
+- HIGH_CITY_HOUSING_PLOTS.md
+- HIGH_CITY_NPC_AND_ROLE_IDEAS.md
+- HIGH_CITY_CLAIM_BOUNDARY.md
+- receipt.txt
+
+Claims:
+- vaultcore_first_city_material_inspected: true
+- high_city_first_city_design_docs_created: true
+- azura_not_used_as_new_first_city_name: true
+- akalynth_reserved_as_world_brand: true
+- cosmic_root_code_imported: false
+- vaultcore_scripts_executed: false
+- runtime_map_renamed: false
+- server_changed: false
+- protocol_changed: false
+- shared_maps_changed: false
+- shared_types_changed: false
+- collision_changed: false
+- walkability_changed: false
+- npc_behavior_added: false
+- mob_behavior_added: false
+- economy_changed: false
+- production_map_promoted: false
+- deploy_performed: false
+
+Verification:
+- source inspected from temporary clone only
+- docs created under docs/asset-decisions
+- no runtime file was intentionally changed
+
+Valid accepted status after review:
+- accepted_high_city_source_extraction_design
+
+Next recommended lane:
+- AKALYNTH_HIGH_CITY_NAMING_MIGRATION_DESIGN_V1

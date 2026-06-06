@@ -37,6 +37,9 @@ const VALID_KINDS = new Set([
   'reputation_change',
   'legendary_obtained',
   'legendary_lost',
+  'origin_sealed',
+  'world_event',
+  'property_acquired',
 ]);
 
 // Kinds that require a valid item reference in details_json

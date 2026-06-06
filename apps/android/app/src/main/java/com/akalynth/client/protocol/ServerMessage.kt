@@ -7,7 +7,7 @@ import kotlinx.serialization.json.JsonElement
 /**
  * Server -> Client messages.
  *
- * Mirrors `packages/shared/protocol.ts` (PROTOCOL_VERSION 1.1.0). protocol.ts is the authoritative
+ * Mirrors `packages/shared/protocol.ts` (PROTOCOL_VERSION 2.0.0). protocol.ts is the authoritative
  * contract; this file follows it and must not diverge.
  *
  * Open-ended `reason` / `code` / `status` fields stay as plain [String] (known values catalogued in
@@ -461,6 +461,29 @@ data class PropertyResultMessage(
 data class PropertyLedgerMessage(
     @SerialName("property_id") val propertyId: String,
     @SerialName("owner_history") val ownerHistory: List<PropertyOwnerHistoryEntry>,
+    @SerialName("sale_count") val saleCount: Int
+) : ServerMessage()
+
+@Serializable
+@SerialName("property_auction_state")
+data class PropertyAuctionStateMessage(
+    @SerialName("property_id") val propertyId: String,
+    val kind: String,
+    @SerialName("current_high") val currentHigh: Int? = null,
+    @SerialName("high_bidder_name") val highBidderName: String? = null,
+    @SerialName("min_next") val minNext: Int,
+    @SerialName("scheduled_close") val scheduledClose: Long? = null
+) : ServerMessage()
+
+@Serializable
+@SerialName("house_auction_settled")
+data class HouseAuctionSettledMessage(
+    @SerialName("property_id") val propertyId: String,
+    @SerialName("plot_id") val plotId: String,
+    val zone: String,
+    @SerialName("winner_name") val winnerName: String? = null,
+    @SerialName("seller_name") val sellerName: String? = null,
+    val price: Int,
     @SerialName("sale_count") val saleCount: Int
 ) : ServerMessage()
 

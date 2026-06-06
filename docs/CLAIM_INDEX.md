@@ -21,15 +21,17 @@ Grouped by role. `L` = line count at last review. Entries marked **(non-binding)
 | --- | --- | --- |
 | [CURRENT_STAGE.md](./CURRENT_STAGE.md) | 112 | **Canonical** boundary on what may be claimed/shown. |
 | [KNOWN_GAPS.md](./KNOWN_GAPS.md) | 65 | Release blockers, engineering/product risks, presentation rules. |
-| [V1_SCOPE.md](./V1_SCOPE.md) | 61 | Scope fence: in/out of scope, binding guarantees, non-binding specs. |
+| [V1_SCOPE.md](./V1_SCOPE.md) | 65 | Scope fence: in/out of scope, binding guarantees, non-binding specs. |
+| [CLAIM_INDEX.md](./CLAIM_INDEX.md) | 204 | This navigational map and claim index; non-authoritative if it disagrees with the claim boundary docs. |
 | [SIMULATE_WITHOUT_LYING.md](./SIMULATE_WITHOUT_LYING.md) | 386 | Doctrine for simulating/demoing without overstating maturity. |
 | [GOVERNANCE_INVARIANTS.md](./GOVERNANCE_INVARIANTS.md) | 24 | Public index for civil guarantees; points to canonical G1–G15. |
 
 ### Vision, world & lore
 | Doc | L | Role |
 | --- | --- | --- |
-| [MANIFESTO.md](./MANIFESTO.md) | 63 | Narrative vision (aspirational; carries a "Grounding" note mapping claims to shipped systems). |
-| [WORLD_AZURA.md](./WORLD_AZURA.md) | 137 | The world/city of Azura. |
+| [MANIFESTO.md](./MANIFESTO.md) | 64 | Narrative vision (aspirational; carries a "Grounding" note mapping claims to shipped systems). |
+| [AKALYNTH_LORE_BIBLE.md](./AKALYNTH_LORE_BIBLE.md) | 235 | Current lore authority and naming boundary. |
+| [WORLD_HIGH_CITY.md](./WORLD_HIGH_CITY.md) | 150 | Current first-city map; High City player-facing name over legacy `Azura` runtime id. |
 | [WORLD_ROOKGUARD.md](./WORLD_ROOKGUARD.md) | 82 | Rookguard training zone. |
 | [WORLD_EVOLUTION.md](./WORLD_EVOLUTION.md) | 342 | "Record change, don't overwrite truth" — world history doctrine **(non-binding)**. |
 
@@ -37,7 +39,7 @@ Grouped by role. `L` = line count at last review. Entries marked **(non-binding)
 | Doc | L | Role |
 | --- | --- | --- |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | 257 | System architecture. |
-| [PROTOCOL.md](./PROTOCOL.md) | 438 | WebSocket/HTTP protocol surface. |
+| [PROTOCOL.md](./PROTOCOL.md) | 536 | WebSocket/HTTP protocol surface. |
 | [CLIENT_CONTRACT_V0_1.md](./CLIENT_CONTRACT_V0_1.md) | 219 | **Frozen** client contract v0.1. |
 | [SPINE_V1.md](./SPINE_V1.md) | 126 | Spine Lock v1. |
 | [PERSISTENCE_MATRIX.md](./PERSISTENCE_MATRIX.md) | 107 | Durable-state classification (documentation only; not a restore guarantee). |
@@ -46,9 +48,10 @@ Grouped by role. `L` = line count at last review. Entries marked **(non-binding)
 | Doc | L | Role |
 | --- | --- | --- |
 | [VERIFICATION_SPINE_API.md](./VERIFICATION_SPINE_API.md) | 926 | Verification Spine API v1. |
-| [PROOF_BUNDLES.md](./PROOF_BUNDLES.md) | 282 | What a proof bundle is and how to assemble one. |
 | [PROOF_RUN_TEMPLATE.md](./PROOF_RUN_TEMPLATE.md) | 92 | Template for recording a reproducible proof run. |
+| [RNG_OUTCOME_VERIFICATION.md](./RNG_OUTCOME_VERIFICATION.md) | 519 | Offline verifier for receipt-recorded RNG outcomes; documents trust boundaries and caveats. |
 | [archive/MVP_VERIFICATION_REPORT_v1.md](./archive/MVP_VERIFICATION_REPORT_v1.md) | 217 | **Archived** — point-in-time MVP verification record (superseded by the verification spine). |
+| [archive/PROOF_BUNDLES.md](./archive/PROOF_BUNDLES.md) | 282 | **Archived** — proof-export design sketch; not implemented in current game runtime. |
 | [LOAD_TEST_HARNESS.md](./LOAD_TEST_HARNESS.md) | 586 | Load-test harness spec (local/staging only). |
 
 ### Identity & anti-cheat
@@ -60,8 +63,7 @@ Grouped by role. `L` = line count at last review. Entries marked **(non-binding)
 ### Monetization
 | Doc | L | Role |
 | --- | --- | --- |
-| [MONETIZATION_CONSTITUTION.md](./MONETIZATION_CONSTITUTION.md) | 170 | Constitutional rules for monetization. |
-| [MONETIZATION_BLUEPRINT.md](./MONETIZATION_BLUEPRINT.md) | 182 | What money may/may not buy **(non-binding)**. |
+| [MONETIZATION_CONSTITUTION.md](./MONETIZATION_CONSTITUTION.md) | 186 | Constitutional rules for monetization. |
 | [MONETIZATION_JUSTIFICATIONS.md](./MONETIZATION_JUSTIFICATIONS.md) | 23 | "Not power" justification registry. |
 | [MONETIZATION_RECEIPTS.md](./MONETIZATION_RECEIPTS.md) | 144 | Monetization receipt schema (draft). |
 
@@ -73,13 +75,15 @@ Grouped by role. `L` = line count at last review. Entries marked **(non-binding)
 | [UI_MAPPING_CHECKLIST.md](./UI_MAPPING_CHECKLIST.md) | 64 | UI v0 implementation mapping checklist. |
 | [UI_REGRESSION_MATRIX.md](./UI_REGRESSION_MATRIX.md) | 270 | UI regression matrix. |
 | [CLASSIC_32_ART_AND_MOBILE_UI_DIRECTION.md](./CLASSIC_32_ART_AND_MOBILE_UI_DIRECTION.md) | 409 | Classic-32 art + mobile UI direction. |
+| [asset-decisions/README.md](./asset-decisions/README.md) | 46 | Asset/map/mobile decision-packet index and cleanup boundary. |
 
 ### Governance & process
 | Doc | L | Role |
 | --- | --- | --- |
 | [CONSTITUTIONAL_AMENDMENTS.md](./CONSTITUTIONAL_AMENDMENTS.md) | 126 | Amendment process for constitutional surfaces. |
 | [HIGH_LEVERAGE_DECISION_CHECKLIST.md](./HIGH_LEVERAGE_DECISION_CHECKLIST.md) | 288 | Decision checklist for high-leverage tasks. |
-| [LEVERAGE_TIER_MAPPING.md](./LEVERAGE_TIER_MAPPING.md) | 263 | Leverage-tier mapping of current state. |
+| [LEVERAGE_TIER_MAPPING.md](./LEVERAGE_TIER_MAPPING.md) | 266 | Leverage-tier mapping of current state. |
+| [REPO_HYGIENE_ARCHITECTURE.md](./REPO_HYGIENE_ARCHITECTURE.md) | 96 | Cleanup policy: root/doc/archive/drop custody and guardrails. |
 | [COPILOT_DELEGATION.md](./COPILOT_DELEGATION.md) | 577 | Delegation guidance. |
 
 ### Ops, deploy, distribution & runbooks
@@ -87,31 +91,37 @@ Grouped by role. `L` = line count at last review. Entries marked **(non-binding)
 | --- | --- | --- |
 | [SHOWCASE_RUNBOOK.md](./SHOWCASE_RUNBOOK.md) | 142 | Local pre-alpha proof showcase runbook. |
 | [NEW_BOX_PROVISIONING.md](./NEW_BOX_PROVISIONING.md) | 237 | New-box provisioning runbook. |
-| [APK_DISTRIBUTION_CHECKLIST.md](./APK_DISTRIBUTION_CHECKLIST.md) | 220 | Android APK distribution checklist. |
+| [archive/APK_DISTRIBUTION_CHECKLIST.md](./archive/APK_DISTRIBUTION_CHECKLIST.md) | 220 | **Archived** — Android ship-and-observe checklist. |
 | [archive/MMO_SITE_AND_LOOT_RUNBOOK.md](./archive/MMO_SITE_AND_LOOT_RUNBOOK.md) | 126 | **Archived** — completed-work log (mmo-site PR #75, mob-loot fix PR #81). |
-| [DRIVER_BRIEF.md](./DRIVER_BRIEF.md) | 69 | Technical driver brief. |
-| [DRIVER_30_DAY_PLAN.md](./DRIVER_30_DAY_PLAN.md) | 97 | 30-day driver plan. |
-| [README.md](./README.md) | 192 | Docs index / single source of truth pointer. |
+| [archive/DRIVER_BRIEF.md](./archive/DRIVER_BRIEF.md) | 69 | **Archived** — technical driver brief. |
+| [archive/DRIVER_30_DAY_PLAN.md](./archive/DRIVER_30_DAY_PLAN.md) | 97 | **Archived** — 30-day driver plan. |
+| [README.md](./README.md) | 202 | Docs index / single source of truth pointer. |
 
-### Reference — Witness-Ledger architecture
+### Archived reference — Witness-Ledger architecture
 | Doc | L | Role |
 | --- | --- | --- |
-| [reference/RFC_WITNESS_LEDGER.md](./reference/RFC_WITNESS_LEDGER.md) | 561 | RFC: witness-ledger architecture. |
-| [reference/WITNESS_LEDGER_ARCHITECTURE.md](./reference/WITNESS_LEDGER_ARCHITECTURE.md) | 246 | Witness–ledger architecture. |
-| [reference/WLA_V1_FINAL.md](./reference/WLA_V1_FINAL.md) | 107 | WLA v1 final. |
+| [archive/reference/RFC_WITNESS_LEDGER.md](./archive/reference/RFC_WITNESS_LEDGER.md) | 561 | **Archived** — RFC: witness-ledger architecture. |
+| [archive/reference/WITNESS_LEDGER_ARCHITECTURE.md](./archive/reference/WITNESS_LEDGER_ARCHITECTURE.md) | 246 | **Archived** — witness-ledger architecture narrative. |
+| [archive/reference/WLA_V1_FINAL.md](./archive/reference/WLA_V1_FINAL.md) | 107 | **Archived** — WLA v1 finality declaration. |
 
-### Speculative / future **(non-binding)**
+### Archived speculative / future **(non-binding)**
 | Doc | L | Role |
 | --- | --- | --- |
-| [speculative/AKALYNTH_MAIL_MMO.v1.md](./speculative/AKALYNTH_MAIL_MMO.v1.md) | 412 | Mail-edge "golden receipt" concept (doc only; out of v1 scope). |
+| [archive/speculative/AKALYNTH_MAIL_MMO.v1.md](./archive/speculative/AKALYNTH_MAIL_MMO.v1.md) | 412 | **Archived** — mail-edge "golden receipt" concept (doc only; out of v1 scope). |
+
+### Imported source material
+| Doc | Role |
+| --- | --- |
+| [DROP_SOURCE_INDEX.md](./DROP_SOURCE_INDEX.md) | Source corpus index for future lore, gameplay, systems, world, and asset packages. Not runtime authority and not proof of implemented behavior. |
 
 ### Audits & signal reports
 | Doc | L | Role |
 | --- | --- | --- |
 | [AUDITS/SYSTEM_AUDIT_CODEX_POST_REPAIR.md](./AUDITS/SYSTEM_AUDIT_CODEX_POST_REPAIR.md) | 291 | Post-repair system audit (Codex). |
 | [AUDITS/ARCHIVED/SYSTEM_AUDIT_POST_REPAIR_v1.md](./AUDITS/ARCHIVED/SYSTEM_AUDIT_POST_REPAIR_v1.md) | 36 | **Archived** — point-in-time audit result (superseded by the Codex audit procedure). |
-| [`/AUDIT_REPORT.md`](../AUDIT_REPORT.md) | 132 | Repo audit: v0 client spine + protocol parity. |
-| [`/CODEX_SIGNAL_REPORT.md`](../CODEX_SIGNAL_REPORT.md) | 403 | "Where are we?" signal report. |
+| [archive/MONETIZATION_BLUEPRINT.md](./archive/MONETIZATION_BLUEPRINT.md) | 182 | **Archived** — superseded monetization design sketch; formal policy is `MONETIZATION_CONSTITUTION.md`. |
+| [archive/SITE_RETIRED_FROM_MONOREPO.md](./archive/SITE_RETIRED_FROM_MONOREPO.md) | 38 | **Archived** — record that the old `mmo-site/` copy was retired from this monorepo. |
+| [archive/asset-decisions/README.md](./archive/asset-decisions/README.md) | 12 | **Archived** — index for superseded decision-packet lanes. |
 
 ### Component & tooling READMEs
 | Doc | Role |
@@ -177,7 +187,8 @@ Production-deployment-ready · Commercial-MMO-ready · Content-alpha · Public-l
 Design intent, not current capability. Treat as future-facing.
 
 - **Narrative vision:** `MANIFESTO.md` (the Ledger, Origin Act, the Stone) — partially grounded in `world/origin.ts`, `world/runestone.ts`; where it outpaces the build it is design intent.
-- **Non-binding specs (per `V1_SCOPE.md`):** `MONETIZATION_BLUEPRINT.md`, `WORLD_EVOLUTION.md`, `docs/speculative/AKALYNTH_MAIL_MMO.v1.md`, `packages/coordination-kernel/CONSTITUTIONAL_API_FREEZE.md`, plus `apps/server/docs/PHASE6_WITNESS_INTERFACE.md`, `EVIDENCE_UI_SPEC.md`, `PHASE7_MODERATION.md`.
+- **Imported source material:** `drop/` packages are source inputs for future canon/gameplay/assets, not current runtime claims until promoted through a reviewed lane.
+- **Non-binding specs (per `V1_SCOPE.md`):** `docs/archive/MONETIZATION_BLUEPRINT.md`, `WORLD_EVOLUTION.md`, `docs/archive/speculative/AKALYNTH_MAIL_MMO.v1.md`, `packages/coordination-kernel/CONSTITUTIONAL_API_FREEZE.md`, plus `apps/server/docs/PHASE6_WITNESS_INTERFACE.md`, `EVIDENCE_UI_SPEC.md`, `PHASE7_MODERATION.md`.
 - **Frozen contracts (shape locked, not a maturity claim):** `CLIENT_CONTRACT_V0_1.md`, `SPINE_V1.md`, `UI_PROPOSAL.md`.
 
 ### G. Open gaps / release blockers
@@ -189,4 +200,4 @@ Design intent, not current capability. Treat as future-facing.
 
 Per `CURRENT_STAGE.md` and `PROOF_RUN_TEMPLATE.md`, a statement about the repo is evidence-backed only when it names at least one: source file · protocol contract · receipt fixture · verifier output · CI run artifact · reproducible local command · commit SHA. Narrative descriptions are explanatory only — they are not proof artifacts.
 
-To assemble evidence: follow `SHOWCASE_RUNBOOK.md`, record with `PROOF_RUN_TEMPLATE.md`, and bundle per `PROOF_BUNDLES.md`.
+To assemble evidence: follow `SHOWCASE_RUNBOOK.md` and record with `PROOF_RUN_TEMPLATE.md`. The old proof-bundle export sketch is archived at `docs/archive/PROOF_BUNDLES.md` and is not a current runtime capability.

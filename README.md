@@ -15,10 +15,8 @@ Akalynth v0.1 is a **pre-alpha, proof-native MMO vertical slice**.
 It is not a production MMO, not content-alpha, and not a public launch candidate. For the canonical claim boundary, start with:
 
 - `docs/CURRENT_STAGE.md`
-- `docs/DRIVER_BRIEF.md`
 - `docs/SHOWCASE_RUNBOOK.md`
 - `docs/KNOWN_GAPS.md`
-- `docs/DRIVER_30_DAY_PLAN.md`
 
 ## Quickstart (Server)
 
@@ -158,11 +156,9 @@ Start here: `docs/README.md`
 Showcase / driver packet:
 
 - `docs/CURRENT_STAGE.md`
-- `docs/DRIVER_BRIEF.md`
 - `docs/SHOWCASE_RUNBOOK.md`
 - `docs/PROOF_RUN_TEMPLATE.md`
 - `docs/KNOWN_GAPS.md`
-- `docs/DRIVER_30_DAY_PLAN.md`
 
 Core docs:
 
@@ -170,4 +166,4 @@ Core docs:
 - `docs/ARCHITECTURE.md`
 - `docs/PROTOCOL.md`
 - `docs/ANTICHEAT.md`
-- `docs/WORLD_AZURA.md`
+- `docs/WORLD_HIGH_CITY.md`

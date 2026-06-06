@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 /**
  * Client -> Server messages.
  *
- * Mirrors `packages/shared/protocol.ts` (PROTOCOL_VERSION 1.1.0). protocol.ts is the
+ * Mirrors `packages/shared/protocol.ts` (PROTOCOL_VERSION 2.0.0). protocol.ts is the
  * authoritative contract; this file follows it and must not diverge from it.
  *
  * Encoding is hand-rolled in [MessageSerializer.encodeClient] (the client never relies on
@@ -304,4 +304,33 @@ data class GetPropertyLedgerMessage(
     @SerialName("property_id") val propertyId: String
 ) : ClientMessage() {
     override val type: String = "get_property_ledger"
+}
+
+// Property Auctions v2
+@Serializable
+@SerialName("open_house_auction")
+data class OpenHouseAuctionMessage(
+    @SerialName("property_id") val propertyId: String,
+    @SerialName("min_bid") val minBid: Int,
+    @SerialName("min_increment_gold") val minIncrementGold: Int,
+    @SerialName("duration_s") val durationS: Int
+) : ClientMessage() {
+    override val type: String = "open_house_auction"
+}
+
+@Serializable
+@SerialName("place_house_bid")
+data class PlaceHouseBidMessage(
+    @SerialName("property_id") val propertyId: String,
+    val amount: Int
+) : ClientMessage() {
+    override val type: String = "place_house_bid"
+}
+
+@Serializable
+@SerialName("cancel_house_auction")
+data class CancelHouseAuctionMessage(
+    @SerialName("property_id") val propertyId: String
+) : ClientMessage() {
+    override val type: String = "cancel_house_auction"
 }

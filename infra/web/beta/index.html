@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Akalynth - Download (Beta)</title>
+    <meta
+      name="description"
+      content="Download the Akalynth Android client (beta lane). Server-authoritative, anti-bot-first MMO in High City. Android only."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%231f1a13'/%3E%3Cpath d='M16 5l7 11-7 11-7-11z' fill='%23d9b25a'/%3E%3C/svg%3E"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Akalynth" />
+    <meta property="og:title" content="Akalynth - Download (Beta)" />
+    <meta property="og:description" content="Get the Akalynth Android client. Server-authoritative, anti-bot-first." />
+    <style>
+      :root {
+        --bg: #0c0a07; --panel: #16120c; --ink: #efe6d2; --ink-soft: #b7a988;
+        --gold: #d9b25a; --line: #2a2318; --green: #6fbf73;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; min-height: 100vh; background: radial-gradient(120% 120% at 50% 0%, #17120b 0%, var(--bg) 60%);
+        color: var(--ink); font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+        display: flex; align-items: center; justify-content: center; padding: 32px 16px;
+      }
+      .card {
+        width: 100%; max-width: 540px; background: var(--panel); border: 1px solid var(--line);
+        border-radius: 14px; padding: 32px; box-shadow: 0 20px 60px rgba(0,0,0,.5);
+      }
+      .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+      .brand-mark { font-size: 26px; color: var(--gold); }
+      .brand-name { font-size: 22px; font-weight: 700; letter-spacing: .5px; }
+      .lane {
+        display: inline-block; margin-left: auto; font-size: 12px; letter-spacing: 1px;
+        text-transform: uppercase; color: #0c0a07; background: var(--gold);
+        padding: 3px 10px; border-radius: 999px; font-weight: 700;
+      }
+      .tag { color: var(--ink-soft); margin: 0 0 24px; font-size: 14px; line-height: 1.5; }
+      .btn {
+        display: block; text-align: center; text-decoration: none; font-weight: 700;
+        padding: 16px; border-radius: 10px; background: var(--gold); color: #1a1408;
+        font-size: 17px; transition: transform .05s ease, filter .15s ease;
+      }
+      .btn:hover { filter: brightness(1.06); }
+      .btn:active { transform: translateY(1px); }
+      .meta { margin: 18px 0 0; padding: 16px; background: #100d08; border: 1px solid var(--line); border-radius: 10px; }
+      .meta dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; margin: 0; font-size: 13px; }
+      .meta dt { color: var(--ink-soft); }
+      .meta dd { margin: 0; }
+      .meta a { color: var(--gold); }
+      .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--green); margin-right: 6px; }
+      .steps { margin: 22px 0 0; padding: 0 0 0 18px; color: var(--ink-soft); font-size: 13px; line-height: 1.7; }
+      footer { margin-top: 26px; font-size: 12px; color: #6f6650; text-align: center; }
+      footer a { color: var(--ink-soft); }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">A</span>
+        <span class="brand-name">Akalynth</span>
+        <span class="lane">Beta</span>
+      </div>
+      <p class="tag">
+        A server-authoritative, anti-bot-first MMO in High City.
+        The beta is an <strong>Android app</strong> - download and install below.
+      </p>
+
+      <a class="btn" href="/download/akalynth-beta.apk" download>Download Android APK</a>
+
+      <div class="meta">
+        <dl>
+          <dt>Platform</dt><dd>Android 8.0+ (API 26+)</dd>
+          <dt>Lane</dt><dd>Beta</dd>
+          <dt>Server</dt><dd><a href="https://beta-api.akalynth.com/v1/health">beta-api.akalynth.com</a></dd>
+          <dt>Status</dt><dd><span class="dot"></span>Server-authoritative - Tem (anti-bot) active</dd>
+        </dl>
+      </div>
+
+      <ol class="steps">
+        <li>Tap <strong>Download Android APK</strong> above.</li>
+        <li>Open the downloaded file; allow installs from this source if prompted.</li>
+        <li>Launch Akalynth and step into High City.</li>
+      </ol>
+
+      <footer>
+        Akalynth - <a href="https://akalynth.com/">akalynth.com</a> - Beta lane
+      </footer>
+    </main>
+  </body>
+</html>

@@ -49,6 +49,10 @@ object ReceiptToChronicleEvent {
             "combat_kill" -> ChronicleEventKind.COMBAT_KILL
             "tutorial_complete" -> ChronicleEventKind.TUTORIAL_COMPLETE
             "character_created" -> ChronicleEventKind.CHARACTER_CREATED
+            "world_event",
+            "world_event_started",
+            "world_event_contribution",
+            "world_event_resolved" -> ChronicleEventKind.WORLD_EVENT
             else -> ChronicleEventKind.UNKNOWN
         }
     }

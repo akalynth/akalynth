@@ -9,8 +9,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.Assert.*
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
+import androidx.test.ext.junit.runners.AndroidJUnit4
 
 /**
  * Regression tests for Tier 1 (tap + cooldown) button.
@@ -19,8 +18,7 @@ import org.robolectric.annotation.Config
  * Timing constants:
  * - COOLDOWN_MS = 500ms (±50ms tolerance)
  */
-@RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
+@RunWith(AndroidJUnit4::class)
 class Tier1ButtonTest {
 
     @get:Rule
@@ -37,7 +35,7 @@ class Tier1ButtonTest {
     // =========================================================================
 
     @Test
-    fun `A1 - tap triggers exactly one callback`() {
+    fun test_a1_tap_triggers_exactly_one_callback() {
         var callCount = 0
 
         // TODO:
@@ -49,7 +47,7 @@ class Tier1ButtonTest {
     }
 
     @Test
-    fun `A1 - cooldown overlay appears after tap`() {
+    fun test_a1_cooldown_overlay_appears_after_tap() {
         // TODO:
         // 1. Render Tier1Button
         // 2. Perform tap
@@ -60,7 +58,7 @@ class Tier1ButtonTest {
     }
 
     @Test
-    fun `A1 - pressed state shows scale animation`() {
+    fun test_a1_pressed_state_shows_scale_animation() {
         // TODO:
         // 1. Render Tier1Button
         // 2. Start press (don't release)
@@ -77,7 +75,7 @@ class Tier1ButtonTest {
     // =========================================================================
 
     @Test
-    fun `A2 - tap during cooldown is ignored`() = runTest {
+    fun test_a2_tap_during_cooldown_is_ignored() = runTest {
         var callCount = 0
 
         // TODO:
@@ -90,7 +88,7 @@ class Tier1ButtonTest {
     }
 
     @Test
-    fun `A2 - cooldown overlay remains during cooldown`() = runTest {
+    fun test_a2_cooldown_overlay_remains_during_cooldown() = runTest {
         // TODO:
         // 1. Render Tier1Button
         // 2. Tap
@@ -101,7 +99,7 @@ class Tier1ButtonTest {
     }
 
     @Test
-    fun `A2 - multiple rapid taps only trigger once`() {
+    fun test_a2_multiple_rapid_taps_only_trigger_once() {
         var callCount = 0
 
         // TODO:
@@ -117,7 +115,7 @@ class Tier1ButtonTest {
     // =========================================================================
 
     @Test
-    fun `cooldown duration is 500ms within tolerance`() = runTest {
+    fun test_cooldown_duration_is_500ms_within_tolerance() = runTest {
         var callCount = 0
 
         // TODO:
@@ -131,7 +129,7 @@ class Tier1ButtonTest {
     }
 
     @Test
-    fun `cooldown animation progresses linearly`() = runTest {
+    fun test_cooldown_animation_progresses_linearly() = runTest {
         // TODO:
         // 1. Render Tier1Button
         // 2. Tap to start cooldown

@@ -17,8 +17,7 @@ import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
+import androidx.test.ext.junit.runners.AndroidJUnit4
 
 /**
  * Regression tests for Why explanation sheet and overlay contention.
@@ -29,8 +28,7 @@ import org.robolectric.annotation.Config
  * - M3: Lists recent events with explanations
  * - M4: Dismiss returns to None state
  */
-@RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
+@RunWith(AndroidJUnit4::class)
 class WhyExplanationSheetTest {
 
     @get:Rule
@@ -41,13 +39,13 @@ class WhyExplanationSheetTest {
     // =========================================================================
 
     @Test
-    fun `M1 - canOpenWhy returns true for None state`() {
+    fun test_m1_canopenwhy_returns_true_for_none_state() {
         val state: UiOverlayState = UiOverlayState.None
         assertTrue("Should be able to open Why from None", state.canOpenWhy())
     }
 
     @Test
-    fun `M1 - canOpenWhy returns false for Toast state`() {
+    fun test_m1_canopenwhy_returns_false_for_toast_state() {
         val state: UiOverlayState = UiOverlayState.Toast(
             createTestDeathNotice()
         )
@@ -55,7 +53,7 @@ class WhyExplanationSheetTest {
     }
 
     @Test
-    fun `M1 - canOpenWhy returns false for Recap state`() {
+    fun test_m1_canopenwhy_returns_false_for_recap_state() {
         val state: UiOverlayState = UiOverlayState.Recap(
             createTestChronicleEvent()
         )
@@ -63,7 +61,7 @@ class WhyExplanationSheetTest {
     }
 
     @Test
-    fun `M1 - canOpenWhy returns false for ConfirmDrop state`() {
+    fun test_m1_canopenwhy_returns_false_for_confirmdrop_state() {
         val state: UiOverlayState = UiOverlayState.ConfirmDrop(
             slotIndex = 0,
             itemId = "item_1",
@@ -74,7 +72,7 @@ class WhyExplanationSheetTest {
     }
 
     @Test
-    fun `M1 - canOpenWhy returns false for Why state`() {
+    fun test_m1_canopenwhy_returns_false_for_why_state() {
         val state: UiOverlayState = UiOverlayState.Why(
             WhyContext(zone = "Rookguard")
         )
@@ -86,7 +84,7 @@ class WhyExplanationSheetTest {
     // =========================================================================
 
     @Test
-    fun `priority ordering is correct`() {
+    fun test_priority_ordering_is_correct() {
         val none = UiOverlayState.None
         val why = UiOverlayState.Why(WhyContext(zone = "Test"))
         val toast = UiOverlayState.Toast(createTestDeathNotice())
@@ -104,7 +102,7 @@ class WhyExplanationSheetTest {
     // =========================================================================
 
     @Test
-    fun `M2 - displays zone context`() {
+    fun test_m2_displays_zone_context() {
         val context = WhyContext(zone = "Rookguard")
 
         composeTestRule.setContent {
@@ -121,7 +119,7 @@ class WhyExplanationSheetTest {
     }
 
     @Test
-    fun `M2 - displays current zone label`() {
+    fun test_m2_displays_current_zone_label() {
         val context = WhyContext(zone = "Azura")
 
         composeTestRule.setContent {
@@ -134,7 +132,7 @@ class WhyExplanationSheetTest {
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("Current Zone").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Azura").assertIsDisplayed()
+        composeTestRule.onNodeWithText("High City").assertIsDisplayed()
     }
 
     // =========================================================================
@@ -142,7 +140,7 @@ class WhyExplanationSheetTest {
     // =========================================================================
 
     @Test
-    fun `M3 - displays recent events header`() {
+    fun test_m3_displays_recent_events_header() {
         val context = WhyContext(
             zone = "Rookguard",
             recentEvents = listOf(createTestChronicleEvent())
@@ -162,7 +160,7 @@ class WhyExplanationSheetTest {
     }
 
     @Test
-    fun `M3 - displays event list`() {
+    fun test_m3_displays_event_list() {
         val event = createTestChronicleEvent()
         val context = WhyContext(
             zone = "Rookguard",
@@ -183,7 +181,7 @@ class WhyExplanationSheetTest {
     }
 
     @Test
-    fun `M3 - shows no events message when empty`() {
+    fun test_m3_shows_no_events_message_when_empty() {
         val context = WhyContext(
             zone = "Rookguard",
             recentEvents = emptyList()
@@ -202,7 +200,7 @@ class WhyExplanationSheetTest {
     }
 
     @Test
-    fun `M3 - event click fires callback`() {
+    fun test_m3_event_click_fires_callback() {
         var clickedEvent: ChronicleEvent? = null
         val event = createTestChronicleEvent()
         val context = WhyContext(
@@ -230,7 +228,7 @@ class WhyExplanationSheetTest {
     // =========================================================================
 
     @Test
-    fun `M4 - dismiss button fires callback`() {
+    fun test_m4_dismiss_button_fires_callback() {
         var dismissed = false
         val context = WhyContext(zone = "Rookguard")
 
@@ -249,7 +247,7 @@ class WhyExplanationSheetTest {
     }
 
     @Test
-    fun `M4 - scrim tap fires dismiss callback`() {
+    fun test_m4_scrim_tap_fires_dismiss_callback() {
         var dismissed = false
         val context = WhyContext(zone = "Rookguard")
 
@@ -272,7 +270,7 @@ class WhyExplanationSheetTest {
     // =========================================================================
 
     @Test
-    fun `topic help shown when provided`() {
+    fun test_topic_help_shown_when_provided() {
         val context = WhyContext(
             zone = "Rookguard",
             topic = "death"
@@ -291,7 +289,7 @@ class WhyExplanationSheetTest {
     }
 
     @Test
-    fun `topic help hidden when not provided`() {
+    fun test_topic_help_hidden_when_not_provided() {
         val context = WhyContext(zone = "Rookguard")
 
         composeTestRule.setContent {
@@ -311,7 +309,7 @@ class WhyExplanationSheetTest {
     // =========================================================================
 
     @Test
-    fun `displays title`() {
+    fun test_displays_title() {
         val context = WhyContext(zone = "Rookguard")
 
         composeTestRule.setContent {
@@ -328,7 +326,7 @@ class WhyExplanationSheetTest {
     }
 
     @Test
-    fun `displays icon`() {
+    fun test_displays_icon() {
         val context = WhyContext(zone = "Rookguard")
 
         composeTestRule.setContent {
@@ -348,7 +346,7 @@ class WhyExplanationSheetTest {
     // =========================================================================
 
     @Test
-    fun `Why state holds correct data`() {
+    fun test_why_state_holds_correct_data() {
         val context = WhyContext(
             zone = "Rookguard",
             recentEvents = listOf(createTestChronicleEvent()),

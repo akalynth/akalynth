@@ -6,9 +6,10 @@ import * as path from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { createReceiptLogger } from '@akalynth/coordination-kernel';
 import { createPersistenceLayer } from '../src/persist/index.js';
-import { hydrateAntiCheatRuntime } from '../src/anticheat/detector.js';
+import { createAntiCheatRuntime, hydrateAntiCheatRuntime } from '../src/anticheat/detector.js';
+import { handleTemResponse, issueTemChallenge } from '../src/anticheat/tem.js';
 import { hydrateHeatState } from '../src/world/heat.js';
-import { THROTTLE_DURATION_MS } from '../../../packages/shared/types.js';
+import { TEM_CHALLENGE_RESPONSE, THROTTLE_DURATION_MS } from '../../../packages/shared/types.js';
 
 interface ReceiptLine {
   action: string;
@@ -27,6 +28,8 @@ function ok(msg: string): void {
 }
 
 function main(): void {
+  assertTemChallengeContract();
+
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'akalynth-anticheat-'));
   const receiptDir = path.join(tmpDir, 'receipts');
   const receiptsPath = path.join(receiptDir, 'receipts.jsonl');
@@ -108,6 +111,33 @@ function main(): void {
   assertProjection(dbPath, markerPath, receiptsPath, expectedPenaltyUntil, expectedThrottleUntil, expectedLastTemMs);
 
   ok('receipt-backed anti-cheat state survives replay and restore');
+}
+
+function assertTemChallengeContract(): void {
+  if (TEM_CHALLENGE_RESPONSE !== 'AKALYNTH') {
+    fail(`expected Tem challenge response AKALYNTH, got ${TEM_CHALLENGE_RESPONSE}`);
+  }
+
+  const runtime = createAntiCheatRuntime(0);
+  const issued = issueTemChallenge(runtime.state, 1_000);
+  if (issued.outcome !== 'issued') fail('Tem challenge did not issue');
+  if (!issued.challenge.message.includes(TEM_CHALLENGE_RESPONSE)) {
+    fail('Tem challenge prompt does not include the shared response phrase');
+  }
+
+  const legacyRuntime = createAntiCheatRuntime(0);
+  issueTemChallenge(legacyRuntime.state, 1_000);
+  const legacy = handleTemResponse(legacyRuntime.state, 'AZURA');
+  if (legacy.outcome !== 'failed' || legacy.reason !== 'wrong_response') {
+    fail('legacy AZURA response unexpectedly satisfies Tem challenge');
+  }
+
+  const passRuntime = createAntiCheatRuntime(0);
+  issueTemChallenge(passRuntime.state, 1_000);
+  const pass = handleTemResponse(passRuntime.state, ' akalynth ');
+  if (pass.outcome !== 'passed') fail('AKALYNTH response did not satisfy Tem challenge');
+
+  ok('Tem challenge response contract uses AKALYNTH');
 }
 
 function assertProjection(
