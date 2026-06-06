@@ -23,15 +23,24 @@ Used by automation and operations only.
 - `infra/caddy/Caddyfile.example` — reverse-proxy template for the prod box.
 - `infra/caddy/Caddyfile.ops-dev-01` — checked-in Caddy source for the beta
   and staging Android lanes on ops-dev-01.
-- `infra/web/beta/index.html` and `infra/web/staging/index.html` — static APK
-  download pages served by the beta and staging site hosts.
+- `infra/web/beta/index.html` — fallback static APK download page for the beta
+  lane. The live beta root may instead be populated from the public
+  `akalynth-site` repository when the marketing/download lane is published.
+- `infra/web/staging/index.html` — static APK download page served by the
+  staging site host.
 - `infra/PROVISIONING.md` — runbook for provisioning the prod and dev/Android boxes.
 
 ## Content Drop Boundary
 
 `infra/web/beta/index.html` and `infra/web/staging/index.html` are operational
-APK download pages for lane access. Website-update prompts inside `drop/`
-packages target public product/design routes, not these lane pages.
+APK download page sources for lane access. On ops-dev-01, beta is allowed to
+serve the public `akalynth-site` static marketing/download payload from
+`/var/www/akalynth-beta` while preserving the APK artifacts under
+`/var/www/akalynth-beta/download/`. Staging remains an APK-only operational
+page unless a separate staging marketing mirror is approved.
+
+Website-update prompts inside `drop/` packages target reviewed public
+product/design routes, not these lane pages or live APK artifacts.
 
 Do not copy raw `drop/` JSON, Markdown, or registry files into `infra/web`, and
 do not use the lane pages to imply that a source package is live gameplay.
