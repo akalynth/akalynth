@@ -1,0 +1,49 @@
+# Akalynth beta + staging lanes - ops-dev-01 (194.147.221.89)
+#
+# Mobile-only model: the SITE hosts (beta./staging.) serve a static APK download
+# page only. The game runtime is reached by the Android client directly through
+# the *-api hosts (HTTP API + WebSocket), never through the site host.
+#
+# This file is the versioned source of truth for /etc/caddy/Caddyfile on this box.
+
+# --- Beta site: APK download page only ---
+beta.akalynth.com {
+	encode zstd gzip
+	root * /var/www/akalynth-beta
+	file_server
+	log {
+		output file /var/log/caddy/akalynth-beta.log
+		format json
+	}
+}
+
+# --- Beta API + WebSocket (Android beta build connects here) ---
+beta-api.akalynth.com {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3000
+	log {
+		output file /var/log/caddy/akalynth-beta-api.log
+		format json
+	}
+}
+
+# --- Staging site: APK download page only ---
+staging.akalynth.com {
+	encode zstd gzip
+	root * /var/www/akalynth-staging
+	file_server
+	log {
+		output file /var/log/caddy/akalynth-staging.log
+		format json
+	}
+}
+
+# --- Staging API + WebSocket (Android staging build connects here) ---
+staging-api.akalynth.com {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3001
+	log {
+		output file /var/log/caddy/akalynth-staging-api.log
+		format json
+	}
+}

@@ -30,6 +30,13 @@ android {
             buildConfigField("String", "WS_BASE_URL", "\"wss://beta-api.akalynth.com\"")
             buildConfigField("String", "HTTP_BASE_URL", "\"https://beta-api.akalynth.com\"")
         }
+        create("staging") {
+            // Staging server: wss://staging-api.akalynth.com
+            initWith(getByName("debug"))
+            matchingFallbacks += listOf("debug")
+            buildConfigField("String", "WS_BASE_URL", "\"wss://staging-api.akalynth.com\"")
+            buildConfigField("String", "HTTP_BASE_URL", "\"https://staging-api.akalynth.com\"")
+        }
         release {
             isMinifyEnabled = true
             proguardFiles(
