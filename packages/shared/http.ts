@@ -371,6 +371,86 @@ export interface PropertyLedgerResponse {
 }
 
 // ============================================================================
+// Web Economy API (account-gated, receipt-backed)
+// ============================================================================
+
+export interface WebShopCatalogItem {
+  shop_key: string;
+  item_type: string;
+  name: string;
+  tag: string;
+  description: string;
+  price_gold: number;
+  currency: 'gold';
+}
+
+export interface WebShopCatalogResponse {
+  items: WebShopCatalogItem[];
+}
+
+export interface WebWalletResponse {
+  ok: true;
+  character_id: string;
+  balance_gold: number;
+}
+
+export interface WebShopPurchaseRequest {
+  character_id: string;
+  shop_key: string;
+}
+
+export interface WebShopPurchaseResponse {
+  ok: true;
+  item: {
+    item_id: string;
+    item_type: string;
+    shop_key: string;
+  };
+  balance_gold: number;
+}
+
+export interface WebEconomyProperty {
+  property_id: string;
+  zone: string;
+  plot_id: string;
+  district: string | null;
+  status: PropertyStatus;
+  owned_by_character: boolean;
+  primary_price_gold: number;
+  listed_price_gold: number | null;
+  sale_count: number;
+}
+
+export interface WebPropertyBuyRequest {
+  character_id: string;
+  property_id: string;
+}
+
+export interface WebPropertyBuyResponse {
+  ok: true;
+  property: WebEconomyProperty;
+  balance_gold: number;
+}
+
+export interface WebPropertyListRequest {
+  character_id: string;
+  property_id: string;
+  price_gold: number;
+}
+
+export interface WebPropertyListResponse {
+  ok: true;
+  property: WebEconomyProperty;
+}
+
+export interface WebPropertyUnlistRequest {
+  character_id: string;
+  property_id: string;
+}
+
+export type WebPropertyUnlistResponse = WebPropertyListResponse;
+
+// ============================================================================
 // Transparency API (public)
 // ============================================================================
 

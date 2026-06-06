@@ -28,6 +28,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export interface AccountConfig {
   secureCookies: boolean;
+  csrfCookieDomain?: string;
   sessionTtlSec: number;
   verificationTtlSec: number;
   resetTtlSec: number;
@@ -82,7 +83,7 @@ export class AccountService {
   constructor(private readonly d: AccountServiceDeps) {}
 
   private sessionCookies(token: string, csrf: string): string[] {
-    const { secureCookies, sessionTtlSec } = this.d.config;
+    const { secureCookies, sessionTtlSec, csrfCookieDomain } = this.d.config;
     return [
       serializeCookie(SESSION_COOKIE, token, {
         httpOnly: true,
@@ -91,22 +92,23 @@ export class AccountService {
         maxAgeSec: sessionTtlSec,
         path: '/',
       }),
-      // CSRF token is readable by JS (double-submit); not HttpOnly.
+      // CSRF token is readable by the static portal (double-submit); not HttpOnly.
       serializeCookie(CSRF_COOKIE, csrf, {
         httpOnly: false,
         secure: secureCookies,
         sameSite: 'Strict',
         maxAgeSec: sessionTtlSec,
         path: '/',
+        domain: csrfCookieDomain,
       }),
     ];
   }
 
   private clearCookies(): string[] {
-    const { secureCookies } = this.d.config;
+    const { secureCookies, csrfCookieDomain } = this.d.config;
     return [
       clearCookie(SESSION_COOKIE, { httpOnly: true, secure: secureCookies, sameSite: 'Strict', path: '/' }),
-      clearCookie(CSRF_COOKIE, { httpOnly: false, secure: secureCookies, sameSite: 'Strict', path: '/' }),
+      clearCookie(CSRF_COOKIE, { httpOnly: false, secure: secureCookies, sameSite: 'Strict', path: '/', domain: csrfCookieDomain }),
     ];
   }
 
@@ -218,7 +220,7 @@ export class AccountService {
 
     return {
       status: 200,
-      body: { ok: true, account: { account_id: acct.account_id, email_verified: acct.email_verified === 1, status: acct.status } },
+      body: { ok: true, account: { account_id: acct.account_id, email_verified: acct.email_verified === 1, status: acct.status }, csrf_token: csrf },
       cookies: this.sessionCookies(token, csrf),
     };
   }

@@ -56,6 +56,7 @@
     "verify:property-auction-persistence": "tsx tools/verify-property-auction-persistence.ts",
     "test:account-auth": "tsx tools/verify-account-auth.test.ts",
     "test:character-v2": "tsx tools/verify-character-v2.test.ts",
+    "test:web-economy": "tsx tools/verify-web-economy.test.ts",
     "test:cors": "tsx tools/verify-cors.test.ts",
     "test:account-email": "tsx tools/verify-account-email.test.ts",
     "test:principal-seal": "tsx tools/verify-principal-identity-seal.test.ts"
