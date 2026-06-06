@@ -36,6 +36,8 @@ import com.akalynth.client.ui.components.displayOptionalZoneName
 import com.akalynth.client.ui.components.displayZoneName
 import com.akalynth.client.ui.state.ChronicleEvent
 import com.akalynth.client.ui.state.ChronicleEventKind
+import com.akalynth.client.ui.state.EventSource
+import com.akalynth.client.ui.state.EventStatus
 import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -269,6 +271,8 @@ private fun EventRow(
                 color = Color(0xFF9E9E9E),
                 fontSize = 12.sp
             )
+
+            StatusBadge(event)
         }
 
         // Tap indicator for death events
@@ -281,6 +285,28 @@ private fun EventRow(
             )
         }
     }
+}
+
+@Composable
+private fun StatusBadge(event: ChronicleEvent) {
+    val (label, color) = when (event.status) {
+        EventStatus.PENDING -> "Pending" to Color(0xFFFFD166)
+        EventStatus.REJECTED -> "Rejected" to Color(0xFFFF5D4D)
+        EventStatus.CONFIRMED -> {
+            if (event.source == EventSource.SERVER_RECEIPT) {
+                "Server receipt" to Color(0xFF42E66B)
+            } else {
+                "Confirmed" to Color(0xFF8FD3D6)
+            }
+        }
+    }
+    Text(
+        text = label,
+        color = color,
+        fontSize = 11.sp,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.testTag("ChronicleSheet_EventStatus_${event.id}")
+    )
 }
 
 /**

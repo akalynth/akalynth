@@ -7,6 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -52,16 +53,26 @@ fun TemChallengeDialog(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = "TEM CHALLENGE",
+                    text = "TEM HUMAN CHECK",
                     style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onErrorContainer
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.testTag("TemChallenge_Title")
+                )
+
+                Text(
+                    text = "Tem keeps High City for human play. Answer the prompt to continue.",
+                    style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.testTag("TemChallenge_Explanation")
                 )
 
                 Text(
                     text = message,
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onErrorContainer
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.testTag("TemChallenge_Message")
                 )
 
                 Text(

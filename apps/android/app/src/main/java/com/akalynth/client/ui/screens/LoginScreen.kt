@@ -1,5 +1,9 @@
 package com.akalynth.client.ui.screens
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,13 +13,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -31,10 +39,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.akalynth.client.game.GameEvent
 import com.akalynth.client.game.GameState
+import com.akalynth.client.game.HealthCheckState
 import com.akalynth.client.network.ConnectionState
+import com.akalynth.client.network.EndpointInfo
+import com.akalynth.client.ui.diagnostics.DiagnosticsFormatter
 import com.akalynth.client.ui.theme.ClassicButton
 import com.akalynth.client.ui.theme.ClassicPanel
 import com.akalynth.client.ui.theme.ClassicShellColors
+import kotlinx.coroutines.delay
 
 @Composable
 fun LoginScreen(
@@ -47,11 +59,14 @@ fun LoginScreen(
     }
     var showAdvanced by remember { mutableStateOf(false) }
     val keyboardController = LocalSoftwareKeyboardController.current
+    val context = LocalContext.current
     val savedCharacterName = state.session.playerName ?: state.session.savedCharacterName
+    val endpoint = EndpointInfo.fromWsUrl(state.session.serverUrl)
+    val nowMs = rememberNowMs()
     val entryHint = when {
         savedCharacterName != null -> "Saved character: $savedCharacterName"
         state.session.guestToken != null -> "Saved guest session"
-        else -> "Connect as guest or create a character"
+        else -> "Start in Rookguard, then step into High City"
     }
 
     Box(
@@ -64,7 +79,8 @@ fun LoginScreen(
         ClassicPanel(
             modifier = Modifier
                 .fillMaxWidth()
-                .widthIn(max = 580.dp),
+                .widthIn(max = 580.dp)
+                .verticalScroll(rememberScrollState()),
             contentPadding = PaddingValues(horizontal = 18.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(14.dp)
@@ -77,7 +93,7 @@ fun LoginScreen(
             )
 
             Text(
-                text = "A server-authoritative MMO",
+                text = "Server-authoritative MMO - Rookguard opens into High City",
                 style = MaterialTheme.typography.bodyLarge,
                 color = ClassicShellColors.MutedText
             )
@@ -98,6 +114,12 @@ fun LoginScreen(
                     onClick = { showAdvanced = !showAdvanced },
                     compact = true,
                     modifier = Modifier.testTag("LoginScreen_ServerToggle")
+                )
+                ClassicButton(
+                    text = "Check server",
+                    onClick = { onEvent(GameEvent.CheckHealth) },
+                    compact = true,
+                    modifier = Modifier.testTag("LoginScreen_CheckHealth")
                 )
             }
 
@@ -150,32 +172,22 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    FilterChip(
-                        selected = state.session.serverUrl == "ws://10.0.2.2:3000",
-                        onClick = {
-                            serverUrlInput = "ws://10.0.2.2:3000"
-                            onEvent(GameEvent.SetServerUrl("ws://10.0.2.2:3000"))
-                        },
-                        label = { Text("Emulator", style = MaterialTheme.typography.labelSmall) }
-                    )
-
-                    FilterChip(
-                        selected = state.session.serverUrl == "ws://localhost:3000",
-                        onClick = {
-                            serverUrlInput = "ws://localhost:3000"
-                            onEvent(GameEvent.SetServerUrl("ws://localhost:3000"))
-                        },
-                        label = { Text("USB", style = MaterialTheme.typography.labelSmall) }
-                    )
-
-                    FilterChip(
-                        selected = state.session.serverUrl.contains("akalynth.com"),
-                        onClick = {
-                            serverUrlInput = "wss://api.akalynth.com"
-                            onEvent(GameEvent.SetServerUrl("wss://api.akalynth.com"))
-                        },
-                        label = { Text("Prod", style = MaterialTheme.typography.labelSmall) }
-                    )
+                    PresetChip("Local", "ws://10.0.2.2:3000", state.session.serverUrl) {
+                        serverUrlInput = it
+                        onEvent(GameEvent.SetServerUrl(it))
+                    }
+                    PresetChip("Beta", "wss://beta-api.akalynth.com", state.session.serverUrl) {
+                        serverUrlInput = it
+                        onEvent(GameEvent.SetServerUrl(it))
+                    }
+                    PresetChip("Staging", "wss://staging-api.akalynth.com", state.session.serverUrl) {
+                        serverUrlInput = it
+                        onEvent(GameEvent.SetServerUrl(it))
+                    }
+                    PresetChip("Prod", "wss://api.akalynth.com", state.session.serverUrl) {
+                        serverUrlInput = it
+                        onEvent(GameEvent.SetServerUrl(it))
+                    }
                 }
             }
 
@@ -238,6 +250,21 @@ fun LoginScreen(
                 }
             }
 
+            EndpointStatusPanel(
+                state = state,
+                endpoint = endpoint,
+                nowMs = nowMs,
+                onCopyDiagnostics = {
+                    copyDiagnosticsToClipboard(context, DiagnosticsFormatter.format(state))
+                },
+                onCopyIssueReport = {
+                    copyIssueReportToClipboard(context, DiagnosticsFormatter.formatIssueReport(state))
+                },
+                onResetServer = {
+                    onEvent(GameEvent.ResetServerUrl)
+                }
+            )
+
             state.session.guestToken?.let {
                 Text(
                     text = "Returning player",
@@ -247,4 +274,156 @@ fun LoginScreen(
             }
         }
     }
+}
+
+@Composable
+private fun EndpointStatusPanel(
+    state: GameState,
+    endpoint: EndpointInfo,
+    nowMs: Long,
+    onCopyDiagnostics: () -> Unit,
+    onCopyIssueReport: () -> Unit,
+    onResetServer: () -> Unit
+) {
+    val diagnostics = state.ui.connectionDiagnostics
+    val reconnectLabel = DiagnosticsFormatter.reconnectCountdownLabel(diagnostics, nowMs)
+    val checkedAtLabel = DiagnosticsFormatter.healthCheckedAtLabel(state.ui.healthCheck, nowMs)
+    val isBetaBuild = endpoint.lane == "Beta" || endpoint.buildType.equals("beta", ignoreCase = true)
+    ClassicPanel(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("LoginScreen_StatusPanel"),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "${endpoint.lane} lane",
+                style = MaterialTheme.typography.labelLarge,
+                color = ClassicShellColors.Brass,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.testTag("LoginScreen_Lane")
+            )
+            Text(
+                text = endpoint.host,
+                style = MaterialTheme.typography.bodySmall,
+                color = ClassicShellColors.Text,
+                modifier = Modifier.testTag("LoginScreen_ServerHost")
+            )
+            if (isBetaBuild) {
+                Text(
+                    text = "BETA BUILD",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = ClassicShellColors.Good,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.testTag("LoginScreen_BetaBuildBadge")
+                )
+            }
+        }
+        Text(
+            text = DiagnosticsFormatter.connectionLabel(state.connection),
+            style = MaterialTheme.typography.bodySmall,
+            color = ClassicShellColors.MutedText,
+            modifier = Modifier.testTag("LoginScreen_ConnectionState")
+        )
+        Text(
+            text = DiagnosticsFormatter.healthLabel(state.ui.healthCheck),
+            style = MaterialTheme.typography.bodySmall,
+            color = when (state.ui.healthCheck) {
+                is HealthCheckState.Reachable -> ClassicShellColors.Good
+                is HealthCheckState.Unreachable -> ClassicShellColors.Danger
+                is HealthCheckState.Checking -> ClassicShellColors.Warning
+                is HealthCheckState.Unknown -> ClassicShellColors.MutedText
+            },
+            modifier = Modifier.testTag("LoginScreen_HealthState")
+        )
+        if (checkedAtLabel != null) {
+            Text(
+                text = checkedAtLabel,
+                style = MaterialTheme.typography.labelSmall,
+                color = ClassicShellColors.MutedText,
+                modifier = Modifier.testTag("LoginScreen_HealthCheckedAt")
+            )
+        }
+        if (reconnectLabel != null) {
+            Text(
+                text = reconnectLabel,
+                style = MaterialTheme.typography.bodySmall,
+                color = ClassicShellColors.Warning,
+                modifier = Modifier.testTag("LoginScreen_ReconnectDiagnostics")
+            )
+        }
+        Text(
+            text = "App ${endpoint.appVersion} (${endpoint.buildType})",
+            style = MaterialTheme.typography.labelSmall,
+            color = ClassicShellColors.MutedText,
+            modifier = Modifier.testTag("LoginScreen_AppVersion")
+        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            ClassicButton(
+                text = "Copy diagnostics",
+                onClick = onCopyDiagnostics,
+                compact = true,
+                modifier = Modifier.testTag("LoginScreen_CopyDiagnostics")
+            )
+            ClassicButton(
+                text = "Report issue",
+                onClick = onCopyIssueReport,
+                compact = true,
+                modifier = Modifier.testTag("LoginScreen_ReportIssue")
+            )
+        }
+        ClassicButton(
+            text = "Reset Server",
+            onClick = onResetServer,
+            compact = true,
+            modifier = Modifier.testTag("LoginScreen_ResetServer")
+        )
+    }
+}
+
+@Composable
+private fun rememberNowMs(): Long {
+    var nowMs by remember { mutableStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(1000)
+            nowMs = System.currentTimeMillis()
+        }
+    }
+    return nowMs
+}
+
+@Composable
+private fun PresetChip(
+    label: String,
+    url: String,
+    currentUrl: String,
+    onSelect: (String) -> Unit
+) {
+    FilterChip(
+        selected = currentUrl == url,
+        onClick = { onSelect(url) },
+        label = { Text(label, style = MaterialTheme.typography.labelSmall) }
+    )
+}
+
+private fun copyDiagnosticsToClipboard(context: Context, text: String) {
+    copyTextToClipboard(context, "Akalynth Diagnostics", text, "Diagnostics copied")
+}
+
+private fun copyIssueReportToClipboard(context: Context, text: String) {
+    copyTextToClipboard(context, "Akalynth Issue Report", text, "Issue report copied")
+}
+
+private fun copyTextToClipboard(context: Context, label: String, text: String, toast: String) {
+    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    clipboard.setPrimaryClip(ClipData.newPlainText(label, text))
+    Toast.makeText(context, toast, Toast.LENGTH_SHORT).show()
 }

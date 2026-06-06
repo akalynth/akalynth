@@ -28,6 +28,7 @@ import com.akalynth.client.game.DebugLogEntry
 import com.akalynth.client.game.GameState
 import com.akalynth.client.network.ConnectionState
 import com.akalynth.client.protocol.PlayerPublic
+import com.akalynth.client.ui.diagnostics.DiagnosticsFormatter
 import com.akalynth.client.ui.theme.ClassicShellColors
 import com.akalynth.client.ui.theme.classicPanelBrush
 import java.text.SimpleDateFormat
@@ -82,10 +83,17 @@ fun DebugDrawer(
 
                 // Copy button
                 TextButton(
-                    onClick = { copyLogToClipboard(context, state.ui.debugLog) },
+                    onClick = { copyDiagnosticsToClipboard(context, state) },
                     contentPadding = PaddingValues(horizontal = 8.dp)
                 ) {
                     Text("Copy", color = ClassicShellColors.Rune, style = MaterialTheme.typography.labelSmall)
+                }
+
+                TextButton(
+                    onClick = { copyIssueReportToClipboard(context, state) },
+                    contentPadding = PaddingValues(horizontal = 8.dp)
+                ) {
+                    Text("Issue", color = ClassicShellColors.Rune, style = MaterialTheme.typography.labelSmall)
                 }
 
                 // Clear button
@@ -169,18 +177,36 @@ fun DebugDrawer(
     }
 }
 
-private fun copyLogToClipboard(context: Context, log: List<DebugLogEntry>) {
+private fun copyDiagnosticsToClipboard(context: Context, state: GameState) {
+    copyTextToClipboard(context, "Akalynth Diagnostics", diagnosticsWithRecentLog(state), "Copied diagnostics")
+}
+
+private fun copyIssueReportToClipboard(context: Context, state: GameState) {
+    val text = DiagnosticsFormatter.formatIssueReport(state) +
+        "\nRecent log entries:\n" +
+        recentLogText(state.ui.debugLog)
+    copyTextToClipboard(context, "Akalynth Issue Report", text, "Copied issue report")
+}
+
+private fun diagnosticsWithRecentLog(state: GameState): String =
+    DiagnosticsFormatter.format(state) +
+        "\nRecent log entries:\n" +
+        recentLogText(state.ui.debugLog)
+
+private fun recentLogText(log: List<DebugLogEntry>): String {
     val timeFormat = SimpleDateFormat("HH:mm:ss.SSS", Locale.US)
-    val text = log.takeLast(50).joinToString("\n") { entry ->
+    return log.takeLast(50).joinToString("\n") { entry ->
         val ts = timeFormat.format(Date(entry.timestamp))
         "$ts ${entry.direction} ${entry.messageType} ${entry.preview}"
     }
+}
 
+private fun copyTextToClipboard(context: Context, label: String, text: String, toast: String) {
     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    val clip = ClipData.newPlainText("Akalynth Debug Log", text)
+    val clip = ClipData.newPlainText(label, text)
     clipboard.setPrimaryClip(clip)
 
-    Toast.makeText(context, "Copied ${log.takeLast(50).size} entries", Toast.LENGTH_SHORT).show()
+    Toast.makeText(context, toast, Toast.LENGTH_SHORT).show()
 }
 
 @Composable

@@ -7,6 +7,7 @@ import androidx.compose.ui.test.performClick
 import com.akalynth.client.actions.WorldEventSkillIds
 import com.akalynth.client.ui.theme.AkalynthTheme
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -55,5 +56,25 @@ class ActionButtonsTest {
             ),
             contributions
         )
+    }
+
+    @Test
+    fun chronicleButtonEmitsUiIntent() {
+        var tapped = false
+
+        composeTestRule.setContent {
+            AkalynthTheme(darkTheme = true) {
+                ActionButtons(
+                    onChat = {},
+                    onChronicle = { tapped = true }
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag("ActionButtons_Chronicle")
+            .assertIsDisplayed()
+            .performClick()
+
+        assertTrue(tapped)
     }
 }

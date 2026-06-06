@@ -5,9 +5,13 @@ import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
+import com.akalynth.client.game.ConnectionDiagnostics
 import com.akalynth.client.game.GameEvent
 import com.akalynth.client.game.GameState
+import com.akalynth.client.game.HealthCheckState
 import com.akalynth.client.game.SessionState
+import com.akalynth.client.game.UiState
 import com.akalynth.client.ui.screens.LoginScreen
 import com.akalynth.client.ui.theme.AkalynthTheme
 import org.junit.Assert.assertEquals
@@ -41,7 +45,7 @@ class LoginScreenEntryParityTest {
         }
 
         composeTestRule.onNodeWithTag("LoginScreen_EntryHint")
-            .assertTextEquals("Connect as guest or create a character")
+            .assertTextEquals("Start in Rookguard, then step into High City")
         composeTestRule.onNodeWithTag("LoginScreen_CreateCharacter")
             .assertIsDisplayed()
             .performClick()
@@ -73,6 +77,77 @@ class LoginScreenEntryParityTest {
             .assertTextEquals("Saved character: AuditHero")
         composeTestRule.onNodeWithTag("LoginScreen_Connect")
             .assertTextEquals("Enter Play")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun `beta status panel shows lane health and emits health check`() {
+        val events = mutableListOf<GameEvent>()
+        val state = GameState.INITIAL.copy(
+            session = SessionState(serverUrl = "wss://beta-api.akalynth.com"),
+            ui = UiState(
+                healthCheck = HealthCheckState.Reachable(
+                    version = "0.1.0",
+                    tickMs = 100,
+                    checkedAtMs = 1L
+                )
+            )
+        )
+
+        composeTestRule.setContent {
+            AkalynthTheme(darkTheme = true) {
+                LoginScreen(
+                    state = state,
+                    onEvent = { events.add(it) },
+                    onCreateCharacter = {}
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag("LoginScreen_StatusPanel").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("LoginScreen_Lane").assertTextEquals("Beta lane")
+        composeTestRule.onNodeWithTag("LoginScreen_ServerHost").assertTextEquals("beta-api.akalynth.com")
+        composeTestRule.onNodeWithTag("LoginScreen_BetaBuildBadge").assertTextEquals("BETA BUILD")
+        composeTestRule.onNodeWithTag("LoginScreen_HealthState")
+            .assertTextEquals("Reachable v0.1.0 tick=100ms")
+        composeTestRule.onNodeWithTag("LoginScreen_HealthCheckedAt")
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithTag("LoginScreen_ReportIssue")
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithTag("LoginScreen_CheckHealth").performClick()
+        composeTestRule.onNodeWithTag("LoginScreen_ResetServer")
+            .performScrollTo()
+            .performClick()
+
+        assertEquals(listOf(GameEvent.CheckHealth, GameEvent.ResetServerUrl), events)
+    }
+
+    @Test
+    fun `status panel surfaces reconnect countdown`() {
+        val state = GameState.INITIAL.copy(
+            ui = UiState(
+                connectionDiagnostics = ConnectionDiagnostics(
+                    reconnectAttempts = 3,
+                    nextBackoffMs = 5000,
+                    nextReconnectAtMs = System.currentTimeMillis() + 5000
+                )
+            )
+        )
+
+        composeTestRule.setContent {
+            AkalynthTheme(darkTheme = true) {
+                LoginScreen(
+                    state = state,
+                    onEvent = {},
+                    onCreateCharacter = {}
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag("LoginScreen_ReconnectDiagnostics")
+            .performScrollTo()
             .assertIsDisplayed()
     }
 }

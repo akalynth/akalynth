@@ -1,8 +1,10 @@
 package com.akalynth.client.game
 
+import com.akalynth.client.BuildConfig
 import com.akalynth.client.network.ConnectionState
 import com.akalynth.client.protocol.MapName
 import com.akalynth.client.protocol.PlayerPublic
+import com.akalynth.client.ui.state.ChronicleEvent
 
 data class GameState(
     val connection: ConnectionState = ConnectionState.Idle,
@@ -20,7 +22,7 @@ data class SessionState(
     val playerId: String? = null,
     val playerName: String? = null,
     val savedCharacterName: String? = null,
-    val serverUrl: String = "ws://10.0.2.2:3000"
+    val serverUrl: String = BuildConfig.WS_BASE_URL
 )
 
 data class WorldState(
@@ -42,9 +44,12 @@ data class UiState(
     val witnessRequest: WitnessRequestData? = null,
     val errorMessage: String? = null,
     val chatOpen: Boolean = false,
+    val showChronicleSheet: Boolean = false,
+    val chronicleEvents: List<ChronicleEvent> = emptyList(),
     val debugLog: List<DebugLogEntry> = emptyList(),
     val showDebugDrawer: Boolean = false,
-    val connectionDiagnostics: ConnectionDiagnostics = ConnectionDiagnostics()
+    val connectionDiagnostics: ConnectionDiagnostics = ConnectionDiagnostics(),
+    val healthCheck: HealthCheckState = HealthCheckState.Unknown
 )
 
 data class DebugLogEntry(
@@ -70,5 +75,20 @@ data class ConnectionDiagnostics(
     val lastCloseCode: Int? = null,
     val lastCloseReason: String? = null,
     val reconnectAttempts: Int = 0,
-    val nextBackoffMs: Long = 0L
+    val nextBackoffMs: Long = 0L,
+    val nextReconnectAtMs: Long? = null
 )
+
+sealed class HealthCheckState {
+    data object Unknown : HealthCheckState()
+    data object Checking : HealthCheckState()
+    data class Reachable(
+        val version: String,
+        val tickMs: Int,
+        val checkedAtMs: Long
+    ) : HealthCheckState()
+    data class Unreachable(
+        val message: String,
+        val checkedAtMs: Long
+    ) : HealthCheckState()
+}

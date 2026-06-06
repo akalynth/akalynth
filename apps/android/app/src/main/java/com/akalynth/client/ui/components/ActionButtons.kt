@@ -23,6 +23,7 @@ import com.akalynth.client.ui.theme.ClassicShellColors
 @Composable
 fun ActionButtons(
     onChat: () -> Unit,
+    onChronicle: () -> Unit = {},
     showWitnessMothBloom: Boolean = false,
     onWorldEventContribution: (String) -> Unit = {},
     modifier: Modifier = Modifier
@@ -51,6 +52,29 @@ fun ActionButtons(
 
             Text(
                 text = "Chat",
+                style = MaterialTheme.typography.labelSmall,
+                color = ClassicShellColors.Text
+            )
+
+            Box(
+                modifier = Modifier
+                    .size(54.dp)
+                    .clip(CircleShape)
+                    .background(ClassicShellColors.Stone.copy(alpha = 0.92f))
+                    .border(1.dp, ClassicShellColors.Rune.copy(alpha = 0.75f), CircleShape)
+                    .clickable { onChronicle() }
+                    .testTag("ActionButtons_Chronicle"),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "C",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = ClassicShellColors.Text
+                )
+            }
+
+            Text(
+                text = "Chronicle",
                 style = MaterialTheme.typography.labelSmall,
                 color = ClassicShellColors.Text
             )

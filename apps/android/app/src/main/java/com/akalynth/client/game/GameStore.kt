@@ -1,22 +1,35 @@
 package com.akalynth.client.game
 
 import android.content.Context
+import com.akalynth.client.BuildConfig
 import com.akalynth.client.network.ConnectionState
+import com.akalynth.client.network.EndpointInfo
+import com.akalynth.client.network.HealthApi
 import com.akalynth.client.network.IdentityStore
 import com.akalynth.client.network.WsClient
 import com.akalynth.client.network.WsEvent
 import com.akalynth.client.protocol.*
+import com.akalynth.client.protocol.ChronicleEvent as WireChronicleEvent
+import com.akalynth.client.ui.state.ChronicleEvent
+import com.akalynth.client.ui.state.ChronicleEventDetails
+import com.akalynth.client.ui.state.ChronicleEventKind
+import com.akalynth.client.ui.state.EventSource
+import com.akalynth.client.ui.state.EventStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 
 private const val PREFS_NAME = "akalynth_prefs"
 private const val KEY_GUEST_TOKEN = "guest_token"
 private const val KEY_SERVER_URL = "server_url"
-private const val DEFAULT_SERVER_URL = "ws://10.0.2.2:3000"
+private val DEFAULT_SERVER_URL = BuildConfig.WS_BASE_URL
 private const val MAX_CHAT_MESSAGES = 50
 private const val MAX_DEBUG_LOG = 100
 private const val WITNESS_TTL_MS = 12000L
@@ -49,6 +62,8 @@ class GameStore(
 
         observeWsEvents()
         observeConnectionState()
+        observeWsDiagnostics()
+        checkHealth()
     }
 
     private fun observeWsEvents() {
@@ -157,16 +172,29 @@ class GameStore(
     private fun observeConnectionState() {
         scope.launch {
             wsClient.connectionState.collect { connState ->
-                val diag = ConnectionDiagnostics(
-                    lastCloseCode = wsClient.lastCloseCode,
-                    lastCloseReason = wsClient.lastCloseReason,
-                    reconnectAttempts = wsClient.reconnectAttempts,
-                    nextBackoffMs = wsClient.nextBackoffMs
-                )
                 _state.update {
                     it.copy(
-                        connection = connState,
-                        ui = it.ui.copy(connectionDiagnostics = diag)
+                        connection = connState
+                    )
+                }
+            }
+        }
+    }
+
+    private fun observeWsDiagnostics() {
+        scope.launch {
+            wsClient.diagnostics.collect { diag ->
+                _state.update {
+                    it.copy(
+                        ui = it.ui.copy(
+                            connectionDiagnostics = ConnectionDiagnostics(
+                                lastCloseCode = diag.lastCloseCode,
+                                lastCloseReason = diag.lastCloseReason,
+                                reconnectAttempts = diag.reconnectAttempts,
+                                nextBackoffMs = diag.nextBackoffMs,
+                                nextReconnectAtMs = diag.nextReconnectAtMs
+                            )
+                        )
                     )
                 }
             }
@@ -180,6 +208,8 @@ class GameStore(
                 wsClient.connect()
             }
             is GameEvent.Disconnect -> wsClient.disconnect()
+            is GameEvent.CheckHealth -> checkHealth()
+            is GameEvent.ResetServerUrl -> setServerUrl(DEFAULT_SERVER_URL)
             is GameEvent.Move -> sendMove(event.direction)
             is GameEvent.SendChat -> sendChat(event.message)
             is GameEvent.ToggleChat -> toggleChat()
@@ -190,6 +220,7 @@ class GameStore(
             is GameEvent.DismissError -> clearError()
             is GameEvent.DismissTemChallenge -> dismissTemChallenge()
             is GameEvent.DismissWitnessRequest -> dismissWitnessRequest()
+            is GameEvent.ToggleChronicle -> toggleChronicle()
             is GameEvent.SetServerUrl -> setServerUrl(event.url)
             is GameEvent.ToggleDebugDrawer -> toggleDebugDrawer()
             is GameEvent.ClearDebugLog -> clearDebugLog()
@@ -198,6 +229,10 @@ class GameStore(
 
     private fun toggleDebugDrawer() {
         _state.update { it.copy(ui = it.ui.copy(showDebugDrawer = !it.ui.showDebugDrawer)) }
+    }
+
+    private fun toggleChronicle() {
+        _state.update { it.copy(ui = it.ui.copy(showChronicleSheet = !it.ui.showChronicleSheet)) }
     }
 
     private fun clearDebugLog() {
@@ -226,6 +261,46 @@ class GameStore(
         prefs.edit().putString(KEY_SERVER_URL, normalized).apply()
         _state.update { it.copy(session = it.session.copy(serverUrl = normalized)) }
         logDebug("sys", "URL set: $normalized")
+        checkHealth()
+    }
+
+    private fun checkHealth() {
+        val endpoint = EndpointInfo.fromWsUrl(_state.value.session.serverUrl)
+        _state.update { it.copy(ui = it.ui.copy(healthCheck = HealthCheckState.Checking)) }
+        HealthApi(endpoint.httpBaseUrl).check(object : HealthApi.HealthCallback {
+            override fun onSuccess(health: HealthApi.HealthResponse) {
+                scope.launch {
+                    _state.update {
+                        it.copy(
+                            ui = it.ui.copy(
+                                healthCheck = HealthCheckState.Reachable(
+                                    version = health.version,
+                                    tickMs = health.tickMs,
+                                    checkedAtMs = System.currentTimeMillis()
+                                )
+                            )
+                        )
+                    }
+                    logDebug("sys", "health OK: v${health.version} tick=${health.tickMs}ms")
+                }
+            }
+
+            override fun onFailure(error: String) {
+                scope.launch {
+                    _state.update {
+                        it.copy(
+                            ui = it.ui.copy(
+                                healthCheck = HealthCheckState.Unreachable(
+                                    message = error,
+                                    checkedAtMs = System.currentTimeMillis()
+                                )
+                            )
+                        )
+                    }
+                    logDebug("sys", "health FAIL: $error")
+                }
+            }
+        })
     }
 
     private fun normalizeServerUrl(raw: String): String? {
@@ -288,7 +363,7 @@ class GameStore(
             is WorldItemAddedMessage -> {}
             is WorldItemRemovedMessage -> {}
             is ProtectedSlotSetMessage -> {}
-            is ChronicleSnapshotMessage -> {}
+            is ChronicleSnapshotMessage -> handleChronicleSnapshot(msg)
             is EvidenceSnapshotMessage -> {}
             is PressureMetricsSnapshotMessage -> {}
             is PlayerInspectMessage -> {}
@@ -456,6 +531,63 @@ class GameStore(
         val messages = (_state.value.world.chatMessages + entry).takeLast(MAX_CHAT_MESSAGES)
         _state.update { it.copy(world = it.world.copy(chatMessages = messages)) }
     }
+
+    private fun handleChronicleSnapshot(msg: ChronicleSnapshotMessage) {
+        val events = msg.events.mapIndexed { index, event -> event.toUiChronicleEvent(index) }
+        _state.update {
+            it.copy(ui = it.ui.copy(chronicleEvents = events))
+        }
+    }
+
+    private fun WireChronicleEvent.toUiChronicleEvent(index: Int): ChronicleEvent {
+        val detailsObject = details as? JsonObject
+        val receiptId = evidenceRef?.chronicleEventId?.toString()
+        return ChronicleEvent(
+            id = receiptId ?: "${kind}_${timestamp}_$index",
+            kind = mapChronicleKind(kind),
+            timestamp = timestamp,
+            zone = zone ?: "Unknown",
+            x = x ?: 0,
+            y = y ?: 0,
+            details = ChronicleEventDetails(
+                killerName = detailsObject?.string("killer_name") ?: detailsObject?.string("killerName"),
+                itemsLost = detailsObject?.stringList("items_lost") ?: detailsObject?.stringList("itemsLost"),
+                itemName = detailsObject?.string("item_name") ?: detailsObject?.string("itemName"),
+                victimName = detailsObject?.string("victim_name") ?: detailsObject?.string("victimName"),
+                fromZone = detailsObject?.string("from_zone") ?: detailsObject?.string("fromZone"),
+                eventId = detailsObject?.string("event_id") ?: detailsObject?.string("eventId"),
+                phase = detailsObject?.string("phase"),
+                contributionId = detailsObject?.string("contribution_id")
+                    ?: detailsObject?.string("contributionId"),
+                outcome = detailsObject?.string("outcome")
+            ),
+            status = EventStatus.CONFIRMED,
+            source = EventSource.SERVER_RECEIPT
+        )
+    }
+
+    private fun mapChronicleKind(kind: String): ChronicleEventKind = when (kind.lowercase()) {
+        "death" -> ChronicleEventKind.DEATH
+        "zone_enter" -> ChronicleEventKind.ZONE_ENTER
+        "item_pickup" -> ChronicleEventKind.ITEM_PICKUP
+        "item_drop" -> ChronicleEventKind.ITEM_DROP
+        "combat_kill" -> ChronicleEventKind.COMBAT_KILL
+        "tutorial_complete" -> ChronicleEventKind.TUTORIAL_COMPLETE
+        "character_created" -> ChronicleEventKind.CHARACTER_CREATED
+        "world_event",
+        "world_event_started",
+        "world_event_contribution",
+        "world_event_resolved" -> ChronicleEventKind.WORLD_EVENT
+        else -> ChronicleEventKind.UNKNOWN
+    }
+
+    private fun JsonObject.string(name: String): String? =
+        (this[name] as? JsonPrimitive)?.contentOrNull
+
+    private fun JsonObject.stringList(name: String): List<String>? =
+        (this[name] as? JsonArray)
+            ?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }
+            ?.takeIf { it.isNotEmpty() }
 
     private fun handleTemChallenge(msg: TemChallengeMessage) {
         val data = TemChallengeData(

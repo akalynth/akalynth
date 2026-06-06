@@ -7,6 +7,8 @@ sealed class GameEvent {
     // Connection
     data object Connect : GameEvent()
     data object Disconnect : GameEvent()
+    data object CheckHealth : GameEvent()
+    data object ResetServerUrl : GameEvent()
 
     // Movement
     data class Move(val direction: Direction) : GameEvent()
@@ -29,6 +31,7 @@ sealed class GameEvent {
     data object DismissError : GameEvent()
     data object DismissTemChallenge : GameEvent()
     data object DismissWitnessRequest : GameEvent()
+    data object ToggleChronicle : GameEvent()
 
     // Settings
     data class SetServerUrl(val url: String) : GameEvent()

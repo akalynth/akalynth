@@ -36,6 +36,9 @@ class WsClient(
     private val _connectionState = MutableStateFlow<ConnectionState>(ConnectionState.Idle)
     val connectionState: StateFlow<ConnectionState> = _connectionState.asStateFlow()
 
+    private val _diagnostics = MutableStateFlow(WsDiagnostics())
+    val diagnostics: StateFlow<WsDiagnostics> = _diagnostics.asStateFlow()
+
     private val reconnectPolicy = ReconnectPolicy()
     private var reconnectJob: Job? = null
     private var autoReconnect = true
@@ -43,11 +46,13 @@ class WsClient(
     // Diagnostics
     private var _lastCloseCode: Int? = null
     private var _lastCloseReason: String? = null
+    private var _nextReconnectAtMs: Long? = null
 
     val lastCloseCode: Int? get() = _lastCloseCode
     val lastCloseReason: String? get() = _lastCloseReason
     val reconnectAttempts: Int get() = reconnectPolicy.attempt
     val nextBackoffMs: Long get() = reconnectPolicy.lastDelay
+    val nextReconnectAtMs: Long? get() = _nextReconnectAtMs
 
     fun connect() {
         if (_connectionState.value == ConnectionState.Connecting) return
@@ -61,6 +66,8 @@ class WsClient(
                 reconnectPolicy.reset()
                 _lastCloseCode = null
                 _lastCloseReason = null
+                _nextReconnectAtMs = null
+                updateDiagnostics()
                 _connectionState.value = ConnectionState.Connected
                 scope.launch { _events.send(WsEvent.Connected) }
             }
@@ -77,6 +84,7 @@ class WsClient(
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                 _lastCloseCode = code
                 _lastCloseReason = reason.ifEmpty { null }
+                updateDiagnostics()
                 _connectionState.value = ConnectionState.Disconnected(reason)
                 scope.launch { _events.send(WsEvent.Disconnected(code, reason)) }
                 if (autoReconnect) {
@@ -102,6 +110,8 @@ class WsClient(
     fun disconnect() {
         autoReconnect = false
         reconnectJob?.cancel()
+        _nextReconnectAtMs = null
+        updateDiagnostics()
         webSocket?.close(1000, "User disconnect")
         webSocket = null
         _connectionState.value = ConnectionState.Idle
@@ -110,7 +120,12 @@ class WsClient(
     private fun scheduleReconnect() {
         reconnectJob?.cancel()
         reconnectJob = scope.launch {
-            delay(reconnectPolicy.nextDelay())
+            val delayMs = reconnectPolicy.nextDelay()
+            _nextReconnectAtMs = System.currentTimeMillis() + delayMs
+            updateDiagnostics()
+            delay(delayMs)
+            _nextReconnectAtMs = null
+            updateDiagnostics()
             connect()
         }
     }
@@ -121,5 +136,15 @@ class WsClient(
 
     fun setUrl(url: String) {
         currentUrl = url
+    }
+
+    private fun updateDiagnostics() {
+        _diagnostics.value = WsDiagnostics(
+            lastCloseCode = _lastCloseCode,
+            lastCloseReason = _lastCloseReason,
+            reconnectAttempts = reconnectPolicy.attempt,
+            nextBackoffMs = reconnectPolicy.lastDelay,
+            nextReconnectAtMs = _nextReconnectAtMs
+        )
     }
 }

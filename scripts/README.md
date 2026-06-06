@@ -46,6 +46,9 @@ Scripts should be idempotent and documented.
 
 ### Docker runtime scripts
 - `scripts/verify-docker-runtime.sh`: Backs `npm run verify:docker-runtime` (see `infra/README.md`).
+- `scripts/smoke-beta-apk.sh`: Downloads the public beta APK, verifies the
+  `.sha256` sidecar, and optionally installs through `adb` when a device is
+  connected.
 - `scripts/smoke-docker-runtime.sh`: Backs `npm run smoke:docker-runtime`.
 - `scripts/render-docker-runtime.sh`: Backs `npm run render:docker-runtime` (renders host Docker files into `.tmp/akalynth-docker-runtime` by default).
 

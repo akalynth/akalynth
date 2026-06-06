@@ -1,5 +1,9 @@
 package com.akalynth.client.ui.screens
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
@@ -7,22 +11,37 @@ import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.akalynth.client.game.GameEvent
 import com.akalynth.client.game.GameState
+import com.akalynth.client.network.EndpointInfo
+import com.akalynth.client.ui.diagnostics.DiagnosticsFormatter
 import com.akalynth.client.ui.components.*
+import com.akalynth.client.ui.components.chronicle.ChronicleSheet
 import com.akalynth.client.ui.theme.ClassicButton
 import com.akalynth.client.ui.theme.ClassicPanel
 import com.akalynth.client.ui.theme.ClassicShellColors
+import kotlinx.coroutines.delay
 
 @Composable
 fun WorldScreen(
     state: GameState,
     onEvent: (GameEvent) -> Unit
 ) {
+    val context = LocalContext.current
+    val endpoint = EndpointInfo.fromWsUrl(state.session.serverUrl)
+    val nowMs = rememberNowMs()
+    val reconnectLabel = DiagnosticsFormatter.reconnectCountdownLabel(state.ui.connectionDiagnostics, nowMs)
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -58,20 +77,40 @@ fun WorldScreen(
                 color = ClassicShellColors.Brass
             )
             Text(
-                text = "Local debug",
+                text = reconnectLabel
+                    ?: "${endpoint.lane} - ${DiagnosticsFormatter.connectionLabel(state.connection)}",
                 style = MaterialTheme.typography.labelSmall,
-                color = ClassicShellColors.MutedText
+                color = if (reconnectLabel != null) ClassicShellColors.Warning else ClassicShellColors.MutedText,
+                modifier = Modifier.testTag("WorldScreen_ConnectionLine")
             )
         }
 
-        ClassicButton(
-            text = "DBG",
-            onClick = { onEvent(GameEvent.ToggleDebugDrawer) },
-            compact = true,
+        Row(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(12.dp)
-        )
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            ClassicButton(
+                text = "Issue",
+                onClick = {
+                    copyTextToClipboard(
+                        context = context,
+                        label = "Akalynth Issue Report",
+                        text = DiagnosticsFormatter.formatIssueReport(state),
+                        toast = "Issue report copied"
+                    )
+                },
+                compact = true,
+                modifier = Modifier.testTag("WorldScreen_ReportIssue")
+            )
+            ClassicButton(
+                text = "DBG",
+                onClick = { onEvent(GameEvent.ToggleDebugDrawer) },
+                compact = true,
+                modifier = Modifier.testTag("WorldScreen_Debug")
+            )
+        }
 
         if (!state.ui.showDebugDrawer) {
             DPad(
@@ -83,6 +122,7 @@ fun WorldScreen(
 
             ActionButtons(
                 onChat = { onEvent(GameEvent.ToggleChat) },
+                onChronicle = { onEvent(GameEvent.ToggleChronicle) },
                 showWitnessMothBloom = state.world.currentMap.isHighCityCompatible,
                 onWorldEventContribution = { contributionId ->
                     onEvent(GameEvent.WorldEventContribution(contributionId))
@@ -106,6 +146,17 @@ fun WorldScreen(
                 state = state,
                 onClose = { onEvent(GameEvent.ToggleDebugDrawer) },
                 onClear = { onEvent(GameEvent.ClearDebugLog) },
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
+        }
+
+        if (state.ui.showChronicleSheet) {
+            ChronicleSheet(
+                events = state.ui.chronicleEvents,
+                hasMore = false,
+                onEventClick = {},
+                onLoadMore = {},
+                onDismiss = { onEvent(GameEvent.ToggleChronicle) },
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
         }
@@ -145,4 +196,27 @@ fun WorldScreen(
             }
         }
     }
+}
+
+@Composable
+private fun rememberNowMs(): Long {
+    var nowMs by remember { mutableStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(1000)
+            nowMs = System.currentTimeMillis()
+        }
+    }
+    return nowMs
+}
+
+private fun copyTextToClipboard(
+    context: Context,
+    label: String,
+    text: String,
+    toast: String
+) {
+    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    clipboard.setPrimaryClip(ClipData.newPlainText(label, text))
+    Toast.makeText(context, toast, Toast.LENGTH_SHORT).show()
 }
