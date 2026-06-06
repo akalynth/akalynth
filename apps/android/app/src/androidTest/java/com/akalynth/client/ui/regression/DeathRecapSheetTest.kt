@@ -16,8 +16,7 @@ import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
+import androidx.test.ext.junit.runners.AndroidJUnit4
 
 /**
  * Regression tests for death recap sheet.
@@ -26,8 +25,7 @@ import org.robolectric.annotation.Config
  * Timing constants:
  * - SHEET_OPEN_MS = 300ms (max)
  */
-@RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
+@RunWith(AndroidJUnit4::class)
 class DeathRecapSheetTest {
 
     @get:Rule
@@ -38,7 +36,7 @@ class DeathRecapSheetTest {
     // =========================================================================
 
     @Test
-    fun `X3 - displays killer name`() {
+    fun test_x3_displays_killer_name() {
         val deathEvent = createMockDeathEvent(
             killerName = "DarkMage_99"
         )
@@ -59,7 +57,7 @@ class DeathRecapSheetTest {
     }
 
     @Test
-    fun `X3 - displays location`() {
+    fun test_x3_displays_location() {
         val deathEvent = createMockDeathEvent(
             zone = "Azura",
             x = 12,
@@ -82,7 +80,7 @@ class DeathRecapSheetTest {
     }
 
     @Test
-    fun `X3 - displays time`() {
+    fun test_x3_displays_time() {
         val deathEvent = createMockDeathEvent(
             timestamp = "2026-01-21T14:32:07Z"
         )
@@ -103,7 +101,7 @@ class DeathRecapSheetTest {
     }
 
     @Test
-    fun `X3 - displays items lost`() {
+    fun test_x3_displays_items_lost() {
         val deathEvent = createMockDeathEvent(
             itemsLost = listOf("Flame Sword", "Ration", "Ration")
         )
@@ -128,7 +126,7 @@ class DeathRecapSheetTest {
     }
 
     @Test
-    fun `X3 - handles unknown killer`() {
+    fun test_x3_handles_unknown_killer() {
         val deathEvent = createMockDeathEvent(
             killerName = null
         )
@@ -148,7 +146,7 @@ class DeathRecapSheetTest {
     }
 
     @Test
-    fun `X3 - handles no items lost`() {
+    fun test_x3_handles_no_items_lost() {
         val deathEvent = createMockDeathEvent(
             itemsLost = emptyList()
         )
@@ -173,7 +171,7 @@ class DeathRecapSheetTest {
     // =========================================================================
 
     @Test
-    fun `X4 - copy event id works`() {
+    fun test_x4_copy_event_id_works() {
         val eventId = "evt_12345"
         var copiedId: String? = null
 
@@ -198,7 +196,7 @@ class DeathRecapSheetTest {
     }
 
     @Test
-    fun `X4 - copy button is displayed`() {
+    fun test_x4_copy_button_is_displayed() {
         val deathEvent = createMockDeathEvent()
 
         composeTestRule.setContent {
@@ -215,7 +213,7 @@ class DeathRecapSheetTest {
     }
 
     @Test
-    fun `X4 - copy button disabled if no event id`() {
+    fun test_x4_copy_button_disabled_if_no_event_id() {
         val deathEvent = createMockDeathEvent(
             chronicleEventId = null
         )
@@ -236,7 +234,7 @@ class DeathRecapSheetTest {
     }
 
     @Test
-    fun `X4 - copy button enabled with valid event id`() {
+    fun test_x4_copy_button_enabled_with_valid_event_id() {
         val deathEvent = createMockDeathEvent(
             chronicleEventId = "evt_valid_123"
         )
@@ -255,7 +253,7 @@ class DeathRecapSheetTest {
     }
 
     @Test
-    fun `X4 - copy button does not crash on null id click`() {
+    fun test_x4_copy_button_does_not_crash_on_null_id_click() {
         var callbackInvoked = false
         val deathEvent = createMockDeathEvent(
             chronicleEventId = null
@@ -282,7 +280,7 @@ class DeathRecapSheetTest {
     // =========================================================================
 
     @Test
-    fun `dismiss closes sheet`() {
+    fun test_dismiss_closes_sheet() {
         var dismissed = false
         val deathEvent = createMockDeathEvent()
 
@@ -303,7 +301,7 @@ class DeathRecapSheetTest {
     }
 
     @Test
-    fun `header shows DEATH RECAP`() {
+    fun test_header_shows_death_recap() {
         val deathEvent = createMockDeathEvent()
 
         composeTestRule.setContent {
@@ -320,7 +318,7 @@ class DeathRecapSheetTest {
     }
 
     @Test
-    fun `skull icon is displayed`() {
+    fun test_skull_icon_is_displayed() {
         val deathEvent = createMockDeathEvent()
 
         composeTestRule.setContent {
@@ -337,7 +335,7 @@ class DeathRecapSheetTest {
     }
 
     @Test
-    fun `event id is displayed when present`() {
+    fun test_event_id_is_displayed_when_present() {
         val eventId = "evt_display_test"
         val deathEvent = createMockDeathEvent(chronicleEventId = eventId)
 
@@ -359,7 +357,7 @@ class DeathRecapSheetTest {
     // =========================================================================
 
     @Test
-    fun `SHEET_OPEN_MS matches spec`() {
+    fun test_sheet_open_ms_matches_spec() {
         assertEquals("SHEET_OPEN_MS should be 300", 300L, SHEET_OPEN_MS)
     }
 

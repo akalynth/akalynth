@@ -11,8 +11,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.Assert.*
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
+import androidx.test.ext.junit.runners.AndroidJUnit4
 
 /**
  * Regression tests for Tier 2 (hold 1.5s) confirmation button.
@@ -24,8 +23,7 @@ import org.robolectric.annotation.Config
  * Note: These tests use Compose's test clock for deterministic timing.
  * mainClock.advanceTimeBy() controls the animation progress.
  */
-@RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
+@RunWith(AndroidJUnit4::class)
 class Tier2HoldButtonTest {
 
     @get:Rule
@@ -41,7 +39,7 @@ class Tier2HoldButtonTest {
     // =========================================================================
 
     @Test
-    fun `D1 - hold full duration confirms`() {
+    fun test_d1_hold_full_duration_confirms() {
         var confirmed = false
         var cancelled = false
 
@@ -72,7 +70,7 @@ class Tier2HoldButtonTest {
     }
 
     @Test
-    fun `D1 - hold duration is 1500ms within tolerance`() {
+    fun test_d1_hold_duration_is_1500ms_within_tolerance() {
         var confirmed = false
 
         composeTestRule.setContent {
@@ -104,7 +102,7 @@ class Tier2HoldButtonTest {
     }
 
     @Test
-    fun `D1 - confirm callback fires exactly once`() {
+    fun test_d1_confirm_callback_fires_exactly_once() {
         var confirmCount = 0
 
         composeTestRule.setContent {
@@ -136,7 +134,7 @@ class Tier2HoldButtonTest {
     // =========================================================================
 
     @Test
-    fun `D2 - release before completion cancels`() {
+    fun test_d2_release_before_completion_cancels() {
         var confirmed = false
         var cancelled = false
 
@@ -167,7 +165,7 @@ class Tier2HoldButtonTest {
     }
 
     @Test
-    fun `D2 - progress resets on cancel`() {
+    fun test_d2_progress_resets_on_cancel() {
         var cancelCount = 0
 
         composeTestRule.setContent {
@@ -204,7 +202,7 @@ class Tier2HoldButtonTest {
     }
 
     @Test
-    fun `D2 - release at 99 percent does not confirm`() {
+    fun test_d2_release_at_99_percent_does_not_confirm() {
         var confirmed = false
         var cancelled = false
 
@@ -238,7 +236,7 @@ class Tier2HoldButtonTest {
     // =========================================================================
 
     @Test
-    fun `confirmed latch prevents cancel after confirm`() {
+    fun test_confirmed_latch_prevents_cancel_after_confirm() {
         var confirmCount = 0
         var cancelCount = 0
 
@@ -275,7 +273,7 @@ class Tier2HoldButtonTest {
     // =========================================================================
 
     @Test
-    fun `text shows HOLD initially`() {
+    fun test_text_shows_hold_initially() {
         composeTestRule.setContent {
             Tier2HoldButton(
                 label = "Test",
@@ -288,7 +286,7 @@ class Tier2HoldButtonTest {
     }
 
     @Test
-    fun `text changes from HOLD to DONE on completion`() {
+    fun test_text_changes_from_hold_to_done_on_completion() {
         composeTestRule.setContent {
             Tier2HoldButton(
                 label = "Test",
@@ -315,7 +313,7 @@ class Tier2HoldButtonTest {
     // =========================================================================
 
     @Test
-    fun `can confirm after previous cancel`() {
+    fun test_can_confirm_after_previous_cancel() {
         var confirmCount = 0
         var cancelCount = 0
 
@@ -357,7 +355,7 @@ class Tier2HoldButtonTest {
     // =========================================================================
 
     @Test
-    fun `immediate release does not fire cancel`() {
+    fun test_immediate_release_does_not_fire_cancel() {
         var cancelCount = 0
 
         composeTestRule.setContent {
@@ -380,7 +378,7 @@ class Tier2HoldButtonTest {
     }
 
     @Test
-    fun `very short hold fires cancel`() {
+    fun test_very_short_hold_fires_cancel() {
         var cancelCount = 0
 
         composeTestRule.setContent {

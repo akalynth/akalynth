@@ -36,7 +36,7 @@ class TopBarTest {
     // =========================================================================
 
     @Test
-    fun `L1 - stage 0 shows HP bar`() {
+    fun test_l1_stage_0_shows_hp_bar() {
         composeTestRule.setContent {
             TopBar(
                 stage = 0,
@@ -51,7 +51,7 @@ class TopBarTest {
     }
 
     @Test
-    fun `L1 - stage 0 shows chat button`() {
+    fun test_l1_stage_0_shows_chat_button() {
         composeTestRule.setContent {
             TopBar(
                 stage = 0,
@@ -66,7 +66,7 @@ class TopBarTest {
     }
 
     @Test
-    fun `L1 - stage 0 hides menu`() {
+    fun test_l1_stage_0_hides_menu() {
         composeTestRule.setContent {
             TopBar(
                 stage = 0,
@@ -81,7 +81,7 @@ class TopBarTest {
     }
 
     @Test
-    fun `L1 - stage 0 hides why`() {
+    fun test_l1_stage_0_hides_why() {
         composeTestRule.setContent {
             TopBar(
                 stage = 0,
@@ -96,7 +96,7 @@ class TopBarTest {
     }
 
     @Test
-    fun `L1 - stage 0 hides rep gold nearby`() {
+    fun test_l1_stage_0_hides_rep_gold_nearby() {
         composeTestRule.setContent {
             TopBar(
                 stage = 0,
@@ -120,7 +120,7 @@ class TopBarTest {
     // =========================================================================
 
     @Test
-    fun `L2 - stage 1 shows menu`() {
+    fun test_l2_stage_1_shows_menu() {
         composeTestRule.setContent {
             TopBar(
                 stage = 1,
@@ -135,7 +135,7 @@ class TopBarTest {
     }
 
     @Test
-    fun `L2 - stage 1 still hides why`() {
+    fun test_l2_stage_1_still_hides_why() {
         composeTestRule.setContent {
             TopBar(
                 stage = 1,
@@ -154,7 +154,7 @@ class TopBarTest {
     // =========================================================================
 
     @Test
-    fun `L3 - stage 2 shows why`() {
+    fun test_l3_stage_2_shows_why() {
         composeTestRule.setContent {
             TopBar(
                 stage = 2,
@@ -169,7 +169,7 @@ class TopBarTest {
     }
 
     @Test
-    fun `L3 - stage 2 still hides rep gold nearby`() {
+    fun test_l3_stage_2_still_hides_rep_gold_nearby() {
         composeTestRule.setContent {
             TopBar(
                 stage = 2,
@@ -193,7 +193,7 @@ class TopBarTest {
     // =========================================================================
 
     @Test
-    fun `L4 - stage 3 shows rep`() {
+    fun test_l4_stage_3_shows_rep() {
         composeTestRule.setContent {
             TopBar(
                 stage = 3,
@@ -209,7 +209,7 @@ class TopBarTest {
     }
 
     @Test
-    fun `L4 - stage 3 shows gold`() {
+    fun test_l4_stage_3_shows_gold() {
         composeTestRule.setContent {
             TopBar(
                 stage = 3,
@@ -225,7 +225,7 @@ class TopBarTest {
     }
 
     @Test
-    fun `L4 - stage 3 shows nearby when count is positive`() {
+    fun test_l4_stage_3_shows_nearby_when_count_is_positive() {
         composeTestRule.setContent {
             TopBar(
                 stage = 3,
@@ -241,7 +241,7 @@ class TopBarTest {
     }
 
     @Test
-    fun `L4 - stage 3 hides nearby when count is 0`() {
+    fun test_l4_stage_3_hides_nearby_when_count_is_0() {
         composeTestRule.setContent {
             TopBar(
                 stage = 3,
@@ -261,7 +261,7 @@ class TopBarTest {
     // =========================================================================
 
     @Test
-    fun `HP bar shows correct text`() {
+    fun test_hp_bar_shows_correct_text() {
         composeTestRule.setContent {
             TopBar(
                 stage = 0,
@@ -276,7 +276,7 @@ class TopBarTest {
     }
 
     @Test
-    fun `HP bar handles zero max`() {
+    fun test_hp_bar_handles_zero_max() {
         composeTestRule.setContent {
             TopBar(
                 stage = 0,
@@ -296,7 +296,7 @@ class TopBarTest {
     // =========================================================================
 
     @Test
-    fun `menu button fires callback`() {
+    fun test_menu_button_fires_callback() {
         var clicked = false
 
         composeTestRule.setContent {
@@ -316,7 +316,7 @@ class TopBarTest {
     }
 
     @Test
-    fun `why button fires callback`() {
+    fun test_why_button_fires_callback() {
         var clicked = false
 
         composeTestRule.setContent {
@@ -336,7 +336,7 @@ class TopBarTest {
     }
 
     @Test
-    fun `chat button fires callback`() {
+    fun test_chat_button_fires_callback() {
         var clicked = false
 
         composeTestRule.setContent {
@@ -356,7 +356,7 @@ class TopBarTest {
     }
 
     @Test
-    fun `nearby chip fires callback`() {
+    fun test_nearby_chip_fires_callback() {
         var clicked = false
 
         composeTestRule.setContent {
@@ -381,7 +381,7 @@ class TopBarTest {
     // =========================================================================
 
     @Test
-    fun `menu reserved slot exists at stage 0`() {
+    fun test_menu_reserved_slot_exists_at_stage_0() {
         composeTestRule.setContent {
             TopBar(
                 stage = 0,
@@ -396,7 +396,7 @@ class TopBarTest {
     }
 
     @Test
-    fun `why reserved slot exists at stage 0`() {
+    fun test_why_reserved_slot_exists_at_stage_0() {
         composeTestRule.setContent {
             TopBar(
                 stage = 0,
@@ -415,22 +415,22 @@ class TopBarTest {
     // =========================================================================
 
     @Test
-    fun `TOP_BAR_HEIGHT is 56dp`() {
+    fun test_top_bar_height_is_56dp() {
         assertEquals(56.dp, TOP_BAR_HEIGHT)
     }
 
     @Test
-    fun `MIN_TOUCH_TARGET is 44dp`() {
+    fun test_min_touch_target_is_44dp() {
         assertEquals(44.dp, MIN_TOUCH_TARGET)
     }
 
     @Test
-    fun `HP_BAR_WIDTH is 100dp`() {
+    fun test_hp_bar_width_is_100dp() {
         assertEquals(100.dp, HP_BAR_WIDTH)
     }
 
     @Test
-    fun `HP_BAR_HEIGHT is 20dp`() {
+    fun test_hp_bar_height_is_20dp() {
         assertEquals(20.dp, HP_BAR_HEIGHT)
     }
 }

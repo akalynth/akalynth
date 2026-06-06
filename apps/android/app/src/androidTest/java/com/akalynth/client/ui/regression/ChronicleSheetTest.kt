@@ -16,8 +16,7 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
+import androidx.test.ext.junit.runners.AndroidJUnit4
 
 /**
  * Regression tests for chronicle feed sheet.
@@ -28,8 +27,7 @@ import org.robolectric.annotation.Config
  *
  * Note: Day grouping tests use dynamic dates (today/yesterday) to avoid flakiness.
  */
-@RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
+@RunWith(AndroidJUnit4::class)
 class ChronicleSheetTest {
 
     @get:Rule
@@ -45,7 +43,7 @@ class ChronicleSheetTest {
     // =========================================================================
 
     @Test
-    fun `C1 - events grouped by day`() {
+    fun test_c1_events_grouped_by_day() {
         val todayTimestamp = todayAt(14, 0)
         val todayTimestamp2 = todayAt(10, 0)
         val yesterdayTimestamp = yesterdayAt(22, 0)
@@ -76,7 +74,7 @@ class ChronicleSheetTest {
     }
 
     @Test
-    fun `C1 - today header shows for today events`() {
+    fun test_c1_today_header_shows_for_today_events() {
         val events = listOf(
             createMockEvent(todayAt(14, 0), ChronicleEventKind.DEATH, "evt1")
         )
@@ -97,7 +95,7 @@ class ChronicleSheetTest {
     }
 
     @Test
-    fun `C1 - yesterday header shows for yesterday events`() {
+    fun test_c1_yesterday_header_shows_for_yesterday_events() {
         val events = listOf(
             createMockEvent(yesterdayAt(14, 0), ChronicleEventKind.ZONE_ENTER, "evt1")
         )
@@ -118,7 +116,7 @@ class ChronicleSheetTest {
     }
 
     @Test
-    fun `C1 - older dates show formatted date`() {
+    fun test_c1_older_dates_show_formatted_date() {
         val threeDaysAgo = LocalDate.now().minusDays(3)
         val timestamp = threeDaysAgo.atTime(14, 0).atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
         val expectedHeader = threeDaysAgo.format(DateTimeFormatter.ofPattern("MMM d"))
@@ -148,7 +146,7 @@ class ChronicleSheetTest {
     // =========================================================================
 
     @Test
-    fun `C2 - death row opens recap`() {
+    fun test_c2_death_row_opens_recap() {
         var clickedEvent: ChronicleEvent? = null
         val deathEvent = createMockEvent(todayAt(14, 0), ChronicleEventKind.DEATH, "evt_death")
 
@@ -171,7 +169,7 @@ class ChronicleSheetTest {
     }
 
     @Test
-    fun `C2 - non death rows not tappable`() {
+    fun test_c2_non_death_rows_not_tappable() {
         var clickCount = 0
         val events = listOf(
             createMockEvent(todayAt(14, 0), ChronicleEventKind.ZONE_ENTER, "evt_zone"),
@@ -200,7 +198,7 @@ class ChronicleSheetTest {
     }
 
     @Test
-    fun `C2 - death row visually distinct`() {
+    fun test_c2_death_row_visually_distinct() {
         val events = listOf(
             createMockEvent(todayAt(14, 0), ChronicleEventKind.DEATH, "evt_death"),
             createMockEvent(todayAt(13, 0), ChronicleEventKind.ZONE_ENTER, "evt_zone")
@@ -232,7 +230,7 @@ class ChronicleSheetTest {
     // =========================================================================
 
     @Test
-    fun `C3 - load more triggers pagination`() {
+    fun test_c3_load_more_triggers_pagination() {
         var loadMoreCount = 0
 
         val events = listOf(
@@ -258,7 +256,7 @@ class ChronicleSheetTest {
     }
 
     @Test
-    fun `C3 - load more hidden when no more`() {
+    fun test_c3_load_more_hidden_when_no_more() {
         val events = listOf(
             createMockEvent(todayAt(14, 0), ChronicleEventKind.DEATH, "evt1")
         )
@@ -279,7 +277,7 @@ class ChronicleSheetTest {
     }
 
     @Test
-    fun `C3 - load more visible when has more`() {
+    fun test_c3_load_more_visible_when_has_more() {
         val events = listOf(
             createMockEvent(todayAt(14, 0), ChronicleEventKind.DEATH, "evt1")
         )
@@ -305,7 +303,7 @@ class ChronicleSheetTest {
     // =========================================================================
 
     @Test
-    fun `C4 - death icon is skull`() {
+    fun test_c4_death_icon_is_skull() {
         val events = listOf(
             createMockEvent(todayAt(14, 0), ChronicleEventKind.DEATH, "evt1")
         )
@@ -326,7 +324,7 @@ class ChronicleSheetTest {
     }
 
     @Test
-    fun `C4 - item pickup icon is package`() {
+    fun test_c4_item_pickup_icon_is_package() {
         val events = listOf(
             createMockEvent(todayAt(14, 0), ChronicleEventKind.ITEM_PICKUP, "evt1")
         )
@@ -347,7 +345,7 @@ class ChronicleSheetTest {
     }
 
     @Test
-    fun `C4 - zone enter icon is building`() {
+    fun test_c4_zone_enter_icon_is_building() {
         val events = listOf(
             createMockEvent(todayAt(14, 0), ChronicleEventKind.ZONE_ENTER, "evt1")
         )
@@ -368,7 +366,7 @@ class ChronicleSheetTest {
     }
 
     @Test
-    fun `C4 - combat kill icon is sword`() {
+    fun test_c4_combat_kill_icon_is_sword() {
         val events = listOf(
             createMockEvent(todayAt(14, 0), ChronicleEventKind.COMBAT_KILL, "evt1")
         )
@@ -389,7 +387,7 @@ class ChronicleSheetTest {
     }
 
     @Test
-    fun `C4 - tutorial complete icon is graduation`() {
+    fun test_c4_tutorial_complete_icon_is_graduation() {
         val events = listOf(
             createMockEvent(todayAt(14, 0), ChronicleEventKind.TUTORIAL_COMPLETE, "evt1")
         )
@@ -410,7 +408,7 @@ class ChronicleSheetTest {
     }
 
     @Test
-    fun `C4 - character created icon is sparkle`() {
+    fun test_c4_character_created_icon_is_sparkle() {
         val events = listOf(
             createMockEvent(todayAt(14, 0), ChronicleEventKind.CHARACTER_CREATED, "evt1")
         )
@@ -435,7 +433,7 @@ class ChronicleSheetTest {
     // =========================================================================
 
     @Test
-    fun `header shows MY CHRONICLE`() {
+    fun test_header_shows_my_chronicle() {
         composeTestRule.setContent {
             ChronicleSheet(
                 events = emptyList(),
@@ -452,7 +450,7 @@ class ChronicleSheetTest {
     }
 
     @Test
-    fun `empty state handled`() {
+    fun test_empty_state_handled() {
         composeTestRule.setContent {
             ChronicleSheet(
                 events = emptyList(),
@@ -470,7 +468,7 @@ class ChronicleSheetTest {
     }
 
     @Test
-    fun `dismiss closes sheet`() {
+    fun test_dismiss_closes_sheet() {
         var dismissed = false
 
         composeTestRule.setContent {
@@ -491,7 +489,7 @@ class ChronicleSheetTest {
     }
 
     @Test
-    fun `event row shows zone and time`() {
+    fun test_event_row_shows_zone_and_time() {
         val events = listOf(
             createMockEvent(todayAt(14, 30), ChronicleEventKind.DEATH, "evt1", zone = "Azura")
         )

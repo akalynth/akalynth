@@ -22,8 +22,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.Assert.*
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
+import androidx.test.ext.junit.runners.AndroidJUnit4
 
 /**
  * Regression tests for GameHUD layout and stage gating.
@@ -34,8 +33,7 @@ import org.robolectric.annotation.Config
  * - Section 4: U1 (Stage 0 layout)
  * - Section 5: X5 (Why button visibility)
  */
-@RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
+@RunWith(AndroidJUnit4::class)
 class GameHUDTest {
 
     @get:Rule
@@ -51,7 +49,7 @@ class GameHUDTest {
     // =========================================================================
 
     @Test
-    fun `M4 - dead zone enforced via spacer`() {
+    fun test_m4_dead_zone_enforced_via_spacer() {
         composeTestRule.setContent {
             GameHUDSimple(
                 deadZone = 100.dp,
@@ -82,7 +80,7 @@ class GameHUDTest {
     }
 
     @Test
-    fun `M4 - dead zone constant matches spec`() {
+    fun test_m4_dead_zone_constant_matches_spec() {
         assertEquals(
             "DEAD_ZONE_DP should be 100dp",
             100.dp,
@@ -91,7 +89,7 @@ class GameHUDTest {
     }
 
     @Test
-    fun `M4 - dead zone enforced in simple layout`() {
+    fun test_m4_dead_zone_enforced_in_simple_layout() {
         composeTestRule.setContent {
             GameHUDSimple(
                 deadZone = DEAD_ZONE_DP,
@@ -124,7 +122,7 @@ class GameHUDTest {
     // =========================================================================
 
     @Test
-    fun `A3 - attack hidden at stage 0`() {
+    fun test_a3_attack_hidden_at_stage_0() {
         composeTestRule.setContent {
             GameHUD(
                 stage = 0,
@@ -140,7 +138,7 @@ class GameHUDTest {
     }
 
     @Test
-    fun `A4 - menu visible at stage 1`() {
+    fun test_a4_menu_visible_at_stage_1() {
         composeTestRule.setContent {
             GameHUD(
                 stage = 1,
@@ -154,7 +152,7 @@ class GameHUDTest {
     }
 
     @Test
-    fun `A4 - menu visible at stage 2`() {
+    fun test_a4_menu_visible_at_stage_2() {
         composeTestRule.setContent {
             GameHUD(
                 stage = 2,
@@ -168,7 +166,7 @@ class GameHUDTest {
     }
 
     @Test
-    fun `A4 - menu visible at stage 3`() {
+    fun test_a4_menu_visible_at_stage_3() {
         composeTestRule.setContent {
             GameHUD(
                 stage = 3,
@@ -186,7 +184,7 @@ class GameHUDTest {
     // =========================================================================
 
     @Test
-    fun `D6 - hotbar hidden at stage 0`() {
+    fun test_d6_hotbar_hidden_at_stage_0() {
         composeTestRule.setContent {
             GameHUD(
                 stage = 0,
@@ -200,7 +198,7 @@ class GameHUDTest {
     }
 
     @Test
-    fun `D6 - hotbar hidden at stage 1`() {
+    fun test_d6_hotbar_hidden_at_stage_1() {
         composeTestRule.setContent {
             GameHUD(
                 stage = 1,
@@ -214,7 +212,7 @@ class GameHUDTest {
     }
 
     @Test
-    fun `D7 - hotbar visible at stage 2`() {
+    fun test_d7_hotbar_visible_at_stage_2() {
         composeTestRule.setContent {
             GameHUD(
                 stage = 2,
@@ -228,7 +226,7 @@ class GameHUDTest {
     }
 
     @Test
-    fun `D7 - hotbar visible at stage 3`() {
+    fun test_d7_hotbar_visible_at_stage_3() {
         composeTestRule.setContent {
             GameHUD(
                 stage = 3,
@@ -246,7 +244,7 @@ class GameHUDTest {
     // =========================================================================
 
     @Test
-    fun `U1 - stage 0 shows only essential elements`() {
+    fun test_u1_stage_0_shows_only_essential_elements() {
         composeTestRule.setContent {
             GameHUD(
                 stage = 0,
@@ -280,7 +278,7 @@ class GameHUDTest {
     }
 
     @Test
-    fun `stage 1 adds menu`() {
+    fun test_stage_1_adds_menu() {
         composeTestRule.setContent {
             GameHUD(
                 stage = 1,
@@ -307,7 +305,7 @@ class GameHUDTest {
     }
 
     @Test
-    fun `stage 2 adds hotbar and why`() {
+    fun test_stage_2_adds_hotbar_and_why() {
         composeTestRule.setContent {
             GameHUD(
                 stage = 2,
@@ -338,7 +336,7 @@ class GameHUDTest {
     }
 
     @Test
-    fun `stage 3 shows full UI`() {
+    fun test_stage_3_shows_full_ui() {
         composeTestRule.setContent {
             GameHUD(
                 stage = 3,
@@ -369,7 +367,7 @@ class GameHUDTest {
     // =========================================================================
 
     @Test
-    fun `X5 - why button hidden before stage 2`() {
+    fun test_x5_why_button_hidden_before_stage_2() {
         // Stage 0
         composeTestRule.setContent {
             GameHUD(
@@ -384,7 +382,7 @@ class GameHUDTest {
     }
 
     @Test
-    fun `X5 - why button hidden at stage 1`() {
+    fun test_x5_why_button_hidden_at_stage_1() {
         composeTestRule.setContent {
             GameHUD(
                 stage = 1,
@@ -398,7 +396,7 @@ class GameHUDTest {
     }
 
     @Test
-    fun `X5 - why button visible at stage 2`() {
+    fun test_x5_why_button_visible_at_stage_2() {
         composeTestRule.setContent {
             GameHUD(
                 stage = 2,
@@ -416,7 +414,7 @@ class GameHUDTest {
     // =========================================================================
 
     @Test
-    fun `K1 - menu reserved slot exists at stage 0`() {
+    fun test_k1_menu_reserved_slot_exists_at_stage_0() {
         composeTestRule.setContent {
             GameHUD(
                 stage = 0,
@@ -432,7 +430,7 @@ class GameHUDTest {
     }
 
     @Test
-    fun `K2 - why reserved slot exists at stage 0`() {
+    fun test_k2_why_reserved_slot_exists_at_stage_0() {
         composeTestRule.setContent {
             GameHUD(
                 stage = 0,
@@ -448,7 +446,7 @@ class GameHUDTest {
     }
 
     @Test
-    fun `K3 - reserved slots have minimum touch target size`() {
+    fun test_k3_reserved_slots_have_minimum_touch_target_size() {
         composeTestRule.setContent {
             GameHUD(
                 stage = 0,
