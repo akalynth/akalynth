@@ -635,7 +635,7 @@ function parseHydratedTeaser(
 function messageForPhase(phase: WitnessMothBloomPhase): string {
   switch (phase) {
     case 'signal':
-      return 'Witness moths gather above High City, replaying a forgotten trial in pale light.';
+      return 'Lanterns draw moths. Witness draws memory. When the bloom comes, stand where you mean to be seen.';
     case 'investigation':
       return 'The Bloom is being investigated. Testimony, lantern frames, and scribe defense all matter.';
     case 'resolved':
