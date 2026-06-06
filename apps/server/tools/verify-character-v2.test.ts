@@ -64,7 +64,10 @@ async function main(): Promise<void> {
   const actions = () => receipts.map((r) => r.action);
 
   // ---- catalogs (public) ----
-  check('GET worlds returns worlds', ((characterService.worlds().body as { worlds: unknown[] }).worlds.length) >= 2);
+  const worlds = (characterService.worlds().body as { worlds: { world_id: string; name: string }[] }).worlds;
+  check('GET worlds returns worlds', worlds.length >= 2);
+  check('GET worlds advertises high_city', worlds.some((w) => w.world_id === 'high_city' && w.name === 'High City'));
+  check('GET worlds omits legacy azura id', !worlds.some((w) => w.world_id === 'azura'));
   check('outfits(male) only male', (characterService.outfits('male').body as { outfits: { sex: string }[] }).outfits.every((o) => o.sex === 'male'));
   check('outfits(female) only female', (characterService.outfits('female').body as { outfits: { sex: string }[] }).outfits.every((o) => o.sex === 'female'));
 
@@ -84,6 +87,7 @@ async function main(): Promise<void> {
   check('create 201', c1.status === 201);
   const c1body = c1.body as { ok: boolean; character: { character_id: string; world_id: string; sex: string; outfit_id: string }; token: string };
   check('create returns character + play token', c1body.ok && c1body.character.character_id === 'p_Aria' && c1body.token === 'play_Aria');
+  check('create keeps canonical rookguard world id', c1body.character.world_id === 'rookguard');
   check('create persisted account_characters row', (db.prepare('SELECT count(*) c FROM account_characters WHERE account_id=?').get(accountId) as { c: number }).c === 1);
   check('receipts: created + world_assigned + outfit_selected', ['character_created', 'character_world_assigned', 'character_outfit_selected'].every((a) => actions().includes(a)));
 
@@ -106,7 +110,10 @@ async function main(): Promise<void> {
   check('select unknown character -> 404', characterService.select(accountId, { character_id: 'p_nope' }).status === 404);
 
   // ---- character limit ----
-  characterService.create(accountId, { name: 'Bree', world_id: 'azura', sex: 'male', outfit_id: 'male_guard' });
+  const c2 = characterService.create(accountId, { name: 'Bree', world_id: 'azura', sex: 'male', outfit_id: 'male_guard' });
+  const c2body = c2.body as { character?: { world_id: string } };
+  check('legacy azura create is accepted and normalized', c2.status === 201 && c2body.character?.world_id === 'high_city');
+  check('legacy azura create is persisted as high_city', (db.prepare('SELECT world_id FROM account_characters WHERE character_id=?').get('p_Bree') as { world_id: string }).world_id === 'high_city');
   characterService.create(accountId, { name: 'Cole', world_id: 'azura', sex: 'male', outfit_id: 'male_mage' });
   check('create over limit (>3) -> 409', characterService.create(accountId, { name: 'Dane', world_id: 'azura', sex: 'male', outfit_id: 'male_wanderer' }).status === 409);
 
@@ -114,6 +121,7 @@ async function main(): Promise<void> {
   const leak = receipts.some((r) => JSON.stringify(r).includes('pilot@example.com'));
   check('no character receipt carried email/PII', !leak);
   check('receipt inputs only carry world/sex/outfit/character_id', receipts.every((r) => Object.keys(r.inputs ?? {}).every((k) => ['world_id', 'sex', 'outfit_id', 'character_id'].includes(k))));
+  check('new character receipts do not emit legacy azura world id', receipts.every((r) => r.inputs?.world_id !== 'azura'));
 }
 
 main().then(() => {
