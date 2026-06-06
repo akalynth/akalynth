@@ -48,10 +48,12 @@ export interface CookieOptions {
   httpOnly?: boolean;
   sameSite?: 'Strict' | 'Lax' | 'None';
   path?: string;
+  domain?: string;
 }
 
 export function serializeCookie(name: string, value: string, opts: CookieOptions = {}): string {
   const parts = [`${name}=${encodeURIComponent(value)}`, `Path=${opts.path ?? '/'}`];
+  if (opts.domain) parts.push(`Domain=${opts.domain}`);
   if (opts.maxAgeSec !== undefined) parts.push(`Max-Age=${opts.maxAgeSec}`);
   if (opts.httpOnly) parts.push('HttpOnly');
   if (opts.secure) parts.push('Secure');

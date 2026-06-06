@@ -83,6 +83,7 @@ import { hashPassword, verifyPassword } from './account/password.js';
 import { CharacterStore } from './character/store.js';
 import { CharacterService } from './character/service.js';
 import { makeCharacterRouter } from './character/router.js';
+import { makeWebEconomyRouter, type ShopItemConfig } from './economy/router.js';
 import { publicActorForReceipt, toPublicReceipt } from './audit/public_receipts.js';
 import {
   loadAuthKeyPair,
@@ -243,9 +244,21 @@ const DEFAULT_GUEST_SESSION_CLEANUP_MS = 60 * 1000;
 const MAX_GUEST_SESSIONS = 10_000;
 const DEBUG_MODE = process.env.DEBUG === '1';
 
-const SHOP_ITEMS: Record<string, { item_type: string; price: number }> = {
-  'pilgrim_mark': { item_type: 'pilgrim_mark', price: 10 },
-  'healing_herb': { item_type: 'healing_herb', price: 5 },
+const SHOP_ITEMS: Record<string, ShopItemConfig> = {
+  'pilgrim_mark': {
+    item_type: 'pilgrim_mark',
+    price: 10,
+    name: 'Pilgrim Mark',
+    tag: 'Cosmetic',
+    description: 'A non-power mark for identity and memory. Bought with earned gold only.',
+  },
+  'healing_herb': {
+    item_type: 'healing_herb',
+    price: 5,
+    name: 'Healing Herb',
+    tag: 'Consumable',
+    description: 'A server-authoritative in-game item. Bought with earned gold only.',
+  },
 };
 
 // PvE player health (PvP combat remains the instant-kill weighted generator)
@@ -282,6 +295,7 @@ const EMAIL_FROM = process.env.EMAIL_FROM || 'Akalynth <no-reply@akalynth.com>';
 const PORTAL_BASE_URL = process.env.PORTAL_BASE_URL || 'https://akalynth.com';
 const PRINCIPAL_DOMAIN = process.env.AKALYNTH_PRINCIPAL_DOMAIN || 'akalynth.com';
 const PRINCIPAL_TERMS_VERSION = process.env.AKALYNTH_PRINCIPAL_TERMS_VERSION || 'identity-seal-terms-v1';
+const CSRF_COOKIE_DOMAIN = process.env.CSRF_COOKIE_DOMAIN || (REQUIRE_TLS && !ALLOW_INSECURE_LOCAL ? '.akalynth.com' : undefined);
 const SMTP_HOST = process.env.SMTP_HOST || '';
 const SMTP_PORT = parseEnvInt(process.env.SMTP_PORT, 587, 1);
 const SMTP_SECURE = parseBoolEnv(process.env.SMTP_SECURE, SMTP_PORT === 465);
@@ -1235,7 +1249,8 @@ const accountService = new AccountService({
     audit.write({ player_id: e.accountId ?? 'system', action: e.action, inputs: e.inputs ?? {}, result: e.result }),
   now: () => Date.now(),
   config: {
-    secureCookies: REQUIRE_TLS,
+    secureCookies: REQUIRE_TLS && !ALLOW_INSECURE_LOCAL,
+    csrfCookieDomain: CSRF_COOKIE_DOMAIN,
     sessionTtlSec: 30 * 24 * 60 * 60,
     verificationTtlSec: 24 * 60 * 60,
     resetTtlSec: 60 * 60,
@@ -1283,6 +1298,24 @@ const handleCharacter = makeCharacterRouter({
   service: characterService,
   resolveAccount: (cookies) => accountService.sessionAccount(cookies),
   requireVerifiedForCreate: true,
+});
+const economyCharacterStore = new CharacterStore(persist.db);
+const handleEconomy = makeWebEconomyRouter({
+  resolveAccount: (cookies) => accountService.sessionAccount(cookies),
+  findCharacter: (characterId) => economyCharacterStore.findById(characterId),
+  shopItems: SHOP_ITEMS,
+  canAfford,
+  getGoldBalance,
+  withTreasuryLock,
+  writeReceipt: (r) => audit.write(r),
+  computeReceiptHash,
+  generateItemId,
+  addInventoryItem: (playerId, itemId) => {
+    if (!inventory.has(playerId)) inventory.set(playerId, new Set());
+    inventory.get(playerId)!.add(itemId);
+  },
+  getProperty,
+  isValidPrice,
 });
 
 // Identity Seal v1: privacy-light principal registry + signed challenge auth.
@@ -2302,6 +2335,7 @@ const httpServer = http.createServer((req, res) => {
     handleAccount,
     handleCharacter,
     handlePrincipal,
+    handleEconomy,
     listMaps: () =>
       (Object.keys(worlds) as MapName[]).map((name) => ({
         name,

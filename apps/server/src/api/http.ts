@@ -66,6 +66,8 @@ export interface ApiDeps {
   handleCharacter?: (req: IncomingMessage, res: ServerResponse) => boolean | Promise<boolean>;
   // Identity Seal v1: additive principal/key-bound identity endpoints.
   handlePrincipal?: (req: IncomingMessage, res: ServerResponse) => boolean | Promise<boolean>;
+  // Web economy portal: shop/wallet/property command endpoints.
+  handleEconomy?: (req: IncomingMessage, res: ServerResponse) => boolean | Promise<boolean>;
 }
 
 function json(res: ServerResponse, status: number, body: unknown) {
@@ -170,6 +172,18 @@ export function handleHttp(
     (path === '/v1/worlds' || path === '/v1/outfits' || path === '/v1/characters' || path === '/v1/characters/select')
   ) {
     return deps.handleCharacter(req, res);
+  }
+
+  if (
+    deps.handleEconomy &&
+    (path === '/v1/shop/catalog' ||
+      path === '/v1/shop/purchase' ||
+      path === '/v1/wallet' ||
+      path === '/v1/property/buy' ||
+      path === '/v1/property/list' ||
+      path === '/v1/property/unlist')
+  ) {
+    return deps.handleEconomy(req, res);
   }
 
   // Health

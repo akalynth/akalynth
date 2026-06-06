@@ -5,9 +5,11 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { URL } from 'node:url';
 import type { CharacterService, CharacterResult } from './service.js';
-import { parseCookies } from '../account/tokens.js';
+import { CSRF_COOKIE } from '../account/service.js';
+import { parseCookies, safeEqual } from '../account/tokens.js';
 
 const MAX_BODY = 8192;
+const CSRF_HEADER = 'x-csrf-token';
 
 function send(res: ServerResponse, r: CharacterResult): void {
   res.statusCode = r.status;
@@ -54,11 +56,18 @@ export interface CharacterRouterDeps {
 
 export function makeCharacterRouter(deps: CharacterRouterDeps) {
   const { service } = deps;
+  function csrfOk(req: IncomingMessage, cookies: Record<string, string>): boolean {
+    const csrfCookie = cookies[CSRF_COOKIE];
+    const csrfHeader = req.headers[CSRF_HEADER];
+    return typeof csrfHeader === 'string' && !!csrfCookie && safeEqual(csrfCookie, csrfHeader);
+  }
+
   return async function handleCharacter(req: IncomingMessage, res: ServerResponse): Promise<boolean> {
     const url = new URL(req.url ?? '/', 'http://localhost');
     const path = url.pathname;
     const method = (req.method ?? 'GET').toUpperCase();
-    const account = (): SessionAccount | null => deps.resolveAccount(parseCookies(req.headers.cookie));
+    const cookies = parseCookies(req.headers.cookie);
+    const account = (): SessionAccount | null => deps.resolveAccount(cookies);
 
     // Public catalogs.
     if (path === '/v1/worlds' && method === 'GET') return (send(res, service.worlds()), true);
@@ -73,6 +82,7 @@ export function makeCharacterRouter(deps: CharacterRouterDeps) {
     if (path === '/v1/characters' && method === 'POST') {
       const a = account();
       if (!a) return (send(res, { status: 401, body: { ok: false, error: 'not_authenticated' } }), true);
+      if (!csrfOk(req, cookies)) return (send(res, { status: 403, body: { ok: false, error: 'csrf_failed' } }), true);
       if (deps.requireVerifiedForCreate && !a.emailVerified) {
         return (send(res, { status: 403, body: { ok: false, error: 'email_unverified', message: 'Verify your email before creating a character.' } }), true);
       }
@@ -81,6 +91,7 @@ export function makeCharacterRouter(deps: CharacterRouterDeps) {
     if (path === '/v1/characters/select' && method === 'POST') {
       const a = account();
       if (!a) return (send(res, { status: 401, body: { ok: false, error: 'not_authenticated' } }), true);
+      if (!csrfOk(req, cookies)) return (send(res, { status: 403, body: { ok: false, error: 'csrf_failed' } }), true);
       return (send(res, service.select(a.accountId, await readJson(req))), true);
     }
 

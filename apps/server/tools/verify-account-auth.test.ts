@@ -41,7 +41,7 @@ async function main(): Promise<void> {
     verifyPassword,
     emitReceipt: (e) => events.push(e),
     now: () => Date.now(),
-    config: { secureCookies: false, sessionTtlSec: 3600, verificationTtlSec: 3600, resetTtlSec: 3600, devExposeLinks: true },
+    config: { secureCookies: false, csrfCookieDomain: '.akalynth.test', sessionTtlSec: 3600, verificationTtlSec: 3600, resetTtlSec: 3600, devExposeLinks: true },
   });
   const actions = () => events.map((e) => e.action);
 
@@ -95,8 +95,11 @@ async function main(): Promise<void> {
   const sessTok = cookieValue(login.cookies, SESSION_COOKIE);
   const csrf = cookieValue(login.cookies, CSRF_COOKIE);
   check('login set session + csrf cookies', !!sessTok && !!csrf);
+  check('login body returns csrf token for static portal', (login.body as { csrf_token?: string }).csrf_token === csrf);
   check('session cookie is HttpOnly', !!login.cookies?.find((c) => c.startsWith(SESSION_COOKIE) && c.includes('HttpOnly')));
   check('csrf cookie is NOT HttpOnly', !!login.cookies?.find((c) => c.startsWith(CSRF_COOKIE) && !c.includes('HttpOnly')));
+  check('csrf cookie can be scoped to portal parent domain', !!login.cookies?.find((c) => c.startsWith(CSRF_COOKIE) && c.includes('Domain=.akalynth.test')));
+  check('session cookie remains host scoped', !login.cookies?.find((c) => c.startsWith(SESSION_COOKIE) && c.includes('Domain=')));
   check('receipts login_succeeded + session_issued', actions().includes('account_login_succeeded') && actions().includes('account_session_issued'));
   // session token stored hashed
   const srow = db.prepare('SELECT token_hash FROM account_sessions').get() as { token_hash: string };
