@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.testing.Test
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -108,4 +110,17 @@ dependencies {
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.compose.ui.test.junit4)
     androidTestImplementation(libs.kotlinx.coroutines.test)
+}
+
+tasks.withType<Test>().configureEach {
+    if (name in setOf("testBetaUnitTest", "testStagingUnitTest", "testReleaseUnitTest")) {
+        // These host Compose tests require ui-test-manifest, which is kept debug-only so
+        // ComponentActivity is not added to beta, staging, or release APK manifests.
+        exclude(
+            "com/akalynth/client/ui/components/ActionButtonsTest.class",
+            "com/akalynth/client/ui/components/TemChallengeDialogTest.class",
+            "com/akalynth/client/ui/components/chronicle/ChronicleSheetTest.class",
+            "com/akalynth/client/ui/regression/LoginScreenEntryParityTest.class"
+        )
+    }
 }

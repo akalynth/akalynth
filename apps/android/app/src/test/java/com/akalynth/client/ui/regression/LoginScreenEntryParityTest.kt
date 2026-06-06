@@ -39,7 +39,8 @@ class LoginScreenEntryParityTest {
                 LoginScreen(
                     state = GameState.INITIAL,
                     onEvent = { events.add(it) },
-                    onCreateCharacter = { createTapped = true }
+                    onCreateCharacter = { createTapped = true },
+                    onAdventurerSeal = {}
                 )
             }
         }
@@ -68,7 +69,8 @@ class LoginScreenEntryParityTest {
                 LoginScreen(
                     state = state,
                     onEvent = {},
-                    onCreateCharacter = {}
+                    onCreateCharacter = {},
+                    onAdventurerSeal = {}
                 )
             }
         }
@@ -99,7 +101,8 @@ class LoginScreenEntryParityTest {
                 LoginScreen(
                     state = state,
                     onEvent = { events.add(it) },
-                    onCreateCharacter = {}
+                    onCreateCharacter = {},
+                    onAdventurerSeal = {}
                 )
             }
         }
@@ -116,7 +119,9 @@ class LoginScreenEntryParityTest {
         composeTestRule.onNodeWithTag("LoginScreen_ReportIssue")
             .performScrollTo()
             .assertIsDisplayed()
-        composeTestRule.onNodeWithTag("LoginScreen_CheckHealth").performClick()
+        composeTestRule.onNodeWithTag("LoginScreen_CheckHealth")
+            .performScrollTo()
+            .performClick()
         composeTestRule.onNodeWithTag("LoginScreen_ResetServer")
             .performScrollTo()
             .performClick()
@@ -141,7 +146,8 @@ class LoginScreenEntryParityTest {
                 LoginScreen(
                     state = state,
                     onEvent = {},
-                    onCreateCharacter = {}
+                    onCreateCharacter = {},
+                    onAdventurerSeal = {}
                 )
             }
         }
