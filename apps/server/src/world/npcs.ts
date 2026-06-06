@@ -158,16 +158,22 @@ const NPC_REGISTRY: NpcDef[] = [
       stranger: {
         intent_id: 'azura_herald_arrival',
         openers: [
-          'You made it through Rookguard — not everyone does.',
-          'Through Rookguard and still standing — good.',
-          'So you cleared Rookguard. Few do.',
+          'The Herald lifts a hand from the plaza stones.',
+          'A city voice meets you at the center.',
+          'The Herald marks your arrival.',
         ],
         must_convey: [
+          {
+            fact_id: 'arrival_record',
+            text:
+              'Rookguard has opened for you, traveler. High City receives every true thread at its center. ' +
+              'Speak plainly, move with care, and leave only what you mean to have remembered.',
+          },
           { fact_id: 'guild_north', text: 'The guild hall is north of the plaza if you want work.' },
         ],
         may_convey: [
-          { fact_id: 'drawn', text: 'And if you feel drawn toward something you cannot name, that is normal.' },
-          { fact_id: 'careful', text: 'Walk carefully.' },
+          { fact_id: 'plots_wait', text: 'Marked plots wait below the hall.' },
+          { fact_id: 'bloom_seen', text: 'Witnessed events begin in public.' },
         ],
       },
       seen: {
@@ -195,11 +201,17 @@ const NPC_REGISTRY: NpcDef[] = [
       stranger: {
         intent_id: 'azura_steward_intro',
         openers: [
-          'The guild offers work and trade.',
-          'Work and trade, both, here at the guild.',
-          'Welcome — the guild deals in work and trade.',
+          'The Steward opens the city record.',
+          "The Steward's ledger rests beside the hall door.",
+          'The Steward studies the marked plots.',
         ],
         must_convey: [
+          {
+            fact_id: 'plot_resolved_claim',
+            text:
+              'A plot is not yours because you stand on it. It is yours when the city resolves the claim ' +
+              'and the record holds. The marked plots below the hall are addresses waiting for a name.',
+          },
           { fact_id: 'sweep_pays', text: 'The temple sweep pays in gold.' },
           {
             fact_id: 'stores',
