@@ -29,17 +29,21 @@ export const LANDMARK_LORE: Record<string, LoreEntry> = {
   },
   guild_hall: {
     title: 'Guild Hall',
-    body: 'The hall is ready before the oath is. Its doors do not open yet.',
+    body:
+      'The hall is ready before the oath is. Its doors do not open yet, ' +
+      'and no interior is currently implemented.',
   },
   plaza: {
     title: 'Central Plaza',
-    body: 'The plaza is built for standing still: for chat, meeting, waiting, and being seen.',
+    body:
+      'The city receives newcomers here after Rookguard: a civic floor for ' +
+      'chat, meeting, waiting, and being seen.',
   },
   house_plots: {
     title: 'House Plot',
     body:
-      'Three marked plots wait below the Guild Hall. A plot becomes more than ' +
-      'ground only when the city resolves the claim and the record holds.',
+      'Three marked addresses wait below the Guild Hall. A plot becomes more ' +
+      'than ground only when the city resolves the claim and the record holds.',
   },
 };
 
@@ -53,14 +57,14 @@ export const SPAWN_LORE: Record<string, LoreEntry> = {
   Azura: {
     title: 'Spawn',
     body:
-      'Rookguard has opened. High City receives you at its center, where the ' +
-      'first stones were raised and the record begins to widen.',
+      'Rookguard has opened. High City receives you at its center and asks ' +
+      'what your living hand will leave behind.',
   },
   HighCity: {
     title: 'Spawn',
     body:
-      'Rookguard has opened. High City receives you at its center, where the ' +
-      'first stones were raised and the record begins to widen.',
+      'Rookguard has opened. High City receives you at its center and asks ' +
+      'what your living hand will leave behind.',
   },
 };
 
