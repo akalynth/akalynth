@@ -18,7 +18,7 @@ The Ledger does not comfort. It confirms. It never explains itself. It never say
 
 The Ledger is already present in the record, in firsts, in the asymmetry between public truth and private meaning, and in delayed revelation. When you return, nothing apologizes; your status is simply different. That difference is the Ledger acting.
 
-Players will say, "Check the Ledger." They will say, "That death is recorded." They will say, "You do not come back clean from Azura." They will say, "That place remembers." You did not write the dialogue; you made it inevitable.
+Players will say, "Check the Ledger." They will say, "That death is recorded." They will say, "You do not come back clean from High City." They will say, "That place remembers." You did not write the dialogue; you made it inevitable.
 
 ## Your First Act Is Sealed
 
@@ -34,7 +34,7 @@ Rookguard is boring, painful, mandatory, corrective. It is the place you return 
 
 ## Akalynth Is Pressure
 
-Akalynth is the world. The first city after Rookguard carries its pressure: high reward, sparse explanation, and danger that is consistent rather than constant. It does not explain itself, and it does not apologize for what it takes.
+Akalynth is the world. High City, the first city after Rookguard, carries its pressure: high reward, sparse explanation, and danger that is consistent rather than constant. It does not explain itself, and it does not apologize for what it takes.
 
 ## Truth Is Public, Meaning Is Private
 
@@ -59,6 +59,6 @@ Legends are born when memory is indisputable and interpretation is contested. Th
 > - **The Ledger** is the receipt chain — every meaningful action is appended to `audit/receipts.jsonl` and never overwritten (see `docs/WORLD_EVOLUTION.md`, "record change, don't overwrite truth").
 > - **Your First Act / Origin** is the Origin Act in `apps/server/src/world/origin.ts`: the first origin-worthy receipt (`combat_resolved`, `tem_witness_response`, `drop_item`) is sealed permanently and idempotently — discovered, not selected.
 > - **The Stone Exhales** is the runestone ritual in `apps/server/src/world/runestone.ts`: a server-authoritative roll over the six `Element` faces (`packages/shared/types.ts`), broadcast to nearby players, with the one-time "Trinity of Shadow" recognition.
-> - **World naming** is transitional: current runtime maps still use `Rookguard` and `Azura`; source/canon docs are moving the first-city language toward High City. No runtime rename is created by this manifesto.
+> - **World naming** is settled at the player-facing canon layer: Akalynth is the world, High City is the first city, and Rookguard is onboarding. Runtime compatibility still preserves legacy `Azura` ids. No runtime rename is created by this manifesto.
 >
 > Where the manifesto outpaces the build (e.g. death returning players to "the Ledger," Rookguard as on-death exile), treat it as design intent. No mechanic is created or changed by this document.
