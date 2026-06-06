@@ -18,6 +18,9 @@ sealed class GameEvent {
     // Combat
     data class Attack(val targetId: String) : GameEvent()
 
+    // World events
+    data class WorldEventContribution(val contributionId: String) : GameEvent()
+
     // Tem/Witness
     data class AnswerTemChallenge(val response: String) : GameEvent()
     data class AnswerWitness(val requestId: String, val response: WitnessResponse) : GameEvent()

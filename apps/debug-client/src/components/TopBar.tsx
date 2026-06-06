@@ -1,4 +1,5 @@
 import type { MapName } from '@shared/http';
+import { displayMapName } from '@shared/http';
 import type { ConnectionState, UiStage } from '../types';
 
 interface TopBarProps {
@@ -29,7 +30,7 @@ export function TopBar({ stage, onStageChange, map, onMapChange, conn }: TopBarP
       <div className="map-switcher">
         <select value={map} onChange={(e) => onMapChange(e.target.value as MapName)} disabled>
           <option value="Rookguard">Rookguard</option>
-          <option value="Azura">Azura</option>
+          <option value="Azura">{displayMapName('Azura')}</option>
         </select>
       </div>
       <div className={`conn-pill ${conn.phase}`}>

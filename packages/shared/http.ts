@@ -12,6 +12,23 @@ import type {
 } from './types.js';
 
 export type MapName = 'Rookguard' | 'Azura';
+export type MapWireName = MapName | 'HighCity';
+
+export function normalizeMapName(value: string): MapName | null {
+  if (value === 'Rookguard') return 'Rookguard';
+  if (value === 'Azura' || value === 'HighCity') return 'Azura';
+  return null;
+}
+
+export function isAcceptedMapName(value: string): value is MapWireName {
+  return normalizeMapName(value) !== null;
+}
+
+export function displayMapName(value: string): string {
+  if (value === 'Azura' || value === 'HighCity') return 'High City';
+  if (value === 'Rookguard') return 'Rookguard';
+  return value;
+}
 
 export interface HealthResponse {
   ok: true;

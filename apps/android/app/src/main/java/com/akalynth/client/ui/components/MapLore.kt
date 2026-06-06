@@ -28,7 +28,13 @@ object MapLore {
             x = 32,
             y = 32,
             title = "Spawn",
-            body = "The center of the city, where new arrivals appear after clearing Rookguard.",
+            body = "The center of High City, where new arrivals appear after clearing Rookguard.",
+        )
+        MapName.HIGH_CITY -> SpawnInfo(
+            x = 32,
+            y = 32,
+            title = "Spawn",
+            body = "The center of High City, where new arrivals appear after clearing Rookguard.",
         )
     }
 }

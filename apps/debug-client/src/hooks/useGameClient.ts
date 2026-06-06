@@ -16,6 +16,7 @@ import type {
   PropertyPublic,
 } from '@shared/protocol';
 import type { MapName } from '@shared/http';
+import { normalizeMapName } from '@shared/http';
 import { loadIdentity, saveIdentity, clearIdentity, hasValidToken } from '../identity';
 import {
   DIRECTION_OFFSETS,
@@ -750,7 +751,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
                 },
               };
             case 'world_state': {
-              const nextMap = data.map as MapName | undefined;
+              const nextMap = typeof data.map === 'string' ? normalizeMapName(data.map) : null;
               const runtimeMap = isMapData(data.map_data) ? data.map_data : null;
               const loop = isLoop(data.loop) ? data.loop : isLoop(data.player?.loop) ? data.player.loop : s.loop;
               const base = nextMap && nextMap !== s.world.map.name
@@ -817,7 +818,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
               return { ...s, conn, world: { ...s.world, others }, combat: { ...s.combat, targetId: nextTarget } };
             }
             case 'move_result': {
-              const nextMap = data.map as MapName | undefined;
+              const nextMap = typeof data.map === 'string' ? normalizeMapName(data.map) : null;
               if (nextMap && nextMap !== s.world.map.name) {
                 const base = resetForMap(s, nextMap);
                 return { ...base, conn: { ...base.conn, lastServerAt: now } };
@@ -869,7 +870,8 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
             }
 
             case 'combat_resolved': {
-              if (data.map !== s.world.map.name) return { ...s, conn };
+              const eventMap = typeof data.map === 'string' ? normalizeMapName(data.map) : null;
+              if (eventMap !== s.world.map.name) return { ...s, conn };
 
               const defender = s.world.others.get(data.defender_id);
               const defenderName = defender?.name ?? data.defender_id;
@@ -1090,7 +1092,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
             }
 
             case 'death_notice': {
-              const nextMap = data.map as MapName | undefined;
+              const nextMap = typeof data.map === 'string' ? normalizeMapName(data.map) : null;
               if (nextMap && nextMap !== s.world.map.name) {
                 const base = resetForMap(s, nextMap);
                 return { ...base, conn: { ...base.conn, lastServerAt: now } };

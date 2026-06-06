@@ -2681,9 +2681,9 @@ function playLoopFor(s: Session) {
   if (!s.tutorial.move) objective = 'Step onto the move rune';
   else if (!s.tutorial.chat) objective = 'Send a signal in chat';
   else if (!s.tutorial.tem) objective = 'Answer Tem: AZURA';
-  else if (!s.tutorial.gate) objective = 'Enter the Azura gate';
-  else if (!s.heraldMet) objective = 'Seek the Azura herald in the southern plaza';
-  else if (bloom.phase === 'signal' || bloom.phase === 'investigation') objective = 'Help resolve the Witness Moth Bloom above Azura';
+  else if (!s.tutorial.gate) objective = 'Enter the High City gate';
+  else if (!s.heraldMet) objective = 'Seek the High City herald in the southern plaza';
+  else if (bloom.phase === 'signal' || bloom.phase === 'investigation') objective = 'Help resolve the Witness Moth Bloom above High City';
   else objective = 'Talk to the steward at guild hall';
 
   return {

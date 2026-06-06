@@ -145,6 +145,23 @@ class ProtocolParityTest {
         assertEquals("she said \"hi\"\\bye", obj["message"]!!.jsonPrimitive.content)
     }
 
+    @Test
+    fun highCityAndLegacyAzuraMapNamesDecode() {
+        val highCity = MessageSerializer.decodeServer(
+            """{"type":"world_state","map":"HighCity","player":{"id":"p","name":"n","x":1,"y":1},"nearby_players":[]}"""
+        ) as WorldStateMessage
+        val legacy = MessageSerializer.decodeServer(
+            """{"type":"world_state","map":"Azura","player":{"id":"p","name":"n","x":1,"y":1},"nearby_players":[]}"""
+        ) as WorldStateMessage
+
+        assertEquals(MapName.HIGH_CITY, highCity.map)
+        assertEquals(MapName.AZURA, legacy.map)
+        assertEquals("High City", highCity.map.displayName)
+        assertEquals("High City", legacy.map.displayName)
+        assertTrue(highCity.map.isHighCityCompatible)
+        assertTrue(legacy.map.isHighCityCompatible)
+    }
+
     // ---- Server decode ------------------------------------------------------
 
     @Test

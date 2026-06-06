@@ -24,12 +24,15 @@ receipts, verifiers, and code paths under `apps/`, `packages/`, and `docs/`.
 ## Reconciliation
 
 The source package describes High City Outskirts as the first playable region.
-Current runtime authority still exposes only `Rookguard` and `Azura`.
+Current runtime authority still exposes `Rookguard` and the legacy `Azura`
+runtime id. New player-facing first-city copy should say High City.
 
 - Rookguard remains Act 0 onboarding: movement, chat signal, Tem, and the gate.
-- Azura is the current archive/civic stand-in for first-playable experiments.
-- High City, High City Outskirts, and First Archive are future map/canon names
-  until a separate map/protocol/runtime authority pass expands `MapName`.
+- The legacy `Azura` runtime id is the current archive/civic stand-in for
+  first-playable experiments.
+- High City is the player-facing first-city name. `high_city`, High City
+  Outskirts, and First Archive remain future runtime/canon promotions until a
+  separate map/protocol/runtime authority pass expands the full map authority.
 - Source factions and origin starts remain narrative/design input, not live
   progression or reputation systems.
 
@@ -40,7 +43,9 @@ server-authoritative world event prototype.
 
 Runtime behavior:
 
-- The Bloom can start when a player reaches Azura and talks to the Azura herald.
+- The Bloom can start when a player reaches High City and talks to the High City
+  herald. In this prep slice that still resolves through the legacy `Azura`
+  runtime map/NPC ids.
 - The server emits `world_event_started` before changing event state.
 - Players contribute through existing `use_skill` intents:
   - `event:witness_moth_bloom:verify_testimony`
@@ -55,7 +60,8 @@ Runtime behavior:
   hydration restores the Bloom runtime from that projection.
 
 This promotion adds no new WebSocket message shape, no new client truth claim,
-no economy reward, no new map name, and no raw drop-source import.
+no economy reward, no full `high_city` runtime-id switch, and no raw
+drop-source import.
 
 ## Deferred Source
 

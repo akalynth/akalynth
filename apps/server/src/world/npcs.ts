@@ -73,7 +73,7 @@ const NPC_REGISTRY: NpcDef[] = [
             fact_id: 'gate_steps',
             text: "Step onto the glowing rune ahead, then send a chat signal, then answer Tem's challenge.",
           },
-          { fact_id: 'gate_opens', text: 'The gate to Azura opens when all three are done.' },
+          { fact_id: 'gate_opens', text: 'The gate to High City opens when all three are done.' },
         ],
         may_convey: [
           { fact_id: 'no_rush', text: 'Many pass through here; none need rush it.' },

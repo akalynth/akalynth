@@ -24,6 +24,7 @@ import type {
   PropertyMarketResponse,
   PropertyLedgerResponse,
 } from '../../../../packages/shared/http.js';
+import { normalizeMapName } from '../../../../packages/shared/http.js';
 import type { BuildInfo } from '../build-info.js';
 
 type GuestSessionMintResult = GuestSessionResponse | { error: string; status?: number };
@@ -79,10 +80,6 @@ function notFound(res: ServerResponse) {
 function methodNotAllowed(res: ServerResponse) {
   res.statusCode = 405;
   res.end('method not allowed');
-}
-
-function isMapName(x: string): x is MapName {
-  return x === 'Rookguard' || x === 'Azura';
 }
 
 function isGuestSessionError(x: GuestSessionMintResult): x is { error: string; status?: number } {
@@ -207,8 +204,8 @@ export function handleHttp(
   // Map detail
   const m = path.match(/^\/v1\/maps\/([^/]+)$/);
   if (method === 'GET' && m) {
-    const name = m[1];
-    if (!isMapName(name)) {
+    const name = normalizeMapName(m[1]);
+    if (!name) {
       json(res, 404, { error: 'unknown_map' });
       return true;
     }
@@ -304,8 +301,8 @@ export function handleHttp(
   if (method === 'GET' && worldPlayersMatch) {
     if (!deps.getWorldPlayers) return (json(res, 501, { error: 'not_implemented' }), true);
 
-    const map = worldPlayersMatch[1];
-    if (!isMapName(map)) {
+    const map = normalizeMapName(worldPlayersMatch[1]);
+    if (!map) {
       json(res, 404, { error: 'unknown_map' });
       return true;
     }
@@ -329,8 +326,8 @@ export function handleHttp(
   const worldStateMatch = path.match(/^\/v1\/world\/([^/]+)\/state$/);
   if (method === 'GET' && worldStateMatch) {
     if (!deps.getWorldState) return (json(res, 501, { error: 'not_implemented' }), true);
-    const map = worldStateMatch[1];
-    if (!isMapName(map)) {
+    const map = normalizeMapName(worldStateMatch[1]);
+    if (!map) {
       json(res, 404, { error: 'unknown_map' });
       return true;
     }

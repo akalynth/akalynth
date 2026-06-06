@@ -378,7 +378,7 @@ function parseHydratedContributions(raw: string): WitnessMothBloomRuntime['contr
 function messageForPhase(phase: WitnessMothBloomPhase): string {
   switch (phase) {
     case 'signal':
-      return 'Witness moths gather above Azura, replaying a forgotten trial in pale light.';
+      return 'Witness moths gather above High City, replaying a forgotten trial in pale light.';
     case 'investigation':
       return 'The Bloom is being investigated. Testimony, lantern frames, and scribe defense all matter.';
     case 'resolved':

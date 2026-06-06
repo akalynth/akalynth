@@ -52,7 +52,7 @@ fun WorldScreen(
             verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
             Text(
-                text = state.world.currentMap.name,
+                text = state.world.currentMap.displayName,
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
                 color = ClassicShellColors.Brass
@@ -83,6 +83,10 @@ fun WorldScreen(
 
             ActionButtons(
                 onChat = { onEvent(GameEvent.ToggleChat) },
+                showWitnessMothBloom = state.world.currentMap.isHighCityCompatible,
+                onWorldEventContribution = { contributionId ->
+                    onEvent(GameEvent.WorldEventContribution(contributionId))
+                },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(end = 12.dp, bottom = if (state.ui.chatOpen) 304.dp else 12.dp)

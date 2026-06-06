@@ -14,6 +14,7 @@ object MapRepository {
     private fun assetPath(map: MapName): String = when (map) {
         MapName.ROOKGUARD -> "maps/rookguard.json"
         MapName.AZURA -> "maps/azura.json"
+        MapName.HIGH_CITY -> "maps/azura.json"
     }
 
     // Returns MapData for map, or null if the asset is missing/unreadable. Cached per map.

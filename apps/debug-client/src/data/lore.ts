@@ -52,7 +52,11 @@ export const SPAWN_LORE: Record<string, LoreEntry> = {
   },
   Azura: {
     title: 'Spawn',
-    body: 'The center of the city, where new arrivals appear after clearing Rookguard.',
+    body: 'The center of High City, where new arrivals appear after clearing Rookguard.',
+  },
+  HighCity: {
+    title: 'Spawn',
+    body: 'The center of High City, where new arrivals appear after clearing Rookguard.',
   },
 };
 
@@ -94,7 +98,7 @@ export const TILE_LORE: Partial<Record<TileCode, LoreEntry>> = {
     body: 'A friendly Tem challenge. Pass it to continue.',
   },
   [TileCode.GateToAzura]: {
-    title: 'Gate to Azura',
-    body: 'Opens once the tutorial checklist is complete. Step through to enter Azura.',
+    title: 'Gate to High City',
+    body: 'Opens once the tutorial checklist is complete. Step through to enter High City.',
   },
 };
