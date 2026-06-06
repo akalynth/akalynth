@@ -65,6 +65,14 @@ class MainActivity : ComponentActivity() {
                                             CharacterCreateActivity::class.java
                                         )
                                     )
+                                },
+                                onAdventurerSeal = {
+                                    startActivity(
+                                        Intent(
+                                            this@MainActivity,
+                                            AdventurerSealActivity::class.java
+                                        )
+                                    )
                                 }
                             )
                         }

@@ -28,6 +28,10 @@
             android:name=".CharacterCreateActivity"
             android:exported="true"
             android:label="Create Character" />
+        <activity
+            android:name=".AdventurerSealActivity"
+            android:exported="true"
+            android:label="Adventurer Seal" />
     </application>
 
 </manifest>

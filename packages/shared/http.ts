@@ -73,6 +73,146 @@ export interface HttpErrorResponse {
   error: string;
 }
 
+// ============================================================================
+// Identity Seal API (additive)
+// ============================================================================
+
+export type PrincipalStatus = 'active' | 'seal_retired' | 'principal_deleted' | 'disabled';
+export type PrincipalIdentityLevel = 'guest' | 'key_bound' | 'pgp_pending' | 'pgp_bound';
+export type PrincipalChallengePurpose =
+  | 'principal_login'
+  | 'principal_retire'
+  | 'principal_delete'
+  | 'pgp_bind'
+  | 'forum_authority_post';
+export type PrincipalCapability =
+  | 'forum:post_basic'
+  | 'forum:report'
+  | 'forum:block'
+  | 'forum:post_authority'
+  | 'moderation:read'
+  | 'moderation:resolve'
+  | 'project:announce';
+
+export interface PrincipalPublic {
+  principal_id: string;
+  handle: string;
+  display_name: string;
+  status: PrincipalStatus;
+  identity_level: PrincipalIdentityLevel;
+  roles: string[];
+  capabilities: PrincipalCapability[];
+  recovery_mode: 'none';
+  created_at: string;
+  seal_retired_at: string | null;
+  principal_deleted_at: string | null;
+}
+
+export interface PrincipalRegisterRequest {
+  handle: string;
+  display_name?: string;
+  public_key_spki_pem: string;
+  accepted_terms: true;
+  client: 'android' | 'web';
+}
+
+export interface PrincipalRegisterResponse {
+  ok: true;
+  principal: PrincipalPublic;
+  key_fingerprint: string;
+  loss_warning: string;
+}
+
+export interface PrincipalChallengeRequest {
+  principal_id: string;
+  purpose: PrincipalChallengePurpose;
+  domain: 'akalynth.com';
+  client: 'android' | 'web';
+}
+
+export interface PrincipalChallengePayload {
+  type: 'akalynth.challenge.v1';
+  domain: 'akalynth.com';
+  purpose: PrincipalChallengePurpose;
+  principal_id: string;
+  challenge_id: string;
+  nonce: string;
+  issued_at: string;
+  expires_at: string;
+  client: 'android' | 'web';
+  protocol_version: '1';
+}
+
+export interface PrincipalChallengeResponse {
+  ok: true;
+  challenge_id: string;
+  payload: PrincipalChallengePayload;
+  canonical_payload: string;
+  expires_at: string;
+}
+
+export interface PrincipalVerifyRequest {
+  principal_id: string;
+  challenge_id: string;
+  signature_base64url: string;
+}
+
+export interface PrincipalVerifyResponse {
+  ok: true;
+  principal: PrincipalPublic;
+  session_token: string;
+  expires_at: string;
+}
+
+export interface PrincipalMeResponse {
+  ok: true;
+  principal: PrincipalPublic;
+}
+
+export interface PrincipalReportRequest {
+  target_principal_id: string;
+  content_ref?: string;
+  reason: string;
+  detail?: string;
+}
+
+export interface PrincipalBlockRequest {
+  target_principal_id: string;
+  reason?: string;
+}
+
+export interface PrincipalReportPublic {
+  report_id: string;
+  reporter_principal_id: string;
+  target_principal_id: string;
+  content_ref: string | null;
+  reason: string;
+  detail: string | null;
+  status: 'open' | 'resolved';
+  created_at: string;
+  resolved_at: string | null;
+  resolved_by_principal_id: string | null;
+  resolution: 'no_action' | 'warning' | 'temp_mute' | 'ban' | null;
+  resolution_reason: string | null;
+}
+
+export interface PrincipalReportsResponse {
+  ok: true;
+  reports: PrincipalReportPublic[];
+}
+
+export interface PrincipalPolicyResponse {
+  ok: true;
+  terms_version: string;
+  account_policy: string;
+  recovery_mode: 'none';
+  local_storage: string[];
+  server_storage: string[];
+  public_storage: string[];
+  loss_warning: string;
+  no_wallet_token_nft_claim: true;
+}
+
 export interface WorldPlayersResponse {
   players: PlayerPublic[];
 }

@@ -37,6 +37,11 @@ Important gates:
 
 `login` and `login_ack` carry both legacy guest-token fields and newer signed-token fields. `token` is preferred where available. `guest_token` remains present for legacy compatibility.
 
+Identity Seal v1 principal endpoints live on the HTTP control plane under
+`/v1/principals/*`. They are additive and do not add a new WebSocket message
+type. Clients must not submit roles or capabilities over WebSocket; authority is
+derived server-side from principal state where principal-gated surfaces use it.
+
 Server messages may include optional fields for UI context. Clients should tolerate unknown additional fields, but they should not treat unknown message types as valid gameplay authority.
 
 ## Android Subset Caveat

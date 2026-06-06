@@ -2,6 +2,27 @@
 
 External verification protocol for Akalynth identity tokens.
 
+## Identity Seal v1 Additive Note
+
+`AKALYNTH_IDENTITY_SEAL_ACCOUNTLESS_AUTH_V1` adds a separate principal identity
+surface beside the existing player token protocol. It does not replace the
+`auth_token_issue` token wire format below.
+
+Identity Seal v1 uses device public keys and single-use canonical challenges for
+principal sessions:
+
+- challenge type: `akalynth.challenge.v1`
+- deterministic JSON: UTF-8, sorted keys, no insignificant whitespace
+- required binding: domain, purpose, principal id, challenge id, nonce, expiry,
+  client, protocol version
+- server storage: public key, public key fingerprint, nonce hash, challenge
+  metadata, hashed principal session tokens
+- never stored or receipted: private keys, raw session tokens, detached
+  signatures, recovery secrets
+
+Clients prove key control only. Roles and capabilities are derived server-side
+from principal state and role/capability registries.
+
 ---
 
 ## Purpose

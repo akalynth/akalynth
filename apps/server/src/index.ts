@@ -76,6 +76,9 @@ import { AccountStore } from './account/store.js';
 import { AccountService } from './account/service.js';
 import { makeAccountRouter } from './account/router.js';
 import { RateLimiter } from './account/rateLimit.js';
+import { PrincipalStore } from './principal/store.js';
+import { PrincipalService } from './principal/service.js';
+import { makePrincipalRouter } from './principal/router.js';
 import { hashPassword, verifyPassword } from './account/password.js';
 import { CharacterStore } from './character/store.js';
 import { CharacterService } from './character/service.js';
@@ -277,6 +280,8 @@ const CORS_POLICY: CorsPolicy = {
 const EMAIL_TRANSPORT: 'smtp' | 'console' = process.env.EMAIL_TRANSPORT === 'smtp' ? 'smtp' : 'console';
 const EMAIL_FROM = process.env.EMAIL_FROM || 'Akalynth <no-reply@akalynth.com>';
 const PORTAL_BASE_URL = process.env.PORTAL_BASE_URL || 'https://akalynth.com';
+const PRINCIPAL_DOMAIN = process.env.AKALYNTH_PRINCIPAL_DOMAIN || 'akalynth.com';
+const PRINCIPAL_TERMS_VERSION = process.env.AKALYNTH_PRINCIPAL_TERMS_VERSION || 'identity-seal-terms-v1';
 const SMTP_HOST = process.env.SMTP_HOST || '';
 const SMTP_PORT = parseEnvInt(process.env.SMTP_PORT, 587, 1);
 const SMTP_SECURE = parseBoolEnv(process.env.SMTP_SECURE, SMTP_PORT === 465);
@@ -1280,6 +1285,33 @@ const handleCharacter = makeCharacterRouter({
   requireVerifiedForCreate: true,
 });
 
+// Identity Seal v1: privacy-light principal registry + signed challenge auth.
+// This is additive beside Account Platform v1; it does not mint game tokens or
+// migrate personal account rows. Clients prove key control, while server code
+// derives roles/capabilities from stored principal state.
+const principalService = new PrincipalService({
+  store: new PrincipalStore(persist.db),
+  emitReceipt: (e) =>
+    audit.write({
+      player_id: e.principalId ?? 'system',
+      action: e.action,
+      inputs: e.inputs ?? {},
+      result: e.result,
+    }),
+  now: () => Date.now(),
+  config: {
+    domain: PRINCIPAL_DOMAIN,
+    challengeTtlMs: 5 * 60 * 1000,
+    sessionTtlMs: 30 * 24 * 60 * 60 * 1000,
+    termsVersion: PRINCIPAL_TERMS_VERSION,
+  },
+});
+const handlePrincipal = makePrincipalRouter({
+  service: principalService,
+  writeLimiter: new RateLimiter(10, 60 * 60 * 1000),
+  challengeLimiter: new RateLimiter(30, 10 * 60 * 1000),
+});
+
 const antiCheatPriorStore = createAntiCheatPriorStore({
   enabled: DEBUG_MODE,
   filePath: ANTICHEAT_PRIORS_PATH,
@@ -2269,6 +2301,7 @@ const httpServer = http.createServer((req, res) => {
     getTickMs: () => TICK_MS,
     handleAccount,
     handleCharacter,
+    handlePrincipal,
     listMaps: () =>
       (Object.keys(worlds) as MapName[]).map((name) => ({
         name,
