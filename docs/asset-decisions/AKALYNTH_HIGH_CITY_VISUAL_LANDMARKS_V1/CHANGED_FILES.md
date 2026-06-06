@@ -11,6 +11,7 @@ Lane: `AKALYNTH_HIGH_CITY_VISUAL_LANDMARKS_V1`
 - `docs/asset-decisions/AKALYNTH_HIGH_CITY_VISUAL_LANDMARKS_V1/CHANGED_FILES.md`
 - `docs/asset-decisions/AKALYNTH_HIGH_CITY_VISUAL_LANDMARKS_V1/BOUNDARY_CHECK.md`
 - `docs/asset-decisions/AKALYNTH_HIGH_CITY_VISUAL_LANDMARKS_V1/VERIFICATION.md`
+- `docs/asset-decisions/AKALYNTH_HIGH_CITY_VISUAL_LANDMARKS_V1/SCREENSHOTS.md`
 
 ## Change Summary
 
@@ -20,6 +21,7 @@ Lane: `AKALYNTH_HIGH_CITY_VISUAL_LANDMARKS_V1`
 - Used existing `VITE_DEFAULT_MAP` config as the debug-client initial map.
 - Unified objective fallback copy so offline High City previews say
   `Arrive in High City` instead of `Enter Rookguard`.
+- Recorded visual evidence and final local-green receipt state.
 
 ## Explicitly Not Included
 

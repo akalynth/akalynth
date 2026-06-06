@@ -2,6 +2,12 @@
 
 Lane: `AKALYNTH_HIGH_CITY_VISUAL_LANDMARKS_V1`
 
+Status: `implemented_committed_local_green`
+
+Branch: `codex/high-city-visual-landmarks-v1`
+
+Implementation commit: `163815bc8decf26570af478d6658c157c4bedcd4`
+
 ## Confirmed Unchanged
 
 - `packages/shared/maps/` was not changed.

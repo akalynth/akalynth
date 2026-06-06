@@ -1,7 +1,10 @@
 # AKALYNTH_HIGH_CITY_VISUAL_LANDMARKS_V1
 
-status: implemented_pending_review
+status: implemented_committed_local_green
 mechanical_class: display_only_no_runtime_semantics_change
+
+branch: codex/high-city-visual-landmarks-v1
+commit: 163815bc8decf26570af478d6658c157c4bedcd4
 
 ## Summary
 
@@ -23,6 +26,11 @@ This lane adds presentation overlays for:
 - `apps/debug-client/src/App.tsx`
 - `apps/debug-client/src/components/ActionsPanel.tsx`
 - `apps/debug-client/src/data/highCityVisualLandmarks.ts`
+- `docs/asset-decisions/AKALYNTH_HIGH_CITY_VISUAL_LANDMARKS_V1/receipt.md`
+- `docs/asset-decisions/AKALYNTH_HIGH_CITY_VISUAL_LANDMARKS_V1/CHANGED_FILES.md`
+- `docs/asset-decisions/AKALYNTH_HIGH_CITY_VISUAL_LANDMARKS_V1/BOUNDARY_CHECK.md`
+- `docs/asset-decisions/AKALYNTH_HIGH_CITY_VISUAL_LANDMARKS_V1/VERIFICATION.md`
+- `docs/asset-decisions/AKALYNTH_HIGH_CITY_VISUAL_LANDMARKS_V1/SCREENSHOTS.md`
 
 ## Boundary Summary
 
@@ -54,6 +62,10 @@ state in screenshots is expected for that capture mode.
 - `git diff --check -- apps/debug-client/src/App.tsx apps/debug-client/src/components/ActionsPanel.tsx apps/debug-client/src/data/highCityVisualLandmarks.ts`: PASS
 - `npm -w apps/debug-client run build`: PASS
 - `npm run verify:quick`: PASS, 9/9 verifiers
+
+## Review Next
+
+The clean next step is a review lane, not another feature lane.
 
 ## Caveat
 

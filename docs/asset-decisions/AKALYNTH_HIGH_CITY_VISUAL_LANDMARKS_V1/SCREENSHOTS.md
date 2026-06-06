@@ -1,4 +1,4 @@
-# Verification
+# Screenshots
 
 Lane: `AKALYNTH_HIGH_CITY_VISUAL_LANDMARKS_V1`
 
@@ -8,27 +8,14 @@ Branch: `codex/high-city-visual-landmarks-v1`
 
 Implementation commit: `163815bc8decf26570af478d6658c157c4bedcd4`
 
-## Commands Run
+## Captured Files
 
-```bash
-git diff --check -- apps/debug-client/src/App.tsx apps/debug-client/src/components/ActionsPanel.tsx apps/debug-client/src/data/highCityVisualLandmarks.ts
-```
+- Desktop: `/tmp/akalynth-high-city-visual-landmarks-desktop.png`
+- Mobile landscape: `/tmp/akalynth-high-city-visual-landmarks-mobile.png`
 
-Result: PASS.
+## Capture Method
 
-```bash
-npm -w apps/debug-client run build
-```
-
-Result: PASS.
-
-```bash
-npm run verify:quick
-```
-
-Result: PASS, 9/9 verifiers.
-
-## Screenshot Commands
+Screenshots were captured from a temporary offline High City preview:
 
 ```bash
 VITE_DEFAULT_MAP=Azura VITE_HTTP_BASE=http://127.0.0.1:3999 VITE_WS_BASE=ws://127.0.0.1:3999 npm -w apps/debug-client run build
@@ -37,15 +24,15 @@ npx -y playwright@1.56.1 screenshot --wait-for-selector 'canvas[aria-label="worl
 npx -y playwright@1.56.1 screenshot --wait-for-selector 'canvas[aria-label="world-map"]' --wait-for-timeout 1500 --viewport-size=844,390 http://127.0.0.1:4173/play/ /tmp/akalynth-high-city-visual-landmarks-mobile.png
 ```
 
-Result: PASS.
+## Expected Preview State
 
-Screenshots:
+The preview intentionally used dead server URLs so the debug client could hold
+the local High City map without depending on live travel state. A visible
+connection `error` state is expected for this capture mode.
 
-- `/tmp/akalynth-high-city-visual-landmarks-desktop.png`
-- `/tmp/akalynth-high-city-visual-landmarks-mobile.png`
+## Visual Result
 
-## Notes
-
-The screenshot preview intentionally used offline server URLs to hold the debug
-client on High City without depending on live travel state. The visible
-connection error in the screenshots is expected for that preview mode.
+- Desktop screenshot shows the Guild Hall facade, civic paving, and High City
+  objective copy.
+- Mobile landscape screenshot shows the spawn court, fountain, banners, benches,
+  and High City objective copy.
