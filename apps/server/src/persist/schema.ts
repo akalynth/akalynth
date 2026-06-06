@@ -7,7 +7,7 @@ import type Database from 'better-sqlite3';
 // Schema Version
 // ============================================================================
 
-export const SCHEMA_VERSION = 18;
+export const SCHEMA_VERSION = 19;
 
 // ============================================================================
 // DDL Statements
@@ -373,6 +373,117 @@ CREATE TABLE IF NOT EXISTS account_characters (
 CREATE INDEX IF NOT EXISTS idx_account_characters_account ON account_characters(account_id);
 `;
 
+// Identity Seal v1: accountless principal registry. This is additive beside the
+// Account Platform tables; it stores public keys/fingerprints and privacy-light
+// identity state, never private keys, raw session tokens, emails, or passwords.
+const DDL_PRINCIPALS = `
+CREATE TABLE IF NOT EXISTS principals (
+  principal_id           TEXT PRIMARY KEY,
+  handle                 TEXT NOT NULL,
+  handle_lower           TEXT NOT NULL,
+  display_name           TEXT NOT NULL,
+  status                 TEXT NOT NULL DEFAULT 'active',
+  roles_json             TEXT NOT NULL DEFAULT '["player"]',
+  recovery_mode          TEXT NOT NULL DEFAULT 'none',
+  created_at             TEXT NOT NULL,
+  updated_at             TEXT NOT NULL,
+  seal_retired_at        TEXT DEFAULT NULL,
+  principal_deleted_at   TEXT DEFAULT NULL,
+  deletion_requested_at  TEXT DEFAULT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_principals_handle_lower_active ON principals(handle_lower) WHERE status != 'principal_deleted';
+CREATE INDEX IF NOT EXISTS idx_principals_status ON principals(status);
+`;
+
+const DDL_PRINCIPAL_KEYS = `
+CREATE TABLE IF NOT EXISTS principal_keys (
+  key_id           TEXT PRIMARY KEY,
+  principal_id     TEXT NOT NULL,
+  key_type         TEXT NOT NULL,
+  public_key       TEXT NOT NULL,
+  key_fingerprint  TEXT NOT NULL,
+  status           TEXT NOT NULL DEFAULT 'active',
+  created_at       TEXT NOT NULL,
+  retired_at       TEXT DEFAULT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_principal_keys_principal ON principal_keys(principal_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_principal_keys_fingerprint ON principal_keys(key_fingerprint);
+`;
+
+const DDL_PRINCIPAL_CHALLENGES = `
+CREATE TABLE IF NOT EXISTS principal_challenges (
+  challenge_id  TEXT PRIMARY KEY,
+  principal_id  TEXT NOT NULL,
+  nonce_hash    TEXT NOT NULL,
+  purpose       TEXT NOT NULL,
+  domain        TEXT NOT NULL,
+  payload_json  TEXT NOT NULL,
+  client        TEXT NOT NULL,
+  issued_at     TEXT NOT NULL,
+  expires_at    TEXT NOT NULL,
+  consumed_at   TEXT DEFAULT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_principal_challenges_nonce ON principal_challenges(nonce_hash);
+CREATE INDEX IF NOT EXISTS idx_principal_challenges_principal ON principal_challenges(principal_id);
+CREATE INDEX IF NOT EXISTS idx_principal_challenges_expiry ON principal_challenges(expires_at);
+`;
+
+const DDL_PRINCIPAL_SESSIONS = `
+CREATE TABLE IF NOT EXISTS principal_sessions (
+  session_id      TEXT PRIMARY KEY,
+  principal_id    TEXT NOT NULL,
+  token_hash      TEXT NOT NULL,
+  identity_level  TEXT NOT NULL,
+  created_at      TEXT NOT NULL,
+  expires_at      TEXT NOT NULL,
+  last_seen_at    TEXT DEFAULT NULL,
+  revoked_at      TEXT DEFAULT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_principal_sessions_token ON principal_sessions(token_hash);
+CREATE INDEX IF NOT EXISTS idx_principal_sessions_principal ON principal_sessions(principal_id);
+`;
+
+const DDL_PRINCIPAL_TERMS = `
+CREATE TABLE IF NOT EXISTS principal_terms_acceptances (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  principal_id   TEXT NOT NULL,
+  terms_version  TEXT NOT NULL,
+  accepted_at    TEXT NOT NULL,
+  client         TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_principal_terms_principal ON principal_terms_acceptances(principal_id);
+`;
+
+const DDL_PRINCIPAL_BLOCKS = `
+CREATE TABLE IF NOT EXISTS principal_blocks (
+  blocker_principal_id  TEXT NOT NULL,
+  blocked_principal_id  TEXT NOT NULL,
+  reason                TEXT DEFAULT NULL,
+  created_at            TEXT NOT NULL,
+  PRIMARY KEY (blocker_principal_id, blocked_principal_id)
+);
+CREATE INDEX IF NOT EXISTS idx_principal_blocks_blocked ON principal_blocks(blocked_principal_id);
+`;
+
+const DDL_PRINCIPAL_REPORTS = `
+CREATE TABLE IF NOT EXISTS principal_reports (
+  report_id                 TEXT PRIMARY KEY,
+  reporter_principal_id     TEXT NOT NULL,
+  target_principal_id       TEXT NOT NULL,
+  content_ref               TEXT DEFAULT NULL,
+  reason                    TEXT NOT NULL,
+  detail                    TEXT DEFAULT NULL,
+  status                    TEXT NOT NULL DEFAULT 'open',
+  created_at                TEXT NOT NULL,
+  resolved_at               TEXT DEFAULT NULL,
+  resolved_by_principal_id  TEXT DEFAULT NULL,
+  resolution                TEXT DEFAULT NULL,
+  resolution_reason         TEXT DEFAULT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_principal_reports_status ON principal_reports(status);
+CREATE INDEX IF NOT EXISTS idx_principal_reports_target ON principal_reports(target_principal_id);
+`;
+
 // ============================================================================
 // Schema Initialization
 // ============================================================================
@@ -499,6 +610,9 @@ function runMigration(db: Database.Database, version: number): void {
       break;
     case 18:
       migrateToV18(db);
+      break;
+    case 19:
+      migrateToV19(db);
       break;
     default:
       throw new Error(`Unknown schema version: ${version}`);
@@ -762,6 +876,23 @@ function migrateToV18(db: Database.Database): void {
   insertMeta.run('schema_version', '18');
 }
 
+function migrateToV19(db: Database.Database): void {
+  // Identity Seal v1: principal/key/challenge/session/moderation state. Additive
+  // beside account tables; no existing account/player rows are modified.
+  db.exec(DDL_PRINCIPALS);
+  db.exec(DDL_PRINCIPAL_KEYS);
+  db.exec(DDL_PRINCIPAL_CHALLENGES);
+  db.exec(DDL_PRINCIPAL_SESSIONS);
+  db.exec(DDL_PRINCIPAL_TERMS);
+  db.exec(DDL_PRINCIPAL_BLOCKS);
+  db.exec(DDL_PRINCIPAL_REPORTS);
+
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', '19');
+}
+
 function ensureWorldEventEvidenceColumns(db: Database.Database): void {
   const columns = db.prepare(`PRAGMA table_info(world_events)`).all() as Array<{ name: string }>;
   const names = new Set(columns.map((column) => column.name));
@@ -781,6 +912,13 @@ function ensureWorldEventEvidenceColumns(db: Database.Database): void {
 export function resetSchema(db: Database.Database): void {
   // Drop all tables and recreate (for testing/recovery)
   db.exec('DROP TABLE IF EXISTS world_events');
+  db.exec('DROP TABLE IF EXISTS principal_reports');
+  db.exec('DROP TABLE IF EXISTS principal_blocks');
+  db.exec('DROP TABLE IF EXISTS principal_terms_acceptances');
+  db.exec('DROP TABLE IF EXISTS principal_sessions');
+  db.exec('DROP TABLE IF EXISTS principal_challenges');
+  db.exec('DROP TABLE IF EXISTS principal_keys');
+  db.exec('DROP TABLE IF EXISTS principals');
   db.exec('DROP TABLE IF EXISTS account_characters');
   db.exec('DROP TABLE IF EXISTS account_password_resets');
   db.exec('DROP TABLE IF EXISTS account_sessions');

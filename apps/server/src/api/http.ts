@@ -64,6 +64,8 @@ export interface ApiDeps {
   // Account Platform v1 (E4): catalogs + account-gated character endpoints
   // (/v1/worlds, /v1/outfits, /v1/characters, /v1/characters/select).
   handleCharacter?: (req: IncomingMessage, res: ServerResponse) => boolean | Promise<boolean>;
+  // Identity Seal v1: additive principal/key-bound identity endpoints.
+  handlePrincipal?: (req: IncomingMessage, res: ServerResponse) => boolean | Promise<boolean>;
 }
 
 function json(res: ServerResponse, status: number, body: unknown) {
@@ -153,6 +155,12 @@ export function handleHttp(
   // self-contained account router (parses body/cookies/CSRF, sets Set-Cookie).
   if (path.startsWith('/v1/accounts/') && deps.handleAccount) {
     return deps.handleAccount(req, res);
+  }
+
+  // Identity Seal v1: principal registry + signed challenge auth. This is
+  // additive and does not replace Account Platform or player auth tokens.
+  if (path.startsWith('/v1/principals/') && deps.handlePrincipal) {
+    return deps.handlePrincipal(req, res);
   }
 
   // Account Platform v1 (E4): catalogs + account-gated character surface.

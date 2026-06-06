@@ -52,7 +52,8 @@ import kotlinx.coroutines.delay
 fun LoginScreen(
     state: GameState,
     onEvent: (GameEvent) -> Unit,
-    onCreateCharacter: () -> Unit
+    onCreateCharacter: () -> Unit,
+    onAdventurerSeal: () -> Unit
 ) {
     var serverUrlInput by remember(state.session.serverUrl) {
         mutableStateOf(state.session.serverUrl)
@@ -122,6 +123,13 @@ fun LoginScreen(
                     modifier = Modifier.testTag("LoginScreen_CheckHealth")
                 )
             }
+
+            ClassicButton(
+                text = "Adventurer Seal",
+                onClick = onAdventurerSeal,
+                compact = true,
+                modifier = Modifier.testTag("LoginScreen_AdventurerSeal")
+            )
 
             Text(
                 text = entryHint,

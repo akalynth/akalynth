@@ -438,6 +438,23 @@ export const RECEIPT_ACTIONS = {
   CHARACTER_SELECTED: 'character_selected',
   CHARACTER_WORLD_ASSIGNED: 'character_world_assigned',
   CHARACTER_OUTFIT_SELECTED: 'character_outfit_selected',
+
+  // Identity Seal v1: privacy-light principal lifecycle. These receipts carry
+  // opaque principal ids, public key fingerprints, proof mechanisms, and
+  // server-derived capabilities only. They never carry private keys, raw
+  // session tokens, signatures, recovery secrets, email, or legal identity.
+  PRINCIPAL_CREATED: 'principal_created',
+  PRINCIPAL_TERMS_ACCEPTED: 'principal_terms_accepted',
+  PRINCIPAL_CHALLENGE_VERIFIED: 'principal_challenge_verified',
+  PRINCIPAL_CHALLENGE_REJECTED: 'principal_challenge_rejected',
+  PRINCIPAL_SESSION_ISSUED: 'principal_session_issued',
+  PRINCIPAL_SESSION_REVOKED: 'principal_session_revoked',
+  PRINCIPAL_PGP_BINDING_PENDING: 'principal_pgp_binding_pending',
+  PRINCIPAL_BLOCKED: 'principal_blocked',
+  PRINCIPAL_REPORTED: 'principal_reported',
+  PRINCIPAL_MODERATION_ACTION: 'principal_moderation_action',
+  PRINCIPAL_SEAL_RETIRED: 'principal_seal_retired',
+  PRINCIPAL_DELETION_REQUESTED: 'principal_deletion_requested',
 } as const;
 
 // Alias mapping for existing receipt actions
