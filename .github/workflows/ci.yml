@@ -112,6 +112,9 @@ jobs:
       - name: Validate Codex/plugin scaffold
         run: npm run validate:codex-plugin
 
+      - name: Validate skills and symlink invariant
+        run: bash scripts/verify_skills.sh
+
       - name: Validate delegation issue templates
         run: |
           node --input-type=module - <<'NODE'
@@ -195,6 +198,9 @@ jobs:
 
       - name: Verify protocol docs are in sync
         run: ./scripts/verify_protocol_sync.sh
+
+      - name: Validate skills and symlink invariant
+        run: ./scripts/verify_skills.sh
 
       - name: Install dependencies
         run: cd apps/server && npm ci

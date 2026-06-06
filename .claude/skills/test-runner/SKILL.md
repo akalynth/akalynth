@@ -1,6 +1,7 @@
 ---
 name: test-runner
 description: Use when choosing, running, or interpreting Akalynth verification commands, builds, smoke tests, health checks, WebSocket checks, or focused regression tests.
+version: 0.1.0
 ---
 
 # Test Runner

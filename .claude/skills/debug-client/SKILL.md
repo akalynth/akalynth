@@ -1,6 +1,7 @@
 ---
 name: debug-client
 description: Use when developing, debugging, or extending the Akalynth browser debug client (apps/debug-client/) — React/TypeScript app covering WebSocket connection, map rendering, actions panel, chat, event log, presence, and existence mode.
+version: 0.1.0
 ---
 
 # Debug Client

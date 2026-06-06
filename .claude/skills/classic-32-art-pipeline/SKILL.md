@@ -1,6 +1,7 @@
 ---
 name: classic-32-art-pipeline
 description: Use when generating, normalizing, packing, or reviewing Akalynth "Classic 32" world art and UI icons — 32x32 top-down pixel-art tiles, sprites, atlases, palettes, and the OpenAI asset pipeline — while keeping the legal boundary and server-metadata lockstep intact.
+version: 0.1.0
 ---
 
 # Classic 32 Art Pipeline

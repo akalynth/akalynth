@@ -1,6 +1,7 @@
 ---
 name: content-designer
 description: Use when adding or modifying Akalynth game content — mob definitions, item definitions, zone layouts, spawn tables, drop tables, NPC behavior, or world content data — without silently changing economy balance or server authority rules.
+version: 0.1.0
 ---
 
 # Content Designer

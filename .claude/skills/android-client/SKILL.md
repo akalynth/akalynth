@@ -1,6 +1,7 @@
 ---
 name: android-client
 description: Use when developing, auditing, or debugging the Akalynth Android client (apps/android/) — Kotlin app covering WebSocket connection, identity/token login, receipt ingestion, action intent dispatch, snapshot diffs, and UI components.
+version: 0.1.0
 ---
 
 # Android Client

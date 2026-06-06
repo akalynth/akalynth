@@ -1,6 +1,7 @@
 ---
 name: ci-steward
 description: Use when authoring, debugging, or repairing Akalynth GitHub Actions CI — path classification, witness harness, smoke tests, build jobs, invariant guards, and CI change-control rules.
+version: 0.1.0
 ---
 
 # CI Steward
