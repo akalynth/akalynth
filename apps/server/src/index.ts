@@ -2692,6 +2692,7 @@ function playLoopFor(s: Session) {
     gateOpen,
     objective,
     lastEvent: bloom.phase === 'idle' ? null : `witness_moth_bloom_${bloom.phase}`,
+    ...(bloom.teaser ? { teaser: bloom.teaser } : {}),
   };
 }
 
@@ -5727,9 +5728,14 @@ function processSessionQueue(s: Session, now: number) {
             break;
           }
 
+          const loopEvent = 'resolved' in result
+            ? result.resolved ? 'witness_moth_bloom_resolved' : 'witness_moth_bloom_progress'
+            : 'witness_moth_bloom_evidence';
+          const shouldBroadcast = ('recorded' in result && result.recorded) || ('recovered' in result && result.recovered);
+
           send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: result.payload }));
-          sendLoopUpdate(s, result.resolved ? 'witness_moth_bloom_resolved' : 'witness_moth_bloom_progress');
-          if (result.recorded) {
+          sendLoopUpdate(s, loopEvent);
+          if (shouldBroadcast) {
             broadcastToMap('Azura', ServerMessages.chatBroadcast('system', 'Witness Bloom', result.message));
           }
           break;

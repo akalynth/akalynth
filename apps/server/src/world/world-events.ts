@@ -3,13 +3,29 @@ import { RECEIPT_ACTIONS } from '../persist/types.js';
 
 export const WITNESS_MOTH_BLOOM_EVENT_ID = 'witness_moth_bloom';
 export const WITNESS_MOTH_BLOOM_SKILL_PREFIX = `event:${WITNESS_MOTH_BLOOM_EVENT_ID}:`;
+export const WITNESS_MOTH_BLOOM_EVIDENCE_PREFIX = `${WITNESS_MOTH_BLOOM_SKILL_PREFIX}evidence:`;
+export const EMBER_ROAD_TEASER_ID = 'ember_road_marker';
 
 export type WitnessMothBloomPhase = 'idle' | 'signal' | 'investigation' | 'resolved';
 export type WitnessMothBloomOutcome = 'controlled_release';
+export type WitnessMothBloomEvidenceId =
+  | 'testimony_shard'
+  | 'damaged_ledger'
+  | 'moth_residue';
 export type WitnessMothBloomContributionId =
   | 'verify_testimony'
   | 'craft_lantern_frame'
   | 'defend_scribes';
+
+export type WitnessMothBloomSkillIntent =
+  | { kind: 'evidence'; evidence_id: WitnessMothBloomEvidenceId }
+  | { kind: 'contribution'; contribution_id: WitnessMothBloomContributionId };
+
+export interface WitnessMothBloomEvidence {
+  evidence_id: WitnessMothBloomEvidenceId;
+  player_id: string;
+  recovered_at_ms: number;
+}
 
 export interface WitnessMothBloomContribution {
   contribution_id: WitnessMothBloomContributionId;
@@ -26,7 +42,9 @@ export interface WitnessMothBloomRuntime {
   resolved_by: string | null;
   resolved_at_ms: number | null;
   outcome: WitnessMothBloomOutcome | null;
+  evidence: Partial<Record<WitnessMothBloomEvidenceId, WitnessMothBloomEvidence>>;
   contributions: Partial<Record<WitnessMothBloomContributionId, WitnessMothBloomContribution>>;
+  teaser: { id: typeof EMBER_ROAD_TEASER_ID; unlocked: true; unlocked_by: string; unlocked_at_ms: number } | null;
 }
 
 export interface WitnessMothBloomHydrationRow {
@@ -39,6 +57,8 @@ export interface WitnessMothBloomHydrationRow {
   resolved_at: string | null;
   outcome: string | null;
   contributions_json: string;
+  evidence_json?: string | null;
+  teaser_json?: string | null;
 }
 
 type WriteReceiptInput = {
@@ -59,6 +79,15 @@ export const WITNESS_MOTH_BLOOM_CONTRIBUTIONS: ReadonlyArray<{
   { contribution_id: 'defend_scribes', label: 'Defend scribes' },
 ];
 
+export const WITNESS_MOTH_BLOOM_EVIDENCE: ReadonlyArray<{
+  evidence_id: WitnessMothBloomEvidenceId;
+  label: string;
+}> = [
+  { evidence_id: 'testimony_shard', label: 'Testimony shard' },
+  { evidence_id: 'damaged_ledger', label: 'Damaged ledger' },
+  { evidence_id: 'moth_residue', label: 'Witness moth residue' },
+];
+
 export function createWitnessMothBloomRuntime(): WitnessMothBloomRuntime {
   return {
     event_id: WITNESS_MOTH_BLOOM_EVENT_ID,
@@ -69,24 +98,50 @@ export function createWitnessMothBloomRuntime(): WitnessMothBloomRuntime {
     resolved_by: null,
     resolved_at_ms: null,
     outcome: null,
+    evidence: {},
     contributions: {},
+    teaser: null,
   };
 }
 
 export function parseWitnessMothBloomSkillId(skillId: string): WitnessMothBloomContributionId | null {
   if (!skillId.startsWith(WITNESS_MOTH_BLOOM_SKILL_PREFIX)) return null;
+  if (skillId.startsWith(WITNESS_MOTH_BLOOM_EVIDENCE_PREFIX)) return null;
   const contributionId = skillId.slice(WITNESS_MOTH_BLOOM_SKILL_PREFIX.length);
   return isWitnessMothBloomContributionId(contributionId) ? contributionId : null;
 }
 
+export function parseWitnessMothBloomEvidenceSkillId(skillId: string): WitnessMothBloomEvidenceId | null {
+  if (!skillId.startsWith(WITNESS_MOTH_BLOOM_EVIDENCE_PREFIX)) return null;
+  const evidenceId = skillId.slice(WITNESS_MOTH_BLOOM_EVIDENCE_PREFIX.length);
+  return isWitnessMothBloomEvidenceId(evidenceId) ? evidenceId : null;
+}
+
+export function parseWitnessMothBloomSkillIntent(skillId: string): WitnessMothBloomSkillIntent | null {
+  const evidenceId = parseWitnessMothBloomEvidenceSkillId(skillId);
+  if (evidenceId) return { kind: 'evidence', evidence_id: evidenceId };
+
+  const contributionId = parseWitnessMothBloomSkillId(skillId);
+  if (contributionId) return { kind: 'contribution', contribution_id: contributionId };
+
+  return null;
+}
+
 export function witnessMothBloomPublicState(runtime: WitnessMothBloomRuntime) {
+  const teaser = runtime.teaser?.unlocked
+    ? { id: runtime.teaser.id, unlocked: true as const }
+    : undefined;
+
   return {
     event_id: runtime.event_id,
     map: runtime.map,
     phase: runtime.phase,
+    evidence_count: Object.keys(runtime.evidence).length,
+    required_evidence_count: WITNESS_MOTH_BLOOM_EVIDENCE.length,
     contribution_count: Object.keys(runtime.contributions).length,
     required_count: WITNESS_MOTH_BLOOM_CONTRIBUTIONS.length,
     outcome: runtime.outcome,
+    ...(teaser ? { teaser } : {}),
   };
 }
 
@@ -103,7 +158,9 @@ export function hydrateWitnessMothBloomRuntime(
   runtime.resolved_by = row.resolved_by;
   runtime.resolved_at_ms = timestampMs(row.resolved_at);
   runtime.outcome = row.outcome === 'controlled_release' ? row.outcome : null;
+  runtime.evidence = parseHydratedEvidence(row.evidence_json);
   runtime.contributions = parseHydratedContributions(row.contributions_json);
+  runtime.teaser = parseHydratedTeaser(row.teaser_json);
   return true;
 }
 
@@ -180,6 +237,103 @@ export type RecordWitnessMothContributionResult =
       payload: Record<string, unknown>;
     };
 
+export type RecoverWitnessMothEvidenceResult =
+  | {
+      ok: true;
+      recovered: boolean;
+      phase: WitnessMothBloomPhase;
+      message: string;
+      payload: Record<string, unknown>;
+    }
+  | {
+      ok: false;
+      reason: 'invalid_skill' | 'invalid_target';
+      payload: Record<string, unknown>;
+    };
+
+export function recoverWitnessMothBloomEvidence(
+  runtime: WitnessMothBloomRuntime,
+  input: {
+    player_id: string;
+    map: MapName;
+    evidence_id: WitnessMothBloomEvidenceId;
+    now_ms: number;
+  },
+  writeReceipt: WriteReceipt
+): RecoverWitnessMothEvidenceResult {
+  if (input.map !== runtime.map) {
+    return {
+      ok: false,
+      reason: 'invalid_target',
+      payload: { error: 'wrong_map', event_id: runtime.event_id, required_map: runtime.map },
+    };
+  }
+
+  if (runtime.phase === 'idle') {
+    return {
+      ok: false,
+      reason: 'invalid_target',
+      payload: { error: 'event_inactive', event_id: runtime.event_id },
+    };
+  }
+
+  if (runtime.phase === 'resolved') {
+    return {
+      ok: true,
+      recovered: false,
+      phase: runtime.phase,
+      message: messageForPhase(runtime.phase),
+      payload: witnessMothBloomPublicState(runtime),
+    };
+  }
+
+  if (runtime.evidence[input.evidence_id]) {
+    return {
+      ok: true,
+      recovered: false,
+      phase: runtime.phase,
+      message: 'That evidence is already recovered for the Bloom.',
+      payload: {
+        ...witnessMothBloomPublicState(runtime),
+        evidence_id: input.evidence_id,
+        duplicate: true,
+      },
+    };
+  }
+
+  const recoveredCount = Object.keys(runtime.evidence).length + 1;
+  writeReceipt({
+    player_id: input.player_id,
+    action: RECEIPT_ACTIONS.WORLD_EVENT_EVIDENCE_RECOVERED,
+    inputs: {
+      event_id: runtime.event_id,
+      map: runtime.map,
+      phase: runtime.phase,
+      evidence_id: input.evidence_id,
+      recovered_count: recoveredCount,
+      required_evidence_count: WITNESS_MOTH_BLOOM_EVIDENCE.length,
+    },
+    result: 'ok',
+  });
+
+  runtime.evidence[input.evidence_id] = {
+    evidence_id: input.evidence_id,
+    player_id: input.player_id,
+    recovered_at_ms: input.now_ms,
+  };
+
+  return {
+    ok: true,
+    recovered: true,
+    phase: runtime.phase,
+    message: messageForEvidence(input.evidence_id),
+    payload: {
+      ...witnessMothBloomPublicState(runtime),
+      evidence_id: input.evidence_id,
+    },
+  };
+}
+
 export function recordWitnessMothBloomContribution(
   runtime: WitnessMothBloomRuntime,
   input: {
@@ -214,6 +368,18 @@ export function recordWitnessMothBloomContribution(
       phase: runtime.phase,
       message: messageForPhase(runtime.phase),
       payload: witnessMothBloomPublicState(runtime),
+    };
+  }
+
+  if (!allWitnessMothBloomEvidenceRecovered(runtime)) {
+    return {
+      ok: false,
+      reason: 'invalid_target',
+      payload: {
+        error: 'evidence_required',
+        event_id: runtime.event_id,
+        required_evidence_ids: WITNESS_MOTH_BLOOM_EVIDENCE.map((entry) => entry.evidence_id),
+      },
     };
   }
 
@@ -286,10 +452,30 @@ export function recordWitnessMothBloomContribution(
     result: 'ok',
   });
 
+  writeReceipt({
+    player_id: input.player_id,
+    action: RECEIPT_ACTIONS.WORLD_EVENT_TEASER_UNLOCKED,
+    inputs: {
+      event_id: runtime.event_id,
+      map: runtime.map,
+      phase: 'resolved',
+      teaser_id: EMBER_ROAD_TEASER_ID,
+      unlocked: true,
+      source: RECEIPT_ACTIONS.WORLD_EVENT_RESOLVED,
+    },
+    result: 'ok',
+  });
+
   runtime.phase = 'resolved';
   runtime.resolved_by = input.player_id;
   runtime.resolved_at_ms = input.now_ms;
   runtime.outcome = outcome;
+  runtime.teaser = {
+    id: EMBER_ROAD_TEASER_ID,
+    unlocked: true,
+    unlocked_by: input.player_id,
+    unlocked_at_ms: input.now_ms,
+  };
 
   return {
     ok: true,
@@ -313,9 +499,9 @@ export function handleWitnessMothBloomSkillIntent(
     now_ms: number;
   },
   writeReceipt: WriteReceipt
-): RecordWitnessMothContributionResult {
-  const contributionId = parseWitnessMothBloomSkillId(input.skill_id);
-  if (!contributionId) {
+): RecordWitnessMothContributionResult | RecoverWitnessMothEvidenceResult {
+  const intent = parseWitnessMothBloomSkillIntent(input.skill_id);
+  if (!intent) {
     return {
       ok: false,
       reason: 'invalid_skill',
@@ -323,16 +509,37 @@ export function handleWitnessMothBloomSkillIntent(
     };
   }
 
+  if (intent.kind === 'evidence') {
+    return recoverWitnessMothBloomEvidence(
+      runtime,
+      {
+        player_id: input.player_id,
+        map: input.map,
+        evidence_id: intent.evidence_id,
+        now_ms: input.now_ms,
+      },
+      writeReceipt
+    );
+  }
+
   return recordWitnessMothBloomContribution(
     runtime,
     {
       player_id: input.player_id,
       map: input.map,
-      contribution_id: contributionId,
+      contribution_id: intent.contribution_id,
       now_ms: input.now_ms,
     },
     writeReceipt
   );
+}
+
+function allWitnessMothBloomEvidenceRecovered(runtime: WitnessMothBloomRuntime): boolean {
+  return WITNESS_MOTH_BLOOM_EVIDENCE.every((entry) => !!runtime.evidence[entry.evidence_id]);
+}
+
+function isWitnessMothBloomEvidenceId(value: string): value is WitnessMothBloomEvidenceId {
+  return WITNESS_MOTH_BLOOM_EVIDENCE.some((entry) => entry.evidence_id === value);
 }
 
 function isWitnessMothBloomContributionId(value: string): value is WitnessMothBloomContributionId {
@@ -347,6 +554,32 @@ function timestampMs(value: string | null): number | null {
   if (!value) return null;
   const parsed = Date.parse(value);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function parseHydratedEvidence(raw: string | null | undefined): WitnessMothBloomRuntime['evidence'] {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw ?? '{}');
+  } catch {
+    return {};
+  }
+
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+  const evidence: WitnessMothBloomRuntime['evidence'] = {};
+  for (const [key, value] of Object.entries(parsed as Record<string, unknown>)) {
+    if (!isWitnessMothBloomEvidenceId(key)) continue;
+    if (!value || typeof value !== 'object' || Array.isArray(value)) continue;
+    const rawEvidence = value as Record<string, unknown>;
+    const playerId = rawEvidence.player_id;
+    const recoveredAt = rawEvidence.recovered_at_ms;
+    if (typeof playerId !== 'string' || typeof recoveredAt !== 'number') continue;
+    evidence[key] = {
+      evidence_id: key,
+      player_id: playerId,
+      recovered_at_ms: recoveredAt,
+    };
+  }
+  return evidence;
 }
 
 function parseHydratedContributions(raw: string): WitnessMothBloomRuntime['contributions'] {
@@ -375,6 +608,30 @@ function parseHydratedContributions(raw: string): WitnessMothBloomRuntime['contr
   return contributions;
 }
 
+function parseHydratedTeaser(
+  raw: string | null | undefined
+): WitnessMothBloomRuntime['teaser'] {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw ?? '{}');
+  } catch {
+    return null;
+  }
+
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
+  const teaser = parsed as Record<string, unknown>;
+  if (teaser.id !== EMBER_ROAD_TEASER_ID || teaser.unlocked !== true) return null;
+  const unlockedBy = teaser.unlocked_by;
+  const unlockedAt = teaser.unlocked_at_ms;
+  if (typeof unlockedBy !== 'string' || typeof unlockedAt !== 'number') return null;
+  return {
+    id: EMBER_ROAD_TEASER_ID,
+    unlocked: true,
+    unlocked_by: unlockedBy,
+    unlocked_at_ms: unlockedAt,
+  };
+}
+
 function messageForPhase(phase: WitnessMothBloomPhase): string {
   switch (phase) {
     case 'signal':
@@ -397,5 +654,16 @@ function messageForContribution(contributionId: WitnessMothBloomContributionId):
       return 'A memory lantern frame is prepared for the Bloom.';
     case 'defend_scribes':
       return 'The scribes hold their line while the Bloom is indexed.';
+  }
+}
+
+function messageForEvidence(evidenceId: WitnessMothBloomEvidenceId): string {
+  switch (evidenceId) {
+    case 'testimony_shard':
+      return 'A testimony shard is recovered from the Bloom signal.';
+    case 'damaged_ledger':
+      return 'A damaged ledger is pulled from the archive steps.';
+    case 'moth_residue':
+      return 'Witness moth residue is sealed for Chronicle review.';
   }
 }

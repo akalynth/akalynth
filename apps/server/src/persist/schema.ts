@@ -7,7 +7,7 @@ import type Database from 'better-sqlite3';
 // Schema Version
 // ============================================================================
 
-export const SCHEMA_VERSION = 17;
+export const SCHEMA_VERSION = 18;
 
 // ============================================================================
 // DDL Statements
@@ -230,6 +230,8 @@ CREATE TABLE IF NOT EXISTS world_events (
   resolved_at        TEXT DEFAULT NULL,
   outcome            TEXT DEFAULT NULL,
   contributions_json TEXT NOT NULL DEFAULT '{}',
+  evidence_json      TEXT NOT NULL DEFAULT '{}',
+  teaser_json        TEXT NOT NULL DEFAULT '{}',
   last_receipt       TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_world_events_map_phase ON world_events(map, phase);
@@ -495,6 +497,9 @@ function runMigration(db: Database.Database, version: number): void {
     case 17:
       migrateToV17(db);
       break;
+    case 18:
+      migrateToV18(db);
+      break;
     default:
       throw new Error(`Unknown schema version: ${version}`);
   }
@@ -743,6 +748,30 @@ function migrateToV17(db: Database.Database): void {
     'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
   );
   insertMeta.run('schema_version', '17');
+}
+
+function migrateToV18(db: Database.Database): void {
+  // Evidence Loop v0: add replayable Bloom evidence + teaser projection columns.
+  // Additive only; existing rows get empty JSON defaults.
+  db.exec(DDL_WORLD_EVENTS);
+  ensureWorldEventEvidenceColumns(db);
+
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', '18');
+}
+
+function ensureWorldEventEvidenceColumns(db: Database.Database): void {
+  const columns = db.prepare(`PRAGMA table_info(world_events)`).all() as Array<{ name: string }>;
+  const names = new Set(columns.map((column) => column.name));
+
+  if (!names.has('evidence_json')) {
+    db.exec(`ALTER TABLE world_events ADD COLUMN evidence_json TEXT NOT NULL DEFAULT '{}';`);
+  }
+  if (!names.has('teaser_json')) {
+    db.exec(`ALTER TABLE world_events ADD COLUMN teaser_json TEXT NOT NULL DEFAULT '{}';`);
+  }
 }
 
 // ============================================================================
