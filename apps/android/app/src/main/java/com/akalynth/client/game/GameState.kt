@@ -46,6 +46,7 @@ data class UiState(
     val chatOpen: Boolean = false,
     val showChronicleSheet: Boolean = false,
     val chronicleEvents: List<ChronicleEvent> = emptyList(),
+    val chronicleHasMore: Boolean = false,
     val debugLog: List<DebugLogEntry> = emptyList(),
     val showDebugDrawer: Boolean = false,
     val connectionDiagnostics: ConnectionDiagnostics = ConnectionDiagnostics(),

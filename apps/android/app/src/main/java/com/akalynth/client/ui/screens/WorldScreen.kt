@@ -153,7 +153,7 @@ fun WorldScreen(
         if (state.ui.showChronicleSheet) {
             ChronicleSheet(
                 events = state.ui.chronicleEvents,
-                hasMore = false,
+                hasMore = state.ui.chronicleHasMore,
                 onEventClick = {},
                 onLoadMore = {},
                 onDismiss = { onEvent(GameEvent.ToggleChronicle) },

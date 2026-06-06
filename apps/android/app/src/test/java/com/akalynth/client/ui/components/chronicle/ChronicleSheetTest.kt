@@ -2,9 +2,11 @@ package com.akalynth.client.ui.components.chronicle
 
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.dp
 import com.akalynth.client.ui.state.ChronicleEvent
 import com.akalynth.client.ui.state.ChronicleEventKind
@@ -45,6 +47,39 @@ class ChronicleSheetTest {
             .assertTextEquals("Server receipt")
         composeTestRule.onNodeWithTag("ChronicleSheet_EventStatus_rejected")
             .assertTextEquals("Rejected")
+    }
+
+    @Test
+    fun chronicleRowsDisplayLegacyAzuraAsHighCity() {
+        composeTestRule.setContent {
+            ChronicleSheet(
+                events = listOf(event("azura", EventStatus.CONFIRMED, EventSource.SERVER_RECEIPT)),
+                hasMore = false,
+                onEventClick = {},
+                onLoadMore = {},
+                onDismiss = {},
+                modifier = Modifier.height(420.dp)
+            )
+        }
+
+        composeTestRule.onNodeWithText("High City • 08:00").assertIsDisplayed()
+    }
+
+    @Test
+    fun emptyChronicleDoesNotInventEvents() {
+        composeTestRule.setContent {
+            ChronicleSheet(
+                events = emptyList(),
+                hasMore = false,
+                onEventClick = {},
+                onLoadMore = {},
+                onDismiss = {},
+                modifier = Modifier.height(420.dp)
+            )
+        }
+
+        composeTestRule.onNodeWithTag("ChronicleSheet_Empty")
+            .assertTextEquals("No events yet")
     }
 
     private fun event(
