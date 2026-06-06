@@ -18,7 +18,7 @@ The same file also states that Akalynth is the world/app/site, High City is the 
 
 ## Current Identifier Surface
 
-Tracked search found 116 files containing `Azura`, `azura`, or `GateToAzura`.
+Tracked search found 127 files containing `Azura`, `azura`, or `GateToAzura`.
 
 Observed areas:
 
@@ -36,7 +36,7 @@ Observed areas:
 | Server place ids | `azura:plaza`, `azura:guild_hall` |
 | Server death actions | `death_in_azura`, `first_death_in_azura` |
 | Server property ids | `Azura:H1`, `Azura:H2`, etc. |
-| Character world id | `world_id: 'azura'` |
+| Character world id | `world_id: 'high_city'`; legacy create input `azura` is accepted and normalized |
 | Android map asset | `apps/android/app/src/main/assets/maps/azura.json` |
 | Android serializer | `@SerialName("Azura") AZURA` |
 | Browser map import | `@shared/maps/azura.json` |
@@ -52,6 +52,8 @@ These cannot be blindly renamed without replay and receipt compatibility:
 
 - receipt `inputs.map`
 - receipt `inputs.zone`
+- historical character receipt `inputs.world_id` values if emitted before the
+  account-world normalization sublane
 - death action names
 - property ids
 - chronicle event zones

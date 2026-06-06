@@ -2,7 +2,26 @@
 
 ## Lane Boundary
 
-This plan does not run a runtime migration. It defines validation required for future implementation lanes.
+This plan has one completed scoped account-world cleanup. It does not run the
+runtime map identifier migration. It defines validation required for future
+implementation lanes.
+
+## Completed Account-World Catalog Validation
+
+Commands already used for the scoped account-world cleanup:
+
+- `npm -w apps/server run test:character-v2`
+- `npm -w apps/server run build`
+- `./scripts/verify_protocol_sync.sh`
+- `npm run verify`
+
+Covered checks:
+
+- `GET /v1/worlds` advertises `high_city` / `High City`
+- legacy `azura` create input remains accepted
+- account character rows persist `high_city`
+- new character lifecycle receipts emit `high_city`, not `azura`
+- full verification spine passed after the change
 
 ## Required Validation For Future Compatibility Prep
 

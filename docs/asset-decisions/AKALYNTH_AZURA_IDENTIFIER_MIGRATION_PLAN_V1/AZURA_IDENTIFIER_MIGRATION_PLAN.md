@@ -4,7 +4,8 @@
 
 Design the future migration from Azura runtime identifiers to High City without breaking server authority, client protocol compatibility, receipts, replay, Android parsing, browser rendering, property ids, or historical evidence.
 
-This lane is planning only.
+This lane started as planning only. Completed scoped sublanes are recorded below
+so future runtime migration work does not repeat already-safe cleanup.
 
 ## Canonical Naming Decision
 
@@ -71,6 +72,23 @@ Protocol:
 
 - still do not make the server emit `HighCity`
 
+### Completed Scoped Account-World Cleanup
+
+Completed before the full runtime map switch:
+
+- Account `GET /v1/worlds` advertises `high_city` / `High City` instead of
+  legacy `azura` / `Azura`.
+- Account `POST /v1/characters` still accepts legacy `azura` input for old
+  clients, but persists and emits new character lifecycle receipts with
+  `world_id: 'high_city'`.
+- Focused character verifier covers catalog output, legacy alias acceptance,
+  normalized persistence, and normalized receipt inputs.
+
+Boundary:
+
+- This does not rename the runtime map file, shared `MapName`, WebSocket map
+  values, `GateToAzura`, NPC/place ids, property ids, or historical receipts.
+
 ### Phase 3: Runtime Identifier Switch
 
 Future lane:
@@ -88,7 +106,8 @@ Implement:
 - rename landmark to `gate_to_high_city`
 - migrate server world registry from `worlds.Azura` to `worlds.HighCity`
 - migrate new NPC/place ids to `high_city_*` and `high_city:*`
-- migrate character catalog world/location id from `azura` to `high_city`
+- keep the already-migrated account character catalog on `high_city` and retain
+  the legacy `azura` create alias
 - migrate new property ids to `high_city:H*`
 - add migration logic for existing property rows if runtime state has existing Azura property ids
 
@@ -159,6 +178,7 @@ Minimum safe implementation path:
 4. evidence/replay compatibility
 5. public copy migration
 
-## Current Lane Non-Action
+## Current Lane Boundary
 
-This plan does not rename any identifiers.
+The account-world id is now migrated. The runtime map identifier migration is
+not complete.
