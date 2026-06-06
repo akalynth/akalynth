@@ -2,14 +2,16 @@
 
 > **Purpose:** Reference for the Rookguard onboarding map. Source of truth is `packages/shared/maps/rookguard.json`; this doc must stay consistent with it.
 
-Rookguard is the **mandatory 32×32 onboarding map** every guest must complete before entering Azura. It exists to prove that a human is at the keyboard and to warm players up on core systems (movement intent, chat, Tem challenge).
+Rookguard is the **mandatory 32×32 onboarding map** every guest must complete
+before entering High City. It exists to prove that a human is at the keyboard and
+to warm players up on core systems (movement intent, chat, Tem challenge).
 
 ## Map Specifications
 
 - **Size**: 32×32 tiles  
 - **Spawn**: `(2, 2)`  
 - **Boundary**: Exterior ring of non-walkable walls  
-- **Path**: Straight tutorial corridor across row `y = 2` ending at the gate to Azura
+- **Path**: Straight tutorial corridor across row `y = 2` ending at the gate to High City
 
 ## Tile Codes
 
@@ -20,7 +22,7 @@ Rookguard is the **mandatory 32×32 onboarding map** every guest must complete b
 | `5` | `TutorialMove` | Step here to mark the movement lesson complete |
 | `6` | `TutorialChat` | Marks the chat lesson area; any non-empty Rookguard chat completes the current server tutorial chat step |
 | `7` | `TutorialTem` | Triggers a Tem demo challenge; pass it to continue |
-| `8` | `GateToAzura` | Available only after all tutorial flags are true |
+| `8` | `GateToAzura` | Legacy tile identifier for the High City gate; available only after all tutorial flags are true |
 
 All tutorial tiles are walkable so the authoritative server can detect them as part of the standard movement pipeline.
 
@@ -28,8 +30,8 @@ All tutorial tiles are walkable so the authoritative server can detect them as p
 
 1. **Movement** – reach the `TutorialMove` tile.  
 2. **Chat** – send a non-empty chat message while still in Rookguard.
-3. **Tem Demo** – stepping on `TutorialTem` issues the friendly Tem challenge (“Hi! 👋 type AZURA…”). Passing it marks the Tem step.  
-4. **Gate Unlock** – once the previous steps are true, stepping on `GateToAzura` flips `tutorial_complete = true`, emits receipts, and the server transfers the player to Azura’s spawn.
+3. **Tem Demo** – stepping on `TutorialTem` issues the friendly Tem challenge. Passing it marks the Tem step.
+4. **Gate Unlock** – once the previous steps are true, stepping on `GateToAzura` flips `tutorial_complete = true`, emits receipts, and the server transfers the player to the first-city spawn. The tile name remains a legacy runtime identifier until the compatibility migration is complete.
 
 Every event is logged to `audit/receipts.jsonl` (`tutorial_step_complete`, `tem_challenge_issued`, `tutorial_completed`, `gate_unlock`, etc.).
 
@@ -39,7 +41,7 @@ Every event is logged to `audit/receipts.jsonl` (`tutorial_step_complete`, `tem_
 Walls █
 
 Row y=2:
- [Spawn] → 5 (move) → 6 (chat) → 7 (Tem) → 8 (Gate►Azura)
+ [Spawn] → 5 (move) → 6 (chat) → 7 (Tem) → 8 (Gate►High City)
 
 Single-tile corridor surrounded by walls to keep focus on onboarding.
 ```
@@ -59,7 +61,10 @@ These are landmark entries (not walkable-tile codes) and may be referenced by ga
 
 > Narrative framing only. Mechanics are documented in the tables and code references above; nothing in this section changes tile behavior, collision, drops, rewards, or progression.
 
-Rookguard is the threshold every newcomer crosses before the world will admit them. It is deliberately small and quiet — a stone antechamber where the keep listens to confirm a living hand is at the keyboard before opening the gate to Azura.
+Rookguard is the threshold every newcomer crosses before the world will admit
+them. It is deliberately small and quiet — a stone antechamber where the keep
+listens to confirm a living hand is at the keyboard before opening the gate to
+High City.
 
 ### The Runestone Table — `(4, 4)`
 
@@ -79,4 +84,7 @@ A weathered marker stone near the table. It carries the names and deeds the keep
 
 ## Map Data
 
-`packages/shared/maps/rookguard.json` holds the complete 32×32 tile array plus landmarks for each tutorial marker and the gate. This file is loaded by the authoritative server just like `azura.json`.
+`packages/shared/maps/rookguard.json` holds the complete 32×32 tile array plus
+landmarks for each tutorial marker and the gate. This file is loaded by the
+authoritative server just like the current first-city map file,
+`packages/shared/maps/azura.json`.

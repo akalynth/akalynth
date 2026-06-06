@@ -116,7 +116,7 @@ Core docs:
 - [Identity Verification v0.1](./IDENTITY_VERIFICATION.md) - external verification protocol for identity tokens
 - [Persistence Matrix](./PERSISTENCE_MATRIX.md) - state classified by durability, authority, and evidence
 - [Manifesto](./MANIFESTO.md) - narrative manifesto: the world's tone, the Ledger, and why it endures
-- [World: Azura](./WORLD_AZURA.md) - city layout, spawn zone, landmarks
+- [World: High City](./WORLD_HIGH_CITY.md) - first-city layout, spawn zone, landmarks
 - [World: Rookguard](./WORLD_ROOKGUARD.md) - mandatory 32×32 onboarding/training map
 - [World Evolution](./WORLD_EVOLUTION.md) - epochs, sunsets, and founder-absence survival rules
 - [Akalynth Lore Bible](./AKALYNTH_LORE_BIBLE.md) - current lore authority and naming boundary

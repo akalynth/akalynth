@@ -166,4 +166,4 @@ Core docs:
 - `docs/ARCHITECTURE.md`
 - `docs/PROTOCOL.md`
 - `docs/ANTICHEAT.md`
-- `docs/WORLD_AZURA.md`
+- `docs/WORLD_HIGH_CITY.md`

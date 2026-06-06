@@ -31,7 +31,7 @@ Grouped by role. `L` = line count at last review. Entries marked **(non-binding)
 | --- | --- | --- |
 | [MANIFESTO.md](./MANIFESTO.md) | 64 | Narrative vision (aspirational; carries a "Grounding" note mapping claims to shipped systems). |
 | [AKALYNTH_LORE_BIBLE.md](./AKALYNTH_LORE_BIBLE.md) | 235 | Current lore authority and naming boundary. |
-| [WORLD_AZURA.md](./WORLD_AZURA.md) | 141 | Current Azura runtime city map; lore/canon naming is transitional. |
+| [WORLD_HIGH_CITY.md](./WORLD_HIGH_CITY.md) | 150 | Current first-city map; High City player-facing name over legacy `Azura` runtime id. |
 | [WORLD_ROOKGUARD.md](./WORLD_ROOKGUARD.md) | 82 | Rookguard training zone. |
 | [WORLD_EVOLUTION.md](./WORLD_EVOLUTION.md) | 342 | "Record change, don't overwrite truth" — world history doctrine **(non-binding)**. |
 

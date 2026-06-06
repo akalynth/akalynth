@@ -2,7 +2,7 @@
 //
 // Display-only flavor. This data is never sent to the server and changes no
 // mechanic — it mirrors the world docs (docs/WORLD_ROOKGUARD.md,
-// docs/WORLD_AZURA.md) and accurately describes existing server behavior.
+// docs/WORLD_HIGH_CITY.md) and accurately describes existing server behavior.
 
 import { TileCode } from '@shared/types';
 

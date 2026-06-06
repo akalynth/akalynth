@@ -123,10 +123,15 @@ Future lane:
 
 `AKALYNTH_HIGH_CITY_PUBLIC_COPY_MIGRATION_V1`
 
-Update:
+Completed docs-only cleanup:
 
-- `docs/WORLD_AZURA.md` to a new `docs/WORLD_HIGH_CITY.md`
-- Rookguard doc gate language
+- Retired the old first-city world-doc path in favor of
+  `docs/WORLD_HIGH_CITY.md` — completed as a docs-only rename while preserving
+  legacy runtime identifiers.
+- Updated Rookguard doc gate language.
+
+Remaining future public-copy work:
+
 - browser strings
 - Android strings
 - website copy

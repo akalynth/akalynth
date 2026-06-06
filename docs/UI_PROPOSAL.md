@@ -241,7 +241,7 @@ Half-sheet modal. Shows what happened, not forensic math.
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  Killed by: DarkMage_99                                        │
-│  Location: Azura (12, 45)                                      │
+│  Location: High City (12, 45)                                  │
 │  Time: 14:32:07                                                │
 │                                                                 │
 │  ITEMS LOST (3):                                               │
@@ -305,10 +305,10 @@ Simple history feed. Grouped by day.
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  TODAY                                                          │
-│  • 14:32  ☠ Died at Azura (12, 45)                             │
+│  • 14:32  ☠ Died at High City (12, 45)                         │
 │  • 14:28  ⚔ Killed RatBoy_12                                   │
 │  • 14:15  📦 Picked up Iron Shield                             │
-│  • 13:42  🏛 Entered Azura                                      │
+│  • 13:42  🏛 Entered High City                                  │
 │                                                                 │
 │  YESTERDAY                                                      │
 │  • 22:15  🎓 Completed tutorial                                │

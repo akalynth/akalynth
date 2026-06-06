@@ -40,11 +40,11 @@ Observed areas:
 | Android map asset | `apps/android/app/src/main/assets/maps/azura.json` |
 | Android serializer | `@SerialName("Azura") AZURA` |
 | Browser map import | `@shared/maps/azura.json` |
-| Browser lore/copy | "Gate to Azura", "enter Azura" |
+| Browser lore/copy | "Gate to High City", "enter High City"; legacy `GateToAzura` remains a runtime tile id |
 | Studio tools | `GateToAzura`, `gate_to_azura` |
 | Phone server | `CANONICAL_MAP_IDS: ['Rookguard', 'Azura']` |
 | Tests and fixtures | Map names, receipts, property ids, drop policy, NPC recognition |
-| Docs and reports | `WORLD_AZURA.md`, audit reports, signal reports |
+| Docs and reports | `WORLD_HIGH_CITY.md`, audit reports, signal reports |
 
 ## Historical Data Surfaces
 

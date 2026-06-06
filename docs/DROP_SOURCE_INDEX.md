@@ -37,7 +37,8 @@ Before any `drop/` content becomes canonical or live:
    behavior, protocol/API, persistence, economy, anti-cheat, receipt, or asset
    pipeline work.
 2. Reconcile player starts, High City language, and future world regions with
-   the current Rookguard -> Azura runtime path.
+   the current Rookguard -> High City player-facing path over the legacy
+   `Azura` runtime id.
 3. Add or update the relevant claim boundary in `docs/`.
 4. Add a verifier, smoke test, proof receipt, or explicit non-binding label.
 5. Keep server and client imports pointed at reviewed source, not raw `drop/`
