@@ -447,8 +447,8 @@ Future versions may register:
 
 ### 9.2 Informative References
 
-- `docs/reference/WITNESS_LEDGER_ARCHITECTURE.md` (architectural narrative)
-- `docs/PROOF_BUNDLES.md` (proof format reference)
+- `docs/archive/reference/WITNESS_LEDGER_ARCHITECTURE.md` (archived architectural narrative)
+- `docs/archive/PROOF_BUNDLES.md` (archived proof format reference)
 - `docs/SIMULATE_WITHOUT_LYING.md` (fork & simulation discipline)
 
 ---

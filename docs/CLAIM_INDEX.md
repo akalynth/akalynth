@@ -48,10 +48,10 @@ Grouped by role. `L` = line count at last review. Entries marked **(non-binding)
 | Doc | L | Role |
 | --- | --- | --- |
 | [VERIFICATION_SPINE_API.md](./VERIFICATION_SPINE_API.md) | 926 | Verification Spine API v1. |
-| [PROOF_BUNDLES.md](./PROOF_BUNDLES.md) | 282 | What a proof bundle is and how to assemble one. |
 | [PROOF_RUN_TEMPLATE.md](./PROOF_RUN_TEMPLATE.md) | 92 | Template for recording a reproducible proof run. |
 | [RNG_OUTCOME_VERIFICATION.md](./RNG_OUTCOME_VERIFICATION.md) | 519 | Offline verifier for receipt-recorded RNG outcomes; documents trust boundaries and caveats. |
 | [archive/MVP_VERIFICATION_REPORT_v1.md](./archive/MVP_VERIFICATION_REPORT_v1.md) | 217 | **Archived** — point-in-time MVP verification record (superseded by the verification spine). |
+| [archive/PROOF_BUNDLES.md](./archive/PROOF_BUNDLES.md) | 282 | **Archived** — proof-export design sketch; not implemented in current game runtime. |
 | [LOAD_TEST_HARNESS.md](./LOAD_TEST_HARNESS.md) | 586 | Load-test harness spec (local/staging only). |
 
 ### Identity & anti-cheat
@@ -91,23 +91,23 @@ Grouped by role. `L` = line count at last review. Entries marked **(non-binding)
 | --- | --- | --- |
 | [SHOWCASE_RUNBOOK.md](./SHOWCASE_RUNBOOK.md) | 142 | Local pre-alpha proof showcase runbook. |
 | [NEW_BOX_PROVISIONING.md](./NEW_BOX_PROVISIONING.md) | 237 | New-box provisioning runbook. |
-| [APK_DISTRIBUTION_CHECKLIST.md](./APK_DISTRIBUTION_CHECKLIST.md) | 220 | Android APK distribution checklist. |
+| [archive/APK_DISTRIBUTION_CHECKLIST.md](./archive/APK_DISTRIBUTION_CHECKLIST.md) | 220 | **Archived** — Android ship-and-observe checklist. |
 | [archive/MMO_SITE_AND_LOOT_RUNBOOK.md](./archive/MMO_SITE_AND_LOOT_RUNBOOK.md) | 126 | **Archived** — completed-work log (mmo-site PR #75, mob-loot fix PR #81). |
-| [DRIVER_BRIEF.md](./DRIVER_BRIEF.md) | 69 | Technical driver brief. |
-| [DRIVER_30_DAY_PLAN.md](./DRIVER_30_DAY_PLAN.md) | 97 | 30-day driver plan. |
+| [archive/DRIVER_BRIEF.md](./archive/DRIVER_BRIEF.md) | 69 | **Archived** — technical driver brief. |
+| [archive/DRIVER_30_DAY_PLAN.md](./archive/DRIVER_30_DAY_PLAN.md) | 97 | **Archived** — 30-day driver plan. |
 | [README.md](./README.md) | 202 | Docs index / single source of truth pointer. |
 
-### Reference — Witness-Ledger architecture
+### Archived reference — Witness-Ledger architecture
 | Doc | L | Role |
 | --- | --- | --- |
-| [reference/RFC_WITNESS_LEDGER.md](./reference/RFC_WITNESS_LEDGER.md) | 561 | RFC: witness-ledger architecture. |
-| [reference/WITNESS_LEDGER_ARCHITECTURE.md](./reference/WITNESS_LEDGER_ARCHITECTURE.md) | 246 | Witness–ledger architecture. |
-| [reference/WLA_V1_FINAL.md](./reference/WLA_V1_FINAL.md) | 107 | WLA v1 final. |
+| [archive/reference/RFC_WITNESS_LEDGER.md](./archive/reference/RFC_WITNESS_LEDGER.md) | 561 | **Archived** — RFC: witness-ledger architecture. |
+| [archive/reference/WITNESS_LEDGER_ARCHITECTURE.md](./archive/reference/WITNESS_LEDGER_ARCHITECTURE.md) | 246 | **Archived** — witness-ledger architecture narrative. |
+| [archive/reference/WLA_V1_FINAL.md](./archive/reference/WLA_V1_FINAL.md) | 107 | **Archived** — WLA v1 finality declaration. |
 
-### Speculative / future **(non-binding)**
+### Archived speculative / future **(non-binding)**
 | Doc | L | Role |
 | --- | --- | --- |
-| [speculative/AKALYNTH_MAIL_MMO.v1.md](./speculative/AKALYNTH_MAIL_MMO.v1.md) | 412 | Mail-edge "golden receipt" concept (doc only; out of v1 scope). |
+| [archive/speculative/AKALYNTH_MAIL_MMO.v1.md](./archive/speculative/AKALYNTH_MAIL_MMO.v1.md) | 412 | **Archived** — mail-edge "golden receipt" concept (doc only; out of v1 scope). |
 
 ### Imported source material
 | Doc | Role |
@@ -188,7 +188,7 @@ Design intent, not current capability. Treat as future-facing.
 
 - **Narrative vision:** `MANIFESTO.md` (the Ledger, Origin Act, the Stone) — partially grounded in `world/origin.ts`, `world/runestone.ts`; where it outpaces the build it is design intent.
 - **Imported source material:** `drop/` packages are source inputs for future canon/gameplay/assets, not current runtime claims until promoted through a reviewed lane.
-- **Non-binding specs (per `V1_SCOPE.md`):** `docs/archive/MONETIZATION_BLUEPRINT.md`, `WORLD_EVOLUTION.md`, `docs/speculative/AKALYNTH_MAIL_MMO.v1.md`, `packages/coordination-kernel/CONSTITUTIONAL_API_FREEZE.md`, plus `apps/server/docs/PHASE6_WITNESS_INTERFACE.md`, `EVIDENCE_UI_SPEC.md`, `PHASE7_MODERATION.md`.
+- **Non-binding specs (per `V1_SCOPE.md`):** `docs/archive/MONETIZATION_BLUEPRINT.md`, `WORLD_EVOLUTION.md`, `docs/archive/speculative/AKALYNTH_MAIL_MMO.v1.md`, `packages/coordination-kernel/CONSTITUTIONAL_API_FREEZE.md`, plus `apps/server/docs/PHASE6_WITNESS_INTERFACE.md`, `EVIDENCE_UI_SPEC.md`, `PHASE7_MODERATION.md`.
 - **Frozen contracts (shape locked, not a maturity claim):** `CLIENT_CONTRACT_V0_1.md`, `SPINE_V1.md`, `UI_PROPOSAL.md`.
 
 ### G. Open gaps / release blockers
@@ -200,4 +200,4 @@ Design intent, not current capability. Treat as future-facing.
 
 Per `CURRENT_STAGE.md` and `PROOF_RUN_TEMPLATE.md`, a statement about the repo is evidence-backed only when it names at least one: source file · protocol contract · receipt fixture · verifier output · CI run artifact · reproducible local command · commit SHA. Narrative descriptions are explanatory only — they are not proof artifacts.
 
-To assemble evidence: follow `SHOWCASE_RUNBOOK.md`, record with `PROOF_RUN_TEMPLATE.md`, and bundle per `PROOF_BUNDLES.md`.
+To assemble evidence: follow `SHOWCASE_RUNBOOK.md` and record with `PROOF_RUN_TEMPLATE.md`. The old proof-bundle export sketch is archived at `docs/archive/PROOF_BUNDLES.md` and is not a current runtime capability.

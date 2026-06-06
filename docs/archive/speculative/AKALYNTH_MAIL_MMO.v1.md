@@ -2,7 +2,7 @@
 
 > **Purpose:** Speculative design doctrine for a receipt-emitting mail transport ("Mail Edge"). It applies the receipts-first philosophy to email but is **not implemented** in this repository.
 >
-> **Status:** Speculative / design doctrine (explicitly **out of scope for Akalynth v1**; listed under "Non-binding / Future Specs" in `docs/V1_SCOPE.md`). Nothing here is built — there is no Mail Edge code, `policy.rs`, or VaultMesh mail pipeline in this repo. Schemas, paths, and code anchors below describe a proposed design, not shipped behavior.
+> **Status:** Archived speculative / design doctrine (explicitly **out of scope for Akalynth v1**; listed under "Non-binding / Future Specs" in `docs/V1_SCOPE.md`). Nothing here is built — there is no Mail Edge code, `policy.rs`, or VaultMesh mail pipeline in this repo. Schemas, paths, and code anchors below describe a proposed design, not shipped behavior.
 > **Effective (design draft):** 2026-01-02
 > **Scroll:** `MAIL_EDGE.v1`
 > **Change control:** Doctrine. Changes require a version bump of the Scroll and an explicit amendment note (no silent edits).

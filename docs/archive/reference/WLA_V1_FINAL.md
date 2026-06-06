@@ -78,9 +78,9 @@ The following artifacts together define WLA v1.0:
 
 | Artifact                                          | Role                         |
 | ------------------------------------------------- | ---------------------------- |
-| `docs/reference/RFC_WITNESS_LEDGER.md`            | Normative specification      |
-| `docs/reference/WITNESS_LEDGER_ARCHITECTURE.md`   | Architectural narrative      |
-| `docs/PROOF_BUNDLES.md`                           | Proof format reference       |
+| `docs/archive/reference/RFC_WITNESS_LEDGER.md`    | Archived normative specification |
+| `docs/archive/reference/WITNESS_LEDGER_ARCHITECTURE.md` | Archived architectural narrative |
+| `docs/archive/PROOF_BUNDLES.md`                   | Archived proof format reference |
 | `docs/SIMULATE_WITHOUT_LYING.md`                  | Fork & simulation discipline |
 | `packages/coordination-kernel/src/witness/`       | Reference implementation     |
 | `packages/coordination-kernel/src/conformance/`   | Executable conformance suite |

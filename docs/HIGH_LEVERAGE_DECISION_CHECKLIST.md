@@ -284,5 +284,5 @@ If the answer is "nothing depends on it," it's not high leverage.
 
 - [SPINE_V1.md](SPINE_V1.md) - Directory structure discipline
 - [GOVERNANCE_INVARIANTS.md](GOVERNANCE_INVARIANTS.md) - Constitutional law
-- [PROOF_BUNDLES.md](PROOF_BUNDLES.md) - Portable truth
+- [PROOF_RUN_TEMPLATE.md](PROOF_RUN_TEMPLATE.md) - Reproducible proof-run capture
 - [LEVERAGE_TIER_MAPPING.md](LEVERAGE_TIER_MAPPING.md) - Current task audit

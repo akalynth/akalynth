@@ -1,6 +1,6 @@
 # Monetization Blueprint — What Money May Purchase (and What It Never Can)
 
-> **Status:** Superseded design sketch (non-binding for v1). This is the pre-formalization draft; its rules were hardened into the binding [`MONETIZATION_CONSTITUTION.md`](./MONETIZATION_CONSTITUTION.md) (the authoritative source). Kept for design history — do not cite it for guidance; cite the Constitution.
+> **Status:** Superseded design sketch (non-binding for v1). This is the pre-formalization draft; its rules were hardened into the binding [`MONETIZATION_CONSTITUTION.md`](../MONETIZATION_CONSTITUTION.md) (the authoritative source). Kept for design history — do not cite it for guidance; cite the Constitution.
 
 > Alright. I’ll design this as a future-proof blueprint, not a commitment. Think of it as a sealed scroll you can open later.
 

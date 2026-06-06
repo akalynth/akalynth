@@ -97,11 +97,9 @@ requires backup, rollback, and single-runtime-owner gates.
 Showcase / driver packet:
 
 - [Current Stage](./CURRENT_STAGE.md) - canonical claim boundary for the repo now
-- [Technical Driver Brief](./DRIVER_BRIEF.md) - why the base is useful and how to evaluate it
 - [Showcase Runbook](./SHOWCASE_RUNBOOK.md) - bounded local demonstration path
 - [Proof Run Template](./PROOF_RUN_TEMPLATE.md) - template for recording a run without overclaiming
 - [Known Gaps](./KNOWN_GAPS.md) - release blockers, engineering risks, and presentation rules
-- [30-Day Driver Plan](./DRIVER_30_DAY_PLAN.md) - bounded next execution path
 
 Design / production notes:
 
@@ -132,7 +130,6 @@ Verification, governance, and proof docs:
 - [Governance Invariants](./GOVERNANCE_INVARIANTS.md) - civil guarantees and auditability constraints
 - [Repo Hygiene Architecture](./REPO_HYGIENE_ARCHITECTURE.md) - root/doc/archive/drop cleanup rules
 - [Constitutional Amendment Process](./CONSTITUTIONAL_AMENDMENTS.md) - formal process for modifying constitutional files
-- [Proof Bundles](./PROOF_BUNDLES.md) - portable, immutable, independently verifiable proof packets
 - [RNG Outcome Verification](./RNG_OUTCOME_VERIFICATION.md) - offline verifier for receipt-recorded RNG outcomes and its caveats
 - [Simulate Without Lying](./SIMULATE_WITHOUT_LYING.md) - Fork/Replay system for counterfactuals isolated from truth
 - [MVP Verification Report v1](./archive/MVP_VERIFICATION_REPORT_v1.md) - **archived** point-in-time verification record (superseded by the verification spine)
@@ -154,7 +151,6 @@ UI / client docs:
 - [UI Implementation Proposal](./UI_IMPLEMENTATION_PROPOSAL.md) - normative Android UI implementation guidance
 - [UI Mapping Checklist](./UI_MAPPING_CHECKLIST.md) - implementation mapping checklist against the UI spec
 - [UI Regression Matrix](./UI_REGRESSION_MATRIX.md) - behavioral contract for Android UI, mapped to tests
-- [APK Distribution Checklist](./APK_DISTRIBUTION_CHECKLIST.md) - ship & observe rollout checklist
 
 Audits:
 
@@ -162,15 +158,16 @@ Audits:
 - [System Audit — Codex Post-Repair](./AUDITS/SYSTEM_AUDIT_CODEX_POST_REPAIR.md) - Codex post-repair audit prompt
 - [Static Site Retirement](./archive/SITE_RETIRED_FROM_MONOREPO.md) - **archived** record of retiring the old monorepo static-site copy
 
-Frozen reference specs (WLA v1.0 — no further changes):
+Archived planning and reference docs:
 
-- [Witness-Ledger Architecture](./reference/WITNESS_LEDGER_ARCHITECTURE.md) - architectural narrative for the WLA pattern
-- [WLA v1.0 Final](./reference/WLA_V1_FINAL.md) - finality declaration, frozen conformance scope
-- [RFC WLA-001](./reference/RFC_WITNESS_LEDGER.md) - normative specification
-
-Speculative / deferred (out of scope for v1):
-
-- [Mail MMO System](./speculative/AKALYNTH_MAIL_MMO.v1.md) - design doctrine, not active
+- [Technical Driver Brief](./archive/DRIVER_BRIEF.md) - archived technical-driver orientation.
+- [30-Day Driver Plan](./archive/DRIVER_30_DAY_PLAN.md) - archived bounded execution sketch.
+- [Proof Bundles](./archive/PROOF_BUNDLES.md) - archived proof-export design sketch; not implemented.
+- [APK Distribution Checklist](./archive/APK_DISTRIBUTION_CHECKLIST.md) - archived ship-and-observe checklist.
+- [Witness-Ledger Architecture](./archive/reference/WITNESS_LEDGER_ARCHITECTURE.md) - archived WLA narrative reference.
+- [WLA v1.0 Final](./archive/reference/WLA_V1_FINAL.md) - archived finality declaration.
+- [RFC WLA-001](./archive/reference/RFC_WITNESS_LEDGER.md) - archived WLA draft specification.
+- [Mail MMO System](./archive/speculative/AKALYNTH_MAIL_MMO.v1.md) - archived speculative design doctrine, not active.
 
 ## V1 Claim Boundary
 
