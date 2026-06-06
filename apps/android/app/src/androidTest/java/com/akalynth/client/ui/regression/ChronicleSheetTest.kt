@@ -509,7 +509,7 @@ class ChronicleSheetTest {
         composeTestRule.waitForIdle()
 
         // Verify zone and time are displayed
-        composeTestRule.onNodeWithText("Azura • 14:30", substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText("High City • 14:30", substring = true).assertIsDisplayed()
     }
 
     // =========================================================================

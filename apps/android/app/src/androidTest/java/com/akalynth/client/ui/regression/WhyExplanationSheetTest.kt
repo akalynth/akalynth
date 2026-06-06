@@ -134,7 +134,7 @@ class WhyExplanationSheetTest {
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("Current Zone").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Azura").assertIsDisplayed()
+        composeTestRule.onNodeWithText("High City").assertIsDisplayed()
     }
 
     // =========================================================================

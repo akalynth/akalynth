@@ -130,10 +130,16 @@ Completed docs-only cleanup:
   legacy runtime identifiers.
 - Updated Rookguard doc gate language.
 
+Completed client display cleanup:
+
+- Browser map selector and lore surfaces render the first city as High City via
+  display helpers while retaining legacy `Azura` map keys.
+- Android Chronicle, death recap, Why sheet, map display name, and map lore
+  render legacy `Azura` / `HighCity` zone values as High City without mutating
+  stored receipts, protocol enums, or bundled map assets.
+
 Remaining future public-copy work:
 
-- browser strings
-- Android strings
 - website copy
 - Guardian/codex copy
 

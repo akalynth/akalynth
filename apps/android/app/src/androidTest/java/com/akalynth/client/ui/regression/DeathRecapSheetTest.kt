@@ -78,7 +78,7 @@ class DeathRecapSheetTest {
 
         // Verify location is displayed
         composeTestRule.onNodeWithText("Location:").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Azura (12, 45)").assertIsDisplayed()
+        composeTestRule.onNodeWithText("High City (12, 45)").assertIsDisplayed()
     }
 
     @Test
