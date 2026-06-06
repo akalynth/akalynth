@@ -11,11 +11,27 @@ receipts, verifiers, and code paths under `apps/`, `packages/`, and `docs/`.
 
 - `AKALYNTH_FIRST_PLAYABLE_SLICE_V1/README.md`
 - `data/playable_slice_summary.json`
+- `data/origins.json`
+- `data/locations.json`
+- `data/acts.json`
 - `data/systems_required.json`
 - `data/release_gates.json`
+- `data/production_checklist.json`
 - `data/field_fragments.json`
 - `data/dungeon_rooms.json`
 - `data/boss.json`
+- `data/final_choices.json`
+- `data/ui_surfaces.json`
+- `docs/AKALYNTH_FIRST_PLAYABLE_SLICE_V1.md`
+- `docs/AKALYNTH_ORIGIN_OPENINGS_V1.md`
+- `docs/AKALYNTH_WITNESS_MOTH_BLOOM_SLICE_EVENT_V1.md`
+- `docs/AKALYNTH_FIRST_ARCHIVE_LOWER_VAULT_DUNGEON_V1.md`
+- `docs/AKALYNTH_UNINDEXED_TRUTH_BOSS_V1.md`
+- `docs/AKALYNTH_FIRST_PLAYABLE_SLICE_UI_SURFACES_V1.md`
+- `docs/AKALYNTH_FIRST_PLAYABLE_SLICE_PRODUCTION_CHECKLIST_V1.md`
+- `docs/AKALYNTH_FIRST_PLAYABLE_SLICE_RELEASE_GATES_V1.md`
+- `docs/AKALYNTH_FIRST_PLAYABLE_SLICE_IMPLEMENTATION_NOTES_V1.md`
+- `registry/akalynthFirstPlayableSliceRegistry.ts`
 - `AKALYNTH_WORLD_EVENTS_ENGINE_V1/README.md`
 - `data/canon_events.json`
 - `data/integration_matrix.json`
@@ -35,6 +51,26 @@ runtime id. New player-facing first-city copy should say High City.
   separate map/protocol/runtime authority pass expands the full map authority.
 - Source factions and origin starts remain narrative/design input, not live
   progression or reputation systems.
+
+## Full Slice Coverage
+
+The source package describes a 1-3 hour vertical slice with:
+
+- three origin openings: Archivist, Flamekeeper, and Ashwarden
+- High City Outskirts as the first playable region
+- field evidence and archive verification beats
+- profession utility hooks
+- First Archive Lower Vault dungeon
+- The Unindexed Truth boss
+- Preserve / Suppress / Release final choice
+- UI surfaces for origin task, evidence, event phase, dungeon access, boss
+  truth state, and final choice
+- release gates for origin, evidence, verification, profession, dungeon, boss,
+  choice, and Chronicle readiness
+
+These are indexed for future work only. They do not create live origin
+selection, dungeon entry, boss mechanics, faction trust, UI state, or final
+choice outcomes in this pass.
 
 ## Accepted Runtime Seed
 
@@ -75,6 +111,18 @@ The following remain source-only:
 - Preserve / Suppress / Release final choice
 - Memory Fragment or Witness Moth material economy rewards
 - full world-event reward tiers, failure aftermath, and recurring schedules
+
+## Future Promotion Checklist
+
+Before promoting another element from this slice:
+
+1. Select one minimum path, such as evidence comparison or dungeon access.
+2. Name the server state and receipt action that precede any derived state.
+3. Keep Android and debug-client inputs intent-only.
+4. Reconcile any High City map change with the legacy `Azura` runtime id and
+   existing Rookguard onboarding.
+5. Add a focused verifier for the promoted behavior before expanding the next
+   slice beat.
 
 ## Verification Boundary
 
