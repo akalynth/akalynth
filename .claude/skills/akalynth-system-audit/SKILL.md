@@ -1,11 +1,12 @@
 ---
 name: akalynth-system-audit
 description: Use for an evidence-backed audit of Akalynth server identity, receipts, transparency, WebSocket protocol, Android parity, infra exposure, deploy reliability, repo hygiene, and verification status.
+version: 0.1.1
 ---
 
 # System Audit (Akalynth)
 
-Runbook version follows tag v1.0.5-identity-law+.
+Runbook version tracks this skill's frontmatter `version` field.
 
 ## Goal
 

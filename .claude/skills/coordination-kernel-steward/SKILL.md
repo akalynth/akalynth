@@ -1,6 +1,7 @@
 ---
 name: coordination-kernel-steward
 description: Use when modifying the Akalynth coordination kernel (packages/coordination-kernel/) — identity, token, witness proofs, receipt signing/verification, anchor, capability, compliance, conformance, or resolution subsystems.
+version: 0.1.0
 ---
 
 # Coordination Kernel Steward

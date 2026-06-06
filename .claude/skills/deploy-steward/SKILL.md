@@ -1,6 +1,7 @@
 ---
 name: deploy-steward
 description: Use when deploying, repairing, auditing, or rolling back the Akalynth Linux server, systemd service, Caddy proxy, firewall, runtime paths, or production bootstrap.
+version: 0.1.0
 ---
 
 # Deploy Steward

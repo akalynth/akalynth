@@ -1,6 +1,7 @@
 ---
 name: receipt-chain-steward
 description: Use when working with Akalynth receipts, chronicle logs, replay, audit JSONL, SQLite materialization, receipt schemas, chain verification, or production runtime data custody.
+version: 0.1.0
 ---
 
 # Receipt Chain Steward

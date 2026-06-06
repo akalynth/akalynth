@@ -1,6 +1,7 @@
 ---
 name: map-and-lore-builder
 description: Use when expanding Akalynth maps, place names, lore, signs, chill-zone flavor, world descriptions, or player-facing narrative while keeping mechanics explicit.
+version: 0.1.0
 ---
 
 # Map And Lore Builder

@@ -1,6 +1,7 @@
 ---
 name: anti-cheat-steward
 description: Use when modifying Akalynth anti-cheat detection, heat, Tem challenges, enforcement, penalties, evidence, or player-facing anti-bot feedback.
+version: 0.1.0
 ---
 
 # Anti-Cheat Steward
