@@ -1,6 +1,7 @@
 ---
 name: gameplay-loop-designer
 description: Use when designing or adjusting Akalynth gameplay loops, progression, map flow, chill-zone activities, player rituals, or MVP-scoped game feel without silently changing server authority or economy rules.
+version: 0.1.0
 ---
 
 # Gameplay Loop Designer

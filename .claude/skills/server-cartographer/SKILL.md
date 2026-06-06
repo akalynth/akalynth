@@ -1,6 +1,7 @@
 ---
 name: server-cartographer
 description: Use when mapping Akalynth's server layout, runtime paths, services, ports, process ownership, deploy topology, or Linux host state before changing the game server.
+version: 0.1.0
 ---
 
 # Server Cartographer

@@ -1,6 +1,7 @@
 ---
 name: delegation-steward
 description: Use when creating, triaging, splitting, assigning, or closing Akalynth GitHub Issues used as delegated TODOs.
+version: 0.1.0
 ---
 
 # Delegation Steward

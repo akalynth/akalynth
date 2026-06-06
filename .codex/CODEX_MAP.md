@@ -1,48 +1,79 @@
 # Akalynth Codex Full Set Map
 
-Generated from the Akalynth workspace and the current user-level Codex home.
+Regenerated 2026-06-06 for the **dev box** `ops-dev-01` from the current
+workspace and the user-level Codex home at `/home/sovereign/.codex/`.
+
+> A separate **production** box uses `/root/.codex/config.toml` and the live
+> tree `/opt/akalynth`. The previous version of this map described that prod
+> layout; this version describes the machine you actually work on. Treat prod
+> paths as documentation of the other host, not this one.
+
+## Host And Authority
+
+- Host: `ops-dev-01`
+- Active workspace: `/home/sovereign/akalynth-ops/repos/akalynth`
+- User Codex config: `/home/sovereign/.codex/config.toml` (active authority)
+- Model: `gpt-5.5`, reasoning effort `xhigh`, plan-mode effort `xhigh`
+- Approval reviewer: `user`
+- Trusted projects (from config): `/`, `/home/sovereign`,
+  `/home/sovereign/akalynth-ops`, `/home/sovereign/akalynth-ops/repos`,
+  `/home/sovereign/akalynth-ops/repos/akalynth`,
+  `/home/sovereign/akalynth-ops/repos/akalynth-site`
+- Enabled plugins: `github@openai-curated` (enabled)
+- Disabled plugins: `cloudflare@openai-curated` (disabled)
+
+This is the active local authority source. Treat it as higher priority than
+repo examples unless the user explicitly says to apply the repo example posture.
+
+## Skill Stores (COLLAPSED TO ONE SOURCE — 2026-06-06)
+
+There is now a **single authored source** for the Akalynth skill set:
+`.claude/skills/` (21 skills). Every other store is a symlink into it, so the
+old "skills/plugins keep getting installed and drifting" problem is gone — a
+re-install can only ever resolve back to the one source.
+
+| Store | Count | Tracked? | Role after collapse |
+|---|---|---|---|
+| `.claude/skills/` | 21 | yes | **Canonical source.** Edit skills only here. |
+| `plugins/akalynth-studio/skills/` | 9 | yes | Curated Codex plugin pack — 9 relative symlinks (`../../../.claude/skills/<name>`) into canonical. |
+| `.agents/skills` | symlink | no (gitignored) | `→ ../.claude/skills`. Agent-runtime store; sees all 21. |
+| `/home/sovereign/.codex/skills/` | 21 symlinks | n/a (global) | Each akalynth skill `→ <repo>/.claude/skills/<name>` (absolute). `.system/` (5) left as real dirs. |
+| `.codex/skills/akalynth-system-audit/` | 1 | yes | **Intentional exception:** a Codex project-skill in `skill.md`+`README.md` form with audit-specific content; not part of the duplicated set. Left as-is. |
+
+The 5 formerly-orphan skills (`economy-steward`, `game-server-steward`,
+`observability-steward`, `package-steward`, `release-steward`) were absorbed
+into `.claude/skills/` from the global store, so nothing was lost. The 3 plugin
+skills that had drifted (`delegation-steward`, `deploy-steward`, `test-runner`)
+now resolve to the newer canonical versions.
+
+Editing rule: change a skill **only** in `.claude/skills/`. All other stores
+follow automatically. To publish the self-contained Codex plugin elsewhere,
+dereference the symlinks at pack time, e.g. `cp -RL plugins/akalynth-studio
+<dest>` or `tar -h -czf akalynth-studio.tgz plugins/akalynth-studio`.
 
 ## Inventory
 
-- Active workspace: `/opt/akalynth`
-- User sovereign config: `/root/.codex/config.toml`
-- Project Codex directory: `.codex/`
-- Project plugin count: 1
-- Project-scoped skill count: 1
-- Akalynth Studio skill count: 9
-- User system skill count: 5
-- Enabled cached user plugin count: 4
-- Cached plugin skill count: 16
-
-## User Sovereign Authority
-
-Source: `/root/.codex/config.toml`
-
-- Model: `gpt-5.5`
-- Reasoning effort: `medium`
-- Approval reviewer: `user`
-- Trusted project: `/opt/akalynth`
-- Enabled plugins:
-  - `canva@openai-curated`
-  - `github@openai-curated`
-  - `hubspot@openai-curated`
-  - `openai-developers@openai-curated`
-
-This is the active local authority source. Treat it as higher priority than repo examples unless the user explicitly says to apply the repo example posture.
+- Project plugin count: 1 (`akalynth-studio`)
+- Project-scoped Codex skill count (`.codex/skills/`): 1
+- Akalynth Studio plugin skill count: 9
+- Claude Code skill count (`.claude/skills/`): 21 (canonical source)
+- User-level Codex skill count (`/home/sovereign/.codex/skills/`): 21
+- User system skill count (`/home/sovereign/.codex/skills/.system/`): 5
+- Enabled cached user plugin count: 1 (`github`)
+- Cached-on-disk user plugin count: 2 (`github` enabled, `cloudflare` disabled)
 
 ## Akalynth Repo Posture
 
 Source: `.codex/config.toml.example`
 
-- Intended as a template to copy into `~/.codex/config.toml`.
-- Warns that `/opt/akalynth` is the live server tree.
+- A template to copy into `~/.codex/config.toml`, not active config.
 - Recommends read-only review by default (`sandbox_mode = "read-only"`).
-- Defines an `akalynth-review` profile (read-only) and an explicit
-  `akalynth-deploy` profile for workspace-write sessions.
-- Keeps workspace-write network disabled in the example.
-- Marks `/home/codex-akalynth/work/akalynth-candidate` as the trusted project in
-  the example (a candidate checkout, distinct from the live `/opt/akalynth`).
-- Warns against committing API keys, SSH private keys, Cloudflare tokens, or production secrets.
+- Defines an `akalynth-review` (read-only) and `akalynth-deploy`
+  (workspace-write) profile; workspace-write network disabled.
+- Warns against committing API keys, SSH private keys, Cloudflare tokens, or
+  production secrets.
+- Note: the example's trusted project (`/home/codex-akalynth/work/...`) and the
+  prod tree `/opt/akalynth` are not paths on this dev box.
 
 ## Project Codex Files
 
@@ -56,24 +87,14 @@ Source: `.codex/config.toml.example`
 ### `akalynth-system-audit`
 
 - Path: `.codex/skills/akalynth-system-audit/skill.md`
-- Version: `0.1.0`
-- Scope: `akalynth`
-- Mode: `audit`
-- Inputs: `repo_root`, `environment`
-- Outputs: verified facts, findings by severity, next 5 shipments, regression tests.
-- Purpose: evidence-backed audit of server identity, receipts, transparency, WebSocket protocol, Android parity, infra exposure, deploy reliability, repo hygiene, and verification status.
-- Non-negotiables:
-  - No claims without evidence.
-  - Separate verified facts from assumptions.
-  - Mark docs/code disagreement as critical.
-  - Record identity-affecting randomness in receipts.
-  - Keep guest login functional unless a new contract deprecates it.
-- Green criteria:
-  - Token signing spec matches implementation.
-  - `/v1/transparency` exposes `auth_public_key_hex` and derivation string.
-  - WebSocket token login works and wins over guest when both are present.
-  - Receipts bind identity deterministically.
-  - Android canonical WebSocket path supports token login and token rotation persistence.
+- Scope: `akalynth`, Mode: `audit`
+- Purpose: evidence-backed audit of server identity, receipts, transparency,
+  WebSocket protocol, Android parity, infra exposure, deploy reliability, repo
+  hygiene, and verification status.
+- Non-negotiables: no claims without evidence; separate verified facts from
+  assumptions; mark docs/code disagreement as critical; record
+  identity-affecting randomness in receipts; keep guest login functional unless
+  a new contract deprecates it.
 
 ## Project Plugin
 
@@ -81,159 +102,36 @@ Source: `.codex/config.toml.example`
 
 - Manifest: `plugins/akalynth-studio/.codex-plugin/plugin.json`
 - Skills root: `plugins/akalynth-studio/skills/`
-- Version: `0.1.0`
-- Author: `VaultSovereign`
-- License: `UNLICENSED`
+- Version `0.1.0`, Author `VaultSovereign`, License `UNLICENSED`
 - Repository: `https://github.com/VaultSovereign/akalynth`
-- Category: Developer Tools
-- Capabilities: `Read`, `Write`, `Interactive`
-- Purpose: private Akalynth MMO server design, deploy, audit, protocol stewardship, receipt-chain custody, anti-cheat, map/lore, and verification skills.
+- Skills (9): `anti-cheat-steward`, `delegation-steward`, `deploy-steward`,
+  `gameplay-loop-designer`, `map-and-lore-builder`, `protocol-guardian`,
+  `receipt-chain-steward`, `server-cartographer`, `test-runner`.
 
-## Akalynth Studio Skills
+## User-Level Skills
 
-### `anti-cheat-steward`
-
-- Path: `plugins/akalynth-studio/skills/anti-cheat-steward/SKILL.md`
-- Use for: anti-cheat detection, heat, Tem challenges, enforcement, penalties, evidence, and player-facing anti-bot feedback.
-- Core rule: enforcement must be deterministic, evidenced, explainable, and never based on client-reported truth.
-
-### `delegation-steward`
-
-- Path: `plugins/akalynth-studio/skills/delegation-steward/SKILL.md`
-- Use for: creating, triaging, splitting, assigning, or closing Akalynth GitHub Issues used as delegated TODOs.
-- Core rule: delegated tasks need scope, allowed files, forbidden actions, acceptance criteria, verification, branch naming, PR linkage, and closure evidence.
-
-### `deploy-steward`
-
-- Path: `plugins/akalynth-studio/skills/deploy-steward/SKILL.md`
-- Use for: deploying, repairing, auditing, or rolling back Linux server state, systemd, Caddy, firewall, runtime paths, or production bootstrap.
-- Core rule: re-probe host state before mutation and preserve `/var/lib/akalynth` plus `/etc/akalynth` secrets.
-
-### `gameplay-loop-designer`
-
-- Path: `plugins/akalynth-studio/skills/gameplay-loop-designer/SKILL.md`
-- Use for: gameplay loops, progression, map flow, chill-zone activities, player rituals, and MVP game feel.
-- Core rule: do not silently change server authority or economy rules.
-
-### `map-and-lore-builder`
-
-- Path: `plugins/akalynth-studio/skills/map-and-lore-builder/SKILL.md`
-- Use for: maps, place names, lore, signs, chill-zone flavor, world descriptions, and player-facing narrative.
-- Core rule: lore is flavor unless an explicit rule, receipt, or protocol change is requested.
-
-### `protocol-guardian`
-
-- Path: `plugins/akalynth-studio/skills/protocol-guardian/SKILL.md`
-- Use for: WebSocket messages, HTTP APIs, shared protocol/types, Android/debug-client contracts, and compatibility docs.
-- Core rule: protect compatibility across server, shared packages, debug client, and Android; clients send intent, not truth.
-
-### `receipt-chain-steward`
-
-- Path: `plugins/akalynth-studio/skills/receipt-chain-steward/SKILL.md`
-- Use for: receipts, chronicle logs, replay, audit JSONL, SQLite materialization, receipt schemas, chain verification, and production runtime data custody.
-- Core rule: receipts and chronicle data are canonical; SQLite is derived.
-
-### `server-cartographer`
-
-- Path: `plugins/akalynth-studio/skills/server-cartographer/SKILL.md`
-- Use for: server layout, runtime paths, services, ports, process ownership, deploy topology, and Linux host state before game-server changes.
-- Expected layout:
-  - Repo: `/opt/akalynth`
-  - Runtime data: `/var/lib/akalynth`
-  - Audit log: `/var/lib/akalynth/audit`
-  - Config/secrets: `/etc/akalynth`
-  - Service: `akalynth`
-  - Reverse proxy: Caddy
-  - Public API: `https://api.akalynth.com/v1/health`
-
-### `test-runner`
-
-- Path: `plugins/akalynth-studio/skills/test-runner/SKILL.md`
-- Use for: choosing, running, or interpreting verification commands, builds, smoke tests, health checks, WebSocket checks, and focused regression tests.
-- Core rule: pick the narrowest command that proves the claim.
+`/home/sovereign/.codex/skills/` (21): `akalynth-system-audit`,
+`android-client`, `anti-cheat-steward`, `ci-steward`,
+`classic-32-art-pipeline`, `content-designer`, `coordination-kernel-steward`,
+`debug-client`, `delegation-steward`, `deploy-steward`, `economy-steward`,
+`game-server-steward`, `gameplay-loop-designer`, `map-and-lore-builder`,
+`observability-steward`, `package-steward`, `protocol-guardian`,
+`receipt-chain-steward`, `release-steward`, `server-cartographer`,
+`test-runner`.
 
 ## User System Skills
 
-### `imagegen`
-
-- Path: `/root/.codex/skills/.system/imagegen/SKILL.md`
-- Use for: AI-created or AI-edited raster images such as photos, illustrations, textures, sprites, mockups, or transparent-background cutouts.
-- Default path: built-in `image_gen` tool.
-
-### `openai-docs`
-
-- Path: `/root/.codex/skills/.system/openai-docs/SKILL.md`
-- Use for: current official OpenAI product/API docs, citations, model choice, model upgrades, and prompt upgrade guidance.
-- Source rule: prefer official OpenAI documentation.
-
-### `plugin-creator`
-
-- Path: `/root/.codex/skills/.system/plugin-creator/SKILL.md`
-- Use for: creating and scaffolding Codex plugin directories, manifests, optional plugin structure, marketplace entries, and reinstall/cachebuster flow.
-
-### `skill-creator`
-
-- Path: `/root/.codex/skills/.system/skill-creator/SKILL.md`
-- Use for: creating or updating Codex skills with specialized workflows, knowledge, or tool integrations.
-
-### `skill-installer`
-
-- Path: `/root/.codex/skills/.system/skill-installer/SKILL.md`
-- Use for: listing installable skills or installing skills from curated lists or GitHub repo paths.
+`/home/sovereign/.codex/skills/.system/` (5): `imagegen`, `openai-docs`,
+`plugin-creator`, `skill-creator`, `skill-installer`.
 
 ## Cached User Plugins
 
-### `canva`
+`/home/sovereign/.codex/plugins/cache/openai-curated/`
 
-- Manifest: `/root/.codex/plugins/cache/openai-curated/canva/fef63ecf/.codex-plugin/plugin.json`
-- Version: `1.0.0`
-- Category: Productivity
-- Skills root: `/root/.codex/plugins/cache/openai-curated/canva/fef63ecf/skills/`
-- Purpose: search, create, and edit Canva designs.
-- Skills:
-  - `canva-branded-presentation`: create branded presentations from a brief, outline, existing Canva doc, or design link.
-  - `canva-resize-for-all-social-media`: resize one Canva design into standard social media formats.
-  - `canva-translate-design`: translate text in a Canva design while preserving layout and the original file.
-
-### `github`
-
-- Manifest: `/root/.codex/plugins/cache/openai-curated/github/fef63ecf/.codex-plugin/plugin.json`
-- Version: `0.1.0`
-- Category: Developer Tools
-- Skills root: `/root/.codex/plugins/cache/openai-curated/github/fef63ecf/skills/`
-- Purpose: inspect repositories, triage pull requests/issues, debug CI, and publish changes through a hybrid connector and CLI workflow.
-- Skills:
-  - `github`: general GitHub repository, pull request, and issue triage through the connected GitHub app.
-  - `gh-address-comments`: inspect unresolved PR feedback and implement selected fixes.
-  - `gh-fix-ci`: debug or fix failing GitHub Actions checks on a PR.
-  - `yeet`: publish local changes by confirming scope, committing, pushing, and opening a draft PR.
-
-### `hubspot`
-
-- Manifest: `/root/.codex/plugins/cache/openai-curated/hubspot/fef63ecf/.codex-plugin/plugin.json`
-- Version: `2.0.0`
-- Category: Productivity
-- Skills root: `/root/.codex/plugins/cache/openai-curated/hubspot/fef63ecf/skills/`
-- Purpose: work with HubSpot CRM records, reports, pipeline health, customer preparation, and data hygiene.
-- Skills:
-  - `hubspot`: search, summarize, create, update, associate, or analyze HubSpot CRM records.
-  - `hubspot-crm-data-hygiene`: audit missing fields, stale records, duplicates, associations, owners, and cleanup tasks.
-  - `hubspot-customer-prep`: prepare customer briefs for meetings, renewals, QBRs, sales calls, escalations, handoffs, or follow-ups.
-  - `hubspot-pipeline-health`: review pipeline health, forecasts, stale deals, slipping close dates, and open deal risks.
-
-### `openai-developers`
-
-- Manifest: `/root/.codex/plugins/cache/openai-curated/openai-developers/fef63ecf/.codex-plugin/plugin.json`
-- Version: `1.1.0`
-- Category: Engineering
-- Skills root: `/root/.codex/plugins/cache/openai-curated/openai-developers/fef63ecf/skills/`
-- Purpose: build with OpenAI APIs, Agents SDK, ChatGPT Apps, and create/save OpenAI API keys from Codex.
-- Skills:
-  - `agents-sdk`: build, run, deploy, and evaluate OpenAI Agents SDK apps from Codex.
-  - `build-chatgpt-app`: build, scaffold, refactor, and troubleshoot ChatGPT Apps SDK applications combining MCP servers and widget UI.
-  - `chatgpt-app-submission`: inspect a ChatGPT Apps MCP server and generate `chatgpt-app-submission.json`.
-  - `openai-api-troubleshooting`: classify OpenAI API runtime failures and route to the right remediation.
-  - `openai-platform-api-key`: credential gate for work that builds, runs, tests, debugs, or configures OpenAI API-backed artifacts.
+- `github` (enabled): repository, PR/issue triage, CI debugging, publish flow.
+  Skills: `github`, `gh-address-comments`, `gh-fix-ci`, `yeet`.
+  Self-contained payload at `.../github/2cb26e7b/`.
+- `cloudflare` (disabled): cached on disk but not enabled in config.
 
 ## Routing Matrix
 
@@ -248,24 +146,45 @@ Source: `.codex/config.toml.example`
 - Verification command selection and test interpretation: `test-runner`
 - Delegated GitHub issue TODOs: `delegation-steward`
 - External PR/issue/CI/publish workflows: cached `github` plugin skills
-- Canva design generation/adaptation: cached `canva` plugin skills
-- HubSpot CRM work: cached `hubspot` plugin skills
-- OpenAI API/app/agent/key workflows: cached `openai-developers` plugin skills plus system `openai-docs`
 - Raster image generation/editing: system `imagegen`
 - Creating local Codex plugins or skills: system `plugin-creator`, `skill-creator`, `skill-installer`
 
 ## Sovereign Operating Rules For Akalynth
 
-- Treat `/root/.codex/config.toml` as the active user sovereign source.
-- Treat `.codex/config.toml.example` as Akalynth's recommended posture template, not active config.
-- Prefer Akalynth Studio skills for Akalynth domain work.
-- Prefer cached user plugins for external systems: GitHub, Canva, HubSpot, OpenAI Platform.
-- Do not place secrets, private keys, tokens, or production credential values in repo docs or config.
-- Do not print secret material from `/etc/akalynth`, `/var/lib/akalynth`, env files, or OpenAI key storage.
-- Preserve `/var/lib/akalynth` and `/etc/akalynth` unless the user explicitly approves destructive work.
-- For live `/opt/akalynth` work, distinguish review, implementation, and deploy authority before mutating host or runtime state.
-- For API/protocol work, keep client messages intent-only and document compatibility impact.
-- For receipt work, treat JSONL/chronicle data as canonical and SQLite as rebuildable derived state.
+- Treat `/home/sovereign/.codex/config.toml` as the active user sovereign source
+  on this dev box.
+- Treat `.codex/config.toml.example` as Akalynth's recommended posture template,
+  not active config.
+- Prefer `.claude/skills/` as the canonical skill source; avoid hand-editing the
+  installed copies (`.agents/skills/`, `/home/sovereign/.codex/skills/`).
+- Prefer cached user plugins for external systems (currently GitHub).
+- Do not place secrets, private keys, tokens, or production credential values in
+  repo docs or config.
+- Do not print secret material from server config or runtime data trees.
+- Production work targets a different host (`/opt/akalynth`, `/var/lib/akalynth`,
+  `/etc/akalynth`) over SSH; distinguish review, implementation, and deploy
+  authority before mutating host or runtime state there.
+- For API/protocol work, keep client messages intent-only and document
+  compatibility impact.
+- For receipt work, treat JSONL/chronicle data as canonical and SQLite as
+  rebuildable derived state.
+
+## Maintenance Notes
+
+- 2026-06-06: pruned `/home/sovereign/.codex/.tmp/plugins/` (a 78 MB clone of
+  `github.com/openai/plugins.git`, the full curated marketplace index). It is a
+  cache and may re-sync when Codex next needs the marketplace; the enabled
+  `github` plugin payload is unaffected (lives in `plugins/cache/`).
+- Open item: `/home/sovereign/.codex/logs_2.sqlite` is large (~212 MB). Vacuum
+  only while Codex is **not** running (the DB has live `-wal`/`-shm` files):
+  `sqlite3 ~/.codex/logs_2.sqlite 'VACUUM;'`.
+- 2026-06-06: collapsed the five skill stores to a single source
+  (`.claude/skills/`, now 21). `plugins/akalynth-studio/skills/` (9),
+  `.agents/skills`, and the akalynth entries in `/home/sovereign/.codex/skills/`
+  are now symlinks into it; `.codex/skills/akalynth-system-audit/` kept as an
+  intentional Codex-format exception. See Skill Stores above.
+- Tightened `.gitignore` (`.agents/skills/` → `.agents/skills`) so the new
+  runtime symlink stays untracked.
 
 ## Source Paths
 
@@ -274,7 +193,7 @@ Source: `.codex/config.toml.example`
 - Project audit skill: `.codex/skills/akalynth-system-audit/skill.md`
 - Akalynth plugin manifest: `plugins/akalynth-studio/.codex-plugin/plugin.json`
 - Akalynth plugin skills: `plugins/akalynth-studio/skills/*/SKILL.md`
-- User sovereign config: `/root/.codex/config.toml`
-- User system skills: `/root/.codex/skills/.system/*/SKILL.md`
-- Cached plugin manifests: `/root/.codex/plugins/cache/openai-curated/*/fef63ecf/.codex-plugin/plugin.json`
-- Cached plugin skills: `/root/.codex/plugins/cache/openai-curated/*/fef63ecf/skills/*/SKILL.md`
+- Claude Code skills (canonical source): `.claude/skills/*/SKILL.md`
+- User sovereign config: `/home/sovereign/.codex/config.toml`
+- User system skills: `/home/sovereign/.codex/skills/.system/*/SKILL.md`
+- Cached plugin manifests: `/home/sovereign/.codex/plugins/cache/openai-curated/*/<hash>/.codex-plugin/plugin.json`

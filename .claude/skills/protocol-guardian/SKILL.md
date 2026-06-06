@@ -1,6 +1,7 @@
 ---
 name: protocol-guardian
 description: Use when changing Akalynth WebSocket messages, HTTP APIs, shared protocol/types, Android/debug-client contracts, or docs that define client-server compatibility.
+version: 0.1.0
 ---
 
 # Protocol Guardian
