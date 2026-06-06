@@ -48,7 +48,7 @@ built in E0.
 ## Non-goals (explicitly deferred)
 
 - Stripe / real-money purchases (premium currency is a later gated epic).
-- Real-money-purchasable Azura coins.
+- Real-money-purchasable premium currency.
 - Layered/composited clothing rendering (start with discrete full sprites).
 - Moving shop/houses into Android before the account + character session model is stable.
 - Auctions on the house portal until the server auction verifier lanes fully pass.

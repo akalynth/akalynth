@@ -15,7 +15,7 @@ Decision: **in-game currency first. No real-money payments in V1.**
 ## Explicitly deferred (later gated epic)
 
 - **Stripe / real-money payments.**
-- **Real-money-purchasable premium currency** (e.g. Azura coins for cash).
+- **Real-money-purchasable premium currency** (e.g. premium coins for cash).
 - PCI scope, payment ledgers, refunds, chargebacks, tax — all deferred with payments.
 
 ## Overclaim guard

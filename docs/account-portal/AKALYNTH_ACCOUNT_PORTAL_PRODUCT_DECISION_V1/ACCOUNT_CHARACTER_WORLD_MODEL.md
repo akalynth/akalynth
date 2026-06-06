@@ -24,14 +24,18 @@ account (1) ──< character (N) ── world_id
 
 - `account_id` — stable, opaque, non-PII (never the email).
 - `character_id` — stable, opaque (the existing `p_<uuid>` player id may serve).
-- `world_id` — from a server-owned world catalog (e.g. `rookguard`, `azura`).
+- `world_id` — from a server-owned world catalog (e.g. `rookguard`,
+  `high_city`; legacy runtime aliases such as `azura` may resolve during
+  migration).
 - `outfit_id` — from a server-owned outfit catalog (see appearance below).
 
 ## Worlds
 
 - A **server-owned catalog** of worlds is the source of truth (`GET /v1/worlds`).
-- Initial worlds derive from the current map set (Rookguard / Azura); the catalog
-  decouples "world" from the hard-coded `MapName` so worlds can be added/retired.
+- Initial worlds derive from the current map set: Rookguard plus the first-city
+  surface displayed as High City and currently backed by the legacy `Azura`
+  runtime id. The catalog decouples "world" from the hard-coded `MapName` so
+  worlds can be added/retired.
 
 ## Appearance (sex + outfit)
 
