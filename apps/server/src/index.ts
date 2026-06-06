@@ -31,6 +31,7 @@ import {
   LEGEND_REFUSED_ACTION,
   LEGEND_SIGHTED_ACTION,
   RUMOR_SEEDED_ACTION,
+  TEM_CHALLENGE_RESPONSE,
 } from '../../../packages/shared/types.js';
 import { TileCode } from '../../../packages/shared/types.js';
 import {
@@ -2680,7 +2681,7 @@ function playLoopFor(s: Session) {
 
   if (!s.tutorial.move) objective = 'Step onto the move rune';
   else if (!s.tutorial.chat) objective = 'Send a signal in chat';
-  else if (!s.tutorial.tem) objective = 'Answer Tem: AZURA';
+  else if (!s.tutorial.tem) objective = `Answer Tem: ${TEM_CHALLENGE_RESPONSE}`;
   else if (!s.tutorial.gate) objective = 'Enter the High City gate';
   else if (!s.heraldMet) objective = 'Seek the High City herald in the southern plaza';
   else if (bloom.phase === 'signal' || bloom.phase === 'investigation') objective = 'Help resolve the Witness Moth Bloom above High City';

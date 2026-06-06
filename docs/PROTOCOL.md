@@ -166,7 +166,9 @@ Submits a chat message. Chat may satisfy an active Tem challenge when the conten
 
 #### `tem_response`
 
-Responds directly to an active Tem challenge.
+Responds directly to an active Tem challenge. Clients should submit the
+player-entered answer and must not hardcode the expected phrase; the server owns
+the prompt and validation.
 
 #### `kill_self`
 
@@ -347,7 +349,8 @@ Broadcast chat message.
 
 #### `tem_challenge`
 
-Tem challenge with challenge id, prompt, and timeout seconds.
+Tem challenge with challenge id, prompt, and timeout seconds. Clients should
+display the server-provided `message` verbatim.
 
 #### `error`
 

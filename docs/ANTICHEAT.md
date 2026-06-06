@@ -72,7 +72,7 @@ The code also has per-IP rate checks for connection, movement, and chat abuse. T
 Current behavior:
 
 - challenge IDs are generated as `tc_${randomUUID()}`
-- challenge text asks the player to type `AZURA`
+- challenge text asks the player to type `AKALYNTH`
 - timeout length comes from `TEM_TIMEOUT_SECONDS`
 - `tem_response` messages and chat messages can satisfy an active challenge
 - wrong responses and timeouts fail the challenge

@@ -251,7 +251,7 @@ export const CAPABILITY_GATED_ACTION = 'capability_gated';
 
 export type DeathReceiptAction = 'death' | 'respawn' | 'death_penalty_applied';
 
-export const TEM_CHALLENGE_RESPONSE = 'AZURA';
+export const TEM_CHALLENGE_RESPONSE = 'AKALYNTH';
 export const THROTTLE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 export const SIGNAL_DECAY_MS = 60 * 1000; // 60 seconds
 

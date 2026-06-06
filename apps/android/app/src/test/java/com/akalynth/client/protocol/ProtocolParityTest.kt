@@ -74,7 +74,7 @@ class ProtocolParityTest {
             EnterWorldMessage to "enter_world",
             MoveIntentMessage(Direction.NORTH) to "move_intent",
             ChatMessage("hi") to "chat",
-            TemResponseMessage("AZURA") to "tem_response",
+            TemResponseMessage("AKALYNTH") to "tem_response",
             KillSelfMessage to "kill_self",
             RunestoneCastMessage("table-1", Element.FIRE) to "runestone_cast",
             TemWitnessResponseMessage("req-1", WitnessResponse.CONFIRM) to "tem_witness_response",

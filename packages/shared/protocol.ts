@@ -2,7 +2,7 @@
 // All messages sent over WebSocket
 
 import type { Direction, Element, PlayerPublic, PropertyAuctionKind, PropertyAuctionDenialReason, PropertyDenialReason, PropertyStatus, RunestoneDenialReason, SovereignVocation } from './types.js';
-import { ELEMENTS, SOVEREIGN_VOCATIONS } from './types.js';
+import { ELEMENTS, SOVEREIGN_VOCATIONS, TEM_CHALLENGE_RESPONSE } from './types.js';
 import type { MapName } from './http.js';
 
 // ============================================================================
@@ -1024,7 +1024,7 @@ export const ServerMessages = {
   temChallenge: (challenge_id: string, timeout_seconds: number): TemChallengeMessage => ({
     type: 'tem_challenge',
     challenge_id,
-    message: `Hi! Type AZURA in chat within ${timeout_seconds} seconds.`,
+    message: `Hi! Type ${TEM_CHALLENGE_RESPONSE} in chat within ${timeout_seconds} seconds.`,
     timeout_seconds,
   }),
 
