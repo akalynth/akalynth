@@ -48,6 +48,7 @@ interface ActionsPanelProps {
   workContract: WorkContractRef | null;
   targetName: string | null;
   loop: PlayLoopProgress | null;
+  objectiveLabel: string;
   inventory: InventoryItemRef[];
   gold: number;
 }
@@ -73,6 +74,7 @@ export function ActionsPanel({
   workContract,
   targetName,
   loop,
+  objectiveLabel,
   inventory,
   gold,
 }: ActionsPanelProps) {
@@ -194,7 +196,7 @@ export function ActionsPanel({
     <div className="actions-panel" aria-label="Actions">
       <div className="mission-card">
         <span>Objective</span>
-        <strong>{loop?.objective ?? 'Enter Rookguard'}</strong>
+        <strong>{objectiveLabel}</strong>
         <div className="mission-flags" aria-label="objective progress">
           <i className={loop?.move ? 'done' : ''}>Move</i>
           <i className={loop?.chat ? 'done' : ''}>Signal</i>
