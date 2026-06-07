@@ -100,7 +100,7 @@ function runReceiptBackedLegacyVerifier(
 }
 
 /**
- * Create the default verifier registry with all 24 verifiers
+ * Create the default verifier registry with all 25 verifiers
  */
 export function createDefaultRegistry(): VerifierRegistry {
   const registry = new VerifierRegistry();
@@ -276,7 +276,7 @@ export function createDefaultRegistry(): VerifierRegistry {
   };
 
   // ============================================================================
-  // Phase 2: Domain Checks (13 verifiers)
+  // Phase 2: Domain Checks (14 verifiers)
   // ============================================================================
 
   const chronicleVerifier: VerifierSpec = {
@@ -483,6 +483,23 @@ export function createDefaultRegistry(): VerifierRegistry {
     },
   };
 
+  const absenceReceiptsVerifier: VerifierSpec = {
+    id: 'absence-receipts',
+    title: 'Absence Receipts',
+    description:
+      're-verifies absence_receipt.v1 claims (bounded non-observation): re-executes the committed slice, recomputes predicate + authority-snapshot hashes, and re-evaluates the predicate asserting zero matches',
+    phase: 2,
+    dependsOn: ['receipts-exist'],
+    auditSafe: true,
+    async run(ctx) {
+      return runReceiptBackedLegacyVerifier(
+        'apps/server/tools/verify-absence-receipts.ts',
+        'absence-receipts',
+        ctx,
+      );
+    },
+  };
+
   // ============================================================================
   // Phase 3: Integration Tests (1 verifier)
   // ============================================================================
@@ -566,6 +583,7 @@ export function createDefaultRegistry(): VerifierRegistry {
   registry.register(workContractsVerifier);
   registry.register(worldEventsVerifier);
   registry.register(propertyVerifier);
+  registry.register(absenceReceiptsVerifier);
 
   // Phase 3
   registry.register(opsVerifier);
