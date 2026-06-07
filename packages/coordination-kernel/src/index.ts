@@ -33,6 +33,10 @@ export * from './conformance/index.js';
 // "Witnesses that can leave and be verified years later."
 export * from './anchor/index.js';
 
+// Absence Receipts (absence_receipt.v1) — bounded non-observation proofs.
+// "A signed receipt for what did not happen inside a committed boundary."
+export * from './absence/index.js';
+
 // Version info
 export const COORDINATION_KERNEL_VERSION = '0.4.0';
 

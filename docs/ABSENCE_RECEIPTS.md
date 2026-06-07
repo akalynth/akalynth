@@ -106,7 +106,8 @@ To be defined as a TS interface in `packages/coordination-kernel/src/absence/typ
 
   "predicate": {
     "predicate_id": "prod_release_approval_by_required_authority.v1",
-    "canonical_form_hash": "blake3:...",         // blake3(canonicalize(predicate))
+    "definition": { "op": "eq", "field": "action", "value": "prod_release_approved" },
+    "canonical_form_hash": "blake3:...",         // blake3(canonicalize(definition))
     "description": "valid approval event for production release under active authority"
   },
 
@@ -169,6 +170,9 @@ set:
 - A predicate is a **pure function of `(receipt, authority_snapshot)`** only.
 - Canonical form = `canonicalize(predicate)`; `canonical_form_hash = blake3(canonical_form)`.
 - The verifier **recomputes** this hash and rejects on mismatch (`ABSENCE_PREDICATE_MISMATCH`).
+- MVP: the predicate body travels self-contained in `predicate.definition` so the
+  receipt is independently checkable. (Phase 3 pre-registration lets the verifier
+  instead look the body up by hash from an `absence_predicate_registered` receipt.)
 
 ---
 
