@@ -1,6 +1,6 @@
 {
   "id": "AKALYNTH_ACCOUNT_CHARACTER_ENTRY_PARITY_V1",
-  "status": "implemented_pending_review",
+  "status": "source_reviewed",
   "scope": "Android and browser/debug-client account-character entry presentation parity",
   "purpose": "Make the Android debug client expose a cold-start create/connect/enter-play path comparable to the accepted browser mobile shell, without changing authentication, protocol, or gameplay authority.",
   "input_receipts": [
@@ -90,18 +90,18 @@
     "npm run verify:quick": "pass 9/9"
   },
   "review": {
-    "status": "pending_review",
+    "status": "source_reviewed",
     "acceptance_criteria": {
-      "android_cold_start_has_create_character_affordance": null,
-      "android_cold_start_has_connect_or_enter_play_affordance": null,
-      "saved_character_hint_is_visible": null,
-      "character_create_returns_to_main_client": null,
-      "connected_world_reachable_from_cold_start": null,
-      "browser_debug_client_reference_surface_preserved": null,
-      "protocol_unchanged": null,
-      "server_runtime_untouched": null,
-      "gameplay_authority_unchanged": null,
-      "verification_passes": null
+      "android_cold_start_has_create_character_affordance": true,
+      "android_cold_start_has_connect_or_enter_play_affordance": true,
+      "saved_character_hint_is_visible": true,
+      "character_create_returns_to_main_client": true,
+      "connected_world_reachable_from_cold_start": true,
+      "browser_debug_client_reference_surface_preserved": true,
+      "protocol_unchanged": true,
+      "server_runtime_untouched": true,
+      "gameplay_authority_unchanged": true,
+      "verification_passes": true
     }
   },
   "closure_target": "closed_account_character_entry_parity_no_auth_no_protocol_no_gameplay_authority_change"
