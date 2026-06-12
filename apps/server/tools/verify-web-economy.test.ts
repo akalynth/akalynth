@@ -258,6 +258,7 @@ async function main(): Promise<void> {
 
   res = await request('GET', '/v1/wallet?character_id=p_other', undefined, { cookie: cookieHeader() });
   check('wallet rejects character owned by another account', res.status === 404 && res.body.error === 'character_not_found');
+  check('cross-account wallet read emits no receipts', receipts.length === 0);
 
   res = await request('POST', '/v1/shop/purchase', { character_id: 'p_buyer', shop_key: 'healing_herb' });
   check('shop purchase requires account session', res.status === 401 && res.body.error === 'not_authenticated');
@@ -286,6 +287,7 @@ async function main(): Promise<void> {
 
   res = await request('POST', '/v1/work/start', { character_id: 'p_other' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
   check('work start rejects character owned by another account', res.status === 404 && res.body.error === 'character_not_found');
+  check('cross-account work start emits no receipts', receipts.filter((r) => r.action === WORK_CONTRACT_STARTED_ACTION).length === 0);
 
   res = await request('POST', '/v1/work/start', { character_id: 'p_buyer' }, { cookie: cookieHeader(), 'x-csrf-token': 'bad' });
   check('work start requires matching csrf', res.status === 403 && res.body.error === 'csrf_failed');
