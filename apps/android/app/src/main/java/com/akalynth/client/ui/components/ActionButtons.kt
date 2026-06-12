@@ -37,6 +37,7 @@ private val ROUTE_SURVEY_ACTIONS = listOf(
     "route:quest:shipment" to "Ship",
     "route:economy:forgehold" to "Quote",
     "route:economy:settle" to "Settle",
+    "route:economy:payout" to "Pay",
     "route:craft:soulsteel" to "Steel",
     "route:craft:ashglass" to "Glass",
     "route:craft:refine" to "Refine",

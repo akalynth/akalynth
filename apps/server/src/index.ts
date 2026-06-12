@@ -5911,6 +5911,17 @@ function processSessionQueue(s: Session, now: number) {
             }));
             send(s.ws, ServerMessages.inventorySnapshot(invItems));
           },
+          creditWallet: (amount, reason) => {
+            audit.write({
+              player_id: s.player!.id,
+              action: WALLET_CREDIT_ACTION,
+              inputs: { amount, reason: reason as WalletCreditReason },
+              result: 'ok',
+            });
+            const balance = getGoldBalance(s.player!.id);
+            send(s.ws, ServerMessages.walletSnapshot(balance));
+            return { balance_gold: balance };
+          },
         };
 
         handleUseSkill(skillCtx, msg);

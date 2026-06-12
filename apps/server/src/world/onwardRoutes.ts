@@ -6,6 +6,7 @@ import {
   DREAM_GATE_INTERPRETED_ACTION,
   DREAM_GATE_SEAL_PREPARED_ACTION,
   DREAM_GATE_TRAVERSAL_AUTHORIZED_ACTION,
+  FORGEHOLD_COMPONENT_PAYOUT_CREDITED_ACTION,
   FORGEHOLD_COMPONENT_SETTLED_ACTION,
   FORGEHOLD_ECONOMY_QUOTED_ACTION,
   FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION,
@@ -28,6 +29,7 @@ export interface OnwardRouteReceiptProgress {
   soulsteelRefinementAuthorized: boolean;
   soulsteelComponentMinted: boolean;
   forgeholdComponentSettled: boolean;
+  forgeholdComponentPayoutCredited: boolean;
   moonspireSurveyed: boolean;
   dreamGateInterpreted: boolean;
   dreamFragmentAnchored: boolean;
@@ -49,6 +51,7 @@ function defaultProgress(): OnwardRouteReceiptProgress {
     soulsteelRefinementAuthorized: false,
     soulsteelComponentMinted: false,
     forgeholdComponentSettled: false,
+    forgeholdComponentPayoutCredited: false,
     moonspireSurveyed: false,
     dreamGateInterpreted: false,
     dreamFragmentAnchored: false,
@@ -116,6 +119,8 @@ export function applyReceiptToOnwardRoutes(receipt: AuditReceipt): void {
     next = { ...current, soulsteelComponentMinted: true };
   } else if (receipt.action === FORGEHOLD_COMPONENT_SETTLED_ACTION) {
     next = { ...current, forgeholdComponentSettled: true };
+  } else if (receipt.action === FORGEHOLD_COMPONENT_PAYOUT_CREDITED_ACTION) {
+    next = { ...current, forgeholdComponentPayoutCredited: true };
   } else if (receipt.action === DREAM_GATE_SEAL_PREPARED_ACTION) {
     next = { ...current, dreamGateSealPrepared: true };
   } else if (receipt.action === DREAM_GATE_TRAVERSAL_AUTHORIZED_ACTION) {

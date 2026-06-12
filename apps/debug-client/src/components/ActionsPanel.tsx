@@ -35,6 +35,7 @@ const ROUTE_SURVEY_ACTIONS = [
   { skill_id: 'route:quest:shipment', label: 'Investigate Shipment', short: 'Ship' },
   { skill_id: 'route:economy:forgehold', label: 'Quote Forgehold Economy', short: 'Quote' },
   { skill_id: 'route:economy:settle', label: 'Settle Forgehold Ledger', short: 'Settle' },
+  { skill_id: 'route:economy:payout', label: 'Credit Forgehold Payout', short: 'Pay' },
   { skill_id: 'route:craft:soulsteel', label: 'Stabilize Soulsteel', short: 'Steel' },
   { skill_id: 'route:craft:ashglass', label: 'Recover Ashglass Evidence', short: 'Glass' },
   { skill_id: 'route:craft:refine', label: 'Authorize Soulsteel Refinement', short: 'Refine' },
@@ -65,6 +66,7 @@ function routeActionIdsFor(onwardRoutes: NonNullable<PlayLoopProgress['onwardRou
       else if (!completed.has('soulsteel_refinement_authorization')) ids.push('route:craft:refine');
       else if (!completed.has('soulsteel_component_mint')) ids.push('route:craft:mint');
       else if (!completed.has('forgehold_component_settlement')) ids.push('route:economy:settle');
+      else if (!completed.has('forgehold_component_payout')) ids.push('route:economy:payout');
     } else if (route.route_id === 'moonspire_dream_gate_slice_v1') {
       if (!completed.has('dream_gate_rumor')) ids.push('route:survey:moonspire');
       else if (!completed.has('symbolic_puzzle_projection')) ids.push('route:dream:interpret');

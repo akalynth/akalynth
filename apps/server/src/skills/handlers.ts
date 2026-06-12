@@ -6,6 +6,7 @@ import {
   ASHGLASS_EVIDENCE_RECOVERED_ACTION,
   DREAM_FRAGMENT_ANCHORED_ACTION,
   DREAM_GATE_ARRIVAL_RECORDED_ACTION,
+  FORGEHOLD_COMPONENT_PAYOUT_CREDITED_ACTION,
   FORGEHOLD_COMPONENT_SETTLED_ACTION,
   FORGEHOLD_ECONOMY_QUOTED_ACTION,
   HEARTFORGE_GATE_PREPARED_ACTION,
@@ -350,6 +351,70 @@ export function handleForgeholdComponentSettlement(ctx: SkillContext): SkillResu
       receipt_action: FORGEHOLD_COMPONENT_SETTLED_ACTION,
       settlement_guard: settlementGuard,
       economy_impact: 'valuation_only',
+    },
+  };
+}
+
+export function handleForgeholdComponentPayout(ctx: SkillContext): SkillResult {
+  if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
+  const routeProgress = ctx.getOnwardRouteProgress?.();
+  if (!routeProgress?.forgeholdComponentSettled) return { success: false, reason: 'invalid_target' };
+  if (!ctx.creditWallet) return { success: false, reason: 'invalid_target' };
+
+  const creditedAt = new Date().toISOString();
+  const settlementId = 'forgehold_soulsteel_component_settlement_v1';
+  const payoutId = 'forgehold_soulsteel_component_payout_v1';
+  const amount = 25;
+  const reason = `forgehold_payout:${settlementId}`;
+  const credit = ctx.creditWallet(amount, reason, 'forgehold_route');
+  const payoutGuard = {
+    wallet_debit_gold: 0,
+    wallet_credit_gold: amount,
+    direct_wallet_mutation: false,
+    item_transfer: false,
+    travel_unlocked: false,
+    heat_changed: false,
+    penalty_applied: false,
+  };
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: FORGEHOLD_COMPONENT_PAYOUT_CREDITED_ACTION,
+    inputs: {
+      route_id: 'forgehold_route_slice_v1',
+      payout_id: payoutId,
+      settlement_id: settlementId,
+      item_type: 'refined_soulsteel_component',
+      required_settlement: FORGEHOLD_COMPONENT_SETTLED_ACTION,
+      wallet_credit_gold: amount,
+      wallet_credit_reason: reason,
+      balance_gold: credit.balance_gold,
+      source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
+      credited_at: creditedAt,
+      payout_guard: payoutGuard,
+      economy_impact: 'wallet_credit',
+    },
+    result: 'ok',
+  });
+
+  return {
+    success: true,
+    payload: {
+      route_id: 'forgehold_route_slice_v1',
+      payout_id: payoutId,
+      settlement_id: settlementId,
+      title: 'Forgehold Soulsteel Payout',
+      status: 'credited',
+      item_type: 'refined_soulsteel_component',
+      required_settlement: FORGEHOLD_COMPONENT_SETTLED_ACTION,
+      wallet_credit_gold: amount,
+      wallet_credit_reason: reason,
+      balance_gold: credit.balance_gold,
+      next_objective: 'Forgehold payout is credited by wallet receipt and the component remains server-traceable.',
+      source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
+      receipt_action: FORGEHOLD_COMPONENT_PAYOUT_CREDITED_ACTION,
+      payout_guard: payoutGuard,
+      economy_impact: 'wallet_credit',
     },
   };
 }

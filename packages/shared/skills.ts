@@ -16,6 +16,7 @@ export type SkillId =
   | 'route:safety:moonspire'
   | 'route:economy:forgehold'
   | 'route:economy:settle'
+  | 'route:economy:payout'
   | 'route:craft:soulsteel'
   | 'route:craft:ashglass'
   | 'route:craft:refine'
@@ -119,6 +120,14 @@ export const SKILL_REGISTRY: Record<SkillId, SkillDefinition> = {
   'route:economy:settle': {
     id: 'route:economy:settle',
     name: 'Settle Forgehold Ledger',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
+  'route:economy:payout': {
+    id: 'route:economy:payout',
+    name: 'Credit Forgehold Payout',
     cooldown_ms: 45_000,
     target: 'none',
     gold_cost: 0,
@@ -240,6 +249,7 @@ export const ROUTE_SURVEYED_ACTION = 'route_surveyed';
 export const ROUTE_ABUSE_NOTES_REVIEWED_ACTION = 'route_abuse_notes_reviewed';
 export const FORGEHOLD_ECONOMY_QUOTED_ACTION = 'forgehold_economy_quoted';
 export const FORGEHOLD_COMPONENT_SETTLED_ACTION = 'forgehold_component_settled';
+export const FORGEHOLD_COMPONENT_PAYOUT_CREDITED_ACTION = 'forgehold_component_payout_credited';
 export const SOULSTEEL_STABILIZED_ACTION = 'soulsteel_stabilized';
 export const ASHGLASS_EVIDENCE_RECOVERED_ACTION = 'ashglass_evidence_recovered';
 export const SOULSTEEL_REFINEMENT_AUTHORIZED_ACTION = 'soulsteel_refinement_authorized';

@@ -20,6 +20,7 @@ import {
   handlePingTem,
   handleRequestRecap,
   handleReport,
+  handleForgeholdComponentPayout,
   handleForgeholdComponentSettlement,
   handleForgeholdEconomyQuote,
   handleRouteSurvey,
@@ -78,6 +79,11 @@ export interface SkillContext {
     source: string
   ) => { item_id: string; item_type: string };
   syncInventory?: () => void;
+  creditWallet?: (
+    amount: number,
+    reason: string,
+    source: string
+  ) => { balance_gold: number };
 }
 
 export interface SkillResult {
@@ -223,6 +229,9 @@ async function executeSkill(
 
     case 'route:economy:settle':
       return handleForgeholdComponentSettlement(ctx);
+
+    case 'route:economy:payout':
+      return handleForgeholdComponentPayout(ctx);
 
     case 'route:craft:soulsteel':
       return handleSoulsteelStabilization(ctx);

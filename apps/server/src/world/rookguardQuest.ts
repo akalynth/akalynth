@@ -293,6 +293,7 @@ export function buildOnwardRouteProgress(
     soulsteelRefinementAuthorized: false,
     soulsteelComponentMinted: false,
     forgeholdComponentSettled: false,
+    forgeholdComponentPayoutCredited: false,
     moonspireSurveyed: false,
     dreamGateInterpreted: false,
     dreamFragmentAnchored: false,
@@ -316,6 +317,7 @@ export function buildOnwardRouteProgress(
     ...(receiptProgress.soulsteelRefinementAuthorized ? ['soulsteel_refinement_authorization'] : []),
     ...(receiptProgress.soulsteelComponentMinted ? ['soulsteel_component_mint'] : []),
     ...(receiptProgress.forgeholdComponentSettled ? ['forgehold_component_settlement'] : []),
+    ...(receiptProgress.forgeholdComponentPayoutCredited ? ['forgehold_component_payout'] : []),
   ];
   const moonspireCompleted = [
     ...(receiptProgress.moonspireSurveyed ? ['dream_gate_rumor'] : []),
@@ -334,8 +336,10 @@ export function buildOnwardRouteProgress(
       status,
       unlock_requirement: unlockRequirement,
       next_objective: available
-        ? receiptProgress.forgeholdComponentSettled
-          ? 'Forgehold component settlement is ledgered without unreceipted wallet mutation.'
+        ? receiptProgress.forgeholdComponentPayoutCredited
+          ? 'Forgehold payout is credited by wallet receipt and the component remains server-traceable.'
+          : receiptProgress.forgeholdComponentSettled
+          ? 'Credit the Forgehold payout through a wallet receipt before the component leaves custody.'
           : receiptProgress.soulsteelComponentMinted
           ? 'Settle the minted Soulsteel component in the Forgehold ledger before any payout exists.'
           : receiptProgress.soulsteelRefinementAuthorized
@@ -364,13 +368,14 @@ export function buildOnwardRouteProgress(
         { id: 'soulsteel_refinement_authorization', label: 'Soulsteel refinement authorization', system: 'crafting' },
         { id: 'soulsteel_component_mint', label: 'Soulsteel component mint', system: 'crafting' },
         { id: 'forgehold_component_settlement', label: 'Forgehold component ledger settlement', system: 'economy' },
+        { id: 'forgehold_component_payout', label: 'Forgehold wallet payout receipt', system: 'economy' },
         { id: 'forgehold_client_projection', label: 'Read-only client route projection', system: 'ui' },
         { id: 'forgehold_android_projection', label: 'Android read-only route parity', system: 'android' },
         { id: 'forgehold_abuse_notes', label: 'No client-truth crafting or shipment claims', system: 'anti_cheat' },
       ],
       completed_objective_ids: forgeholdCompleted,
       source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
-      receipt_actions: ['route_surveyed', 'forgehold_shipment_investigated', 'forgehold_economy_quoted', 'soulsteel_stabilized', 'route_abuse_notes_reviewed', 'heartforge_gate_prepared', 'ashglass_evidence_recovered', 'soulsteel_refinement_authorized', 'soulsteel_component_minted', 'forgehold_component_settled', 'item_minted', 'item_added_to_inventory'],
+      receipt_actions: ['route_surveyed', 'forgehold_shipment_investigated', 'forgehold_economy_quoted', 'soulsteel_stabilized', 'route_abuse_notes_reviewed', 'heartforge_gate_prepared', 'ashglass_evidence_recovered', 'soulsteel_refinement_authorized', 'soulsteel_component_minted', 'forgehold_component_settled', 'forgehold_component_payout_credited', 'wallet_credit', 'item_minted', 'item_added_to_inventory'],
     },
     {
       route_id: 'moonspire_dream_gate_slice_v1',
