@@ -225,6 +225,26 @@ for server_literal in \
   fi
 done
 
+for web_economy_literal in \
+  "wallet read requires account-owned character" \
+  "wallet rejects character owned by another account" \
+  "shop purchase requires matching csrf" \
+  "shop receipts do not carry account/session/csrf tokens" \
+  "work start rejects character owned by another account" \
+  "work start requires matching csrf" \
+  "work tick completes after presence gates" \
+  "work completion updates wallet balance" \
+  "work receipts include ticks, completion, and wallet credit" \
+  "property buy without gold is rejected" \
+  "primary buy emitted wallet debit + property purchase" \
+  "property list succeeds for owner" \
+  "resale emits buyer debit + seller credit + transfer" \
+  "property unlist succeeds for owner"; do
+  if ! grep -Fq "$web_economy_literal" "$ROOT_DIR/apps/server/tools/verify-web-economy.test.ts"; then
+    die "Missing web economy gameplay proof: $web_economy_literal"
+  fi
+done
+
 for gameplay_doc in "$ROOT_DIR/README.md" "$ROOT_DIR/docs/CURRENT_STAGE.md" "$ROOT_DIR/docs/V1_SCOPE.md" "$ROOT_DIR/scripts/README.md"; do
   if ! grep -Fq 'wallet/shop/work/property gameplay route proof' "$gameplay_doc"; then
     die "Missing account-character wallet/gameplay route proof wording in ${gameplay_doc#$ROOT_DIR/}"
