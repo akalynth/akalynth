@@ -1,6 +1,6 @@
 # AKALYNTH_ACCOUNT_PORTAL_PRODUCT_DECISION_V1 — Master Decision Record
 
-Status: **decided / no implementation**
+Status: **decided / later source implementation present**
 Date: 2026-06-05
 Lane: E0 (decision record before implementation)
 
@@ -87,4 +87,4 @@ built in E0.
 
 ## Closure
 
-`closed_account_portal_product_decision_recorded_no_implementation`
+`closed_account_portal_product_decision_recorded_then_later_source_implemented`
