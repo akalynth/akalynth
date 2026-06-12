@@ -37,6 +37,27 @@ const ROUTE_SURVEY_ACTIONS = [
   { skill_id: 'route:dream:fragment', label: 'Anchor Dream Fragment', short: 'Frag' },
 ] as const;
 
+type RouteActionId = typeof ROUTE_SURVEY_ACTIONS[number]['skill_id'];
+
+function routeActionIdsFor(onwardRoutes: NonNullable<PlayLoopProgress['onwardRoutes']>): RouteActionId[] {
+  const ids: RouteActionId[] = [];
+  for (const route of onwardRoutes) {
+    if (route.status !== 'available') continue;
+    const completed = new Set(route.completed_objective_ids);
+    if (route.route_id === 'forgehold_route_slice_v1') {
+      if (!completed.has('forgehold_route_survey')) ids.push('route:survey:forgehold');
+      else if (!completed.has('forgehold_missing_shipment')) ids.push('route:quest:shipment');
+      else if (!completed.has('forgehold_economy_receipts')) ids.push('route:economy:forgehold');
+      else if (!completed.has('soulsteel_stabilization')) ids.push('route:craft:soulsteel');
+    } else if (route.route_id === 'moonspire_dream_gate_slice_v1') {
+      if (!completed.has('dream_gate_rumor')) ids.push('route:survey:moonspire');
+      else if (!completed.has('symbolic_puzzle_projection')) ids.push('route:dream:interpret');
+      else if (!completed.has('dream_fragment_evidence')) ids.push('route:dream:fragment');
+    }
+  }
+  return ids;
+}
+
 const VOCATION_ACTIONS: Array<{ vocation: SovereignVocation; label: string; short: string }> = [
   { vocation: 'warden', label: 'Warden', short: 'Ward' },
   { vocation: 'cantor', label: 'Cantor', short: 'Cant' },
@@ -102,7 +123,9 @@ export function ActionsPanel({
   const rookguardQuest = loop?.rookguardQuest ?? null;
   const codexProfession = rookguardQuest?.codexProfession ?? null;
   const onwardRoutes = loop?.onwardRoutes ?? [];
-  const routeSurveysOpen = onwardRoutes.some((route) => route.status === 'available');
+  const routeActionIds = routeActionIdsFor(onwardRoutes);
+  const routeActions = ROUTE_SURVEY_ACTIONS.filter((action) => routeActionIds.includes(action.skill_id));
+  const routeSurveysOpen = routeActions.length > 0;
   const witnessMothOpen =
     stage >= 3 &&
     !!loop?.lastEvent?.startsWith('witness_moth_bloom_') &&
@@ -192,7 +215,7 @@ export function ActionsPanel({
                 {action.short}
               </button>
             ))}
-            {routeSurveysOpen && ROUTE_SURVEY_ACTIONS.map((action) => (
+            {routeSurveysOpen && routeActions.map((action) => (
               <button
                 key={action.skill_id}
                 className="action-btn mobile-hotbar-btn ritual-btn"
@@ -308,7 +331,7 @@ export function ActionsPanel({
         )}
         {routeSurveysOpen && (
           <div className="shop-actions" aria-label="Route survey actions">
-            {ROUTE_SURVEY_ACTIONS.map((action) => (
+            {routeActions.map((action) => (
               <button
                 key={action.skill_id}
                 className="action-btn shop-btn"
@@ -432,7 +455,7 @@ export function ActionsPanel({
           {routeSurveysOpen && (
             <div className="shop-section">
               <div className="shop-header">Onward Routes</div>
-              {ROUTE_SURVEY_ACTIONS.map(action => (
+              {routeActions.map(action => (
                 <button
                   key={action.skill_id}
                   className="action-btn shop-btn"

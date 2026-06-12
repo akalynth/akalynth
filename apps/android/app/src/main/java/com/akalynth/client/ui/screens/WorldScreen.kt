@@ -56,9 +56,8 @@ fun WorldScreen(
             mapData?.landmarks?.get("guild_hall")?.contains(me.x, me.y)
         } == true
     )
-    val showRouteSurveys = state.progression.loop?.onwardRoutes?.any { route ->
-        route.status == "available"
-    } == true
+    val routeActionSkillIds = routeActionSkillIdsFor(state.progression.loop?.onwardRoutes ?: emptyList())
+    val showRouteSurveys = routeActionSkillIds.isNotEmpty()
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -157,6 +156,7 @@ fun WorldScreen(
                     onEvent(GameEvent.WorldEventContribution(contributionId))
                 },
                 showRouteSurveys = showRouteSurveys,
+                routeActionSkillIds = routeActionSkillIds,
                 onRouteSurvey = { skillId -> onEvent(GameEvent.RouteSurvey(skillId)) },
                 showRookguardActions = !state.world.currentMap.isHighCityCompatible,
                 showRookguardVocations = showRookguardVocations,
@@ -236,6 +236,29 @@ fun WorldScreen(
             ) {
                 Text(error)
             }
+        }
+    }
+}
+
+private fun routeActionSkillIdsFor(routes: List<OnwardRouteProgress>): List<String> {
+    return routes.flatMap { route ->
+        if (route.status != "available") return@flatMap emptyList()
+        val completed = route.completedObjectiveIds.toSet()
+        when (route.routeId) {
+            "forgehold_route_slice_v1" -> when {
+                !completed.contains("forgehold_route_survey") -> listOf("route:survey:forgehold")
+                !completed.contains("forgehold_missing_shipment") -> listOf("route:quest:shipment")
+                !completed.contains("forgehold_economy_receipts") -> listOf("route:economy:forgehold")
+                !completed.contains("soulsteel_stabilization") -> listOf("route:craft:soulsteel")
+                else -> emptyList()
+            }
+            "moonspire_dream_gate_slice_v1" -> when {
+                !completed.contains("dream_gate_rumor") -> listOf("route:survey:moonspire")
+                !completed.contains("symbolic_puzzle_projection") -> listOf("route:dream:interpret")
+                !completed.contains("dream_fragment_evidence") -> listOf("route:dream:fragment")
+                else -> emptyList()
+            }
+            else -> emptyList()
         }
     }
 }

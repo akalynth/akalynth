@@ -46,6 +46,7 @@ fun ActionButtons(
     showWitnessMothBloom: Boolean = false,
     onWorldEventContribution: (String) -> Unit = {},
     showRouteSurveys: Boolean = false,
+    routeActionSkillIds: List<String> = ROUTE_SURVEY_ACTIONS.map { it.first },
     onRouteSurvey: (String) -> Unit = {},
     showRookguardActions: Boolean = false,
     showRookguardVocations: Boolean = false,
@@ -60,6 +61,10 @@ fun ActionButtons(
     onUnlistHouse: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val routeActions = ROUTE_SURVEY_ACTIONS.filter { (skillId, _) ->
+        routeActionSkillIds.contains(skillId)
+    }
+
     ClassicDock(modifier = modifier) {
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -138,14 +143,14 @@ fun ActionButtons(
                 )
             }
 
-            if (showRouteSurveys) {
+            if (showRouteSurveys && routeActions.isNotEmpty()) {
                 Text(
                     text = "Routes",
                     style = MaterialTheme.typography.labelSmall,
                     color = ClassicShellColors.Brass,
                     modifier = Modifier.testTag("ActionButtons_RouteSurveys")
                 )
-                ROUTE_SURVEY_ACTIONS.forEach { (skillId, label) ->
+                routeActions.forEach { (skillId, label) ->
                     ClassicButton(
                         text = label,
                         onClick = { onRouteSurvey(skillId) },
