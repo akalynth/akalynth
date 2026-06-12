@@ -66,7 +66,7 @@
     "github_pr": "https://github.com/akalynth/akalynth/pull/312"
   },
   "github_ci_status": {
-    "status": "external_runner_scheduling_failure",
+    "status": "self_hosted_runner_repair_in_progress",
     "checked_utc": "2026-06-12T18:26:00Z",
     "pr": "https://github.com/akalynth/akalynth/pull/312",
     "failed_checks": [
@@ -81,7 +81,21 @@
       "GitHub job log API returned BlobNotFound for the failed job log."
     ],
     "local_validation": "passed",
-    "merge_status": "not merged"
+    "merge_status": "not merged",
+    "repair": {
+      "runner_name": "akalynth-github-runner-01",
+      "runner_service": "actions.runner.akalynth-akalynth.akalynth-github-runner-01.service",
+      "runner_status": "online",
+      "runner_labels": [
+        "self-hosted",
+        "Linux",
+        "X64",
+        "ubuntu-24.04",
+        "ubuntu-latest",
+        "node-22"
+      ],
+      "workflow_change": "GitHub workflow jobs now target [self-hosted, ubuntu-24.04] so PR checks can run on the host-local runner instead of unavailable GitHub-hosted runners."
+    }
   },
   "non_mutation_boundary": {
     "runtime_trees": "unchanged",
