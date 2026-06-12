@@ -21,7 +21,8 @@ Server may evolve internally, but MUST remain backward compatible with this cont
 ```
 
 ### Character Create
-- `POST /v1/characters/create`
+- Retired: `POST /v1/characters/create`
+- Current: `POST /v1/characters` with account session, CSRF, `world_id`, `sex`, and `outfit_id`
 - Request:
 ```json
 {"name":"Sovereign"}
@@ -202,7 +203,8 @@ See `docs/IDENTITY_VERIFICATION.md` for verification protocol.
 ## Migration Notes (v0 → v0.1)
 
 ### What's New
-- `POST /v1/characters/create` endpoint for persistent named characters
+- Retired `POST /v1/characters/create` endpoint for persistent named characters
+- Current account-gated `POST /v1/characters` endpoint for world/sex/outfit character creation
 - Signed auth tokens (preferred over guest tokens)
 - New error codes: `token_invalid`, `token_expired`, `name_taken`, `invalid_name`, `banned`
 - `login_ack` now includes `token` and `expires_at` fields

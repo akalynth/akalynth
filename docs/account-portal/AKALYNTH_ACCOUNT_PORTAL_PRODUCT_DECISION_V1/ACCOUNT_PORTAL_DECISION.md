@@ -67,8 +67,9 @@ built in E0.
 
 ## Current-state grounding (why this is net-new)
 
-- **No account system exists.** Server identity today is guest sessions + signed
-  character tokens (Ed25519, from `POST /v1/characters/create`). No email/password/account.
+- **Historical pre-account baseline.** Server identity was guest sessions + signed
+  character tokens (Ed25519, from retired `POST /v1/characters/create`) before
+  account-gated character creation moved to `POST /v1/characters`.
 - **akalynth-site is a localStorage-only preview** (`account.html`, `shop.html`,
   `houses.html`, `app.js`). Nothing is server-backed yet.
 - **Gender/outfit sprites do not exist** — only `base_human_male_01` + themed NPC sprites.

@@ -67,9 +67,8 @@ POST /v1/characters                 -> create {name, world_id, sex, outfit_id} (
 POST /v1/characters/select          -> select active character -> play token
 ```
 
-Note: `POST /v1/characters/create` (the current name-only, guest-era endpoint) is
-**superseded** by the account-gated `POST /v1/characters`. The legacy endpoint may stay
-during migration but is not the production path.
+Note: retired `POST /v1/characters/create` (the name-only, guest-era endpoint) is
+replaced by account-gated `POST /v1/characters`. It is not the production path.
 
 ## Lifecycle receipts (privacy-bounded)
 
