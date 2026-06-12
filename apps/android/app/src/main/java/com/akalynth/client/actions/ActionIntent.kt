@@ -1,6 +1,5 @@
 package com.akalynth.client.actions
 
-import com.akalynth.client.ui.components.character.CharacterSex
 import com.akalynth.client.ui.components.hotbar.ItemRarity
 
 object WorldEventSkillIds {
@@ -70,16 +69,6 @@ sealed interface ActionIntent {
         val itemName: String,
         val x: Int,
         val y: Int
-    ) : ActionIntent
-
-    /**
-     * Create a new character.
-     * Chronicle kind: CHARACTER_CREATED
-     */
-    data class CreateCharacter(
-        override val actionId: String,
-        val name: String,
-        val sex: CharacterSex
     ) : ActionIntent
 
     /**

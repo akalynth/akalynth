@@ -75,15 +75,6 @@ class WebSocketActionTransport(
                 }
             }
 
-            is ActionIntent.CreateCharacter -> buildJsonObject {
-                put("type", "create_character")
-                put("action_id", intent.actionId)
-                putJsonObject("payload") {
-                    put("name", intent.name)
-                    put("sex", intent.sex.name.lowercase())
-                }
-            }
-
             is ActionIntent.WorldEventContribution -> buildJsonObject {
                 put("type", "use_skill")
                 put("action_id", intent.actionId)

@@ -6,7 +6,6 @@ import com.akalynth.client.chronicle.ChronicleStore
 import com.akalynth.client.chronicle.EventSource
 import com.akalynth.client.chronicle.EventStatus
 import com.akalynth.client.chronicle.Receipt
-import com.akalynth.client.ui.components.character.CharacterSex
 import com.akalynth.client.ui.components.hotbar.ItemRarity
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
@@ -115,16 +114,6 @@ class ActionBusTest {
         assertEquals(ItemRarity.RARE, drop.rarity)
     }
 
-    @Test
-    fun `B - transport receives all intent details`() = runTest {
-        bus.dispatchCreateCharacter("TestHero", CharacterSex.FEMALE)
-
-        assertTrue(transport.lastSent is ActionIntent.CreateCharacter)
-        val create = transport.lastSent as ActionIntent.CreateCharacter
-        assertEquals("TestHero", create.name)
-        assertEquals(CharacterSex.FEMALE, create.sex)
-    }
-
     // =========================================================================
     // C) pending event emission
     // =========================================================================
@@ -193,14 +182,6 @@ class ActionBusTest {
 
         val event = chronicle.events.value.first()
         assertEquals(ChronicleEventKind.COMBAT_KILL, event.kind)
-    }
-
-    @Test
-    fun `C - create character maps to CHARACTER_CREATED kind`() = runTest {
-        bus.dispatchCreateCharacter("Hero", CharacterSex.MALE)
-
-        val event = chronicle.events.value.first()
-        assertEquals(ChronicleEventKind.CHARACTER_CREATED, event.kind)
     }
 
     @Test
@@ -364,21 +345,6 @@ class ActionBusTest {
         assertNotNull(event)
         assertEquals(30, event?.x) // Uses intent coords, not player coords
         assertEquals(40, event?.y)
-    }
-
-    @Test
-    fun `PendingEventMapper - create character includes name and sex`() {
-        val intent = ActionIntent.CreateCharacter(
-            actionId = "test-003",
-            name = "TestHero",
-            sex = CharacterSex.FEMALE
-        )
-
-        val event = PendingEventMapper.map(intent, clock, null, null, null)
-
-        assertNotNull(event)
-        assertEquals("TestHero", event?.details?.get("name"))
-        assertEquals("FEMALE", event?.details?.get("sex"))
     }
 
     @Test
