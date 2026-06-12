@@ -377,6 +377,8 @@ class IdentityApi(
 
     fun hasAccountSession(): Boolean = getSessionCookie().isNotBlank() && csrfToken.isNotBlank()
 
+    fun accountCharacterSessionMessage(action: String): String? = accountSessionError(action)?.message
+
     private fun accountSessionError(action: String): CharacterCreateResult.Error? {
         if (getSessionCookie().isBlank()) {
             return CharacterCreateResult.Error(

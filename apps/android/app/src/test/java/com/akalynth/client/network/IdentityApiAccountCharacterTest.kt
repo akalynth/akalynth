@@ -70,6 +70,10 @@ class IdentityApiAccountCharacterTest {
         assertTrue(error != null)
         assertEquals("csrf_missing", error?.code)
         assertEquals("Security token missing. Sign in again before account character creation.", error?.message)
+        assertEquals(
+            "Security token missing. Sign in again before account character creation.",
+            api.accountCharacterSessionMessage("creation")
+        )
     }
 
     @Test
