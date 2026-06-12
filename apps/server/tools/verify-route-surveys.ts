@@ -24,7 +24,7 @@ async function test(name: string, fn: () => Promise<void>) {
   }
 }
 
-function context() {
+function context(options: { onwardRoutesAvailable?: boolean } = {}) {
   const receipts: Array<{ player_id: string; action: string; inputs: Record<string, unknown>; result: string }> = [];
   const sent: unknown[] = [];
   const ctx: SkillContext = {
@@ -41,6 +41,7 @@ function context() {
       kickCount: 0,
     } satisfies AntiCheatState,
     skillCooldowns: new Map(),
+    onwardRoutesAvailable: options.onwardRoutesAvailable ?? true,
     audit: (receipt) => receipts.push(receipt),
     findPlayerOnline: (_id: string): Player | null => null,
     issueTem: () => ({ outcome: 'none' }),
@@ -49,6 +50,25 @@ function context() {
   };
   return { ctx, receipts, sent };
 }
+
+test('route actions reject before Rookguard completion without route side effects', async () => {
+  const { ctx, receipts, sent } = context({ onwardRoutesAvailable: false });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
+
+  assert(receipts.some((r) => r.action === SKILL_USE_INTENT_ACTION), 'locked route should still record skill intent');
+  assert(receipts.some((r) => r.action === 'skill_rejected' && r.inputs.reason === 'invalid_target'), 'locked route should emit skill rejection');
+  assert(!receipts.some((r) => r.action === FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION), 'locked route must not emit quest receipt');
+  assert(!receipts.some((r) => r.action === ROUTE_SURVEYED_ACTION), 'locked route must not emit route survey receipt');
+  assert(!receipts.some((r) => r.action === SOULSTEEL_STABILIZED_ACTION), 'locked route must not emit Soulsteel receipt');
+  assert(!receipts.some((r) => r.action === DREAM_GATE_INTERPRETED_ACTION), 'locked route must not emit Dream Gate receipt');
+
+  const result = sent.find((msg) => typeof msg === 'object' && msg !== null && (msg as { type?: string }).type === 'skill_result') as {
+    success?: boolean;
+    reason?: string;
+  } | undefined;
+  assert(result?.success === false, 'locked route skill_result should fail');
+  assert(result.reason === 'invalid_target', 'locked route skill_result should use invalid_target');
+});
 
 test('Forgehold survey emits server-owned route payload and receipts', async () => {
   const { ctx, receipts, sent } = context();

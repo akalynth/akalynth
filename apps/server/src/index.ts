@@ -5848,6 +5848,7 @@ function processSessionQueue(s: Session, now: number) {
           ws: s.ws,
           antiState: s.anti.state,
           skillCooldowns: s.skillCooldowns,
+          onwardRoutesAvailable: buildRookguardQuestProgress(rookguardQuestInputFor(s)).completed,
           audit: (receipt) => audit.write(receipt),
           findPlayerOnline: findPlayerByIdOnline,
           issueTem: issueTemChallenge,

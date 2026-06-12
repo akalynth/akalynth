@@ -35,6 +35,7 @@ export interface SkillContext {
   ws: WebSocket;
   antiState: AntiCheatState;
   skillCooldowns: Map<string, number>;
+  onwardRoutesAvailable?: boolean;
   // Audit write function
   audit: (receipt: {
     player_id: string;
