@@ -54,6 +54,21 @@ export interface WebEconomyRouterDeps {
   addInventoryItem: (playerId: string, itemId: string) => void;
   getProperty: (propertyId: string) => PropertyProjection | null;
   isValidPrice: (price: unknown) => price is number;
+  startWorkContract: (playerId: string) =>
+    | { ok: true; contract_id: string; payout_gold: number; cooldown_seconds: number; min_duration_ms: number }
+    | { ok: false; error: string };
+  tickWorkContract: (playerId: string, contractId: string) =>
+    | {
+        ok: true;
+        contract_id: string;
+        ticks_observed: number;
+        ticks_required: number;
+        remaining_ms: number;
+        completed: boolean;
+        credited_gold?: number;
+        balance_gold?: number;
+      }
+    | { ok: false; error: string };
 }
 
 type CharacterResolution =
@@ -228,6 +243,42 @@ export function makeWebEconomyRouter(deps: WebEconomyRouterDeps) {
         };
       });
       send(res, result.status, result.body);
+      return true;
+    }
+
+    if (path === '/v1/work/start' && method === 'POST') {
+      const body = await readJson(req);
+      const resolved = resolveAuthedCharacter(deps, req, body, true);
+      if (!resolved.ok) return (send(res, resolved.status, resolved.body), true);
+      const characterId = resolved.character.character_id;
+      const result = deps.startWorkContract(characterId);
+      if (!result.ok) return (send(res, 409, { ok: false, error: result.error }), true);
+      send(res, 200, {
+        ok: true,
+        character_id: characterId,
+        contract_id: result.contract_id,
+        contract_type: 'temple_sweep',
+        payout_gold: result.payout_gold,
+        cooldown_seconds: result.cooldown_seconds,
+        min_duration_ms: result.min_duration_ms,
+      });
+      return true;
+    }
+
+    if (path === '/v1/work/tick' && method === 'POST') {
+      const body = await readJson(req);
+      const resolved = resolveAuthedCharacter(deps, req, body, true);
+      if (!resolved.ok) return (send(res, resolved.status, resolved.body), true);
+      const contractId = body.contract_id;
+      if (typeof contractId !== 'string' || !contractId) {
+        send(res, 400, { ok: false, error: 'contract_id_required' });
+        return true;
+      }
+      const characterId = resolved.character.character_id;
+      const result = deps.tickWorkContract(characterId, contractId);
+      if (!result.ok) return (send(res, 409, { ok: false, error: result.error }), true);
+      const { ok: _ok, ...tickBody } = result;
+      send(res, 200, { ok: true, character_id: characterId, ...tickBody });
       return true;
     }
 

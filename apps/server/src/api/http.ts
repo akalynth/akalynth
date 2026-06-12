@@ -137,6 +137,8 @@ export function handleHttp(
     (path === '/v1/shop/catalog' ||
       path === '/v1/shop/purchase' ||
       path === '/v1/wallet' ||
+      path === '/v1/work/start' ||
+      path === '/v1/work/tick' ||
       path === '/v1/property/buy' ||
       path === '/v1/property/list' ||
       path === '/v1/property/unlist')

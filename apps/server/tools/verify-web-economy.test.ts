@@ -22,6 +22,9 @@ import {
   PROPERTY_UNLISTED_ACTION,
   WALLET_CREDIT_ACTION,
   WALLET_DEBIT_ACTION,
+  WORK_CONTRACT_COMPLETED_ACTION,
+  WORK_CONTRACT_STARTED_ACTION,
+  WORK_CONTRACT_TICK_RECORDED_ACTION,
 } from '../../../packages/shared/types.js';
 import { CSRF_COOKIE, SESSION_COOKIE } from '../src/account/service.js';
 import type { AccountCharacterRow } from '../src/persist/types.js';
@@ -40,6 +43,13 @@ import {
   getGoldBalance,
   withTreasuryLock,
 } from '../src/world/treasury.js';
+import {
+  applyReceiptToWorkContracts,
+  clearWorkContractsProjection,
+  completeContract,
+  recordTick,
+  startContract,
+} from '../src/world/work_contracts.js';
 
 let failed = 0;
 function check(name: string, cond: boolean): void {
@@ -138,12 +148,23 @@ function writeReceipt(input: {
   receipts.push(full);
   applyReceiptToTreasury(full);
   applyReceiptToProperty(full);
+  applyReceiptToWorkContracts(full);
   return full;
+}
+
+function writeWorkReceipt(input: Omit<AuditReceipt, 'sequence' | 'timestamp' | 'prev_hash' | 'event_hash' | 'signature' | 'inputs_hash' | 'outputs_hash'>): void {
+  writeReceipt({
+    player_id: input.actor_id,
+    action: input.action,
+    inputs: input.inputs ?? {},
+    result: input.result,
+  });
 }
 
 function resetState(): void {
   clearTreasuryProjection();
   clearPropertyProjection();
+  clearWorkContractsProjection();
   receipts.length = 0;
   inventory.clear();
   lastEventHash = null;
@@ -195,6 +216,33 @@ const router = makeWebEconomyRouter({
   },
   getProperty,
   isValidPrice,
+  startWorkContract: (playerId) => startContract(playerId, 'temple_sweep', logicalNowMs, writeWorkReceipt),
+  tickWorkContract: (playerId, contractId) => {
+    const tickResult = recordTick(playerId, contractId, logicalNowMs, writeWorkReceipt);
+    if (!tickResult.ok) return tickResult;
+    if (!tickResult.ready_to_complete) {
+      return {
+        ok: true as const,
+        contract_id: contractId,
+        ticks_observed: tickResult.ticks_observed,
+        ticks_required: tickResult.ticks_required,
+        remaining_ms: tickResult.remaining_ms,
+        completed: false,
+      };
+    }
+    const completeResult = completeContract(playerId, contractId, logicalNowMs, writeWorkReceipt);
+    if (!completeResult.ok) return completeResult;
+    return {
+      ok: true as const,
+      contract_id: contractId,
+      ticks_observed: tickResult.ticks_observed,
+      ticks_required: tickResult.ticks_required,
+      remaining_ms: tickResult.remaining_ms,
+      completed: true,
+      credited_gold: completeResult.credited_gold,
+      balance_gold: getGoldBalance(playerId),
+    };
+  },
 });
 
 async function main(): Promise<void> {
@@ -225,6 +273,28 @@ async function main(): Promise<void> {
   check('shop item id is derived from mint receipt hash', (res.body.item as { item_id?: string }).item_id === expectedItemId);
   check('shop inventory mirror updated', inventory.get('p_buyer')?.has(expectedItemId) === true);
   check('shop receipts do not carry account/session/csrf tokens', receipts.every((r) => !JSON.stringify(r).includes('sess-ok') && !JSON.stringify(r).includes('csrf-ok')));
+
+  res = await request('POST', '/v1/work/start', { character_id: 'p_other' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
+  check('work start rejects character owned by another account', res.status === 404 && res.body.error === 'character_not_found');
+
+  res = await request('POST', '/v1/work/start', { character_id: 'p_buyer' }, { cookie: cookieHeader(), 'x-csrf-token': 'bad' });
+  check('work start requires matching csrf', res.status === 403 && res.body.error === 'csrf_failed');
+
+  res = await request('POST', '/v1/work/start', { character_id: 'p_buyer' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
+  const contractId = res.body.contract_id as string;
+  check('work start succeeds', res.status === 200 && res.body.ok === true && typeof contractId === 'string' && contractId.startsWith('wc_'));
+  check('work start emits work_contract_started receipt', receipts.at(-1)?.action === WORK_CONTRACT_STARTED_ACTION);
+
+  res = await request('POST', '/v1/work/tick', { character_id: 'p_buyer' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
+  check('work tick requires contract id', res.status === 400 && res.body.error === 'contract_id_required');
+
+  for (let i = 0; i < 6; i++) {
+    logicalNowMs += 5_000;
+    res = await request('POST', '/v1/work/tick', { character_id: 'p_buyer', contract_id: contractId }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
+  }
+  check('work tick completes after presence gates', res.status === 200 && res.body.completed === true && res.body.credited_gold === 10);
+  check('work completion updates wallet balance', res.body.balance_gold === getGoldBalance('p_buyer'));
+  check('work receipts include ticks, completion, and wallet credit', [WORK_CONTRACT_TICK_RECORDED_ACTION, WORK_CONTRACT_COMPLETED_ACTION, WALLET_CREDIT_ACTION].every((a) => receipts.some((r) => r.action === a)));
 
   resetState();
   seedProperty('Azura:H1', 100);

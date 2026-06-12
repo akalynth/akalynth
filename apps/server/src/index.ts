@@ -1317,6 +1317,34 @@ const handleEconomy = makeWebEconomyRouter({
   },
   getProperty,
   isValidPrice,
+  startWorkContract: (playerId) => startContract(playerId, 'temple_sweep', Date.now(), (r) => audit.write(r)),
+  tickWorkContract: (playerId, contractId) => {
+    const nowMs = Date.now();
+    const tickResult = recordTick(playerId, contractId, nowMs, (r) => audit.write(r));
+    if (!tickResult.ok) return tickResult;
+    if (!tickResult.ready_to_complete) {
+      return {
+        ok: true as const,
+        contract_id: contractId,
+        ticks_observed: tickResult.ticks_observed,
+        ticks_required: tickResult.ticks_required,
+        remaining_ms: tickResult.remaining_ms,
+        completed: false,
+      };
+    }
+    const completeResult = completeContract(playerId, contractId, nowMs, (r) => audit.write(r));
+    if (!completeResult.ok) return completeResult;
+    return {
+      ok: true as const,
+      contract_id: contractId,
+      ticks_observed: tickResult.ticks_observed,
+      ticks_required: tickResult.ticks_required,
+      remaining_ms: tickResult.remaining_ms,
+      completed: true,
+      credited_gold: completeResult.credited_gold,
+      balance_gold: getGoldBalance(playerId),
+    };
+  },
 });
 
 // Identity Seal v1: privacy-light principal registry + signed challenge auth.
