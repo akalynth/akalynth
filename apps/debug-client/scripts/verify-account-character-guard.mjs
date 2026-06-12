@@ -169,6 +169,36 @@ const required = [
     literal: 'if (!isAccountCharacterPlayResponse(body)) {',
   },
   {
+    label: 'token login is preferred for selected account character',
+    file: 'gameClient',
+    literal: "loginMsg = { type: 'login', token: identity.token };",
+  },
+  {
+    label: 'work start remains token-scoped intent only',
+    file: 'gameClient',
+    literal: "const payload: StartWorkContractMessage = { type: 'start_work_contract', contract_type: 'temple_sweep' };",
+  },
+  {
+    label: 'work tick remains token-scoped intent only',
+    file: 'gameClient',
+    literal: "const payload: WorkTickMessage = { type: 'work_tick', contract_id: s.workContract.contract_id };",
+  },
+  {
+    label: 'house buy remains token-scoped intent only',
+    file: 'gameClient',
+    literal: "send({ type: 'buy_house', property_id: propertyId });",
+  },
+  {
+    label: 'house list remains token-scoped intent only',
+    file: 'gameClient',
+    literal: "send({ type: 'list_house', property_id: propertyId, price });",
+  },
+  {
+    label: 'house unlist remains token-scoped intent only',
+    file: 'gameClient',
+    literal: "send({ type: 'unlist_house', property_id: propertyId });",
+  },
+  {
     label: 'create disabled until catalog is loaded',
     file: 'characterBar',
     literal: '!!catalog.loaded',
