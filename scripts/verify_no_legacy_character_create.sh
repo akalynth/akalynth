@@ -83,4 +83,13 @@ if [[ -n "$sequence_matches" ]]; then
   die "Stale account portal sequencing wording found. Current docs must distinguish source-level E5/E6 surfaces from production release proof."
 fi
 
+for status_doc in "$ROOT_DIR/docs/CURRENT_STAGE.md" "$ROOT_DIR/docs/V1_SCOPE.md"; do
+  if ! grep -Fq 'Account-character entry v2' "$status_doc"; then
+    die "Missing account-character entry v2 status in ${status_doc#$ROOT_DIR/}"
+  fi
+  if ! grep -Fq 'verify:account-character' "$status_doc"; then
+    die "Missing account-character verifier reference in ${status_doc#$ROOT_DIR/}"
+  fi
+done
+
 echo "✅ No legacy create_character protocol path found"

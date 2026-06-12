@@ -20,6 +20,11 @@ Define what v1 covers and what it explicitly does not. This prevents scope drift
 - Property ownership v0 (server + proof): house registry seeded from map plots, primary sale (gold sink) + listing + resale (player→player, conserved), durable in SQLite (schema v13), receipt-sourced. **In-game gold only — no real money** (the monetization constitution governs value entry; gameplay gold purchases are not monetization). Buyable by any player (no capability gate on standard plots).
 - Property auctions, resale (server + proof): owner-opened resale auctions with open/bid/cancel handlers, world-loop close→settle (wall-clock only triggers emission; settlement truth is the receipt; reducer/replay are clock-free), and a **durable auction projection** (SQLite schema v14, `property_auctions`, materializer + boot hydration). Gold model proven to conserve (primary sink / resale net-zero) and persistence proven (projection==DB, idempotent re-materialize, DB-hydration==replay) via `verify:property-auction*`. **In-game gold only.** Not in V1: primary/system auction opening, anti-snipe, a production restart proof run, and the site auction UI.
 - Public transparency surfaces exist: `/v1/receipts/public` (and `/v1/transparency`, `/v1/receipts`), served by `apps/server/src/api/http.ts`; docs describe what they are today. Property market/ledger are exposed (anonymized) at `/v1/property/market` and `/v1/property/ledger`.
+- Account-character entry v2 is source-level in scope for client parity:
+  account/session + CSRF-gated `/v1/characters`, canonical world/sex/outfit
+  catalogs, site/debug-client/Android create/select paths, and missing-session
+  or missing-CSRF helpers. It is covered by `npm run verify:account-character`.
+  This is not a production release claim without named proof artifacts.
 
 ## Out of Scope (v1)
 
@@ -27,6 +32,9 @@ Define what v1 covers and what it explicitly does not. This prevents scope drift
 - Witness UI (Phase 6) beyond docs/spec
 - Mail MMO system (doc only)
 - Property ownership beyond v0: taxation/upkeep, house customization, furniture, premium plot tiers (`house:estate`/`house:guild` capability gates), production proof for client/site/Android property views, and auction UI. Source-level fixed-price/resale property views may exist, but they are not a production release claim without named proof artifacts.
+- Production proof for account-character site/debug-client/Android surfaces.
+  Source-level parity may exist, but public/release claims require named proof
+  artifacts.
 - Any “constitutional freeze” guarantees not enforced by CI/verifiers
 - Cryptographic envelope verification for receipts (`verify:receipt-chain`) until PR2 lands
 
