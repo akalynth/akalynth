@@ -43,6 +43,13 @@ function isClientCharacterShape(value: unknown): value is { character_id: string
     typeof v.sex === 'string' &&
     typeof v.outfit_id === 'string';
 }
+function isClientOutfitShape(value: unknown): value is { outfit_id: string; sex: string; name: string } {
+  const v = value as Record<string, unknown>;
+  return !!v &&
+    typeof v.outfit_id === 'string' &&
+    typeof v.sex === 'string' &&
+    typeof v.name === 'string';
+}
 type ResponseCapture = ServerResponse & {
   bodyText: string;
   headersOut: Record<string, string | number | readonly string[]>;
@@ -164,6 +171,14 @@ async function main(): Promise<void> {
   // ---- HTTP router boundary: public catalogs; account session + CSRF + email verification ----
   let http = await request('GET', '/v1/worlds');
   check('HTTP GET /v1/worlds is public', http.status === 200 && Array.isArray(http.body.worlds));
+  http = await request('GET', '/v1/outfits');
+  check('HTTP GET /v1/outfits is public', http.status === 200 && Array.isArray(http.body.outfits));
+  check('HTTP GET /v1/outfits returns client outfit shape', (http.body.outfits as unknown[]).every(isClientOutfitShape));
+  http = await request('GET', '/v1/outfits?sex=female');
+  check(
+    'HTTP GET /v1/outfits filters by sex',
+    http.status === 200 && Array.isArray(http.body.outfits) && (http.body.outfits as { sex?: string }[]).every((o) => o.sex === 'female')
+  );
   http = await request('GET', '/v1/characters');
   check('HTTP GET /v1/characters requires account session', http.status === 401 && http.body.error === 'not_authenticated');
   http = await request('POST', '/v1/characters', { name: 'NoCookie', world_id: 'rookguard', sex: 'male', outfit_id: 'male_guard' });
