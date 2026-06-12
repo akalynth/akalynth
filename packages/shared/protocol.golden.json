@@ -1,9 +1,9 @@
 {
   "version": "2.0.0",
-  "generatedAt": "2026-06-05T22:26:08.999Z",
+  "generatedAt": "2026-06-12T03:19:53.091Z",
   "source": {
     "path": "/home/sovereign/akalynth-ops/repos/akalynth/packages/shared/protocol.ts",
-    "hash": "sha256:b98f66a6eeb9ea7780c6a40b8947d2c4fa241dd1f776bd0876288270b8ac2cd4"
+    "hash": "sha256:39ca33ff5c39774dfd3b37ea8a4b1b7bbbc0cefce829b5ba93dcc4a788ac9013"
   },
   "surface": {
     "version": "2.0.0",

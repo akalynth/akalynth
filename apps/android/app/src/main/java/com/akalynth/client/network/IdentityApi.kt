@@ -144,10 +144,9 @@ class IdentityApi(
         postJson(
             path = ACCOUNT_CREATE_PATH,
             json = json,
-            callback = callback
-        ) { obj ->
-            parseAccountCharacterResponse(obj)
-        }
+            callback = callback,
+            parser = { obj -> parseAccountCharacterResponse(obj) }
+        )
     }
 
     private fun parseAccountCharacterResponse(obj: JSONObject): CharacterCreateResult {

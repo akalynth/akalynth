@@ -83,6 +83,7 @@ import { hashPassword, verifyPassword } from './account/password.js';
 import { CharacterStore } from './character/store.js';
 import { CharacterService } from './character/service.js';
 import { makeCharacterRouter } from './character/router.js';
+import { outfitById } from './character/catalog.js';
 import { makeWebEconomyRouter, type ShopItemConfig } from './economy/router.js';
 import { publicActorForReceipt, toPublicReceipt } from './audit/public_receipts.js';
 import {
@@ -2206,6 +2207,11 @@ function mapForAccountCharacter(playerId: string): 'Rookguard' | 'Azura' {
   return 'Rookguard';
 }
 
+function spriteForAccountCharacter(playerId: string): string | null {
+  const row = characterStore.findById(playerId);
+  return row ? outfitById(row.outfit_id)?.sprite_id ?? null : null;
+}
+
 // Account character minting. This is internal plumbing for the account-gated
 // /v1/characters route, not a standalone legacy HTTP route.
 type CharacterCreateResult =
@@ -3189,6 +3195,7 @@ function processSessionQueue(s: Session, now: number) {
         }
 
         const loginMap = authToken ? mapForAccountCharacter(player_id) : 'Rookguard';
+        const spriteId = authToken ? spriteForAccountCharacter(player_id) : null;
         const spawn = worlds[loginMap].map.spawn;
 
         s.guestToken = guest_token ?? null;
@@ -3207,6 +3214,7 @@ function processSessionQueue(s: Session, now: number) {
           hp: PLAYER_MAX_HP,
           max_hp: PLAYER_MAX_HP,
           reputation: 0,
+          sprite_id: spriteId,
           caps: [],
         };
 
