@@ -27,7 +27,7 @@ const WITNESS_MOTH_ACTIONS = [
   { skill_id: 'event:witness_moth_bloom:defend_scribes', label: 'Defend scribes', short: 'Guard' },
 ] as const;
 
-const ROUTE_SURVEY_ACTIONS = [
+const ROUTE_ACTIONS = [
   { skill_id: 'route:survey:forgehold', label: 'Survey Forgehold', short: 'Forge' },
   { skill_id: 'route:survey:moonspire', label: 'Survey Dream Gate', short: 'Dream' },
   { skill_id: 'route:safety:forgehold', label: 'Review Forgehold Safety', short: 'FSafe' },
@@ -48,7 +48,7 @@ const ROUTE_SURVEY_ACTIONS = [
   { skill_id: 'route:dream:fragment', label: 'Anchor Dream Fragment', short: 'Frag' },
 ] as const;
 
-type RouteActionId = typeof ROUTE_SURVEY_ACTIONS[number]['skill_id'];
+type RouteActionId = typeof ROUTE_ACTIONS[number]['skill_id'];
 
 function routeActionIdsFor(onwardRoutes: NonNullable<PlayLoopProgress['onwardRoutes']>): RouteActionId[] {
   const ids: RouteActionId[] = [];
@@ -146,8 +146,8 @@ export function ActionsPanel({
   const codexProfession = rookguardQuest?.codexProfession ?? null;
   const onwardRoutes = loop?.onwardRoutes ?? [];
   const routeActionIds = routeActionIdsFor(onwardRoutes);
-  const routeActions = ROUTE_SURVEY_ACTIONS.filter((action) => routeActionIds.includes(action.skill_id));
-  const routeSurveysOpen = routeActions.length > 0;
+  const routeActions = ROUTE_ACTIONS.filter((action) => routeActionIds.includes(action.skill_id));
+  const routeActionsOpen = routeActions.length > 0;
   const witnessMothOpen =
     stage >= 3 &&
     !!loop?.lastEvent?.startsWith('witness_moth_bloom_') &&
@@ -237,7 +237,7 @@ export function ActionsPanel({
                 {action.short}
               </button>
             ))}
-            {routeSurveysOpen && routeActions.map((action) => (
+            {routeActionsOpen && routeActions.map((action) => (
               <button
                 key={action.skill_id}
                 className="action-btn mobile-hotbar-btn ritual-btn"
@@ -355,8 +355,8 @@ export function ActionsPanel({
             })}
           </div>
         )}
-        {routeSurveysOpen && (
-          <div className="shop-actions" aria-label="Route survey actions">
+        {routeActionsOpen && (
+          <div className="shop-actions" aria-label="Route actions">
             {routeActions.map((action) => (
               <button
                 key={action.skill_id}
@@ -478,7 +478,7 @@ export function ActionsPanel({
               ))}
             </div>
           )}
-          {routeSurveysOpen && (
+          {routeActionsOpen && (
             <div className="shop-section">
               <div className="shop-header">Onward Routes</div>
               {routeActions.map(action => (

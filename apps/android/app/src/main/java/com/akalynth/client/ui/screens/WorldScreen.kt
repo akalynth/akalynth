@@ -57,7 +57,7 @@ fun WorldScreen(
         } == true
     )
     val routeActionSkillIds = routeActionSkillIdsFor(state.progression.loop?.onwardRoutes ?: emptyList())
-    val showRouteSurveys = routeActionSkillIds.isNotEmpty()
+    val showRouteActions = routeActionSkillIds.isNotEmpty()
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -155,7 +155,7 @@ fun WorldScreen(
                 onWorldEventContribution = { contributionId ->
                     onEvent(GameEvent.WorldEventContribution(contributionId))
                 },
-                showRouteSurveys = showRouteSurveys,
+                showRouteActions = showRouteActions,
                 routeActionSkillIds = routeActionSkillIds,
                 onRouteSurvey = { skillId -> onEvent(GameEvent.RouteSurvey(skillId)) },
                 showRookguardActions = !state.world.currentMap.isHighCityCompatible,

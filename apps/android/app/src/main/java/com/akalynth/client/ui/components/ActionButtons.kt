@@ -29,7 +29,7 @@ private val ROOKGUARD_VOCATION_ACTIONS = listOf(
     SovereignVocation.REAVER to "Rvr"
 )
 
-private val ROUTE_SURVEY_ACTIONS = listOf(
+private val ROUTE_ACTIONS = listOf(
     "route:survey:forgehold" to "Forge",
     "route:survey:moonspire" to "Dream",
     "route:safety:forgehold" to "FSafe",
@@ -56,8 +56,8 @@ fun ActionButtons(
     onChronicle: () -> Unit = {},
     showWitnessMothBloom: Boolean = false,
     onWorldEventContribution: (String) -> Unit = {},
-    showRouteSurveys: Boolean = false,
-    routeActionSkillIds: List<String> = ROUTE_SURVEY_ACTIONS.map { it.first },
+    showRouteActions: Boolean = false,
+    routeActionSkillIds: List<String> = ROUTE_ACTIONS.map { it.first },
     onRouteSurvey: (String) -> Unit = {},
     showRookguardActions: Boolean = false,
     showRookguardVocations: Boolean = false,
@@ -72,7 +72,7 @@ fun ActionButtons(
     onUnlistHouse: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val routeActions = ROUTE_SURVEY_ACTIONS.filter { (skillId, _) ->
+    val routeActions = ROUTE_ACTIONS.filter { (skillId, _) ->
         routeActionSkillIds.contains(skillId)
     }
 
@@ -154,19 +154,19 @@ fun ActionButtons(
                 )
             }
 
-            if (showRouteSurveys && routeActions.isNotEmpty()) {
+            if (showRouteActions && routeActions.isNotEmpty()) {
                 Text(
                     text = "Routes",
                     style = MaterialTheme.typography.labelSmall,
                     color = ClassicShellColors.Brass,
-                    modifier = Modifier.testTag("ActionButtons_RouteSurveys")
+                    modifier = Modifier.testTag("ActionButtons_RouteActions")
                 )
                 routeActions.forEach { (skillId, label) ->
                     ClassicButton(
                         text = label,
                         onClick = { onRouteSurvey(skillId) },
                         compact = true,
-                        modifier = Modifier.testTag("ActionButtons_RouteSurvey_$label")
+                        modifier = Modifier.testTag("ActionButtons_RouteAction_$label")
                     )
                 }
             }
