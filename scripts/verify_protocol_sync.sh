@@ -11,6 +11,8 @@ die(){ echo "❌ $*" >&2; exit 1; }
 [[ -f "$DOC" ]]  || die "Missing $DOC"
 [[ -f "$ROOT_DIR/scripts/verify_no_legacy_character_create.sh" ]] || die "Missing legacy character-create guard"
 
+bash -n "$ROOT_DIR/scripts/verify_no_legacy_character_create.sh"
+
 # Extract message type strings from protocol.ts (e.g., type: 'connect')
 code_types="$(
   grep -oE "type:\s*['\"][a-z_]+['\"]" "$CODE" \
