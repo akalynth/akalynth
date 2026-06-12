@@ -1,0 +1,26 @@
+{
+  "lane": "AKALYNTH_ROOKGUARD_MAP_ASSET_TRAINING_BUILD_V1",
+  "closure_status": "rookguard_training_asset_bundle_created_preview_verified_no_gameplay_mutation",
+  "status": "accepted_training_bundle",
+  "created_utc": "2026-06-12T15:22:52.874Z",
+  "training_only": true,
+  "no_gameplay_mutation": true,
+  "no_canonical_map_promotion": true,
+  "no_npc_behavior_change": true,
+  "no_collision_or_walkability_protocol_change": true,
+  "no_deploy": true,
+  "source_ref": "original_akalynth_training_build_v1",
+  "bundle_dir": "data/map-training/rookguard",
+  "manifest_scope": [
+    "rookguard.asset-register.json",
+    "rookguard.map-training.jsonl",
+    "rookguard.seed-map.json",
+    "rookguard.asset-placement-rules.json",
+    "rookguard.preview.html",
+    "claim-boundary.md"
+  ],
+  "manifest_sha256": "82ff6099ede13d8ae4187bd3d84534a9ef0e854969902f8e97c6493edc2f1b3d",
+  "verifier": "apps/server/tools/verify-rookguard-training-build.ts",
+  "preview": "data/map-training/rookguard/rookguard.preview.html",
+  "evidence_note": "Manifest excludes receipt, manifest, and verification log to avoid self-referential hashes."
+}
