@@ -297,7 +297,11 @@ private fun OnwardRoutesPanel(
         routes.forEach { route ->
             val open = route.status == "available"
             val completed = route.completedObjectiveIds.toSet()
-            val nextObjectiveId = route.objectives.firstOrNull { objective -> !completed.contains(objective.id) }?.id
+            val nextObjectiveId = if (open) {
+                route.objectives.firstOrNull { objective -> !completed.contains(objective.id) }?.id
+            } else {
+                null
+            }
             val routeStepObjectives = route.objectives.filter { objective ->
                 objective.system != "ui" && objective.system != "android"
             }
@@ -330,6 +334,7 @@ private fun OnwardRoutesPanel(
                     val done = completed.contains(objective.id)
                     val marker = when {
                         done -> "Done"
+                        !open -> "Locked"
                         objective.id == nextObjectiveId -> "Next"
                         else -> "Later"
                     }

@@ -327,23 +327,24 @@ export function ActionsPanel({
           <div className="codex-shelves onward-routes" aria-label="Onward routes">
             {onwardRoutes.map((route) => {
               const completed = new Set(route.completed_objective_ids);
-              const nextObjectiveId = route.objectives.find((objective) => !completed.has(objective.id))?.id ?? null;
+              const routeOpen = route.status === 'available';
+              const nextObjectiveId = routeOpen ? route.objectives.find((objective) => !completed.has(objective.id))?.id ?? null : null;
               const routeStepObjectives = route.objectives.filter((objective) => objective.system !== 'ui' && objective.system !== 'android');
               const routeStepCompleted = routeStepObjectives.filter((objective) => completed.has(objective.id)).length;
               return (
                 <article
                   key={route.route_id}
-                  className={`onward-route-card ${route.status === 'available' ? 'active' : ''}`}
+                  className={`onward-route-card ${routeOpen ? 'active' : ''}`}
                   title={`Source: ${route.source_drop}`}
                 >
                   <strong>
-                    {route.status === 'available' ? 'Open' : 'Locked'}: {route.title} ({routeStepCompleted}/{routeStepObjectives.length})
+                    {routeOpen ? 'Open' : 'Locked'}: {route.title} ({routeStepCompleted}/{routeStepObjectives.length})
                   </strong>
                   <span>{route.next_objective}</span>
                   <ul>
                     {route.objectives.map((objective) => (
                       <li key={objective.id} className={completed.has(objective.id) ? 'done' : ''}>
-                        <b>{completed.has(objective.id) ? 'Done' : objective.id === nextObjectiveId ? 'Next' : 'Later'}</b>
+                        <b>{completed.has(objective.id) ? 'Done' : !routeOpen ? 'Locked' : objective.id === nextObjectiveId ? 'Next' : 'Later'}</b>
                         {objective.label}
                         <small>{objective.system}</small>
                       </li>
