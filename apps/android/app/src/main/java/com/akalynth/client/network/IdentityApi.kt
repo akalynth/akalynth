@@ -145,13 +145,9 @@ class IdentityApi(
     }
 
     fun createCharacter(name: String, worldId: String, sex: String, outfitId: String, callback: CreateCallback) {
-        if (!hasAccountSession()) {
-            callback.onResult(
-                CharacterCreateResult.Error(
-                    code = "not_authenticated",
-                    message = "Sign in required for account character creation."
-                )
-            )
+        val sessionError = accountSessionError("creation")
+        if (sessionError != null) {
+            callback.onResult(sessionError)
             return
         }
         if (!VALID_WORLD_IDS.contains(worldId)) {
@@ -187,13 +183,9 @@ class IdentityApi(
     }
 
     fun selectCharacter(characterId: String, callback: CreateCallback) {
-        if (!hasAccountSession()) {
-            callback.onResult(
-                CharacterCreateResult.Error(
-                    code = "not_authenticated",
-                    message = "Sign in required for account character selection."
-                )
-            )
+        val sessionError = accountSessionError("selection")
+        if (sessionError != null) {
+            callback.onResult(sessionError)
             return
         }
         val json = JSONObject().apply {
@@ -384,6 +376,22 @@ class IdentityApi(
     }
 
     fun hasAccountSession(): Boolean = getSessionCookie().isNotBlank() && csrfToken.isNotBlank()
+
+    private fun accountSessionError(action: String): CharacterCreateResult.Error? {
+        if (getSessionCookie().isBlank()) {
+            return CharacterCreateResult.Error(
+                code = "not_authenticated",
+                message = "Sign in required for account character $action."
+            )
+        }
+        if (csrfToken.isBlank()) {
+            return CharacterCreateResult.Error(
+                code = "csrf_missing",
+                message = "Security token missing. Sign in again before account character $action."
+            )
+        }
+        return null
+    }
 
     private fun getSessionCookie(): String = sessionCookies[SESSION_COOKIE]?.trim().orEmpty()
     private fun getCsrfCookie(): String = sessionCookies[CSRF_COOKIE]?.trim().orEmpty()
