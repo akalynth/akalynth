@@ -43,6 +43,26 @@ const required = [
     literal: "httpUrl(config.httpBase, '/v1/characters/select')",
   },
   {
+    label: 'world catalog uses account-character API',
+    file: 'gameClient',
+    literal: "httpUrl(config.httpBase, '/v1/worlds')",
+  },
+  {
+    label: 'outfit catalog uses account-character API',
+    file: 'gameClient',
+    literal: "httpUrl(config.httpBase, '/v1/outfits')",
+  },
+  {
+    label: 'world catalog response is validated',
+    file: 'gameClient',
+    literal: 'worldsBody.worlds.filter(isCharacterCatalogWorld)',
+  },
+  {
+    label: 'outfit catalog response is validated',
+    file: 'gameClient',
+    literal: 'outfitsBody.outfits.filter(isCharacterCatalogOutfit)',
+  },
+  {
     label: 'create path requires account session',
     file: 'gameClient',
     literal: 'const account = await requireAccountSession();',
@@ -72,6 +92,36 @@ const required = [
     file: 'characterBar',
     literal:
       'Sign in with an account session and CSRF token first; character creation and selection are disabled until the session check succeeds.',
+  },
+  {
+    label: 'world selector is driven by catalog worlds',
+    file: 'characterBar',
+    literal: 'catalog.worlds.map((world) => (',
+  },
+  {
+    label: 'outfit selector filters by selected sex',
+    file: 'characterBar',
+    literal: 'catalog.outfits.filter((entry) => entry.sex === sex)',
+  },
+  {
+    label: 'create path submits world id',
+    file: 'characterBar',
+    literal: 'world_id: worldId,',
+  },
+  {
+    label: 'create path submits outfit id',
+    file: 'characterBar',
+    literal: 'outfit_id: outfitId,',
+  },
+  {
+    label: 'create disabled until catalog is loaded',
+    file: 'characterBar',
+    literal: '!!catalog.loaded',
+  },
+  {
+    label: 'catalog loading disables world selector',
+    file: 'characterBar',
+    literal: 'disabled={createFieldsDisabled || !catalog.loaded || catalog.loading}',
   },
 ];
 
