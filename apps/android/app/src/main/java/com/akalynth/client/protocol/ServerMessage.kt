@@ -118,6 +118,7 @@ data class OnwardRouteProgress(
     @SerialName("unlock_requirement") val unlockRequirement: String,
     @SerialName("next_objective") val nextObjective: String,
     val objectives: List<OnwardRouteObjective> = emptyList(),
+    @SerialName("completed_objective_ids") val completedObjectiveIds: List<String> = emptyList(),
     @SerialName("source_drop") val sourceDrop: String,
     @SerialName("receipt_actions") val receiptActions: List<String> = emptyList()
 )

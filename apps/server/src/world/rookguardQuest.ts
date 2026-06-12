@@ -14,6 +14,7 @@ import {
   TEM_CHALLENGE_RESPONSE,
   VOCATION_DECLARED_ACTION,
 } from '../../../../packages/shared/types.js';
+import type { OnwardRouteReceiptProgress } from './onwardRoutes.js';
 
 export interface RookguardQuestInput {
   tutorial: TutorialProgress;
@@ -279,10 +280,28 @@ export function buildRookguardQuestProgress(input: RookguardQuestInput): Rookgua
   };
 }
 
-export function buildOnwardRouteProgress(input: RookguardQuestInput): OnwardRouteProgress[] {
+export function buildOnwardRouteProgress(
+  input: RookguardQuestInput,
+  receiptProgress: OnwardRouteReceiptProgress = {
+    forgeholdSurveyed: false,
+    forgeholdShipmentInvestigated: false,
+    soulsteelStabilized: false,
+    moonspireSurveyed: false,
+    dreamGateInterpreted: false,
+  }
+): OnwardRouteProgress[] {
   const available = buildRookguardQuestProgress(input).completed;
   const status = available ? 'available' : 'locked';
   const unlockRequirement = 'Complete Rookguard Codex Path: move, chat, Tem, training slime, vocation, and High City gate receipts.';
+  const forgeholdCompleted = [
+    ...(receiptProgress.forgeholdSurveyed ? ['forgehold_route_survey'] : []),
+    ...(receiptProgress.forgeholdShipmentInvestigated ? ['forgehold_missing_shipment'] : []),
+    ...(receiptProgress.soulsteelStabilized ? ['soulsteel_stabilization'] : []),
+  ];
+  const moonspireCompleted = [
+    ...(receiptProgress.moonspireSurveyed ? ['dream_gate_rumor'] : []),
+    ...(receiptProgress.dreamGateInterpreted ? ['symbolic_puzzle_projection'] : []),
+  ];
 
   return [
     {
@@ -291,9 +310,14 @@ export function buildOnwardRouteProgress(input: RookguardQuestInput): OnwardRout
       status,
       unlock_requirement: unlockRequirement,
       next_objective: available
-        ? 'Investigate the missing Ember Road shipment and stabilize Soulsteel without adding an unreceipted reward.'
+        ? receiptProgress.soulsteelStabilized
+          ? 'Carry the unstable Soulsteel proof toward the Heartforge Trial chamber; refinement still requires evidence recovery.'
+          : receiptProgress.forgeholdShipmentInvestigated
+            ? 'Stabilize cracked Soulsteel without adding an unreceipted reward.'
+            : 'Investigate the missing Ember Road shipment and stabilize Soulsteel without adding an unreceipted reward.'
         : 'Finish the Rookguard Codex Path to reveal the Forgehold shipment board.',
       objectives: [
+        { id: 'forgehold_route_survey', label: 'Forgehold route survey', system: 'quest' },
         { id: 'forgehold_missing_shipment', label: 'Missing shipment investigation', system: 'quest' },
         { id: 'forgehold_economy_receipts', label: 'Receipt-backed Forgehold economy proof', system: 'economy' },
         { id: 'soulsteel_stabilization', label: 'Soulsteel stabilization crafting', system: 'crafting' },
@@ -302,6 +326,7 @@ export function buildOnwardRouteProgress(input: RookguardQuestInput): OnwardRout
         { id: 'forgehold_android_projection', label: 'Android read-only route parity', system: 'android' },
         { id: 'forgehold_abuse_notes', label: 'No client-truth crafting or shipment claims', system: 'anti_cheat' },
       ],
+      completed_objective_ids: forgeholdCompleted,
       source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
       receipt_actions: ['tutorial_completed', 'gate_unlock'],
     },
@@ -311,7 +336,9 @@ export function buildOnwardRouteProgress(input: RookguardQuestInput): OnwardRout
       status,
       unlock_requirement: unlockRequirement,
       next_objective: available
-        ? 'Survey a Dream Gate clue and keep dream traversal symbolic until the server owns the gate transition.'
+        ? receiptProgress.dreamGateInterpreted
+          ? 'Anchor the interpreted symbols before any Dream Gate traversal can be server-authorized.'
+          : 'Survey a Dream Gate clue and keep dream traversal symbolic until the server owns the gate transition.'
         : 'Finish the Rookguard Codex Path to reveal the Moonspire dream-gate rumor.',
       objectives: [
         { id: 'dream_gate_rumor', label: 'Dream Gate rumor discovery', system: 'quest' },
@@ -321,6 +348,7 @@ export function buildOnwardRouteProgress(input: RookguardQuestInput): OnwardRout
         { id: 'dream_gate_android_projection', label: 'Android read-only route parity', system: 'android' },
         { id: 'dream_gate_abuse_notes', label: 'No client-owned dream traversal truth', system: 'anti_cheat' },
       ],
+      completed_objective_ids: moonspireCompleted,
       source_drop: 'drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1',
       receipt_actions: ['tutorial_completed', 'gate_unlock'],
     },

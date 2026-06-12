@@ -8,6 +8,8 @@ import type { WebSocket } from 'ws';
 import type { AntiCheatState, Player } from '../../../packages/shared/types.js';
 import { DREAM_GATE_INTERPRETED_ACTION, FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION, ROUTE_SURVEYED_ACTION, SKILL_RESOLVED_ACTION, SKILL_USE_INTENT_ACTION, SOULSTEEL_STABILIZED_ACTION } from '../../../packages/shared/skills.js';
 import { handleUseSkill, type SkillContext } from '../src/skills/index.js';
+import { buildOnwardRouteProgress, type RookguardQuestInput } from '../src/world/rookguardQuest.js';
+import { applyReceiptToOnwardRoutes, clearOnwardRouteProjection, getOnwardRouteReceiptProgress } from '../src/world/onwardRoutes.js';
 
 function assert(condition: unknown, msg: string): asserts condition {
   if (!condition) throw new Error(msg);
@@ -25,7 +27,8 @@ async function test(name: string, fn: () => Promise<void>) {
 }
 
 function context(options: { onwardRoutesAvailable?: boolean } = {}) {
-  const receipts: Array<{ player_id: string; action: string; inputs: Record<string, unknown>; result: string }> = [];
+  clearOnwardRouteProjection();
+  const receipts: Array<{ actor_id: string; player_id: string; action: string; inputs: Record<string, unknown>; result: string }> = [];
   const sent: unknown[] = [];
   const ctx: SkillContext = {
     playerId: 'p1',
@@ -42,7 +45,11 @@ function context(options: { onwardRoutesAvailable?: boolean } = {}) {
     } satisfies AntiCheatState,
     skillCooldowns: new Map(),
     onwardRoutesAvailable: options.onwardRoutesAvailable ?? true,
-    audit: (receipt) => receipts.push(receipt),
+    audit: (receipt) => {
+      const normalized = { ...receipt, actor_id: receipt.player_id };
+      receipts.push(normalized);
+      applyReceiptToOnwardRoutes(normalized as never);
+    },
     findPlayerOnline: (_id: string): Player | null => null,
     issueTem: () => ({ outcome: 'none' }),
     getChronicle: () => [],
@@ -50,6 +57,12 @@ function context(options: { onwardRoutesAvailable?: boolean } = {}) {
   };
   return { ctx, receipts, sent };
 }
+
+const completedRookguard: RookguardQuestInput = {
+  tutorial: { move: true, chat: true, tem: true, gate: true, complete: true },
+  trainingComplete: true,
+  vocation: 'warden',
+};
 
 test('route actions reject before Rookguard completion without route side effects', async () => {
   const { ctx, receipts, sent } = context({ onwardRoutesAvailable: false });
@@ -183,6 +196,30 @@ test('Forgehold shipment investigation records quest progress without travel or 
   assert(result.payload?.travel_unlocked === false, 'Forgehold investigation payload must not unlock travel');
   assert(result.payload?.evidence_objects?.includes('charred_shipment_plate'), 'Forgehold investigation payload should name Charred Shipment Plate');
   assert(result.payload?.contradiction === 'departed / undeparted', 'Forgehold investigation payload should name contradiction');
+});
+
+test('onward route projection is derived from route receipts', async () => {
+  const { ctx } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:moonspire' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:interpret' });
+
+  const progress = getOnwardRouteReceiptProgress('p1');
+  const routes = buildOnwardRouteProgress(completedRookguard, progress);
+  const forgehold = routes.find((route) => route.route_id === 'forgehold_route_slice_v1');
+  const moonspire = routes.find((route) => route.route_id === 'moonspire_dream_gate_slice_v1');
+
+  assert(forgehold, 'Forgehold route projection missing');
+  assert(moonspire, 'Moonspire route projection missing');
+  assert(forgehold.completed_objective_ids.includes('forgehold_route_survey'), 'Forgehold survey should project complete');
+  assert(forgehold.completed_objective_ids.includes('forgehold_missing_shipment'), 'Forgehold shipment should project complete');
+  assert(forgehold.completed_objective_ids.includes('soulsteel_stabilization'), 'Soulsteel should project complete');
+  assert(moonspire.completed_objective_ids.includes('dream_gate_rumor'), 'Moonspire survey should project complete');
+  assert(moonspire.completed_objective_ids.includes('symbolic_puzzle_projection'), 'Dream interpretation should project complete');
+  assert(forgehold.next_objective.includes('Heartforge Trial'), 'Forgehold next objective should advance after Soulsteel');
+  assert(moonspire.next_objective.includes('Anchor the interpreted symbols'), 'Moonspire next objective should advance after interpretation');
 });
 
 console.log('\n✓ all route survey checks passed');

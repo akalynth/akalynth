@@ -284,7 +284,7 @@ export function ActionsPanel({
                 className={route.status === 'available' ? 'active' : ''}
                 title={`${route.next_objective} Source: ${route.source_drop}`}
               >
-                {route.status === 'available' ? 'Open' : 'Locked'}: {route.title}
+                {route.status === 'available' ? 'Open' : 'Locked'}: {route.title} ({route.completed_objective_ids.length}/{route.objectives.length})
               </i>
             ))}
           </div>

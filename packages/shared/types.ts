@@ -173,6 +173,7 @@ export interface OnwardRouteProgress {
   unlock_requirement: string;
   next_objective: string;
   objectives: OnwardRouteObjective[];
+  completed_objective_ids: string[];
   source_drop: string;
   receipt_actions: string[];
 }

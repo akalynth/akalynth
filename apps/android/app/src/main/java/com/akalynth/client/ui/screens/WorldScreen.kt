@@ -267,7 +267,7 @@ private fun OnwardRoutesPanel(
                 .distinct()
                 .joinToString(", ")
             Text(
-                text = "${if (open) "Open" else "Locked"}: ${route.title}",
+                text = "${if (open) "Open" else "Locked"}: ${route.title} (${route.completedObjectiveIds.size}/${route.objectives.size})",
                 style = MaterialTheme.typography.labelSmall,
                 color = if (open) ClassicShellColors.Good else ClassicShellColors.MutedText,
                 modifier = Modifier.testTag("WorldScreen_OnwardRoute_${route.routeId}")

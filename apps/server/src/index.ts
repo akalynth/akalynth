@@ -227,6 +227,7 @@ import {
   rookguardQuestObjective,
   type RookguardQuestInput,
 } from './world/rookguardQuest.js';
+import { getOnwardRouteReceiptProgress } from './world/onwardRoutes.js';
 import { buildSimLifeSnapshot } from './simulation/simLifeSnapshot.js';
 import { chronicleAppend } from './witness/chronicleAdapter.js';
 import { verifyRulebookOrExit } from './rulebook/verifyRulebook.js';
@@ -2729,7 +2730,10 @@ function playLoopFor(s: Session) {
     gateOpen,
     objective,
     rookguardQuest: buildRookguardQuestProgress(rookguardQuestInput),
-    onwardRoutes: buildOnwardRouteProgress(rookguardQuestInput),
+    onwardRoutes: buildOnwardRouteProgress(
+      rookguardQuestInput,
+      s.player ? getOnwardRouteReceiptProgress(s.player.id) : undefined
+    ),
     lastEvent: bloom.phase === 'idle' ? null : `witness_moth_bloom_${bloom.phase}`,
     ...(bloom.teaser ? { teaser: bloom.teaser } : {}),
   };
