@@ -297,6 +297,9 @@ async function main(): Promise<void> {
   res = await request('POST', '/v1/work/tick', { character_id: 'p_buyer', contract_id: contractId });
   check('work tick requires account session', res.status === 401 && res.body.error === 'not_authenticated');
 
+  res = await request('POST', '/v1/work/tick', { character_id: 'p_buyer', contract_id: contractId }, { cookie: cookieHeader(), 'x-csrf-token': 'bad' });
+  check('work tick requires matching csrf', res.status === 403 && res.body.error === 'csrf_failed');
+
   res = await request('POST', '/v1/work/tick', { character_id: 'p_buyer' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
   check('work tick requires contract id', res.status === 400 && res.body.error === 'contract_id_required');
 
@@ -326,6 +329,9 @@ async function main(): Promise<void> {
   res = await request('POST', '/v1/property/list', { character_id: 'p_buyer', property_id: 'Azura:H1', price_gold: 75 });
   check('property list requires account session', res.status === 401 && res.body.error === 'not_authenticated');
 
+  res = await request('POST', '/v1/property/list', { character_id: 'p_buyer', property_id: 'Azura:H1', price_gold: 75 }, { cookie: cookieHeader(), 'x-csrf-token': 'bad' });
+  check('property list requires matching csrf', res.status === 403 && res.body.error === 'csrf_failed');
+
   res = await request('POST', '/v1/property/list', { character_id: 'p_buyer', property_id: 'Azura:H1', price_gold: 75 }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
   check('property list succeeds for owner', res.status === 200 && getProperty('Azura:H1')?.status === 'listed');
   check('property list emitted property_listed receipt', receipts.at(-1)?.action === PROPERTY_LISTED_ACTION);
@@ -345,6 +351,9 @@ async function main(): Promise<void> {
 
   res = await request('POST', '/v1/property/unlist', { character_id: 'p_buyer', property_id: 'Azura:H1' });
   check('property unlist requires account session', res.status === 401 && res.body.error === 'not_authenticated');
+
+  res = await request('POST', '/v1/property/unlist', { character_id: 'p_buyer', property_id: 'Azura:H1' }, { cookie: cookieHeader(), 'x-csrf-token': 'bad' });
+  check('property unlist requires matching csrf', res.status === 403 && res.body.error === 'csrf_failed');
 }
 
 main().then(() => {
