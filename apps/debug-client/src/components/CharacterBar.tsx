@@ -60,9 +60,9 @@ export function CharacterBar({
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [worldId, setWorldId] = useState('');
+  const [worldId, setWorldId] = useState<CharacterCreateInput['world_id'] | ''>('');
   const [sex, setSex] = useState<CharacterSex>('male');
-  const [outfitId, setOutfitId] = useState('');
+  const [outfitId, setOutfitId] = useState<CharacterCreateInput['outfit_id'] | ''>('');
   const [selectedCharacterId, setSelectedCharacterId] = useState('');
   const outfitOptions = useMemo(
     () => catalog.outfits.filter((entry) => entry.sex === sex),
@@ -134,6 +134,11 @@ export function CharacterBar({
     }
     if (!trimmed) {
       setError('Name is required');
+      setBusy(false);
+      return;
+    }
+    if (!worldId || !outfitId) {
+      setError('World and outfit are required');
       setBusy(false);
       return;
     }
@@ -240,7 +245,7 @@ export function CharacterBar({
       <select
         className="character-bar-input"
         value={worldId}
-        onChange={(e) => setWorldId(e.target.value)}
+        onChange={(e) => setWorldId(e.target.value as CharacterCreateInput['world_id'])}
         disabled={busy || !catalog.loaded || catalog.loading}
         aria-label="character world"
       >
@@ -263,7 +268,7 @@ export function CharacterBar({
       <select
         className="character-bar-input"
         value={outfitId}
-        onChange={(e) => setOutfitId(e.target.value)}
+        onChange={(e) => setOutfitId(e.target.value as CharacterCreateInput['outfit_id'])}
         disabled={busy || !catalog.loaded || catalog.loading || !outfitOptions.length}
         aria-label="character outfit"
       >
