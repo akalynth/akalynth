@@ -332,6 +332,10 @@ async function main(): Promise<void> {
   check('property buy rejects character owned by another account', res.status === 404 && res.body.error === 'character_not_found');
   check('cross-account property buy emits no receipts', receipts.every((r) => r.action !== PROPERTY_PURCHASED_ACTION));
 
+  res = await request('POST', '/v1/property/buy', { character_id: 'p_buyer', property_id: 'Azura:H1' }, { cookie: cookieHeader(), 'x-csrf-token': 'bad' });
+  check('property buy requires matching csrf', res.status === 403 && res.body.error === 'csrf_failed');
+  check('auth/csrf rejected property buy emits no purchase receipt', receipts.every((r) => r.action !== PROPERTY_PURCHASED_ACTION));
+
   res = await request('POST', '/v1/property/buy', { character_id: 'p_buyer', property_id: 'Azura:H1' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
   check('property buy without gold is rejected', res.status === 409 && res.body.error === 'insufficient_gold');
   check('rejected property buy emitted no purchase receipt', receipts.every((r) => r.action !== PROPERTY_PURCHASED_ACTION));
