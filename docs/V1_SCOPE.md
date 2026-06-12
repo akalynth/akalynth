@@ -26,7 +26,7 @@ Define what v1 covers and what it explicitly does not. This prevents scope drift
 - Moderation system (Phase 7), appeals, bans, enforcement tooling
 - Witness UI (Phase 6) beyond docs/spec
 - Mail MMO system (doc only)
-- Property ownership beyond v0: taxation/upkeep, house customization, furniture, premium plot tiers (`house:estate`/`house:guild` capability gates), and the client/site/Android property views (deferred to PR B/C)
+- Property ownership beyond v0: taxation/upkeep, house customization, furniture, premium plot tiers (`house:estate`/`house:guild` capability gates), production proof for client/site/Android property views, and auction UI. Source-level fixed-price/resale property views may exist, but they are not a production release claim without named proof artifacts.
 - Any “constitutional freeze” guarantees not enforced by CI/verifiers
 - Cryptographic envelope verification for receipts (`verify:receipt-chain`) until PR2 lands
 
