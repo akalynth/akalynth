@@ -2,6 +2,7 @@ package com.akalynth.client
 
 import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -33,6 +34,7 @@ class CharacterCreateActivity : Activity() {
     private lateinit var emailInput: EditText
     private lateinit var passwordInput: EditText
     private lateinit var loginButton: Button
+    private lateinit var accountPortalButton: Button
     private lateinit var selectButton: Button
     private lateinit var createButton: Button
     private lateinit var progress: ProgressBar
@@ -109,6 +111,11 @@ class CharacterCreateActivity : Activity() {
         loginButton = Button(this).apply {
             text = "Sign In"
             setOnClickListener { onLoginTapped() }
+        }
+
+        accountPortalButton = Button(this).apply {
+            text = "Create / Verify Account"
+            setOnClickListener { openAccountPortal() }
         }
 
         characterAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, ArrayList<String>())
@@ -217,6 +224,7 @@ class CharacterCreateActivity : Activity() {
         root.addView(emailInput, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
         root.addView(passwordInput, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
         root.addView(loginButton, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+        root.addView(accountPortalButton, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
         root.addView(TextView(this).apply { text = "Existing characters"; textSize = 12f },
             LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
         root.addView(characterSpinner, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
@@ -279,6 +287,11 @@ class CharacterCreateActivity : Activity() {
                 }
             }
         })
+    }
+
+    private fun openAccountPortal() {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.PORTAL_ACCOUNT_URL))
+        startActivity(intent)
     }
 
     private fun onCreateTapped() {
@@ -599,6 +612,7 @@ class CharacterCreateActivity : Activity() {
         sexSpinner.isEnabled = hasAccount && !busy
         outfitSpinner.isEnabled = hasAccount && filteredOutfits.isNotEmpty() && !busy
         loginButton.isEnabled = !busy
+        accountPortalButton.isEnabled = !busy
         selectButton.isEnabled = hasAccount && !busy && selectedCharacterId != null
 
         val nameReady = nameInput.text?.toString()?.trim()?.isNotBlank() == true
