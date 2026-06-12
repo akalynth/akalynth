@@ -1280,8 +1280,9 @@ const handleAccount = makeAccountRouter({
 // account-gated character create/list/select. Reuses the core player+token
 // primitives via injection (createCharacterHandler + issuePlayTokenForPlayer,
 // both hoisted function declarations defined below). Privacy-bounded receipts.
+const characterStore = new CharacterStore(persist.db);
 const characterService = new CharacterService({
-  store: new CharacterStore(persist.db),
+  store: characterStore,
   mintCharacter: (name) => createCharacterHandler(name),
   issuePlayToken: (characterId) => issuePlayTokenForPlayer(characterId),
   emitReceipt: (e) =>
@@ -1299,10 +1300,9 @@ const handleCharacter = makeCharacterRouter({
   resolveAccount: (cookies) => accountService.sessionAccount(cookies),
   requireVerifiedForCreate: true,
 });
-const economyCharacterStore = new CharacterStore(persist.db);
 const handleEconomy = makeWebEconomyRouter({
   resolveAccount: (cookies) => accountService.sessionAccount(cookies),
-  findCharacter: (characterId) => economyCharacterStore.findById(characterId),
+  findCharacter: (characterId) => characterStore.findById(characterId),
   shopItems: SHOP_ITEMS,
   canAfford,
   getGoldBalance,
@@ -2198,6 +2198,12 @@ function resolveSessionMe(guest_token: string, expiredReason: string): SessionMe
     expires_at_ms: minted.expires_at_ms,
     ttl_ms_remaining,
   };
+}
+
+function mapForAccountCharacter(playerId: string): 'Rookguard' | 'Azura' {
+  const row = characterStore.findById(playerId);
+  if (row?.world_id === 'high_city') return 'Azura';
+  return 'Rookguard';
 }
 
 // Account character minting. This is internal plumbing for the account-gated
@@ -3182,16 +3188,19 @@ function processSessionQueue(s: Session, now: number) {
           });
         }
 
+        const loginMap = authToken ? mapForAccountCharacter(player_id) : 'Rookguard';
+        const spawn = worlds[loginMap].map.spawn;
+
         s.guestToken = guest_token ?? null;
-        s.currentMap = 'Rookguard';
-        s.tutorial = { move: false, chat: false, tem: false, gate: false, complete: false };
+        s.currentMap = loginMap;
+        s.tutorial = { move: false, chat: false, tem: false, gate: false, complete: loginMap === 'Azura' };
         s.ledgerHesitationArmed = false;
         s.ledgerHesitationDeathTs = null;
         s.player = {
           id: player_id,
           name,
-          x: worlds.Rookguard.map.spawn.x,
-          y: worlds.Rookguard.map.spawn.y,
+          x: spawn.x,
+          y: spawn.y,
           state: 'authenticated',
           status: 'alive',
           dead_until_ms: null,
