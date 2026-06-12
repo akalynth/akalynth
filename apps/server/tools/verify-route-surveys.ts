@@ -457,6 +457,39 @@ test('Soulsteel component mint records item and inventory receipts without walle
   assert(result.payload?.economy_impact === 'item_mint_only', 'Soulsteel mint payload economy impact mismatch');
 });
 
+test('Soulsteel component mint is idempotent after receipt-derived item mint', async () => {
+  const { ctx, receipts, sent } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:safety:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:gate:heartforge' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:ashglass' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:refine' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:mint' });
+  ctx.skillCooldowns.set('route:craft:mint', 0);
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:mint' });
+
+  const routeMints = receipts.filter((r) => r.action === SOULSTEEL_COMPONENT_MINTED_ACTION);
+  const itemMints = receipts.filter((r) => r.action === 'item_minted' && r.inputs.item_type === 'refined_soulsteel_component');
+  const inventoryAdds = receipts.filter((r) => r.action === 'item_added_to_inventory' && r.inputs.source === 'forgehold_route');
+  const mintResults = sent.filter((msg) =>
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as { type?: string }).type === 'skill_result' &&
+    (msg as { skill_id?: string }).skill_id === 'route:craft:mint'
+  ) as Array<{ success?: boolean; reason?: string }>;
+
+  assert(routeMints.length === 1, 'repeat Soulsteel mint must not emit a second route mint receipt');
+  assert(itemMints.length === 1, 'repeat Soulsteel mint must not emit a second item_minted receipt');
+  assert(inventoryAdds.length === 1, 'repeat Soulsteel mint must not add a second inventory item');
+  assert(mintResults.length === 2, 'repeat Soulsteel mint should return two skill results');
+  assert(mintResults[0]?.success === true, 'first Soulsteel mint should succeed');
+  assert(mintResults[1]?.success === false, 'second Soulsteel mint should fail');
+  assert(mintResults[1]?.reason === 'invalid_target', 'second Soulsteel mint should be rejected as invalid target');
+});
+
 test('Forgehold component settlement records valuation without wallet, item transfer, travel, heat, or penalty authority', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });

@@ -704,6 +704,7 @@ export function handleSoulsteelComponentMint(ctx: SkillContext): SkillResult {
   if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
   const routeProgress = ctx.getOnwardRouteProgress?.();
   if (!routeProgress?.soulsteelRefinementAuthorized) return { success: false, reason: 'invalid_target' };
+  if (routeProgress.soulsteelComponentMinted) return { success: false, reason: 'invalid_target' };
   if (!ctx.mintItemToInventory) return { success: false, reason: 'invalid_target' };
 
   const mintedAt = new Date().toISOString();
