@@ -267,6 +267,10 @@ async function main(): Promise<void> {
   check('shop purchase requires matching csrf', res.status === 403 && res.body.error === 'csrf_failed');
   check('auth/csrf rejected shop requests emit no receipts', receipts.length === 0);
 
+  res = await request('POST', '/v1/shop/purchase', { character_id: 'p_other', shop_key: 'healing_herb' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
+  check('shop purchase rejects character owned by another account', res.status === 404 && res.body.error === 'character_not_found');
+  check('cross-account shop purchase emits no receipts', receipts.length === 0);
+
   res = await request('POST', '/v1/shop/purchase', { character_id: 'p_buyer', shop_key: 'healing_herb' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
   check('shop purchase without gold is rejected', res.status === 409 && res.body.error === 'insufficient_gold');
   check('rejected shop purchase emitted no debit/mint receipts', receipts.every((r) => r.action !== WALLET_DEBIT_ACTION && r.action !== 'item_minted'));
@@ -304,6 +308,10 @@ async function main(): Promise<void> {
   check('work tick requires matching csrf', res.status === 403 && res.body.error === 'csrf_failed');
   check('auth/csrf rejected work tick emits no receipts', receipts.filter((r) => r.action === WORK_CONTRACT_TICK_RECORDED_ACTION).length === 0);
 
+  res = await request('POST', '/v1/work/tick', { character_id: 'p_other', contract_id: contractId }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
+  check('work tick rejects character owned by another account', res.status === 404 && res.body.error === 'character_not_found');
+  check('cross-account work tick emits no receipts', receipts.filter((r) => r.action === WORK_CONTRACT_TICK_RECORDED_ACTION).length === 0);
+
   res = await request('POST', '/v1/work/tick', { character_id: 'p_buyer' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
   check('work tick requires contract id', res.status === 400 && res.body.error === 'contract_id_required');
 
@@ -319,6 +327,10 @@ async function main(): Promise<void> {
   seedProperty('Azura:H1', 100);
   res = await request('POST', '/v1/property/buy', { character_id: 'p_buyer', property_id: 'Azura:H1' });
   check('property buy requires account session', res.status === 401 && res.body.error === 'not_authenticated');
+
+  res = await request('POST', '/v1/property/buy', { character_id: 'p_other', property_id: 'Azura:H1' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
+  check('property buy rejects character owned by another account', res.status === 404 && res.body.error === 'character_not_found');
+  check('cross-account property buy emits no receipts', receipts.every((r) => r.action !== PROPERTY_PURCHASED_ACTION));
 
   res = await request('POST', '/v1/property/buy', { character_id: 'p_buyer', property_id: 'Azura:H1' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
   check('property buy without gold is rejected', res.status === 409 && res.body.error === 'insufficient_gold');
