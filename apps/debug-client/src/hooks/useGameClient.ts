@@ -39,6 +39,12 @@ import type {
   ToastNotice,
   DeathRecap,
   LostItemCount,
+  CharacterCreateInput,
+  CharacterCatalog,
+  CharacterWorldOption,
+  CharacterOutfitOption,
+  CreateResult,
+  AccountSessionStatus,
 } from '../types';
 import { loadConfig } from '../config';
 
@@ -48,10 +54,24 @@ const ATTACK_COOLDOWN_MS = 1200;
 const RUNESTONE_TABLE_ID = 'rookguard_runestone_table_01';
 const MAX_CHAT = 50;
 const DEFAULT_RESPAWN_MS = 15_000;
+const CSRF_COOKIE = 'akalynth_csrf';
+const ACCOUNT_REQUIRED_MESSAGE = 'Sign in to an account before creating a character.';
+const ACCOUNT_EXPIRED_MESSAGE = 'Account session expired. Sign in again before creating a character.';
 
 function wsUrl(base: string): string {
   if (base.startsWith('ws://') || base.startsWith('wss://')) return base;
   return base.replace(/^http/, 'ws');
+}
+
+function readCookie(name: string): string {
+  if (typeof document === 'undefined') return '';
+  const parts = document.cookie ? document.cookie.split(';') : [];
+  for (const part of parts) {
+    const [rawName, ...rest] = part.trim().split('=');
+    if (rawName !== name) continue;
+    return decodeURIComponent((rest.join('=') || '').trim());
+  }
+  return '';
 }
 
 function httpUrl(base: string, path: string): string {
@@ -116,6 +136,26 @@ function parseTimestampMs(value: unknown): number {
   if (typeof value !== 'string') return 0;
   const parsed = Date.parse(value);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function isCharacterCatalogWorld(value: unknown): value is CharacterWorldOption {
+  return (
+    !!value &&
+    typeof value === 'object' &&
+    typeof (value as Record<string, unknown>).world_id === 'string' &&
+    typeof (value as Record<string, unknown>).name === 'string'
+  );
+}
+
+function isCharacterCatalogOutfit(value: unknown): value is CharacterOutfitOption {
+  const sex = (value as Record<string, unknown>).sex;
+  return (
+    !!value &&
+    typeof value === 'object' &&
+    typeof (value as Record<string, unknown>).outfit_id === 'string' &&
+    (sex === 'male' || sex === 'female') &&
+    (typeof (value as Record<string, unknown>).name === 'string')
+  );
 }
 
 function findOldestTimestamp(events: ChronicleEvent[]): string | null {
@@ -264,6 +304,19 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
   const moveTokens = useRef(MOVE_TOKENS_PER_SEC_MAX);
   const lastTokenRefillAt = useRef(performance.now());
   const diagFlip = useRef(false);
+  const [characterCatalog, setCharacterCatalog] = useState<CharacterCatalog>({
+    worlds: [],
+    outfits: [],
+    loading: false,
+    loaded: false,
+    error: null,
+  });
+  const [accountSession, setAccountSession] = useState<AccountSessionStatus>({
+    checking: false,
+    checked: false,
+    authenticated: false,
+    message: ACCOUNT_REQUIRED_MESSAGE,
+  });
 
   useEffect(() => {
     stateRef.current = state;
@@ -1166,6 +1219,94 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     [config.httpBase]
   );
 
+  const loadCharacterCatalog = useCallback(async (): Promise<CharacterCatalog> => {
+    setCharacterCatalog((prev) => ({ ...prev, loading: true, error: null }));
+    try {
+      const worldsUrl = httpUrl(config.httpBase, '/v1/worlds');
+      const outfitsUrl = httpUrl(config.httpBase, '/v1/outfits');
+      const [worldsResp, outfitsResp] = await Promise.all([
+        fetch(worldsUrl, { credentials: 'include' }),
+        fetch(outfitsUrl, { credentials: 'include' }),
+      ]);
+
+      const worldsBody = await worldsResp.json().catch(() => ({}));
+      const outfitsBody = await outfitsResp.json().catch(() => ({}));
+      if (!worldsResp.ok || !outfitsResp.ok) {
+        const bodyError = typeof worldsBody?.error === 'string'
+          ? worldsBody.error
+          : typeof outfitsBody?.error === 'string'
+            ? outfitsBody.error
+            : 'Could not load character setup options';
+        throw new Error(bodyError);
+      }
+
+      const worlds = Array.isArray(worldsBody?.worlds) ? worldsBody.worlds.filter(isCharacterCatalogWorld) : [];
+      const outfits = Array.isArray(outfitsBody?.outfits)
+        ? outfitsBody.outfits.filter(isCharacterCatalogOutfit)
+        : [];
+      const next: CharacterCatalog = {
+        worlds,
+        outfits,
+        loading: false,
+        loaded: true,
+        error: null,
+      };
+      setCharacterCatalog(next);
+      return next;
+    } catch (err) {
+      const next: CharacterCatalog = {
+        worlds: [],
+        outfits: [],
+        loading: false,
+        loaded: false,
+        error: (err as Error).message || 'Could not load character options',
+      };
+      setCharacterCatalog(next);
+      return next;
+    }
+  }, [config.httpBase]);
+
+  const refreshAccountSession = useCallback(async (): Promise<AccountSessionStatus> => {
+    const csrf = readCookie(CSRF_COOKIE);
+    if (!csrf) {
+      const next: AccountSessionStatus = {
+        checking: false,
+        checked: true,
+        authenticated: false,
+        message: ACCOUNT_REQUIRED_MESSAGE,
+      };
+      setAccountSession(next);
+      return next;
+    }
+
+    setAccountSession((prev) => ({ ...prev, checking: true, message: null }));
+    try {
+      const resp = await fetch(httpUrl(config.httpBase, '/v1/accounts/me'), {
+        method: 'GET',
+        credentials: 'include',
+      });
+      const body = await resp.json().catch(() => null);
+      const ok = resp.ok && body?.ok !== false && !!body?.account;
+      const next: AccountSessionStatus = {
+        checking: false,
+        checked: true,
+        authenticated: ok,
+        message: ok ? null : ACCOUNT_EXPIRED_MESSAGE,
+      };
+      setAccountSession(next);
+      return next;
+    } catch (err) {
+      const next: AccountSessionStatus = {
+        checking: false,
+        checked: true,
+        authenticated: false,
+        message: (err as Error).message || 'Could not confirm account session',
+      };
+      setAccountSession(next);
+      return next;
+    }
+  }, [config.httpBase]);
+
   const boot = useCallback(
     async (map: MapName = mapName) => {
       try {
@@ -1222,23 +1363,61 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
   // then reconnect as that character. Returns an error string for the UI on
   // failure (name taken / invalid / rate limited).
   const createCharacter = useCallback(
-    async (name: string): Promise<{ ok: boolean; error?: string }> => {
+    async ({ name, world_id, sex, outfit_id }: CharacterCreateInput): Promise<CreateResult> => {
       const trimmed = name.trim();
       if (!trimmed) return { ok: false, error: 'Name is required' };
+      if (!world_id || !outfit_id || (sex !== 'male' && sex !== 'female')) {
+        return { ok: false, error: 'Name, world, sex, and outfit are required' };
+      }
+
+      const account = accountSession.authenticated ? accountSession : await refreshAccountSession();
+      if (!account.authenticated) {
+        return { ok: false, error: account.message ?? ACCOUNT_REQUIRED_MESSAGE };
+      }
+
+      const catalog = characterCatalog.loaded ? characterCatalog : await loadCharacterCatalog();
+      const outfits = catalog.outfits.filter((entry) => entry.sex === sex);
+      if (outfits.length === 0) {
+        return { ok: false, error: 'No outfits available for this sex' };
+      }
+      if (!outfits.some((entry) => entry.outfit_id === outfit_id)) {
+        return { ok: false, error: 'Selected outfit does not match selected sex' };
+      }
+
       try {
-        const url = httpUrl(config.httpBase, '/v1/characters/create');
+        const csrf = readCookie(CSRF_COOKIE);
+        const headers: Record<string, string> = {
+          'content-type': 'application/json',
+        };
+        if (csrf) headers['x-csrf-token'] = csrf;
+
+        const url = httpUrl(config.httpBase, '/v1/characters');
         const resp = await fetch(url, {
           method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ name: trimmed }),
+          credentials: 'include',
+          headers,
+          body: JSON.stringify({
+            name: trimmed,
+            world_id,
+            sex,
+            outfit_id,
+          }),
         });
         const body = await resp.json().catch(() => null);
         if (!resp.ok || !body || body.ok === false) {
-          return { ok: false, error: (body && body.message) || 'Could not create character' };
+          if (resp.status === 401) return { ok: false, error: ACCOUNT_REQUIRED_MESSAGE };
+          if (resp.status === 403) return { ok: false, error: ACCOUNT_EXPIRED_MESSAGE };
+          return {
+            ok: false,
+            error:
+              (body && typeof body.message === 'string' && body.message) ||
+              (body && typeof body.error === 'string' && body.error) ||
+              'Could not create character',
+          };
         }
         saveIdentity({
-          playerId: body.player_id,
-          name: body.name,
+          playerId: typeof body.character?.character_id === 'string' ? body.character.character_id : '',
+          name: typeof body.character?.name === 'string' ? body.character.name : trimmed,
           token: body.token,
           expiresAt: typeof body.expires_at === 'number' ? body.expires_at : Date.now(),
         });
@@ -1252,7 +1431,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
         return { ok: false, error: (err as Error).message };
       }
     },
-    [boot, config.httpBase, mapName]
+    [accountSession, boot, characterCatalog, loadCharacterCatalog, mapName, refreshAccountSession]
   );
 
   // Clear the stored character token and fall back to a guest session.
@@ -1297,6 +1476,14 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     };
   }, [boot, mapName, resetSessionState]);
 
+  useEffect(() => {
+    void loadCharacterCatalog();
+  }, [loadCharacterCatalog]);
+
+  useEffect(() => {
+    void refreshAccountSession();
+  }, [refreshAccountSession]);
+
   const api: GameClientApi = {
     sendMove,
     releaseMove,
@@ -1321,6 +1508,9 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     relog,
     createCharacter,
     signOut,
+    characterCatalog,
+    accountSession,
+    refreshAccountSession,
     openChat,
     closeChat,
     buyHouse,

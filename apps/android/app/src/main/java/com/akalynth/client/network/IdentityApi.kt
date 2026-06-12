@@ -14,12 +14,65 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Akalynth Identity API
- * POST /v1/characters/create
+ * Handles account character flow and auth helpers.
  */
 class IdentityApi(
     private val baseUrl: String = BuildConfig.HTTP_BASE_URL
 ) {
-    data class CharacterCreateRequest(val name: String)
+    private val client = OkHttpClient.Builder()
+        .callTimeout(10, TimeUnit.SECONDS)
+        .build()
+
+    private val sessionCookies = mutableMapOf<String, String>()
+    private var csrfToken: String = ""
+
+    private val endpoint = baseUrl.trimEnd('/')
+
+    private companion object {
+        private const val SESSION_COOKIE = "akalynth_session"
+        private const val CSRF_COOKIE = "akalynth_csrf"
+        private const val ACCOUNT_CREATE_PATH = "/v1/characters"
+        private const val LOGIN_PATH = "/v1/accounts/login"
+        private const val WORLDS_PATH = "/v1/worlds"
+        private const val OUTFITS_PATH = "/v1/outfits"
+    }
+
+    data class World(
+        val worldId: String,
+        val name: String
+    )
+
+    data class Outfit(
+        val outfitId: String,
+        val sex: String,
+        val name: String
+    )
+
+    data class Account(
+        val accountId: String,
+        val emailVerified: Boolean
+    )
+
+    sealed class LoginResult {
+        data class Success(
+            val account: Account,
+            val csrfToken: String
+        ) : LoginResult()
+
+        data class Error(
+            val code: String,
+            val message: String
+        ) : LoginResult()
+    }
+
+    interface LoginCallback {
+        fun onResult(result: LoginResult)
+    }
+
+    interface CatalogCallback<T> {
+        fun onSuccess(items: List<T>)
+        fun onError(code: String, message: String)
+    }
 
     sealed class CharacterCreateResult {
         data class Success(
@@ -72,56 +125,250 @@ class IdentityApi(
         fun onResult(result: PrincipalResult)
     }
 
-    private val client = OkHttpClient.Builder()
-        .callTimeout(10, TimeUnit.SECONDS)
-        .build()
-
-    fun createCharacter(name: String, callback: CreateCallback) {
-        val url = "${baseUrl.trimEnd('/')}/v1/characters/create"
+    fun createCharacter(name: String, worldId: String, sex: String, outfitId: String, callback: CreateCallback) {
+        if (!hasAccountSession()) {
+            callback.onResult(
+                CharacterCreateResult.Error(
+                    code = "not_authenticated",
+                    message = "Sign in required for account character creation."
+                )
+            )
+            return
+        }
         val json = JSONObject().apply {
             put("name", name)
+            put("world_id", worldId)
+            put("sex", sex)
+            put("outfit_id", outfitId)
+        }
+        postJson(
+            path = ACCOUNT_CREATE_PATH,
+            json = json,
+            callback = callback
+        ) { obj ->
+            parseAccountCharacterResponse(obj)
+        }
+    }
+
+    private fun parseAccountCharacterResponse(obj: JSONObject): CharacterCreateResult {
+        val character = obj.optJSONObject("character")
+        return CharacterCreateResult.Success(
+            playerId = character?.optString("character_id") ?: obj.optString("player_id"),
+            name = character?.optString("name") ?: obj.optString("name"),
+            token = obj.optString("token"),
+            issuedAt = obj.optLong("issued_at", 0L),
+            expiresAt = obj.optLong("expires_at")
+        )
+    }
+
+
+    fun login(email: String, password: String, callback: LoginCallback) {
+        if (email.isBlank() || password.isBlank()) {
+            callback.onResult(LoginResult.Error(code = "invalid_input", message = "Email and password are required."))
+            return
+        }
+        val url = "$endpoint$LOGIN_PATH"
+        val json = JSONObject().apply {
+            put("email", email)
+            put("password", password)
         }
         val body = json.toString()
             .toRequestBody("application/json; charset=utf-8".toMediaType())
-
         val request = Request.Builder()
             .url(url)
             .post(body)
             .build()
-
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                callback.onResult(
-                    CharacterCreateResult.Error(
-                        code = "network_error",
-                        message = e.message ?: "Network error"
-                    )
-                )
+                callback.onResult(LoginResult.Error(code = "network_error", message = e.message ?: "Network error"))
             }
 
             override fun onResponse(call: Call, response: Response) {
                 response.use {
                     val raw = it.body?.string() ?: ""
                     val obj = runCatching { JSONObject(raw) }.getOrNull()
+                    val setCookies = it.headers("Set-Cookie")
+                    if (setCookies.isNotEmpty()) {
+                        storeCookies(setCookies)
+                    }
 
                     if (it.isSuccessful && obj != null && obj.optBoolean("ok", false)) {
+                        val accountObj = obj.optJSONObject("account")
+                        val csrf = obj.optString("csrf_token", "").ifBlank { csrfToken }
+                        if (csrf.isNotBlank()) {
+                            csrfToken = csrf
+                        }
                         callback.onResult(
-                            CharacterCreateResult.Success(
-                                playerId = obj.optString("player_id"),
-                                name = obj.optString("name"),
-                                token = obj.optString("token"),
-                                issuedAt = obj.optLong("issued_at"),
-                                expiresAt = obj.optLong("expires_at")
+                            LoginResult.Success(
+                                account = Account(
+                                    accountId = accountObj?.optString("account_id") ?: "",
+                                    emailVerified = accountObj?.optBoolean("email_verified", false) == true
+                                ),
+                                csrfToken = csrf
                             )
                         )
                         return
                     }
 
-                    val code = obj?.optString("code")?.takeIf { s -> s.isNotBlank() }
+                    val code = obj?.optString("error")?.takeIf { s -> s.isNotBlank() }
+                        ?: obj?.optString("code")?.takeIf { s -> s.isNotBlank() }
                         ?: "http_${it.code}"
                     val message = obj?.optString("message")?.takeIf { s -> s.isNotBlank() }
+                        ?: obj?.optString("error")?.takeIf { s -> s.isNotBlank() }
                         ?: "Request failed"
-                    callback.onResult(CharacterCreateResult.Error(code, message))
+                    callback.onResult(LoginResult.Error(code, message))
+                }
+            }
+        })
+    }
+
+    fun loadWorlds(callback: CatalogCallback<World>) {
+        fetchCatalog(
+            path = WORLDS_PATH,
+            parser = { obj ->
+                val arr = obj.optJSONArray("worlds") ?: return@fetchCatalog emptyList<World>()
+                val out = ArrayList<World>(arr.length())
+                for (i in 0 until arr.length()) {
+                    val entry = arr.getJSONObject(i)
+                    out.add(World(worldId = entry.optString("world_id"), name = entry.optString("name")))
+                }
+                out
+            },
+            callback = callback,
+        )
+    }
+
+    fun loadOutfits(callback: CatalogCallback<Outfit>) {
+        fetchCatalog(
+            path = OUTFITS_PATH,
+            parser = { obj ->
+                val arr = obj.optJSONArray("outfits") ?: return@fetchCatalog emptyList<Outfit>()
+                val out = ArrayList<Outfit>(arr.length())
+                for (i in 0 until arr.length()) {
+                    val entry = arr.getJSONObject(i)
+                    out.add(
+                        Outfit(
+                            outfitId = entry.optString("outfit_id"),
+                            sex = entry.optString("sex"),
+                            name = entry.optString("name")
+                        )
+                    )
+                }
+                out
+            },
+            callback = callback,
+        )
+    }
+
+    fun hasAccountSession(): Boolean = getSessionCookie().isNotBlank() && csrfToken.isNotBlank()
+
+    private fun getSessionCookie(): String = sessionCookies[SESSION_COOKIE]?.trim().orEmpty()
+    private fun getCsrfCookie(): String = sessionCookies[CSRF_COOKIE]?.trim().orEmpty()
+
+    private fun storeCookies(headers: List<String>) {
+        headers.forEach { header ->
+            val first = header.substringBefore(';')
+            val idx = first.indexOf('=')
+            if (idx <= 0) return@forEach
+            val name = first.substring(0, idx).trim()
+            val value = first.substring(idx + 1).trim()
+            when (name) {
+                SESSION_COOKIE -> sessionCookies[name] = value
+                CSRF_COOKIE -> {
+                    csrfToken = value
+                    sessionCookies[name] = value
+                }
+            }
+        }
+    }
+
+    private fun buildCookieHeader(): String {
+        if (sessionCookies.isEmpty()) return ""
+        return sessionCookies.entries.joinToString("; ") { "${it.key}=${it.value}" }
+    }
+
+    private fun postJson(
+        path: String,
+        json: JSONObject,
+        callback: CreateCallback,
+        parser: (JSONObject) -> CharacterCreateResult,
+        onError: (Pair<String, String>) -> Unit = { fallback ->
+            callback.onResult(CharacterCreateResult.Error(fallback.first, fallback.second))
+        }
+    ) {
+        val body = json.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
+        val requestBuilder = Request.Builder()
+            .url("$endpoint$path")
+            .post(body)
+            .header("Content-Type", "application/json; charset=utf-8")
+            .header("Accept", "application/json")
+        val cookieHeader = buildCookieHeader()
+        if (cookieHeader.isNotEmpty()) requestBuilder.header("Cookie", cookieHeader)
+        val csrf = csrfToken.ifBlank { getCsrfCookie() }
+        if (csrf.isNotBlank()) requestBuilder.header("x-csrf-token", csrf)
+
+        val request = requestBuilder.build()
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                onError(Pair("network_error", e.message ?: "Network error"))
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    val setCookies = it.headers("Set-Cookie")
+                    if (setCookies.isNotEmpty()) {
+                        storeCookies(setCookies)
+                    }
+                    val raw = it.body?.string() ?: ""
+                    val obj = runCatching { JSONObject(raw) }.getOrNull()
+                    if (it.isSuccessful && obj != null && obj.optBoolean("ok", false)) {
+                        callback.onResult(parser(obj))
+                        return
+                    }
+
+                    val code = obj?.optString("error")?.takeIf { s -> s.isNotBlank() }
+                        ?: obj?.optString("code")?.takeIf { s -> s.isNotBlank() }
+                        ?: "http_${it.code}"
+                    val message = obj?.optString("message")?.takeIf { s -> s.isNotBlank() }
+                        ?: obj?.optString("error")?.takeIf { s -> s.isNotBlank() }
+                        ?: "Request failed"
+                    onError(Pair(code, message))
+                }
+            }
+        })
+    }
+
+    private fun <T> fetchCatalog(
+        path: String,
+        parser: (JSONObject) -> List<T>,
+        callback: CatalogCallback<T>
+    ) {
+        val request = Request.Builder()
+            .url("$endpoint$path")
+            .get()
+            .build()
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                callback.onError("network_error", e.message ?: "Network error")
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    val raw = it.body?.string() ?: ""
+                    val obj = runCatching { JSONObject(raw) }.getOrNull()
+                    if (!it.isSuccessful || obj == null) {
+                        callback.onError(
+                            "http_${it.code}",
+                            obj?.optString("error") ?: "Request failed"
+                        )
+                        return
+                    }
+
+                    runCatching { parser(obj) }
+                        .onSuccess { callback.onSuccess(it) }
+                        .onFailure {
+                            callback.onError("parse_error", "Unexpected response from catalog API.")
+                        }
                 }
             }
         })

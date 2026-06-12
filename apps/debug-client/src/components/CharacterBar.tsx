@@ -1,5 +1,11 @@
-import { useState, type FormEvent } from 'react';
-import type { SessionInfo } from '../types';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import type {
+  AccountSessionStatus,
+  CharacterCatalog,
+  CharacterCreateInput,
+  CharacterSex,
+  SessionInfo,
+} from '../types';
 
 // Scoped styles injected once (kept out of the shared index.css).
 const STYLE_ID = 'character-bar-styles';
@@ -16,14 +22,18 @@ if (typeof document !== 'undefined' && !document.getElementById(STYLE_ID)) {
     .character-bar-btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .character-bar--signed .character-bar-btn { background: linear-gradient(180deg,#423f39,#1f1f1d); color: #f0c83c; }
     .character-bar-error { width: 100%; font-size: 11px; color: #ff6b62; text-shadow: 0 1px #050505; }
+    .character-bar-helper { width: 100%; font-size: 11px; color: #d7cab0; text-shadow: 0 1px #050505; }
   `;
   document.head.appendChild(el);
 }
 
 interface CharacterBarProps {
   session: SessionInfo;
-  onCreate: (name: string) => Promise<{ ok: boolean; error?: string }>;
+  onCreate: (input: CharacterCreateInput) => Promise<{ ok: boolean; error?: string }>;
   onSignOut: () => void;
+  catalog: CharacterCatalog;
+  accountSession: AccountSessionStatus;
+  onRefreshAccountSession: () => Promise<AccountSessionStatus>;
 }
 
 /**
@@ -32,10 +42,39 @@ interface CharacterBarProps {
  * mints a signed token and reconnects as that character. Guest play remains the
  * default — this bar is purely additive.
  */
-export function CharacterBar({ session, onCreate, onSignOut }: CharacterBarProps) {
+export function CharacterBar({
+  session,
+  onCreate,
+  onSignOut,
+  catalog,
+  accountSession,
+  onRefreshAccountSession,
+}: CharacterBarProps) {
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [worldId, setWorldId] = useState('');
+  const [sex, setSex] = useState<CharacterSex>('male');
+  const [outfitId, setOutfitId] = useState('');
+  const outfitOptions = useMemo(
+    () => catalog.outfits.filter((entry) => entry.sex === sex),
+    [catalog.outfits, sex]
+  );
+
+  useEffect(() => {
+    if (!catalog.worlds.length) return;
+    if (catalog.worlds.some((world) => world.world_id === worldId)) return;
+    setWorldId(catalog.worlds[0].world_id);
+  }, [catalog.worlds, worldId]);
+
+  useEffect(() => {
+    if (!outfitOptions.length) {
+      setOutfitId('');
+      return;
+    }
+    if (outfitOptions.some((outfit) => outfit.outfit_id === outfitId)) return;
+    setOutfitId(outfitOptions[0].outfit_id);
+  }, [outfitOptions, outfitId]);
 
   if (session.authenticated) {
     return (
@@ -54,18 +93,56 @@ export function CharacterBar({ session, onCreate, onSignOut }: CharacterBarProps
     if (busy) return;
     setBusy(true);
     setError(null);
-    const result = await onCreate(name);
+    const trimmed = name.trim();
+    if (!accountSession.authenticated) {
+      const next = await onRefreshAccountSession();
+      if (!next.authenticated) {
+        setError(next.message ?? 'Sign in to an account before creating a character');
+        setBusy(false);
+        return;
+      }
+    }
+    if (!trimmed) {
+      setError('Name is required');
+      setBusy(false);
+      return;
+    }
+    const result = await onCreate({
+      name: trimmed,
+      world_id: worldId,
+      sex,
+      outfit_id: outfitId,
+    });
     setBusy(false);
     if (result.ok) {
       setName('');
+      if (outfitOptions[0]?.outfit_id) {
+        setOutfitId(outfitOptions[0].outfit_id);
+      }
     } else {
       setError(result.error ?? 'Could not create character');
     }
   };
 
+  const canCreate =
+    !busy &&
+    !!catalog.loaded &&
+    !catalog.loading &&
+    accountSession.authenticated &&
+    name.trim().length > 0 &&
+    !!worldId &&
+    !!outfitId;
+
+  const accountHelper = accountSession.authenticated
+    ? 'Account session ready'
+    : accountSession.checking
+      ? 'Checking account session'
+      : accountSession.message ?? 'Sign in to an account before creating a character';
+
   return (
     <form className="character-bar" aria-label="create character" onSubmit={submit}>
-      <span className="character-bar-kicker">Guest · create a character</span>
+      <span className="character-bar-kicker">Account session required · create a character</span>
+      <span className="character-bar-helper">{accountHelper}</span>
       <input
         className="character-bar-input"
         type="text"
@@ -76,14 +153,65 @@ export function CharacterBar({ session, onCreate, onSignOut }: CharacterBarProps
         disabled={busy}
         aria-label="character name"
       />
-      <button type="submit" className="character-bar-btn" disabled={busy || name.trim().length === 0}>
-        {busy ? 'Creating…' : 'Create & play'}
+      <select
+        className="character-bar-input"
+        value={worldId}
+        onChange={(e) => setWorldId(e.target.value)}
+        disabled={busy || !catalog.loaded || catalog.loading}
+        aria-label="character world"
+      >
+        {catalog.worlds.map((world) => (
+          <option key={world.world_id} value={world.world_id}>
+            {world.name}
+          </option>
+        ))}
+      </select>
+      <select
+        className="character-bar-input"
+        value={sex}
+        onChange={(e) => setSex(e.target.value as CharacterSex)}
+        disabled={busy || !catalog.loaded || catalog.loading}
+        aria-label="character sex"
+      >
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+      </select>
+      <select
+        className="character-bar-input"
+        value={outfitId}
+        onChange={(e) => setOutfitId(e.target.value)}
+        disabled={busy || !catalog.loaded || catalog.loading || !outfitOptions.length}
+        aria-label="character outfit"
+      >
+        {outfitOptions.map((outfit) => (
+          <option key={outfit.outfit_id} value={outfit.outfit_id}>
+            {outfit.name}
+          </option>
+        ))}
+      </select>
+      <button
+        type="submit"
+        className="character-bar-btn"
+        disabled={!canCreate}
+      >
+        {busy ? 'Creating...' : accountSession.authenticated ? 'Create & play' : 'Sign in first'}
       </button>
+      {!accountSession.authenticated && (
+        <button
+          type="button"
+          className="character-bar-btn"
+          onClick={() => void onRefreshAccountSession()}
+          disabled={busy || accountSession.checking}
+        >
+          Check session
+        </button>
+      )}
       {error && (
         <span className="character-bar-error" role="alert">
           {error}
         </span>
       )}
+      {catalog.error && !error && <span className="character-bar-error" role="alert">{catalog.error}</span>}
     </form>
   );
 }

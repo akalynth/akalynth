@@ -19,7 +19,14 @@ import { BackpackSheet } from './components/BackpackSheet';
 import { ProofSheet } from './components/ProofSheet';
 import { loadConfig } from './config';
 import { highCityVisualLandmarksForMap } from './data/highCityVisualLandmarks';
-import type { ConnectionState, SessionInfo, UiStage } from './types';
+import type {
+  AccountSessionStatus,
+  CharacterCatalog,
+  CharacterCreateInput,
+  ConnectionState,
+  SessionInfo,
+  UiStage,
+} from './types';
 
 type ChronicleGroup = { day: string; items: ChronicleEvent[] };
 
@@ -223,7 +230,10 @@ interface MobilePlayEntryProps {
   stage: UiStage['stage'];
   conn: ConnectionState;
   hasWorldPlayer: boolean;
-  onCreate: (name: string) => Promise<{ ok: boolean; error?: string }>;
+  characterCatalog: CharacterCatalog;
+  accountSession: AccountSessionStatus;
+  onCreate: (input: CharacterCreateInput) => Promise<{ ok: boolean; error?: string }>;
+  onRefreshAccountSession: () => Promise<AccountSessionStatus>;
   onSignOut: () => void;
   onEnterPlay: () => void;
 }
@@ -233,7 +243,10 @@ function MobilePlayEntry({
   stage,
   conn,
   hasWorldPlayer,
+  characterCatalog,
+  accountSession,
   onCreate,
+  onRefreshAccountSession,
   onSignOut,
   onEnterPlay,
 }: MobilePlayEntryProps) {
@@ -251,7 +264,10 @@ function MobilePlayEntry({
       </div>
       <CharacterBar
         session={session}
+        catalog={characterCatalog}
+        accountSession={accountSession}
         onCreate={onCreate}
+        onRefreshAccountSession={onRefreshAccountSession}
         onSignOut={onSignOut}
       />
       {stage < 1 && (
@@ -678,7 +694,10 @@ function DebugApp() {
               <span>{currentMapDisplayName}</span>
               <CharacterBar
                 session={state.session}
+                catalog={api.characterCatalog}
+                accountSession={api.accountSession}
                 onCreate={api.createCharacter}
+                onRefreshAccountSession={api.refreshAccountSession}
                 onSignOut={api.signOut}
               />
             </div>
@@ -709,7 +728,10 @@ function DebugApp() {
               stage={state.ui.stage}
               conn={state.conn}
               hasWorldPlayer={Boolean(state.world.me)}
+              characterCatalog={api.characterCatalog}
+              accountSession={api.accountSession}
               onCreate={api.createCharacter}
+              onRefreshAccountSession={api.refreshAccountSession}
               onSignOut={api.signOut}
               onEnterPlay={() => api.setStage(1)}
             />
