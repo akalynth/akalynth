@@ -298,12 +298,16 @@ private fun OnwardRoutesPanel(
             val open = route.status == "available"
             val completed = route.completedObjectiveIds.toSet()
             val nextObjectiveId = route.objectives.firstOrNull { objective -> !completed.contains(objective.id) }?.id
+            val routeStepObjectives = route.objectives.filter { objective ->
+                objective.system != "ui" && objective.system != "android"
+            }
+            val routeStepCompleted = routeStepObjectives.count { objective -> completed.contains(objective.id) }
             val systems = route.objectives
                 .map { objective -> objective.system }
                 .distinct()
                 .joinToString(", ")
             Text(
-                text = "${if (open) "Open" else "Locked"}: ${route.title} (${route.completedObjectiveIds.size}/${route.objectives.size})",
+                text = "${if (open) "Open" else "Locked"}: ${route.title} ($routeStepCompleted/${routeStepObjectives.size})",
                 style = MaterialTheme.typography.labelSmall,
                 color = if (open) ClassicShellColors.Good else ClassicShellColors.MutedText,
                 modifier = Modifier.testTag("WorldScreen_OnwardRoute_${route.routeId}")

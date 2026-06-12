@@ -328,6 +328,8 @@ export function ActionsPanel({
             {onwardRoutes.map((route) => {
               const completed = new Set(route.completed_objective_ids);
               const nextObjectiveId = route.objectives.find((objective) => !completed.has(objective.id))?.id ?? null;
+              const routeStepObjectives = route.objectives.filter((objective) => objective.system !== 'ui' && objective.system !== 'android');
+              const routeStepCompleted = routeStepObjectives.filter((objective) => completed.has(objective.id)).length;
               return (
                 <article
                   key={route.route_id}
@@ -335,7 +337,7 @@ export function ActionsPanel({
                   title={`Source: ${route.source_drop}`}
                 >
                   <strong>
-                    {route.status === 'available' ? 'Open' : 'Locked'}: {route.title} ({route.completed_objective_ids.length}/{route.objectives.length})
+                    {route.status === 'available' ? 'Open' : 'Locked'}: {route.title} ({routeStepCompleted}/{routeStepObjectives.length})
                   </strong>
                   <span>{route.next_objective}</span>
                   <ul>
