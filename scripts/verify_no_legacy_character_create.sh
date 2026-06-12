@@ -246,6 +246,8 @@ for web_economy_literal in \
   "cross-account work start emits no receipts" \
   "work start requires matching csrf" \
   "auth/csrf rejected work start emits no receipts" \
+  "work start requires character id" \
+  "missing-character work start emits no receipts" \
   "work tick requires account session" \
   "no-session work tick emits no receipts" \
   "work tick requires matching csrf" \

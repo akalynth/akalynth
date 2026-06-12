@@ -305,6 +305,10 @@ async function main(): Promise<void> {
   check('work start requires matching csrf', res.status === 403 && res.body.error === 'csrf_failed');
   check('auth/csrf rejected work start emits no receipts', receipts.filter((r) => r.action === WORK_CONTRACT_STARTED_ACTION).length === 0);
 
+  res = await request('POST', '/v1/work/start', {}, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
+  check('work start requires character id', res.status === 400 && res.body.error === 'character_id_required');
+  check('missing-character work start emits no receipts', receipts.filter((r) => r.action === WORK_CONTRACT_STARTED_ACTION).length === 0);
+
   res = await request('POST', '/v1/work/start', { character_id: 'p_buyer' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
   const contractId = res.body.contract_id as string;
   check('work start succeeds', res.status === 200 && res.body.ok === true && typeof contractId === 'string' && contractId.startsWith('wc_'));
