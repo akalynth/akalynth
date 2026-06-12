@@ -66,6 +66,15 @@ ticks_observed, ticks_required, remaining_ms, completed, credited_gold?,
 balance_gold? }`. Failed starts/ticks return `{ ok: false, error }` and do not
 grant browser-local authority.
 
+Simulation life viewer snapshots live on the HTTP control plane under
+`/v1/sim/snapshot`. This endpoint is additive and read-only. It does not add a
+new WebSocket message type and does not accept client truth. The response is a
+server-generated deterministic sim timeline for the public sim dashboard:
+visible agent positions, roles, intents, gold, inventory counts, timeline
+frames, first-five-minute plan steps, and hash-linked simulated receipt records.
+Clients may pause or timelapse through returned frames, but must not submit
+positions, inventory, gold, or receipt claims back to the server.
+
 Server messages may include optional fields for UI context. Clients should tolerate unknown additional fields, but they should not treat unknown message types as valid gameplay authority.
 
 ## Android Subset Caveat

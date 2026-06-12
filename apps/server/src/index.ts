@@ -219,6 +219,7 @@ import {
   startWitnessMothBloom,
   witnessMothBloomPublicState,
 } from './world/world-events.js';
+import { buildSimLifeSnapshot } from './simulation/simLifeSnapshot.js';
 import { chronicleAppend } from './witness/chronicleAdapter.js';
 import { verifyRulebookOrExit } from './rulebook/verifyRulebook.js';
 import {
@@ -281,6 +282,7 @@ const DEFAULT_WEBSITE_ORIGINS = [
   'https://akalynth.com',
   'https://www.akalynth.com',
   'https://beta.akalynth.com',
+  'https://sim.akalynth.com',
 ] as const;
 const ACCOUNT_CORS_ORIGINS = parseCorsOrigins(process.env.ACCOUNT_CORS_ORIGINS, DEFAULT_WEBSITE_ORIGINS);
 const CORS_POLICY: CorsPolicy = {
@@ -2385,6 +2387,10 @@ const httpServer = http.createServer((req, res) => {
         landmarks: w.map.landmarks,
       };
     },
+    getSimSnapshot: () => buildSimLifeSnapshot([
+      { name: 'Rookguard', map: worlds.Rookguard.map },
+      { name: 'Azura', map: worlds.Azura.map },
+    ]),
     getTransparency: () => ({
       version: VERSION,
       server_version: VERSION,

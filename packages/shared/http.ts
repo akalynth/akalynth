@@ -316,6 +316,89 @@ export interface WorldStateResponse {
 export type WorldStateResult = WorldStateResponse | { error: string; status: number };
 
 // ============================================================================
+// Simulation Life Viewer API (public, read-only, non-authoritative)
+// ============================================================================
+
+export type SimLifeRole = 'worker' | 'homesteader' | 'merchant';
+export type SimLifeSpeed = 0 | 1 | 10 | 100;
+
+export interface SimLifeReceiptLink {
+  sequence: number;
+  timestamp: string;
+  action: string;
+  actor_id: string;
+  event_hash: string;
+  prev_hash: string;
+  inputs_hash: string;
+  outputs_hash: string;
+  result: string;
+}
+
+export interface SimLifeAgentSnapshot {
+  agent_id: string;
+  name: string;
+  role: SimLifeRole;
+  map: MapName;
+  x: number;
+  y: number;
+  intent: string;
+  gold: number;
+  inventory_count: number;
+  status: 'alive' | 'dead';
+  last_receipt: SimLifeReceiptLink;
+}
+
+export interface SimLifeFrame {
+  frame: number;
+  elapsed_ms: number;
+  label: string;
+  agent_id: string;
+  map: MapName;
+  x: number;
+  y: number;
+  intent: string;
+  gold: number;
+  inventory_count: number;
+  receipt: SimLifeReceiptLink;
+}
+
+export interface SimLifeGameplanStep {
+  minute: number;
+  title: string;
+  agent_id: string;
+  map: MapName;
+  visible_action: string;
+  receipt_actions: string[];
+}
+
+export interface SimLifeSnapshotResponse {
+  ok: true;
+  mode: 'sim_life_viewer_v1';
+  authority: {
+    lane: 'sim';
+    authoritative_for_public_world: false;
+    client_truth_allowed: false;
+    source: 'server_deterministic_sim_snapshot';
+    receipt_boundary: 'simulated_receipts_only';
+  };
+  updated_at_ms: number;
+  duration_ms: number;
+  speed_controls: SimLifeSpeed[];
+  maps: Array<{
+    name: MapName;
+    width: number;
+    height: number;
+    spawn: { x: number; y: number };
+  }>;
+  agents: SimLifeAgentSnapshot[];
+  timeline: SimLifeFrame[];
+  first_5min_gameplan: SimLifeGameplanStep[];
+  receipt_actions_covered: string[];
+}
+
+export type SimLifeSnapshotResult = SimLifeSnapshotResponse | { error: string; status: number };
+
+// ============================================================================
 // Receipts API
 // ============================================================================
 

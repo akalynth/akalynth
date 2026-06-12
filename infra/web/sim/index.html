@@ -3,131 +3,299 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Akalynth - Simulation Lane</title>
+    <title>Akalynth - Sim Life Viewer</title>
     <meta
       name="description"
-      content="Akalynth simulation lane dashboard for the isolated sim-api. Local proof and agent economy runs only."
+      content="Akalynth simulation life viewer: receipt-backed visible agents, timelapse controls, and first-five-minute plan."
     />
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23090d12'/%3E%3Cpath d='M7 23h18M9 18h14M11 13h10M13 8h6' stroke='%2378d0a8' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E"
     />
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Akalynth" />
-    <meta property="og:title" content="Akalynth - Simulation Lane" />
-    <meta property="og:description" content="Dashboard for the isolated Akalynth simulation API lane." />
     <style>
       :root {
         --bg: #090d12;
         --panel: #111820;
+        --panel-2: #151d23;
         --ink: #edf6f2;
-        --ink-soft: #9eb1aa;
-        --line: #24313a;
-        --accent: #78d0a8;
-        --warn: #d9b25a;
-        --muted: #18222b;
+        --soft: #a9b8b2;
+        --muted: #6f817a;
+        --line: #2a3940;
+        --field: #203028;
+        --gold: #d9b25a;
+        --green: #78d0a8;
+        --coral: #ee7f69;
+        --blue: #73a7de;
+        --violet: #aa91d8;
       }
       * { box-sizing: border-box; }
       body {
         margin: 0;
         min-height: 100vh;
-        background: linear-gradient(180deg, #0d141b 0%, var(--bg) 64%);
+        background: #090d12;
         color: var(--ink);
         font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
-        padding: 28px 16px;
+      }
+      button {
+        font: inherit;
       }
       main {
-        width: min(960px, 100%);
+        width: min(1440px, 100%);
         margin: 0 auto;
+        padding: 20px;
       }
       header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 20px;
-        padding: 0 0 22px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 16px;
+        align-items: start;
+        padding-bottom: 14px;
         border-bottom: 1px solid var(--line);
       }
       h1 {
         margin: 0;
-        font-size: 30px;
+        font-size: 28px;
         line-height: 1.15;
-        font-weight: 750;
       }
-      .subtitle {
+      .sub {
         margin: 8px 0 0;
-        color: var(--ink-soft);
-        max-width: 680px;
-        line-height: 1.55;
+        color: var(--soft);
+        line-height: 1.45;
+        max-width: 840px;
       }
-      .lane {
-        display: inline-flex;
-        align-items: center;
-        min-height: 28px;
-        padding: 4px 10px;
-        border: 1px solid var(--accent);
-        color: var(--accent);
+      .badge {
+        border: 1px solid var(--green);
+        color: var(--green);
+        padding: 6px 10px;
         font-size: 12px;
-        font-weight: 750;
+        font-weight: 800;
         letter-spacing: .08em;
         text-transform: uppercase;
-        white-space: nowrap;
       }
-      .grid {
+      .shell {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 14px;
-        margin: 22px 0;
+        grid-template-columns: minmax(0, 1.8fr) minmax(320px, .9fr);
+        gap: 16px;
+        margin-top: 16px;
       }
-      .metric {
+      .map-area,
+      .side,
+      .timeline,
+      .agent-card,
+      .plan-row {
         border: 1px solid var(--line);
         background: var(--panel);
         border-radius: 8px;
-        padding: 16px;
-        min-height: 104px;
       }
-      .label {
-        color: var(--ink-soft);
-        font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: .08em;
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px;
+        border-bottom: 1px solid var(--line);
       }
-      .value {
-        margin-top: 10px;
-        font-size: 18px;
-        font-weight: 720;
-        overflow-wrap: anywhere;
+      .speed {
+        display: inline-flex;
+        gap: 6px;
       }
-      .section {
-        border-top: 1px solid var(--line);
-        padding-top: 20px;
-        margin-top: 20px;
+      .speed button {
+        min-width: 54px;
+        min-height: 34px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--panel-2);
+        color: var(--ink);
+        cursor: pointer;
+      }
+      .speed button.active {
+        border-color: var(--green);
+        background: #15352a;
+        color: var(--green);
+      }
+      .clock {
+        color: var(--soft);
+        font-variant-numeric: tabular-nums;
+      }
+      .maps {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        padding: 12px;
+      }
+      .map-panel {
+        min-width: 0;
+      }
+      .map-title {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        color: var(--soft);
+        font-size: 13px;
+        margin-bottom: 8px;
+      }
+      svg.map {
+        width: 100%;
+        aspect-ratio: 1;
+        display: block;
+        border: 1px solid var(--line);
+        background: #0f151a;
+        border-radius: 6px;
+      }
+      .side {
+        padding: 12px;
       }
       h2 {
-        margin: 0 0 12px;
-        font-size: 18px;
+        margin: 0 0 10px;
+        font-size: 16px;
       }
-      dl {
+      .agents {
         display: grid;
-        grid-template-columns: 180px 1fr;
-        gap: 10px 18px;
-        margin: 0;
+        gap: 10px;
       }
-      dt { color: var(--ink-soft); }
-      dd { margin: 0; overflow-wrap: anywhere; }
-      a { color: var(--accent); }
-      .notice {
-        background: var(--muted);
-        border-left: 4px solid var(--warn);
-        padding: 14px 16px;
-        color: var(--ink-soft);
-        line-height: 1.55;
+      .agent-card {
+        padding: 10px;
+        background: var(--panel-2);
       }
-      @media (max-width: 760px) {
-        header { display: block; }
-        .lane { margin-top: 16px; }
-        .grid { grid-template-columns: 1fr; }
-        dl { grid-template-columns: 1fr; }
+      .agent-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: start;
+      }
+      .agent-name {
+        font-weight: 800;
+      }
+      .role {
+        color: var(--soft);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+      }
+      .pill {
+        padding: 3px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        color: var(--soft);
+        font-size: 12px;
+        white-space: nowrap;
+      }
+      .agent-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .stat {
+        background: #0d1419;
+        border: 1px solid #223039;
+        border-radius: 6px;
+        padding: 8px;
+        min-width: 0;
+      }
+      .stat-label {
+        color: var(--muted);
+        font-size: 11px;
+        text-transform: uppercase;
+      }
+      .stat-value {
+        margin-top: 4px;
+        font-weight: 750;
+        overflow-wrap: anywhere;
+      }
+      .receipt {
+        margin-top: 10px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        color: var(--soft);
+        overflow-wrap: anywhere;
+      }
+      .timeline {
+        margin-top: 16px;
+        padding: 12px;
+      }
+      .rail {
+        position: relative;
+        height: 16px;
+        background: #0d1419;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .rail-fill {
+        height: 100%;
+        width: 0%;
+        background: var(--green);
+      }
+      .event-list {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .event {
+        min-height: 86px;
+        border: 1px solid var(--line);
+        background: var(--panel-2);
+        border-radius: 6px;
+        padding: 8px;
+        color: var(--soft);
+        font-size: 12px;
+      }
+      .event.active {
+        border-color: var(--green);
+        color: var(--ink);
+      }
+      .event strong {
+        display: block;
+        color: var(--ink);
+        margin-bottom: 4px;
+      }
+      .plan {
+        display: grid;
+        gap: 8px;
+        margin-top: 16px;
+      }
+      .plan-row {
+        display: grid;
+        grid-template-columns: 56px minmax(0, 1fr);
+        gap: 10px;
+        padding: 10px;
+      }
+      .minute {
+        color: var(--gold);
+        font-weight: 850;
+      }
+      .plan-title {
+        font-weight: 800;
+      }
+      .plan-copy {
+        color: var(--soft);
+        margin-top: 4px;
+        line-height: 1.4;
+      }
+      .actions {
+        color: var(--muted);
+        margin-top: 6px;
+        font-size: 12px;
+        overflow-wrap: anywhere;
+      }
+      .status {
+        color: var(--soft);
+      }
+      .error {
+        color: var(--coral);
+      }
+      @media (max-width: 980px) {
+        main { padding: 14px; }
+        header,
+        .shell,
+        .maps,
+        .event-list {
+          grid-template-columns: 1fr;
+        }
+        .badge { width: fit-content; }
       }
     </style>
   </head>
@@ -135,52 +303,260 @@
     <main>
       <header>
         <div>
-          <h1>Akalynth Simulation Lane</h1>
-          <p class="subtitle">
-            A separate API and state lane for proof runs, agent economy
-            simulation, and dashboard inspection. This lane is isolated from
-            beta and staging receipt chains.
+          <h1>Akalynth Sim Life Viewer</h1>
+          <p class="sub">
+            A receipt-backed miniature world for the sim lane. Agents are visible,
+            but the browser never submits truth: positions, gold, inventory, and
+            actions come from <code>/v1/sim/snapshot</code>.
           </p>
         </div>
-        <span class="lane">Sim</span>
+        <span class="badge">Sim only</span>
       </header>
 
-      <section class="grid" aria-label="Simulation lane summary">
-        <div class="metric">
-          <div class="label">API host</div>
-          <div class="value"><a href="https://sim-api.akalynth.com/v1/health">sim-api.akalynth.com</a></div>
-        </div>
-        <div class="metric">
-          <div class="label">Loopback port</div>
-          <div class="value">127.0.0.1:3002</div>
-        </div>
-        <div class="metric">
-          <div class="label">State root</div>
-          <div class="value">/var/lib/akalynth-sim</div>
-        </div>
-      </section>
+      <section class="shell">
+        <div>
+          <section class="map-area">
+            <div class="toolbar">
+              <div>
+                <strong id="frameLabel">Loading sim snapshot</strong>
+                <div class="clock" id="clock">00:00 / 05:00</div>
+              </div>
+              <div class="speed" aria-label="Playback speed">
+                <button data-speed="0" class="active">Pause</button>
+                <button data-speed="1">1x</button>
+                <button data-speed="10">10x</button>
+                <button data-speed="100">100x</button>
+              </div>
+            </div>
+            <div class="maps" id="maps"></div>
+          </section>
 
-      <section class="section">
-        <h2>Runtime Custody</h2>
-        <dl>
-          <dt>Dashboard</dt><dd>sim.akalynth.com</dd>
-          <dt>Service</dt><dd>akalynth-sim.service</dd>
-          <dt>Artifact tree</dt><dd>/opt/akalynth-sim</dd>
-          <dt>Receipt chain</dt><dd>/var/lib/akalynth-sim/audit/receipts.jsonl</dd>
-          <dt>SQLite projection</dt><dd>/var/lib/akalynth-sim/data/akalynth.db</dd>
-          <dt>Replay marker</dt><dd>/var/lib/akalynth-sim/data/replay_marker.json</dd>
-          <dt>Chronicle key</dt><dd>/etc/akalynth-sim/chronicle.key</dd>
-        </dl>
-      </section>
+          <section class="timeline">
+            <h2>Receipt Timeline</h2>
+            <div class="rail" aria-label="Timeline progress">
+              <div class="rail-fill" id="railFill"></div>
+            </div>
+            <div class="event-list" id="events"></div>
+          </section>
 
-      <section class="section">
-        <h2>Boundary</h2>
-        <p class="notice">
-          This dashboard is a static operational surface for the simulation
-          lane. It does not imply launch readiness, Android release readiness,
-          production promotion, or shared state with beta/staging.
-        </p>
+          <section class="plan" id="plan" aria-label="First five minute gameplan"></section>
+        </div>
+
+        <aside class="side">
+          <h2>Visible Agents</h2>
+          <div class="status" id="status">Fetching snapshot...</div>
+          <div class="agents" id="agents"></div>
+        </aside>
       </section>
     </main>
+
+    <script>
+      const API_BASE = location.hostname === 'sim.akalynth.com'
+        ? 'https://sim-api.akalynth.com'
+        : '';
+      const roleColor = {
+        worker: '#78d0a8',
+        homesteader: '#d9b25a',
+        merchant: '#73a7de',
+      };
+      const state = {
+        data: null,
+        speed: 0,
+        cursorMs: 0,
+        lastTick: performance.now(),
+      };
+
+      document.querySelectorAll('[data-speed]').forEach((button) => {
+        button.addEventListener('click', () => {
+          state.speed = Number(button.dataset.speed);
+          document.querySelectorAll('[data-speed]').forEach((b) => b.classList.remove('active'));
+          button.classList.add('active');
+        });
+      });
+
+      async function loadSnapshot() {
+        const res = await fetch(`${API_BASE}/v1/sim/snapshot`, {
+          headers: { accept: 'application/json' },
+          credentials: 'include',
+        });
+        if (!res.ok) throw new Error(`snapshot ${res.status}`);
+        const data = await res.json();
+        state.data = data;
+        state.cursorMs = 0;
+        renderPlan(data);
+        renderEvents(data);
+        renderStaticMaps(data);
+        render();
+      }
+
+      function frameAt(data, cursorMs) {
+        let current = data.timeline[0];
+        for (const frame of data.timeline) {
+          if (frame.elapsed_ms <= cursorMs) current = frame;
+        }
+        return current;
+      }
+
+      function agentPositions(data, cursorMs) {
+        const latest = new Map();
+        for (const frame of data.timeline) {
+          if (frame.elapsed_ms <= cursorMs) latest.set(frame.agent_id, frame);
+        }
+        for (const agent of data.agents) {
+          if (!latest.has(agent.agent_id)) {
+            const first = data.timeline.find((frame) => frame.agent_id === agent.agent_id);
+            if (first) latest.set(agent.agent_id, first);
+          }
+        }
+        return latest;
+      }
+
+      function renderStaticMaps(data) {
+        const maps = document.getElementById('maps');
+        maps.innerHTML = data.maps.map((map) => `
+          <div class="map-panel">
+            <div class="map-title">
+              <strong>${escapeHtml(map.name)}</strong>
+              <span>${map.width} x ${map.height}</span>
+            </div>
+            <svg class="map" id="map-${map.name}" viewBox="0 0 ${map.width} ${map.height}" role="img" aria-label="${map.name} sim map">
+              <defs>
+                <pattern id="grid-${map.name}" width="4" height="4" patternUnits="userSpaceOnUse">
+                  <path d="M 4 0 L 0 0 0 4" fill="none" stroke="#223039" stroke-width="0.22" />
+                </pattern>
+              </defs>
+              <rect x="0" y="0" width="${map.width}" height="${map.height}" fill="#10171c" />
+              <rect x="0" y="0" width="${map.width}" height="${map.height}" fill="url(#grid-${map.name})" />
+              <rect x="${map.spawn.x - 1}" y="${map.spawn.y - 1}" width="3" height="3" fill="#203028" stroke="#78d0a8" stroke-width="0.35" />
+              <g id="agents-${map.name}"></g>
+            </svg>
+          </div>
+        `).join('');
+      }
+
+      function renderEvents(data) {
+        const events = document.getElementById('events');
+        events.innerHTML = data.first_5min_gameplan.map((step) => `
+          <div class="event" data-minute="${step.minute}">
+            <strong>${step.minute}:00 ${escapeHtml(step.title)}</strong>
+            ${escapeHtml(step.agent_id)}<br />
+            ${step.receipt_actions.map(escapeHtml).join(', ')}
+          </div>
+        `).join('');
+      }
+
+      function renderPlan(data) {
+        const plan = document.getElementById('plan');
+        plan.innerHTML = '<h2>First 5min Gameplan</h2>' + data.first_5min_gameplan.map((step) => `
+          <div class="plan-row">
+            <div class="minute">${step.minute}:00</div>
+            <div>
+              <div class="plan-title">${escapeHtml(step.title)}</div>
+              <div class="plan-copy">${escapeHtml(step.visible_action)}</div>
+              <div class="actions">${step.receipt_actions.map(escapeHtml).join(' / ')}</div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      function render() {
+        const data = state.data;
+        if (!data) return;
+
+        const current = frameAt(data, state.cursorMs);
+        document.getElementById('frameLabel').textContent = current.label;
+        document.getElementById('clock').textContent = `${fmt(state.cursorMs)} / ${fmt(data.duration_ms)}`;
+        document.getElementById('railFill').style.width = `${Math.min(100, (state.cursorMs / data.duration_ms) * 100)}%`;
+        document.getElementById('status').textContent = `${data.mode} - ${data.authority.receipt_boundary}`;
+
+        document.querySelectorAll('.event').forEach((node) => {
+          const minute = Number(node.dataset.minute);
+          node.classList.toggle('active', Math.floor(state.cursorMs / 60000) === minute);
+        });
+
+        const positions = agentPositions(data, state.cursorMs);
+        for (const map of data.maps) {
+          const group = document.getElementById(`agents-${map.name}`);
+          if (!group) continue;
+          group.innerHTML = '';
+          for (const [agentId, frame] of positions) {
+            if (frame.map !== map.name) continue;
+            const agent = data.agents.find((a) => a.agent_id === agentId);
+            const color = roleColor[agent?.role] || '#aa91d8';
+            group.insertAdjacentHTML('beforeend', `
+              <g>
+                <circle cx="${frame.x + 0.5}" cy="${frame.y + 0.5}" r="1.25" fill="${color}" stroke="#edf6f2" stroke-width="0.25" />
+                <text x="${frame.x + 2}" y="${frame.y + 1.2}" fill="#edf6f2" font-size="2.2">${agent?.name?.replace(/^Sim /, '') || agentId}</text>
+              </g>
+            `);
+          }
+        }
+
+        renderAgents(data, positions);
+      }
+
+      function renderAgents(data, positions) {
+        const agents = document.getElementById('agents');
+        agents.innerHTML = data.agents.map((agent) => {
+          const frame = positions.get(agent.agent_id) || agent;
+          const receipt = frame.receipt || agent.last_receipt;
+          return `
+            <article class="agent-card">
+              <div class="agent-top">
+                <div>
+                  <div class="agent-name">${escapeHtml(agent.name)}</div>
+                  <div class="role">${escapeHtml(agent.role)} / ${escapeHtml(frame.intent)}</div>
+                </div>
+                <span class="pill">${escapeHtml(frame.map)} ${frame.x},${frame.y}</span>
+              </div>
+              <div class="agent-grid">
+                <div class="stat"><div class="stat-label">Gold</div><div class="stat-value">${frame.gold}</div></div>
+                <div class="stat"><div class="stat-label">Items</div><div class="stat-value">${frame.inventory_count}</div></div>
+                <div class="stat"><div class="stat-label">Status</div><div class="stat-value">${escapeHtml(agent.status)}</div></div>
+              </div>
+              <div class="receipt">
+                #${receipt.sequence} ${escapeHtml(receipt.action)}<br />
+                ${escapeHtml(receipt.event_hash)}
+              </div>
+            </article>
+          `;
+        }).join('');
+      }
+
+      function tick(now) {
+        const data = state.data;
+        if (data && state.speed > 0) {
+          const delta = now - state.lastTick;
+          state.cursorMs = (state.cursorMs + delta * state.speed) % data.duration_ms;
+          render();
+        }
+        state.lastTick = now;
+        requestAnimationFrame(tick);
+      }
+
+      function fmt(ms) {
+        const total = Math.floor(ms / 1000);
+        const min = Math.floor(total / 60);
+        const sec = total % 60;
+        return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      loadSnapshot().catch((err) => {
+        document.getElementById('status').innerHTML = `<span class="error">${escapeHtml(err.message)}</span>`;
+      });
+      setInterval(() => {
+        loadSnapshot().catch(() => undefined);
+      }, 30000);
+      requestAnimationFrame(tick);
+    </script>
   </body>
 </html>

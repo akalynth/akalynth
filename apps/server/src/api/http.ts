@@ -23,6 +23,7 @@ import type {
   AntiCheatPriorResponse,
   PropertyMarketResponse,
   PropertyLedgerResponse,
+  SimLifeSnapshotResponse,
 } from '../../../../packages/shared/http.js';
 import { normalizeMapName } from '../../../../packages/shared/http.js';
 import type { BuildInfo } from '../build-info.js';
@@ -42,6 +43,7 @@ export interface ApiDeps {
   getSessionMe?: (guest_token: string) => SessionMeResult;
   getWorldPlayers?: (map: MapName, query: WorldPlayersQuery) => WorldPlayersResult;
   getWorldState?: (map: MapName, guest_token: string | null) => WorldStateResult;
+  getSimSnapshot?: () => SimLifeSnapshotResponse;
   queryReceipts: (params: ReceiptsQueryParams) => ReceiptsResponse;
   queryPublicReceipts?: (params: PublicReceiptsQueryParams) => PublicReceiptsResponse;
   queryPublicReceiptsRaw?: (params: PublicReceiptsQueryParams) => PublicReceiptsRawResult;
@@ -158,6 +160,12 @@ export function handleHttp(
       built_at: build?.built_at ?? 'unknown',
     };
     json(res, 200, body);
+    return true;
+  }
+
+  if (method === 'GET' && path === '/v1/sim/snapshot') {
+    if (!deps.getSimSnapshot) return (json(res, 501, { error: 'not_implemented' }), true);
+    json(res, 200, deps.getSimSnapshot());
     return true;
   }
 
