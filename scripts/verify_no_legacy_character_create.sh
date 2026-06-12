@@ -100,6 +100,20 @@ for android_catalog_literal in \
   fi
 done
 
+for android_token_scope_literal in \
+  'val authToken = identityStore.getToken()' \
+  'wsClient.send(LoginMessage(token = authToken))' \
+  'wsClient.send(LoginMessage(guestToken = guestToken))' \
+  'val storedToken = identityStore?.getToken()' \
+  'val resolvedToken = listOf(authToken, this.authToken, storedToken)' \
+  'put("token", resolvedToken)' \
+  'put("guest_token", JSONObject.NULL)' \
+  'No auth token present -> falling back to guest login'; do
+  if ! grep -RInF "$android_token_scope_literal" "$ROOT_DIR/apps/android/app/src/main/java/com/akalynth/client" >/dev/null; then
+    die "Missing Android token-scoped gameplay/login proof literal: $android_token_scope_literal"
+  fi
+done
+
 for debug_client_literal in \
   'create/select handlers use explicit account session guard' \
   'missing account session blocks character actions before request' \
