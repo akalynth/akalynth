@@ -21,6 +21,7 @@ export type SkillId =
   | 'route:craft:mint'
   | 'route:gate:heartforge'
   | 'route:gate:moonspire'
+  | 'route:dream:traverse'
   | 'route:dream:interpret'
   | 'route:dream:fragment'
   | 'route:quest:shipment';
@@ -161,6 +162,14 @@ export const SKILL_REGISTRY: Record<SkillId, SkillDefinition> = {
     gold_cost: 0,
     debug_only: false,
   },
+  'route:dream:traverse': {
+    id: 'route:dream:traverse',
+    name: 'Authorize Dream Gate Traversal',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
   'route:dream:interpret': {
     id: 'route:dream:interpret',
     name: 'Interpret Dream Gate',
@@ -218,6 +227,7 @@ export const SOULSTEEL_REFINEMENT_AUTHORIZED_ACTION = 'soulsteel_refinement_auth
 export const SOULSTEEL_COMPONENT_MINTED_ACTION = 'soulsteel_component_minted';
 export const HEARTFORGE_GATE_PREPARED_ACTION = 'heartforge_gate_prepared';
 export const DREAM_GATE_SEAL_PREPARED_ACTION = 'dream_gate_seal_prepared';
+export const DREAM_GATE_TRAVERSAL_AUTHORIZED_ACTION = 'dream_gate_traversal_authorized';
 export const DREAM_GATE_INTERPRETED_ACTION = 'dream_gate_interpreted';
 export const DREAM_FRAGMENT_ANCHORED_ACTION = 'dream_fragment_anchored';
 export const FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION = 'forgehold_shipment_investigated';

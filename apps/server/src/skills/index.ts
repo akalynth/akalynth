@@ -31,6 +31,7 @@ import {
   handleRouteSafetyReview,
   handleHeartforgeGatePreparation,
   handleDreamGateSealPreparation,
+  handleDreamGateTraversalAuthorization,
   handleForgeholdShipmentInvestigation,
 } from './handlers.js';
 
@@ -235,6 +236,9 @@ async function executeSkill(
 
     case 'route:gate:moonspire':
       return handleDreamGateSealPreparation(ctx);
+
+    case 'route:dream:traverse':
+      return handleDreamGateTraversalAuthorization(ctx);
 
     case 'route:dream:interpret':
       return handleDreamGateInterpretation(ctx);

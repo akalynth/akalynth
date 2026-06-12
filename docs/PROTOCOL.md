@@ -326,7 +326,7 @@ Current onward-route skill ids are additive intent-only values:
 `route:craft:mint`,
 `route:safety:forgehold`, `route:gate:heartforge`,
 `route:survey:moonspire`,
-`route:dream:interpret`, `route:dream:fragment`,
+`route:dream:interpret`, `route:dream:fragment`, `route:dream:traverse`,
 `route:safety:moonspire`, and `route:gate:moonspire`.
 The server validates sequencing from receipts and returns `invalid_target`
 without route side-effect receipts when a route step is locked or out of order.

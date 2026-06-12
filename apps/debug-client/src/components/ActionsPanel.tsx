@@ -40,6 +40,7 @@ const ROUTE_SURVEY_ACTIONS = [
   { skill_id: 'route:craft:mint', label: 'Mint Soulsteel Component', short: 'Mint' },
   { skill_id: 'route:gate:heartforge', label: 'Prepare Heartforge Gate', short: 'Gate' },
   { skill_id: 'route:gate:moonspire', label: 'Prepare Dream Gate Seal', short: 'Seal' },
+  { skill_id: 'route:dream:traverse', label: 'Authorize Dream Gate Traversal', short: 'Pass' },
   { skill_id: 'route:dream:interpret', label: 'Interpret Dream Gate', short: 'Gate' },
   { skill_id: 'route:dream:fragment', label: 'Anchor Dream Fragment', short: 'Frag' },
 ] as const;
@@ -67,6 +68,7 @@ function routeActionIdsFor(onwardRoutes: NonNullable<PlayLoopProgress['onwardRou
       else if (!completed.has('dream_fragment_evidence')) ids.push('route:dream:fragment');
       else if (!completed.has('dream_gate_abuse_notes')) ids.push('route:safety:moonspire');
       else if (!completed.has('dream_gate_server_seal')) ids.push('route:gate:moonspire');
+      else if (!completed.has('dream_gate_traversal_authorization')) ids.push('route:dream:traverse');
     }
   }
   return ids;

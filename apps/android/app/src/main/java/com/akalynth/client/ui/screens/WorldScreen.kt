@@ -263,6 +263,7 @@ private fun routeActionSkillIdsFor(routes: List<OnwardRouteProgress>): List<Stri
                 !completed.contains("dream_fragment_evidence") -> listOf("route:dream:fragment")
                 !completed.contains("dream_gate_abuse_notes") -> listOf("route:safety:moonspire")
                 !completed.contains("dream_gate_server_seal") -> listOf("route:gate:moonspire")
+                !completed.contains("dream_gate_traversal_authorization") -> listOf("route:dream:traverse")
                 else -> emptyList()
             }
             else -> emptyList()

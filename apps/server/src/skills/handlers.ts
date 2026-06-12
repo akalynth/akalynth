@@ -8,6 +8,7 @@ import {
   FORGEHOLD_ECONOMY_QUOTED_ACTION,
   HEARTFORGE_GATE_PREPARED_ACTION,
   DREAM_GATE_SEAL_PREPARED_ACTION,
+  DREAM_GATE_TRAVERSAL_AUTHORIZED_ACTION,
   PLAYER_REPORTED_ACTION,
   ROUTE_ABUSE_NOTES_REVIEWED_ACTION,
   ROUTE_SURVEYED_ACTION,
@@ -670,6 +671,57 @@ export function handleDreamGateSealPreparation(ctx: SkillContext): SkillResult {
       source_drop: 'drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1',
       receipt_action: DREAM_GATE_SEAL_PREPARED_ACTION,
       traversal_granted: false,
+      economy_impact: 'none',
+    },
+  };
+}
+
+export function handleDreamGateTraversalAuthorization(ctx: SkillContext): SkillResult {
+  if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
+  const routeProgress = ctx.getOnwardRouteProgress?.();
+  if (!routeProgress?.dreamGateSealPrepared) return { success: false, reason: 'invalid_target' };
+
+  const authorizedAt = new Date().toISOString();
+  const traversalId = 'moonspire_dream_gate_traversal_authorization_v1';
+  const authorityGuard = {
+    client_position_authority: false,
+    client_map_transition: false,
+    wallet_debit_gold: 0,
+    wallet_credit_gold: 0,
+    item_mint: false,
+    heat_changed: false,
+    penalty_applied: false,
+  };
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: DREAM_GATE_TRAVERSAL_AUTHORIZED_ACTION,
+    inputs: {
+      route_id: 'moonspire_dream_gate_slice_v1',
+      traversal_id: traversalId,
+      required_seal: DREAM_GATE_SEAL_PREPARED_ACTION,
+      source_drop: 'drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1',
+      authorized_at: authorizedAt,
+      traversal_authorized: true,
+      authority_guard: authorityGuard,
+      economy_impact: 'none',
+    },
+    result: 'ok',
+  });
+
+  return {
+    success: true,
+    payload: {
+      route_id: 'moonspire_dream_gate_slice_v1',
+      traversal_id: traversalId,
+      title: 'Moonspire Dream Gate Traversal',
+      status: 'authorized',
+      required_seal: DREAM_GATE_SEAL_PREPARED_ACTION,
+      next_objective: 'Dream Gate traversal is server-authorized; client movement remains intent-only.',
+      source_drop: 'drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1',
+      receipt_action: DREAM_GATE_TRAVERSAL_AUTHORIZED_ACTION,
+      traversal_authorized: true,
+      authority_guard: authorityGuard,
       economy_impact: 'none',
     },
   };

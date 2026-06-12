@@ -665,6 +665,7 @@ class GameStore(
             msg.skillId != "route:craft:mint" &&
             msg.skillId != "route:gate:heartforge" &&
             msg.skillId != "route:gate:moonspire" &&
+            msg.skillId != "route:dream:traverse" &&
             msg.skillId != "route:dream:interpret" &&
             msg.skillId != "route:dream:fragment"
         ) return
@@ -681,6 +682,7 @@ class GameStore(
             "route:craft:mint" -> "Soulsteel component"
             "route:gate:heartforge" -> "Heartforge gate"
             "route:gate:moonspire" -> "Dream Gate seal"
+            "route:dream:traverse" -> "Dream Gate traversal"
             "route:dream:interpret" -> "Dream Gate"
             "route:dream:fragment" -> "Dream fragment"
             else -> "Route"
@@ -695,6 +697,7 @@ class GameStore(
                 "route:craft:refine" -> "$title authorized by server."
                 "route:craft:mint" -> "$title minted by server."
                 "route:gate:heartforge", "route:gate:moonspire" -> "$title prepared by server."
+                "route:dream:traverse" -> "$title authorized by server."
                 "route:dream:interpret" -> "$title interpretation recorded by server."
                 "route:dream:fragment" -> "$title evidence anchored by server."
                 else -> "$title survey recorded by server."
@@ -900,6 +903,7 @@ class GameStore(
             skillId != "route:craft:mint" &&
             skillId != "route:gate:heartforge" &&
             skillId != "route:gate:moonspire" &&
+            skillId != "route:dream:traverse" &&
             skillId != "route:dream:interpret" &&
             skillId != "route:dream:fragment"
         ) return

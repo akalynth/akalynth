@@ -4,6 +4,7 @@ import {
   DREAM_FRAGMENT_ANCHORED_ACTION,
   DREAM_GATE_INTERPRETED_ACTION,
   DREAM_GATE_SEAL_PREPARED_ACTION,
+  DREAM_GATE_TRAVERSAL_AUTHORIZED_ACTION,
   FORGEHOLD_ECONOMY_QUOTED_ACTION,
   FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION,
   HEARTFORGE_GATE_PREPARED_ACTION,
@@ -29,6 +30,7 @@ export interface OnwardRouteReceiptProgress {
   dreamFragmentAnchored: boolean;
   dreamGateAbuseNotesReviewed: boolean;
   dreamGateSealPrepared: boolean;
+  dreamGateTraversalAuthorized: boolean;
 }
 
 function defaultProgress(): OnwardRouteReceiptProgress {
@@ -47,6 +49,7 @@ function defaultProgress(): OnwardRouteReceiptProgress {
     dreamFragmentAnchored: false,
     dreamGateAbuseNotesReviewed: false,
     dreamGateSealPrepared: false,
+    dreamGateTraversalAuthorized: false,
   };
 }
 
@@ -107,6 +110,8 @@ export function applyReceiptToOnwardRoutes(receipt: AuditReceipt): void {
     next = { ...current, soulsteelComponentMinted: true };
   } else if (receipt.action === DREAM_GATE_SEAL_PREPARED_ACTION) {
     next = { ...current, dreamGateSealPrepared: true };
+  } else if (receipt.action === DREAM_GATE_TRAVERSAL_AUTHORIZED_ACTION) {
+    next = { ...current, dreamGateTraversalAuthorized: true };
   }
 
   if (next) setProgress(playerId, next);
