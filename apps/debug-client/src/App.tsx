@@ -13,6 +13,7 @@ import { ChatSheet } from './components/ChatSheet';
 import { TopBar } from './components/TopBar';
 import { NearbyList } from './components/NearbyList';
 import { ExistenceShell } from './components/ExistenceShell';
+import { SimLifeRookguardTimelapse } from './components/SimLifeRookguardTimelapse';
 import { VisualSmokeReview } from './components/VisualSmokeReview';
 import { CharacterBar } from './components/CharacterBar';
 import { BackpackSheet } from './components/BackpackSheet';
@@ -322,6 +323,10 @@ export default function App() {
   const params = new URLSearchParams(window.location.search);
   if (params.has('visual-smoke')) {
     return <VisualSmokeReview />;
+  }
+
+  if (params.get('mode') === 'sim-life' || params.get('mode') === 'rookguard-timelapse' || params.has('sim-life')) {
+    return <SimLifeRookguardTimelapse />;
   }
 
   // Existence mode: minimal truth viewer
