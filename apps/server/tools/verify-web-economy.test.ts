@@ -361,6 +361,11 @@ async function main(): Promise<void> {
   check('work completion updates wallet balance', res.body.balance_gold === getGoldBalance('p_buyer'));
   check('work receipts include ticks, completion, and wallet credit', [WORK_CONTRACT_TICK_RECORDED_ACTION, WORK_CONTRACT_COMPLETED_ACTION, WALLET_CREDIT_ACTION].every((a) => receipts.some((r) => r.action === a)));
 
+  const receiptCountAfterWorkCompletion = receipts.length;
+  res = await request('POST', '/v1/work/tick', { character_id: 'p_buyer', contract_id: contractId }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
+  check('work tick rejects completed contract', res.status === 409 && res.body.error === 'invalid_contract');
+  check('completed-contract work tick emits no receipts', receipts.length === receiptCountAfterWorkCompletion);
+
   resetState();
   seedProperty('Azura:H1', 100);
   res = await request('POST', '/v1/property/buy', { character_id: 'p_buyer', property_id: 'Azura:H1' });

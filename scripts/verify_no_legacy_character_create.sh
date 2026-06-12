@@ -272,6 +272,8 @@ for web_economy_literal in \
   "work tick completes after presence gates" \
   "work completion updates wallet balance" \
   "work receipts include ticks, completion, and wallet credit" \
+  "work tick rejects completed contract" \
+  "completed-contract work tick emits no receipts" \
   "property buy requires account session" \
   "no-session property buy emits no purchase receipt" \
   "property buy rejects character owned by another account" \
