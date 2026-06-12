@@ -134,7 +134,8 @@ fun GameCanvas(
                     y = centerY + offsetY,
                     radius = tileSize / 3,
                     isDead = other.status == PlayerStatus.DEAD,
-                    isSelf = false
+                    isSelf = false,
+                    spriteId = other.spriteId
                 )
             }
 
@@ -144,7 +145,8 @@ fun GameCanvas(
                 y = centerY,
                 radius = tileSize / 2.7f,
                 isDead = player.status == PlayerStatus.DEAD,
-                isSelf = true
+                isSelf = true,
+                spriteId = player.spriteId
             )
         }
     }
@@ -361,12 +363,21 @@ private fun DrawScope.drawPlayer(
     y: Float,
     radius: Float,
     isDead: Boolean,
-    isSelf: Boolean
+    isSelf: Boolean,
+    spriteId: String?
 ) {
     val color = when {
         isDead -> PLAYER_DEAD
+        spriteId == "guard_city_01" -> Color(0xFF6FA8DC)
+        spriteId == "mage_apprentice_01" -> Color(0xFFB98CFF)
+        spriteId == "base_human_male_01" -> PLAYER_SELF
         isSelf -> PLAYER_SELF
         else -> PLAYER_OTHER
+    }
+    val accent = when (spriteId) {
+        "guard_city_01" -> Color(0xFFCDAF4A)
+        "mage_apprentice_01" -> Color(0xFFE6D7FF)
+        else -> Color.White.copy(alpha = 0.3f)
     }
 
     // Outer glow
@@ -385,8 +396,17 @@ private fun DrawScope.drawPlayer(
 
     // Inner highlight
     drawCircle(
-        color = Color.White.copy(alpha = 0.3f),
+        color = accent,
         radius = radius * 0.4f,
         center = Offset(x - radius * 0.2f, y - radius * 0.2f)
     )
+
+    if (!isDead && (spriteId == "guard_city_01" || spriteId == "mage_apprentice_01")) {
+        drawLine(
+            color = accent,
+            start = Offset(x - radius * 0.55f, y + radius * 0.45f),
+            end = Offset(x + radius * 0.55f, y + radius * 0.45f),
+            strokeWidth = radius * 0.18f
+        )
+    }
 }
