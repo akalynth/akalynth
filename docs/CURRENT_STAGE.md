@@ -55,7 +55,8 @@ Implemented-but-not-release-claimed systems include:
   world/sex/outfit catalogs, site/debug-client/Android create/select paths, and
   client-side missing-session/CSRF helpers. Covered by `npm run
   verify:account-character`, including server create/select play-token handoff and login projection proof,
-  server wallet/shop/work/property gameplay route proof, and Android gameplay wire-authority protocol proof.
+  server wallet/shop/work/property gameplay route proof, debug-client gameplay wire-authority proof,
+  and Android gameplay wire-authority protocol proof.
   The public account portal and four Codex surfaces (Public, Builder, Operator, Agent)
   are covered in the separate `akalynth-site` repo by
   `./scripts/verify-account-character-site.sh`, including executable site E2D gameplay action proof

@@ -8,6 +8,7 @@ const root = resolve(here, '..');
 const files = {
   characterBar: readFileSync(resolve(root, 'src/components/CharacterBar.tsx'), 'utf8'),
   gameClient: readFileSync(resolve(root, 'src/hooks/useGameClient.ts'), 'utf8'),
+  packageJson: readFileSync(resolve(root, 'package.json'), 'utf8'),
 };
 
 const required = [
@@ -207,6 +208,11 @@ const required = [
     label: 'catalog loading disables world selector',
     file: 'characterBar',
     literal: 'disabled={createFieldsDisabled || !catalog.loaded || catalog.loading}',
+  },
+  {
+    label: 'debug gameplay wire authority verifier is wired',
+    file: 'packageJson',
+    literal: 'node scripts/verify-debug-gameplay-wire-authority.mjs',
   },
 ];
 
