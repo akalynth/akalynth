@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  ANDROID_HOME: /usr/lib/android-sdk
+  ANDROID_SDK_ROOT: /usr/lib/android-sdk
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true

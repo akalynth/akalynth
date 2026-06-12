@@ -95,6 +95,14 @@
         "node-22"
       ],
       "workflow_change": "GitHub workflow jobs now target [self-hosted, ubuntu-24.04] so PR checks can run on the host-local runner instead of unavailable GitHub-hosted runners."
+    },
+    "follow_up_repair": {
+      "reason": "GitHub self-hosted jobs reached execution but Android Gradle tasks could not find SDK location.",
+      "workflow_env": {
+        "ANDROID_HOME": "/usr/lib/android-sdk",
+        "ANDROID_SDK_ROOT": "/usr/lib/android-sdk"
+      },
+      "runner_env": "services/github-runner/akalynth-runner-01/.env exports the same Android SDK paths."
     }
   },
   "non_mutation_boundary": {
