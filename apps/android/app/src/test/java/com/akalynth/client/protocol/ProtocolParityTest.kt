@@ -4,6 +4,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -24,6 +25,12 @@ class ProtocolParityTest {
 
     private fun typeOf(frame: String): String =
         json.decodeFromString<JsonObject>(frame)["type"]!!.jsonPrimitive.content
+
+    private fun assertNoClientAuthorityFields(obj: JsonObject) {
+        for (field in listOf("character_id", "player_id", "x", "y")) {
+            assertFalse("gameplay intent frame must not carry $field", obj.containsKey(field))
+        }
+    }
 
     // ---- Version handshake --------------------------------------------------
 
@@ -143,6 +150,48 @@ class ProtocolParityTest {
         // Round-trips back to the original string.
         val obj = json.decodeFromString<JsonObject>(frame)
         assertEquals("she said \"hi\"\\bye", obj["message"]!!.jsonPrimitive.content)
+    }
+
+    @Test
+    fun `work gameplay messages omit client identity and coordinates`() {
+        val startObj = json.decodeFromString<JsonObject>(
+            MessageSerializer.encodeClient(StartWorkContractMessage())
+        )
+        assertEquals("start_work_contract", startObj["type"]!!.jsonPrimitive.content)
+        assertEquals(WorkContractType.TEMPLE_SWEEP, startObj["contract_type"]!!.jsonPrimitive.content)
+        assertNoClientAuthorityFields(startObj)
+
+        val tickObj = json.decodeFromString<JsonObject>(
+            MessageSerializer.encodeClient(WorkTickMessage("contract-1"))
+        )
+        assertEquals("work_tick", tickObj["type"]!!.jsonPrimitive.content)
+        assertEquals("contract-1", tickObj["contract_id"]!!.jsonPrimitive.content)
+        assertNoClientAuthorityFields(tickObj)
+    }
+
+    @Test
+    fun `property gameplay messages omit client identity and coordinates`() {
+        val buyObj = json.decodeFromString<JsonObject>(
+            MessageSerializer.encodeClient(BuyHouseMessage("HighCity:H1"))
+        )
+        assertEquals("buy_house", buyObj["type"]!!.jsonPrimitive.content)
+        assertEquals("HighCity:H1", buyObj["property_id"]!!.jsonPrimitive.content)
+        assertNoClientAuthorityFields(buyObj)
+
+        val listObj = json.decodeFromString<JsonObject>(
+            MessageSerializer.encodeClient(ListHouseMessage("HighCity:H1", 123))
+        )
+        assertEquals("list_house", listObj["type"]!!.jsonPrimitive.content)
+        assertEquals("HighCity:H1", listObj["property_id"]!!.jsonPrimitive.content)
+        assertEquals("123", listObj["price"]!!.jsonPrimitive.content)
+        assertNoClientAuthorityFields(listObj)
+
+        val unlistObj = json.decodeFromString<JsonObject>(
+            MessageSerializer.encodeClient(UnlistHouseMessage("HighCity:H1"))
+        )
+        assertEquals("unlist_house", unlistObj["type"]!!.jsonPrimitive.content)
+        assertEquals("HighCity:H1", unlistObj["property_id"]!!.jsonPrimitive.content)
+        assertNoClientAuthorityFields(unlistObj)
     }
 
     @Test
