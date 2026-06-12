@@ -9,6 +9,7 @@ die(){ echo "❌ $*" >&2; exit 1; }
 
 [[ -f "$CODE" ]] || die "Missing $CODE"
 [[ -f "$DOC" ]]  || die "Missing $DOC"
+[[ -f "$ROOT_DIR/scripts/verify_no_legacy_character_create.sh" ]] || die "Missing legacy character-create guard"
 
 # Extract message type strings from protocol.ts (e.g., type: 'connect')
 code_types="$(
@@ -45,5 +46,7 @@ fi
 if [[ $errors -eq 1 ]]; then
   exit 1
 fi
+
+bash "$ROOT_DIR/scripts/verify_no_legacy_character_create.sh"
 
 echo "✅ Protocol docs match packages/shared/protocol.ts"
