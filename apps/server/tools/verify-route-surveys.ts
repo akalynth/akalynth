@@ -6,7 +6,7 @@
 
 import type { WebSocket } from 'ws';
 import type { AntiCheatState, Player } from '../../../packages/shared/types.js';
-import { ROUTE_SURVEYED_ACTION, SKILL_RESOLVED_ACTION, SKILL_USE_INTENT_ACTION, SOULSTEEL_STABILIZED_ACTION } from '../../../packages/shared/skills.js';
+import { DREAM_GATE_INTERPRETED_ACTION, ROUTE_SURVEYED_ACTION, SKILL_RESOLVED_ACTION, SKILL_USE_INTENT_ACTION, SOULSTEEL_STABILIZED_ACTION } from '../../../packages/shared/skills.js';
 import { handleUseSkill, type SkillContext } from '../src/skills/index.js';
 
 function assert(condition: unknown, msg: string): asserts condition {
@@ -114,6 +114,30 @@ test('Soulsteel stabilization emits crafting receipt without wallet or item auth
   assert(result.payload?.quality === 'unstable', 'Soulsteel payload quality mismatch');
   assert(result.payload?.economy_impact === 'none', 'Soulsteel payload economy impact mismatch');
   assert(result.payload?.required_evidence?.includes('ashglass_shard'), 'Soulsteel payload should name Ashglass Shard');
+});
+
+test('Dream Gate interpretation records symbolic state without traversal or economy authority', async () => {
+  const { ctx, receipts, sent } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:interpret' });
+
+  const interpretation = receipts.find((r) => r.action === DREAM_GATE_INTERPRETED_ACTION);
+  assert(interpretation, 'missing dream_gate_interpreted receipt');
+  assert(interpretation.inputs.route_id === 'moonspire_dream_gate_slice_v1', 'Dream Gate route mismatch');
+  assert(interpretation.inputs.gate_state === 'interpreted', 'Dream Gate state should be interpreted');
+  assert(interpretation.inputs.traversal_granted === false, 'Dream Gate interpretation must not grant traversal');
+  assert(interpretation.inputs.economy_impact === 'none', 'Dream Gate interpretation should not change economy');
+  assert(!receipts.some((r) => r.action === 'wallet_debit'), 'Dream Gate interpretation should not debit gold');
+  assert(!receipts.some((r) => r.action === 'item_minted'), 'Dream Gate interpretation should not mint an item');
+
+  const result = sent.find((msg) => typeof msg === 'object' && msg !== null && (msg as { type?: string }).type === 'skill_result') as {
+    success?: boolean;
+    payload?: { gate_state?: string; traversal_granted?: boolean; meanings?: string[]; required_fragments?: string[] };
+  } | undefined;
+  assert(result?.success === true, 'Dream Gate skill_result should succeed');
+  assert(result.payload?.gate_state === 'interpreted', 'Dream Gate payload state mismatch');
+  assert(result.payload?.traversal_granted === false, 'Dream Gate payload must not grant traversal');
+  assert(result.payload?.meanings?.includes('hidden memory'), 'Dream Gate payload should include hidden memory meaning');
+  assert(result.payload?.required_fragments?.includes('emotional_residue'), 'Dream Gate payload should name Emotional Residue');
 });
 
 console.log('\n✓ all route survey checks passed');

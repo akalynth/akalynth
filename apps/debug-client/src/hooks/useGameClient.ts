@@ -1088,11 +1088,15 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
                     : 'Purchase failed';
                 return pushToast(s, 'npc', line, 'SHOP');
               }
-              if (skillId.startsWith('route:survey:') || skillId === 'route:craft:soulsteel') {
+              if (skillId.startsWith('route:survey:') || skillId === 'route:craft:soulsteel' || skillId === 'route:dream:interpret') {
                 const title = typeof payload?.title === 'string' ? payload.title : 'Route';
                 const next = typeof payload?.next_objective === 'string' ? payload.next_objective : 'Survey recorded.';
-                const quality = typeof payload?.quality === 'string' ? ` [${payload.quality}]` : '';
-                const line = success ? `${title}${quality}: ${next}` : 'Route action unavailable.';
+                const marker = typeof payload?.quality === 'string'
+                  ? ` [${payload.quality}]`
+                  : typeof payload?.gate_state === 'string'
+                    ? ` [${payload.gate_state}]`
+                    : '';
+                const line = success ? `${title}${marker}: ${next}` : 'Route action unavailable.';
                 return pushToast(s, 'objective', line, 'ROUTE');
               }
               return { ...s, conn };

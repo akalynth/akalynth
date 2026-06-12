@@ -21,6 +21,7 @@ import {
   handleReport,
   handleRouteSurvey,
   handleSoulsteelStabilization,
+  handleDreamGateInterpretation,
 } from './handlers.js';
 
 // ============================================================================
@@ -185,6 +186,9 @@ async function executeSkill(
 
     case 'route:craft:soulsteel':
       return handleSoulsteelStabilization(ctx);
+
+    case 'route:dream:interpret':
+      return handleDreamGateInterpretation(ctx);
 
     default:
       return { success: false, reason: 'invalid_skill' };

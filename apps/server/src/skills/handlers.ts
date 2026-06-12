@@ -6,6 +6,7 @@ import {
   PLAYER_REPORTED_ACTION,
   ROUTE_SURVEYED_ACTION,
   SOULSTEEL_STABILIZED_ACTION,
+  DREAM_GATE_INTERPRETED_ACTION,
 } from '../../../../packages/shared/skills.js';
 import { createHash } from 'node:crypto';
 
@@ -222,6 +223,48 @@ export function handleSoulsteelStabilization(ctx: SkillContext): SkillResult {
       required_evidence: requiredEvidence,
       source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
       receipt_action: SOULSTEEL_STABILIZED_ACTION,
+      economy_impact: 'none',
+    },
+  };
+}
+
+export function handleDreamGateInterpretation(ctx: SkillContext): SkillResult {
+  const interpretedAt = new Date().toISOString();
+  const symbols = ['Door', 'Mirror', 'Water'];
+  const meanings = ['boundary', 'self-recognition', 'hidden memory'];
+  const requiredFragments = ['silver_thread', 'emotional_residue'];
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: DREAM_GATE_INTERPRETED_ACTION,
+    inputs: {
+      route_id: 'moonspire_dream_gate_slice_v1',
+      gate_state: 'interpreted',
+      symbols,
+      meanings,
+      required_fragments: requiredFragments,
+      source_drop: 'drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1',
+      interpreted_at: interpretedAt,
+      traversal_granted: false,
+      economy_impact: 'none',
+    },
+    result: 'ok',
+  });
+
+  return {
+    success: true,
+    payload: {
+      route_id: 'moonspire_dream_gate_slice_v1',
+      interpretation_id: 'dream_gate_symbolic_interpretation_v1',
+      gate_state: 'interpreted',
+      status: 'interpreted',
+      symbols,
+      meanings,
+      required_fragments: requiredFragments,
+      next_objective: 'Anchor the interpreted symbols before any Dream Gate traversal can be server-authorized.',
+      source_drop: 'drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1',
+      receipt_action: DREAM_GATE_INTERPRETED_ACTION,
+      traversal_granted: false,
       economy_impact: 'none',
     },
   };
