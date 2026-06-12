@@ -15,6 +15,8 @@
     "source_intake": "docs/asset-decisions/AKALYNTH_FORGEHOLD_ROUTE_SOURCE_INTAKE_V1/FORGEHOLD_ROUTE_SOURCE_INTAKE.md",
     "gitea_repo": "https://gitea.akalynth.com/sovereign/akalynth",
     "gitea_issue": "https://gitea.akalynth.com/sovereign/akalynth/issues/2",
+    "gitea_pr": "https://gitea.akalynth.com/sovereign/akalynth/pulls/3",
+    "github_pr": "https://github.com/akalynth/akalynth/pull/312",
     "claimed_branch": "codex/forgehold-next-packet",
     "claimed_by": "Codex agent",
     "target_labels": [
@@ -55,6 +57,13 @@
       "Android compile reported existing deprecation warnings for Icons.Filled.KeyboardArrowLeft/Right in DPad.kt.",
       "apt update still reports intermittent DNS failure for dl.cloudflare.com Caddy repository indexes."
     ]
+  },
+  "codex_status_update": {
+    "status": "codex:accepted",
+    "meaning": "validated locally, queued in local Gitea, and promoted to GitHub PR for canonical upstream review; not merged",
+    "gitea_issue": "https://gitea.akalynth.com/sovereign/akalynth/issues/2",
+    "gitea_pr": "https://gitea.akalynth.com/sovereign/akalynth/pulls/3",
+    "github_pr": "https://github.com/akalynth/akalynth/pull/312"
   },
   "non_mutation_boundary": {
     "runtime_trees": "unchanged",
