@@ -51,6 +51,11 @@ Implemented-but-not-release-claimed systems include:
 - Android observe/play client
 - Load-test harness
 - Public/private receipt and rumor surfaces
+- Account-character entry v2 — account/session + CSRF-gated `GET/POST /v1/characters`,
+  world/sex/outfit catalogs, site/debug-client/Android create/select paths, and
+  client-side missing-session/CSRF helpers. Covered by `npm run
+  verify:account-character`. This is a source-level parity claim, not a
+  production release claim.
 - Property ownership v0 (house buy / list / resale) — receipt-sourced, durable (SQLite schema v13), covered by `apps/server` `npm run verify:property`. Source-level site/debug-client/Android views now exist for account-character property actions and projections, but a production proof run and release claim are still not claimed.
 - Property auctions (resale): open / bid / cancel handlers, world-loop close→settle (wall-clock only triggers emission; settlement truth is the receipt), and a **durable auction projection** (SQLite schema v14, `property_auctions` table, materializer + boot hydration). Proven by `verify:property-auction*` (reducer, gold conservation, handlers, close→settle, and **persistence: projection==DB, idempotent re-materialize, DB-hydration==replay**). Receipts remain the source of truth; the DB is a materialized mirror. Not yet claimed: a production restart proof run, primary/system auction opening, anti-snipe, and the site auction UI.
 - Witness Moth Bloom world-event prototype: server-authoritative High City-facing event signal on the legacy `Azura` runtime map id, plus three `use_skill` contribution intents, with `world_event_started`, `world_event_contribution`, and `world_event_resolved` receipts, derived `world_event` Chronicle rows, and a durable SQLite schema v17 `world_events` projection for startup hydration. Covered by `apps/server` `npm run verify:world-events`. No new WebSocket protocol shape, no full `high_city` runtime-id switch, no economy reward, and no production proof run claim.
