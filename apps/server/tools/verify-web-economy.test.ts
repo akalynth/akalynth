@@ -286,6 +286,7 @@ async function main(): Promise<void> {
   res = await request('POST', '/v1/shop/purchase', { character_id: 'p_buyer', shop_key: 'healing_herb' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
   check('shop purchase without gold is rejected', res.status === 409 && res.body.error === 'insufficient_gold');
   check('rejected shop purchase emitted no debit/mint receipts', receipts.every((r) => r.action !== WALLET_DEBIT_ACTION && r.action !== 'item_minted'));
+  check('rejected shop purchase emitted no inventory receipt', receipts.every((r) => r.action !== 'item_added_to_inventory'));
 
   fund('p_buyer', 10);
   res = await request('POST', '/v1/shop/purchase', { character_id: 'p_buyer', shop_key: 'healing_herb' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });

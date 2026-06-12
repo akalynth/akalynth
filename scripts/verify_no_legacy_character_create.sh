@@ -243,6 +243,7 @@ for web_economy_literal in \
   "missing-character shop purchase emits no debit/mint receipts" \
   "shop purchase rejects unknown shop item" \
   "unknown-item shop purchase emits no debit/mint receipts" \
+  "rejected shop purchase emitted no inventory receipt" \
   "shop purchase requires matching csrf" \
   "auth/csrf rejected shop requests emit no receipts" \
   "shop receipts do not carry account/session/csrf tokens" \
