@@ -262,6 +262,8 @@ for web_economy_literal in \
   "missing contract work tick emits no receipts" \
   "work tick requires character id" \
   "missing-character work tick emits no receipts" \
+  "work tick rejects unknown contract" \
+  "unknown-contract work tick emits no receipts" \
   "work tick completes after presence gates" \
   "work completion updates wallet balance" \
   "work receipts include ticks, completion, and wallet credit" \

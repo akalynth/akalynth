@@ -338,6 +338,11 @@ async function main(): Promise<void> {
   check('work tick requires character id', res.status === 400 && res.body.error === 'character_id_required');
   check('missing-character work tick emits no receipts', receipts.filter((r) => r.action === WORK_CONTRACT_TICK_RECORDED_ACTION).length === 0);
 
+  const receiptCountAfterWorkStart = receipts.length;
+  res = await request('POST', '/v1/work/tick', { character_id: 'p_buyer', contract_id: 'wc_unknown' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
+  check('work tick rejects unknown contract', res.status === 409 && res.body.error === 'invalid_contract');
+  check('unknown-contract work tick emits no receipts', receipts.length === receiptCountAfterWorkStart);
+
   for (let i = 0; i < 6; i++) {
     logicalNowMs += 5_000;
     res = await request('POST', '/v1/work/tick', { character_id: 'p_buyer', contract_id: contractId }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
