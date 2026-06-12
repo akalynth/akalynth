@@ -29,6 +29,16 @@ if (typeof document !== 'undefined' && !document.getElementById(STYLE_ID)) {
   document.head.appendChild(el);
 }
 
+function accountSessionGuardMessage(accountSession: AccountSessionStatus): string | null {
+  if (!accountSession.authenticated) {
+    return accountSession.message ?? 'Sign in to an account before creating or selecting a character.';
+  }
+  if (!accountSession.csrfReady) {
+    return 'Sign in again before creating or selecting; the CSRF token is missing.';
+  }
+  return null;
+}
+
 interface CharacterBarProps {
   session: SessionInfo;
   onCreate: (input: CharacterCreateInput) => Promise<{ ok: boolean; error?: string }>;
@@ -112,8 +122,10 @@ export function CharacterBar({
     setError(null);
     const trimmed = name.trim();
     let emailVerified = accountSession.emailVerified;
+    let activeAccountSession = accountSession;
     if (!accountSession.authenticated) {
       const next = await onRefreshAccountSession();
+      activeAccountSession = next;
       if (!next.authenticated) {
         setError(next.message ?? 'Sign in to an account before creating a character');
         setBusy(false);
@@ -126,6 +138,12 @@ export function CharacterBar({
         setBusy(false);
         return;
       }
+    }
+    const guarded = accountSessionGuardMessage(activeAccountSession);
+    if (guarded) {
+      setError(guarded);
+      setBusy(false);
+      return;
     }
     if (!emailVerified) {
       setError('Verify email before creating; existing characters can still be selected.');
@@ -163,13 +181,21 @@ export function CharacterBar({
     if (busy) return;
     setBusy(true);
     setError(null);
+    let activeAccountSession = accountSession;
     if (!accountSession.authenticated) {
       const next = await onRefreshAccountSession();
+      activeAccountSession = next;
       if (!next.authenticated) {
         setError(next.message ?? 'Sign in to an account before selecting a character');
         setBusy(false);
         return;
       }
+    }
+    const guarded = accountSessionGuardMessage(activeAccountSession);
+    if (guarded) {
+      setError(guarded);
+      setBusy(false);
+      return;
     }
     const characterId = selectedCharacterId || accountCharacters[0]?.character_id || '';
     if (!characterId) {
@@ -197,6 +223,7 @@ export function CharacterBar({
   const canSelect = !busy && accountSession.authenticated && accountSession.csrfReady && !!selectedCharacterId;
   const sessionRequired = !accountSession.authenticated;
   const createFieldsDisabled = busy || sessionRequired || !accountSession.csrfReady;
+  const guardMessage = accountSessionGuardMessage(accountSession);
 
   const accountHelper = accountSession.authenticated
     ? accountSession.emailVerified
@@ -212,7 +239,7 @@ export function CharacterBar({
     <form className="character-bar" aria-label="create character" onSubmit={submit}>
       <span className="character-bar-kicker">Account session required · select or create a character</span>
       <span className="character-bar-helper">{accountHelper}</span>
-      {(sessionRequired || !accountSession.csrfReady) && (
+      {guardMessage && (
         <span className="character-bar-session-guard" role="status">
           Sign in with an account session and CSRF token first; character creation and selection are disabled until the session check succeeds.
         </span>

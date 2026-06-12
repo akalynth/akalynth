@@ -75,6 +75,9 @@ for android_catalog_literal in \
 done
 
 for debug_client_literal in \
+  'create/select handlers use explicit account session guard' \
+  'missing account session blocks character actions before request' \
+  'missing csrf blocks character actions before request' \
   'account character requests include account session cookies' \
   'create path submits typed account character v2 body' \
   'select path submits selected character id' \
