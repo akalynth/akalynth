@@ -71,6 +71,26 @@ const ACCOUNT_CHARACTER_OUTFIT_IDS = new Set([
   'female_guard',
   'female_mage',
 ]);
+const ROUTE_ACTION_SKILL_IDS = new Set([
+  'route:survey:forgehold',
+  'route:survey:moonspire',
+  'route:safety:forgehold',
+  'route:safety:moonspire',
+  'route:quest:shipment',
+  'route:economy:forgehold',
+  'route:economy:settle',
+  'route:economy:payout',
+  'route:craft:soulsteel',
+  'route:craft:ashglass',
+  'route:craft:refine',
+  'route:craft:mint',
+  'route:gate:heartforge',
+  'route:gate:moonspire',
+  'route:dream:traverse',
+  'route:dream:arrive',
+  'route:dream:interpret',
+  'route:dream:fragment',
+]);
 
 function wsUrl(base: string): string {
   if (base.startsWith('ws://') || base.startsWith('wss://')) return base;
@@ -1088,7 +1108,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
                     : 'Purchase failed';
                 return pushToast(s, 'npc', line, 'SHOP');
               }
-              if (skillId.startsWith('route:survey:') || skillId.startsWith('route:safety:') || skillId === 'route:quest:shipment' || skillId.startsWith('route:economy:') || skillId.startsWith('route:craft:') || skillId.startsWith('route:gate:') || skillId.startsWith('route:dream:')) {
+              if (ROUTE_ACTION_SKILL_IDS.has(skillId)) {
                 const title = typeof payload?.title === 'string' ? payload.title : 'Route';
                 const next = typeof payload?.next_objective === 'string' ? payload.next_objective : 'Survey recorded.';
                 const marker = typeof payload?.quality === 'string'
