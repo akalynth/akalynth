@@ -516,6 +516,9 @@ for site_doc in "$ROOT_DIR/README.md" "$ROOT_DIR/docs/CURRENT_STAGE.md" "$ROOT_D
   if ! grep -Fq 'executable site E2D character and gameplay action proof' "$site_doc"; then
     die "Missing akalynth-site E2D character/gameplay proof wording in ${site_doc#$ROOT_DIR/}"
   fi
+  if ! grep -Fq 'explicit no-session/no-CSRF inline helper proof' "$site_doc"; then
+    die "Missing akalynth-site no-session/no-CSRF helper proof wording in ${site_doc#$ROOT_DIR/}"
+  fi
   if ! grep -Fq 'scripts/verify-site-e2d-character-gameplay.mjs' "$site_doc"; then
     die "Missing akalynth-site concrete E2D verifier artifact in ${site_doc#$ROOT_DIR/}"
   fi
@@ -530,6 +533,10 @@ fi
 
 if ! grep -Fq 'scripts/verify-site-e2d-character-gameplay.mjs' "$ROOT_DIR/scripts/README.md"; then
   die "Missing akalynth-site concrete E2D verifier artifact in scripts/README.md"
+fi
+
+if ! grep -Fq 'explicit no-session/no-CSRF' "$ROOT_DIR/scripts/README.md"; then
+  die "Missing akalynth-site no-session/no-CSRF helper proof wording in scripts/README.md"
 fi
 
 for android_ui_doc in "$ROOT_DIR/README.md" "$ROOT_DIR/scripts/README.md"; do

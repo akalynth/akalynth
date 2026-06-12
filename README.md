@@ -97,7 +97,7 @@ those yourself.
   `akalynth-site` repo. That site verifier wraps
   `scripts/verify-site-e2d-character-gameplay.mjs`, which includes executable site E2D character and gameplay action proof
   for account-scoped
-  create/select/shop/work/property requests.
+  create/select/shop/work/property requests plus explicit no-session/no-CSRF inline helper proof.
 
 6) Focused persistence/receipt/anti-cheat checks (from apps/server):
 - `npm run verify:receipt-hygiene`

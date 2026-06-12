@@ -63,7 +63,7 @@ Implemented-but-not-release-claimed systems include:
   `./scripts/verify-account-character-site.sh`, which wraps
   `scripts/verify-site-e2d-character-gameplay.mjs` for executable site E2D character and gameplay action proof
   across account-scoped
-  create/select/shop/work/property requests.
+  create/select/shop/work/property requests plus explicit no-session/no-CSRF inline helper proof.
   This is a source-level parity claim, not a production release claim.
 - Property ownership v0 (house buy / list / resale) — receipt-sourced, durable (SQLite schema v13), covered by `apps/server` `npm run verify:property`. Source-level site/debug-client/Android views now exist for account-character property actions and projections, but a production proof run and release claim are still not claimed.
 - Property auctions (resale): open / bid / cancel handlers, world-loop close→settle (wall-clock only triggers emission; settlement truth is the receipt), and a **durable auction projection** (SQLite schema v14, `property_auctions` table, materializer + boot hydration). Proven by `verify:property-auction*` (reducer, gold conservation, handlers, close→settle, and **persistence: projection==DB, idempotent re-materialize, DB-hydration==replay**). Receipts remain the source of truth; the DB is a materialized mirror. Not yet claimed: a production restart proof run, primary/system auction opening, anti-snipe, and the site auction UI.

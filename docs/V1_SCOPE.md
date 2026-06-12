@@ -35,7 +35,7 @@ Define what v1 covers and what it explicitly does not. This prevents scope drift
   `./scripts/verify-account-character-site.sh`, which wraps
   `scripts/verify-site-e2d-character-gameplay.mjs` for executable site E2D character and gameplay action proof
   across account-scoped
-  create/select/shop/work/property requests.
+  create/select/shop/work/property requests plus explicit no-session/no-CSRF inline helper proof.
 
 ## Out of Scope (v1)
 
