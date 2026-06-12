@@ -307,7 +307,7 @@ class CharacterCreateActivity : Activity() {
             return
         }
         if (!accountEmailVerified) {
-            setStatus("Verify your email before creating account characters.")
+            setStatus("Verify email before creating; existing characters can still be selected.")
             return
         }
         if (selectedWorldId.isNullOrBlank() || selectedOutfitId.isNullOrBlank()) {
@@ -650,14 +650,13 @@ class CharacterCreateActivity : Activity() {
     private fun mapError(code: String, message: String): String {
         return when (code) {
             "invalid_name" -> "Name must be 3-20 chars, start with a letter, and use only letters/numbers/-/_"
-            "name_taken" -> "That name is already taken."
+            "invalid_input" -> message.ifBlank { "Choose a valid name, world, sex, and outfit." }
+            "name_taken" -> message.ifBlank { "That character name is already taken." }
+            "character_not_found", "not_found" -> message.ifBlank { "That character is not available on the signed-in account." }
             "rate_limited" -> "Too many attempts. Try again later."
             "banned" -> "Account banned."
             "network_error" -> "Network error: $message"
-            "not_authenticated" -> "Sign in first for account character creation."
-            "csrf_missing" -> "Security token missing. Sign in again before account character creation."
-            "csrf_failed" -> "Session expired. Sign out and sign in again."
-            "email_unverified" -> "Verify your email before creating account characters."
+            "not_authenticated", "csrf_missing", "csrf_failed", "email_unverified" -> message
             else -> "Error ($code): $message"
         }
     }

@@ -48,6 +48,17 @@ if [[ -n "$android_ui_matches" ]]; then
   die "Stale Android character create UI callback found. Character creation UI must emit name, world_id, sex, and outfit_id."
 fi
 
+android_error_matches="$(
+  grep -RInE 'Sign in first for account character creation|Session expired\. Sign out and sign in again\.|Verify your email before creating account characters\.|That name is already taken\.' \
+    "$ROOT_DIR/apps/android/app/src/main" \
+    2>/dev/null || true
+)"
+
+if [[ -n "$android_error_matches" ]]; then
+  echo "$android_error_matches" >&2
+  die "Stale Android account-character error copy found. Preserve IdentityApi account-character messages instead of remapping to older text."
+fi
+
 for literal in \
   'onCreate: (name: String, worldId: String, sex: CharacterSex, outfitId: String) -> Unit' \
   'CharacterCreateScreen_WorldSelector' \
