@@ -4,6 +4,7 @@ import {
   DREAM_GATE_INTERPRETED_ACTION,
   FORGEHOLD_ECONOMY_QUOTED_ACTION,
   FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION,
+  HEARTFORGE_GATE_PREPARED_ACTION,
   ROUTE_ABUSE_NOTES_REVIEWED_ACTION,
   ROUTE_SURVEYED_ACTION,
   SOULSTEEL_STABILIZED_ACTION,
@@ -15,6 +16,7 @@ export interface OnwardRouteReceiptProgress {
   forgeholdEconomyQuoted: boolean;
   soulsteelStabilized: boolean;
   forgeholdAbuseNotesReviewed: boolean;
+  heartforgeGatePrepared: boolean;
   moonspireSurveyed: boolean;
   dreamGateInterpreted: boolean;
   dreamFragmentAnchored: boolean;
@@ -28,6 +30,7 @@ function defaultProgress(): OnwardRouteReceiptProgress {
     forgeholdEconomyQuoted: false,
     soulsteelStabilized: false,
     forgeholdAbuseNotesReviewed: false,
+    heartforgeGatePrepared: false,
     moonspireSurveyed: false,
     dreamGateInterpreted: false,
     dreamFragmentAnchored: false,
@@ -82,6 +85,8 @@ export function applyReceiptToOnwardRoutes(receipt: AuditReceipt): void {
     } else if (receipt.inputs?.route_id === 'moonspire_dream_gate_slice_v1') {
       next = { ...current, dreamGateAbuseNotesReviewed: true };
     }
+  } else if (receipt.action === HEARTFORGE_GATE_PREPARED_ACTION) {
+    next = { ...current, heartforgeGatePrepared: true };
   }
 
   if (next) setProgress(playerId, next);

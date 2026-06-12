@@ -16,6 +16,7 @@ export type SkillId =
   | 'route:safety:moonspire'
   | 'route:economy:forgehold'
   | 'route:craft:soulsteel'
+  | 'route:gate:heartforge'
   | 'route:dream:interpret'
   | 'route:dream:fragment'
   | 'route:quest:shipment';
@@ -116,6 +117,14 @@ export const SKILL_REGISTRY: Record<SkillId, SkillDefinition> = {
     gold_cost: 0,
     debug_only: false,
   },
+  'route:gate:heartforge': {
+    id: 'route:gate:heartforge',
+    name: 'Prepare Heartforge Gate',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
   'route:dream:interpret': {
     id: 'route:dream:interpret',
     name: 'Interpret Dream Gate',
@@ -168,6 +177,7 @@ export const ROUTE_SURVEYED_ACTION = 'route_surveyed';
 export const ROUTE_ABUSE_NOTES_REVIEWED_ACTION = 'route_abuse_notes_reviewed';
 export const FORGEHOLD_ECONOMY_QUOTED_ACTION = 'forgehold_economy_quoted';
 export const SOULSTEEL_STABILIZED_ACTION = 'soulsteel_stabilized';
+export const HEARTFORGE_GATE_PREPARED_ACTION = 'heartforge_gate_prepared';
 export const DREAM_GATE_INTERPRETED_ACTION = 'dream_gate_interpreted';
 export const DREAM_FRAGMENT_ANCHORED_ACTION = 'dream_fragment_anchored';
 export const FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION = 'forgehold_shipment_investigated';

@@ -26,6 +26,7 @@ import {
   handleDreamGateInterpretation,
   handleDreamFragmentAnchor,
   handleRouteSafetyReview,
+  handleHeartforgeGatePreparation,
   handleForgeholdShipmentInvestigation,
 } from './handlers.js';
 
@@ -207,6 +208,9 @@ async function executeSkill(
 
     case 'route:craft:soulsteel':
       return handleSoulsteelStabilization(ctx);
+
+    case 'route:gate:heartforge':
+      return handleHeartforgeGatePreparation(ctx);
 
     case 'route:dream:interpret':
       return handleDreamGateInterpretation(ctx);

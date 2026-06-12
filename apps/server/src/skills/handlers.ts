@@ -5,6 +5,7 @@ import type { SkillContext, SkillResult } from './index.js';
 import {
   DREAM_FRAGMENT_ANCHORED_ACTION,
   FORGEHOLD_ECONOMY_QUOTED_ACTION,
+  HEARTFORGE_GATE_PREPARED_ACTION,
   PLAYER_REPORTED_ACTION,
   ROUTE_ABUSE_NOTES_REVIEWED_ACTION,
   ROUTE_SURVEYED_ACTION,
@@ -425,6 +426,46 @@ export function handleRouteSafetyReview(ctx: SkillContext, route: 'forgehold' | 
       receipt_action: ROUTE_ABUSE_NOTES_REVIEWED_ACTION,
       heat_changed: false,
       penalty_applied: false,
+    },
+  };
+}
+
+export function handleHeartforgeGatePreparation(ctx: SkillContext): SkillResult {
+  if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
+  const routeProgress = ctx.getOnwardRouteProgress?.();
+  if (!routeProgress?.forgeholdAbuseNotesReviewed) return { success: false, reason: 'invalid_target' };
+
+  const preparedAt = new Date().toISOString();
+  const gateId = 'heartforge_trial_server_gate_v1';
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: HEARTFORGE_GATE_PREPARED_ACTION,
+    inputs: {
+      route_id: 'forgehold_route_slice_v1',
+      gate_id: gateId,
+      required_proofs: ['soulsteel_stabilized', 'route_abuse_notes_reviewed'],
+      source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
+      prepared_at: preparedAt,
+      travel_unlocked: false,
+      economy_impact: 'none',
+    },
+    result: 'ok',
+  });
+
+  return {
+    success: true,
+    payload: {
+      route_id: 'forgehold_route_slice_v1',
+      gate_id: gateId,
+      title: 'Heartforge Trial Gate',
+      status: 'prepared',
+      required_proofs: ['soulsteel_stabilized', 'route_abuse_notes_reviewed'],
+      next_objective: 'Carry the unstable Soulsteel proof toward the Heartforge Trial chamber; refinement still requires evidence recovery.',
+      source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
+      receipt_action: HEARTFORGE_GATE_PREPARED_ACTION,
+      travel_unlocked: false,
+      economy_impact: 'none',
     },
   };
 }

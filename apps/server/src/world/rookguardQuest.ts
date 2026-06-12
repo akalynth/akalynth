@@ -288,6 +288,7 @@ export function buildOnwardRouteProgress(
     forgeholdEconomyQuoted: false,
     soulsteelStabilized: false,
     forgeholdAbuseNotesReviewed: false,
+    heartforgeGatePrepared: false,
     moonspireSurveyed: false,
     dreamGateInterpreted: false,
     dreamFragmentAnchored: false,
@@ -303,6 +304,7 @@ export function buildOnwardRouteProgress(
     ...(receiptProgress.forgeholdEconomyQuoted ? ['forgehold_economy_receipts'] : []),
     ...(receiptProgress.soulsteelStabilized ? ['soulsteel_stabilization'] : []),
     ...(receiptProgress.forgeholdAbuseNotesReviewed ? ['forgehold_abuse_notes'] : []),
+    ...(receiptProgress.heartforgeGatePrepared ? ['heartforge_trial_server_gate'] : []),
   ];
   const moonspireCompleted = [
     ...(receiptProgress.moonspireSurveyed ? ['dream_gate_rumor'] : []),
@@ -318,8 +320,10 @@ export function buildOnwardRouteProgress(
       status,
       unlock_requirement: unlockRequirement,
       next_objective: available
-        ? receiptProgress.forgeholdAbuseNotesReviewed
+        ? receiptProgress.heartforgeGatePrepared
           ? 'Carry the unstable Soulsteel proof toward the Heartforge Trial chamber; refinement still requires evidence recovery.'
+          : receiptProgress.forgeholdAbuseNotesReviewed
+            ? 'Prepare the Heartforge Trial server gate without unlocking travel yet.'
           : receiptProgress.soulsteelStabilized
             ? 'Review the Forgehold safety boundary before the Heartforge Trial chamber.'
           : receiptProgress.forgeholdEconomyQuoted
@@ -340,7 +344,7 @@ export function buildOnwardRouteProgress(
       ],
       completed_objective_ids: forgeholdCompleted,
       source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
-      receipt_actions: ['route_surveyed', 'forgehold_shipment_investigated', 'forgehold_economy_quoted', 'soulsteel_stabilized', 'route_abuse_notes_reviewed'],
+      receipt_actions: ['route_surveyed', 'forgehold_shipment_investigated', 'forgehold_economy_quoted', 'soulsteel_stabilized', 'route_abuse_notes_reviewed', 'heartforge_gate_prepared'],
     },
     {
       route_id: 'moonspire_dream_gate_slice_v1',
