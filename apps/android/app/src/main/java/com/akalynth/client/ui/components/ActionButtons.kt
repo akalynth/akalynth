@@ -49,6 +49,7 @@ private val ROUTE_ACTIONS = listOf(
     "route:dream:interpret" to "Interp",
     "route:dream:fragment" to "Frag"
 )
+private val ROUTE_ACTION_LABELS = ROUTE_ACTIONS.toMap()
 
 @Composable
 fun ActionButtons(
@@ -72,8 +73,8 @@ fun ActionButtons(
     onUnlistHouse: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val routeActions = ROUTE_ACTIONS.filter { (skillId, _) ->
-        routeActionSkillIds.contains(skillId)
+    val routeActions = routeActionSkillIds.mapNotNull { skillId ->
+        ROUTE_ACTION_LABELS[skillId]?.let { label -> skillId to label }
     }
 
     ClassicDock(modifier = modifier) {
