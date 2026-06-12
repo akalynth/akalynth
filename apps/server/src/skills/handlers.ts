@@ -11,6 +11,7 @@ import {
   PLAYER_REPORTED_ACTION,
   ROUTE_ABUSE_NOTES_REVIEWED_ACTION,
   ROUTE_SURVEYED_ACTION,
+  SOULSTEEL_COMPONENT_MINTED_ACTION,
   SOULSTEEL_REFINEMENT_AUTHORIZED_ACTION,
   SOULSTEEL_STABILIZED_ACTION,
   DREAM_GATE_INTERPRETED_ACTION,
@@ -563,13 +564,72 @@ export function handleSoulsteelRefinementAuthorization(ctx: SkillContext): Skill
       title: 'Soulsteel Refinement Authorization',
       status: 'authorized',
       required_evidence: requiredEvidence,
-      next_objective: 'Soulsteel refinement is authorized; final item minting remains a future server receipt.',
+      next_objective: 'Mint the refined Soulsteel component under server inventory receipts.',
       source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
       receipt_action: SOULSTEEL_REFINEMENT_AUTHORIZED_ACTION,
       refinement_guard: refinementGuard,
       item_minted: false,
       travel_unlocked: false,
       economy_impact: 'none',
+    },
+  };
+}
+
+export function handleSoulsteelComponentMint(ctx: SkillContext): SkillResult {
+  if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
+  const routeProgress = ctx.getOnwardRouteProgress?.();
+  if (!routeProgress?.soulsteelRefinementAuthorized) return { success: false, reason: 'invalid_target' };
+  if (!ctx.mintItemToInventory) return { success: false, reason: 'invalid_target' };
+
+  const mintedAt = new Date().toISOString();
+  const itemType = 'refined_soulsteel_component';
+  const mint = ctx.mintItemToInventory(
+    itemType,
+    {
+      source: 'forgehold_route_slice_v1',
+      crafting_id: 'soulsteel_refinement_authorization_v1',
+      quality: 'refined',
+    },
+    'forgehold_soulsteel_refinement',
+    'forgehold_route'
+  );
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: SOULSTEEL_COMPONENT_MINTED_ACTION,
+    inputs: {
+      route_id: 'forgehold_route_slice_v1',
+      item_id: mint.item_id,
+      item_type: mint.item_type,
+      required_refinement: SOULSTEEL_REFINEMENT_AUTHORIZED_ACTION,
+      source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
+      minted_at: mintedAt,
+      wallet_debit_gold: 0,
+      wallet_credit_gold: 0,
+      travel_unlocked: false,
+      economy_impact: 'item_mint_only',
+    },
+    result: 'ok',
+  });
+
+  ctx.syncInventory?.();
+
+  return {
+    success: true,
+    payload: {
+      route_id: 'forgehold_route_slice_v1',
+      item_id: mint.item_id,
+      item_type: mint.item_type,
+      title: 'Refined Soulsteel Component',
+      status: 'minted',
+      required_refinement: SOULSTEEL_REFINEMENT_AUTHORIZED_ACTION,
+      next_objective: 'Carry the minted Soulsteel component as the first Forgehold crafting reward.',
+      source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
+      receipt_action: SOULSTEEL_COMPONENT_MINTED_ACTION,
+      wallet_debit_gold: 0,
+      wallet_credit_gold: 0,
+      travel_unlocked: false,
+      economy_impact: 'item_mint_only',
     },
   };
 }

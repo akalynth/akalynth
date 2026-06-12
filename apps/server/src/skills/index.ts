@@ -25,6 +25,7 @@ import {
   handleSoulsteelStabilization,
   handleAshglassEvidenceRecovery,
   handleSoulsteelRefinementAuthorization,
+  handleSoulsteelComponentMint,
   handleDreamGateInterpretation,
   handleDreamFragmentAnchor,
   handleRouteSafetyReview,
@@ -66,6 +67,14 @@ export interface SkillContext {
   send: (msg: unknown) => void;
   // Optional post-success hook for derived projections owned outside skills
   onSkillResolved?: (skillId: SkillId) => void;
+  // Optional server-owned inventory mint authority for route rewards.
+  mintItemToInventory?: (
+    itemType: string,
+    meta: Record<string, unknown>,
+    reason: string,
+    source: string
+  ) => { item_id: string; item_type: string };
+  syncInventory?: () => void;
 }
 
 export interface SkillResult {
@@ -217,6 +226,9 @@ async function executeSkill(
 
     case 'route:craft:refine':
       return handleSoulsteelRefinementAuthorization(ctx);
+
+    case 'route:craft:mint':
+      return handleSoulsteelComponentMint(ctx);
 
     case 'route:gate:heartforge':
       return handleHeartforgeGatePreparation(ctx);

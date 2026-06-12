@@ -323,6 +323,7 @@ Current onward-route skill ids are additive intent-only values:
 `route:survey:forgehold`, `route:quest:shipment`,
 `route:economy:forgehold`, `route:craft:soulsteel`,
 `route:craft:ashglass`, `route:craft:refine`,
+`route:craft:mint`,
 `route:safety:forgehold`, `route:gate:heartforge`,
 `route:survey:moonspire`,
 `route:dream:interpret`, `route:dream:fragment`,
