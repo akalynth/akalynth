@@ -7,7 +7,10 @@
 import { CharacterStore } from './store.js';
 import { WORLDS, OUTFITS, worldById, outfitById, outfitsForSex, isSex, normalizeWorldId } from './catalog.js';
 import { RECEIPT_ACTIONS } from '../persist/types.js';
-import type { CharacterCreateResult } from '../api/http.js';
+
+export type CharacterCreateResult =
+  | { ok: true; player_id: string; name: string; token: string; issued_at: number; expires_at: number }
+  | { ok: false; code: 'name_taken' | 'invalid_name' | 'rate_limited' | 'banned'; message: string; status: number };
 
 export interface PlayToken {
   token: string;

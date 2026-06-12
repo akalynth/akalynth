@@ -2200,12 +2200,15 @@ function resolveSessionMe(guest_token: string, expiredReason: string): SessionMe
   };
 }
 
-// Identity v0.1: Character creation
+// Account character minting. This is internal plumbing for the account-gated
+// /v1/characters route, not a standalone legacy HTTP route.
+type CharacterCreateResult =
+  | { ok: true; player_id: string; name: string; token: string; issued_at: number; expires_at: number }
+  | { ok: false; code: 'name_taken' | 'invalid_name' | 'rate_limited' | 'banned'; message: string; status: number };
+
 // Reserved names (case-insensitive)
 const RESERVED_NAMES = ['guest', 'admin', 'system', 'sovereign', 'moderator', 'gm', 'support'];
 const NAME_PATTERN = /^[A-Za-z][A-Za-z0-9_-]{2,19}$/;
-
-import type { CharacterCreateResult } from './api/http.js';
 
 function createCharacterHandler(name: string): CharacterCreateResult {
   if (!authKeyPair) {
@@ -2453,93 +2456,6 @@ const httpServer = http.createServer((req, res) => {
         result: 'ok',
       });
       return { player_id, guest_token, name };
-    },
-    // Identity v0.1: Character creation
-    createCharacter: (name: string) => {
-      // Check if auth key is available
-      if (!authKeyPair) {
-        return { ok: false as const, code: 'rate_limited' as const, message: 'Character creation not available', status: 503 };
-      }
-
-      // Name validation
-      const NAME_PATTERN = /^[A-Za-z][A-Za-z0-9_-]{2,19}$/;
-      const RESERVED_NAMES = ['guest', 'admin', 'system', 'sovereign', 'moderator', 'gm', 'support'];
-      const nameLower = name.toLowerCase();
-
-      if (!NAME_PATTERN.test(name)) {
-        audit.write({
-          player_id: 'system',
-          action: 'character_create',
-          inputs: { player_id: '', name, name_lower: nameLower },
-          result: 'invalid_name',
-        });
-        return { ok: false as const, code: 'invalid_name' as const, message: 'Name must be 3-20 characters, start with a letter, and contain only letters, numbers, underscores, or hyphens', status: 400 };
-      }
-
-      if (RESERVED_NAMES.includes(nameLower) || nameLower.startsWith('guest_')) {
-        audit.write({
-          player_id: 'system',
-          action: 'character_create',
-          inputs: { player_id: '', name, name_lower: nameLower },
-          result: 'invalid_name',
-        });
-        return { ok: false as const, code: 'invalid_name' as const, message: 'This name is reserved', status: 400 };
-      }
-
-      // Check if name is taken (via persistence layer)
-      const existingPlayer = persist.db.prepare(
-        'SELECT player_id FROM players WHERE name_lower = ? AND deleted_at IS NULL'
-      ).get(nameLower) as { player_id: string } | undefined;
-
-      if (existingPlayer) {
-        audit.write({
-          player_id: 'system',
-          action: 'character_create',
-          inputs: { player_id: '', name, name_lower: nameLower },
-          result: 'name_taken',
-        });
-        return { ok: false as const, code: 'name_taken' as const, message: 'This name is already taken', status: 409 };
-      }
-
-      // Generate player_id and token
-      const now = Date.now();
-      const player_id = `p_${randomUUID()}`;
-      const nonce = generateNonce();
-
-      // Sign the token
-      const signedToken = signToken(player_id, authKeyPair.privateKey, { nowMs: now, nonce });
-
-      // Emit character_create receipt
-      audit.write({
-        player_id: 'system',
-        action: 'character_create',
-        inputs: { player_id, name, name_lower: nameLower },
-        result: 'ok',
-      });
-
-      // Emit auth_token_issue receipt (audit-only, captures nonce for determinism)
-      audit.write({
-        player_id,
-        action: 'auth_token_issue',
-        inputs: {
-          token_id: signedToken.payload.token_id,
-          player_id,
-          issued_at: signedToken.payload.issued_at,
-          expires_at: signedToken.payload.expires_at,
-          nonce,
-          trigger: 'character_create',
-        },
-        result: 'ok',
-      });
-
-      return {
-        ok: true as const,
-        player_id,
-        name,
-        token: signedToken.wire,
-        issued_at: signedToken.payload.issued_at,
-        expires_at: signedToken.payload.expires_at,
-      };
     },
     getSessionMe: (guest_token: string) => resolveSessionMe(guest_token, 'expired_on_me'),
     getWorldPlayers: (map: MapName, query) => {
