@@ -359,6 +359,7 @@ export function handleForgeholdComponentPayout(ctx: SkillContext): SkillResult {
   if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
   const routeProgress = ctx.getOnwardRouteProgress?.();
   if (!routeProgress?.forgeholdComponentSettled) return { success: false, reason: 'invalid_target' };
+  if (routeProgress.forgeholdComponentPayoutCredited) return { success: false, reason: 'invalid_target' };
   if (!ctx.creditWallet) return { success: false, reason: 'invalid_target' };
 
   const creditedAt = new Date().toISOString();

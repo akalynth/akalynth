@@ -546,6 +546,39 @@ test('Forgehold component payout credits wallet by receipt after settlement', as
   assert(result.payload?.payout_guard?.item_transfer === false, 'Forgehold payout payload must not transfer item');
 });
 
+test('Forgehold component payout is idempotent after receipt-derived credit', async () => {
+  const { ctx, receipts, sent } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:safety:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:gate:heartforge' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:ashglass' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:refine' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:mint' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:settle' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:payout' });
+  ctx.skillCooldowns.set('route:economy:payout', 0);
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:payout' });
+
+  const payouts = receipts.filter((r) => r.action === FORGEHOLD_COMPONENT_PAYOUT_CREDITED_ACTION);
+  const credits = receipts.filter((r) => r.action === 'wallet_credit' && r.inputs.reason === 'forgehold_payout:forgehold_soulsteel_component_settlement_v1');
+  const payoutResults = sent.filter((msg) =>
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as { type?: string }).type === 'skill_result' &&
+    (msg as { skill_id?: string }).skill_id === 'route:economy:payout'
+  ) as Array<{ success?: boolean; reason?: string }>;
+
+  assert(payouts.length === 1, 'repeat Forgehold payout must not emit a second payout receipt');
+  assert(credits.length === 1, 'repeat Forgehold payout must not emit a second wallet credit');
+  assert(payoutResults.length === 2, 'repeat Forgehold payout should return two skill results');
+  assert(payoutResults[0]?.success === true, 'first Forgehold payout should succeed');
+  assert(payoutResults[1]?.success === false, 'second Forgehold payout should fail');
+  assert(payoutResults[1]?.reason === 'invalid_target', 'second Forgehold payout should be rejected as invalid target');
+});
+
 test('Dream Gate seal preparation records server gate without traversal or economy authority', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:moonspire' });
