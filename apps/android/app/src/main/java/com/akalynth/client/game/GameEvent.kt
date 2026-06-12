@@ -23,6 +23,9 @@ sealed class GameEvent {
     // World events
     data class WorldEventContribution(val contributionId: String) : GameEvent()
 
+    // NPC dialogue
+    data class TalkToNpc(val npcId: String) : GameEvent()
+
     // High City economy/property intents
     data object InspectWallet : GameEvent()
     data class BuyHouse(val propertyId: String) : GameEvent()

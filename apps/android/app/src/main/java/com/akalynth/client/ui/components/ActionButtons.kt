@@ -27,7 +27,9 @@ fun ActionButtons(
     onChronicle: () -> Unit = {},
     showWitnessMothBloom: Boolean = false,
     onWorldEventContribution: (String) -> Unit = {},
+    showRookguardActions: Boolean = false,
     showHighCityActions: Boolean = false,
+    onTalkToNpc: (String) -> Unit = {},
     onInspectWallet: () -> Unit = {},
     onStartWork: () -> Unit = {},
     onTickWork: () -> Unit = {},
@@ -114,6 +116,21 @@ fun ActionButtons(
                 )
             }
 
+            if (showRookguardActions) {
+                Text(
+                    text = "Rookguard",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = ClassicShellColors.Brass,
+                    modifier = Modifier.testTag("ActionButtons_RookguardActions")
+                )
+                ClassicButton(
+                    text = "Guide",
+                    onClick = { onTalkToNpc("rookguard_guide") },
+                    compact = true,
+                    modifier = Modifier.testTag("ActionButtons_Talk_RookguardGuide")
+                )
+            }
+
             if (showHighCityActions) {
                 Text(
                     text = "High City",
@@ -126,6 +143,18 @@ fun ActionButtons(
                     onClick = onInspectWallet,
                     compact = true,
                     modifier = Modifier.testTag("ActionButtons_Wallet")
+                )
+                ClassicButton(
+                    text = "Herald",
+                    onClick = { onTalkToNpc("azura_herald") },
+                    compact = true,
+                    modifier = Modifier.testTag("ActionButtons_Talk_AzuraHerald")
+                )
+                ClassicButton(
+                    text = "Steward",
+                    onClick = { onTalkToNpc("azura_steward") },
+                    compact = true,
+                    modifier = Modifier.testTag("ActionButtons_Talk_AzuraSteward")
                 )
                 ClassicButton(
                     text = "Work",
