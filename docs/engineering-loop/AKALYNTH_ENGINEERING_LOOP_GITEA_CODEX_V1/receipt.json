@@ -1,0 +1,36 @@
+{
+  "object_id": "AKALYNTH_ENGINEERING_LOOP_GITEA_CODEX_V1",
+  "status": "created",
+  "created_utc": "2026-06-12T18:08:00Z",
+  "authority": {
+    "github": "canonical public/source remote",
+    "gitea": "local agent workbench and PR queue",
+    "codex": "packet authoring and agent execution",
+    "ci_validation": "proof gate before merge",
+    "receipts": "evidence of what changed and why"
+  },
+  "first_packet": {
+    "object_id": "AKALYNTH_FORGEHOLD_NEXT_PACKET_V1",
+    "path": "docs/codex-work-packets/forgehold-next-packet-v1/Forgehold.next_packet.md",
+    "source_intake": "docs/asset-decisions/AKALYNTH_FORGEHOLD_ROUTE_SOURCE_INTAKE_V1/FORGEHOLD_ROUTE_SOURCE_INTAKE.md",
+    "gitea_repo": "https://gitea.akalynth.com/sovereign/akalynth",
+    "gitea_issue": "https://gitea.akalynth.com/sovereign/akalynth/issues/2",
+    "claimed_branch": "codex/forgehold-next-packet",
+    "claimed_by": "Codex agent",
+    "target_labels": [
+      "codex:ready",
+      "codex:running",
+      "codex:blocked",
+      "codex:needs-review",
+      "codex:accepted",
+      "packet:forgehold"
+    ]
+  },
+  "non_mutation_boundary": {
+    "runtime_trees": "unchanged",
+    "runtime_state": "unchanged",
+    "key_config_custody": "unchanged",
+    "deployment": "not performed",
+    "gameplay_promotion": "not performed"
+  }
+}
