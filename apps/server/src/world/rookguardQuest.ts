@@ -289,6 +289,7 @@ export function buildOnwardRouteProgress(
     soulsteelStabilized: false,
     forgeholdAbuseNotesReviewed: false,
     heartforgeGatePrepared: false,
+    ashglassEvidenceRecovered: false,
     moonspireSurveyed: false,
     dreamGateInterpreted: false,
     dreamFragmentAnchored: false,
@@ -306,6 +307,7 @@ export function buildOnwardRouteProgress(
     ...(receiptProgress.soulsteelStabilized ? ['soulsteel_stabilization'] : []),
     ...(receiptProgress.forgeholdAbuseNotesReviewed ? ['forgehold_abuse_notes'] : []),
     ...(receiptProgress.heartforgeGatePrepared ? ['heartforge_trial_server_gate'] : []),
+    ...(receiptProgress.ashglassEvidenceRecovered ? ['ashglass_evidence_recovery'] : []),
   ];
   const moonspireCompleted = [
     ...(receiptProgress.moonspireSurveyed ? ['dream_gate_rumor'] : []),
@@ -322,8 +324,10 @@ export function buildOnwardRouteProgress(
       status,
       unlock_requirement: unlockRequirement,
       next_objective: available
-        ? receiptProgress.heartforgeGatePrepared
-          ? 'Carry the unstable Soulsteel proof toward the Heartforge Trial chamber; refinement still requires evidence recovery.'
+        ? receiptProgress.ashglassEvidenceRecovered
+          ? 'Hold the recovered Ashglass evidence until Soulsteel refinement is server-authorized.'
+          : receiptProgress.heartforgeGatePrepared
+          ? 'Recover Ashglass evidence before any Soulsteel refinement can be server-authorized.'
           : receiptProgress.forgeholdAbuseNotesReviewed
             ? 'Prepare the Heartforge Trial server gate without unlocking travel yet.'
           : receiptProgress.soulsteelStabilized
@@ -340,13 +344,14 @@ export function buildOnwardRouteProgress(
         { id: 'forgehold_economy_receipts', label: 'Receipt-backed Forgehold economy proof', system: 'economy' },
         { id: 'soulsteel_stabilization', label: 'Soulsteel stabilization crafting', system: 'crafting' },
         { id: 'heartforge_trial_server_gate', label: 'Heartforge Trial server gate', system: 'server' },
+        { id: 'ashglass_evidence_recovery', label: 'Ashglass evidence recovery', system: 'crafting' },
         { id: 'forgehold_client_projection', label: 'Read-only client route projection', system: 'ui' },
         { id: 'forgehold_android_projection', label: 'Android read-only route parity', system: 'android' },
         { id: 'forgehold_abuse_notes', label: 'No client-truth crafting or shipment claims', system: 'anti_cheat' },
       ],
       completed_objective_ids: forgeholdCompleted,
       source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
-      receipt_actions: ['route_surveyed', 'forgehold_shipment_investigated', 'forgehold_economy_quoted', 'soulsteel_stabilized', 'route_abuse_notes_reviewed', 'heartforge_gate_prepared'],
+      receipt_actions: ['route_surveyed', 'forgehold_shipment_investigated', 'forgehold_economy_quoted', 'soulsteel_stabilized', 'route_abuse_notes_reviewed', 'heartforge_gate_prepared', 'ashglass_evidence_recovered'],
     },
     {
       route_id: 'moonspire_dream_gate_slice_v1',

@@ -23,6 +23,7 @@ import {
   handleForgeholdEconomyQuote,
   handleRouteSurvey,
   handleSoulsteelStabilization,
+  handleAshglassEvidenceRecovery,
   handleDreamGateInterpretation,
   handleDreamFragmentAnchor,
   handleRouteSafetyReview,
@@ -209,6 +210,9 @@ async function executeSkill(
 
     case 'route:craft:soulsteel':
       return handleSoulsteelStabilization(ctx);
+
+    case 'route:craft:ashglass':
+      return handleAshglassEvidenceRecovery(ctx);
 
     case 'route:gate:heartforge':
       return handleHeartforgeGatePreparation(ctx);

@@ -1,5 +1,6 @@
 import type { AuditReceipt } from '../../../../packages/shared/types.js';
 import {
+  ASHGLASS_EVIDENCE_RECOVERED_ACTION,
   DREAM_FRAGMENT_ANCHORED_ACTION,
   DREAM_GATE_INTERPRETED_ACTION,
   DREAM_GATE_SEAL_PREPARED_ACTION,
@@ -18,6 +19,7 @@ export interface OnwardRouteReceiptProgress {
   soulsteelStabilized: boolean;
   forgeholdAbuseNotesReviewed: boolean;
   heartforgeGatePrepared: boolean;
+  ashglassEvidenceRecovered: boolean;
   moonspireSurveyed: boolean;
   dreamGateInterpreted: boolean;
   dreamFragmentAnchored: boolean;
@@ -33,6 +35,7 @@ function defaultProgress(): OnwardRouteReceiptProgress {
     soulsteelStabilized: false,
     forgeholdAbuseNotesReviewed: false,
     heartforgeGatePrepared: false,
+    ashglassEvidenceRecovered: false,
     moonspireSurveyed: false,
     dreamGateInterpreted: false,
     dreamFragmentAnchored: false,
@@ -90,6 +93,8 @@ export function applyReceiptToOnwardRoutes(receipt: AuditReceipt): void {
     }
   } else if (receipt.action === HEARTFORGE_GATE_PREPARED_ACTION) {
     next = { ...current, heartforgeGatePrepared: true };
+  } else if (receipt.action === ASHGLASS_EVIDENCE_RECOVERED_ACTION) {
+    next = { ...current, ashglassEvidenceRecovered: true };
   } else if (receipt.action === DREAM_GATE_SEAL_PREPARED_ACTION) {
     next = { ...current, dreamGateSealPrepared: true };
   }

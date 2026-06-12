@@ -16,6 +16,7 @@ export type SkillId =
   | 'route:safety:moonspire'
   | 'route:economy:forgehold'
   | 'route:craft:soulsteel'
+  | 'route:craft:ashglass'
   | 'route:gate:heartforge'
   | 'route:gate:moonspire'
   | 'route:dream:interpret'
@@ -118,6 +119,14 @@ export const SKILL_REGISTRY: Record<SkillId, SkillDefinition> = {
     gold_cost: 0,
     debug_only: false,
   },
+  'route:craft:ashglass': {
+    id: 'route:craft:ashglass',
+    name: 'Recover Ashglass Evidence',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
   'route:gate:heartforge': {
     id: 'route:gate:heartforge',
     name: 'Prepare Heartforge Gate',
@@ -186,6 +195,7 @@ export const ROUTE_SURVEYED_ACTION = 'route_surveyed';
 export const ROUTE_ABUSE_NOTES_REVIEWED_ACTION = 'route_abuse_notes_reviewed';
 export const FORGEHOLD_ECONOMY_QUOTED_ACTION = 'forgehold_economy_quoted';
 export const SOULSTEEL_STABILIZED_ACTION = 'soulsteel_stabilized';
+export const ASHGLASS_EVIDENCE_RECOVERED_ACTION = 'ashglass_evidence_recovered';
 export const HEARTFORGE_GATE_PREPARED_ACTION = 'heartforge_gate_prepared';
 export const DREAM_GATE_SEAL_PREPARED_ACTION = 'dream_gate_seal_prepared';
 export const DREAM_GATE_INTERPRETED_ACTION = 'dream_gate_interpreted';

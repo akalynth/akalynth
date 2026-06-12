@@ -660,6 +660,7 @@ class GameStore(
             msg.skillId != "route:quest:shipment" &&
             msg.skillId != "route:economy:forgehold" &&
             msg.skillId != "route:craft:soulsteel" &&
+            msg.skillId != "route:craft:ashglass" &&
             msg.skillId != "route:gate:heartforge" &&
             msg.skillId != "route:gate:moonspire" &&
             msg.skillId != "route:dream:interpret" &&
@@ -673,6 +674,7 @@ class GameStore(
             "route:quest:shipment" -> "Forgehold shipment"
             "route:economy:forgehold" -> "Forgehold economy"
             "route:craft:soulsteel" -> "Soulsteel"
+            "route:craft:ashglass" -> "Ashglass evidence"
             "route:gate:heartforge" -> "Heartforge gate"
             "route:gate:moonspire" -> "Dream Gate seal"
             "route:dream:interpret" -> "Dream Gate"
@@ -685,6 +687,7 @@ class GameStore(
                 "route:quest:shipment" -> "$title investigation recorded by server."
                 "route:economy:forgehold" -> "$title quote recorded by server."
                 "route:craft:soulsteel" -> "$title stabilization recorded by server."
+                "route:craft:ashglass" -> "$title recovered by server."
                 "route:gate:heartforge", "route:gate:moonspire" -> "$title prepared by server."
                 "route:dream:interpret" -> "$title interpretation recorded by server."
                 "route:dream:fragment" -> "$title evidence anchored by server."
@@ -886,6 +889,7 @@ class GameStore(
             skillId != "route:quest:shipment" &&
             skillId != "route:economy:forgehold" &&
             skillId != "route:craft:soulsteel" &&
+            skillId != "route:craft:ashglass" &&
             skillId != "route:gate:heartforge" &&
             skillId != "route:gate:moonspire" &&
             skillId != "route:dream:interpret" &&

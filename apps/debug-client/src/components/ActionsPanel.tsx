@@ -35,6 +35,7 @@ const ROUTE_SURVEY_ACTIONS = [
   { skill_id: 'route:quest:shipment', label: 'Investigate Shipment', short: 'Ship' },
   { skill_id: 'route:economy:forgehold', label: 'Quote Forgehold Economy', short: 'Quote' },
   { skill_id: 'route:craft:soulsteel', label: 'Stabilize Soulsteel', short: 'Steel' },
+  { skill_id: 'route:craft:ashglass', label: 'Recover Ashglass Evidence', short: 'Glass' },
   { skill_id: 'route:gate:heartforge', label: 'Prepare Heartforge Gate', short: 'Gate' },
   { skill_id: 'route:gate:moonspire', label: 'Prepare Dream Gate Seal', short: 'Seal' },
   { skill_id: 'route:dream:interpret', label: 'Interpret Dream Gate', short: 'Gate' },
@@ -55,6 +56,7 @@ function routeActionIdsFor(onwardRoutes: NonNullable<PlayLoopProgress['onwardRou
       else if (!completed.has('soulsteel_stabilization')) ids.push('route:craft:soulsteel');
       else if (!completed.has('forgehold_abuse_notes')) ids.push('route:safety:forgehold');
       else if (!completed.has('heartforge_trial_server_gate')) ids.push('route:gate:heartforge');
+      else if (!completed.has('ashglass_evidence_recovery')) ids.push('route:craft:ashglass');
     } else if (route.route_id === 'moonspire_dream_gate_slice_v1') {
       if (!completed.has('dream_gate_rumor')) ids.push('route:survey:moonspire');
       else if (!completed.has('symbolic_puzzle_projection')) ids.push('route:dream:interpret');

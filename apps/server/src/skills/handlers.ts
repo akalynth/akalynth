@@ -3,6 +3,7 @@
 
 import type { SkillContext, SkillResult } from './index.js';
 import {
+  ASHGLASS_EVIDENCE_RECOVERED_ACTION,
   DREAM_FRAGMENT_ANCHORED_ACTION,
   FORGEHOLD_ECONOMY_QUOTED_ACTION,
   HEARTFORGE_GATE_PREPARED_ACTION,
@@ -234,7 +235,7 @@ export function handleSoulsteelStabilization(ctx: SkillContext): SkillResult {
       item_type: 'stabilized_soulsteel_component',
       quality,
       status: 'stabilized',
-      next_objective: 'Carry the unstable Soulsteel proof toward the Heartforge Trial chamber; refinement still requires evidence recovery.',
+      next_objective: 'Prepare the Heartforge Trial server gate, then recover Ashglass evidence before refinement.',
       required_evidence: requiredEvidence,
       required_economy_quote: FORGEHOLD_ECONOMY_QUOTED_ACTION,
       source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
@@ -399,7 +400,7 @@ export function handleRouteSafetyReview(ctx: SkillContext, route: 'forgehold' | 
     ? ['server owns crafting results', 'server owns shipment claims', 'no client-owned item mint', 'no client-owned wallet movement']
     : ['server owns dream traversal', 'server owns fragment evidence', 'no client-owned gate state', 'no client-owned economy change'];
   const nextObjective = isForgehold
-    ? 'Carry the unstable Soulsteel proof toward the Heartforge Trial chamber; refinement still requires evidence recovery.'
+    ? 'Prepare the Heartforge Trial server gate without unlocking travel yet.'
     : 'Prepare the Dream Gate server seal without granting traversal yet.';
 
   ctx.audit({
@@ -462,9 +463,59 @@ export function handleHeartforgeGatePreparation(ctx: SkillContext): SkillResult 
       title: 'Heartforge Trial Gate',
       status: 'prepared',
       required_proofs: ['soulsteel_stabilized', 'route_abuse_notes_reviewed'],
-      next_objective: 'Carry the unstable Soulsteel proof toward the Heartforge Trial chamber; refinement still requires evidence recovery.',
+      next_objective: 'Recover Ashglass evidence before any Soulsteel refinement can be server-authorized.',
       source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
       receipt_action: HEARTFORGE_GATE_PREPARED_ACTION,
+      travel_unlocked: false,
+      economy_impact: 'none',
+    },
+  };
+}
+
+export function handleAshglassEvidenceRecovery(ctx: SkillContext): SkillResult {
+  if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
+  const routeProgress = ctx.getOnwardRouteProgress?.();
+  if (!routeProgress?.heartforgeGatePrepared) return { success: false, reason: 'invalid_target' };
+
+  const recoveredAt = new Date().toISOString();
+  const evidenceObjects = ['ashglass_shard', 'tempered_slag_trace'];
+  const refinementGuard = {
+    item_mint: false,
+    wallet_debit_gold: 0,
+    wallet_credit_gold: 0,
+    travel_unlocked: false,
+  };
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: ASHGLASS_EVIDENCE_RECOVERED_ACTION,
+    inputs: {
+      route_id: 'forgehold_route_slice_v1',
+      evidence_id: 'heartforge_ashglass_evidence_v1',
+      evidence_objects: evidenceObjects,
+      required_gate: HEARTFORGE_GATE_PREPARED_ACTION,
+      source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
+      recovered_at: recoveredAt,
+      refinement_guard: refinementGuard,
+      travel_unlocked: false,
+      economy_impact: 'none',
+    },
+    result: 'ok',
+  });
+
+  return {
+    success: true,
+    payload: {
+      route_id: 'forgehold_route_slice_v1',
+      evidence_id: 'heartforge_ashglass_evidence_v1',
+      title: 'Heartforge Ashglass Evidence',
+      status: 'recovered',
+      evidence_objects: evidenceObjects,
+      required_gate: HEARTFORGE_GATE_PREPARED_ACTION,
+      next_objective: 'Hold the recovered Ashglass evidence until Soulsteel refinement is server-authorized.',
+      source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
+      receipt_action: ASHGLASS_EVIDENCE_RECOVERED_ACTION,
+      refinement_guard: refinementGuard,
       travel_unlocked: false,
       economy_impact: 'none',
     },

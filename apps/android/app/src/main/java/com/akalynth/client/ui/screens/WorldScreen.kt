@@ -252,6 +252,7 @@ private fun routeActionSkillIdsFor(routes: List<OnwardRouteProgress>): List<Stri
                 !completed.contains("soulsteel_stabilization") -> listOf("route:craft:soulsteel")
                 !completed.contains("forgehold_abuse_notes") -> listOf("route:safety:forgehold")
                 !completed.contains("heartforge_trial_server_gate") -> listOf("route:gate:heartforge")
+                !completed.contains("ashglass_evidence_recovery") -> listOf("route:craft:ashglass")
                 else -> emptyList()
             }
             "moonspire_dream_gate_slice_v1" -> when {
