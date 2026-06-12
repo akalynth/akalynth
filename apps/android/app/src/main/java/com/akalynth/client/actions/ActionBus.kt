@@ -1,7 +1,6 @@
 package com.akalynth.client.actions
 
 import com.akalynth.client.chronicle.ChronicleStore
-import com.akalynth.client.ui.components.character.CharacterSex
 import com.akalynth.client.ui.components.hotbar.ItemRarity
 
 /**
@@ -113,25 +112,6 @@ class ActionBus(
             itemName = itemName,
             x = x,
             y = y
-        )
-        return dispatch(intent)
-    }
-
-    /**
-     * Dispatch a create character action.
-     *
-     * @param name Character name
-     * @param sex Character sex
-     * @return The stamped action intent
-     */
-    suspend fun dispatchCreateCharacter(
-        name: String,
-        sex: CharacterSex
-    ): ActionIntent.CreateCharacter {
-        val intent = ActionIntent.CreateCharacter(
-            actionId = ids.nextId(),
-            name = name,
-            sex = sex
         )
         return dispatch(intent)
     }

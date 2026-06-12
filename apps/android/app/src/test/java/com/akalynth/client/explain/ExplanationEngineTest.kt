@@ -8,7 +8,6 @@ import com.akalynth.client.chronicle.EventStatus
 import com.akalynth.client.chronicle.Receipt
 import com.akalynth.client.rules.RuleId
 import com.akalynth.client.snapshot.SnapshotV0
-import com.akalynth.client.ui.components.character.CharacterSex
 import com.akalynth.client.ui.components.hotbar.ItemRarity
 import com.akalynth.client.ui.state.ChronicleEventDetails
 import com.akalynth.client.ui.state.DeathNotice
@@ -87,10 +86,9 @@ class ExplanationEngineTest {
 
     @Test
     fun `A - intent has remediation`() {
-        val intent = ActionIntent.CreateCharacter(
+        val intent = ActionIntent.Attack(
             actionId = "action_abc",
-            name = "Hero",
-            sex = CharacterSex.MALE
+            targetId = "enemy_123"
         )
 
         val explanation = ExplanationEngine.explain(

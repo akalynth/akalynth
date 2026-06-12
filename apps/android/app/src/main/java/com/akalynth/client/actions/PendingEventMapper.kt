@@ -66,7 +66,6 @@ object PendingEventMapper {
             is ActionIntent.UseHotbarSlot -> null // Most uses don't create chronicle events
             is ActionIntent.DropHotbarSlot -> mapDrop(intent, clock, zone, x, y)
             is ActionIntent.PickupItem -> mapPickup(intent, clock, zone)
-            is ActionIntent.CreateCharacter -> mapCreateCharacter(intent, clock, zone, x, y)
             is ActionIntent.WorldEventContribution -> null // Server receipt is the only event truth
         }
     }
@@ -136,30 +135,6 @@ object PendingEventMapper {
             details = mapOf(
                 "item_id" to intent.itemId,
                 "item_name" to intent.itemName
-            ),
-            status = EventStatus.PENDING,
-            source = EventSource.CLIENT_INTENT
-        )
-    }
-
-    private fun mapCreateCharacter(
-        intent: ActionIntent.CreateCharacter,
-        clock: Clock,
-        zone: String?,
-        x: Int?,
-        y: Int?
-    ): ChronicleEvent {
-        return ChronicleEvent(
-            eventId = syntheticId(intent.actionId),
-            actionId = intent.actionId,
-            kind = ChronicleEventKind.CHARACTER_CREATED,
-            timestampMs = clock.nowMs(),
-            zone = zone,
-            x = x,
-            y = y,
-            details = mapOf(
-                "name" to intent.name,
-                "sex" to intent.sex.name
             ),
             status = EventStatus.PENDING,
             source = EventSource.CLIENT_INTENT
