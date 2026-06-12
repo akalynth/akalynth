@@ -139,6 +139,10 @@ if ! grep -Fq 'test:web-economy' "$ROOT_DIR/package.json"; then
   die "Root verify:account-character must include server test:web-economy gameplay route proof."
 fi
 
+if ! grep -Fq ':app:compileDebugAndroidTestKotlin' "$ROOT_DIR/package.json"; then
+  die "Root verify:account-character must compile Android character UI androidTest sources."
+fi
+
 if ! grep -Fq "run('npm', ['run', 'test:web-economy']);" "$ROOT_DIR/apps/server/tools/verify-server.mjs"; then
   die "Server verify:quick must include test:web-economy gameplay route proof."
 fi
@@ -146,6 +150,12 @@ fi
 for gameplay_doc in "$ROOT_DIR/README.md" "$ROOT_DIR/docs/CURRENT_STAGE.md" "$ROOT_DIR/docs/V1_SCOPE.md" "$ROOT_DIR/scripts/README.md"; do
   if ! grep -Fq 'shop/work/property gameplay route proof' "$gameplay_doc"; then
     die "Missing account-character gameplay route proof wording in ${gameplay_doc#$ROOT_DIR/}"
+  fi
+done
+
+for android_ui_doc in "$ROOT_DIR/README.md" "$ROOT_DIR/scripts/README.md"; do
+  if ! grep -Fq 'Android character UI compile' "$android_ui_doc"; then
+    die "Missing Android character UI compile wording in ${android_ui_doc#$ROOT_DIR/}"
   fi
 done
 
