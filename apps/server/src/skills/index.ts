@@ -4,6 +4,7 @@
 import type { WebSocket } from 'ws';
 import type { Player, AntiCheatState } from '../../../../packages/shared/types.js';
 import type { UseSkillMessage, SkillRejectionReason } from '../../../../packages/shared/protocol.js';
+import type { OnwardRouteReceiptProgress } from '../world/onwardRoutes.js';
 import { ServerMessages } from '../../../../packages/shared/protocol.js';
 import {
   SKILL_REGISTRY,
@@ -36,6 +37,7 @@ export interface SkillContext {
   antiState: AntiCheatState;
   skillCooldowns: Map<string, number>;
   onwardRoutesAvailable?: boolean;
+  getOnwardRouteProgress?: () => OnwardRouteReceiptProgress;
   // Audit write function
   audit: (receipt: {
     player_id: string;

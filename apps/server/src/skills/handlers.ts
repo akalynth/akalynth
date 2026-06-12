@@ -197,6 +197,10 @@ export function handleRouteSurvey(ctx: SkillContext, route: 'forgehold' | 'moons
 
 export function handleSoulsteelStabilization(ctx: SkillContext): SkillResult {
   if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
+  const routeProgress = ctx.getOnwardRouteProgress?.();
+  if (!routeProgress?.forgeholdSurveyed || !routeProgress.forgeholdShipmentInvestigated) {
+    return { success: false, reason: 'invalid_target' };
+  }
 
   const craftedAt = new Date().toISOString();
   const quality = 'unstable';
@@ -235,6 +239,8 @@ export function handleSoulsteelStabilization(ctx: SkillContext): SkillResult {
 
 export function handleDreamGateInterpretation(ctx: SkillContext): SkillResult {
   if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
+  const routeProgress = ctx.getOnwardRouteProgress?.();
+  if (!routeProgress?.moonspireSurveyed) return { success: false, reason: 'invalid_target' };
 
   const interpretedAt = new Date().toISOString();
   const symbols = ['Door', 'Mirror', 'Water'];
@@ -279,6 +285,8 @@ export function handleDreamGateInterpretation(ctx: SkillContext): SkillResult {
 
 export function handleForgeholdShipmentInvestigation(ctx: SkillContext): SkillResult {
   if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
+  const routeProgress = ctx.getOnwardRouteProgress?.();
+  if (!routeProgress?.forgeholdSurveyed) return { success: false, reason: 'invalid_target' };
 
   const investigatedAt = new Date().toISOString();
   const evidenceObjects = ['broken_route_seal', 'charred_shipment_plate'];

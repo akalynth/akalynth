@@ -15,15 +15,10 @@ function assert(condition: unknown, msg: string): asserts condition {
   if (!condition) throw new Error(msg);
 }
 
-async function test(name: string, fn: () => Promise<void>) {
-  try {
-    await fn();
-    console.log(`✓ ${name}`);
-  } catch (err) {
-    console.error(`✗ ${name}`);
-    console.error(`  ${err}`);
-    process.exit(1);
-  }
+const tests: Array<{ name: string; fn: () => Promise<void> }> = [];
+
+function test(name: string, fn: () => Promise<void>) {
+  tests.push({ name, fn });
 }
 
 function context(options: { onwardRoutesAvailable?: boolean } = {}) {
@@ -46,6 +41,7 @@ function context(options: { onwardRoutesAvailable?: boolean } = {}) {
     } satisfies AntiCheatState,
     skillCooldowns: new Map(),
     onwardRoutesAvailable: options.onwardRoutesAvailable ?? true,
+    getOnwardRouteProgress: () => getOnwardRouteReceiptProgress('p1'),
     audit: (receipt) => {
       const normalized = { ...receipt, actor_id: receipt.player_id };
       receipts.push(normalized);
@@ -60,6 +56,19 @@ function context(options: { onwardRoutesAvailable?: boolean } = {}) {
     },
   };
   return { ctx, receipts, sent, resolvedSkills };
+}
+
+function skillResultFor<T extends Record<string, unknown> = Record<string, unknown>>(sent: unknown[], skillId: string): {
+  success?: boolean;
+  reason?: string;
+  payload?: T;
+} | undefined {
+  return sent.find((msg) =>
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as { type?: string }).type === 'skill_result' &&
+    (msg as { skill_id?: string }).skill_id === skillId
+  ) as { success?: boolean; reason?: string; payload?: T } | undefined;
 }
 
 const completedRookguard: RookguardQuestInput = {
@@ -79,13 +88,31 @@ test('route actions reject before Rookguard completion without route side effect
   assert(!receipts.some((r) => r.action === SOULSTEEL_STABILIZED_ACTION), 'locked route must not emit Soulsteel receipt');
   assert(!receipts.some((r) => r.action === DREAM_GATE_INTERPRETED_ACTION), 'locked route must not emit Dream Gate receipt');
 
-  const result = sent.find((msg) => typeof msg === 'object' && msg !== null && (msg as { type?: string }).type === 'skill_result') as {
-    success?: boolean;
-    reason?: string;
-  } | undefined;
+  const result = skillResultFor(sent, 'route:quest:shipment');
   assert(result?.success === false, 'locked route skill_result should fail');
   assert(result.reason === 'invalid_target', 'locked route skill_result should use invalid_target');
   assert(resolvedSkills.length === 0, 'locked route skill must not publish route progress');
+});
+
+test('route objective skills reject out of order without side effects', async () => {
+  const { ctx, receipts, sent, resolvedSkills } = context();
+
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:interpret' });
+
+  const failedResults = sent.filter((msg) => typeof msg === 'object' && msg !== null && (msg as { type?: string }).type === 'skill_result') as Array<{
+    success?: boolean;
+    reason?: string;
+  }>;
+  assert(failedResults.length === 3, 'out-of-order route skills should each return a skill_result');
+  assert(failedResults.every((result) => result.success === false), 'out-of-order route skills should fail');
+  assert(failedResults.every((result) => result.reason === 'invalid_target'), 'out-of-order route skills should use invalid_target');
+  assert(!receipts.some((r) => r.action === FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION), 'out-of-order shipment must not emit quest receipt');
+  assert(!receipts.some((r) => r.action === SOULSTEEL_STABILIZED_ACTION), 'out-of-order Soulsteel must not emit crafting receipt');
+  assert(!receipts.some((r) => r.action === DREAM_GATE_INTERPRETED_ACTION), 'out-of-order Dream Gate must not emit interpretation receipt');
+  assert(!receipts.some((r) => r.action === SKILL_RESOLVED_ACTION), 'out-of-order route skills must not resolve');
+  assert(resolvedSkills.length === 0, 'out-of-order route skills must not publish route progress');
 });
 
 test('Forgehold survey emits server-owned route payload and receipts', async () => {
@@ -99,10 +126,7 @@ test('Forgehold survey emits server-owned route payload and receipts', async () 
   assert(survey.inputs.route_id === 'forgehold_route_slice_v1', 'wrong Forgehold route id');
   assert(Array.isArray(survey.inputs.systems), 'Forgehold systems should be recorded');
 
-  const result = sent.find((msg) => typeof msg === 'object' && msg !== null && (msg as { type?: string }).type === 'skill_result') as {
-    success?: boolean;
-    payload?: { route_id?: string; systems?: string[] };
-  } | undefined;
+  const result = skillResultFor<{ route_id?: string; systems?: string[] }>(sent, 'route:survey:forgehold');
   assert(result?.success === true, 'Forgehold skill_result should succeed');
   assert(result.payload?.route_id === 'forgehold_route_slice_v1', 'Forgehold payload route mismatch');
   assert(result.payload?.systems?.includes('crafting'), 'Forgehold payload should include crafting');
@@ -118,10 +142,7 @@ test('Moonspire survey emits Dream Gate payload without client traversal truth',
   assert(survey, 'missing route_surveyed receipt');
   assert(survey.inputs.route_id === 'moonspire_dream_gate_slice_v1', 'wrong Moonspire route id');
 
-  const result = sent.find((msg) => typeof msg === 'object' && msg !== null && (msg as { type?: string }).type === 'skill_result') as {
-    success?: boolean;
-    payload?: { route_id?: string; systems?: string[]; next_objective?: string };
-  } | undefined;
+  const result = skillResultFor<{ route_id?: string; systems?: string[]; next_objective?: string }>(sent, 'route:survey:moonspire');
   assert(result?.success === true, 'Moonspire skill_result should succeed');
   assert(result.payload?.route_id === 'moonspire_dream_gate_slice_v1', 'Moonspire payload route mismatch');
   assert(result.payload?.systems?.includes('dream_gate'), 'Moonspire payload should include dream_gate');
@@ -134,6 +155,8 @@ test('Moonspire survey emits Dream Gate payload without client traversal truth',
 
 test('Soulsteel stabilization emits crafting receipt without wallet or item authority', async () => {
   const { ctx, receipts, sent } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
 
   const craft = receipts.find((r) => r.action === SOULSTEEL_STABILIZED_ACTION);
@@ -144,10 +167,7 @@ test('Soulsteel stabilization emits crafting receipt without wallet or item auth
   assert(!receipts.some((r) => r.action === 'wallet_debit'), 'Soulsteel prototype should not debit gold');
   assert(!receipts.some((r) => r.action === 'item_minted'), 'Soulsteel prototype should not mint an item');
 
-  const result = sent.find((msg) => typeof msg === 'object' && msg !== null && (msg as { type?: string }).type === 'skill_result') as {
-    success?: boolean;
-    payload?: { crafting_id?: string; quality?: string; economy_impact?: string; required_evidence?: string[] };
-  } | undefined;
+  const result = skillResultFor<{ crafting_id?: string; quality?: string; economy_impact?: string; required_evidence?: string[] }>(sent, 'route:craft:soulsteel');
   assert(result?.success === true, 'Soulsteel skill_result should succeed');
   assert(result.payload?.crafting_id === 'soulsteel_stabilization_v1', 'Soulsteel payload crafting id mismatch');
   assert(result.payload?.quality === 'unstable', 'Soulsteel payload quality mismatch');
@@ -157,6 +177,7 @@ test('Soulsteel stabilization emits crafting receipt without wallet or item auth
 
 test('Dream Gate interpretation records symbolic state without traversal or economy authority', async () => {
   const { ctx, receipts, sent } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:moonspire' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:interpret' });
 
   const interpretation = receipts.find((r) => r.action === DREAM_GATE_INTERPRETED_ACTION);
@@ -168,10 +189,7 @@ test('Dream Gate interpretation records symbolic state without traversal or econ
   assert(!receipts.some((r) => r.action === 'wallet_debit'), 'Dream Gate interpretation should not debit gold');
   assert(!receipts.some((r) => r.action === 'item_minted'), 'Dream Gate interpretation should not mint an item');
 
-  const result = sent.find((msg) => typeof msg === 'object' && msg !== null && (msg as { type?: string }).type === 'skill_result') as {
-    success?: boolean;
-    payload?: { gate_state?: string; traversal_granted?: boolean; meanings?: string[]; required_fragments?: string[] };
-  } | undefined;
+  const result = skillResultFor<{ gate_state?: string; traversal_granted?: boolean; meanings?: string[]; required_fragments?: string[] }>(sent, 'route:dream:interpret');
   assert(result?.success === true, 'Dream Gate skill_result should succeed');
   assert(result.payload?.gate_state === 'interpreted', 'Dream Gate payload state mismatch');
   assert(result.payload?.traversal_granted === false, 'Dream Gate payload must not grant traversal');
@@ -181,6 +199,7 @@ test('Dream Gate interpretation records symbolic state without traversal or econ
 
 test('Forgehold shipment investigation records quest progress without travel or economy authority', async () => {
   const { ctx, receipts, sent } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
 
   const investigation = receipts.find((r) => r.action === FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION);
@@ -192,10 +211,7 @@ test('Forgehold shipment investigation records quest progress without travel or 
   assert(!receipts.some((r) => r.action === 'wallet_debit'), 'Forgehold investigation should not debit gold');
   assert(!receipts.some((r) => r.action === 'item_minted'), 'Forgehold investigation should not mint an item');
 
-  const result = sent.find((msg) => typeof msg === 'object' && msg !== null && (msg as { type?: string }).type === 'skill_result') as {
-    success?: boolean;
-    payload?: { quest_id?: string; route_state?: string; travel_unlocked?: boolean; evidence_objects?: string[]; contradiction?: string };
-  } | undefined;
+  const result = skillResultFor<{ quest_id?: string; route_state?: string; travel_unlocked?: boolean; evidence_objects?: string[]; contradiction?: string }>(sent, 'route:quest:shipment');
   assert(result?.success === true, 'Forgehold investigation skill_result should succeed');
   assert(result.payload?.quest_id === 'forgehold_missing_shipment_v1', 'Forgehold investigation quest id mismatch');
   assert(result.payload?.route_state === 'investigating', 'Forgehold investigation payload state mismatch');
@@ -227,5 +243,16 @@ test('onward route projection is derived from route receipts', async () => {
   assert(forgehold.next_objective.includes('Heartforge Trial'), 'Forgehold next objective should advance after Soulsteel');
   assert(moonspire.next_objective.includes('Anchor the interpreted symbols'), 'Moonspire next objective should advance after interpretation');
 });
+
+for (const { name, fn } of tests) {
+  try {
+    await fn();
+    console.log(`✓ ${name}`);
+  } catch (err) {
+    console.error(`✗ ${name}`);
+    console.error(`  ${err}`);
+    process.exit(1);
+  }
+}
 
 console.log('\n✓ all route survey checks passed');
