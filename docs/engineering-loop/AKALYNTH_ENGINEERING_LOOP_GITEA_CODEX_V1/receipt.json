@@ -65,6 +65,24 @@
     "gitea_pr": "https://gitea.akalynth.com/sovereign/akalynth/pulls/3",
     "github_pr": "https://github.com/akalynth/akalynth/pull/312"
   },
+  "github_ci_status": {
+    "status": "external_runner_scheduling_failure",
+    "checked_utc": "2026-06-12T18:26:00Z",
+    "pr": "https://github.com/akalynth/akalynth/pull/312",
+    "failed_checks": [
+      "CI / changes",
+      "Spine Lock / enforce-structure",
+      "Verification Spine / verify"
+    ],
+    "evidence": [
+      "Initial jobs failed in 2-4 seconds with no steps.",
+      "Failed-job rerun reproduced the same failure in 2 seconds.",
+      "GitHub job metadata showed empty runner_name, empty runner_group_name, and steps: [].",
+      "GitHub job log API returned BlobNotFound for the failed job log."
+    ],
+    "local_validation": "passed",
+    "merge_status": "not merged"
+  },
   "non_mutation_boundary": {
     "runtime_trees": "unchanged",
     "runtime_state": "unchanged",
