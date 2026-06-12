@@ -1,10 +1,14 @@
 // Account-gated web economy router. This is the static portal command surface:
-// shop catalog/purchase, wallet read, and property buy/list/unlist. The router
+// shop catalog/purchase, wallet read, work contracts, and property buy/list/unlist. The router
 // never mutates authority directly; it validates account + character ownership,
-// then emits the same wallet/item/property receipts as the game server.
+// then emits the same wallet/item/work/property receipts as the game server.
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { URL } from 'node:url';
 import type { AuditReceipt, WalletCreditReason, WalletDebitReason } from '../../../../packages/shared/types.js';
+import type {
+  WebWorkStartResponse,
+  WebWorkTickResponse,
+} from '../../../../packages/shared/http.js';
 import {
   PROPERTY_LISTED_ACTION,
   PROPERTY_PURCHASED_ACTION,
@@ -253,7 +257,7 @@ export function makeWebEconomyRouter(deps: WebEconomyRouterDeps) {
       const characterId = resolved.character.character_id;
       const result = deps.startWorkContract(characterId);
       if (!result.ok) return (send(res, 409, { ok: false, error: result.error }), true);
-      send(res, 200, {
+      const response: WebWorkStartResponse = {
         ok: true,
         character_id: characterId,
         contract_id: result.contract_id,
@@ -261,7 +265,8 @@ export function makeWebEconomyRouter(deps: WebEconomyRouterDeps) {
         payout_gold: result.payout_gold,
         cooldown_seconds: result.cooldown_seconds,
         min_duration_ms: result.min_duration_ms,
-      });
+      };
+      send(res, 200, response);
       return true;
     }
 
@@ -278,7 +283,8 @@ export function makeWebEconomyRouter(deps: WebEconomyRouterDeps) {
       const result = deps.tickWorkContract(characterId, contractId);
       if (!result.ok) return (send(res, 409, { ok: false, error: result.error }), true);
       const { ok: _ok, ...tickBody } = result;
-      send(res, 200, { ok: true, character_id: characterId, ...tickBody });
+      const response: WebWorkTickResponse = { ok: true, character_id: characterId, ...tickBody };
+      send(res, 200, response);
       return true;
     }
 

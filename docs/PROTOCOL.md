@@ -58,6 +58,14 @@ Mutating endpoints require an account session, account-owned character id, and
 double-submit CSRF header; prices, work gates, payouts, and authority remain
 server-derived and receipt-backed.
 
+`POST /v1/work/start` accepts `{ character_id }` and returns
+`{ ok, character_id, contract_id, contract_type: "temple_sweep", payout_gold,
+cooldown_seconds, min_duration_ms }`. `POST /v1/work/tick` accepts
+`{ character_id, contract_id }` and returns `{ ok, character_id, contract_id,
+ticks_observed, ticks_required, remaining_ms, completed, credited_gold?,
+balance_gold? }`. Failed starts/ticks return `{ ok: false, error }` and do not
+grant browser-local authority.
+
 Server messages may include optional fields for UI context. Clients should tolerate unknown additional fields, but they should not treat unknown message types as valid gameplay authority.
 
 ## Android Subset Caveat
