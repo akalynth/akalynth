@@ -253,6 +253,10 @@ async function main(): Promise<void> {
     { cookie: verifiedCookie, 'x-csrf-token': csrf }
   );
   check('HTTP POST /v1/characters creates canonical high_city character', http.status === 201 && (http.body.character as { world_id?: string } | undefined)?.world_id === 'high_city');
+  check(
+    'HTTP POST /v1/characters returns client character + play token',
+    http.status === 201 && isClientCharacterShape(http.body.character) && typeof http.body.token === 'string' && typeof http.body.expires_at === 'number'
+  );
   const highCityProjection = accountCharacterLoginProjection(characterStore.findById('p_RouterHigh'));
   check('login projection: high_city character enters Azura runtime map', highCityProjection.map === 'Azura');
   check('login projection: outfit sprite follows catalog', highCityProjection.sprite_id === 'guard_city_01');
