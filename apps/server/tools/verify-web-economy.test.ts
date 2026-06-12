@@ -294,6 +294,9 @@ async function main(): Promise<void> {
   check('work start succeeds', res.status === 200 && res.body.ok === true && typeof contractId === 'string' && contractId.startsWith('wc_'));
   check('work start emits work_contract_started receipt', receipts.at(-1)?.action === WORK_CONTRACT_STARTED_ACTION);
 
+  res = await request('POST', '/v1/work/tick', { character_id: 'p_buyer', contract_id: contractId });
+  check('work tick requires account session', res.status === 401 && res.body.error === 'not_authenticated');
+
   res = await request('POST', '/v1/work/tick', { character_id: 'p_buyer' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
   check('work tick requires contract id', res.status === 400 && res.body.error === 'contract_id_required');
 
@@ -320,6 +323,9 @@ async function main(): Promise<void> {
   check('primary property buy owns plot', getProperty('Azura:H1')?.owner_player_id === 'p_buyer');
   check('primary buy emitted wallet debit + property purchase', receipts.slice(-2).map((r) => r.action).join(',') === `${WALLET_DEBIT_ACTION},${PROPERTY_PURCHASED_ACTION}`);
 
+  res = await request('POST', '/v1/property/list', { character_id: 'p_buyer', property_id: 'Azura:H1', price_gold: 75 });
+  check('property list requires account session', res.status === 401 && res.body.error === 'not_authenticated');
+
   res = await request('POST', '/v1/property/list', { character_id: 'p_buyer', property_id: 'Azura:H1', price_gold: 75 }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
   check('property list succeeds for owner', res.status === 200 && getProperty('Azura:H1')?.status === 'listed');
   check('property list emitted property_listed receipt', receipts.at(-1)?.action === PROPERTY_LISTED_ACTION);
@@ -336,6 +342,9 @@ async function main(): Promise<void> {
   res = await request('POST', '/v1/property/unlist', { character_id: 'p_buyer', property_id: 'Azura:H1' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
   check('property unlist succeeds for owner', res.status === 200 && getProperty('Azura:H1')?.status === 'owned');
   check('property unlist emitted property_unlisted receipt', receipts.at(-1)?.action === PROPERTY_UNLISTED_ACTION);
+
+  res = await request('POST', '/v1/property/unlist', { character_id: 'p_buyer', property_id: 'Azura:H1' });
+  check('property unlist requires account session', res.status === 401 && res.body.error === 'not_authenticated');
 }
 
 main().then(() => {
