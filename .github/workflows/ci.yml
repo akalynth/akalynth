@@ -481,7 +481,7 @@ jobs:
     permissions:
       contents: read
     needs: [changes]
-    if: github.event_name == 'push' || needs.changes.outputs.full_ci_required == 'true'
+    if: (github.event_name == 'push' || needs.changes.outputs.full_ci_required == 'true') && github.server_url == 'https://github.com'
 
     steps:
       - uses: actions/checkout@v4
