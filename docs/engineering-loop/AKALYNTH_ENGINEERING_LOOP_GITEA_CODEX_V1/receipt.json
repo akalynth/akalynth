@@ -75,14 +75,20 @@
     "github_pr": "https://github.com/akalynth/akalynth/pull/312"
   },
   "github_ci_status": {
-    "status": "ci_repair_rerun_pending",
-    "checked_utc": "2026-06-12T18:58:00Z",
+    "status": "ci_green",
+    "checked_utc": "2026-06-12T20:29:00Z",
     "pr": "https://github.com/akalynth/akalynth/pull/312",
-    "failed_checks": [
+    "green_commit": "e7655e08f566d878c16884f8e09682e81bec2e25",
+    "green_run": "https://github.com/akalynth/akalynth/actions/runs/27440194537",
+    "passed_checks": [
       "CI / changes",
+      "CI / verify",
+      "CI / Android instrumented tests (Compose UI)",
+      "CI / loadtest-smoke",
       "Spine Lock / enforce-structure",
       "Verification Spine / verify"
     ],
+    "failed_checks": [],
     "evidence": [
       "Initial jobs failed in 2-4 seconds with no steps.",
       "Failed-job rerun reproduced the same failure in 2 seconds.",
@@ -129,6 +135,21 @@
       "failed_run": "https://github.com/akalynth/akalynth/actions/runs/27436767569",
       "failed_step": "CI / loadtest-smoke / Run load test smoke (2 clients, 5s)",
       "workflow_fix": "Raised loadtest-smoke timeout from 5 minutes to 15 minutes without weakening any smoke or rate-limit checks."
+    },
+    "fourth_follow_up_repair": {
+      "reason": "GitHub CI reached loadtest-smoke rate-limit verification and exposed host port collision: the isolated scenario loop attempted to bind 0.0.0.0:3001, which is a live Akalynth lane port on this host.",
+      "failed_run": "https://github.com/akalynth/akalynth/actions/runs/27438462152",
+      "failed_step": "CI / loadtest-smoke / Verify rate limits (isolated scenarios)",
+      "workflow_fix": "Moved loadtest-smoke servers to high localhost CI ports: smoke server 43100 and isolated rate-limit scenarios 43110+, and added explicit server cleanup.",
+      "runner_optimization": "Added akalynth-github-runner-02, cleaned stale source-checkout server processes, and removed root Android SDK PATH entries from both GitHub runner service environments.",
+      "green_run": "https://github.com/akalynth/akalynth/actions/runs/27440194537",
+      "green_jobs": {
+        "CI / verify": "https://github.com/akalynth/akalynth/actions/runs/27440194537/job/81113041624",
+        "CI / Android instrumented tests (Compose UI)": "https://github.com/akalynth/akalynth/actions/runs/27440194537/job/81113041635",
+        "CI / loadtest-smoke": "https://github.com/akalynth/akalynth/actions/runs/27440194537/job/81114498790",
+        "Spine Lock / enforce-structure": "https://github.com/akalynth/akalynth/actions/runs/27440194531/job/81112115015",
+        "Verification Spine / verify": "https://github.com/akalynth/akalynth/actions/runs/27440194499/job/81112115007"
+      }
     }
   },
   "non_mutation_boundary": {
