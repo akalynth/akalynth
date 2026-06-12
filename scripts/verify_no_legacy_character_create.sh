@@ -294,6 +294,8 @@ for web_economy_literal in \
   "auth/csrf rejected property unlist emits no unlist receipt" \
   "property unlist requires character id" \
   "missing-character property unlist emits no second unlist receipt" \
+  "property unlist requires property id" \
+  "missing-property property unlist emits no second unlist receipt" \
   "property unlist rejects non-owner" \
   "non-owner property unlist emits no second unlist receipt" \
   "property unlist succeeds for owner" \
