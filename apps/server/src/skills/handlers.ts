@@ -2,7 +2,11 @@
 // Each handler implements utility/admin functionality using existing primitives
 
 import type { SkillContext, SkillResult } from './index.js';
-import { PLAYER_REPORTED_ACTION, ROUTE_SURVEYED_ACTION } from '../../../../packages/shared/skills.js';
+import {
+  PLAYER_REPORTED_ACTION,
+  ROUTE_SURVEYED_ACTION,
+  SOULSTEEL_STABILIZED_ACTION,
+} from '../../../../packages/shared/skills.js';
 import { createHash } from 'node:crypto';
 
 // ============================================================================
@@ -183,6 +187,42 @@ export function handleRouteSurvey(ctx: SkillContext, route: 'forgehold' | 'moons
       source_drop: sourceDrop,
       systems,
       receipt_action: ROUTE_SURVEYED_ACTION,
+    },
+  };
+}
+
+export function handleSoulsteelStabilization(ctx: SkillContext): SkillResult {
+  const craftedAt = new Date().toISOString();
+  const quality = 'unstable';
+  const requiredEvidence = ['charred_shipment_plate', 'ashglass_shard'];
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: SOULSTEEL_STABILIZED_ACTION,
+    inputs: {
+      route_id: 'forgehold_route_slice_v1',
+      quality,
+      required_evidence: requiredEvidence,
+      source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
+      crafted_at: craftedAt,
+      economy_impact: 'none',
+    },
+    result: 'ok',
+  });
+
+  return {
+    success: true,
+    payload: {
+      route_id: 'forgehold_route_slice_v1',
+      crafting_id: 'soulsteel_stabilization_v1',
+      item_type: 'stabilized_soulsteel_component',
+      quality,
+      status: 'stabilized',
+      next_objective: 'Carry the unstable Soulsteel proof toward the Heartforge Trial chamber; refinement still requires evidence recovery.',
+      required_evidence: requiredEvidence,
+      source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
+      receipt_action: SOULSTEEL_STABILIZED_ACTION,
+      economy_impact: 'none',
     },
   };
 }

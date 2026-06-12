@@ -654,16 +654,21 @@ class GameStore(
     }
 
     private fun handleSkillResult(msg: SkillResultMessage) {
-        if (!msg.skillId.startsWith("route:survey:")) return
+        if (!msg.skillId.startsWith("route:survey:") && msg.skillId != "route:craft:soulsteel") return
         val title = when (msg.skillId) {
             "route:survey:forgehold" -> "Forgehold Route"
             "route:survey:moonspire" -> "Moonspire Dream Gate"
+            "route:craft:soulsteel" -> "Soulsteel"
             else -> "Route"
         }
         val line = if (msg.success) {
-            "$title survey recorded by server."
+            if (msg.skillId == "route:craft:soulsteel") {
+                "$title stabilization recorded by server."
+            } else {
+                "$title survey recorded by server."
+            }
         } else {
-            "$title survey unavailable: ${msg.reason ?: "rejected"}"
+            "$title action unavailable: ${msg.reason ?: "rejected"}"
         }
         _state.update {
             it.copy(
@@ -850,7 +855,11 @@ class GameStore(
     }
 
     private fun sendRouteSurvey(skillId: String) {
-        if (skillId != "route:survey:forgehold" && skillId != "route:survey:moonspire") return
+        if (
+            skillId != "route:survey:forgehold" &&
+            skillId != "route:survey:moonspire" &&
+            skillId != "route:craft:soulsteel"
+        ) return
         wsClient.send(UseSkillMessage(skillId = skillId))
         logSent("use_skill", skillId)
     }

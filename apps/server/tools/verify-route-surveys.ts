@@ -6,7 +6,7 @@
 
 import type { WebSocket } from 'ws';
 import type { AntiCheatState, Player } from '../../../packages/shared/types.js';
-import { ROUTE_SURVEYED_ACTION, SKILL_RESOLVED_ACTION, SKILL_USE_INTENT_ACTION } from '../../../packages/shared/skills.js';
+import { ROUTE_SURVEYED_ACTION, SKILL_RESOLVED_ACTION, SKILL_USE_INTENT_ACTION, SOULSTEEL_STABILIZED_ACTION } from '../../../packages/shared/skills.js';
 import { handleUseSkill, type SkillContext } from '../src/skills/index.js';
 
 function assert(condition: unknown, msg: string): asserts condition {
@@ -91,6 +91,29 @@ test('Moonspire survey emits Dream Gate payload without client traversal truth',
     result.payload?.next_objective?.includes('server-owned dream traversal'),
     'Moonspire payload must not grant client-owned dream traversal'
   );
+});
+
+test('Soulsteel stabilization emits crafting receipt without wallet or item authority', async () => {
+  const { ctx, receipts, sent } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
+
+  const craft = receipts.find((r) => r.action === SOULSTEEL_STABILIZED_ACTION);
+  assert(craft, 'missing soulsteel_stabilized receipt');
+  assert(craft.inputs.route_id === 'forgehold_route_slice_v1', 'Soulsteel route mismatch');
+  assert(craft.inputs.quality === 'unstable', 'first Soulsteel quality should be unstable');
+  assert(craft.inputs.economy_impact === 'none', 'Soulsteel prototype should not silently change economy');
+  assert(!receipts.some((r) => r.action === 'wallet_debit'), 'Soulsteel prototype should not debit gold');
+  assert(!receipts.some((r) => r.action === 'item_minted'), 'Soulsteel prototype should not mint an item');
+
+  const result = sent.find((msg) => typeof msg === 'object' && msg !== null && (msg as { type?: string }).type === 'skill_result') as {
+    success?: boolean;
+    payload?: { crafting_id?: string; quality?: string; economy_impact?: string; required_evidence?: string[] };
+  } | undefined;
+  assert(result?.success === true, 'Soulsteel skill_result should succeed');
+  assert(result.payload?.crafting_id === 'soulsteel_stabilization_v1', 'Soulsteel payload crafting id mismatch');
+  assert(result.payload?.quality === 'unstable', 'Soulsteel payload quality mismatch');
+  assert(result.payload?.economy_impact === 'none', 'Soulsteel payload economy impact mismatch');
+  assert(result.payload?.required_evidence?.includes('ashglass_shard'), 'Soulsteel payload should name Ashglass Shard');
 });
 
 console.log('\n✓ all route survey checks passed');

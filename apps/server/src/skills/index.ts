@@ -20,6 +20,7 @@ import {
   handleRequestRecap,
   handleReport,
   handleRouteSurvey,
+  handleSoulsteelStabilization,
 } from './handlers.js';
 
 // ============================================================================
@@ -181,6 +182,9 @@ async function executeSkill(
 
     case 'route:survey:moonspire':
       return handleRouteSurvey(ctx, 'moonspire');
+
+    case 'route:craft:soulsteel':
+      return handleSoulsteelStabilization(ctx);
 
     default:
       return { success: false, reason: 'invalid_skill' };

@@ -31,7 +31,8 @@ private val ROOKGUARD_VOCATION_ACTIONS = listOf(
 
 private val ROUTE_SURVEY_ACTIONS = listOf(
     "route:survey:forgehold" to "Forge",
-    "route:survey:moonspire" to "Dream"
+    "route:survey:moonspire" to "Dream",
+    "route:craft:soulsteel" to "Steel"
 )
 
 @Composable

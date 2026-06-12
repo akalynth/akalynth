@@ -11,7 +11,8 @@ export type SkillId =
   | 'skill_request_recap'
   | 'skill_report'
   | 'route:survey:forgehold'
-  | 'route:survey:moonspire';
+  | 'route:survey:moonspire'
+  | 'route:craft:soulsteel';
 
 export type SkillTarget = 'self' | 'player' | 'none';
 
@@ -77,6 +78,14 @@ export const SKILL_REGISTRY: Record<SkillId, SkillDefinition> = {
     gold_cost: 0,
     debug_only: false,
   },
+  'route:craft:soulsteel': {
+    id: 'route:craft:soulsteel',
+    name: 'Stabilize Soulsteel',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
 };
 
 export const SKILL_IDS = Object.keys(SKILL_REGISTRY) as SkillId[];
@@ -102,6 +111,7 @@ export const SKILL_RESOLVED_ACTION = 'skill_resolved';
 export const SKILL_REJECTED_ACTION = 'skill_rejected';
 export const PLAYER_REPORTED_ACTION = 'player_reported';
 export const ROUTE_SURVEYED_ACTION = 'route_surveyed';
+export const SOULSTEEL_STABILIZED_ACTION = 'soulsteel_stabilized';
 
 // Moderation v1: Resolution receipt action
 export const MODERATION_RESOLVED_ACTION = 'moderation_resolved';

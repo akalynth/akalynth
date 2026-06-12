@@ -30,6 +30,7 @@ const WITNESS_MOTH_ACTIONS = [
 const ROUTE_SURVEY_ACTIONS = [
   { skill_id: 'route:survey:forgehold', label: 'Survey Forgehold', short: 'Forge' },
   { skill_id: 'route:survey:moonspire', label: 'Survey Dream Gate', short: 'Dream' },
+  { skill_id: 'route:craft:soulsteel', label: 'Stabilize Soulsteel', short: 'Steel' },
 ] as const;
 
 const VOCATION_ACTIONS: Array<{ vocation: SovereignVocation; label: string; short: string }> = [
