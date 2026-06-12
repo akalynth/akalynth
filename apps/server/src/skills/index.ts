@@ -55,6 +55,8 @@ export interface SkillContext {
   getChronicle: (playerId: string, limit: number) => unknown[];
   // Send message
   send: (msg: unknown) => void;
+  // Optional post-success hook for derived projections owned outside skills
+  onSkillResolved?: (skillId: SkillId) => void;
 }
 
 export interface SkillResult {
@@ -135,6 +137,9 @@ export async function handleUseSkill(
     cooldown_until_ms: newCooldownUntil,
     payload: result.payload,
   }));
+
+  // 10. Let the session publish receipt-derived projections after success only.
+  ctx.onSkillResolved?.(skillId);
 }
 
 // ============================================================================

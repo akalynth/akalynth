@@ -5858,6 +5858,9 @@ function processSessionQueue(s: Session, now: number) {
           issueTem: issueTemChallenge,
           getChronicle: (pid, limit) => persist.getChronicleForPlayer(pid, limit),
           send: (m) => send(s.ws, m as ServerMessage),
+          onSkillResolved: (skillId) => {
+            if (skillId.startsWith('route:')) sendLoopUpdate(s, 'onward_route_progress');
+          },
         };
 
         handleUseSkill(skillCtx, msg);

@@ -30,6 +30,7 @@ function context(options: { onwardRoutesAvailable?: boolean } = {}) {
   clearOnwardRouteProjection();
   const receipts: Array<{ actor_id: string; player_id: string; action: string; inputs: Record<string, unknown>; result: string }> = [];
   const sent: unknown[] = [];
+  const resolvedSkills: string[] = [];
   const ctx: SkillContext = {
     playerId: 'p1',
     playerName: 'Tester',
@@ -54,8 +55,11 @@ function context(options: { onwardRoutesAvailable?: boolean } = {}) {
     issueTem: () => ({ outcome: 'none' }),
     getChronicle: () => [],
     send: (msg) => sent.push(msg),
+    onSkillResolved: (skillId) => {
+      if (skillId.startsWith('route:')) resolvedSkills.push(skillId);
+    },
   };
-  return { ctx, receipts, sent };
+  return { ctx, receipts, sent, resolvedSkills };
 }
 
 const completedRookguard: RookguardQuestInput = {
@@ -65,7 +69,7 @@ const completedRookguard: RookguardQuestInput = {
 };
 
 test('route actions reject before Rookguard completion without route side effects', async () => {
-  const { ctx, receipts, sent } = context({ onwardRoutesAvailable: false });
+  const { ctx, receipts, sent, resolvedSkills } = context({ onwardRoutesAvailable: false });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
 
   assert(receipts.some((r) => r.action === SKILL_USE_INTENT_ACTION), 'locked route should still record skill intent');
@@ -81,10 +85,11 @@ test('route actions reject before Rookguard completion without route side effect
   } | undefined;
   assert(result?.success === false, 'locked route skill_result should fail');
   assert(result.reason === 'invalid_target', 'locked route skill_result should use invalid_target');
+  assert(resolvedSkills.length === 0, 'locked route skill must not publish route progress');
 });
 
 test('Forgehold survey emits server-owned route payload and receipts', async () => {
-  const { ctx, receipts, sent } = context();
+  const { ctx, receipts, sent, resolvedSkills } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
 
   assert(receipts.some((r) => r.action === SKILL_USE_INTENT_ACTION), 'missing skill intent receipt');
@@ -102,6 +107,7 @@ test('Forgehold survey emits server-owned route payload and receipts', async () 
   assert(result.payload?.route_id === 'forgehold_route_slice_v1', 'Forgehold payload route mismatch');
   assert(result.payload?.systems?.includes('crafting'), 'Forgehold payload should include crafting');
   assert(result.payload?.systems?.includes('anti_cheat'), 'Forgehold payload should include anti_cheat');
+  assert(resolvedSkills.includes('route:survey:forgehold'), 'Forgehold survey should publish route progress after success');
 });
 
 test('Moonspire survey emits Dream Gate payload without client traversal truth', async () => {
