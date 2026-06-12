@@ -258,6 +258,7 @@ export function handleForgeholdEconomyQuote(ctx: SkillContext): SkillResult {
   if (!routeProgress?.forgeholdSurveyed || !routeProgress.forgeholdShipmentInvestigated) {
     return { success: false, reason: 'invalid_target' };
   }
+  if (routeProgress.forgeholdEconomyQuoted) return { success: false, reason: 'invalid_target' };
 
   const quotedAt = new Date().toISOString();
   const quoteId = 'forgehold_soulsteel_quote_v1';

@@ -282,6 +282,29 @@ test('Forgehold economy quote records no-debit no-mint guard', async () => {
   assert(result.payload?.economy_guard?.item_mint === false, 'Forgehold economy quote payload should specify no item mint');
 });
 
+test('Forgehold economy quote is idempotent after receipt-derived quote', async () => {
+  const { ctx, receipts, sent } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
+  ctx.skillCooldowns.set('route:economy:forgehold', 0);
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
+
+  const quotes = receipts.filter((r) => r.action === FORGEHOLD_ECONOMY_QUOTED_ACTION);
+  const quoteResults = sent.filter((msg) =>
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as { type?: string }).type === 'skill_result' &&
+    (msg as { skill_id?: string }).skill_id === 'route:economy:forgehold'
+  ) as Array<{ success?: boolean; reason?: string }>;
+
+  assert(quotes.length === 1, 'repeat Forgehold economy quote must not emit a second quote receipt');
+  assert(quoteResults.length === 2, 'repeat Forgehold economy quote should return two skill results');
+  assert(quoteResults[0]?.success === true, 'first Forgehold economy quote should succeed');
+  assert(quoteResults[1]?.success === false, 'second Forgehold economy quote should fail');
+  assert(quoteResults[1]?.reason === 'invalid_target', 'second Forgehold economy quote should be rejected as invalid target');
+});
+
 test('Dream Gate interpretation records symbolic state without traversal or economy authority', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:moonspire' });
