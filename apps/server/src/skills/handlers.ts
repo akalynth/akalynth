@@ -6,6 +6,7 @@ import {
   DREAM_FRAGMENT_ANCHORED_ACTION,
   FORGEHOLD_ECONOMY_QUOTED_ACTION,
   PLAYER_REPORTED_ACTION,
+  ROUTE_ABUSE_NOTES_REVIEWED_ACTION,
   ROUTE_SURVEYED_ACTION,
   SOULSTEEL_STABILIZED_ACTION,
   DREAM_GATE_INTERPRETED_ACTION,
@@ -374,6 +375,56 @@ export function handleDreamFragmentAnchor(ctx: SkillContext): SkillResult {
       receipt_action: DREAM_FRAGMENT_ANCHORED_ACTION,
       traversal_granted: false,
       economy_impact: 'none',
+    },
+  };
+}
+
+export function handleRouteSafetyReview(ctx: SkillContext, route: 'forgehold' | 'moonspire'): SkillResult {
+  if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
+  const routeProgress = ctx.getOnwardRouteProgress?.();
+  if (route === 'forgehold' && !routeProgress?.soulsteelStabilized) {
+    return { success: false, reason: 'invalid_target' };
+  }
+  if (route === 'moonspire' && !routeProgress?.dreamFragmentAnchored) {
+    return { success: false, reason: 'invalid_target' };
+  }
+
+  const reviewedAt = new Date().toISOString();
+  const isForgehold = route === 'forgehold';
+  const routeId = isForgehold ? 'forgehold_route_slice_v1' : 'moonspire_dream_gate_slice_v1';
+  const title = isForgehold ? 'Forgehold Safety Boundary' : 'Dream Gate Safety Boundary';
+  const boundaries = isForgehold
+    ? ['server owns crafting results', 'server owns shipment claims', 'no client-owned item mint', 'no client-owned wallet movement']
+    : ['server owns dream traversal', 'server owns fragment evidence', 'no client-owned gate state', 'no client-owned economy change'];
+  const nextObjective = isForgehold
+    ? 'Carry the unstable Soulsteel proof toward the Heartforge Trial chamber; refinement still requires evidence recovery.'
+    : 'Hold the anchored dream fragment until traversal is server-authorized.';
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: ROUTE_ABUSE_NOTES_REVIEWED_ACTION,
+    inputs: {
+      route_id: routeId,
+      reviewed_at: reviewedAt,
+      boundaries,
+      source_drop: isForgehold ? 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1' : 'drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1',
+      heat_changed: false,
+      penalty_applied: false,
+    },
+    result: 'ok',
+  });
+
+  return {
+    success: true,
+    payload: {
+      route_id: routeId,
+      title,
+      status: 'reviewed',
+      next_objective: nextObjective,
+      boundaries,
+      receipt_action: ROUTE_ABUSE_NOTES_REVIEWED_ACTION,
+      heat_changed: false,
+      penalty_applied: false,
     },
   };
 }

@@ -30,6 +30,8 @@ const WITNESS_MOTH_ACTIONS = [
 const ROUTE_SURVEY_ACTIONS = [
   { skill_id: 'route:survey:forgehold', label: 'Survey Forgehold', short: 'Forge' },
   { skill_id: 'route:survey:moonspire', label: 'Survey Dream Gate', short: 'Dream' },
+  { skill_id: 'route:safety:forgehold', label: 'Review Forgehold Safety', short: 'Safe' },
+  { skill_id: 'route:safety:moonspire', label: 'Review Dream Gate Safety', short: 'Safe' },
   { skill_id: 'route:quest:shipment', label: 'Investigate Shipment', short: 'Ship' },
   { skill_id: 'route:economy:forgehold', label: 'Quote Forgehold Economy', short: 'Quote' },
   { skill_id: 'route:craft:soulsteel', label: 'Stabilize Soulsteel', short: 'Steel' },
@@ -49,10 +51,12 @@ function routeActionIdsFor(onwardRoutes: NonNullable<PlayLoopProgress['onwardRou
       else if (!completed.has('forgehold_missing_shipment')) ids.push('route:quest:shipment');
       else if (!completed.has('forgehold_economy_receipts')) ids.push('route:economy:forgehold');
       else if (!completed.has('soulsteel_stabilization')) ids.push('route:craft:soulsteel');
+      else if (!completed.has('forgehold_abuse_notes')) ids.push('route:safety:forgehold');
     } else if (route.route_id === 'moonspire_dream_gate_slice_v1') {
       if (!completed.has('dream_gate_rumor')) ids.push('route:survey:moonspire');
       else if (!completed.has('symbolic_puzzle_projection')) ids.push('route:dream:interpret');
       else if (!completed.has('dream_fragment_evidence')) ids.push('route:dream:fragment');
+      else if (!completed.has('dream_gate_abuse_notes')) ids.push('route:safety:moonspire');
     }
   }
   return ids;

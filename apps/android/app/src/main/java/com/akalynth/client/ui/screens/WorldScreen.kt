@@ -250,12 +250,14 @@ private fun routeActionSkillIdsFor(routes: List<OnwardRouteProgress>): List<Stri
                 !completed.contains("forgehold_missing_shipment") -> listOf("route:quest:shipment")
                 !completed.contains("forgehold_economy_receipts") -> listOf("route:economy:forgehold")
                 !completed.contains("soulsteel_stabilization") -> listOf("route:craft:soulsteel")
+                !completed.contains("forgehold_abuse_notes") -> listOf("route:safety:forgehold")
                 else -> emptyList()
             }
             "moonspire_dream_gate_slice_v1" -> when {
                 !completed.contains("dream_gate_rumor") -> listOf("route:survey:moonspire")
                 !completed.contains("symbolic_puzzle_projection") -> listOf("route:dream:interpret")
                 !completed.contains("dream_fragment_evidence") -> listOf("route:dream:fragment")
+                !completed.contains("dream_gate_abuse_notes") -> listOf("route:safety:moonspire")
                 else -> emptyList()
             }
             else -> emptyList()

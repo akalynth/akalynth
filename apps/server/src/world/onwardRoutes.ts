@@ -4,6 +4,7 @@ import {
   DREAM_GATE_INTERPRETED_ACTION,
   FORGEHOLD_ECONOMY_QUOTED_ACTION,
   FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION,
+  ROUTE_ABUSE_NOTES_REVIEWED_ACTION,
   ROUTE_SURVEYED_ACTION,
   SOULSTEEL_STABILIZED_ACTION,
 } from '../../../../packages/shared/skills.js';
@@ -13,9 +14,11 @@ export interface OnwardRouteReceiptProgress {
   forgeholdShipmentInvestigated: boolean;
   forgeholdEconomyQuoted: boolean;
   soulsteelStabilized: boolean;
+  forgeholdAbuseNotesReviewed: boolean;
   moonspireSurveyed: boolean;
   dreamGateInterpreted: boolean;
   dreamFragmentAnchored: boolean;
+  dreamGateAbuseNotesReviewed: boolean;
 }
 
 function defaultProgress(): OnwardRouteReceiptProgress {
@@ -24,9 +27,11 @@ function defaultProgress(): OnwardRouteReceiptProgress {
     forgeholdShipmentInvestigated: false,
     forgeholdEconomyQuoted: false,
     soulsteelStabilized: false,
+    forgeholdAbuseNotesReviewed: false,
     moonspireSurveyed: false,
     dreamGateInterpreted: false,
     dreamFragmentAnchored: false,
+    dreamGateAbuseNotesReviewed: false,
   };
 }
 
@@ -71,6 +76,12 @@ export function applyReceiptToOnwardRoutes(receipt: AuditReceipt): void {
     next = { ...current, dreamGateInterpreted: true };
   } else if (receipt.action === DREAM_FRAGMENT_ANCHORED_ACTION) {
     next = { ...current, dreamFragmentAnchored: true };
+  } else if (receipt.action === ROUTE_ABUSE_NOTES_REVIEWED_ACTION) {
+    if (receipt.inputs?.route_id === 'forgehold_route_slice_v1') {
+      next = { ...current, forgeholdAbuseNotesReviewed: true };
+    } else if (receipt.inputs?.route_id === 'moonspire_dream_gate_slice_v1') {
+      next = { ...current, dreamGateAbuseNotesReviewed: true };
+    }
   }
 
   if (next) setProgress(playerId, next);

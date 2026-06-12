@@ -287,9 +287,11 @@ export function buildOnwardRouteProgress(
     forgeholdShipmentInvestigated: false,
     forgeholdEconomyQuoted: false,
     soulsteelStabilized: false,
+    forgeholdAbuseNotesReviewed: false,
     moonspireSurveyed: false,
     dreamGateInterpreted: false,
     dreamFragmentAnchored: false,
+    dreamGateAbuseNotesReviewed: false,
   }
 ): OnwardRouteProgress[] {
   const available = buildRookguardQuestProgress(input).completed;
@@ -300,11 +302,13 @@ export function buildOnwardRouteProgress(
     ...(receiptProgress.forgeholdShipmentInvestigated ? ['forgehold_missing_shipment'] : []),
     ...(receiptProgress.forgeholdEconomyQuoted ? ['forgehold_economy_receipts'] : []),
     ...(receiptProgress.soulsteelStabilized ? ['soulsteel_stabilization'] : []),
+    ...(receiptProgress.forgeholdAbuseNotesReviewed ? ['forgehold_abuse_notes'] : []),
   ];
   const moonspireCompleted = [
     ...(receiptProgress.moonspireSurveyed ? ['dream_gate_rumor'] : []),
     ...(receiptProgress.dreamGateInterpreted ? ['symbolic_puzzle_projection'] : []),
     ...(receiptProgress.dreamFragmentAnchored ? ['dream_fragment_evidence'] : []),
+    ...(receiptProgress.dreamGateAbuseNotesReviewed ? ['dream_gate_abuse_notes'] : []),
   ];
 
   return [
@@ -314,8 +318,10 @@ export function buildOnwardRouteProgress(
       status,
       unlock_requirement: unlockRequirement,
       next_objective: available
-        ? receiptProgress.soulsteelStabilized
+        ? receiptProgress.forgeholdAbuseNotesReviewed
           ? 'Carry the unstable Soulsteel proof toward the Heartforge Trial chamber; refinement still requires evidence recovery.'
+          : receiptProgress.soulsteelStabilized
+            ? 'Review the Forgehold safety boundary before the Heartforge Trial chamber.'
           : receiptProgress.forgeholdEconomyQuoted
             ? 'Stabilize cracked Soulsteel under the quoted no-mint, no-debit economy guard.'
           : receiptProgress.forgeholdShipmentInvestigated
@@ -334,7 +340,7 @@ export function buildOnwardRouteProgress(
       ],
       completed_objective_ids: forgeholdCompleted,
       source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
-      receipt_actions: ['route_surveyed', 'forgehold_shipment_investigated', 'forgehold_economy_quoted', 'soulsteel_stabilized'],
+      receipt_actions: ['route_surveyed', 'forgehold_shipment_investigated', 'forgehold_economy_quoted', 'soulsteel_stabilized', 'route_abuse_notes_reviewed'],
     },
     {
       route_id: 'moonspire_dream_gate_slice_v1',
@@ -342,8 +348,10 @@ export function buildOnwardRouteProgress(
       status,
       unlock_requirement: unlockRequirement,
       next_objective: available
-        ? receiptProgress.dreamFragmentAnchored
+        ? receiptProgress.dreamGateAbuseNotesReviewed
           ? 'Hold the anchored dream fragment until traversal is server-authorized.'
+          : receiptProgress.dreamFragmentAnchored
+            ? 'Review the Dream Gate safety boundary before any traversal can be server-authorized.'
           : receiptProgress.dreamGateInterpreted
           ? 'Anchor the interpreted symbols before any Dream Gate traversal can be server-authorized.'
           : 'Survey a Dream Gate clue and interpret symbols before any traversal is possible.'
@@ -358,7 +366,7 @@ export function buildOnwardRouteProgress(
       ],
       completed_objective_ids: moonspireCompleted,
       source_drop: 'drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1',
-      receipt_actions: ['route_surveyed', 'dream_gate_interpreted', 'dream_fragment_anchored'],
+      receipt_actions: ['route_surveyed', 'dream_gate_interpreted', 'dream_fragment_anchored', 'route_abuse_notes_reviewed'],
     },
   ];
 }

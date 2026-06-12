@@ -25,6 +25,7 @@ import {
   handleSoulsteelStabilization,
   handleDreamGateInterpretation,
   handleDreamFragmentAnchor,
+  handleRouteSafetyReview,
   handleForgeholdShipmentInvestigation,
 } from './handlers.js';
 
@@ -194,6 +195,12 @@ async function executeSkill(
 
     case 'route:survey:moonspire':
       return handleRouteSurvey(ctx, 'moonspire');
+
+    case 'route:safety:forgehold':
+      return handleRouteSafetyReview(ctx, 'forgehold');
+
+    case 'route:safety:moonspire':
+      return handleRouteSafetyReview(ctx, 'moonspire');
 
     case 'route:economy:forgehold':
       return handleForgeholdEconomyQuote(ctx);

@@ -12,6 +12,8 @@ export type SkillId =
   | 'skill_report'
   | 'route:survey:forgehold'
   | 'route:survey:moonspire'
+  | 'route:safety:forgehold'
+  | 'route:safety:moonspire'
   | 'route:economy:forgehold'
   | 'route:craft:soulsteel'
   | 'route:dream:interpret'
@@ -82,6 +84,22 @@ export const SKILL_REGISTRY: Record<SkillId, SkillDefinition> = {
     gold_cost: 0,
     debug_only: false,
   },
+  'route:safety:forgehold': {
+    id: 'route:safety:forgehold',
+    name: 'Review Forgehold Safety',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
+  'route:safety:moonspire': {
+    id: 'route:safety:moonspire',
+    name: 'Review Dream Gate Safety',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
   'route:economy:forgehold': {
     id: 'route:economy:forgehold',
     name: 'Quote Forgehold Economy',
@@ -147,6 +165,7 @@ export const SKILL_RESOLVED_ACTION = 'skill_resolved';
 export const SKILL_REJECTED_ACTION = 'skill_rejected';
 export const PLAYER_REPORTED_ACTION = 'player_reported';
 export const ROUTE_SURVEYED_ACTION = 'route_surveyed';
+export const ROUTE_ABUSE_NOTES_REVIEWED_ACTION = 'route_abuse_notes_reviewed';
 export const FORGEHOLD_ECONOMY_QUOTED_ACTION = 'forgehold_economy_quoted';
 export const SOULSTEEL_STABILIZED_ACTION = 'soulsteel_stabilized';
 export const DREAM_GATE_INTERPRETED_ACTION = 'dream_gate_interpreted';

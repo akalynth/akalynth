@@ -656,6 +656,7 @@ class GameStore(
     private fun handleSkillResult(msg: SkillResultMessage) {
         if (
             !msg.skillId.startsWith("route:survey:") &&
+            !msg.skillId.startsWith("route:safety:") &&
             msg.skillId != "route:quest:shipment" &&
             msg.skillId != "route:economy:forgehold" &&
             msg.skillId != "route:craft:soulsteel" &&
@@ -665,6 +666,8 @@ class GameStore(
         val title = when (msg.skillId) {
             "route:survey:forgehold" -> "Forgehold Route"
             "route:survey:moonspire" -> "Moonspire Dream Gate"
+            "route:safety:forgehold" -> "Forgehold safety"
+            "route:safety:moonspire" -> "Dream Gate safety"
             "route:quest:shipment" -> "Forgehold shipment"
             "route:economy:forgehold" -> "Forgehold economy"
             "route:craft:soulsteel" -> "Soulsteel"
@@ -674,6 +677,7 @@ class GameStore(
         }
         val line = if (msg.success) {
             when (msg.skillId) {
+                "route:safety:forgehold", "route:safety:moonspire" -> "$title boundary reviewed by server."
                 "route:quest:shipment" -> "$title investigation recorded by server."
                 "route:economy:forgehold" -> "$title quote recorded by server."
                 "route:craft:soulsteel" -> "$title stabilization recorded by server."
@@ -872,6 +876,8 @@ class GameStore(
         if (
             skillId != "route:survey:forgehold" &&
             skillId != "route:survey:moonspire" &&
+            skillId != "route:safety:forgehold" &&
+            skillId != "route:safety:moonspire" &&
             skillId != "route:quest:shipment" &&
             skillId != "route:economy:forgehold" &&
             skillId != "route:craft:soulsteel" &&
