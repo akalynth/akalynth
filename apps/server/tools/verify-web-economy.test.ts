@@ -387,6 +387,7 @@ async function main(): Promise<void> {
   res = await request('POST', '/v1/property/unlist', { character_id: 'p_seller', property_id: 'Azura:H1' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
   check('property unlist rejects non-owner', res.status === 403 && res.body.error === 'not_owner');
   check('non-owner property unlist emits no second unlist receipt', receipts.filter((r) => r.action === PROPERTY_UNLISTED_ACTION).length === 1);
+  check('web economy receipts do not carry account/session/csrf tokens', receipts.every((r) => !JSON.stringify(r).includes('acc_ok') && !JSON.stringify(r).includes('sess-ok') && !JSON.stringify(r).includes('csrf-ok')));
 }
 
 main().then(() => {
