@@ -4,12 +4,14 @@ import com.akalynth.client.BuildConfig
 import com.akalynth.client.network.ConnectionState
 import com.akalynth.client.protocol.MapName
 import com.akalynth.client.protocol.PlayerPublic
+import com.akalynth.client.protocol.PropertyPublic
 import com.akalynth.client.ui.state.ChronicleEvent
 
 data class GameState(
     val connection: ConnectionState = ConnectionState.Idle,
     val session: SessionState = SessionState(),
     val world: WorldState = WorldState(),
+    val economy: EconomyState = EconomyState(),
     val ui: UiState = UiState()
 ) {
     companion object {
@@ -30,6 +32,19 @@ data class WorldState(
     val me: PlayerPublic? = null,
     val otherPlayers: Map<String, PlayerPublic> = emptyMap(),
     val chatMessages: List<ChatEntry> = emptyList()
+)
+
+data class EconomyState(
+    val gold: Int? = null,
+    val properties: Map<String, PropertyPublic> = emptyMap(),
+    val lastPropertyResult: PropertyResultStatus? = null
+)
+
+data class PropertyResultStatus(
+    val action: String,
+    val propertyId: String,
+    val success: Boolean,
+    val reason: String? = null
 )
 
 data class ChatEntry(

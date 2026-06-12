@@ -20,6 +20,9 @@ fun HUD(
     playerName: String?,
     me: PlayerPublic?,
     playerCount: Int,
+    gold: Int? = null,
+    propertyCount: Int = 0,
+    propertyStatus: String? = null,
     connectionState: ConnectionState,
     modifier: Modifier = Modifier
 ) {
@@ -89,6 +92,30 @@ fun HUD(
         if (playerCount > 0) {
             Text(
                 text = "Nearby: $playerCount",
+                style = MaterialTheme.typography.bodySmall,
+                color = ClassicShellColors.MutedText
+            )
+        }
+
+        gold?.let {
+            Text(
+                text = "Gold: $it",
+                style = MaterialTheme.typography.bodySmall,
+                color = ClassicShellColors.Brass
+            )
+        }
+
+        if (propertyCount > 0) {
+            Text(
+                text = "Properties seen: $propertyCount",
+                style = MaterialTheme.typography.bodySmall,
+                color = ClassicShellColors.MutedText
+            )
+        }
+
+        propertyStatus?.let {
+            Text(
+                text = it,
                 style = MaterialTheme.typography.bodySmall,
                 color = ClassicShellColors.MutedText
             )
