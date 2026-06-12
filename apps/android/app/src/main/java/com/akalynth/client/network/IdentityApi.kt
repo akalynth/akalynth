@@ -32,6 +32,7 @@ class IdentityApi(
         private const val SESSION_COOKIE = "akalynth_session"
         private const val CSRF_COOKIE = "akalynth_csrf"
         private const val ACCOUNT_CREATE_PATH = "/v1/characters"
+        private const val CHARACTER_SELECT_PATH = "/v1/characters/select"
         private const val LOGIN_PATH = "/v1/accounts/login"
         private const val WORLDS_PATH = "/v1/worlds"
         private const val OUTFITS_PATH = "/v1/outfits"
@@ -46,6 +47,14 @@ class IdentityApi(
         val outfitId: String,
         val sex: String,
         val name: String
+    )
+
+    data class Character(
+        val characterId: String,
+        val name: String,
+        val worldId: String,
+        val sex: String,
+        val outfitId: String
     )
 
     data class Account(
@@ -143,6 +152,27 @@ class IdentityApi(
         }
         postJson(
             path = ACCOUNT_CREATE_PATH,
+            json = json,
+            callback = callback,
+            parser = { obj -> parseAccountCharacterResponse(obj) }
+        )
+    }
+
+    fun selectCharacter(characterId: String, callback: CreateCallback) {
+        if (!hasAccountSession()) {
+            callback.onResult(
+                CharacterCreateResult.Error(
+                    code = "not_authenticated",
+                    message = "Sign in required for account character selection."
+                )
+            )
+            return
+        }
+        val json = JSONObject().apply {
+            put("character_id", characterId)
+        }
+        postJson(
+            path = CHARACTER_SELECT_PATH,
             json = json,
             callback = callback,
             parser = { obj -> parseAccountCharacterResponse(obj) }
@@ -259,6 +289,30 @@ class IdentityApi(
         )
     }
 
+    fun loadCharacters(callback: CatalogCallback<Character>) {
+        fetchCatalog(
+            path = ACCOUNT_CREATE_PATH,
+            parser = { obj ->
+                val arr = obj.optJSONArray("characters") ?: return@fetchCatalog emptyList<Character>()
+                val out = ArrayList<Character>(arr.length())
+                for (i in 0 until arr.length()) {
+                    val entry = arr.getJSONObject(i)
+                    out.add(
+                        Character(
+                            characterId = entry.optString("character_id"),
+                            name = entry.optString("name"),
+                            worldId = entry.optString("world_id"),
+                            sex = entry.optString("sex"),
+                            outfitId = entry.optString("outfit_id")
+                        )
+                    )
+                }
+                out
+            },
+            callback = callback,
+        )
+    }
+
     fun hasAccountSession(): Boolean = getSessionCookie().isNotBlank() && csrfToken.isNotBlank()
 
     private fun getSessionCookie(): String = sessionCookies[SESSION_COOKIE]?.trim().orEmpty()
@@ -345,6 +399,11 @@ class IdentityApi(
         val request = Request.Builder()
             .url("$endpoint$path")
             .get()
+            .header("Accept", "application/json")
+            .let { builder ->
+                val cookieHeader = buildCookieHeader()
+                if (cookieHeader.isNotEmpty()) builder.header("Cookie", cookieHeader) else builder
+            }
             .build()
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
