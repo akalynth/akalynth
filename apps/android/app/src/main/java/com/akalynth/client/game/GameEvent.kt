@@ -29,6 +29,10 @@ sealed class GameEvent {
     data class ListHouse(val propertyId: String, val price: Int) : GameEvent()
     data class UnlistHouse(val propertyId: String) : GameEvent()
 
+    // Work-contract faucet intents
+    data object StartWorkContract : GameEvent()
+    data object TickWorkContract : GameEvent()
+
     // Tem/Witness
     data class AnswerTemChallenge(val response: String) : GameEvent()
     data class AnswerWitness(val requestId: String, val response: WitnessResponse) : GameEvent()

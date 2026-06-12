@@ -209,6 +209,8 @@ class GameStore(
             is GameEvent.BuyHouse -> buyHouse(event.propertyId)
             is GameEvent.ListHouse -> listHouse(event.propertyId, event.price)
             is GameEvent.UnlistHouse -> unlistHouse(event.propertyId)
+            is GameEvent.StartWorkContract -> startWorkContract()
+            is GameEvent.TickWorkContract -> tickWorkContract()
             is GameEvent.AnswerTemChallenge -> sendTemResponse(event.response)
             is GameEvent.AnswerWitness -> sendWitnessResponse(event.requestId, event.response)
             is GameEvent.DismissError -> clearError()
@@ -363,9 +365,9 @@ class GameStore(
             is PlayerInspectMessage -> {}
             is WalletSnapshotMessage -> handleWalletSnapshot(msg)
             is TitheResultMessage -> {}
-            is WorkContractStartedMessage -> {}
-            is WorkProgressMessage -> {}
-            is WorkContractResultMessage -> {}
+            is WorkContractStartedMessage -> handleWorkContractStarted(msg)
+            is WorkProgressMessage -> handleWorkProgress(msg)
+            is WorkContractResultMessage -> handleWorkContractResult(msg)
             is NpcDialogueMessage -> {}
             is NpcDialogueErrorMessage -> {}
             is SkillResultMessage -> {}
@@ -554,9 +556,76 @@ class GameStore(
         }
     }
 
+    private fun handleWorkContractStarted(msg: WorkContractStartedMessage) {
+        _state.update {
+            it.copy(
+                economy = it.economy.copy(
+                    work = WorkContractStatus(
+                        contractId = msg.contractId,
+                        contractType = msg.contractType,
+                        payoutGold = msg.payoutGold
+                    )
+                )
+            )
+        }
+    }
+
+    private fun handleWorkProgress(msg: WorkProgressMessage) {
+        _state.update {
+            val current = it.economy.work
+            it.copy(
+                economy = it.economy.copy(
+                    work = WorkContractStatus(
+                        contractId = msg.contractId,
+                        contractType = current?.contractType ?: "temple_sweep",
+                        payoutGold = current?.payoutGold,
+                        ticksObserved = msg.ticksObserved,
+                        ticksRequired = msg.ticksRequired,
+                        remainingMs = msg.remainingMs
+                    )
+                )
+            )
+        }
+    }
+
+    private fun handleWorkContractResult(msg: WorkContractResultMessage) {
+        _state.update {
+            val current = it.economy.work
+            it.copy(
+                economy = it.economy.copy(
+                    work = WorkContractStatus(
+                        contractId = msg.contractId.ifBlank { current?.contractId ?: "" },
+                        contractType = current?.contractType ?: "temple_sweep",
+                        payoutGold = msg.creditedGold ?: current?.payoutGold,
+                        ticksObserved = current?.ticksObserved ?: 0,
+                        ticksRequired = current?.ticksRequired ?: 0,
+                        remainingMs = current?.remainingMs,
+                        complete = msg.success,
+                        error = msg.error
+                    )
+                )
+            )
+        }
+    }
+
     private fun inspectWallet() {
         wsClient.send(InspectWalletMessage)
         logSent("inspect_wallet", "")
+    }
+
+    private fun startWorkContract() {
+        wsClient.send(StartWorkContractMessage())
+        logSent("start_work_contract", "temple_sweep")
+    }
+
+    private fun tickWorkContract() {
+        val contractId = _state.value.economy.work?.contractId?.takeIf { it.isNotBlank() }
+        if (contractId == null) {
+            _state.update { it.copy(ui = it.ui.copy(errorMessage = "Start work before ticking.")) }
+            return
+        }
+        wsClient.send(WorkTickMessage(contractId = contractId))
+        logSent("work_tick", contractId)
     }
 
     private fun buyHouse(propertyId: String) {

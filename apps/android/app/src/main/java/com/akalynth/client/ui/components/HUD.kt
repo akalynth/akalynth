@@ -23,6 +23,7 @@ fun HUD(
     gold: Int? = null,
     propertyCount: Int = 0,
     propertyStatus: String? = null,
+    workStatus: String? = null,
     connectionState: ConnectionState,
     modifier: Modifier = Modifier
 ) {
@@ -114,6 +115,14 @@ fun HUD(
         }
 
         propertyStatus?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodySmall,
+                color = ClassicShellColors.MutedText
+            )
+        }
+
+        workStatus?.let {
             Text(
                 text = it,
                 style = MaterialTheme.typography.bodySmall,
