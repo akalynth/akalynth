@@ -12,6 +12,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocket } from 'ws';
+import { resolveChainPaths } from '../../../packages/shared/paths.js';
 import type { MapData, PlayerPublic } from '../../../packages/shared/types.js';
 import { TEM_CHALLENGE_RESPONSE, TileCode, WALKABLE_TILES } from '../../../packages/shared/types.js';
 
@@ -27,6 +28,27 @@ const COMBAT_WAIT_MS = 2100;
 const LANE = 'AKALYNTH_ROOKGUARD_CODEX_PATH_WS_E2E_V1';
 const TARGET_STATUS = 'rookguard_codex_path_ws_e2e_verified';
 const ROOKGUARD_TRAINING_SLIME_SPRITE_ID = 'akalynth_creature_rookguard_training_slime_001';
+const RECEIPT_CHAIN_PATH_ENV = ['AKALYNTH', 'RECEIPT', 'CHAIN', 'PATH'].join('_');
+
+function resolveChainPathsWithEnv(env: Record<string, string>): ReturnType<typeof resolveChainPaths> {
+  const previous = new Map<string, string | undefined>();
+  for (const [key, value] of Object.entries(env)) {
+    previous.set(key, process.env[key]);
+    process.env[key] = value;
+  }
+
+  try {
+    return resolveChainPaths(REPO_ROOT, { requireKey: true });
+  } finally {
+    for (const [key, value] of previous.entries()) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+  }
+}
 
 function fail(msg: string): never {
   console.error(`\n[verify-rookguard-codex-path] FAIL: ${msg}`);
@@ -320,18 +342,23 @@ async function verifyRookguardCodexPath(): Promise<void> {
   const map = loadRookguardMap();
   const port = await getOpenPort();
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'akalynth-rookguard-codex-'));
-  const receiptsPath = path.join(tmp, 'audit/receipts.jsonl');
-  const dbPath = path.join(tmp, 'data/akalynth.db');
-  const markerPath = path.join(tmp, 'data/replay-marker.json');
-  const keyPath = path.join(tmp, 'chronicle.key');
+  const pathEnv = {
+    [RECEIPT_CHAIN_PATH_ENV]: path.join(tmp, 'audit/receipts.jsonl'),
+    AKALYNTH_DB_PATH: path.join(tmp, 'data/akalynth.db'),
+    AKALYNTH_REPLAY_MARKER_PATH: path.join(tmp, 'data/replay-marker.json'),
+    CHRONICLE_KEY_PATH: path.join(tmp, 'chronicle.key'),
+  };
+  const chainPaths = resolveChainPathsWithEnv(pathEnv);
+  assert(chainPaths.keyPath, 'chronicle key path should resolve for isolated verifier');
   const output: string[] = [];
   const tsxBin = path.join(REPO_ROOT, 'node_modules/.bin/tsx');
-  fs.writeFileSync(keyPath, randomBytes(32), { mode: 0o600 });
+  fs.writeFileSync(chainPaths.keyPath, randomBytes(32), { mode: 0o600 });
 
   const child = spawn(tsxBin, ['src/index.ts'], {
     cwd: SERVER_DIR,
     env: {
       ...process.env,
+      ...pathEnv,
       PORT: String(port),
       HOST: '127.0.0.1',
       DEBUG: '1',
@@ -339,10 +366,6 @@ async function verifyRookguardCodexPath(): Promise<void> {
       ALLOW_INSECURE_LOCAL: '1',
       AKALYNTH_BOOTSTRAP: '1',
       AKALYNTH_LIFECYCLE_VERIFY: '0',
-      AKALYNTH_RECEIPT_CHAIN_PATH: receiptsPath,
-      AKALYNTH_DB_PATH: dbPath,
-      AKALYNTH_REPLAY_MARKER_PATH: markerPath,
-      CHRONICLE_KEY_PATH: keyPath,
       CHRONICLE_LOG_PATH: path.join(tmp, 'chronicle.log'),
       ENABLE_CHRONICLE: '0',
       IP_RATE_LIMIT_ENABLED: '0',
@@ -425,7 +448,7 @@ async function verifyRookguardCodexPath(): Promise<void> {
     const azuraPlayer = azura.player as PlayerPublic;
     assert(azuraPlayer.loop?.rookguardQuest?.completed === true, 'Azura world_state should retain completed Rookguard quest projection');
 
-    const actions = fs.readFileSync(receiptsPath, 'utf8').trim().split('\n').map((line) => (JSON.parse(line) as { action: string }).action);
+    const actions = fs.readFileSync(chainPaths.receiptsPath, 'utf8').trim().split('\n').map((line) => (JSON.parse(line) as { action: string }).action);
     for (const action of ['tutorial_step_complete', 'mob_kill', 'item_minted', 'vocation_declared', 'gate_unlock', 'tutorial_completed']) {
       assert(actions.includes(action), `receipt chain missing ${action}`);
     }
