@@ -33,17 +33,21 @@ class CharacterCreateActivity : Activity() {
     private lateinit var emailInput: EditText
     private lateinit var passwordInput: EditText
     private lateinit var loginButton: Button
+    private lateinit var selectButton: Button
     private lateinit var createButton: Button
     private lateinit var progress: ProgressBar
     private lateinit var statusText: TextView
+    private lateinit var characterSpinner: Spinner
     private lateinit var worldSpinner: Spinner
     private lateinit var sexSpinner: Spinner
     private lateinit var outfitSpinner: Spinner
 
     private lateinit var worldAdapter: ArrayAdapter<String>
+    private lateinit var characterAdapter: ArrayAdapter<String>
     private lateinit var sexAdapter: ArrayAdapter<String>
     private lateinit var outfitAdapter: ArrayAdapter<String>
 
+    private val characters = mutableListOf<IdentityApi.Character>()
     private val worlds = mutableListOf<IdentityApi.World>()
     private val outfits = mutableListOf<IdentityApi.Outfit>()
     private val filteredOutfits = mutableListOf<IdentityApi.Outfit>()
@@ -52,6 +56,7 @@ class CharacterCreateActivity : Activity() {
     private val identityApi = IdentityApi()
     private lateinit var store: IdentityStore
 
+    private var selectedCharacterId: String? = null
     private var selectedWorldId: String? = null
     private var selectedSex: String = "male"
     private var selectedOutfitId: String? = null
@@ -103,6 +108,30 @@ class CharacterCreateActivity : Activity() {
         loginButton = Button(this).apply {
             text = "Sign In"
             setOnClickListener { onLoginTapped() }
+        }
+
+        characterAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, ArrayList<String>())
+        characterAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        characterSpinner = Spinner(this).apply {
+            adapter = characterAdapter
+            isEnabled = false
+            onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                    selectedCharacterId = characters.getOrNull(position)?.characterId
+                    refreshCreateEnabled()
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>?) {
+                    selectedCharacterId = null
+                    refreshCreateEnabled()
+                }
+            }
+        }
+
+        selectButton = Button(this).apply {
+            text = "No Character Selected"
+            setOnClickListener { onSelectTapped() }
+            isEnabled = false
         }
 
         worldAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, ArrayList<String>())
@@ -187,6 +216,10 @@ class CharacterCreateActivity : Activity() {
         root.addView(emailInput, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
         root.addView(passwordInput, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
         root.addView(loginButton, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+        root.addView(TextView(this).apply { text = "Existing characters"; textSize = 12f },
+            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+        root.addView(characterSpinner, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+        root.addView(selectButton, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
         root.addView(TextView(this).apply { text = "World"; textSize = 12f },
             LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
         root.addView(worldSpinner, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
@@ -232,6 +265,7 @@ class CharacterCreateActivity : Activity() {
                             setLoading(false)
                             val verified = if (result.account.emailVerified) "Email verified" else "Email pending"
                             setStatus("Signed in (${result.account.accountId.take(8)}) - $verified")
+                            loadCharacters()
                             refreshCreateEnabled()
                         }
                         is IdentityApi.LoginResult.Error -> {
@@ -282,6 +316,7 @@ class CharacterCreateActivity : Activity() {
                                     expiresAt = result.expiresAt
                                 )
                                 setStatus("Created: ${result.name}. Connecting...")
+                                loadCharacters()
                                 connectWsAndLogin(result.token)
                             }
                             is IdentityApi.CharacterCreateResult.Error -> {
@@ -293,6 +328,40 @@ class CharacterCreateActivity : Activity() {
                 }
             }
         )
+    }
+
+    private fun onSelectTapped() {
+        if (busy) return
+        val characterId = selectedCharacterId
+        if (characterId.isNullOrBlank()) {
+            setStatus("Select an existing character first.")
+            return
+        }
+
+        setLoading(true)
+        setStatus("Selecting character...")
+        identityApi.selectCharacter(characterId, object : IdentityApi.CreateCallback {
+            override fun onResult(result: IdentityApi.CharacterCreateResult) {
+                mainHandler.post {
+                    when (result) {
+                        is IdentityApi.CharacterCreateResult.Success -> {
+                            store.save(
+                                playerId = result.playerId,
+                                name = result.name,
+                                token = result.token,
+                                expiresAt = result.expiresAt
+                            )
+                            setStatus("Selected: ${result.name}. Connecting...")
+                            connectWsAndLogin(result.token)
+                        }
+                        is IdentityApi.CharacterCreateResult.Error -> {
+                            setLoading(false)
+                            setStatus(mapError(result.code, result.message))
+                        }
+                    }
+                }
+            }
+        })
     }
 
     private fun loadCatalogs() {
@@ -352,6 +421,52 @@ class CharacterCreateActivity : Activity() {
         })
 
         refreshCreateEnabled()
+    }
+
+    private fun loadCharacters() {
+        if (!identityApi.hasAccountSession()) {
+            characters.clear()
+            characterAdapter.clear()
+            selectedCharacterId = null
+            refreshCreateEnabled()
+            return
+        }
+
+        identityApi.loadCharacters(object : IdentityApi.CatalogCallback<IdentityApi.Character> {
+            override fun onSuccess(items: List<IdentityApi.Character>) {
+                mainHandler.post {
+                    characters.clear()
+                    characters.addAll(items)
+                    characterAdapter.clear()
+                    if (items.isEmpty()) {
+                        characterAdapter.add("No characters yet")
+                        selectedCharacterId = null
+                        setStatus("No existing characters. Create one below.")
+                    } else {
+                        characterAdapter.addAll(items.map { character ->
+                            val world = character.worldId.ifBlank { "world" }
+                            val outfit = character.outfitId.ifBlank { "outfit" }
+                            "${character.name.ifBlank { character.characterId }} - $world - $outfit"
+                        })
+                        selectedCharacterId = items[0].characterId
+                        characterSpinner.setSelection(0)
+                        setStatus("Select a character to play, or create a new one.")
+                    }
+                    refreshCreateEnabled()
+                }
+            }
+
+            override fun onError(code: String, message: String) {
+                mainHandler.post {
+                    characters.clear()
+                    characterAdapter.clear()
+                    characterAdapter.add("Characters unavailable")
+                    selectedCharacterId = null
+                    setStatus("Character list: $code")
+                    refreshCreateEnabled()
+                }
+            }
+        })
     }
 
     private fun refreshOutfitSpinner() {
@@ -472,14 +587,17 @@ class CharacterCreateActivity : Activity() {
     private fun refreshCreateEnabled() {
         val hasAccount = identityApi.hasAccountSession()
         worldSpinner.isEnabled = hasAccount && worlds.isNotEmpty() && !busy
+        characterSpinner.isEnabled = hasAccount && characters.isNotEmpty() && !busy
         sexSpinner.isEnabled = hasAccount && !busy
         outfitSpinner.isEnabled = hasAccount && filteredOutfits.isNotEmpty() && !busy
         loginButton.isEnabled = !busy
+        selectButton.isEnabled = hasAccount && !busy && selectedCharacterId != null
 
         val nameReady = nameInput.text?.toString()?.trim()?.isNotBlank() == true
         val canCreate = hasAccount && !busy && nameReady && selectedWorldId != null && selectedOutfitId != null
         createButton.text = "Create Character"
         createButton.isEnabled = canCreate
+        selectButton.text = if (selectedCharacterId != null) "Play Selected Character" else "No Character Selected"
         nameInput.isEnabled = !busy
         emailInput.isEnabled = !busy
         passwordInput.isEnabled = !busy
