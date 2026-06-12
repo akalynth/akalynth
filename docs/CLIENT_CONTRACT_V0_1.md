@@ -22,31 +22,41 @@ Server may evolve internally, but MUST remain backward compatible with this cont
 
 ### Character Create
 - Retired: `POST /v1/characters/create`
-- Current: `POST /v1/characters` with account session, CSRF, `world_id`, `sex`, and `outfit_id`
+- Current: `POST /v1/characters` with account session cookie, double-submit CSRF, verified email, `world_id`, `sex`, and `outfit_id`
 - Request:
 ```json
-{"name":"Sovereign"}
+{"name":"Sovereign","world_id":"rookguard","sex":"male","outfit_id":"male_wanderer"}
 ```
-- Success (200):
+- Success (201):
 ```json
 {
   "ok": true,
-  "player_id": "p_abc123",
-  "name": "Sovereign",
+  "character": {
+    "character_id": "p_abc123",
+    "name": "Sovereign",
+    "world_id": "rookguard",
+    "sex": "male",
+    "outfit_id": "male_wanderer",
+    "created_at": "2026-06-12T00:00:00.000Z"
+  },
   "token": "<SIGNED_TOKEN>",
-  "issued_at": 1705849200000,
   "expires_at": 1705852800000
 }
 ```
 - Errors:
-  - 400 `invalid_name` - Name violates rules
+  - 400 `invalid_input` - Name, world, sex, or outfit violates account-character rules
+  - 401 `not_authenticated` - Account session cookie is missing or invalid
+  - 403 `csrf_failed` - Server received a request without matching CSRF header/cookie
+  - client-side `csrf_missing` - Client has a session cookie but no readable CSRF token and must ask the user to sign in again before sending create/select
+  - 403 `email_unverified` - Account email must be verified before creating a new character
   - 409 `name_taken` - Name already in use
+  - 409 `character_limit` - Account already has the maximum number of characters
   - 429 `rate_limited` - Too many attempts
   - 403 `banned` - Account banned (reserved)
 
 Error response body (all non-200):
 ```json
-{"ok":false,"code":"invalid_name","message":"..."}
+{"ok":false,"error":"invalid_input"}
 ```
 
 ## WebSocket
@@ -165,11 +175,15 @@ error (failure):
 | `token_invalid` | Token fails signature/format validation |
 | `token_expired` | Token expired |
 | `banned` | Account banned (reserved) |
+| `csrf_failed` | Server-side CSRF double-submit check failed |
+| `csrf_missing` | Client-side guard: account session cookie exists but readable CSRF token is missing |
+| `email_unverified` | Account email must be verified before character create |
 | `not_in_world` | Action requires being in world |
 | `rate_limited` | Too many requests |
 | `kicked` | Server kicked player |
 | `name_taken` | Character name already in use |
-| `invalid_name` | Character name violates rules |
+| `character_limit` | Account has reached the character limit |
+| `invalid_input` | Character name/world/sex/outfit violates rules |
 
 ## Name Rules (Character Create)
 - Length: 3–20 chars
@@ -206,7 +220,7 @@ See `docs/IDENTITY_VERIFICATION.md` for verification protocol.
 - Retired `POST /v1/characters/create` endpoint for persistent named characters
 - Current account-gated `POST /v1/characters` endpoint for world/sex/outfit character creation
 - Signed auth tokens (preferred over guest tokens)
-- New error codes: `token_invalid`, `token_expired`, `name_taken`, `invalid_name`, `banned`
+- New error codes: `token_invalid`, `token_expired`, `name_taken`, `invalid_input`, `character_limit`, `csrf_failed`, `csrf_missing`, `email_unverified`, `banned`
 - `login_ack` now includes `token` and `expires_at` fields
 
 ### Backward Compatibility
