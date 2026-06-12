@@ -52,13 +52,14 @@ Source spec: `docs/UI_PROPOSAL.md` (v0.3 FINAL FREEZE)
 | Chronicle item_lost grouped under death | chronicle_snapshot | chronicle/ChronicleSheet.kt | [ ] |
 | Chronicle pagination (before/limit) + Load more | get_chronicle | chronicle/ChronicleSheet.kt | [ ] |
 | Chronicle death events tappable -> recap | chronicle_snapshot | chronicle/ChronicleSheet.kt | [ ] |
-| Identity: character creation v0 | TBD (server: world_state PlayerPublic) | character/CharacterCreateScreen.kt | [ ] |
-| Sex selection UI (male/female) | TBD (server: world_state PlayerPublic) | character/CharacterCreateScreen.kt | [ ] |
-| Male/female selection stored server-side | TBD (server: world_state PlayerPublic) | character/CharacterCreateScreen.kt | [ ] |
-| Starter outfit assigned server-side | TBD (server: world_state PlayerPublic) | character/CharacterCreateScreen.kt | [ ] |
-| Synced on login | TBD (server: world_state PlayerPublic) | character/CharacterCreateScreen.kt | [ ] |
+| Identity: account-character creation v2 | POST /v1/characters | character/CharacterCreateScreen.kt + CharacterCreateActivity.kt | [x] |
+| World selection UI | world_id in POST /v1/characters | character/CharacterCreateScreen.kt | [x] |
+| Sex selection UI (male/female) | sex in POST /v1/characters | character/CharacterCreateScreen.kt | [x] |
+| Outfit selection UI | outfit_id in POST /v1/characters | character/CharacterCreateScreen.kt | [x] |
+| World/sex/outfit stored server-side | account_characters + receipts | CharacterCreateActivity.kt | [x] |
+| Synced on login | selected account character projection | CharacterCreateActivity.kt | [x] |
 | Starter outfit cosmetic only (no stats/bonuses) | client-only | (no exact match; FLAG) | [ ] |
-| No outfit picker in v0 | client-only | character/CharacterCreateScreen.kt | [ ] |
+| Outfit picker filters by selected sex | client-only + server catalog parity | character/CharacterCreateScreen.kt | [x] |
 | No outfit receipts (no chronicle/evidence entries) | client-only | (no exact match; FLAG) | [ ] |
 | Outfit not inventory/equipment/economy objects | client-only | (no exact match; FLAG) | [ ] |
-| Rename / alias message for v0 contract | TBD (server: world_state PlayerPublic) | n/a | [ ] |
+| Legacy Azura world id rejected for account-character creation | POST /v1/characters | verify-character-v2.test.ts | [x] |

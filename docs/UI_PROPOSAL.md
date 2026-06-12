@@ -394,18 +394,25 @@ Chosen once at character creation. Permanent in v0.
 │  Sex:                         │
 │   (●) Male   (○) Female       │
 │                               │
+│  World: [Rookguard ▼]         │
+│  Outfit: [Wanderer ▼]         │
+│                               │
 │  [  character sprite  ]       │
 │                               │
 │        [ CREATE ]             │
 └───────────────────────────────┘
 ```
 
-No outfit picker in v0. Starter outfit auto-assigned based on sex.
+Current source-level character creation uses the account-character v2 payload:
+name, world id, sex, and outfit id. The Android presentation component exposes
+world and outfit selectors; the server remains authoritative for the accepted
+catalog values and rejects mismatches.
 
 ### Where It Lives
 
 | Data | Storage | Synced |
 |------|---------|--------|
+| World | Server (account character record) | On login |
 | Sex | Server (player record) | On login |
 | Outfit | Server (player record) | On login |
 
@@ -415,7 +422,9 @@ No outfit picker in v0. Starter outfit auto-assigned based on sex.
 - Economy objects
 - Chronicle events
 
-Sex/outfit are part of the player profile snapshot, not a receipt-driven system.
+World/sex/outfit are part of the account character profile snapshot. Character
+creation emits character profile receipts; outfit choice is cosmetic and not an
+inventory, equipment, economy, or power system.
 
 ---
 
