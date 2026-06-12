@@ -85,6 +85,7 @@ those yourself.
 
 5) Account-character/API parity edits:
 - `npm run verify:account-character` (server `/v1/characters`, protocol docs,
+  server create/select play-token handoff and login projection proof,
   server wallet/shop/work/property gameplay route proof, debug-client guard, and
   Android account-character unit tests plus Android character UI compile and
   Android gameplay wire-authority protocol proof)
