@@ -422,6 +422,11 @@ async function main(): Promise<void> {
   fund('p_seller', 300);
   seedProperty('Azura:H2', 100);
   await request('POST', '/v1/property/buy', { character_id: 'p_seller', property_id: 'Azura:H2' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
+  const receiptCountAfterSellerPrimaryBuy = receipts.length;
+  res = await request('POST', '/v1/property/buy', { character_id: 'p_buyer', property_id: 'Azura:H2' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
+  check('property buy rejects owned unlisted plot', res.status === 409 && res.body.error === 'not_for_sale');
+  check('owned-unlisted property buy emits no debit/purchase receipt', receipts.length === receiptCountAfterSellerPrimaryBuy);
+
   await request('POST', '/v1/property/list', { character_id: 'p_seller', property_id: 'Azura:H2', price_gold: 60 }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
   fund('p_buyer', 60);
   res = await request('POST', '/v1/property/buy', { character_id: 'p_buyer', property_id: 'Azura:H2' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
