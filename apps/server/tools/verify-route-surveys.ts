@@ -1,8 +1,8 @@
-// Verify first onward-route survey skills.
+// Verify onward-route action skills.
 //
-// The survey path uses existing use_skill intent handling. Clients send only
+// The route action path uses existing use_skill intent handling. Clients send only
 // a skill id; the server emits skill intent/resolution receipts plus a
-// route_surveyed receipt and returns read-only route payloads.
+// route-specific receipt and returns read-only route payloads.
 
 import type { WebSocket } from 'ws';
 import type { AntiCheatState, Player } from '../../../packages/shared/types.js';
@@ -1160,4 +1160,4 @@ for (const { name, fn } of tests) {
   }
 }
 
-console.log('\n✓ all route survey checks passed');
+console.log('\n✓ all route action checks passed');
