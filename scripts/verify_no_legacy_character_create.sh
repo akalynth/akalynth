@@ -273,6 +273,8 @@ for web_economy_literal in \
   "missing-character property buy emits no debit/purchase receipt" \
   "property buy requires property id" \
   "missing-property property buy emits no debit/purchase receipt" \
+  "property buy rejects unknown plot" \
+  "unknown-plot property buy emits no debit/purchase receipt" \
   "property buy requires matching csrf" \
   "auth/csrf rejected property buy emits no purchase receipt" \
   "property buy without gold is rejected" \
