@@ -654,6 +654,7 @@ export function handleSoulsteelRefinementAuthorization(ctx: SkillContext): Skill
   if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
   const routeProgress = ctx.getOnwardRouteProgress?.();
   if (!routeProgress?.ashglassEvidenceRecovered) return { success: false, reason: 'invalid_target' };
+  if (routeProgress.soulsteelRefinementAuthorized) return { success: false, reason: 'invalid_target' };
 
   const authorizedAt = new Date().toISOString();
   const refinementId = 'soulsteel_refinement_authorization_v1';

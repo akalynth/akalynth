@@ -457,6 +457,34 @@ test('Soulsteel component mint records item and inventory receipts without walle
   assert(result.payload?.economy_impact === 'item_mint_only', 'Soulsteel mint payload economy impact mismatch');
 });
 
+test('Soulsteel refinement authorization is idempotent after receipt-derived authorization', async () => {
+  const { ctx, receipts, sent } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:safety:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:gate:heartforge' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:ashglass' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:refine' });
+  ctx.skillCooldowns.set('route:craft:refine', 0);
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:refine' });
+
+  const refinements = receipts.filter((r) => r.action === SOULSTEEL_REFINEMENT_AUTHORIZED_ACTION);
+  const refineResults = sent.filter((msg) =>
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as { type?: string }).type === 'skill_result' &&
+    (msg as { skill_id?: string }).skill_id === 'route:craft:refine'
+  ) as Array<{ success?: boolean; reason?: string }>;
+
+  assert(refinements.length === 1, 'repeat Soulsteel refinement must not emit a second authorization receipt');
+  assert(refineResults.length === 2, 'repeat Soulsteel refinement should return two skill results');
+  assert(refineResults[0]?.success === true, 'first Soulsteel refinement should succeed');
+  assert(refineResults[1]?.success === false, 'second Soulsteel refinement should fail');
+  assert(refineResults[1]?.reason === 'invalid_target', 'second Soulsteel refinement should be rejected as invalid target');
+});
+
 test('Soulsteel component mint is idempotent after receipt-derived item mint', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
