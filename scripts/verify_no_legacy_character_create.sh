@@ -74,6 +74,16 @@ for android_catalog_literal in \
   fi
 done
 
+for debug_client_literal in \
+  'account character requests include account session cookies' \
+  'create path submits typed account character v2 body' \
+  'select path submits selected character id' \
+  'create/select response validates full play response'; do
+  if ! grep -Fq "$debug_client_literal" "$ROOT_DIR/apps/debug-client/scripts/verify-account-character-guard.mjs"; then
+    die "Missing debug-client account-character verifier proof: $debug_client_literal"
+  fi
+done
+
 for client_contract_literal in \
   '### Character Catalogs' \
   'GET /v1/worlds` is public' \

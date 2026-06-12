@@ -78,6 +78,11 @@ const required = [
     literal: "headers['x-csrf-token'] = csrf;",
   },
   {
+    label: 'account character requests include account session cookies',
+    file: 'gameClient',
+    literal: "credentials: 'include',",
+  },
+  {
     label: 'account session state tracks csrf readiness',
     file: 'gameClient',
     literal: 'csrfReady: ok && !!csrf,',
@@ -112,6 +117,21 @@ const required = [
     label: 'create path submits outfit id',
     file: 'characterBar',
     literal: 'outfit_id: outfitId,',
+  },
+  {
+    label: 'create path submits typed account character v2 body',
+    file: 'gameClient',
+    literal: '} satisfies AccountCharacterCreateRequest),',
+  },
+  {
+    label: 'select path submits selected character id',
+    file: 'gameClient',
+    literal: 'body: JSON.stringify({ character_id: characterId }),',
+  },
+  {
+    label: 'create/select response validates full play response',
+    file: 'gameClient',
+    literal: 'if (!isAccountCharacterPlayResponse(body)) {',
   },
   {
     label: 'create disabled until catalog is loaded',
