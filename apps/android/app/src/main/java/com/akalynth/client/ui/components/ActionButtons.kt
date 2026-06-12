@@ -29,6 +29,8 @@ fun ActionButtons(
     onWorldEventContribution: (String) -> Unit = {},
     showHighCityActions: Boolean = false,
     onInspectWallet: () -> Unit = {},
+    onStartWork: () -> Unit = {},
+    onTickWork: () -> Unit = {},
     onBuyHouse: (String) -> Unit = {},
     onListHouse: (String, Int) -> Unit = { _, _ -> },
     onUnlistHouse: (String) -> Unit = {},
@@ -124,6 +126,18 @@ fun ActionButtons(
                     onClick = onInspectWallet,
                     compact = true,
                     modifier = Modifier.testTag("ActionButtons_Wallet")
+                )
+                ClassicButton(
+                    text = "Work",
+                    onClick = onStartWork,
+                    compact = true,
+                    modifier = Modifier.testTag("ActionButtons_StartWork")
+                )
+                ClassicButton(
+                    text = "Tick",
+                    onClick = onTickWork,
+                    compact = true,
+                    modifier = Modifier.testTag("ActionButtons_TickWork")
                 )
                 ClassicButton(
                     text = "Buy H1",

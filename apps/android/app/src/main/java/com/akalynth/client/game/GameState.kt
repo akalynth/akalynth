@@ -37,7 +37,8 @@ data class WorldState(
 data class EconomyState(
     val gold: Int? = null,
     val properties: Map<String, PropertyPublic> = emptyMap(),
-    val lastPropertyResult: PropertyResultStatus? = null
+    val lastPropertyResult: PropertyResultStatus? = null,
+    val work: WorkContractStatus? = null
 )
 
 data class PropertyResultStatus(
@@ -45,6 +46,17 @@ data class PropertyResultStatus(
     val propertyId: String,
     val success: Boolean,
     val reason: String? = null
+)
+
+data class WorkContractStatus(
+    val contractId: String,
+    val contractType: String,
+    val payoutGold: Int? = null,
+    val ticksObserved: Int = 0,
+    val ticksRequired: Int = 0,
+    val remainingMs: Long? = null,
+    val complete: Boolean = false,
+    val error: String? = null
 )
 
 data class ChatEntry(

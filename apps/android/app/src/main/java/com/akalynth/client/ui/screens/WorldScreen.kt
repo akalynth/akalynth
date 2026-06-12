@@ -61,6 +61,7 @@ fun WorldScreen(
             gold = state.economy.gold,
             propertyCount = state.economy.properties.size,
             propertyStatus = propertyStatusLabel(state.economy.lastPropertyResult),
+            workStatus = workStatusLabel(state.economy.work),
             connectionState = state.connection,
             modifier = Modifier.align(Alignment.TopStart)
         )
@@ -132,6 +133,8 @@ fun WorldScreen(
                 },
                 showHighCityActions = state.world.currentMap.isHighCityCompatible,
                 onInspectWallet = { onEvent(GameEvent.InspectWallet) },
+                onStartWork = { onEvent(GameEvent.StartWorkContract) },
+                onTickWork = { onEvent(GameEvent.TickWorkContract) },
                 onBuyHouse = { propertyId -> onEvent(GameEvent.BuyHouse(propertyId)) },
                 onListHouse = { propertyId, price -> onEvent(GameEvent.ListHouse(propertyId, price)) },
                 onUnlistHouse = { propertyId -> onEvent(GameEvent.UnlistHouse(propertyId)) },
@@ -230,6 +233,17 @@ private fun propertyStatusLabel(status: com.akalynth.client.game.PropertyResultS
         "$action ${status.propertyId}: ok"
     } else {
         "$action ${status.propertyId}: ${status.reason ?: "failed"}"
+    }
+}
+
+private fun workStatusLabel(status: com.akalynth.client.game.WorkContractStatus?): String? {
+    if (status == null) return null
+    if (status.error != null) return "Work: ${status.error}"
+    if (status.complete) return "Work: +${status.payoutGold ?: 0} gold"
+    return if (status.ticksRequired > 0) {
+        "Work: ${status.ticksObserved}/${status.ticksRequired}"
+    } else {
+        "Work: started +${status.payoutGold ?: 0} gold"
     }
 }
 
