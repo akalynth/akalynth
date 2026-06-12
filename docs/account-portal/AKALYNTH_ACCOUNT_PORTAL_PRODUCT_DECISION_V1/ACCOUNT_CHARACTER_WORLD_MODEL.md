@@ -57,7 +57,7 @@ account (1) ──< character (N) ── world_id
 6. Server creates the character, binds it to the account + world + sex + outfit, and
    issues the play token for that character session.
 
-## Proposed API surface (specified in E4)
+## Current API surface (implemented by E4)
 
 ```
 GET  /v1/worlds                     -> world catalog

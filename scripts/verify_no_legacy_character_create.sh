@@ -37,8 +37,9 @@ if [[ -n "$matches" ]]; then
 fi
 
 doc_matches="$(
-  grep -RInE '\{"name":"Sovereign"\}|Success \(200\):|Guest accounts remain functional|Implement character creation flow' "${doc_paths[@]}" \
+  grep -RInE '\{"name":"Sovereign"\}|Success \(200\):|Guest accounts remain functional|Implement character creation flow|Proposed API surface \(specified in E4\)' "${doc_paths[@]}" \
     --include='CLIENT_CONTRACT_V0_1.md' \
+    --include='ACCOUNT_CHARACTER_WORLD_MODEL.md' \
     2>/dev/null || true
 )"
 
