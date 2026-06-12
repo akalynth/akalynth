@@ -9,7 +9,12 @@ export type SkillId =
   | 'skill_inspect'
   | 'skill_ping_tem'
   | 'skill_request_recap'
-  | 'skill_report';
+  | 'skill_report'
+  | 'route:survey:forgehold'
+  | 'route:survey:moonspire'
+  | 'route:craft:soulsteel'
+  | 'route:dream:interpret'
+  | 'route:quest:shipment';
 
 export type SkillTarget = 'self' | 'player' | 'none';
 
@@ -59,6 +64,46 @@ export const SKILL_REGISTRY: Record<SkillId, SkillDefinition> = {
     gold_cost: 0,
     debug_only: false,
   },
+  'route:survey:forgehold': {
+    id: 'route:survey:forgehold',
+    name: 'Survey Forgehold Route',
+    cooldown_ms: 30_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
+  'route:survey:moonspire': {
+    id: 'route:survey:moonspire',
+    name: 'Survey Moonspire Dream Gate',
+    cooldown_ms: 30_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
+  'route:craft:soulsteel': {
+    id: 'route:craft:soulsteel',
+    name: 'Stabilize Soulsteel',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
+  'route:dream:interpret': {
+    id: 'route:dream:interpret',
+    name: 'Interpret Dream Gate',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
+  'route:quest:shipment': {
+    id: 'route:quest:shipment',
+    name: 'Investigate Missing Shipment',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
 };
 
 export const SKILL_IDS = Object.keys(SKILL_REGISTRY) as SkillId[];
@@ -83,6 +128,10 @@ export const SKILL_USE_INTENT_ACTION = 'skill_use_intent';
 export const SKILL_RESOLVED_ACTION = 'skill_resolved';
 export const SKILL_REJECTED_ACTION = 'skill_rejected';
 export const PLAYER_REPORTED_ACTION = 'player_reported';
+export const ROUTE_SURVEYED_ACTION = 'route_surveyed';
+export const SOULSTEEL_STABILIZED_ACTION = 'soulsteel_stabilized';
+export const DREAM_GATE_INTERPRETED_ACTION = 'dream_gate_interpreted';
+export const FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION = 'forgehold_shipment_investigated';
 
 // Moderation v1: Resolution receipt action
 export const MODERATION_RESOLVED_ACTION = 'moderation_resolved';

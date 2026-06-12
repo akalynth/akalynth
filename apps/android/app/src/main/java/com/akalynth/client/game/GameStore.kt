@@ -97,6 +97,7 @@ class GameStore(
             is LoginAckMessage -> if (msg.ok != false) "ok, id=${msg.playerId}" else "fail: ${msg.reason}"
             is WorldStateMessage -> "map=${msg.map}, players=${msg.nearbyPlayers.size}"
             is MoveResultMessage -> "ok=${msg.ok}, pos=(${msg.x},${msg.y})"
+            is LoopUpdateMessage -> "${msg.event}: ${msg.loop.objective}"
             is PlayerMovedMessage -> "${msg.playerId} -> (${msg.x},${msg.y})"
             is PlayerJoinedMessage -> msg.player.name
             is PlayerLeftMessage -> msg.playerId
@@ -205,6 +206,7 @@ class GameStore(
             is GameEvent.ToggleChat -> toggleChat()
             is GameEvent.Attack -> sendAttack(event.targetId)
             is GameEvent.WorldEventContribution -> sendWorldEventContribution(event.contributionId)
+            is GameEvent.RouteSurvey -> sendRouteSurvey(event.skillId)
             is GameEvent.TalkToNpc -> talkToNpc(event.npcId)
             is GameEvent.DeclareVocation -> declareVocation(event.vocation)
             is GameEvent.InspectWallet -> inspectWallet()
@@ -341,6 +343,7 @@ class GameStore(
             is LoginAckMessage -> handleLoginAck(msg)
             is WorldStateMessage -> handleWorldState(msg)
             is MoveResultMessage -> handleMoveResult(msg)
+            is LoopUpdateMessage -> handleLoopUpdate(msg)
             is PlayerMovedMessage -> handlePlayerMoved(msg)
             is PlayerJoinedMessage -> handlePlayerJoined(msg)
             is PlayerLeftMessage -> handlePlayerLeft(msg)
@@ -372,7 +375,7 @@ class GameStore(
             is WorkContractResultMessage -> handleWorkContractResult(msg)
             is NpcDialogueMessage -> handleNpcDialogue(msg)
             is NpcDialogueErrorMessage -> handleNpcDialogueError(msg)
-            is SkillResultMessage -> {}
+            is SkillResultMessage -> handleSkillResult(msg)
             is ModReportsSnapshotMessage -> {}
             is ModResolveResultMessage -> {}
             is PropertySnapshotMessage -> handlePropertySnapshot(msg)
@@ -474,6 +477,18 @@ class GameStore(
                     currentMap = msg.map,
                     me = msg.player,
                     otherPlayers = others
+                ),
+                progression = it.progression.copy(loop = msg.player.loop)
+            )
+        }
+    }
+
+    private fun handleLoopUpdate(msg: LoopUpdateMessage) {
+        _state.update {
+            it.copy(
+                progression = it.progression.copy(
+                    loop = msg.loop,
+                    lastEvent = msg.event
                 )
             )
         }
@@ -632,6 +647,45 @@ class GameStore(
                     npcDialogue = NpcDialogueStatus(
                         npcId = msg.npcId,
                         error = msg.error
+                    )
+                )
+            )
+        }
+    }
+
+    private fun handleSkillResult(msg: SkillResultMessage) {
+        if (
+            !msg.skillId.startsWith("route:survey:") &&
+            msg.skillId != "route:quest:shipment" &&
+            msg.skillId != "route:craft:soulsteel" &&
+            msg.skillId != "route:dream:interpret"
+        ) return
+        val title = when (msg.skillId) {
+            "route:survey:forgehold" -> "Forgehold Route"
+            "route:survey:moonspire" -> "Moonspire Dream Gate"
+            "route:quest:shipment" -> "Forgehold shipment"
+            "route:craft:soulsteel" -> "Soulsteel"
+            "route:dream:interpret" -> "Dream Gate"
+            else -> "Route"
+        }
+        val line = if (msg.success) {
+            when (msg.skillId) {
+                "route:quest:shipment" -> "$title investigation recorded by server."
+                "route:craft:soulsteel" -> "$title stabilization recorded by server."
+                "route:dream:interpret" -> "$title interpretation recorded by server."
+                else -> "$title survey recorded by server."
+            }
+        } else {
+            "$title action unavailable: ${msg.reason ?: "rejected"}"
+        }
+        _state.update {
+            it.copy(
+                ui = it.ui.copy(
+                    npcDialogue = NpcDialogueStatus(
+                        npcId = "route_survey",
+                        placeId = "onward_routes",
+                        tier = if (msg.success) "surveyed" else "rejected",
+                        line = line
                     )
                 )
             )
@@ -804,6 +858,18 @@ class GameStore(
 
     private fun sendWorldEventContribution(contributionId: String) {
         val skillId = "event:witness_moth_bloom:$contributionId"
+        wsClient.send(UseSkillMessage(skillId = skillId))
+        logSent("use_skill", skillId)
+    }
+
+    private fun sendRouteSurvey(skillId: String) {
+        if (
+            skillId != "route:survey:forgehold" &&
+            skillId != "route:survey:moonspire" &&
+            skillId != "route:quest:shipment" &&
+            skillId != "route:craft:soulsteel" &&
+            skillId != "route:dream:interpret"
+        ) return
         wsClient.send(UseSkillMessage(skillId = skillId))
         logSent("use_skill", skillId)
     }

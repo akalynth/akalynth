@@ -2,7 +2,13 @@
 // Each handler implements utility/admin functionality using existing primitives
 
 import type { SkillContext, SkillResult } from './index.js';
-import { PLAYER_REPORTED_ACTION } from '../../../../packages/shared/skills.js';
+import {
+  PLAYER_REPORTED_ACTION,
+  ROUTE_SURVEYED_ACTION,
+  SOULSTEEL_STABILIZED_ACTION,
+  DREAM_GATE_INTERPRETED_ACTION,
+  FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION,
+} from '../../../../packages/shared/skills.js';
 import { createHash } from 'node:crypto';
 
 // ============================================================================
@@ -138,6 +144,179 @@ export function handleReport(ctx: SkillContext, targetId: string): SkillResult {
       reported: true,
       target_id: targetId,
       case_id: caseId,
+    },
+  };
+}
+
+// ============================================================================
+// route:survey:*: First onward-route interaction (read-only, receipt-backed)
+// ============================================================================
+
+export function handleRouteSurvey(ctx: SkillContext, route: 'forgehold' | 'moonspire'): SkillResult {
+  if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
+
+  const surveyedAt = new Date().toISOString();
+  const isForgehold = route === 'forgehold';
+  const routeId = isForgehold ? 'forgehold_route_slice_v1' : 'moonspire_dream_gate_slice_v1';
+  const title = isForgehold ? 'Forgehold Route' : 'Moonspire Dream Gate';
+  const nextObjective = isForgehold
+    ? 'Check the Ember Road shipment board, then stabilize cracked Soulsteel under server receipts.'
+    : 'Read the first Dream Gate symbol clue, then wait for server-owned dream traversal.';
+  const systems = isForgehold
+    ? ['quest', 'economy', 'crafting', 'server', 'ui', 'android', 'anti_cheat']
+    : ['quest', 'dream_gate', 'server', 'ui', 'android', 'anti_cheat'];
+  const sourceDrop = isForgehold
+    ? 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1'
+    : 'drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1';
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: ROUTE_SURVEYED_ACTION,
+    inputs: {
+      route_id: routeId,
+      source_drop: sourceDrop,
+      surveyed_at: surveyedAt,
+      systems,
+    },
+    result: 'ok',
+  });
+
+  return {
+    success: true,
+    payload: {
+      route_id: routeId,
+      title,
+      status: 'surveyed',
+      next_objective: nextObjective,
+      source_drop: sourceDrop,
+      systems,
+      receipt_action: ROUTE_SURVEYED_ACTION,
+    },
+  };
+}
+
+export function handleSoulsteelStabilization(ctx: SkillContext): SkillResult {
+  if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
+
+  const craftedAt = new Date().toISOString();
+  const quality = 'unstable';
+  const requiredEvidence = ['charred_shipment_plate', 'ashglass_shard'];
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: SOULSTEEL_STABILIZED_ACTION,
+    inputs: {
+      route_id: 'forgehold_route_slice_v1',
+      quality,
+      required_evidence: requiredEvidence,
+      source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
+      crafted_at: craftedAt,
+      economy_impact: 'none',
+    },
+    result: 'ok',
+  });
+
+  return {
+    success: true,
+    payload: {
+      route_id: 'forgehold_route_slice_v1',
+      crafting_id: 'soulsteel_stabilization_v1',
+      item_type: 'stabilized_soulsteel_component',
+      quality,
+      status: 'stabilized',
+      next_objective: 'Carry the unstable Soulsteel proof toward the Heartforge Trial chamber; refinement still requires evidence recovery.',
+      required_evidence: requiredEvidence,
+      source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
+      receipt_action: SOULSTEEL_STABILIZED_ACTION,
+      economy_impact: 'none',
+    },
+  };
+}
+
+export function handleDreamGateInterpretation(ctx: SkillContext): SkillResult {
+  if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
+
+  const interpretedAt = new Date().toISOString();
+  const symbols = ['Door', 'Mirror', 'Water'];
+  const meanings = ['boundary', 'self-recognition', 'hidden memory'];
+  const requiredFragments = ['silver_thread', 'emotional_residue'];
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: DREAM_GATE_INTERPRETED_ACTION,
+    inputs: {
+      route_id: 'moonspire_dream_gate_slice_v1',
+      gate_state: 'interpreted',
+      symbols,
+      meanings,
+      required_fragments: requiredFragments,
+      source_drop: 'drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1',
+      interpreted_at: interpretedAt,
+      traversal_granted: false,
+      economy_impact: 'none',
+    },
+    result: 'ok',
+  });
+
+  return {
+    success: true,
+    payload: {
+      route_id: 'moonspire_dream_gate_slice_v1',
+      interpretation_id: 'dream_gate_symbolic_interpretation_v1',
+      gate_state: 'interpreted',
+      status: 'interpreted',
+      symbols,
+      meanings,
+      required_fragments: requiredFragments,
+      next_objective: 'Anchor the interpreted symbols before any Dream Gate traversal can be server-authorized.',
+      source_drop: 'drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1',
+      receipt_action: DREAM_GATE_INTERPRETED_ACTION,
+      traversal_granted: false,
+      economy_impact: 'none',
+    },
+  };
+}
+
+export function handleForgeholdShipmentInvestigation(ctx: SkillContext): SkillResult {
+  if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
+
+  const investigatedAt = new Date().toISOString();
+  const evidenceObjects = ['broken_route_seal', 'charred_shipment_plate'];
+  const contradiction = 'departed / undeparted';
+  const routeState = 'investigating';
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION,
+    inputs: {
+      route_id: 'forgehold_route_slice_v1',
+      act_id: 'act_01_missing_shipment',
+      route_state: routeState,
+      evidence_objects: evidenceObjects,
+      contradiction,
+      source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
+      investigated_at: investigatedAt,
+      travel_unlocked: false,
+      economy_impact: 'none',
+    },
+    result: 'ok',
+  });
+
+  return {
+    success: true,
+    payload: {
+      route_id: 'forgehold_route_slice_v1',
+      quest_id: 'forgehold_missing_shipment_v1',
+      act_id: 'act_01_missing_shipment',
+      route_state: routeState,
+      status: 'investigating',
+      evidence_objects: evidenceObjects,
+      contradiction,
+      next_objective: 'Recover Ashglass Shard evidence before any route reopening or Soulsteel refinement can be server-authorized.',
+      source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
+      receipt_action: FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION,
+      travel_unlocked: false,
+      economy_impact: 'none',
     },
   };
 }

@@ -55,6 +55,96 @@ data class MoveResultMessage(
 ) : ServerMessage()
 
 @Serializable
+data class RookguardQuestStep(
+    @SerialName("step_id") val stepId: String,
+    val label: String,
+    val complete: Boolean,
+    @SerialName("receipt_actions") val receiptActions: List<String> = emptyList()
+)
+
+@Serializable
+data class RookguardCodexShelf(
+    @SerialName("object_id") val objectId: String,
+    val title: String,
+    val subtitle: String,
+    val role: String,
+    @SerialName("gameplay_hint") val gameplayHint: String
+)
+
+@Serializable
+data class RookguardCodexAnchor(
+    @SerialName("object_id") val objectId: String,
+    val status: String,
+    val source: String,
+    val evidence: String,
+    val authority: String,
+    val related: List<String> = emptyList()
+)
+
+@Serializable
+data class RookguardCodexProfession(
+    val vocation: String,
+    @SerialName("lore_id") val loreId: String,
+    @SerialName("codex_anchor") val codexAnchor: RookguardCodexAnchor,
+    val title: String,
+    val oath: String,
+    @SerialName("starter_role") val starterRole: String,
+    @SerialName("starter_actions") val starterActions: List<String> = emptyList()
+)
+
+@Serializable
+data class RookguardQuestProgress(
+    @SerialName("quest_id") val questId: String,
+    val title: String,
+    val phase: String,
+    val steps: List<RookguardQuestStep> = emptyList(),
+    val codexShelves: List<RookguardCodexShelf> = emptyList(),
+    val codexProfession: RookguardCodexProfession? = null,
+    val completed: Boolean = false
+)
+
+@Serializable
+data class OnwardRouteObjective(
+    val id: String,
+    val label: String,
+    val system: String
+)
+
+@Serializable
+data class OnwardRouteProgress(
+    @SerialName("route_id") val routeId: String,
+    val title: String,
+    val status: String,
+    @SerialName("unlock_requirement") val unlockRequirement: String,
+    @SerialName("next_objective") val nextObjective: String,
+    val objectives: List<OnwardRouteObjective> = emptyList(),
+    @SerialName("completed_objective_ids") val completedObjectiveIds: List<String> = emptyList(),
+    @SerialName("source_drop") val sourceDrop: String,
+    @SerialName("receipt_actions") val receiptActions: List<String> = emptyList()
+)
+
+@Serializable
+data class PlayLoopProgress(
+    val move: Boolean = false,
+    val chat: Boolean = false,
+    val tem: Boolean = false,
+    val gate: Boolean = false,
+    val complete: Boolean = false,
+    val gateOpen: Boolean = false,
+    val objective: String = "",
+    val rookguardQuest: RookguardQuestProgress? = null,
+    val onwardRoutes: List<OnwardRouteProgress> = emptyList(),
+    val lastEvent: String? = null
+)
+
+@Serializable
+@SerialName("loop_update")
+data class LoopUpdateMessage(
+    val event: String,
+    val loop: PlayLoopProgress
+) : ServerMessage()
+
+@Serializable
 @SerialName("player_moved")
 data class PlayerMovedMessage(
     @SerialName("player_id") val playerId: String,

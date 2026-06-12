@@ -220,12 +220,14 @@ import {
 } from './world/world-events.js';
 import {
   ROOKGUARD_CODEX_PROFESSIONS,
+  buildOnwardRouteProgress,
   buildRookguardQuestProgress,
   getRookguardQuestInput,
   rookguardGateOpen,
   rookguardQuestObjective,
   type RookguardQuestInput,
 } from './world/rookguardQuest.js';
+import { getOnwardRouteReceiptProgress } from './world/onwardRoutes.js';
 import { buildSimLifeSnapshot } from './simulation/simLifeSnapshot.js';
 import { chronicleAppend } from './witness/chronicleAdapter.js';
 import { verifyRulebookOrExit } from './rulebook/verifyRulebook.js';
@@ -2728,6 +2730,10 @@ function playLoopFor(s: Session) {
     gateOpen,
     objective,
     rookguardQuest: buildRookguardQuestProgress(rookguardQuestInput),
+    onwardRoutes: buildOnwardRouteProgress(
+      rookguardQuestInput,
+      s.player ? getOnwardRouteReceiptProgress(s.player.id) : undefined
+    ),
     lastEvent: bloom.phase === 'idle' ? null : `witness_moth_bloom_${bloom.phase}`,
     ...(bloom.teaser ? { teaser: bloom.teaser } : {}),
   };
@@ -5846,11 +5852,15 @@ function processSessionQueue(s: Session, now: number) {
           ws: s.ws,
           antiState: s.anti.state,
           skillCooldowns: s.skillCooldowns,
+          onwardRoutesAvailable: buildRookguardQuestProgress(rookguardQuestInputFor(s)).completed,
           audit: (receipt) => audit.write(receipt),
           findPlayerOnline: findPlayerByIdOnline,
           issueTem: issueTemChallenge,
           getChronicle: (pid, limit) => persist.getChronicleForPlayer(pid, limit),
           send: (m) => send(s.ws, m as ServerMessage),
+          onSkillResolved: (skillId) => {
+            if (skillId.startsWith('route:')) sendLoopUpdate(s, 'onward_route_progress');
+          },
         };
 
         handleUseSkill(skillCtx, msg);

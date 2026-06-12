@@ -27,6 +27,7 @@ import com.akalynth.client.game.GameState
 import com.akalynth.client.game.MapRepository
 import com.akalynth.client.network.EndpointInfo
 import com.akalynth.client.protocol.MapName
+import com.akalynth.client.protocol.OnwardRouteProgress
 import com.akalynth.client.protocol.PlayerPublic
 import com.akalynth.client.ui.diagnostics.DiagnosticsFormatter
 import com.akalynth.client.ui.components.*
@@ -55,6 +56,9 @@ fun WorldScreen(
             mapData?.landmarks?.get("guild_hall")?.contains(me.x, me.y)
         } == true
     )
+    val showRouteSurveys = state.progression.loop?.onwardRoutes?.any { route ->
+        route.status == "available"
+    } == true
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -103,6 +107,13 @@ fun WorldScreen(
             )
         }
 
+        OnwardRoutesPanel(
+            routes = state.progression.loop?.onwardRoutes ?: emptyList(),
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 12.dp)
+        )
+
         Row(
             modifier = Modifier
                 .align(Alignment.TopEnd)
@@ -145,6 +156,8 @@ fun WorldScreen(
                 onWorldEventContribution = { contributionId ->
                     onEvent(GameEvent.WorldEventContribution(contributionId))
                 },
+                showRouteSurveys = showRouteSurveys,
+                onRouteSurvey = { skillId -> onEvent(GameEvent.RouteSurvey(skillId)) },
                 showRookguardActions = !state.world.currentMap.isHighCityCompatible,
                 showRookguardVocations = showRookguardVocations,
                 showHighCityActions = state.world.currentMap.isHighCityCompatible,
@@ -223,6 +236,52 @@ fun WorldScreen(
             ) {
                 Text(error)
             }
+        }
+    }
+}
+
+@Composable
+private fun OnwardRoutesPanel(
+    routes: List<OnwardRouteProgress>,
+    modifier: Modifier = Modifier
+) {
+    if (routes.isEmpty()) return
+
+    ClassicPanel(
+        modifier = modifier
+            .widthIn(max = 260.dp)
+            .testTag("WorldScreen_OnwardRoutes"),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Text(
+            text = "Next routes",
+            style = MaterialTheme.typography.labelMedium,
+            color = ClassicShellColors.Brass,
+            fontWeight = FontWeight.Bold
+        )
+        routes.forEach { route ->
+            val open = route.status == "available"
+            val systems = route.objectives
+                .map { objective -> objective.system }
+                .distinct()
+                .joinToString(", ")
+            Text(
+                text = "${if (open) "Open" else "Locked"}: ${route.title} (${route.completedObjectiveIds.size}/${route.objectives.size})",
+                style = MaterialTheme.typography.labelSmall,
+                color = if (open) ClassicShellColors.Good else ClassicShellColors.MutedText,
+                modifier = Modifier.testTag("WorldScreen_OnwardRoute_${route.routeId}")
+            )
+            Text(
+                text = route.nextObjective,
+                style = MaterialTheme.typography.bodySmall,
+                color = ClassicShellColors.Text
+            )
+            Text(
+                text = systems,
+                style = MaterialTheme.typography.labelSmall,
+                color = ClassicShellColors.Rune
+            )
         }
     }
 }

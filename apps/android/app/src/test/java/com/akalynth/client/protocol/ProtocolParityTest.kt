@@ -243,6 +243,7 @@ class ProtocolParityTest {
             """{"type":"login_ack","player_id":"p","name":"n","ok":true}""" to LoginAckMessage::class.java,
             """{"type":"world_state","map":"Rookguard","player":{"id":"p","name":"n","x":1,"y":1},"nearby_players":[]}""" to WorldStateMessage::class.java,
             """{"type":"move_result","ok":true,"x":1,"y":2,"reason":null}""" to MoveResultMessage::class.java,
+            """{"type":"loop_update","event":"tutorial_completed","loop":{"move":true,"chat":true,"tem":true,"gate":true,"complete":true,"gateOpen":true,"objective":"Rookguard Codex path complete","onwardRoutes":[{"route_id":"forgehold_route_slice_v1","title":"Forgehold Route","status":"available","unlock_requirement":"Complete Rookguard","next_objective":"Investigate the missing shipment","objectives":[{"id":"soulsteel_stabilization","label":"Soulsteel stabilization crafting","system":"crafting"}],"source_drop":"drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1","receipt_actions":["tutorial_completed","gate_unlock"]}]}}""" to LoopUpdateMessage::class.java,
             """{"type":"player_moved","player_id":"p","x":1,"y":2}""" to PlayerMovedMessage::class.java,
             """{"type":"player_joined","player":{"id":"p","name":"n","x":0,"y":0}}""" to PlayerJoinedMessage::class.java,
             """{"type":"player_left","player_id":"p"}""" to PlayerLeftMessage::class.java,
@@ -284,12 +285,29 @@ class ProtocolParityTest {
             """{"type":"house_auction_settled","property_id":"pr","plot_id":"pl","zone":"z","winner_name":"Ari","seller_name":"Sol","price":600,"sale_count":2}""" to HouseAuctionSettledMessage::class.java,
         )
 
-        // 43 server message types in protocol.ts ServerMessage union.
-        assertEquals(43, frames.size)
+        // 44 server message types in protocol.ts ServerMessage union.
+        assertEquals(44, frames.size)
         for ((frame, cls) in frames) {
             val decoded = MessageSerializer.decodeServer(frame)
             assertEquals("wrong decode for $frame", cls, decoded.javaClass)
         }
+    }
+
+    @Test
+    fun loopUpdateDecodesOnwardRoutesWithoutClientAuthority() {
+        val decoded = MessageSerializer.decodeServer(
+            """{"type":"loop_update","event":"tutorial_completed","loop":{"move":true,"chat":true,"tem":true,"gate":true,"complete":true,"gateOpen":true,"objective":"Rookguard Codex path complete","onwardRoutes":[{"route_id":"moonspire_dream_gate_slice_v1","title":"Moonspire Dream Gate","status":"available","unlock_requirement":"Complete Rookguard","next_objective":"Survey a Dream Gate clue","objectives":[{"id":"symbolic_puzzle_projection","label":"Symbolic puzzle projection","system":"dream_gate"},{"id":"dream_gate_android_projection","label":"Android read-only route parity","system":"android"},{"id":"dream_gate_abuse_notes","label":"No client-owned dream traversal truth","system":"anti_cheat"}],"source_drop":"drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1","receipt_actions":["tutorial_completed","gate_unlock"]}]}}"""
+        ) as LoopUpdateMessage
+
+        val route = decoded.loop.onwardRoutes.single()
+        assertEquals("tutorial_completed", decoded.event)
+        assertEquals("moonspire_dream_gate_slice_v1", route.routeId)
+        assertEquals("available", route.status)
+        assertEquals("Survey a Dream Gate clue", route.nextObjective)
+        assertEquals(listOf("tutorial_completed", "gate_unlock"), route.receiptActions)
+        assertTrue(route.objectives.any { it.system == "dream_gate" })
+        assertTrue(route.objectives.any { it.system == "android" })
+        assertTrue(route.objectives.any { it.system == "anti_cheat" })
     }
 
     @Test

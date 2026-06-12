@@ -3,6 +3,7 @@ package com.akalynth.client.game
 import com.akalynth.client.BuildConfig
 import com.akalynth.client.network.ConnectionState
 import com.akalynth.client.protocol.MapName
+import com.akalynth.client.protocol.PlayLoopProgress
 import com.akalynth.client.protocol.PlayerPublic
 import com.akalynth.client.protocol.PropertyPublic
 import com.akalynth.client.ui.state.ChronicleEvent
@@ -11,6 +12,7 @@ data class GameState(
     val connection: ConnectionState = ConnectionState.Idle,
     val session: SessionState = SessionState(),
     val world: WorldState = WorldState(),
+    val progression: ProgressionState = ProgressionState(),
     val economy: EconomyState = EconomyState(),
     val ui: UiState = UiState()
 ) {
@@ -32,6 +34,11 @@ data class WorldState(
     val me: PlayerPublic? = null,
     val otherPlayers: Map<String, PlayerPublic> = emptyMap(),
     val chatMessages: List<ChatEntry> = emptyList()
+)
+
+data class ProgressionState(
+    val loop: PlayLoopProgress? = null,
+    val lastEvent: String? = null
 )
 
 data class EconomyState(

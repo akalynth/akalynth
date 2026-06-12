@@ -23,6 +23,7 @@ sealed class GameEvent {
 
     // World events
     data class WorldEventContribution(val contributionId: String) : GameEvent()
+    data class RouteSurvey(val skillId: String) : GameEvent()
 
     // NPC dialogue
     data class TalkToNpc(val npcId: String) : GameEvent()
