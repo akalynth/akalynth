@@ -303,6 +303,7 @@ export function handleForgeholdComponentSettlement(ctx: SkillContext): SkillResu
   if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
   const routeProgress = ctx.getOnwardRouteProgress?.();
   if (!routeProgress?.soulsteelComponentMinted) return { success: false, reason: 'invalid_target' };
+  if (routeProgress.forgeholdComponentSettled) return { success: false, reason: 'invalid_target' };
 
   const settledAt = new Date().toISOString();
   const settlementId = 'forgehold_soulsteel_component_settlement_v1';

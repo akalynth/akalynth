@@ -533,6 +533,36 @@ test('Forgehold component settlement records valuation without wallet, item tran
   assert(result.payload?.settlement_guard?.item_transfer === false, 'Forgehold settlement payload must not transfer item');
 });
 
+test('Forgehold component settlement is idempotent after receipt-derived valuation', async () => {
+  const { ctx, receipts, sent } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:safety:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:gate:heartforge' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:ashglass' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:refine' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:mint' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:settle' });
+  ctx.skillCooldowns.set('route:economy:settle', 0);
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:settle' });
+
+  const settlements = receipts.filter((r) => r.action === FORGEHOLD_COMPONENT_SETTLED_ACTION);
+  const settleResults = sent.filter((msg) =>
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as { type?: string }).type === 'skill_result' &&
+    (msg as { skill_id?: string }).skill_id === 'route:economy:settle'
+  ) as Array<{ success?: boolean; reason?: string }>;
+
+  assert(settlements.length === 1, 'repeat Forgehold settlement must not emit a second settlement receipt');
+  assert(settleResults.length === 2, 'repeat Forgehold settlement should return two skill results');
+  assert(settleResults[0]?.success === true, 'first Forgehold settlement should succeed');
+  assert(settleResults[1]?.success === false, 'second Forgehold settlement should fail');
+  assert(settleResults[1]?.reason === 'invalid_target', 'second Forgehold settlement should be rejected as invalid target');
+});
+
 test('Forgehold component payout credits wallet by receipt after settlement', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
