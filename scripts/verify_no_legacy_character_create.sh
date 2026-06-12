@@ -291,6 +291,8 @@ for web_economy_literal in \
   "missing-property property list emits no listing receipt" \
   "property list rejects invalid price" \
   "invalid-price property list emits no listing receipt" \
+  "property list rejects unknown plot" \
+  "unknown-plot property list emits no listing receipt" \
   "property list succeeds for owner" \
   "resale debits buyer wallet" \
   "resale credits seller wallet" \
