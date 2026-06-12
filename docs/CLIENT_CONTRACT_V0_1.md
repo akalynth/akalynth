@@ -224,12 +224,20 @@ See `docs/IDENTITY_VERIFICATION.md` for verification protocol.
 - `login_ack` now includes `token` and `expires_at` fields
 
 ### Backward Compatibility
-- `guest_token` login path continues to work
-- Existing clients can upgrade gradually
-- Guest accounts remain functional
+- `guest_token` login remains a legacy WebSocket compatibility path where the
+  server still accepts it.
+- Existing clients can upgrade gradually, but account-character create/select
+  clients must use the account session + CSRF HTTP flow.
+- Guest compatibility does not create account characters, ownership, or durable
+  gameplay authority.
 
 ### Recommended Migration
-1. Implement character creation flow
-2. Store returned token persistently
-3. Send `{"type":"login","token":"..."}` on reconnect
-4. Handle new error codes gracefully
+1. Sign in or create an account and keep the account session cookie.
+2. Preserve the readable CSRF token returned by account login.
+3. Load `GET /v1/worlds` and `GET /v1/outfits`, then create with
+   `POST /v1/characters` using `name`, `world_id`, `sex`, and `outfit_id`.
+4. Store the returned play token persistently.
+5. Send `{"type":"login","token":"..."}` on reconnect.
+6. Handle `not_authenticated`, `csrf_failed`, client-side `csrf_missing`,
+   `email_unverified`, `invalid_input`, `name_taken`, and `character_limit`
+   gracefully.
