@@ -134,6 +134,21 @@ for android_intent_only_literal in \
   fi
 done
 
+for android_wire_authority_literal in \
+  'fun `work gameplay messages omit client identity and coordinates`()' \
+  'fun `property gameplay messages omit client identity and coordinates`()' \
+  'private fun assertNoClientAuthorityFields(obj: JsonObject)' \
+  'assertFalse("gameplay intent frame must not carry $field", obj.containsKey(field))' \
+  'assertEquals("start_work_contract", startObj["type"]!!.jsonPrimitive.content)' \
+  'assertEquals("work_tick", tickObj["type"]!!.jsonPrimitive.content)' \
+  'assertEquals("buy_house", buyObj["type"]!!.jsonPrimitive.content)' \
+  'assertEquals("list_house", listObj["type"]!!.jsonPrimitive.content)' \
+  'assertEquals("unlist_house", unlistObj["type"]!!.jsonPrimitive.content)'; do
+  if ! grep -Fq "$android_wire_authority_literal" "$ROOT_DIR/apps/android/app/src/test/java/com/akalynth/client/protocol/ProtocolParityTest.kt"; then
+    die "Missing Android gameplay wire-authority proof literal: $android_wire_authority_literal"
+  fi
+done
+
 for debug_client_literal in \
   'create/select handlers use explicit account session guard' \
   'missing account session blocks character actions before request' \
