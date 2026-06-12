@@ -270,7 +270,8 @@ for web_economy_literal in \
   "auth/csrf rejected property unlist emits no unlist receipt" \
   "property unlist rejects non-owner" \
   "non-owner property unlist emits no second unlist receipt" \
-  "property unlist succeeds for owner"; do
+  "property unlist succeeds for owner" \
+  "web economy receipts do not carry account/session/csrf tokens"; do
   if ! grep -Fq "$web_economy_literal" "$ROOT_DIR/apps/server/tools/verify-web-economy.test.ts"; then
     die "Missing web economy gameplay proof: $web_economy_literal"
   fi
