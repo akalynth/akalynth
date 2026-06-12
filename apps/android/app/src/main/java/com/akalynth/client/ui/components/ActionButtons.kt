@@ -58,7 +58,7 @@ fun ActionButtons(
     onWorldEventContribution: (String) -> Unit = {},
     showRouteActions: Boolean = false,
     routeActionSkillIds: List<String> = ROUTE_ACTIONS.map { it.first },
-    onRouteSurvey: (String) -> Unit = {},
+    onRouteAction: (String) -> Unit = {},
     showRookguardActions: Boolean = false,
     showRookguardVocations: Boolean = false,
     showHighCityActions: Boolean = false,
@@ -164,7 +164,7 @@ fun ActionButtons(
                 routeActions.forEach { (skillId, label) ->
                     ClassicButton(
                         text = label,
-                        onClick = { onRouteSurvey(skillId) },
+                        onClick = { onRouteAction(skillId) },
                         compact = true,
                         modifier = Modifier.testTag("ActionButtons_RouteAction_$label")
                     )

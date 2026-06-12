@@ -157,7 +157,7 @@ fun WorldScreen(
                 },
                 showRouteActions = showRouteActions,
                 routeActionSkillIds = routeActionSkillIds,
-                onRouteSurvey = { skillId -> onEvent(GameEvent.RouteSurvey(skillId)) },
+                onRouteAction = { skillId -> onEvent(GameEvent.RouteAction(skillId)) },
                 showRookguardActions = !state.world.currentMap.isHighCityCompatible,
                 showRookguardVocations = showRookguardVocations,
                 showHighCityActions = state.world.currentMap.isHighCityCompatible,

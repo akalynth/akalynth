@@ -206,7 +206,7 @@ class GameStore(
             is GameEvent.ToggleChat -> toggleChat()
             is GameEvent.Attack -> sendAttack(event.targetId)
             is GameEvent.WorldEventContribution -> sendWorldEventContribution(event.contributionId)
-            is GameEvent.RouteSurvey -> sendRouteSurvey(event.skillId)
+            is GameEvent.RouteAction -> sendRouteAction(event.skillId)
             is GameEvent.TalkToNpc -> talkToNpc(event.npcId)
             is GameEvent.DeclareVocation -> declareVocation(event.vocation)
             is GameEvent.InspectWallet -> inspectWallet()
@@ -898,7 +898,7 @@ class GameStore(
         logSent("use_skill", skillId)
     }
 
-    private fun sendRouteSurvey(skillId: String) {
+    private fun sendRouteAction(skillId: String) {
         if (
             skillId != "route:survey:forgehold" &&
             skillId != "route:survey:moonspire" &&
