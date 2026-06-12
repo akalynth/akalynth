@@ -149,6 +149,20 @@ for android_wire_authority_literal in \
   fi
 done
 
+for android_token_login_test_literal in \
+  'class AkalynthClientAccountTokenLoginTest' \
+  'fun `stored account character token is preferred over guest login`()' \
+  'assertEquals("play-token-from-selected-character", frame.getString("token"))' \
+  'assertEquals(JSONObject.NULL, frame.get("guest_token"))' \
+  'fun `guest token is only sent when no account character token exists`()' \
+  'assertEquals("legacy-guest-token", frame.getString("guest_token"))' \
+  'assertFalse(frame.has("character_id"))' \
+  'assertFalse(frame.has("player_id"))'; do
+  if ! grep -Fq "$android_token_login_test_literal" "$ROOT_DIR/apps/android/app/src/test/java/com/akalynth/client/network/AkalynthClientAccountTokenLoginTest.kt"; then
+    die "Missing Android account-character token login handoff proof: $android_token_login_test_literal"
+  fi
+done
+
 for debug_client_literal in \
   'debug gameplay wire authority verifier is wired' \
   'create/select handlers use explicit account session guard' \
@@ -312,6 +326,10 @@ if ! grep -Fq -- "--tests 'com.akalynth.client.protocol.ProtocolParityTest'" "$R
   die "Root verify:account-character must run Android gameplay wire-authority ProtocolParityTest."
 fi
 
+if ! grep -Fq -- "--tests 'com.akalynth.client.network.AkalynthClientAccountTokenLoginTest'" "$ROOT_DIR/package.json"; then
+  die "Root verify:account-character must run Android account-character token login handoff proof."
+fi
+
 if ! grep -Fq 'npm run verify:account-character' "$ROOT_DIR/.github/workflows/verify.yml"; then
   die "GitHub verification workflow must run npm run verify:account-character."
 fi
@@ -466,6 +484,9 @@ for gameplay_doc in "$ROOT_DIR/README.md" "$ROOT_DIR/docs/CURRENT_STAGE.md" "$RO
   if ! grep -Fq 'Android gameplay wire-authority protocol proof' "$gameplay_doc"; then
     die "Missing Android gameplay wire-authority proof wording in ${gameplay_doc#$ROOT_DIR/}"
   fi
+  if ! grep -Fq 'Android account-character token login handoff proof' "$gameplay_doc"; then
+    die "Missing Android account-character token login handoff proof wording in ${gameplay_doc#$ROOT_DIR/}"
+  fi
 done
 
 for site_doc in "$ROOT_DIR/README.md" "$ROOT_DIR/docs/CURRENT_STAGE.md" "$ROOT_DIR/docs/V1_SCOPE.md" "$ROOT_DIR/docs/README.md"; do
@@ -492,6 +513,10 @@ done
 
 if ! grep -Fq 'Android gameplay wire-authority protocol proof' "$ROOT_DIR/docs/README.md"; then
   die "Missing Android gameplay wire-authority proof wording in docs/README.md"
+fi
+
+if ! grep -Fq 'Android account-character token login handoff proof' "$ROOT_DIR/docs/README.md"; then
+  die "Missing Android account-character token login handoff proof wording in docs/README.md"
 fi
 
 if ! grep -Fq 'server create/select play-token handoff and login projection proof' "$ROOT_DIR/docs/README.md"; then

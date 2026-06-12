@@ -45,7 +45,7 @@ Scripts should be idempotent and documented.
 - `scripts/verify_mvp.sh`: End-to-end MVP verification (boots server, runs HTTP/WS scenarios, asserts receipts). Run: `PORT=3101 ./scripts/verify_mvp.sh`
 - `scripts/verify_protocol_sync.sh`: Ensures `docs/PROTOCOL.md` matches `packages/shared/protocol.ts`. Run: `./scripts/verify_protocol_sync.sh`
 - Root `npm run verify:account-character`: focused account-character parity
-  gate. Runs protocol sync, server account-character tests, server create/select play-token handoff and login projection proof, server wallet/shop/work/property gameplay route proof, debug-client guard, debug-client gameplay wire-authority proof, Android account-character unit tests, Android gameplay wire-authority protocol proof, and Android character UI compile.
+  gate. Runs protocol sync, server account-character tests, server create/select play-token handoff and login projection proof, server wallet/shop/work/property gameplay route proof, debug-client guard, debug-client gameplay wire-authority proof, Android account-character unit tests, Android account-character token login handoff proof, Android gameplay wire-authority protocol proof, and Android character UI compile.
 - Site `./scripts/verify-account-character-site.sh` in `akalynth-site`: focused
   public account portal and Public/Builder/Operator/Agent Codex surface gate.
   Includes executable site E2D gameplay action proof for account-scoped
