@@ -30,8 +30,8 @@ const WITNESS_MOTH_ACTIONS = [
 const ROUTE_SURVEY_ACTIONS = [
   { skill_id: 'route:survey:forgehold', label: 'Survey Forgehold', short: 'Forge' },
   { skill_id: 'route:survey:moonspire', label: 'Survey Dream Gate', short: 'Dream' },
-  { skill_id: 'route:safety:forgehold', label: 'Review Forgehold Safety', short: 'Safe' },
-  { skill_id: 'route:safety:moonspire', label: 'Review Dream Gate Safety', short: 'Safe' },
+  { skill_id: 'route:safety:forgehold', label: 'Review Forgehold Safety', short: 'FSafe' },
+  { skill_id: 'route:safety:moonspire', label: 'Review Dream Gate Safety', short: 'DSafe' },
   { skill_id: 'route:quest:shipment', label: 'Investigate Shipment', short: 'Ship' },
   { skill_id: 'route:economy:forgehold', label: 'Quote Forgehold Economy', short: 'Quote' },
   { skill_id: 'route:economy:settle', label: 'Settle Forgehold Ledger', short: 'Settle' },
@@ -40,11 +40,11 @@ const ROUTE_SURVEY_ACTIONS = [
   { skill_id: 'route:craft:ashglass', label: 'Recover Ashglass Evidence', short: 'Glass' },
   { skill_id: 'route:craft:refine', label: 'Authorize Soulsteel Refinement', short: 'Refine' },
   { skill_id: 'route:craft:mint', label: 'Mint Soulsteel Component', short: 'Mint' },
-  { skill_id: 'route:gate:heartforge', label: 'Prepare Heartforge Gate', short: 'Gate' },
+  { skill_id: 'route:gate:heartforge', label: 'Prepare Heartforge Gate', short: 'HGate' },
   { skill_id: 'route:gate:moonspire', label: 'Prepare Dream Gate Seal', short: 'Seal' },
   { skill_id: 'route:dream:traverse', label: 'Authorize Dream Gate Traversal', short: 'Pass' },
   { skill_id: 'route:dream:arrive', label: 'Record Dream Gate Arrival', short: 'Arrv' },
-  { skill_id: 'route:dream:interpret', label: 'Interpret Dream Gate', short: 'Gate' },
+  { skill_id: 'route:dream:interpret', label: 'Interpret Dream Gate', short: 'Interp' },
   { skill_id: 'route:dream:fragment', label: 'Anchor Dream Fragment', short: 'Frag' },
 ] as const;
 

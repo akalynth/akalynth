@@ -32,8 +32,8 @@ private val ROOKGUARD_VOCATION_ACTIONS = listOf(
 private val ROUTE_SURVEY_ACTIONS = listOf(
     "route:survey:forgehold" to "Forge",
     "route:survey:moonspire" to "Dream",
-    "route:safety:forgehold" to "Safe",
-    "route:safety:moonspire" to "Safe",
+    "route:safety:forgehold" to "FSafe",
+    "route:safety:moonspire" to "DSafe",
     "route:quest:shipment" to "Ship",
     "route:economy:forgehold" to "Quote",
     "route:economy:settle" to "Settle",
@@ -42,11 +42,11 @@ private val ROUTE_SURVEY_ACTIONS = listOf(
     "route:craft:ashglass" to "Glass",
     "route:craft:refine" to "Refine",
     "route:craft:mint" to "Mint",
-    "route:gate:heartforge" to "Gate",
+    "route:gate:heartforge" to "HGate",
     "route:gate:moonspire" to "Seal",
     "route:dream:traverse" to "Pass",
     "route:dream:arrive" to "Arrv",
-    "route:dream:interpret" to "Gate",
+    "route:dream:interpret" to "Interp",
     "route:dream:fragment" to "Frag"
 )
 
