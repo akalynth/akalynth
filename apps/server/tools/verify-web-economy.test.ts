@@ -417,6 +417,10 @@ async function main(): Promise<void> {
   check('property unlist requires matching csrf', res.status === 403 && res.body.error === 'csrf_failed');
   check('auth/csrf rejected property unlist emits no unlist receipt', receipts.at(-1)?.action === PROPERTY_UNLISTED_ACTION);
 
+  res = await request('POST', '/v1/property/unlist', { property_id: 'Azura:H1' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
+  check('property unlist requires character id', res.status === 400 && res.body.error === 'character_id_required');
+  check('missing-character property unlist emits no second unlist receipt', receipts.filter((r) => r.action === PROPERTY_UNLISTED_ACTION).length === 1);
+
   res = await request('POST', '/v1/property/unlist', { character_id: 'p_seller', property_id: 'Azura:H1' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
   check('property unlist rejects non-owner', res.status === 403 && res.body.error === 'not_owner');
   check('non-owner property unlist emits no second unlist receipt', receipts.filter((r) => r.action === PROPERTY_UNLISTED_ACTION).length === 1);
