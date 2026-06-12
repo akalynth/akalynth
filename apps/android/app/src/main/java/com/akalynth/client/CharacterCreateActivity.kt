@@ -607,6 +607,7 @@ class CharacterCreateActivity : Activity() {
 
     private fun refreshCreateEnabled() {
         val hasAccount = identityApi.hasAccountSession()
+        val sessionMessage = identityApi.accountCharacterSessionMessage("creation")
         worldSpinner.isEnabled = hasAccount && worlds.isNotEmpty() && !busy
         characterSpinner.isEnabled = hasAccount && characters.isNotEmpty() && !busy
         sexSpinner.isEnabled = hasAccount && !busy
@@ -625,7 +626,7 @@ class CharacterCreateActivity : Activity() {
         passwordInput.isEnabled = !busy
         if (!busy) {
             when {
-                !hasAccount -> setStatus("Sign in required to create an account character.")
+                sessionMessage != null -> setStatus(sessionMessage)
                 !accountEmailVerified -> setStatus("Verify email before creating; existing characters can still be selected.")
                 selectedWorldId == null || selectedOutfitId == null -> setStatus("Select world and outfit first.")
             }
@@ -654,6 +655,7 @@ class CharacterCreateActivity : Activity() {
             "banned" -> "Account banned."
             "network_error" -> "Network error: $message"
             "not_authenticated" -> "Sign in first for account character creation."
+            "csrf_missing" -> "Security token missing. Sign in again before account character creation."
             "csrf_failed" -> "Session expired. Sign out and sign in again."
             "email_unverified" -> "Verify your email before creating account characters."
             else -> "Error ($code): $message"
