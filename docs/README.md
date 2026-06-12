@@ -86,11 +86,15 @@ Useful local checks:
 npm run verify:docker-runtime
 npm run render:docker-runtime
 npm run smoke:docker-runtime
+npm run verify:account-character
 ```
 
 The render command writes reviewable host runtime files to `.tmp/` by default.
 The smoke command uses disposable Docker state only. Live host migration still
 requires backup, rollback, and single-runtime-owner gates.
+`npm run verify:account-character` is the focused gate for account/session +
+CSRF-gated character creation/select across the server, debug client, and
+Android client.
 
 ## Documentation
 

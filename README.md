@@ -83,7 +83,11 @@ those yourself.
 
 4) Runtime/API edits: `./scripts/verify_mvp.sh`
 
-5) Focused persistence/receipt/anti-cheat checks (from apps/server):
+5) Account-character/API parity edits:
+- `npm run verify:account-character` (server `/v1/characters`, protocol docs,
+  debug-client guard, and Android account-character tests)
+
+6) Focused persistence/receipt/anti-cheat checks (from apps/server):
 - `npm run verify:receipt-hygiene`
 - `npm run verify:heat`
 - `npm run verify:anticheat-persistence`
