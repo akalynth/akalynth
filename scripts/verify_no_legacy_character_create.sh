@@ -147,6 +147,15 @@ if ! grep -Fq "run('npm', ['run', 'test:web-economy']);" "$ROOT_DIR/apps/server/
   die "Server verify:quick must include test:web-economy gameplay route proof."
 fi
 
+for server_literal in \
+  "HTTP GET /v1/worlds is public" \
+  "HTTP GET /v1/outfits is public" \
+  "HTTP GET /v1/outfits filters by sex"; do
+  if ! grep -Fq "$server_literal" "$ROOT_DIR/apps/server/tools/verify-character-v2.test.ts"; then
+    die "Missing server account-character catalog route proof: $server_literal"
+  fi
+done
+
 for gameplay_doc in "$ROOT_DIR/README.md" "$ROOT_DIR/docs/CURRENT_STAGE.md" "$ROOT_DIR/docs/V1_SCOPE.md" "$ROOT_DIR/scripts/README.md"; do
   if ! grep -Fq 'shop/work/property gameplay route proof' "$gameplay_doc"; then
     die "Missing account-character gameplay route proof wording in ${gameplay_doc#$ROOT_DIR/}"
