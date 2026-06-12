@@ -382,6 +382,11 @@ async function main(): Promise<void> {
   check('primary property buy owns plot', getProperty('Azura:H1')?.owner_player_id === 'p_buyer');
   check('primary buy emitted wallet debit + property purchase', receipts.slice(-2).map((r) => r.action).join(',') === `${WALLET_DEBIT_ACTION},${PROPERTY_PURCHASED_ACTION}`);
 
+  const receiptCountAfterPrimaryBuy = receipts.length;
+  res = await request('POST', '/v1/property/buy', { character_id: 'p_buyer', property_id: 'Azura:H1' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
+  check('property buy rejects own plot', res.status === 409 && res.body.error === 'cannot_buy_own');
+  check('own-plot property buy emits no debit/purchase receipt', receipts.length === receiptCountAfterPrimaryBuy);
+
   res = await request('POST', '/v1/property/list', { character_id: 'p_buyer', property_id: 'Azura:H1', price_gold: 75 });
   check('property list requires account session', res.status === 401 && res.body.error === 'not_authenticated');
   check('no-session property list emits no listing receipt', receipts.every((r) => r.action !== PROPERTY_LISTED_ACTION));

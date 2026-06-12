@@ -279,6 +279,8 @@ for web_economy_literal in \
   "auth/csrf rejected property buy emits no purchase receipt" \
   "property buy without gold is rejected" \
   "primary buy emitted wallet debit + property purchase" \
+  "property buy rejects own plot" \
+  "own-plot property buy emits no debit/purchase receipt" \
   "property list requires account session" \
   "no-session property list emits no listing receipt" \
   "property list requires matching csrf" \
