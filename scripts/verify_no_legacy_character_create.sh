@@ -242,6 +242,7 @@ for web_economy_literal in \
   "work start requires matching csrf" \
   "auth/csrf rejected work start emits no receipts" \
   "work tick requires account session" \
+  "no-session work tick emits no receipts" \
   "work tick requires matching csrf" \
   "work tick rejects character owned by another account" \
   "cross-account work tick emits no receipts" \
@@ -258,6 +259,7 @@ for web_economy_literal in \
   "property buy without gold is rejected" \
   "primary buy emitted wallet debit + property purchase" \
   "property list requires account session" \
+  "no-session property list emits no listing receipt" \
   "property list requires matching csrf" \
   "auth/csrf rejected property list emits no listing receipt" \
   "property list rejects non-owner" \
@@ -267,6 +269,7 @@ for web_economy_literal in \
   "resale credits seller wallet" \
   "resale emits buyer debit + seller credit + transfer" \
   "property unlist requires account session" \
+  "no-session property unlist emits no second unlist receipt" \
   "property unlist requires matching csrf" \
   "auth/csrf rejected property unlist emits no unlist receipt" \
   "property unlist rejects non-owner" \

@@ -304,6 +304,7 @@ async function main(): Promise<void> {
 
   res = await request('POST', '/v1/work/tick', { character_id: 'p_buyer', contract_id: contractId });
   check('work tick requires account session', res.status === 401 && res.body.error === 'not_authenticated');
+  check('no-session work tick emits no receipts', receipts.filter((r) => r.action === WORK_CONTRACT_TICK_RECORDED_ACTION).length === 0);
 
   res = await request('POST', '/v1/work/tick', { character_id: 'p_buyer', contract_id: contractId }, { cookie: cookieHeader(), 'x-csrf-token': 'bad' });
   check('work tick requires matching csrf', res.status === 403 && res.body.error === 'csrf_failed');
@@ -350,6 +351,7 @@ async function main(): Promise<void> {
 
   res = await request('POST', '/v1/property/list', { character_id: 'p_buyer', property_id: 'Azura:H1', price_gold: 75 });
   check('property list requires account session', res.status === 401 && res.body.error === 'not_authenticated');
+  check('no-session property list emits no listing receipt', receipts.every((r) => r.action !== PROPERTY_LISTED_ACTION));
 
   res = await request('POST', '/v1/property/list', { character_id: 'p_buyer', property_id: 'Azura:H1', price_gold: 75 }, { cookie: cookieHeader(), 'x-csrf-token': 'bad' });
   check('property list requires matching csrf', res.status === 403 && res.body.error === 'csrf_failed');
@@ -380,6 +382,7 @@ async function main(): Promise<void> {
 
   res = await request('POST', '/v1/property/unlist', { character_id: 'p_buyer', property_id: 'Azura:H1' });
   check('property unlist requires account session', res.status === 401 && res.body.error === 'not_authenticated');
+  check('no-session property unlist emits no second unlist receipt', receipts.filter((r) => r.action === PROPERTY_UNLISTED_ACTION).length === 1);
 
   res = await request('POST', '/v1/property/unlist', { character_id: 'p_buyer', property_id: 'Azura:H1' }, { cookie: cookieHeader(), 'x-csrf-token': 'bad' });
   check('property unlist requires matching csrf', res.status === 403 && res.body.error === 'csrf_failed');
