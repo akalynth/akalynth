@@ -98,4 +98,18 @@ for index_doc in "$ROOT_DIR/README.md" "$ROOT_DIR/docs/README.md" "$ROOT_DIR/scr
   fi
 done
 
+if ! grep -Fq 'test:web-economy' "$ROOT_DIR/package.json"; then
+  die "Root verify:account-character must include server test:web-economy gameplay route proof."
+fi
+
+if ! grep -Fq "run('npm', ['run', 'test:web-economy']);" "$ROOT_DIR/apps/server/tools/verify-server.mjs"; then
+  die "Server verify:quick must include test:web-economy gameplay route proof."
+fi
+
+for gameplay_doc in "$ROOT_DIR/README.md" "$ROOT_DIR/docs/CURRENT_STAGE.md" "$ROOT_DIR/docs/V1_SCOPE.md" "$ROOT_DIR/scripts/README.md"; do
+  if ! grep -Fq 'shop/work/property gameplay route proof' "$gameplay_doc"; then
+    die "Missing account-character gameplay route proof wording in ${gameplay_doc#$ROOT_DIR/}"
+  fi
+done
+
 echo "✅ No legacy create_character protocol path found"

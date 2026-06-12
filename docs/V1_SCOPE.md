@@ -23,8 +23,9 @@ Define what v1 covers and what it explicitly does not. This prevents scope drift
 - Account-character entry v2 is source-level in scope for client parity:
   account/session + CSRF-gated `/v1/characters`, canonical world/sex/outfit
   catalogs, site/debug-client/Android create/select paths, and missing-session
-  or missing-CSRF helpers. It is covered by `npm run verify:account-character`.
-  This is not a production release claim without named proof artifacts.
+  or missing-CSRF helpers. It is covered by `npm run verify:account-character`,
+  including server shop/work/property gameplay route proof. This is not a production
+  release claim without named proof artifacts.
 
 ## Out of Scope (v1)
 
