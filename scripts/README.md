@@ -46,6 +46,10 @@ Scripts should be idempotent and documented.
 - `scripts/verify_protocol_sync.sh`: Ensures `docs/PROTOCOL.md` matches `packages/shared/protocol.ts`. Run: `./scripts/verify_protocol_sync.sh`
 - Root `npm run verify:account-character`: focused account-character parity
   gate. Runs protocol sync, server account-character tests, server wallet/shop/work/property gameplay route proof, debug-client guard, Android account-character unit tests, and Android character UI compile.
+- Site `./scripts/verify-account-character-site.sh` in `akalynth-site`: focused
+  public account portal and Public/Builder/Operator/Agent Codex surface gate.
+  Includes executable site E2D gameplay action proof for account-scoped
+  shop/work/property requests.
 
 ### Docker runtime scripts
 - `scripts/verify-docker-runtime.sh`: Backs `npm run verify:docker-runtime` (see `infra/README.md`).
