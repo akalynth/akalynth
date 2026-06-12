@@ -23,6 +23,12 @@ sealed class GameEvent {
     // World events
     data class WorldEventContribution(val contributionId: String) : GameEvent()
 
+    // High City economy/property intents
+    data object InspectWallet : GameEvent()
+    data class BuyHouse(val propertyId: String) : GameEvent()
+    data class ListHouse(val propertyId: String, val price: Int) : GameEvent()
+    data class UnlistHouse(val propertyId: String) : GameEvent()
+
     // Tem/Witness
     data class AnswerTemChallenge(val response: String) : GameEvent()
     data class AnswerWitness(val requestId: String, val response: WitnessResponse) : GameEvent()

@@ -127,6 +127,11 @@ fun WorldScreen(
                 onWorldEventContribution = { contributionId ->
                     onEvent(GameEvent.WorldEventContribution(contributionId))
                 },
+                showHighCityActions = state.world.currentMap.isHighCityCompatible,
+                onInspectWallet = { onEvent(GameEvent.InspectWallet) },
+                onBuyHouse = { propertyId -> onEvent(GameEvent.BuyHouse(propertyId)) },
+                onListHouse = { propertyId, price -> onEvent(GameEvent.ListHouse(propertyId, price)) },
+                onUnlistHouse = { propertyId -> onEvent(GameEvent.UnlistHouse(propertyId)) },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(end = 12.dp, bottom = if (state.ui.chatOpen) 304.dp else 12.dp)

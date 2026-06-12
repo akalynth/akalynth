@@ -205,6 +205,10 @@ class GameStore(
             is GameEvent.ToggleChat -> toggleChat()
             is GameEvent.Attack -> sendAttack(event.targetId)
             is GameEvent.WorldEventContribution -> sendWorldEventContribution(event.contributionId)
+            is GameEvent.InspectWallet -> inspectWallet()
+            is GameEvent.BuyHouse -> buyHouse(event.propertyId)
+            is GameEvent.ListHouse -> listHouse(event.propertyId, event.price)
+            is GameEvent.UnlistHouse -> unlistHouse(event.propertyId)
             is GameEvent.AnswerTemChallenge -> sendTemResponse(event.response)
             is GameEvent.AnswerWitness -> sendWitnessResponse(event.requestId, event.response)
             is GameEvent.DismissError -> clearError()
@@ -509,6 +513,26 @@ class GameStore(
     private fun handlePlayerLeft(msg: PlayerLeftMessage) {
         val others = _state.value.world.otherPlayers - msg.playerId
         _state.update { it.copy(world = it.world.copy(otherPlayers = others)) }
+    }
+
+    private fun inspectWallet() {
+        wsClient.send(InspectWalletMessage)
+        logSent("inspect_wallet", "")
+    }
+
+    private fun buyHouse(propertyId: String) {
+        wsClient.send(BuyHouseMessage(propertyId = propertyId))
+        logSent("buy_house", propertyId)
+    }
+
+    private fun listHouse(propertyId: String, price: Int) {
+        wsClient.send(ListHouseMessage(propertyId = propertyId, price = price))
+        logSent("list_house", "$propertyId price=$price")
+    }
+
+    private fun unlistHouse(propertyId: String) {
+        wsClient.send(UnlistHouseMessage(propertyId = propertyId))
+        logSent("unlist_house", propertyId)
     }
 
     private fun handleChat(msg: ChatBroadcastMessage) {

@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.akalynth.client.actions.WorldEventSkillIds
+import com.akalynth.client.ui.theme.ClassicButton
 import com.akalynth.client.ui.theme.ClassicDock
 import com.akalynth.client.ui.theme.ClassicShellColors
 
@@ -26,6 +27,11 @@ fun ActionButtons(
     onChronicle: () -> Unit = {},
     showWitnessMothBloom: Boolean = false,
     onWorldEventContribution: (String) -> Unit = {},
+    showHighCityActions: Boolean = false,
+    onInspectWallet: () -> Unit = {},
+    onBuyHouse: (String) -> Unit = {},
+    onListHouse: (String, Int) -> Unit = { _, _ -> },
+    onUnlistHouse: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     ClassicDock(modifier = modifier) {
@@ -103,6 +109,39 @@ fun ActionButtons(
                     tag = "ActionButtons_WitnessMoth_Guard",
                     contributionId = WorldEventSkillIds.DEFEND_SCRIBES,
                     onWorldEventContribution = onWorldEventContribution
+                )
+            }
+
+            if (showHighCityActions) {
+                Text(
+                    text = "High City",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = ClassicShellColors.Brass,
+                    modifier = Modifier.testTag("ActionButtons_HighCityActions")
+                )
+                ClassicButton(
+                    text = "Wallet",
+                    onClick = onInspectWallet,
+                    compact = true,
+                    modifier = Modifier.testTag("ActionButtons_Wallet")
+                )
+                ClassicButton(
+                    text = "Buy H1",
+                    onClick = { onBuyHouse("Azura:H1") },
+                    compact = true,
+                    modifier = Modifier.testTag("ActionButtons_BuyHouse_H1")
+                )
+                ClassicButton(
+                    text = "List H1",
+                    onClick = { onListHouse("Azura:H1", 750) },
+                    compact = true,
+                    modifier = Modifier.testTag("ActionButtons_ListHouse_H1")
+                )
+                ClassicButton(
+                    text = "Unlist H1",
+                    onClick = { onUnlistHouse("Azura:H1") },
+                    compact = true,
+                    modifier = Modifier.testTag("ActionButtons_UnlistHouse_H1")
                 )
             }
         }
