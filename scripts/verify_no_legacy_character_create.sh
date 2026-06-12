@@ -92,4 +92,10 @@ for status_doc in "$ROOT_DIR/docs/CURRENT_STAGE.md" "$ROOT_DIR/docs/V1_SCOPE.md"
   fi
 done
 
+for index_doc in "$ROOT_DIR/README.md" "$ROOT_DIR/docs/README.md" "$ROOT_DIR/scripts/README.md"; do
+  if ! grep -Fq 'verify:account-character' "$index_doc"; then
+    die "Missing account-character verifier reference in ${index_doc#$ROOT_DIR/}"
+  fi
+done
+
 echo "✅ No legacy create_character protocol path found"

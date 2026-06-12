@@ -9,6 +9,7 @@ Scripts should be idempotent and documented.
 - Bootstrap: `bootstrap_linux.sh`
 - V1-binding gates: `ci_invariant_guard.sh`, `verify_protocol_sync.sh`, `test-chain-discipline.sh`
 - MVP / smoke: `verify_mvp.sh`, `showcase_local.sh`, `studio-smoke.mjs`
+- Account-character parity: root `npm run verify:account-character`
 - Docker runtime: `verify-docker-runtime.sh`, `smoke-docker-runtime.sh`, `render-docker-runtime.sh`
 - Policy guards / hooks: `phase_gate.ts`, `precommit-hook.sh`, `refuse_windows.{js,sh}`, `warn_protocol_change.sh`, `require-chronicle.js`
 - Formatting: `format_ts.sh`
@@ -43,6 +44,9 @@ Scripts should be idempotent and documented.
 - `scripts/studio-smoke.mjs`: Studio smoke test (backs `npm run studio-smoke`). Run: `node scripts/studio-smoke.mjs`
 - `scripts/verify_mvp.sh`: End-to-end MVP verification (boots server, runs HTTP/WS scenarios, asserts receipts). Run: `PORT=3101 ./scripts/verify_mvp.sh`
 - `scripts/verify_protocol_sync.sh`: Ensures `docs/PROTOCOL.md` matches `packages/shared/protocol.ts`. Run: `./scripts/verify_protocol_sync.sh`
+- Root `npm run verify:account-character`: focused account-character parity
+  gate. Runs protocol sync, server account-character tests, debug-client guard,
+  and Android account-character unit tests.
 
 ### Docker runtime scripts
 - `scripts/verify-docker-runtime.sh`: Backs `npm run verify:docker-runtime` (see `infra/README.md`).
