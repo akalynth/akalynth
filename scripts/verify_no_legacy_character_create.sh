@@ -48,4 +48,16 @@ if [[ -n "$doc_matches" ]]; then
   die "Stale account-character contract wording found. Document POST /v1/characters with account session, CSRF, world_id, sex, outfit_id, and 201 response."
 fi
 
+status_matches="$(
+  grep -RInE 'Status: \*\*decided / no implementation\*\*|closed_account_portal_product_decision_recorded_no_implementation' \
+    "$ROOT_DIR/docs/account-portal/AKALYNTH_ACCOUNT_PORTAL_PRODUCT_DECISION_V1/ACCOUNT_PORTAL_DECISION.md" \
+    "$ROOT_DIR/docs/account-portal/AKALYNTH_ACCOUNT_PORTAL_PRODUCT_DECISION_V1/README.md" \
+    2>/dev/null || true
+)"
+
+if [[ -n "$status_matches" ]]; then
+  echo "$status_matches" >&2
+  die "Stale account-portal status wording found. Current docs must distinguish the historical E0 receipt from later source implementation."
+fi
+
 echo "✅ No legacy create_character protocol path found"

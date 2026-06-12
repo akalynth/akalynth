@@ -1,7 +1,10 @@
 # AKALYNTH_ACCOUNT_PORTAL_PRODUCT_DECISION_V1
 
-**E0 decision record — no implementation.** Records the production architecture for the
-Akalynth account portal + character platform before any code is written.
+**E0 decision record — later source implementation present.** Records the
+production architecture for the Akalynth account portal + character platform.
+The original E0 lane was documentation-only; later source lanes implemented the
+account/session, account-character, site, debug-client, Android, and economy
+portal surfaces described here.
 
 > Akalynth accounts are server-authoritative, email-verified identities. The website is
 > the first account portal. Android reaches feature parity for sign-up, sign-in,
@@ -24,4 +27,4 @@ Akalynth account portal + character platform before any code is written.
 
 ## Status
 
-`closed_account_portal_product_decision_recorded_no_implementation`
+`closed_account_portal_product_decision_recorded_then_later_source_implemented`
