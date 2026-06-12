@@ -201,8 +201,8 @@ for server_literal in \
 done
 
 for gameplay_doc in "$ROOT_DIR/README.md" "$ROOT_DIR/docs/CURRENT_STAGE.md" "$ROOT_DIR/docs/V1_SCOPE.md" "$ROOT_DIR/scripts/README.md"; do
-  if ! grep -Fq 'shop/work/property gameplay route proof' "$gameplay_doc"; then
-    die "Missing account-character gameplay route proof wording in ${gameplay_doc#$ROOT_DIR/}"
+  if ! grep -Fq 'wallet/shop/work/property gameplay route proof' "$gameplay_doc"; then
+    die "Missing account-character wallet/gameplay route proof wording in ${gameplay_doc#$ROOT_DIR/}"
   fi
 done
 
