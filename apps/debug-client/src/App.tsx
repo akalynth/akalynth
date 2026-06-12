@@ -21,6 +21,7 @@ import { loadConfig } from './config';
 import { highCityVisualLandmarksForMap } from './data/highCityVisualLandmarks';
 import type {
   AccountSessionStatus,
+  AccountCharacter,
   CharacterCatalog,
   CharacterCreateInput,
   ConnectionState,
@@ -232,8 +233,11 @@ interface MobilePlayEntryProps {
   hasWorldPlayer: boolean;
   characterCatalog: CharacterCatalog;
   accountSession: AccountSessionStatus;
+  accountCharacters: AccountCharacter[];
   onCreate: (input: CharacterCreateInput) => Promise<{ ok: boolean; error?: string }>;
+  onSelect: (characterId: string) => Promise<{ ok: boolean; error?: string }>;
   onRefreshAccountSession: () => Promise<AccountSessionStatus>;
+  onLoadAccountCharacters: () => Promise<AccountCharacter[]>;
   onSignOut: () => void;
   onEnterPlay: () => void;
 }
@@ -245,8 +249,11 @@ function MobilePlayEntry({
   hasWorldPlayer,
   characterCatalog,
   accountSession,
+  accountCharacters,
   onCreate,
+  onSelect,
   onRefreshAccountSession,
+  onLoadAccountCharacters,
   onSignOut,
   onEnterPlay,
 }: MobilePlayEntryProps) {
@@ -265,9 +272,12 @@ function MobilePlayEntry({
       <CharacterBar
         session={session}
         catalog={characterCatalog}
+        accountCharacters={accountCharacters}
         accountSession={accountSession}
         onCreate={onCreate}
+        onSelect={onSelect}
         onRefreshAccountSession={onRefreshAccountSession}
+        onLoadAccountCharacters={onLoadAccountCharacters}
         onSignOut={onSignOut}
       />
       {stage < 1 && (
@@ -695,9 +705,12 @@ function DebugApp() {
               <CharacterBar
                 session={state.session}
                 catalog={api.characterCatalog}
+                accountCharacters={api.accountCharacters}
                 accountSession={api.accountSession}
                 onCreate={api.createCharacter}
+                onSelect={api.selectCharacter}
                 onRefreshAccountSession={api.refreshAccountSession}
+                onLoadAccountCharacters={api.loadAccountCharacters}
                 onSignOut={api.signOut}
               />
             </div>
@@ -730,8 +743,11 @@ function DebugApp() {
               hasWorldPlayer={Boolean(state.world.me)}
               characterCatalog={api.characterCatalog}
               accountSession={api.accountSession}
+              accountCharacters={api.accountCharacters}
               onCreate={api.createCharacter}
+              onSelect={api.selectCharacter}
               onRefreshAccountSession={api.refreshAccountSession}
+              onLoadAccountCharacters={api.loadAccountCharacters}
               onSignOut={api.signOut}
               onEnterPlay={() => api.setStage(1)}
             />
