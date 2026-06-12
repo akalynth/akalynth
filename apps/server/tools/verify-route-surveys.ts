@@ -1096,6 +1096,8 @@ test('onward route projection is derived from route receipts', async () => {
   assert(forgehold.completed_objective_ids.includes('soulsteel_component_mint'), 'Soulsteel component mint should project complete');
   assert(forgehold.completed_objective_ids.includes('forgehold_component_settlement'), 'Forgehold component settlement should project complete');
   assert(forgehold.completed_objective_ids.includes('forgehold_component_payout'), 'Forgehold component payout should project complete');
+  assert(forgehold.completed_objective_ids.includes('forgehold_client_projection'), 'Forgehold client projection should project complete');
+  assert(forgehold.completed_objective_ids.includes('forgehold_android_projection'), 'Forgehold Android projection should project complete');
   assert(moonspire.completed_objective_ids.includes('dream_gate_rumor'), 'Moonspire survey should project complete');
   assert(moonspire.completed_objective_ids.includes('symbolic_puzzle_projection'), 'Dream interpretation should project complete');
   assert(moonspire.completed_objective_ids.includes('dream_fragment_evidence'), 'Dream fragment should project complete');
@@ -1103,6 +1105,12 @@ test('onward route projection is derived from route receipts', async () => {
   assert(moonspire.completed_objective_ids.includes('dream_gate_server_seal'), 'Dream Gate server seal should project complete');
   assert(moonspire.completed_objective_ids.includes('dream_gate_traversal_authorization'), 'Dream Gate traversal authorization should project complete');
   assert(moonspire.completed_objective_ids.includes('dream_gate_arrival_record'), 'Dream Gate arrival should project complete');
+  assert(moonspire.completed_objective_ids.includes('dream_gate_client_projection'), 'Dream Gate client projection should project complete');
+  assert(moonspire.completed_objective_ids.includes('dream_gate_android_projection'), 'Dream Gate Android projection should project complete');
+  const forgeholdMissing = forgehold.objectives.filter((objective) => !forgehold.completed_objective_ids.includes(objective.id));
+  const moonspireMissing = moonspire.objectives.filter((objective) => !moonspire.completed_objective_ids.includes(objective.id));
+  assert(forgeholdMissing.length === 0, `completed Forgehold route should have no dangling objectives: ${forgeholdMissing.map((objective) => objective.id).join(',')}`);
+  assert(moonspireMissing.length === 0, `completed Dream Gate route should have no dangling objectives: ${moonspireMissing.map((objective) => objective.id).join(',')}`);
   assert(forgehold.next_objective.includes('Forgehold payout is credited'), 'Forgehold next objective should advance after component payout');
   assert(moonspire.next_objective.includes('Dream Gate threshold arrival is recorded'), 'Moonspire next objective should advance after Dream Gate arrival');
 });

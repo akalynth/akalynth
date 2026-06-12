@@ -307,6 +307,7 @@ export function buildOnwardRouteProgress(
   const status = available ? 'available' : 'locked';
   const unlockRequirement = 'Complete Rookguard Codex Path: move, chat, Tem, training slime, vocation, and High City gate receipts.';
   const forgeholdCompleted = [
+    ...(available ? ['forgehold_client_projection', 'forgehold_android_projection'] : []),
     ...(receiptProgress.forgeholdSurveyed ? ['forgehold_route_survey'] : []),
     ...(receiptProgress.forgeholdShipmentInvestigated ? ['forgehold_missing_shipment'] : []),
     ...(receiptProgress.forgeholdEconomyQuoted ? ['forgehold_economy_receipts'] : []),
@@ -320,6 +321,7 @@ export function buildOnwardRouteProgress(
     ...(receiptProgress.forgeholdComponentPayoutCredited ? ['forgehold_component_payout'] : []),
   ];
   const moonspireCompleted = [
+    ...(available ? ['dream_gate_client_projection', 'dream_gate_android_projection'] : []),
     ...(receiptProgress.moonspireSurveyed ? ['dream_gate_rumor'] : []),
     ...(receiptProgress.dreamGateInterpreted ? ['symbolic_puzzle_projection'] : []),
     ...(receiptProgress.dreamFragmentAnchored ? ['dream_fragment_evidence'] : []),
