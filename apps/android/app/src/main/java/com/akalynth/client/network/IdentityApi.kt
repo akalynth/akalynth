@@ -308,7 +308,7 @@ class IdentityApi(
                 val arr = obj.optJSONArray("worlds") ?: return@fetchCatalog emptyList<World>()
                 val out = ArrayList<World>(arr.length())
                 for (i in 0 until arr.length()) {
-                    val entry = arr.getJSONObject(i)
+                    val entry = arr.optJSONObject(i) ?: continue
                     val worldId = entry.optString("world_id")
                     if (VALID_WORLD_IDS.contains(worldId)) {
                         out.add(World(worldId = worldId, name = entry.optString("name")))
@@ -327,7 +327,7 @@ class IdentityApi(
                 val arr = obj.optJSONArray("outfits") ?: return@fetchCatalog emptyList<Outfit>()
                 val out = ArrayList<Outfit>(arr.length())
                 for (i in 0 until arr.length()) {
-                    val entry = arr.getJSONObject(i)
+                    val entry = arr.optJSONObject(i) ?: continue
                     val outfitId = entry.optString("outfit_id")
                     val sex = entry.optString("sex")
                     if (VALID_OUTFIT_IDS.contains(outfitId) && VALID_SEXES.contains(sex)) {
@@ -353,7 +353,7 @@ class IdentityApi(
                 val arr = obj.optJSONArray("characters") ?: return@fetchCatalog emptyList<Character>()
                 val out = ArrayList<Character>(arr.length())
                 for (i in 0 until arr.length()) {
-                    val entry = arr.getJSONObject(i)
+                    val entry = arr.optJSONObject(i) ?: continue
                     val worldId = entry.optString("world_id")
                     val sex = entry.optString("sex")
                     val outfitId = entry.optString("outfit_id")
@@ -504,8 +504,8 @@ class IdentityApi(
 
                     runCatching { parser(obj) }
                         .onSuccess { callback.onSuccess(it) }
-                        .onFailure {
-                            callback.onError("parse_error", "Unexpected response from catalog API.")
+                        .onFailure { err ->
+                            callback.onError("parse_error", err.message ?: "Unexpected response from catalog API.")
                         }
                 }
             }
