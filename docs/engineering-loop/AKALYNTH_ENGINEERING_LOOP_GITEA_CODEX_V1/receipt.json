@@ -122,7 +122,7 @@
       ],
       "repo_fix": "verify-rookguard-codex-path now imports shared path env constants and resolveChainPaths from packages/shared/paths.ts.",
       "runner_fix": "Android SDK packages installed on host SDK: build-tools;36.0.0, emulator, platform-tools, platforms;android-34, system-images;android-34;default;x86_64.",
-      "workflow_fix": "Android instrumented CI now prepares the self-hosted SDK path and installs required emulator packages with sudo before reactivecircus/android-emulator-runner."
+      "workflow_fix": "Android instrumented CI now prepares a writable runner-temp SDK by copying host-preinstalled command-line tools, platform-tools, emulator, licenses, Build Tools 36, Platform 34, and the Android 34 x86_64 system image before reactivecircus/android-emulator-runner."
     }
   },
   "non_mutation_boundary": {
