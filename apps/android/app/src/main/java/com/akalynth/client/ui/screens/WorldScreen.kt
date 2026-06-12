@@ -262,6 +262,7 @@ private fun OnwardRoutesPanel(
         )
         routes.forEach { route ->
             val open = route.status == "available"
+            val completed = route.completedObjectiveIds.toSet()
             val systems = route.objectives
                 .map { objective -> objective.system }
                 .distinct()
@@ -282,6 +283,36 @@ private fun OnwardRoutesPanel(
                 style = MaterialTheme.typography.labelSmall,
                 color = ClassicShellColors.Rune
             )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(3.dp),
+                modifier = Modifier.testTag("WorldScreen_OnwardRouteObjectives_${route.routeId}")
+            ) {
+                route.objectives.forEach { objective ->
+                    val done = completed.contains(objective.id)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = if (done) "Done" else "Next",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (done) ClassicShellColors.Good else ClassicShellColors.MutedText,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = objective.label,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (done) ClassicShellColors.Good else ClassicShellColors.Text,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = objective.system,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = ClassicShellColors.Rune
+                        )
+                    }
+                }
+            }
         }
     }
 }

@@ -278,15 +278,30 @@ export function ActionsPanel({
         )}
         {onwardRoutes.length > 0 && (
           <div className="codex-shelves onward-routes" aria-label="Onward routes">
-            {onwardRoutes.map((route) => (
-              <i
-                key={route.route_id}
-                className={route.status === 'available' ? 'active' : ''}
-                title={`${route.next_objective} Source: ${route.source_drop}`}
-              >
-                {route.status === 'available' ? 'Open' : 'Locked'}: {route.title} ({route.completed_objective_ids.length}/{route.objectives.length})
-              </i>
-            ))}
+            {onwardRoutes.map((route) => {
+              const completed = new Set(route.completed_objective_ids);
+              return (
+                <article
+                  key={route.route_id}
+                  className={`onward-route-card ${route.status === 'available' ? 'active' : ''}`}
+                  title={`Source: ${route.source_drop}`}
+                >
+                  <strong>
+                    {route.status === 'available' ? 'Open' : 'Locked'}: {route.title} ({route.completed_objective_ids.length}/{route.objectives.length})
+                  </strong>
+                  <span>{route.next_objective}</span>
+                  <ul>
+                    {route.objectives.map((objective) => (
+                      <li key={objective.id} className={completed.has(objective.id) ? 'done' : ''}>
+                        <b>{completed.has(objective.id) ? 'Done' : 'Next'}</b>
+                        {objective.label}
+                        <small>{objective.system}</small>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              );
+            })}
           </div>
         )}
         {routeSurveysOpen && (
