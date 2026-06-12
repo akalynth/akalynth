@@ -309,6 +309,8 @@ for web_economy_literal in \
   "resale credits seller wallet" \
   "resale emits buyer debit + seller credit + transfer" \
   "property unlist requires account session" \
+  "property unlist rejects not-listed property" \
+  "not-listed property unlist emits no second unlist receipt" \
   "no-session property unlist emits no second unlist receipt" \
   "property unlist requires matching csrf" \
   "auth/csrf rejected property unlist emits no unlist receipt" \

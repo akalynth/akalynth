@@ -454,6 +454,10 @@ async function main(): Promise<void> {
   check('property unlist succeeds for owner', res.status === 200 && getProperty('Azura:H1')?.status === 'owned');
   check('property unlist emitted property_unlisted receipt', receipts.at(-1)?.action === PROPERTY_UNLISTED_ACTION);
 
+  res = await request('POST', '/v1/property/unlist', { character_id: 'p_buyer', property_id: 'Azura:H1' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
+  check('property unlist rejects not-listed property', res.status === 409 && res.body.error === 'not_listed');
+  check('not-listed property unlist emits no second unlist receipt', receipts.filter((r) => r.action === PROPERTY_UNLISTED_ACTION).length === 1);
+
   res = await request('POST', '/v1/property/unlist', { character_id: 'p_buyer', property_id: 'Azura:H1' });
   check('property unlist requires account session', res.status === 401 && res.body.error === 'not_authenticated');
   check('no-session property unlist emits no second unlist receipt', receipts.filter((r) => r.action === PROPERTY_UNLISTED_ACTION).length === 1);
