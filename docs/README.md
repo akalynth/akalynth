@@ -70,8 +70,8 @@ The public website and four Codex surfaces (Public, Builder, Operator, Agent) li
 in the separate `akalynth-site` source repo. Before changing the account portal,
 beta page, Codex routes, public boundary wording, or site-side shop/work/property
 hooks, run `./scripts/verify-account-character-site.sh` from `akalynth-site`.
-That verifier includes executable site E2D gameplay action proof for
-account-scoped shop/work/property requests.
+That verifier includes executable site E2D character and gameplay action proof for
+account-scoped create/select/shop/work/property requests.
 
 ## Project Structure
 

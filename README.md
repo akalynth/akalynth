@@ -93,8 +93,8 @@ those yourself.
   Android gameplay wire-authority protocol proof)
 - For the public account portal and the four Codex surfaces (Public, Builder, Operator, Agent), run
   `./scripts/verify-account-character-site.sh` from the separate
-  `akalynth-site` repo. That site verifier includes executable site E2D gameplay action proof
-  for account-scoped shop/work/property requests.
+  `akalynth-site` repo. That site verifier includes executable site E2D character and gameplay action proof
+  for account-scoped create/select/shop/work/property requests.
 
 6) Focused persistence/receipt/anti-cheat checks (from apps/server):
 - `npm run verify:receipt-hygiene`
