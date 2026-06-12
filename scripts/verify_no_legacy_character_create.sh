@@ -59,6 +59,17 @@ if [[ -n "$android_error_matches" ]]; then
   die "Stale Android account-character error copy found. Preserve IdentityApi account-character messages instead of remapping to older text."
 fi
 
+for android_activity_error_literal in \
+  '"invalid_input" -> message.ifBlank { "Choose a valid name, world, sex, and outfit." }' \
+  '"name_taken" -> message.ifBlank { "That character name is already taken." }' \
+  '"character_not_found", "not_found" -> message.ifBlank { "That character is not available on the signed-in account." }' \
+  '"not_authenticated", "csrf_missing", "csrf_failed", "email_unverified" -> message' \
+  'Verify email before creating; existing characters can still be selected.'; do
+  if ! grep -Fq "$android_activity_error_literal" "$ROOT_DIR/apps/android/app/src/main/java/com/akalynth/client/CharacterCreateActivity.kt"; then
+    die "Missing Android activity account-character error proof literal: $android_activity_error_literal"
+  fi
+done
+
 for literal in \
   'onCreate: (name: String, worldId: String, sex: CharacterSex, outfitId: String) -> Unit' \
   'CharacterCreateScreen_WorldSelector' \
