@@ -69,6 +69,20 @@ for android_catalog_literal in \
   fi
 done
 
+for client_contract_literal in \
+  '### Character Catalogs' \
+  'GET /v1/worlds` is public' \
+  'GET /v1/outfits?sex=male' \
+  '### Character List' \
+  'GET /v1/characters` requires an account session cookie' \
+  '### Character Select' \
+  'POST /v1/characters/select` requires an account session cookie and matching CSRF header/cookie' \
+  'Email verification is not required for selecting an existing account-owned character'; do
+  if ! grep -Fq "$client_contract_literal" "$ROOT_DIR/docs/CLIENT_CONTRACT_V0_1.md"; then
+    die "Missing account-character client contract section: $client_contract_literal"
+  fi
+done
+
 doc_matches="$(
   grep -RInE '\{"name":"Sovereign"\}|Success \(200\):|Guest accounts remain functional|Implement character creation flow|Proposed API surface \(specified in E4\)' "${doc_paths[@]}" \
     --include='CLIENT_CONTRACT_V0_1.md' \
