@@ -141,7 +141,7 @@ interface BaseMessage {
 | `login_ack` | Returns login result, player identity, token fields, and optional failure reason. |
 | `world_state` | Initial world snapshot containing `map`, the current player, and nearby players. |
 | `move_result` | Result of a move intent. The server returns authoritative coordinates and optional `map`. |
-| `loop_update` | Objective/progression update. The loop payload may include Rookguard quest and Codex profession state. |
+| `loop_update` | Objective/progression update. The loop payload may include Rookguard quest, Codex profession state, and read-only onward route projections. |
 | `player_moved` | Broadcast that another player moved. |
 | `player_joined` | Broadcast that another player entered the world. |
 | `player_left` | Broadcast that a player left. |
@@ -276,6 +276,11 @@ not recognize. Rookguard loop payloads can include:
   Codex, Emberwilds Atlas, Factions Codex, and Heroes Codex shelf descriptors;
 - `rookguardQuest.codexProfession`: selected vocation profile anchored to
   `heroes-codex` / `AKALYNTH_HEROES_CODEX_V1` after `vocation_declared`.
+- `onwardRoutes`: read-only next-slice projections for Forgehold Route and
+  Moonspire Dream Gate. These entries are locked until the server-owned
+  Rookguard Codex Path is complete, then become available as UI planning state.
+  They do not add a client command, reward faucet, crafting authority, travel
+  transition, Android-only behavior, or anti-cheat penalty.
 
 Clients render this state only; they do not send quest progress or Codex truth.
 

@@ -1,5 +1,6 @@
 import type {
   AuditReceipt,
+  OnwardRouteProgress,
   RookguardCodexAnchor,
   RookguardCodexProfession,
   RookguardCodexShelf,
@@ -276,4 +277,52 @@ export function buildRookguardQuestProgress(input: RookguardQuestInput): Rookgua
     codexProfession: input.vocation ? ROOKGUARD_CODEX_PROFESSIONS[input.vocation] : null,
     completed,
   };
+}
+
+export function buildOnwardRouteProgress(input: RookguardQuestInput): OnwardRouteProgress[] {
+  const available = buildRookguardQuestProgress(input).completed;
+  const status = available ? 'available' : 'locked';
+  const unlockRequirement = 'Complete Rookguard Codex Path: move, chat, Tem, training slime, vocation, and High City gate receipts.';
+
+  return [
+    {
+      route_id: 'forgehold_route_slice_v1',
+      title: 'Forgehold Route',
+      status,
+      unlock_requirement: unlockRequirement,
+      next_objective: available
+        ? 'Investigate the missing Ember Road shipment and stabilize Soulsteel without adding an unreceipted reward.'
+        : 'Finish the Rookguard Codex Path to reveal the Forgehold shipment board.',
+      objectives: [
+        { id: 'forgehold_missing_shipment', label: 'Missing shipment investigation', system: 'quest' },
+        { id: 'forgehold_economy_receipts', label: 'Receipt-backed Forgehold economy proof', system: 'economy' },
+        { id: 'soulsteel_stabilization', label: 'Soulsteel stabilization crafting', system: 'crafting' },
+        { id: 'heartforge_trial_server_gate', label: 'Heartforge Trial server gate', system: 'server' },
+        { id: 'forgehold_client_projection', label: 'Read-only client route projection', system: 'ui' },
+        { id: 'forgehold_android_projection', label: 'Android read-only route parity', system: 'android' },
+        { id: 'forgehold_abuse_notes', label: 'No client-truth crafting or shipment claims', system: 'anti_cheat' },
+      ],
+      source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
+      receipt_actions: ['tutorial_completed', 'gate_unlock'],
+    },
+    {
+      route_id: 'moonspire_dream_gate_slice_v1',
+      title: 'Moonspire Dream Gate',
+      status,
+      unlock_requirement: unlockRequirement,
+      next_objective: available
+        ? 'Survey a Dream Gate clue and keep dream traversal symbolic until the server owns the gate transition.'
+        : 'Finish the Rookguard Codex Path to reveal the Moonspire dream-gate rumor.',
+      objectives: [
+        { id: 'dream_gate_rumor', label: 'Dream Gate rumor discovery', system: 'quest' },
+        { id: 'symbolic_puzzle_projection', label: 'Symbolic puzzle projection', system: 'dream_gate' },
+        { id: 'dream_fragment_evidence', label: 'Dream fragment evidence object', system: 'server' },
+        { id: 'dream_gate_client_projection', label: 'Read-only client route projection', system: 'ui' },
+        { id: 'dream_gate_android_projection', label: 'Android read-only route parity', system: 'android' },
+        { id: 'dream_gate_abuse_notes', label: 'No client-owned dream traversal truth', system: 'anti_cheat' },
+      ],
+      source_drop: 'drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1',
+      receipt_actions: ['tutorial_completed', 'gate_unlock'],
+    },
+  ];
 }

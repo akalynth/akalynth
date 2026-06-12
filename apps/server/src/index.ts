@@ -220,6 +220,7 @@ import {
 } from './world/world-events.js';
 import {
   ROOKGUARD_CODEX_PROFESSIONS,
+  buildOnwardRouteProgress,
   buildRookguardQuestProgress,
   getRookguardQuestInput,
   rookguardGateOpen,
@@ -2728,6 +2729,7 @@ function playLoopFor(s: Session) {
     gateOpen,
     objective,
     rookguardQuest: buildRookguardQuestProgress(rookguardQuestInput),
+    onwardRoutes: buildOnwardRouteProgress(rookguardQuestInput),
     lastEvent: bloom.phase === 'idle' ? null : `witness_moth_bloom_${bloom.phase}`,
     ...(bloom.teaser ? { teaser: bloom.teaser } : {}),
   };

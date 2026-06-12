@@ -91,6 +91,7 @@ export function ActionsPanel({
   const inRookguardProfessionHall = nearbyNpc?.npc_id === 'rookguard_steward';
   const rookguardQuest = loop?.rookguardQuest ?? null;
   const codexProfession = rookguardQuest?.codexProfession ?? null;
+  const onwardRoutes = loop?.onwardRoutes ?? [];
   const witnessMothOpen =
     stage >= 3 &&
     !!loop?.lastEvent?.startsWith('witness_moth_bloom_') &&
@@ -252,6 +253,19 @@ export function ActionsPanel({
             {rookguardQuest.codexShelves.map((shelf) => (
               <i key={shelf.object_id} className={shelf.role === 'active_profession_lore' ? 'active' : ''} title={shelf.gameplay_hint}>
                 {shelf.title}
+              </i>
+            ))}
+          </div>
+        )}
+        {onwardRoutes.length > 0 && (
+          <div className="codex-shelves onward-routes" aria-label="Onward routes">
+            {onwardRoutes.map((route) => (
+              <i
+                key={route.route_id}
+                className={route.status === 'available' ? 'active' : ''}
+                title={`${route.next_objective} Source: ${route.source_drop}`}
+              >
+                {route.status === 'available' ? 'Open' : 'Locked'}: {route.title}
               </i>
             ))}
           </div>
