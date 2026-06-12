@@ -173,6 +173,7 @@ object MessageSerializer {
                 "login_ack" -> json.decodeFromString<LoginAckMessage>(raw)
                 "world_state" -> json.decodeFromString<WorldStateMessage>(raw)
                 "move_result" -> json.decodeFromString<MoveResultMessage>(raw)
+                "loop_update" -> json.decodeFromString<LoopUpdateMessage>(raw)
                 "player_moved" -> json.decodeFromString<PlayerMovedMessage>(raw)
                 "player_joined" -> json.decodeFromString<PlayerJoinedMessage>(raw)
                 "player_left" -> json.decodeFromString<PlayerLeftMessage>(raw)

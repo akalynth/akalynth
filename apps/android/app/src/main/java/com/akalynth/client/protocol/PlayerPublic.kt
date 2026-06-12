@@ -13,6 +13,7 @@ data class PlayerPublic(
     @SerialName("dead_until_ms") val deadUntilMs: Long? = null,
     val reputation: Int? = null,
     @SerialName("sprite_id") val spriteId: String? = null,
+    val loop: PlayLoopProgress? = null,
     val title: String? = null,
     val badges: List<String>? = null,
     val mark: String? = null

@@ -27,6 +27,7 @@ import com.akalynth.client.game.GameState
 import com.akalynth.client.game.MapRepository
 import com.akalynth.client.network.EndpointInfo
 import com.akalynth.client.protocol.MapName
+import com.akalynth.client.protocol.OnwardRouteProgress
 import com.akalynth.client.protocol.PlayerPublic
 import com.akalynth.client.ui.diagnostics.DiagnosticsFormatter
 import com.akalynth.client.ui.components.*
@@ -102,6 +103,13 @@ fun WorldScreen(
                 modifier = Modifier.testTag("WorldScreen_ConnectionLine")
             )
         }
+
+        OnwardRoutesPanel(
+            routes = state.progression.loop?.onwardRoutes ?: emptyList(),
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 12.dp)
+        )
 
         Row(
             modifier = Modifier
@@ -223,6 +231,52 @@ fun WorldScreen(
             ) {
                 Text(error)
             }
+        }
+    }
+}
+
+@Composable
+private fun OnwardRoutesPanel(
+    routes: List<OnwardRouteProgress>,
+    modifier: Modifier = Modifier
+) {
+    if (routes.isEmpty()) return
+
+    ClassicPanel(
+        modifier = modifier
+            .widthIn(max = 260.dp)
+            .testTag("WorldScreen_OnwardRoutes"),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Text(
+            text = "Next routes",
+            style = MaterialTheme.typography.labelMedium,
+            color = ClassicShellColors.Brass,
+            fontWeight = FontWeight.Bold
+        )
+        routes.forEach { route ->
+            val open = route.status == "available"
+            val systems = route.objectives
+                .map { objective -> objective.system }
+                .distinct()
+                .joinToString(", ")
+            Text(
+                text = "${if (open) "Open" else "Locked"}: ${route.title}",
+                style = MaterialTheme.typography.labelSmall,
+                color = if (open) ClassicShellColors.Good else ClassicShellColors.MutedText,
+                modifier = Modifier.testTag("WorldScreen_OnwardRoute_${route.routeId}")
+            )
+            Text(
+                text = route.nextObjective,
+                style = MaterialTheme.typography.bodySmall,
+                color = ClassicShellColors.Text
+            )
+            Text(
+                text = systems,
+                style = MaterialTheme.typography.labelSmall,
+                color = ClassicShellColors.Rune
+            )
         }
     }
 }

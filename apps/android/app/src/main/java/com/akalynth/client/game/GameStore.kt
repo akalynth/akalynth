@@ -97,6 +97,7 @@ class GameStore(
             is LoginAckMessage -> if (msg.ok != false) "ok, id=${msg.playerId}" else "fail: ${msg.reason}"
             is WorldStateMessage -> "map=${msg.map}, players=${msg.nearbyPlayers.size}"
             is MoveResultMessage -> "ok=${msg.ok}, pos=(${msg.x},${msg.y})"
+            is LoopUpdateMessage -> "${msg.event}: ${msg.loop.objective}"
             is PlayerMovedMessage -> "${msg.playerId} -> (${msg.x},${msg.y})"
             is PlayerJoinedMessage -> msg.player.name
             is PlayerLeftMessage -> msg.playerId
@@ -341,6 +342,7 @@ class GameStore(
             is LoginAckMessage -> handleLoginAck(msg)
             is WorldStateMessage -> handleWorldState(msg)
             is MoveResultMessage -> handleMoveResult(msg)
+            is LoopUpdateMessage -> handleLoopUpdate(msg)
             is PlayerMovedMessage -> handlePlayerMoved(msg)
             is PlayerJoinedMessage -> handlePlayerJoined(msg)
             is PlayerLeftMessage -> handlePlayerLeft(msg)
@@ -474,6 +476,18 @@ class GameStore(
                     currentMap = msg.map,
                     me = msg.player,
                     otherPlayers = others
+                ),
+                progression = it.progression.copy(loop = msg.player.loop)
+            )
+        }
+    }
+
+    private fun handleLoopUpdate(msg: LoopUpdateMessage) {
+        _state.update {
+            it.copy(
+                progression = it.progression.copy(
+                    loop = msg.loop,
+                    lastEvent = msg.event
                 )
             )
         }
