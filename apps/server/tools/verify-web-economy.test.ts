@@ -316,6 +316,7 @@ async function main(): Promise<void> {
 
   res = await request('POST', '/v1/work/tick', { character_id: 'p_buyer' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
   check('work tick requires contract id', res.status === 400 && res.body.error === 'contract_id_required');
+  check('missing contract work tick emits no receipts', receipts.filter((r) => r.action === WORK_CONTRACT_TICK_RECORDED_ACTION).length === 0);
 
   for (let i = 0; i < 6; i++) {
     logicalNowMs += 5_000;
