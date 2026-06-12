@@ -62,6 +62,7 @@ fun WorldScreen(
             propertyCount = state.economy.properties.size,
             propertyStatus = propertyStatusLabel(state.economy.lastPropertyResult),
             workStatus = workStatusLabel(state.economy.work),
+            npcStatus = npcStatusLabel(state.ui.npcDialogue),
             connectionState = state.connection,
             modifier = Modifier.align(Alignment.TopStart)
         )
@@ -131,7 +132,9 @@ fun WorldScreen(
                 onWorldEventContribution = { contributionId ->
                     onEvent(GameEvent.WorldEventContribution(contributionId))
                 },
+                showRookguardActions = !state.world.currentMap.isHighCityCompatible,
                 showHighCityActions = state.world.currentMap.isHighCityCompatible,
+                onTalkToNpc = { npcId -> onEvent(GameEvent.TalkToNpc(npcId)) },
                 onInspectWallet = { onEvent(GameEvent.InspectWallet) },
                 onStartWork = { onEvent(GameEvent.StartWorkContract) },
                 onTickWork = { onEvent(GameEvent.TickWorkContract) },
@@ -245,6 +248,14 @@ private fun workStatusLabel(status: com.akalynth.client.game.WorkContractStatus?
     } else {
         "Work: started +${status.payoutGold ?: 0} gold"
     }
+}
+
+private fun npcStatusLabel(status: com.akalynth.client.game.NpcDialogueStatus?): String? {
+    if (status == null) return null
+    val name = status.npcId.replace('_', ' ')
+    if (status.error != null) return "$name: ${status.error}"
+    val line = status.line ?: return null
+    return "$name: $line"
 }
 
 private fun copyTextToClipboard(

@@ -69,6 +69,7 @@ data class ChatEntry(
 data class UiState(
     val temChallenge: TemChallengeData? = null,
     val witnessRequest: WitnessRequestData? = null,
+    val npcDialogue: NpcDialogueStatus? = null,
     val errorMessage: String? = null,
     val chatOpen: Boolean = false,
     val showChronicleSheet: Boolean = false,
@@ -97,6 +98,14 @@ data class WitnessRequestData(
     val requestId: String,
     val prompt: String,
     val expiresAt: Long
+)
+
+data class NpcDialogueStatus(
+    val npcId: String,
+    val placeId: String? = null,
+    val tier: String? = null,
+    val line: String? = null,
+    val error: String? = null
 )
 
 data class ConnectionDiagnostics(

@@ -24,6 +24,7 @@ fun HUD(
     propertyCount: Int = 0,
     propertyStatus: String? = null,
     workStatus: String? = null,
+    npcStatus: String? = null,
     connectionState: ConnectionState,
     modifier: Modifier = Modifier
 ) {
@@ -123,6 +124,14 @@ fun HUD(
         }
 
         workStatus?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodySmall,
+                color = ClassicShellColors.MutedText
+            )
+        }
+
+        npcStatus?.let {
             Text(
                 text = it,
                 style = MaterialTheme.typography.bodySmall,

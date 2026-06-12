@@ -205,6 +205,7 @@ class GameStore(
             is GameEvent.ToggleChat -> toggleChat()
             is GameEvent.Attack -> sendAttack(event.targetId)
             is GameEvent.WorldEventContribution -> sendWorldEventContribution(event.contributionId)
+            is GameEvent.TalkToNpc -> talkToNpc(event.npcId)
             is GameEvent.InspectWallet -> inspectWallet()
             is GameEvent.BuyHouse -> buyHouse(event.propertyId)
             is GameEvent.ListHouse -> listHouse(event.propertyId, event.price)
@@ -368,8 +369,8 @@ class GameStore(
             is WorkContractStartedMessage -> handleWorkContractStarted(msg)
             is WorkProgressMessage -> handleWorkProgress(msg)
             is WorkContractResultMessage -> handleWorkContractResult(msg)
-            is NpcDialogueMessage -> {}
-            is NpcDialogueErrorMessage -> {}
+            is NpcDialogueMessage -> handleNpcDialogue(msg)
+            is NpcDialogueErrorMessage -> handleNpcDialogueError(msg)
             is SkillResultMessage -> {}
             is ModReportsSnapshotMessage -> {}
             is ModResolveResultMessage -> {}
@@ -608,9 +609,42 @@ class GameStore(
         }
     }
 
+    private fun handleNpcDialogue(msg: NpcDialogueMessage) {
+        _state.update {
+            it.copy(
+                ui = it.ui.copy(
+                    npcDialogue = NpcDialogueStatus(
+                        npcId = msg.npcId,
+                        placeId = msg.placeId,
+                        tier = msg.tier,
+                        line = msg.line
+                    )
+                )
+            )
+        }
+    }
+
+    private fun handleNpcDialogueError(msg: NpcDialogueErrorMessage) {
+        _state.update {
+            it.copy(
+                ui = it.ui.copy(
+                    npcDialogue = NpcDialogueStatus(
+                        npcId = msg.npcId,
+                        error = msg.error
+                    )
+                )
+            )
+        }
+    }
+
     private fun inspectWallet() {
         wsClient.send(InspectWalletMessage)
         logSent("inspect_wallet", "")
+    }
+
+    private fun talkToNpc(npcId: String) {
+        wsClient.send(TalkToNpcMessage(npcId = npcId))
+        logSent("talk_to_npc", npcId)
     }
 
     private fun startWorkContract() {
