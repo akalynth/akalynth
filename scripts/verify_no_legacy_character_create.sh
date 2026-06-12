@@ -218,7 +218,24 @@ for client_contract_literal in \
   fi
 done
 
-for shared_web_gameplay_literal in \
+for shared_account_character_gameplay_literal in \
+  'export type AccountCharacterWorldId = '\''rookguard'\'' | '\''high_city'\''' \
+  'export type AccountCharacterSex = '\''male'\'' | '\''female'\''' \
+  'export type AccountCharacterOutfitId =' \
+  'export interface AccountCharacterWorldOption' \
+  'world_id: AccountCharacterWorldId;' \
+  'export interface AccountCharacterOutfitOption' \
+  'outfit_id: AccountCharacterOutfitId;' \
+  'sex: AccountCharacterSex;' \
+  'export interface AccountCharacterPublic' \
+  'export interface AccountCharacterWorldsResponse' \
+  'export interface AccountCharacterOutfitsResponse' \
+  'export interface AccountCharactersResponse' \
+  'export interface AccountCharacterCreateRequest' \
+  'export interface AccountCharacterSelectRequest' \
+  'export interface AccountCharacterPlayResponse' \
+  'token: string;' \
+  'expires_at: number;' \
   'export interface WebShopCatalogResponse' \
   'export interface WebWalletResponse' \
   'export interface WebShopPurchaseRequest' \
@@ -233,8 +250,8 @@ for shared_web_gameplay_literal in \
   'export interface WebPropertyListResponse' \
   'export interface WebPropertyUnlistRequest' \
   'export type WebPropertyUnlistResponse = WebPropertyListResponse'; do
-  if ! grep -Fq "$shared_web_gameplay_literal" "$ROOT_DIR/packages/shared/http.ts"; then
-    die "Missing shared web gameplay HTTP type: $shared_web_gameplay_literal"
+  if ! grep -Fq "$shared_account_character_gameplay_literal" "$ROOT_DIR/packages/shared/http.ts"; then
+    die "Missing shared account-character/gameplay HTTP type: $shared_account_character_gameplay_literal"
   fi
 done
 
@@ -480,6 +497,9 @@ for gameplay_doc in "$ROOT_DIR/README.md" "$ROOT_DIR/docs/CURRENT_STAGE.md" "$RO
   fi
   if ! grep -Fq 'wallet/shop/work/property gameplay route proof' "$gameplay_doc"; then
     die "Missing account-character wallet/gameplay route proof wording in ${gameplay_doc#$ROOT_DIR/}"
+  fi
+  if ! grep -Fq 'shared account-character HTTP type proof' "$gameplay_doc"; then
+    die "Missing shared account-character HTTP type proof wording in ${gameplay_doc#$ROOT_DIR/}"
   fi
   if ! grep -Fq 'Android gameplay wire-authority protocol proof' "$gameplay_doc"; then
     die "Missing Android gameplay wire-authority proof wording in ${gameplay_doc#$ROOT_DIR/}"
