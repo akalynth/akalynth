@@ -253,6 +253,8 @@ for web_economy_literal in \
   "property list rejects non-owner" \
   "non-owner property list emits no listing receipt" \
   "property list succeeds for owner" \
+  "resale debits buyer wallet" \
+  "resale credits seller wallet" \
   "resale emits buyer debit + seller credit + transfer" \
   "property unlist requires account session" \
   "property unlist requires matching csrf" \
