@@ -10,8 +10,8 @@ Completed scoped account-world cleanup touched:
 Compatibility result:
 
 - `GET /v1/worlds` now advertises `high_city` / `High City`.
-- `POST /v1/characters` accepts legacy `azura` and normalizes it to
-  `high_city` before persistence, response, and character lifecycle receipts.
+- `POST /v1/characters` requires exact canonical world ids and rejects legacy
+  `azura` input with `400 invalid_input`.
 
 Future implementation will touch:
 
@@ -27,9 +27,9 @@ Future implementation will touch:
 
 ## Compatibility Impact
 
-The completed account-world cleanup is compatible for old clients because
-legacy `azura` create requests still work. It is a forward-facing catalog change
-for new clients, which should now prefer `high_city`.
+The completed account-world cleanup is intentionally breaking for old
+account-character clients that still submit `azura`. Clients must use the public
+catalog and submit `high_city`.
 
 The future runtime switch is protocol-visible because clients currently parse map names such as `Azura`. If the server starts sending `HighCity` before clients support it, Android and other strict clients may fail to deserialize map-bearing messages.
 
@@ -49,7 +49,7 @@ Legacy values:
 | Legacy value | Compatibility rule |
 | --- | --- |
 | `Azura` | accepted for historical receipts and old clients |
-| `azura` | accepted for old account world create input and map file aliases during migration |
+| `azura` | rejected by account-character create; may remain only as a map-file alias during migration |
 | `azura.json` | replaced by `high_city.json`, but legacy lookup may remain during transition |
 | `GateToAzura` | retained as deprecated alias for tile code `8` until a cleanup gate |
 | `gate_to_azura` | accepted as legacy landmark name during map migration |

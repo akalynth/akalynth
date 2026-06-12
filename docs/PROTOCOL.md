@@ -42,6 +42,14 @@ Identity Seal v1 principal endpoints live on the HTTP control plane under
 type. Clients must not submit roles or capabilities over WebSocket; authority is
 derived server-side from principal state where principal-gated surfaces use it.
 
+Account-character endpoints live on the HTTP control plane under `/v1/worlds`,
+`/v1/outfits`, `/v1/characters`, and `/v1/characters/select`. They are additive
+and do not add a WebSocket message type. Catalog reads are public. Character
+list/select require an account session; create requires an account session,
+double-submit CSRF, verified email, and exact canonical `world_id` values
+(`rookguard` or `high_city`). Legacy `azura` is not accepted as account-character
+create input.
+
 Web economy portal endpoints live on the HTTP control plane under
 `/v1/shop/catalog`, `/v1/shop/purchase`, `/v1/wallet`, `/v1/property/buy`,
 `/v1/property/list`, and `/v1/property/unlist`. They are additive and do not add

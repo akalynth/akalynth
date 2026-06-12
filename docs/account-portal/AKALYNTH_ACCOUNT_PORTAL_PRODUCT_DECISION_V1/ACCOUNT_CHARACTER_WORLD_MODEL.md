@@ -63,12 +63,15 @@ account (1) ──< character (N) ── world_id
 GET  /v1/worlds                     -> world catalog
 GET  /v1/outfits?sex=male|female    -> outfit catalog
 GET  /v1/characters                 -> account's characters (auth required)
-POST /v1/characters                 -> create {name, world_id, sex, outfit_id} (auth required)
-POST /v1/characters/select          -> select active character -> play token
+POST /v1/characters                 -> create {name, world_id, sex, outfit_id} (auth + CSRF + verified email)
+POST /v1/characters/select          -> select active character -> play token (auth + CSRF)
 ```
 
 Note: retired `POST /v1/characters/create` (the name-only, guest-era endpoint) is
 replaced by account-gated `POST /v1/characters`. It is not the production path.
+Create requests must use the server catalog's canonical world ids (`rookguard`
+or `high_city`); legacy `azura` is not accepted as account-character create
+input.
 
 ## Lifecycle receipts (privacy-bounded)
 

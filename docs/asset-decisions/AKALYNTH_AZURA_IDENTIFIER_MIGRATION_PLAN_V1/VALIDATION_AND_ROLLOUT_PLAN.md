@@ -18,7 +18,7 @@ Commands already used for the scoped account-world cleanup:
 Covered checks:
 
 - `GET /v1/worlds` advertises `high_city` / `High City`
-- legacy `azura` create input remains accepted
+- legacy `azura` account-character create input is rejected
 - account character rows persist `high_city`
 - new character lifecycle receipts emit `high_city`, not `azura`
 - full verification spine passed after the change

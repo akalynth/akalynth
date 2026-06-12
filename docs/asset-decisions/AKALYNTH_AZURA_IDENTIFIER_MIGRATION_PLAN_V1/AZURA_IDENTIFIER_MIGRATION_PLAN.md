@@ -78,11 +78,10 @@ Completed before the full runtime map switch:
 
 - Account `GET /v1/worlds` advertises `high_city` / `High City` instead of
   legacy `azura` / `Azura`.
-- Account `POST /v1/characters` still accepts legacy `azura` input for old
-  clients, but persists and emits new character lifecycle receipts with
-  `world_id: 'high_city'`.
-- Focused character verifier covers catalog output, legacy alias acceptance,
-  normalized persistence, and normalized receipt inputs.
+- Account `POST /v1/characters` rejects legacy `azura` input and requires exact
+  canonical `world_id` values (`rookguard` or `high_city`).
+- Focused character verifier covers catalog output, legacy alias rejection,
+  canonical persistence, and canonical receipt inputs.
 
 Boundary:
 
@@ -106,8 +105,8 @@ Implement:
 - rename landmark to `gate_to_high_city`
 - migrate server world registry from `worlds.Azura` to `worlds.HighCity`
 - migrate new NPC/place ids to `high_city_*` and `high_city:*`
-- keep the already-migrated account character catalog on `high_city` and retain
-  the legacy `azura` create alias
+- keep the already-migrated account character catalog on `high_city` and keep
+  legacy `azura` rejected for account-character create
 - migrate new property ids to `high_city:H*`
 - add migration logic for existing property rows if runtime state has existing Azura property ids
 
