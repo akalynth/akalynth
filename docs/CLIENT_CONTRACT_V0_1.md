@@ -121,6 +121,7 @@ Outfits response:
 - `GET /v1/wallet?character_id=<character_id>` requires an account session cookie and returns only account-owned character wallet state.
 - `POST /v1/shop/purchase`, `POST /v1/work/start`, `POST /v1/work/tick`, `POST /v1/property/buy`, `POST /v1/property/list`, and `POST /v1/property/unlist` require an account session cookie, matching CSRF header/cookie, and an account-owned `character_id`.
 - Gameplay mutations are receipt-backed. Clients do not create wallet, item, work, or property authority locally.
+- Web gameplay receipts must not carry account ids, session cookie values, or CSRF token values; those remain transport/session state only.
 
 Shop catalog response:
 ```json
