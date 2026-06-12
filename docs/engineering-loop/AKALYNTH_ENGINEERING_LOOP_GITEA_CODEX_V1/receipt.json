@@ -123,6 +123,12 @@
       "repo_fix": "verify-rookguard-codex-path now imports shared path env constants and resolveChainPaths from packages/shared/paths.ts.",
       "runner_fix": "Android SDK packages installed on host SDK: build-tools;36.0.0, emulator, platform-tools, platforms;android-34, system-images;android-34;default;x86_64.",
       "workflow_fix": "Android instrumented CI now prepares a writable $RUNNER_TEMP SDK via $GITHUB_ENV by copying host-preinstalled command-line tools, platform-tools, emulator, licenses, Build Tools 36, Platform 34, and the Android 34 x86_64 system image before reactivecircus/android-emulator-runner."
+    },
+    "third_follow_up_repair": {
+      "reason": "GitHub CI passed server verify and Android instrumented tests, then cancelled loadtest-smoke during the 2-client smoke cooldown because the job's 5 minute timeout was consumed mostly by Node 24 native dependency install/build.",
+      "failed_run": "https://github.com/akalynth/akalynth/actions/runs/27436767569",
+      "failed_step": "CI / loadtest-smoke / Run load test smoke (2 clients, 5s)",
+      "workflow_fix": "Raised loadtest-smoke timeout from 5 minutes to 15 minutes without weakening any smoke or rate-limit checks."
     }
   },
   "non_mutation_boundary": {

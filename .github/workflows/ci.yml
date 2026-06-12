@@ -338,7 +338,7 @@ jobs:
 
   loadtest-smoke:
     runs-on: [self-hosted, ubuntu-24.04]
-    timeout-minutes: 5
+    timeout-minutes: 15
     permissions:
       contents: read
     needs: [changes, verify]
