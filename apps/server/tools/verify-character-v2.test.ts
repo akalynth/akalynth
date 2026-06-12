@@ -93,9 +93,10 @@ async function main(): Promise<void> {
 
   // ---- create validation ----
   check('create unknown world -> 400', characterService.create(accountId, { name: 'X', world_id: 'nope', sex: 'male', outfit_id: 'male_guard' }).status === 400);
-  check('create bad sex -> 400', characterService.create(accountId, { name: 'X', world_id: 'azura', sex: 'other', outfit_id: 'male_guard' }).status === 400);
-  check('create outfit-sex mismatch -> 400', characterService.create(accountId, { name: 'X', world_id: 'azura', sex: 'male', outfit_id: 'female_mage' }).status === 400);
-  check('create name_taken propagates -> 409', characterService.create(accountId, { name: 'Aria', world_id: 'azura', sex: 'male', outfit_id: 'male_guard' }).status === 409);
+  check('legacy azura world id is rejected -> 400', characterService.create(accountId, { name: 'X', world_id: 'azura', sex: 'male', outfit_id: 'male_guard' }).status === 400);
+  check('create bad sex -> 400', characterService.create(accountId, { name: 'X', world_id: 'high_city', sex: 'other', outfit_id: 'male_guard' }).status === 400);
+  check('create outfit-sex mismatch -> 400', characterService.create(accountId, { name: 'X', world_id: 'high_city', sex: 'male', outfit_id: 'female_mage' }).status === 400);
+  check('create name_taken propagates -> 409', characterService.create(accountId, { name: 'Aria', world_id: 'high_city', sex: 'male', outfit_id: 'male_guard' }).status === 409);
 
   // ---- list (scoped to account) ----
   const list = (characterService.list(accountId).body as { characters: { character_id: string }[] }).characters;
@@ -110,12 +111,12 @@ async function main(): Promise<void> {
   check('select unknown character -> 404', characterService.select(accountId, { character_id: 'p_nope' }).status === 404);
 
   // ---- character limit ----
-  const c2 = characterService.create(accountId, { name: 'Bree', world_id: 'azura', sex: 'male', outfit_id: 'male_guard' });
+  const c2 = characterService.create(accountId, { name: 'Bree', world_id: 'high_city', sex: 'male', outfit_id: 'male_guard' });
   const c2body = c2.body as { character?: { world_id: string } };
-  check('legacy azura create is accepted and normalized', c2.status === 201 && c2body.character?.world_id === 'high_city');
-  check('legacy azura create is persisted as high_city', (db.prepare('SELECT world_id FROM account_characters WHERE character_id=?').get('p_Bree') as { world_id: string }).world_id === 'high_city');
-  characterService.create(accountId, { name: 'Cole', world_id: 'azura', sex: 'male', outfit_id: 'male_mage' });
-  check('create over limit (>3) -> 409', characterService.create(accountId, { name: 'Dane', world_id: 'azura', sex: 'male', outfit_id: 'male_wanderer' }).status === 409);
+  check('canonical high_city create succeeds', c2.status === 201 && c2body.character?.world_id === 'high_city');
+  check('canonical high_city is persisted', (db.prepare('SELECT world_id FROM account_characters WHERE character_id=?').get('p_Bree') as { world_id: string }).world_id === 'high_city');
+  characterService.create(accountId, { name: 'Cole', world_id: 'high_city', sex: 'male', outfit_id: 'male_mage' });
+  check('create over limit (>3) -> 409', characterService.create(accountId, { name: 'Dane', world_id: 'high_city', sex: 'male', outfit_id: 'male_wanderer' }).status === 409);
 
   // ---- privacy: character receipts carry only ids/world/sex/outfit, no email ----
   const leak = receipts.some((r) => JSON.stringify(r).includes('pilot@example.com'));
