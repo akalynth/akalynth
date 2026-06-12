@@ -395,6 +395,17 @@ class IdentityApi(
         return null
     }
 
+    private fun accountCharacterErrorMessage(statusCode: Int, code: String, serverMessage: String?): String {
+        if (statusCode == 401) return "Sign in required for account character creation or selection."
+        if (statusCode == 403 && code == "csrf_failed") return "Security token missing. Sign in again before account character creation or selection."
+        if (statusCode == 403 && code == "email_unverified") return "Verify email before creating a character. Existing characters can still be selected."
+        if (statusCode == 403) return "Account session expired. Sign in again before creating or selecting a character."
+        if (statusCode == 404 && (code == "character_not_found" || code == "not_found")) return "That character is not available on the signed-in account."
+        if (statusCode == 400 && code == "invalid_input") return "Choose a valid name, world, sex, and outfit."
+        if (statusCode == 409 && code == "name_taken") return "That character name is already taken."
+        return serverMessage?.takeIf { s -> s.isNotBlank() } ?: "Character request failed."
+    }
+
     private fun getSessionCookie(): String = sessionCookies[SESSION_COOKIE]?.trim().orEmpty()
     private fun getCsrfCookie(): String = sessionCookies[CSRF_COOKIE]?.trim().orEmpty()
 
@@ -462,9 +473,11 @@ class IdentityApi(
                     val code = obj?.optString("error")?.takeIf { s -> s.isNotBlank() }
                         ?: obj?.optString("code")?.takeIf { s -> s.isNotBlank() }
                         ?: "http_${it.code}"
-                    val message = obj?.optString("message")?.takeIf { s -> s.isNotBlank() }
-                        ?: obj?.optString("error")?.takeIf { s -> s.isNotBlank() }
-                        ?: "Request failed"
+                    val message = accountCharacterErrorMessage(
+                        statusCode = it.code,
+                        code = code,
+                        serverMessage = obj?.optString("message")?.takeIf { s -> s.isNotBlank() }
+                    )
                     onError(Pair(code, message))
                 }
             }
