@@ -452,6 +452,11 @@ async function main(): Promise<void> {
   check('owned-unlisted property buy emits no debit/purchase receipt', receipts.length === receiptCountAfterSellerPrimaryBuy);
 
   await request('POST', '/v1/property/list', { character_id: 'p_seller', property_id: 'Azura:H2', price_gold: 60 }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
+  const receiptCountAfterSellerList = receipts.length;
+  res = await request('POST', '/v1/property/buy', { character_id: 'p_buyer', property_id: 'Azura:H2' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
+  check('resale property buy without gold is rejected', res.status === 409 && res.body.error === 'insufficient_gold');
+  check('rejected resale emitted no debit/credit/transfer receipt', receipts.length === receiptCountAfterSellerList);
+
   fund('p_buyer', 60);
   res = await request('POST', '/v1/property/buy', { character_id: 'p_buyer', property_id: 'Azura:H2' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
   check('resale property buy succeeds', res.status === 200 && getProperty('Azura:H2')?.owner_player_id === 'p_buyer');
