@@ -920,6 +920,7 @@ export function handleForgeholdShipmentInvestigation(ctx: SkillContext): SkillRe
   if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
   const routeProgress = ctx.getOnwardRouteProgress?.();
   if (!routeProgress?.forgeholdSurveyed) return { success: false, reason: 'invalid_target' };
+  if (routeProgress.forgeholdShipmentInvestigated) return { success: false, reason: 'invalid_target' };
 
   const investigatedAt = new Date().toISOString();
   const evidenceObjects = ['broken_route_seal', 'charred_shipment_plate'];

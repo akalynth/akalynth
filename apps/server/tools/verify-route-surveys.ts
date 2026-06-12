@@ -921,6 +921,28 @@ test('Forgehold shipment investigation records quest progress without travel or 
   assert(result.payload?.contradiction === 'departed / undeparted', 'Forgehold investigation payload should name contradiction');
 });
 
+test('Forgehold shipment investigation is idempotent after receipt-derived investigation', async () => {
+  const { ctx, receipts, sent } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
+  ctx.skillCooldowns.set('route:quest:shipment', 0);
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
+
+  const investigations = receipts.filter((r) => r.action === FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION);
+  const investigationResults = sent.filter((msg) =>
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as { type?: string }).type === 'skill_result' &&
+    (msg as { skill_id?: string }).skill_id === 'route:quest:shipment'
+  ) as Array<{ success?: boolean; reason?: string }>;
+
+  assert(investigations.length === 1, 'repeat Forgehold shipment investigation must not emit a second investigation receipt');
+  assert(investigationResults.length === 2, 'repeat Forgehold shipment investigation should return two skill results');
+  assert(investigationResults[0]?.success === true, 'first Forgehold shipment investigation should succeed');
+  assert(investigationResults[1]?.success === false, 'second Forgehold shipment investigation should fail');
+  assert(investigationResults[1]?.reason === 'invalid_target', 'second Forgehold shipment investigation should be rejected as invalid target');
+});
+
 test('onward route projection is derived from route receipts', async () => {
   const { ctx } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
