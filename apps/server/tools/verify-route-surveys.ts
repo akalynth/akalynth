@@ -1128,6 +1128,27 @@ test('onward route projection is derived from route receipts', async () => {
   assert(moonspire.next_objective.includes('Dream Gate threshold arrival is recorded'), 'Moonspire next objective should advance after Dream Gate arrival');
 });
 
+test('onward route objective order matches server-owned action sequence', async () => {
+  const routes = buildOnwardRouteProgress(completedRookguard);
+  const forgehold = routes.find((route) => route.route_id === 'forgehold_route_slice_v1');
+  const moonspire = routes.find((route) => route.route_id === 'moonspire_dream_gate_slice_v1');
+  assert(forgehold, 'Forgehold route projection missing');
+  assert(moonspire, 'Moonspire route projection missing');
+
+  const forgeholdOrder = forgehold.objectives.map((objective) => objective.id);
+  const moonspireOrder = moonspire.objectives.map((objective) => objective.id);
+  assert(
+    forgeholdOrder.indexOf('soulsteel_stabilization') < forgeholdOrder.indexOf('forgehold_abuse_notes') &&
+      forgeholdOrder.indexOf('forgehold_abuse_notes') < forgeholdOrder.indexOf('heartforge_trial_server_gate'),
+    'Forgehold safety objective should render between Soulsteel stabilization and Heartforge gate'
+  );
+  assert(
+    moonspireOrder.indexOf('dream_fragment_evidence') < moonspireOrder.indexOf('dream_gate_abuse_notes') &&
+      moonspireOrder.indexOf('dream_gate_abuse_notes') < moonspireOrder.indexOf('dream_gate_server_seal'),
+    'Dream Gate safety objective should render between fragment evidence and server seal'
+  );
+});
+
 for (const { name, fn } of tests) {
   try {
     await fn();
