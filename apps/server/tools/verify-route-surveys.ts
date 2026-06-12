@@ -358,6 +358,32 @@ test('Heartforge gate preparation records server gate without travel or economy 
   assert(result.payload?.required_proofs?.includes('route_abuse_notes_reviewed'), 'Heartforge gate payload should require safety review');
 });
 
+test('Heartforge gate preparation is idempotent after receipt-derived gate', async () => {
+  const { ctx, receipts, sent } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:safety:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:gate:heartforge' });
+  ctx.skillCooldowns.set('route:gate:heartforge', 0);
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:gate:heartforge' });
+
+  const gates = receipts.filter((r) => r.action === HEARTFORGE_GATE_PREPARED_ACTION);
+  const gateResults = sent.filter((msg) =>
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as { type?: string }).type === 'skill_result' &&
+    (msg as { skill_id?: string }).skill_id === 'route:gate:heartforge'
+  ) as Array<{ success?: boolean; reason?: string }>;
+
+  assert(gates.length === 1, 'repeat Heartforge gate preparation must not emit a second gate receipt');
+  assert(gateResults.length === 2, 'repeat Heartforge gate preparation should return two skill results');
+  assert(gateResults[0]?.success === true, 'first Heartforge gate preparation should succeed');
+  assert(gateResults[1]?.success === false, 'second Heartforge gate preparation should fail');
+  assert(gateResults[1]?.reason === 'invalid_target', 'second Heartforge gate preparation should be rejected as invalid target');
+});
+
 test('Ashglass evidence recovery records crafting evidence without item or economy authority', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });

@@ -564,6 +564,7 @@ export function handleHeartforgeGatePreparation(ctx: SkillContext): SkillResult 
   if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
   const routeProgress = ctx.getOnwardRouteProgress?.();
   if (!routeProgress?.forgeholdAbuseNotesReviewed) return { success: false, reason: 'invalid_target' };
+  if (routeProgress.heartforgeGatePrepared) return { success: false, reason: 'invalid_target' };
 
   const preparedAt = new Date().toISOString();
   const gateId = 'heartforge_trial_server_gate_v1';
