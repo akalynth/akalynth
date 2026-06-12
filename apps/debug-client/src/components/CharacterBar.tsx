@@ -189,17 +189,20 @@ export function CharacterBar({
     !!catalog.loaded &&
     !catalog.loading &&
     accountSession.authenticated &&
+    accountSession.csrfReady &&
     accountSession.emailVerified &&
     name.trim().length > 0 &&
     !!worldId &&
     !!outfitId;
-  const canSelect = !busy && accountSession.authenticated && !!selectedCharacterId;
+  const canSelect = !busy && accountSession.authenticated && accountSession.csrfReady && !!selectedCharacterId;
   const sessionRequired = !accountSession.authenticated;
-  const createFieldsDisabled = busy || sessionRequired;
+  const createFieldsDisabled = busy || sessionRequired || !accountSession.csrfReady;
 
   const accountHelper = accountSession.authenticated
     ? accountSession.emailVerified
-      ? 'Account session ready'
+      ? accountSession.csrfReady
+        ? 'Account session ready'
+        : 'Sign in again before creating or selecting; the CSRF token is missing.'
       : 'Verify email before creating; existing characters can still be selected.'
     : accountSession.checking
       ? 'Checking account session'
@@ -209,9 +212,9 @@ export function CharacterBar({
     <form className="character-bar" aria-label="create character" onSubmit={submit}>
       <span className="character-bar-kicker">Account session required · select or create a character</span>
       <span className="character-bar-helper">{accountHelper}</span>
-      {sessionRequired && (
+      {(sessionRequired || !accountSession.csrfReady) && (
         <span className="character-bar-session-guard" role="status">
-          Sign in with an account session first; character creation and selection are disabled until the session check succeeds.
+          Sign in with an account session and CSRF token first; character creation and selection are disabled until the session check succeeds.
         </span>
       )}
       {accountSession.authenticated && accountCharacters.length > 0 && (

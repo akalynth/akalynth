@@ -15,12 +15,17 @@ const required = [
     label: 'explicit session-required helper',
     file: 'characterBar',
     literal:
-      'Sign in with an account session first; character creation and selection are disabled until the session check succeeds.',
+      'Sign in with an account session and CSRF token first; character creation and selection are disabled until the session check succeeds.',
   },
   {
-    label: 'create fields disabled by missing account session',
+    label: 'create fields disabled by missing account session or csrf token',
     file: 'characterBar',
-    literal: 'const createFieldsDisabled = busy || sessionRequired;',
+    literal: 'const createFieldsDisabled = busy || sessionRequired || !accountSession.csrfReady;',
+  },
+  {
+    label: 'select disabled by missing csrf token',
+    file: 'characterBar',
+    literal: 'const canSelect = !busy && accountSession.authenticated && accountSession.csrfReady && !!selectedCharacterId;',
   },
   {
     label: 'create submit refreshes account session before POST',
@@ -51,6 +56,22 @@ const required = [
     label: 'CSRF header is sent when present',
     file: 'gameClient',
     literal: "headers['x-csrf-token'] = csrf;",
+  },
+  {
+    label: 'account session state tracks csrf readiness',
+    file: 'gameClient',
+    literal: 'csrfReady: ok && !!csrf,',
+  },
+  {
+    label: 'account session requirement blocks missing csrf token',
+    file: 'gameClient',
+    literal: 'if (!account.csrfReady) {',
+  },
+  {
+    label: 'inline helper names csrf token requirement',
+    file: 'characterBar',
+    literal:
+      'Sign in with an account session and CSRF token first; character creation and selection are disabled until the session check succeeds.',
   },
 ];
 
