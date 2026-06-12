@@ -5,9 +5,13 @@ on:
   push:
     branches: [main]
 
+env:
+  ANDROID_HOME: /usr/lib/android-sdk
+  ANDROID_SDK_ROOT: /usr/lib/android-sdk
+
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, ubuntu-24.04]
     timeout-minutes: 30
 
     steps:
@@ -18,7 +22,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-          cache: npm
 
       - name: Install dependencies
         run: npm ci
@@ -40,11 +43,20 @@ jobs:
             --out verify-out
 
       - name: Verify account-character parity
+        if: github.server_url == 'https://github.com'
         run: npm run verify:account-character
+
+      - name: Verify account-character parity (Gitea subset)
+        if: github.server_url != 'https://github.com'
+        run: |
+          bash scripts/verify_protocol_sync.sh
+          npm -w apps/server run verify:quick
+          npm -w apps/server run test:web-economy
+          npm -w apps/debug-client run verify:account-character
 
       - name: Upload verification report
         uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && github.server_url == 'https://github.com'
         with:
           name: verification-report
           path: verify-out/
