@@ -90,6 +90,26 @@ function httpUrl(base: string, path: string): string {
   return `${base.replace(/\/$/, '')}${path}`;
 }
 
+function accountCharacterErrorMessage(status: number, body: unknown, fallback: string): string {
+  const error = (body as Record<string, unknown> | null)?.error;
+  const message = (body as Record<string, unknown> | null)?.message;
+  if (status === 401) return ACCOUNT_REQUIRED_MESSAGE;
+  if (status === 403 && error === 'email_unverified') return ACCOUNT_UNVERIFIED_MESSAGE;
+  if (status === 403 && error === 'csrf_failed') return ACCOUNT_CSRF_REQUIRED_MESSAGE;
+  if (status === 403) return ACCOUNT_EXPIRED_MESSAGE;
+  if (status === 404 && (error === 'character_not_found' || error === 'not_found')) {
+    return 'That character is not available on the signed-in account.';
+  }
+  if (status === 400 && error === 'invalid_input') {
+    return 'Choose a valid name, world, sex, and outfit.';
+  }
+  if (status === 409 && error === 'name_taken') {
+    return 'That character name is already taken.';
+  }
+  if (typeof message === 'string' && message) return message;
+  return fallback;
+}
+
 function initialState(mapName: MapName): GameClientState {
   return {
     world: { map: getMap(mapName), me: null, others: new Map() },
@@ -1514,15 +1534,9 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
         });
         const body = await resp.json().catch(() => null);
         if (!resp.ok || !body || body.ok === false) {
-          if (resp.status === 401) return { ok: false, error: ACCOUNT_REQUIRED_MESSAGE };
-          if (resp.status === 403 && body?.error === 'email_unverified') return { ok: false, error: ACCOUNT_UNVERIFIED_MESSAGE };
-          if (resp.status === 403) return { ok: false, error: ACCOUNT_EXPIRED_MESSAGE };
           return {
             ok: false,
-            error:
-              (body && typeof body.message === 'string' && body.message) ||
-              (body && typeof body.error === 'string' && body.error) ||
-              'Could not create character',
+            error: accountCharacterErrorMessage(resp.status, body, 'Could not create character'),
           };
         }
         if (!isAccountCharacterPlayResponse(body)) {
@@ -1568,14 +1582,9 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
         });
         const body = await resp.json().catch(() => null);
         if (!resp.ok || !body || body.ok === false) {
-          if (resp.status === 401) return { ok: false, error: ACCOUNT_REQUIRED_MESSAGE };
-          if (resp.status === 403) return { ok: false, error: ACCOUNT_EXPIRED_MESSAGE };
           return {
             ok: false,
-            error:
-              (body && typeof body.message === 'string' && body.message) ||
-              (body && typeof body.error === 'string' && body.error) ||
-              'Could not select character',
+            error: accountCharacterErrorMessage(resp.status, body, 'Could not select character'),
           };
         }
         if (!isAccountCharacterPlayResponse(body)) {

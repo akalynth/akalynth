@@ -108,6 +108,26 @@ const required = [
     literal: 'if (!account.csrfReady) {',
   },
   {
+    label: 'account-character errors use shared formatter',
+    file: 'gameClient',
+    literal: 'function accountCharacterErrorMessage(status: number, body: unknown, fallback: string): string {',
+  },
+  {
+    label: 'character not-found errors are account scoped',
+    file: 'gameClient',
+    literal: 'That character is not available on the signed-in account.',
+  },
+  {
+    label: 'invalid character input errors are actionable',
+    file: 'gameClient',
+    literal: 'Choose a valid name, world, sex, and outfit.',
+  },
+  {
+    label: 'taken character names are actionable',
+    file: 'gameClient',
+    literal: 'That character name is already taken.',
+  },
+  {
     label: 'inline helper names csrf token requirement',
     file: 'characterBar',
     literal:
