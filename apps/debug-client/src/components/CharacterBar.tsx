@@ -24,6 +24,7 @@ if (typeof document !== 'undefined' && !document.getElementById(STYLE_ID)) {
     .character-bar--signed .character-bar-btn { background: linear-gradient(180deg,#423f39,#1f1f1d); color: #f0c83c; }
     .character-bar-error { width: 100%; font-size: 11px; color: #ff6b62; text-shadow: 0 1px #050505; }
     .character-bar-helper { width: 100%; font-size: 11px; color: #d7cab0; text-shadow: 0 1px #050505; }
+    .character-bar-session-guard { width: 100%; font-size: 11px; color: #f0c83c; text-shadow: 0 1px #050505; }
   `;
   document.head.appendChild(el);
 }
@@ -194,6 +195,8 @@ export function CharacterBar({
     !!worldId &&
     !!outfitId;
   const canSelect = !busy && accountSession.authenticated && !!selectedCharacterId;
+  const sessionRequired = !accountSession.authenticated;
+  const createFieldsDisabled = busy || sessionRequired;
 
   const accountHelper = accountSession.authenticated
     ? accountSession.emailVerified
@@ -207,6 +210,11 @@ export function CharacterBar({
     <form className="character-bar" aria-label="create character" onSubmit={submit}>
       <span className="character-bar-kicker">Account session required · select or create a character</span>
       <span className="character-bar-helper">{accountHelper}</span>
+      {sessionRequired && (
+        <span className="character-bar-session-guard" role="status">
+          Sign in with an account session first; character creation and selection are disabled until the session check succeeds.
+        </span>
+      )}
       {accountSession.authenticated && accountCharacters.length > 0 && (
         <>
           <select
@@ -239,14 +247,14 @@ export function CharacterBar({
         onChange={(e) => setName(e.target.value)}
         placeholder="Character name"
         maxLength={24}
-        disabled={busy}
+        disabled={createFieldsDisabled}
         aria-label="character name"
       />
       <select
         className="character-bar-input"
         value={worldId}
         onChange={(e) => setWorldId(e.target.value as CharacterCreateInput['world_id'])}
-        disabled={busy || !catalog.loaded || catalog.loading}
+        disabled={createFieldsDisabled || !catalog.loaded || catalog.loading}
         aria-label="character world"
       >
         {catalog.worlds.map((world) => (
@@ -259,7 +267,7 @@ export function CharacterBar({
         className="character-bar-input"
         value={sex}
         onChange={(e) => setSex(e.target.value as CharacterSex)}
-        disabled={busy || !catalog.loaded || catalog.loading}
+        disabled={createFieldsDisabled || !catalog.loaded || catalog.loading}
         aria-label="character sex"
       >
         <option value="male">Male</option>
@@ -269,7 +277,7 @@ export function CharacterBar({
         className="character-bar-input"
         value={outfitId}
         onChange={(e) => setOutfitId(e.target.value as CharacterCreateInput['outfit_id'])}
-        disabled={busy || !catalog.loaded || catalog.loading || !outfitOptions.length}
+        disabled={createFieldsDisabled || !catalog.loaded || catalog.loading || !outfitOptions.length}
         aria-label="character outfit"
       >
         {outfitOptions.map((outfit) => (
