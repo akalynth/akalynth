@@ -36,7 +36,7 @@ function linkFor(kind: EmailKind, token: string, base: string): string {
   const root = base.replace(/\/+$/, '');
   // The E5 portal reads ?verify=<token>; ?reset=<token> is the reset target.
   const param = kind === 'verify' ? 'verify' : 'reset';
-  return `${root}/account?${param}=${encodeURIComponent(token)}`;
+  return `${root}/account.html?${param}=${encodeURIComponent(token)}`;
 }
 
 function escapeHtml(s: string): string {

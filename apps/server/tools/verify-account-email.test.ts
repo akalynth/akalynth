@@ -32,12 +32,12 @@ const LINKS: EmailLinks = { portalBaseUrl: 'https://akalynth.com/', from: 'Akaly
 const verify = buildAccountEmail('verify', 'player@example.com', 'tok-abc', LINKS);
 check('verify subject', verify.subject === 'Verify your Akalynth account');
 check('verify to-address', verify.to === 'player@example.com');
-check('verify link uses ?verify= and trims base slash', verify.text.includes('https://akalynth.com/account?verify=tok-abc'));
-check('verify link present in html too', verify.html.includes('account?verify=tok-abc'));
+check('verify link uses account.html ?verify= and trims base slash', verify.text.includes('https://akalynth.com/account.html?verify=tok-abc'));
+check('verify link present in html too', verify.html.includes('account.html?verify=tok-abc'));
 
 const reset = buildAccountEmail('reset', 'player@example.com', 'tok/xyz 1', LINKS);
 check('reset subject', reset.subject === 'Reset your Akalynth password');
-check('reset link uses ?reset= and url-encodes token', reset.text.includes('account?reset=tok%2Fxyz%201'));
+check('reset link uses account.html ?reset= and url-encodes token', reset.text.includes('account.html?reset=tok%2Fxyz%201'));
 check('reset copy reassures on no-op', reset.text.includes('password stays unchanged'));
 
 // ------------------------------------------------------------- console transport
