@@ -39,6 +39,9 @@ jobs:
             --format json \
             --out verify-out
 
+      - name: Verify account-character parity
+        run: npm run verify:account-character
+
       - name: Upload verification report
         uses: actions/upload-artifact@v4
         if: always()
