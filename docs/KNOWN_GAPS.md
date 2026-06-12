@@ -1,6 +1,6 @@
 # Akalynth Known Gaps
 
-> Last reviewed against `main` on 2026-05-30.
+> Last reviewed against `main` on 2026-06-12.
 
 ## Purpose
 
