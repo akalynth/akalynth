@@ -50,6 +50,15 @@
         "command": "ANDROID_HOME=/usr/lib/android-sdk ANDROID_SDK_ROOT=/usr/lib/android-sdk ./gradlew :app:testDebugUnitTest --tests 'com.akalynth.client.protocol.ProtocolParityTest'",
         "status": "passed",
         "notes": "Required host Android SDK repair: installed Google command-line tools, Build Tools 34, Platform 35, and accepted SDK licenses."
+      },
+      {
+        "command": "bash scripts/test-chain-discipline.sh",
+        "status": "passed",
+        "notes": "Passed after routing verify-rookguard-codex-path through the shared chain path resolver."
+      },
+      {
+        "command": "git diff --check",
+        "status": "passed"
       }
     ],
     "known_warnings": [
@@ -66,8 +75,8 @@
     "github_pr": "https://github.com/akalynth/akalynth/pull/312"
   },
   "github_ci_status": {
-    "status": "self_hosted_runner_repair_in_progress",
-    "checked_utc": "2026-06-12T18:26:00Z",
+    "status": "ci_repair_rerun_pending",
+    "checked_utc": "2026-06-12T18:58:00Z",
     "pr": "https://github.com/akalynth/akalynth/pull/312",
     "failed_checks": [
       "CI / changes",
@@ -103,6 +112,17 @@
         "ANDROID_SDK_ROOT": "/usr/lib/android-sdk"
       },
       "runner_env": "services/github-runner/akalynth-runner-01/.env exports the same Android SDK paths."
+    },
+    "second_follow_up_repair": {
+      "reason": "GitHub CI reached project checks and exposed two remaining runner/repo issues: chain discipline flagged verify-rookguard-codex-path legacy receipt env usage, and android-emulator-runner could not install missing SDK packages into root-owned /usr/lib/android-sdk.",
+      "failed_run": "https://github.com/akalynth/akalynth/actions/runs/27435712272",
+      "failed_steps": [
+        "CI / verify / Chain path discipline check",
+        "CI / Android instrumented tests (Compose UI) / Run instrumented Compose UI tests"
+      ],
+      "repo_fix": "verify-rookguard-codex-path now imports shared path env constants and resolveChainPaths from packages/shared/paths.ts.",
+      "runner_fix": "Android SDK packages installed on host SDK: build-tools;36.0.0, emulator, platform-tools, platforms;android-34, system-images;android-34;default;x86_64.",
+      "workflow_fix": "Android instrumented CI now prepares the self-hosted SDK path and installs required emulator packages with sudo before reactivecircus/android-emulator-runner."
     }
   },
   "non_mutation_boundary": {

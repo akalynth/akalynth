@@ -12,6 +12,12 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocket } from 'ws';
+import {
+  DB_PATH_ENV,
+  REPLAY_MARKER_PATH_ENV,
+  RECEIPT_CHAIN_PATH_ENV,
+  resolveChainPaths,
+} from '../../../packages/shared/paths.js';
 import type { MapData, PlayerPublic } from '../../../packages/shared/types.js';
 import { TEM_CHALLENGE_RESPONSE, TileCode, WALKABLE_TILES } from '../../../packages/shared/types.js';
 
@@ -320,9 +326,7 @@ async function verifyRookguardCodexPath(): Promise<void> {
   const map = loadRookguardMap();
   const port = await getOpenPort();
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'akalynth-rookguard-codex-'));
-  const receiptsPath = path.join(tmp, 'audit/receipts.jsonl');
-  const dbPath = path.join(tmp, 'data/akalynth.db');
-  const markerPath = path.join(tmp, 'data/replay-marker.json');
+  const chainPaths = resolveChainPaths(tmp);
   const keyPath = path.join(tmp, 'chronicle.key');
   const output: string[] = [];
   const tsxBin = path.join(REPO_ROOT, 'node_modules/.bin/tsx');
@@ -339,9 +343,9 @@ async function verifyRookguardCodexPath(): Promise<void> {
       ALLOW_INSECURE_LOCAL: '1',
       AKALYNTH_BOOTSTRAP: '1',
       AKALYNTH_LIFECYCLE_VERIFY: '0',
-      AKALYNTH_RECEIPT_CHAIN_PATH: receiptsPath,
-      AKALYNTH_DB_PATH: dbPath,
-      AKALYNTH_REPLAY_MARKER_PATH: markerPath,
+      [RECEIPT_CHAIN_PATH_ENV]: chainPaths.receiptsPath,
+      [DB_PATH_ENV]: chainPaths.dbPath,
+      [REPLAY_MARKER_PATH_ENV]: chainPaths.markerPath,
       CHRONICLE_KEY_PATH: keyPath,
       CHRONICLE_LOG_PATH: path.join(tmp, 'chronicle.log'),
       ENABLE_CHRONICLE: '0',
@@ -425,7 +429,7 @@ async function verifyRookguardCodexPath(): Promise<void> {
     const azuraPlayer = azura.player as PlayerPublic;
     assert(azuraPlayer.loop?.rookguardQuest?.completed === true, 'Azura world_state should retain completed Rookguard quest projection');
 
-    const actions = fs.readFileSync(receiptsPath, 'utf8').trim().split('\n').map((line) => (JSON.parse(line) as { action: string }).action);
+    const actions = fs.readFileSync(chainPaths.receiptsPath, 'utf8').trim().split('\n').map((line) => (JSON.parse(line) as { action: string }).action);
     for (const action of ['tutorial_step_complete', 'mob_kill', 'item_minted', 'vocation_declared', 'gate_unlock', 'tutorial_completed']) {
       assert(actions.includes(action), `receipt chain missing ${action}`);
     }
