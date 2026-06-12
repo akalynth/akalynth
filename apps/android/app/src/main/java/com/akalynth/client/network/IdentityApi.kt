@@ -36,6 +36,16 @@ class IdentityApi(
         private const val LOGIN_PATH = "/v1/accounts/login"
         private const val WORLDS_PATH = "/v1/worlds"
         private const val OUTFITS_PATH = "/v1/outfits"
+        private val VALID_WORLD_IDS = setOf("rookguard", "high_city")
+        private val VALID_OUTFIT_IDS = setOf(
+            "male_wanderer",
+            "male_guard",
+            "male_mage",
+            "female_wanderer",
+            "female_guard",
+            "female_mage"
+        )
+        private val VALID_SEXES = setOf("male", "female")
     }
 
     data class World(
@@ -144,6 +154,24 @@ class IdentityApi(
             )
             return
         }
+        if (!VALID_WORLD_IDS.contains(worldId)) {
+            callback.onResult(
+                CharacterCreateResult.Error(
+                    code = "invalid_input",
+                    message = "Select a valid world from the server catalog."
+                )
+            )
+            return
+        }
+        if (!VALID_SEXES.contains(sex) || !VALID_OUTFIT_IDS.contains(outfitId)) {
+            callback.onResult(
+                CharacterCreateResult.Error(
+                    code = "invalid_input",
+                    message = "Select a valid sex and outfit from the server catalog."
+                )
+            )
+            return
+        }
         val json = JSONObject().apply {
             put("name", name)
             put("world_id", worldId)
@@ -180,13 +208,43 @@ class IdentityApi(
     }
 
     private fun parseAccountCharacterResponse(obj: JSONObject): CharacterCreateResult {
-        val character = obj.optJSONObject("character")
+        if (!obj.optBoolean("ok", false)) {
+            return CharacterCreateResult.Error(
+                code = obj.optString("error", "invalid_response"),
+                message = obj.optString("message", "Character request failed.")
+            )
+        }
+        val character = obj.optJSONObject("character") ?: return CharacterCreateResult.Error(
+            code = "invalid_response",
+            message = "Character response was missing character details."
+        )
+        val playerId = character.optString("character_id")
+        val name = character.optString("name")
+        val worldId = character.optString("world_id")
+        val sex = character.optString("sex")
+        val outfitId = character.optString("outfit_id")
+        val token = obj.optString("token")
+        val expiresAt = obj.optLong("expires_at", 0L)
+        if (
+            playerId.isBlank() ||
+            name.isBlank() ||
+            token.isBlank() ||
+            expiresAt <= 0L ||
+            !VALID_WORLD_IDS.contains(worldId) ||
+            !VALID_SEXES.contains(sex) ||
+            !VALID_OUTFIT_IDS.contains(outfitId)
+        ) {
+            return CharacterCreateResult.Error(
+                code = "invalid_response",
+                message = "Character response did not match the account character contract."
+            )
+        }
         return CharacterCreateResult.Success(
-            playerId = character?.optString("character_id") ?: obj.optString("player_id"),
-            name = character?.optString("name") ?: obj.optString("name"),
-            token = obj.optString("token"),
+            playerId = playerId,
+            name = name,
+            token = token,
             issuedAt = obj.optLong("issued_at", 0L),
-            expiresAt = obj.optLong("expires_at")
+            expiresAt = expiresAt
         )
     }
 
@@ -259,7 +317,10 @@ class IdentityApi(
                 val out = ArrayList<World>(arr.length())
                 for (i in 0 until arr.length()) {
                     val entry = arr.getJSONObject(i)
-                    out.add(World(worldId = entry.optString("world_id"), name = entry.optString("name")))
+                    val worldId = entry.optString("world_id")
+                    if (VALID_WORLD_IDS.contains(worldId)) {
+                        out.add(World(worldId = worldId, name = entry.optString("name")))
+                    }
                 }
                 out
             },
@@ -275,13 +336,17 @@ class IdentityApi(
                 val out = ArrayList<Outfit>(arr.length())
                 for (i in 0 until arr.length()) {
                     val entry = arr.getJSONObject(i)
-                    out.add(
-                        Outfit(
-                            outfitId = entry.optString("outfit_id"),
-                            sex = entry.optString("sex"),
-                            name = entry.optString("name")
+                    val outfitId = entry.optString("outfit_id")
+                    val sex = entry.optString("sex")
+                    if (VALID_OUTFIT_IDS.contains(outfitId) && VALID_SEXES.contains(sex)) {
+                        out.add(
+                            Outfit(
+                                outfitId = outfitId,
+                                sex = sex,
+                                name = entry.optString("name")
+                            )
                         )
-                    )
+                    }
                 }
                 out
             },
@@ -297,15 +362,20 @@ class IdentityApi(
                 val out = ArrayList<Character>(arr.length())
                 for (i in 0 until arr.length()) {
                     val entry = arr.getJSONObject(i)
-                    out.add(
-                        Character(
-                            characterId = entry.optString("character_id"),
-                            name = entry.optString("name"),
-                            worldId = entry.optString("world_id"),
-                            sex = entry.optString("sex"),
-                            outfitId = entry.optString("outfit_id")
+                    val worldId = entry.optString("world_id")
+                    val sex = entry.optString("sex")
+                    val outfitId = entry.optString("outfit_id")
+                    if (VALID_WORLD_IDS.contains(worldId) && VALID_SEXES.contains(sex) && VALID_OUTFIT_IDS.contains(outfitId)) {
+                        out.add(
+                            Character(
+                                characterId = entry.optString("character_id"),
+                                name = entry.optString("name"),
+                                worldId = worldId,
+                                sex = sex,
+                                outfitId = outfitId
+                            )
                         )
-                    )
+                    }
                 }
                 out
             },
