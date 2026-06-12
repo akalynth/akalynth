@@ -34,6 +34,15 @@ function cookieValue(cookies: string[] | undefined, name: string): string | unde
   }
   return undefined;
 }
+function isClientCharacterShape(value: unknown): value is { character_id: string; name: string; world_id: string; sex: string; outfit_id: string } {
+  const v = value as Record<string, unknown>;
+  return !!v &&
+    typeof v.character_id === 'string' &&
+    typeof v.name === 'string' &&
+    typeof v.world_id === 'string' &&
+    typeof v.sex === 'string' &&
+    typeof v.outfit_id === 'string';
+}
 type ResponseCapture = ServerResponse & {
   bodyText: string;
   headersOut: Record<string, string | number | readonly string[]>;
@@ -172,8 +181,9 @@ async function main(): Promise<void> {
   // ---- create character (account-gated, valid) ----
   const c1 = characterService.create(accountId, { name: 'Aria', world_id: 'rookguard', sex: 'female', outfit_id: 'female_mage' });
   check('create 201', c1.status === 201);
-  const c1body = c1.body as { ok: boolean; character: { character_id: string; world_id: string; sex: string; outfit_id: string }; token: string };
+  const c1body = c1.body as { ok: boolean; character: { character_id: string; name: string; world_id: string; sex: string; outfit_id: string }; token: string; expires_at: number };
   check('create returns character + play token', c1body.ok && c1body.character.character_id === 'p_Aria' && c1body.token === 'play_Aria');
+  check('create response has full client character shape', isClientCharacterShape(c1body.character) && typeof c1body.expires_at === 'number');
   check('create keeps canonical rookguard world id', c1body.character.world_id === 'rookguard');
   check('create persisted account_characters row', (db.prepare('SELECT count(*) c FROM account_characters WHERE account_id=?').get(accountId) as { c: number }).c === 1);
   const rookguardProjection = accountCharacterLoginProjection(characterStore.findById('p_Aria'));
@@ -191,11 +201,14 @@ async function main(): Promise<void> {
   // ---- list (scoped to account) ----
   const list = (characterService.list(accountId).body as { characters: { character_id: string }[] }).characters;
   check('list returns the account character', list.length === 1 && list[0].character_id === 'p_Aria');
+  check('list response has full client character shape', list.every(isClientCharacterShape));
   check('list for other account is empty', (characterService.list('acc_other').body as { characters: unknown[] }).characters.length === 0);
 
   // ---- select (ownership enforced) ----
   const sel = characterService.select(accountId, { character_id: 'p_Aria' });
-  check('select 200 + play token', sel.status === 200 && (sel.body as { token: string }).token === 'sel_p_Aria');
+  const selBody = sel.body as { character?: unknown; token?: string; expires_at?: number };
+  check('select 200 + play token', sel.status === 200 && selBody.token === 'sel_p_Aria');
+  check('select response has full client character shape', isClientCharacterShape(selBody.character) && typeof selBody.expires_at === 'number');
   check('receipt character_selected', actions().includes('character_selected'));
   check('select other account -> 404 (ownership)', characterService.select('acc_other', { character_id: 'p_Aria' }).status === 404);
   check('select unknown character -> 404', characterService.select(accountId, { character_id: 'p_nope' }).status === 404);
@@ -240,8 +253,10 @@ async function main(): Promise<void> {
   check('create over limit (>3) -> 409', characterService.create(accountId, { name: 'Dane', world_id: 'high_city', sex: 'male', outfit_id: 'male_wanderer' }).status === 409);
 
   // ---- privacy: character receipts carry only ids/world/sex/outfit, no email ----
-  const leak = receipts.some((r) => JSON.stringify(r).includes('pilot@example.com'));
+  const receiptText = receipts.map((r) => JSON.stringify(r)).join('\n');
+  const leak = receiptText.includes('pilot@example.com');
   check('no character receipt carried email/PII', !leak);
+  check('no character receipt carried play/session/csrf tokens', !['play_', 'sel_', sess, csrf].some((secret) => secret && receiptText.includes(secret)));
   check('receipt inputs only carry world/sex/outfit/character_id', receipts.every((r) => Object.keys(r.inputs ?? {}).every((k) => ['world_id', 'sex', 'outfit_id', 'character_id'].includes(k))));
   check('new character receipts do not emit legacy azura world id', receipts.every((r) => r.inputs?.world_id !== 'azura'));
 }
