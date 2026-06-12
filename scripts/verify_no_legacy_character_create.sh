@@ -305,6 +305,8 @@ for web_economy_literal in \
   "missing-character property unlist emits no second unlist receipt" \
   "property unlist requires property id" \
   "missing-property property unlist emits no second unlist receipt" \
+  "property unlist rejects unknown plot" \
+  "unknown-plot property unlist emits no second unlist receipt" \
   "property unlist rejects non-owner" \
   "non-owner property unlist emits no second unlist receipt" \
   "property unlist succeeds for owner" \

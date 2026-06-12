@@ -445,6 +445,10 @@ async function main(): Promise<void> {
   check('property unlist requires property id', res.status === 400 && res.body.error === 'property_id_required');
   check('missing-property property unlist emits no second unlist receipt', receipts.filter((r) => r.action === PROPERTY_UNLISTED_ACTION).length === 1);
 
+  res = await request('POST', '/v1/property/unlist', { character_id: 'p_buyer', property_id: 'Azura:UNKNOWN' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
+  check('property unlist rejects unknown plot', res.status === 404 && res.body.error === 'unknown_plot');
+  check('unknown-plot property unlist emits no second unlist receipt', receipts.filter((r) => r.action === PROPERTY_UNLISTED_ACTION).length === 1);
+
   res = await request('POST', '/v1/property/unlist', { character_id: 'p_seller', property_id: 'Azura:H1' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
   check('property unlist rejects non-owner', res.status === 403 && res.body.error === 'not_owner');
   check('non-owner property unlist emits no second unlist receipt', receipts.filter((r) => r.action === PROPERTY_UNLISTED_ACTION).length === 1);
