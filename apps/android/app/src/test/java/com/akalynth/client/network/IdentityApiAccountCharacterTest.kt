@@ -234,6 +234,67 @@ class IdentityApiAccountCharacterTest {
         }
     }
 
+    @Test
+    fun `create character maps invalid input to actionable message`() {
+        withPostServer(
+            statusCode = 400,
+            body = """{"ok":false,"error":"invalid_input"}"""
+        ) { baseUrl, _ ->
+            val api = IdentityApi(baseUrl)
+            setSessionAndCsrf(api)
+            val latch = CountDownLatch(1)
+            var result: IdentityApi.CharacterCreateResult? = null
+
+            api.createCharacter(
+                name = "Sovereign",
+                worldId = "rookguard",
+                sex = "male",
+                outfitId = "male_wanderer",
+                callback = object : IdentityApi.CreateCallback {
+                    override fun onResult(next: IdentityApi.CharacterCreateResult) {
+                        result = next
+                        latch.countDown()
+                    }
+                }
+            )
+
+            assertTrue("create callback timed out", latch.await(2, TimeUnit.SECONDS))
+            val error = result as? IdentityApi.CharacterCreateResult.Error
+            assertTrue(error != null)
+            assertEquals("invalid_input", error?.code)
+            assertEquals("Choose a valid name, world, sex, and outfit.", error?.message)
+        }
+    }
+
+    @Test
+    fun `select character maps not found to account-scoped message`() {
+        withPostServer(
+            statusCode = 404,
+            body = """{"ok":false,"error":"character_not_found"}"""
+        ) { baseUrl, _ ->
+            val api = IdentityApi(baseUrl)
+            setSessionAndCsrf(api)
+            val latch = CountDownLatch(1)
+            var result: IdentityApi.CharacterCreateResult? = null
+
+            api.selectCharacter(
+                characterId = "p_missing",
+                callback = object : IdentityApi.CreateCallback {
+                    override fun onResult(next: IdentityApi.CharacterCreateResult) {
+                        result = next
+                        latch.countDown()
+                    }
+                }
+            )
+
+            assertTrue("select callback timed out", latch.await(2, TimeUnit.SECONDS))
+            val error = result as? IdentityApi.CharacterCreateResult.Error
+            assertTrue(error != null)
+            assertEquals("character_not_found", error?.code)
+            assertEquals("That character is not available on the signed-in account.", error?.message)
+        }
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun setSessionCookieOnly(api: IdentityApi) {
         val field = IdentityApi::class.java.getDeclaredField("sessionCookies")
@@ -302,6 +363,7 @@ class IdentityApiAccountCharacterTest {
 
     private fun withPostServer(
         body: String,
+        statusCode: Int = 200,
         test: (baseUrl: String, request: () -> Map<String, String>) -> Unit
     ) {
         val server = ServerSocket(0)
@@ -342,7 +404,7 @@ class IdentityApiAccountCharacterTest {
                 }
                 val bytes = body.toByteArray(Charsets.UTF_8)
                 val response = (
-                    "HTTP/1.1 200 OK\r\n" +
+                    "HTTP/1.1 $statusCode OK\r\n" +
                         "Content-Type: application/json\r\n" +
                         "Content-Length: ${bytes.size}\r\n" +
                         "Connection: close\r\n" +
