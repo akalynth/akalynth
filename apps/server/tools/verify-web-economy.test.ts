@@ -271,6 +271,10 @@ async function main(): Promise<void> {
   check('shop purchase rejects character owned by another account', res.status === 404 && res.body.error === 'character_not_found');
   check('cross-account shop purchase emits no receipts', receipts.length === 0);
 
+  res = await request('POST', '/v1/shop/purchase', { character_id: 'p_buyer' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
+  check('shop purchase requires shop key', res.status === 400 && res.body.error === 'shop_key_required');
+  check('missing-key shop purchase emits no debit/mint receipts', receipts.every((r) => r.action !== WALLET_DEBIT_ACTION && r.action !== 'item_minted' && r.action !== 'item_added_to_inventory'));
+
   res = await request('POST', '/v1/shop/purchase', { character_id: 'p_buyer', shop_key: 'healing_herb' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
   check('shop purchase without gold is rejected', res.status === 409 && res.body.error === 'insufficient_gold');
   check('rejected shop purchase emitted no debit/mint receipts', receipts.every((r) => r.action !== WALLET_DEBIT_ACTION && r.action !== 'item_minted'));
