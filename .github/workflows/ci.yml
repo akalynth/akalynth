@@ -461,9 +461,6 @@ jobs:
       contents: read
     needs: [changes]
     if: github.event_name == 'push' || needs.changes.outputs.full_ci_required == 'true'
-    env:
-      ANDROID_HOME: ${{ runner.temp }}/android-sdk
-      ANDROID_SDK_ROOT: ${{ runner.temp }}/android-sdk
 
     steps:
       - uses: actions/checkout@v4
@@ -483,6 +480,11 @@ jobs:
 
       - name: Prepare Android SDK
         run: |
+          ANDROID_CI_SDK="$RUNNER_TEMP/android-sdk"
+          echo "ANDROID_HOME=$ANDROID_CI_SDK" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$ANDROID_CI_SDK" >> "$GITHUB_ENV"
+          export ANDROID_HOME="$ANDROID_CI_SDK"
+          export ANDROID_SDK_ROOT="$ANDROID_CI_SDK"
           rm -rf "$ANDROID_SDK_ROOT"
           mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
           cp -a /usr/lib/android-sdk/cmdline-tools/13.0 "$ANDROID_SDK_ROOT/cmdline-tools/latest"
