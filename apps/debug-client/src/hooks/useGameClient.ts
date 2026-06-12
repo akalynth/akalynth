@@ -58,6 +58,7 @@ const DEFAULT_RESPAWN_MS = 15_000;
 const CSRF_COOKIE = 'akalynth_csrf';
 const ACCOUNT_REQUIRED_MESSAGE = 'Sign in to an account before creating a character.';
 const ACCOUNT_EXPIRED_MESSAGE = 'Account session expired. Sign in again before creating a character.';
+const ACCOUNT_CSRF_REQUIRED_MESSAGE = 'Account session needs a CSRF token. Sign in again before creating or selecting a character.';
 const ACCOUNT_UNVERIFIED_MESSAGE = 'Verify email before creating a character. Existing characters can still be selected.';
 const ACCOUNT_CHARACTER_WORLD_IDS = new Set(['rookguard', 'high_city']);
 const ACCOUNT_CHARACTER_OUTFIT_IDS = new Set([
@@ -362,6 +363,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     checking: false,
     checked: false,
     authenticated: false,
+    csrfReady: false,
     emailVerified: false,
     message: ACCOUNT_REQUIRED_MESSAGE,
   });
@@ -1322,6 +1324,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
         checking: false,
         checked: true,
         authenticated: false,
+        csrfReady: false,
         emailVerified: false,
         message: ACCOUNT_REQUIRED_MESSAGE,
       };
@@ -1341,6 +1344,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
         checking: false,
         checked: true,
         authenticated: ok,
+        csrfReady: ok && !!csrf,
         emailVerified: ok ? body.account.email_verified === true : false,
         message: ok ? null : ACCOUNT_EXPIRED_MESSAGE,
       };
@@ -1352,6 +1356,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
         checking: false,
         checked: true,
         authenticated: false,
+        csrfReady: false,
         emailVerified: false,
         message: (err as Error).message || 'Could not confirm account session',
       };
@@ -1366,6 +1371,9 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
       const account = accountSession.authenticated ? accountSession : await refreshAccountSession();
       if (!account.authenticated) {
         return { ok: false, error: account.message ?? ACCOUNT_REQUIRED_MESSAGE };
+      }
+      if (!account.csrfReady) {
+        return { ok: false, error: ACCOUNT_CSRF_REQUIRED_MESSAGE };
       }
       if (!allowUnverified && !account.emailVerified) {
         return { ok: false, error: ACCOUNT_UNVERIFIED_MESSAGE };

@@ -100,6 +100,7 @@ export interface AccountSessionStatus {
   checking: boolean;
   checked: boolean;
   authenticated: boolean;
+  csrfReady: boolean;
   emailVerified: boolean;
   message: string | null;
 }
