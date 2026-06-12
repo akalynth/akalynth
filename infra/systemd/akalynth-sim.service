@@ -1,0 +1,89 @@
+[Unit]
+Description=Akalynth Server (simulation lane)
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=akalynth-sim
+Group=akalynth-sim
+WorkingDirectory=/opt/akalynth-sim/apps/server
+Environment=HOME=/var/lib/akalynth-sim
+UMask=0077
+
+# Runtime paths (NO repo writes)
+Environment=AKALYNTH_RECEIPT_CHAIN_PATH=/var/lib/akalynth-sim/audit/receipts.jsonl
+Environment=AKALYNTH_DB_PATH=/var/lib/akalynth-sim/data/akalynth.db
+Environment=AKALYNTH_REPLAY_MARKER_PATH=/var/lib/akalynth-sim/data/replay_marker.json
+Environment=CHRONICLE_KEY_PATH=/etc/akalynth-sim/chronicle.key
+
+# Server mode
+Environment=PORT=3002
+Environment=HOST=127.0.0.1
+Environment=REQUIRE_TLS=1
+Environment=TRUST_PROXY=1
+Environment=TRUST_PROXY_LOOPBACK_ONLY=1
+Environment=ALLOW_INSECURE_LOCAL=0
+Environment=NODE_ENV=production
+Environment=AKALYNTH_LANE=sim
+
+# systemd-managed dirs (creates /var/lib/akalynth-sim with correct owner)
+StateDirectory=akalynth-sim
+StateDirectoryMode=0750
+RuntimeDirectory=akalynth-sim
+RuntimeDirectoryMode=0750
+
+# Preflight
+ExecStartPre=/usr/bin/node -v
+ExecStartPre=/usr/bin/npm -v
+ExecStartPre=/usr/bin/test -f /opt/akalynth-sim/dist/server/apps/server/src/index.js
+ExecStartPre=/usr/bin/test -f /etc/akalynth-sim/chronicle.key
+ExecStartPre=/usr/bin/bash -c 'test -f /etc/akalynth-sim/chronicle.key || { echo "FATAL: chronicle key missing at /etc/akalynth-sim/chronicle.key; refusing to start" >&2; exit 1; }'
+ExecStartPre=/usr/bin/bash -c 'mkdir -p /var/lib/akalynth-sim/{data,audit} && touch /var/lib/akalynth-sim/audit/receipts.jsonl'
+
+ExecStart=/usr/bin/node /opt/akalynth-sim/dist/server/apps/server/src/index.js
+
+Restart=on-failure
+RestartSec=2
+KillSignal=SIGINT
+TimeoutStopSec=20
+
+LimitNOFILE=65536
+
+# Hardening matches the direct Node runtime. MemoryDenyWriteExecute stays false:
+# Node's V8 JIT needs writable+executable memory.
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/var/lib/akalynth-sim
+
+# Loopback :3002 is unprivileged -> drop all capabilities.
+CapabilityBoundingSet=
+AmbientCapabilities=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged
+SystemCallFilter=~@resources
+SystemCallErrorNumber=EPERM
+SystemCallArchitectures=native
+
+ProtectClock=true
+ProtectHostname=true
+ProtectKernelLogs=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+ProtectProc=invisible
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RemoveIPC=true
+MemoryDenyWriteExecute=false
+
+[Install]
+WantedBy=multi-user.target

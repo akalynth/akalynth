@@ -1,10 +1,10 @@
 # Akalynth beta + staging lanes - ops-dev-01 (194.147.221.89)
 #
-# Mobile lane model: the SITE hosts (beta./staging.) serve static files only.
-# Beta may serve the public marketing/download payload plus APK artifacts.
-# Staging is APK-only unless explicitly mirrored. The game runtime is reached by
-# the Android client directly through the *-api hosts (HTTP API + WebSocket),
-# never through the site host.
+# Mobile lane model: the SITE hosts (beta./staging./sim.) serve static files
+# only. Beta may serve the public marketing/download payload plus APK artifacts.
+# Staging is APK-only unless explicitly mirrored. Sim is an operational dashboard
+# for the isolated simulation lane. The game runtime is reached directly through
+# the *-api hosts (HTTP API + WebSocket), never through the site host.
 #
 # This file is the versioned source of truth for /etc/caddy/Caddyfile on this box.
 
@@ -46,6 +46,27 @@ staging-api.akalynth.com {
 	reverse_proxy 127.0.0.1:3001
 	log {
 		output file /var/log/caddy/akalynth-staging-api.log
+		format json
+	}
+}
+
+# --- Simulation dashboard: static operational status only ---
+sim.akalynth.com {
+	encode zstd gzip
+	root * /var/www/akalynth-sim
+	file_server
+	log {
+		output file /var/log/caddy/akalynth-sim.log
+		format json
+	}
+}
+
+# --- Simulation API + WebSocket (isolated state/receipt lane) ---
+sim-api.akalynth.com {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:3002
+	log {
+		output file /var/log/caddy/akalynth-sim-api.log
 		format json
 	}
 }
