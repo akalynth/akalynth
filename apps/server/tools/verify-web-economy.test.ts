@@ -328,6 +328,7 @@ async function main(): Promise<void> {
   seedProperty('Azura:H1', 100);
   res = await request('POST', '/v1/property/buy', { character_id: 'p_buyer', property_id: 'Azura:H1' });
   check('property buy requires account session', res.status === 401 && res.body.error === 'not_authenticated');
+  check('no-session property buy emits no purchase receipt', receipts.every((r) => r.action !== PROPERTY_PURCHASED_ACTION));
 
   res = await request('POST', '/v1/property/buy', { character_id: 'p_other', property_id: 'Azura:H1' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
   check('property buy rejects character owned by another account', res.status === 404 && res.body.error === 'character_not_found');
