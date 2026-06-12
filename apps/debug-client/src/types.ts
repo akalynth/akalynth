@@ -1,5 +1,12 @@
 import type { Direction, MapData, PlayerPublic, PlayerStatus, PlayLoopProgress } from '@shared/types';
-import type { MapName } from '@shared/http';
+import type {
+  AccountCharacterCreateRequest,
+  AccountCharacterOutfitOption,
+  AccountCharacterPublic,
+  AccountCharacterSex,
+  AccountCharacterWorldOption,
+  MapName,
+} from '@shared/http';
 import type { ChronicleEvent, PropertyPublic } from '@shared/protocol';
 
 export type InputDirection =
@@ -75,20 +82,9 @@ export interface LostItemCount {
   qty: number;
 }
 
-export type CharacterSex = 'male' | 'female';
-
-export interface CharacterWorldOption {
-  world_id: string;
-  name: string;
-  description: string;
-}
-
-export interface CharacterOutfitOption {
-  outfit_id: string;
-  sex: CharacterSex;
-  name: string;
-  sprite_id: string | null;
-}
+export type CharacterSex = AccountCharacterSex;
+export type CharacterWorldOption = AccountCharacterWorldOption;
+export type CharacterOutfitOption = AccountCharacterOutfitOption;
 
 export interface CharacterCatalog {
   worlds: CharacterWorldOption[];
@@ -98,14 +94,7 @@ export interface CharacterCatalog {
   error: string | null;
 }
 
-export interface AccountCharacter {
-  character_id: string;
-  name: string;
-  world_id: string;
-  sex: CharacterSex;
-  outfit_id: string;
-  created_at?: string;
-}
+export type AccountCharacter = AccountCharacterPublic;
 
 export interface AccountSessionStatus {
   checking: boolean;
@@ -115,12 +104,7 @@ export interface AccountSessionStatus {
   message: string | null;
 }
 
-export interface CharacterCreateInput {
-  name: string;
-  world_id: string;
-  sex: CharacterSex;
-  outfit_id: string;
-}
+export type CharacterCreateInput = AccountCharacterCreateRequest;
 
 export interface CreateResult {
   ok: boolean;

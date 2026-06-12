@@ -15,7 +15,7 @@ import type {
   ChronicleEvent,
   PropertyPublic,
 } from '@shared/protocol';
-import type { MapName } from '@shared/http';
+import type { AccountCharacterCreateRequest, AccountCharacterPlayResponse, MapName } from '@shared/http';
 import { normalizeMapName } from '@shared/http';
 import { loadIdentity, saveIdentity, clearIdentity, hasValidToken } from '../identity';
 import {
@@ -59,6 +59,15 @@ const CSRF_COOKIE = 'akalynth_csrf';
 const ACCOUNT_REQUIRED_MESSAGE = 'Sign in to an account before creating a character.';
 const ACCOUNT_EXPIRED_MESSAGE = 'Account session expired. Sign in again before creating a character.';
 const ACCOUNT_UNVERIFIED_MESSAGE = 'Verify email before creating a character. Existing characters can still be selected.';
+const ACCOUNT_CHARACTER_WORLD_IDS = new Set(['rookguard', 'high_city']);
+const ACCOUNT_CHARACTER_OUTFIT_IDS = new Set([
+  'male_wanderer',
+  'male_guard',
+  'male_mage',
+  'female_wanderer',
+  'female_guard',
+  'female_mage',
+]);
 
 function wsUrl(base: string): string {
   if (base.startsWith('ws://') || base.startsWith('wss://')) return base;
@@ -141,35 +150,54 @@ function parseTimestampMs(value: unknown): number {
 }
 
 function isCharacterCatalogWorld(value: unknown): value is CharacterWorldOption {
+  const worldId = (value as Record<string, unknown>)?.world_id;
   return (
     !!value &&
     typeof value === 'object' &&
-    typeof (value as Record<string, unknown>).world_id === 'string' &&
+    typeof worldId === 'string' &&
+    ACCOUNT_CHARACTER_WORLD_IDS.has(worldId) &&
     typeof (value as Record<string, unknown>).name === 'string'
   );
 }
 
 function isCharacterCatalogOutfit(value: unknown): value is CharacterOutfitOption {
   const sex = (value as Record<string, unknown>).sex;
+  const outfitId = (value as Record<string, unknown>)?.outfit_id;
   return (
     !!value &&
     typeof value === 'object' &&
-    typeof (value as Record<string, unknown>).outfit_id === 'string' &&
+    typeof outfitId === 'string' &&
+    ACCOUNT_CHARACTER_OUTFIT_IDS.has(outfitId) &&
     (sex === 'male' || sex === 'female') &&
     (typeof (value as Record<string, unknown>).name === 'string')
   );
 }
 
 function isAccountCharacter(value: unknown): value is AccountCharacter {
+  const worldId = (value as Record<string, unknown>)?.world_id;
   const sex = (value as Record<string, unknown>).sex;
+  const outfitId = (value as Record<string, unknown>)?.outfit_id;
   return (
     !!value &&
     typeof value === 'object' &&
     typeof (value as Record<string, unknown>).character_id === 'string' &&
     typeof (value as Record<string, unknown>).name === 'string' &&
-    typeof (value as Record<string, unknown>).world_id === 'string' &&
+    typeof worldId === 'string' &&
+    ACCOUNT_CHARACTER_WORLD_IDS.has(worldId) &&
     (sex === 'male' || sex === 'female') &&
-    typeof (value as Record<string, unknown>).outfit_id === 'string'
+    typeof outfitId === 'string' &&
+    ACCOUNT_CHARACTER_OUTFIT_IDS.has(outfitId)
+  );
+}
+
+function isAccountCharacterPlayResponse(value: unknown): value is AccountCharacterPlayResponse {
+  return (
+    !!value &&
+    typeof value === 'object' &&
+    (value as Record<string, unknown>).ok === true &&
+    isAccountCharacter((value as Record<string, unknown>).character) &&
+    typeof (value as Record<string, unknown>).token === 'string' &&
+    typeof (value as Record<string, unknown>).expires_at === 'number'
   );
 }
 
@@ -1461,7 +1489,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
             world_id,
             sex,
             outfit_id,
-          }),
+          } satisfies AccountCharacterCreateRequest),
         });
         const body = await resp.json().catch(() => null);
         if (!resp.ok || !body || body.ok === false) {
@@ -1476,11 +1504,14 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
               'Could not create character',
           };
         }
+        if (!isAccountCharacterPlayResponse(body)) {
+          return { ok: false, error: 'Server returned an invalid character response' };
+        }
         saveIdentity({
-          playerId: typeof body.character?.character_id === 'string' ? body.character.character_id : '',
-          name: typeof body.character?.name === 'string' ? body.character.name : trimmed,
+          playerId: body.character.character_id,
+          name: body.character.name,
           token: body.token,
-          expiresAt: typeof body.expires_at === 'number' ? body.expires_at : Date.now(),
+          expiresAt: body.expires_at,
         });
         void loadAccountCharacters();
         if (wsRef.current) {
@@ -1528,11 +1559,14 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
               'Could not select character',
           };
         }
+        if (!isAccountCharacterPlayResponse(body)) {
+          return { ok: false, error: 'Server returned an invalid character response' };
+        }
         saveIdentity({
-          playerId: typeof body.character?.character_id === 'string' ? body.character.character_id : characterId,
-          name: typeof body.character?.name === 'string' ? body.character.name : 'Adventurer',
+          playerId: body.character.character_id,
+          name: body.character.name,
           token: body.token,
-          expiresAt: typeof body.expires_at === 'number' ? body.expires_at : Date.now(),
+          expiresAt: body.expires_at,
         });
         if (wsRef.current) {
           wsRef.current.close();
