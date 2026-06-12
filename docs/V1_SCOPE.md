@@ -26,8 +26,9 @@ Define what v1 covers and what it explicitly does not. This prevents scope drift
   or missing-CSRF helpers. It is covered by `npm run verify:account-character`,
   including server wallet/shop/work/property gameplay route proof. This is not a production
   release claim without named proof artifacts.
-  The public account portal and four Codex surfaces are verified in the separate
-  `akalynth-site` repo by `./scripts/verify-account-character-site.sh`.
+  The public account portal and four Codex surfaces (Public, Builder, Operator, Agent)
+  are verified in the separate `akalynth-site` repo by
+  `./scripts/verify-account-character-site.sh`.
 
 ## Out of Scope (v1)
 

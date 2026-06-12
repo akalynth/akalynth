@@ -87,7 +87,7 @@ those yourself.
 - `npm run verify:account-character` (server `/v1/characters`, protocol docs,
   server wallet/shop/work/property gameplay route proof, debug-client guard, and
   Android account-character unit tests plus Android character UI compile)
-- For the public account portal and four Codex surfaces, run
+- For the public account portal and the four Codex surfaces (Public, Builder, Operator, Agent), run
   `./scripts/verify-account-character-site.sh` from the separate
   `akalynth-site` repo.
 
