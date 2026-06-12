@@ -25,7 +25,8 @@ Define what v1 covers and what it explicitly does not. This prevents scope drift
   catalogs, site/debug-client/Android create/select paths, and missing-session
   or missing-CSRF helpers. It is covered by `npm run verify:account-character`,
   including server create/select play-token handoff and login projection proof,
-  server wallet/shop/work/property gameplay route proof, debug-client gameplay wire-authority proof,
+  shared account-character HTTP type proof, server wallet/shop/work/property gameplay route proof,
+  debug-client gameplay wire-authority proof,
   Android account-character token login handoff proof, and Android gameplay wire-authority protocol proof.
   This is not a production
   release claim without named proof artifacts.
