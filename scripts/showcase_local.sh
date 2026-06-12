@@ -20,7 +20,12 @@ echo "[showcase] MVP verification"
 cd "$ROOT_DIR"
 ./scripts/verify_mvp.sh
 
+echo "[showcase] agent economy simulation proof"
+cd apps/server
+npm run verify:agent-economy-simulation
+
 echo "[showcase] debug client build"
+cd "$ROOT_DIR"
 cd apps/debug-client
 npm run build
 

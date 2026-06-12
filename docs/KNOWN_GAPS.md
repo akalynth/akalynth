@@ -58,6 +58,9 @@ The next closure target is a reproducible local proof run with:
 - named commit,
 - documented runbook,
 - passing showcase preflight,
+- passing agent economy simulator proof,
+- deterministic first-five-minutes path mapped to worker, homesteader, and
+  merchant simulator roles,
 - captured command transcript,
 - receipt output,
 - known-gaps register,
