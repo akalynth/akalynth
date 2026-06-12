@@ -29,8 +29,10 @@ permanently second-class for the core account flow.**
 - Android stores the session/play token using its existing secure store (`IdentityStore`),
   extended for the account session; never logs tokens (consistent with the receipt/secret boundary).
 
-## Sequencing
+## Current source status
 
-Android account parity is its own epic (E6 in the sequence) and depends on E1–E4
-(server account + character model). It should not start before the account + character
-session model is stable.
+Android account parity remains its own epic (E6 in the sequence) and depends on
+E1-E4 (server account + character model). Source-level Android entry now exists
+for account portal launch, sign-in/session checks, character create/select,
+world, sex/outfit, and play-token handoff. This is not a production release
+claim without named proof artifacts.

@@ -71,4 +71,16 @@ if [[ -n "$site_doc_matches" ]]; then
   die "Stale website portal role wording found. Current docs must describe API-backed static frontend behavior without browser-local authority."
 fi
 
+sequence_matches="$(
+  grep -RInE 'E6 brings Android to parity|should not start before the account \+ character|replace localStorage authority\. Keep honest preview wording where still mock' \
+    "$ROOT_DIR/docs/account-portal/AKALYNTH_ACCOUNT_PORTAL_PRODUCT_DECISION_V1/IMPLEMENTATION_SEQUENCE.md" \
+    "$ROOT_DIR/docs/account-portal/AKALYNTH_ACCOUNT_PORTAL_PRODUCT_DECISION_V1/ANDROID_PARITY_REQUIREMENTS.md" \
+    2>/dev/null || true
+)"
+
+if [[ -n "$sequence_matches" ]]; then
+  echo "$sequence_matches" >&2
+  die "Stale account portal sequencing wording found. Current docs must distinguish source-level E5/E6 surfaces from production release proof."
+fi
+
 echo "✅ No legacy create_character protocol path found"

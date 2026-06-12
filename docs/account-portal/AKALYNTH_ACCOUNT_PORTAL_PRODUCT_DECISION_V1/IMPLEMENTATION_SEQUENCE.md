@@ -10,8 +10,8 @@ verify per Akalynth policy). **E0 is this decision record — no implementation.
 | **E2** | `AKALYNTH_ACCOUNT_AUTH_API_V1` | `register`, `login`, `logout`, `me`, `password-reset/request`, `password-reset/confirm`. Argon2id, verified-email flag, uniform (no-enumeration) responses, sessions, rate limits, hashed-at-rest tokens, redacted receipts. | E1 |
 | **E3** | `AKALYNTH_ACCOUNT_EMAIL_VERIFICATION_V1` | Email delivery as its own lane (operational blast radius). Dev mode logs links; prod sends real email; resend limits + expiry; receipt without token. **Needs an email-provider decision + SPF/DKIM/DMARC (later).** | E2 |
 | **E4** | `AKALYNTH_ACCOUNT_CHARACTER_V2_V1` | Character bound to account: `world_id`, `sex`, `outfit_id`. `GET /v1/worlds`, `GET /v1/outfits`, `GET/POST /v1/characters`, `POST /v1/characters/select`. Character lifecycle receipts. | E2 |
-| **E5** | `AKALYNTH_SITE_ACCOUNT_PORTAL_API_V1` | Website pages call the real API (account/character); replace localStorage authority. Keep honest preview wording where still mock. | E2, E4 |
-| **E6** | `AKALYNTH_ANDROID_ACCOUNT_CHARACTER_PARITY_V1` | Android: title, create account, sign in, verify status, create/select character, world, sex/outfit, enter game. | E2, E4 |
+| **E5** | `AKALYNTH_SITE_ACCOUNT_PORTAL_API_V1` | Source-level website pages call the real API for account/session, account-character, shop, work, wallet, and property actions; browser storage is non-authoritative UI state only. Production release proof remains separate. | E2, E4 |
+| **E6** | `AKALYNTH_ANDROID_ACCOUNT_CHARACTER_PARITY_V1` | Source-level Android account-character entry exists for portal launch, sign-in/session checks, create/select character, world, sex/outfit, and enter-game play token handoff. Production release proof remains separate. | E2, E4 |
 | **E7** | `AKALYNTH_CHARACTER_APPEARANCE_SPRITES_V1` | **Discrete full sprites first**: male/female base + finished outfit sprites; wire into sprite system + MapCanvas. (Blocks visible outfit choice.) | E4 + asset pipeline |
 | **E8a** | `AKALYNTH_SITE_HOUSE_PORTAL_SERVER_BACKED_V1` | Houses portal → server property API. Fixed-price/resale first; **auctions blocked** until the server auction verifier lanes pass. | E5 |
 | **E8b** | `AKALYNTH_SITE_SHOP_IN_GAME_CURRENCY_V1` | Shop portal on **in-game currency**. No Stripe / premium real-money. | E5 |
@@ -20,7 +20,9 @@ verify per Akalynth policy). **E0 is this decision record — no implementation.
 ## Critical path to "create account → play"
 
 `E1 → E2 → E3 (verify) → E4 (character/world/sex/outfit) → E7 (outfit sprites) → E5 (web)`
-gives a player the full website journey into the game. E6 brings Android to parity.
+defines the full website journey into the game. Source-level E5/E6 surfaces now
+exist; production release still requires named proof artifacts and release
+claims.
 E8/E9 deepen the economy portal and harden for production.
 
 ## Hard "do not do yet"
