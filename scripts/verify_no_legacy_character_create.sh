@@ -36,6 +36,29 @@ if [[ -n "$matches" ]]; then
   die "Legacy WebSocket create_character path found. Use account/session/CSRF POST /v1/characters instead."
 fi
 
+android_ui_matches="$(
+  grep -RInE 'onCreate: \(name: String, sex: CharacterSex\)|onCreate = \{ [^,]+, [^,]+ ->|onCharacterCreated: \(name: String, sex' \
+    "$ROOT_DIR/apps/android/app/src/main" \
+    "$ROOT_DIR/apps/android/app/src/androidTest" \
+    2>/dev/null || true
+)"
+
+if [[ -n "$android_ui_matches" ]]; then
+  echo "$android_ui_matches" >&2
+  die "Stale Android character create UI callback found. Character creation UI must emit name, world_id, sex, and outfit_id."
+fi
+
+for literal in \
+  'onCreate: (name: String, worldId: String, sex: CharacterSex, outfitId: String) -> Unit' \
+  'CharacterCreateScreen_WorldSelector' \
+  'CharacterCreateScreen_OutfitSelector' \
+  'CharacterCreateScreen_World_high_city' \
+  'CharacterCreateScreen_Outfit_female_mage'; do
+  if ! grep -RInF "$literal" "$ROOT_DIR/apps/android/app/src/main" "$ROOT_DIR/apps/android/app/src/androidTest" >/dev/null; then
+    die "Missing Android account-character v2 UI proof literal: $literal"
+  fi
+done
+
 doc_matches="$(
   grep -RInE '\{"name":"Sovereign"\}|Success \(200\):|Guest accounts remain functional|Implement character creation flow|Proposed API surface \(specified in E4\)' "${doc_paths[@]}" \
     --include='CLIENT_CONTRACT_V0_1.md' \

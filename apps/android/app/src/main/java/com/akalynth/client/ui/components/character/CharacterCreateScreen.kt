@@ -46,23 +46,25 @@ import androidx.compose.ui.unit.sp
  *
  * Contracts:
  * - N1: Name input field (max 16 chars, non-blank)
- * - N2: Sex selection (male/female toggle)
- * - N3: Sprite preview swaps on sex change
+ * - N2: World, sex, and outfit selection
+ * - N3: Sprite preview swaps on sex/outfit change
  * - N4: Create button enabled only when valid
  *
  * This is a pure presentation component with no navigation assumptions.
  * All actions are exposed via callbacks.
  *
- * @param onCreate Called with (name, sex) when create button is tapped and valid
+ * @param onCreate Called with (name, worldId, sex, outfitId) when create button is tapped and valid
  * @param modifier Optional modifier for the root container
  */
 @Composable
 fun CharacterCreateScreen(
-    onCreate: (name: String, sex: CharacterSex) -> Unit,
+    onCreate: (name: String, worldId: String, sex: CharacterSex, outfitId: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var name by remember { mutableStateOf("") }
+    var selectedWorldId by remember { mutableStateOf(DEFAULT_WORLD_ID) }
     var selectedSex by remember { mutableStateOf(CharacterSex.MALE) }
+    var selectedOutfitId by remember { mutableStateOf(defaultOutfitId(CharacterSex.MALE)) }
 
     val isNameValid by remember {
         derivedStateOf {
@@ -71,7 +73,11 @@ fun CharacterCreateScreen(
     }
 
     val isFormValid by remember {
-        derivedStateOf { isNameValid }
+        derivedStateOf {
+            isNameValid &&
+                WORLD_OPTIONS.any { it.worldId == selectedWorldId } &&
+                OUTFIT_OPTIONS.any { it.outfitId == selectedOutfitId && it.sex == selectedSex }
+        }
     }
 
     Column(
@@ -97,6 +103,7 @@ fun CharacterCreateScreen(
         // Sprite Preview
         SpritePreview(
             sex = selectedSex,
+            outfitId = selectedOutfitId,
             modifier = Modifier.testTag("CharacterCreateScreen_Preview")
         )
 
@@ -130,11 +137,33 @@ fun CharacterCreateScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // World selection
+        WorldSelector(
+            selectedWorldId = selectedWorldId,
+            onWorldSelected = { selectedWorldId = it },
+            modifier = Modifier.testTag("CharacterCreateScreen_WorldSelector")
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // Sex Selection
         SexSelector(
             selectedSex = selectedSex,
-            onSexSelected = { selectedSex = it },
+            onSexSelected = {
+                selectedSex = it
+                selectedOutfitId = defaultOutfitId(it)
+            },
             modifier = Modifier.testTag("CharacterCreateScreen_SexSelector")
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Outfit selection
+        OutfitSelector(
+            selectedSex = selectedSex,
+            selectedOutfitId = selectedOutfitId,
+            onOutfitSelected = { selectedOutfitId = it },
+            modifier = Modifier.testTag("CharacterCreateScreen_OutfitSelector")
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -143,7 +172,7 @@ fun CharacterCreateScreen(
         Button(
             onClick = {
                 if (isFormValid) {
-                    onCreate(name.trim(), selectedSex)
+                    onCreate(name.trim(), selectedWorldId, selectedSex, selectedOutfitId)
                 }
             },
             enabled = isFormValid,
@@ -172,6 +201,72 @@ fun CharacterCreateScreen(
                 fontSize = 12.sp,
                 modifier = Modifier.testTag("CharacterCreateScreen_ValidationHint")
             )
+        }
+    }
+}
+
+private data class CharacterWorldOption(
+    val worldId: String,
+    val label: String
+)
+
+private data class CharacterOutfitOption(
+    val outfitId: String,
+    val sex: CharacterSex,
+    val label: String,
+    val spriteId: String
+)
+
+private val WORLD_OPTIONS = listOf(
+    CharacterWorldOption("rookguard", "Rookguard"),
+    CharacterWorldOption("high_city", "High City")
+)
+
+private val OUTFIT_OPTIONS = listOf(
+    CharacterOutfitOption("male_wanderer", CharacterSex.MALE, "Wanderer", "base_human_male_01"),
+    CharacterOutfitOption("male_guard", CharacterSex.MALE, "City Guard", "guard_city_01"),
+    CharacterOutfitOption("male_mage", CharacterSex.MALE, "Apprentice Mage", "mage_apprentice_01"),
+    CharacterOutfitOption("female_wanderer", CharacterSex.FEMALE, "Wanderer", "base_human_female_01"),
+    CharacterOutfitOption("female_guard", CharacterSex.FEMALE, "City Guard", "guard_city_female_01"),
+    CharacterOutfitOption("female_mage", CharacterSex.FEMALE, "Apprentice Mage", "mage_apprentice_female_01")
+)
+
+private const val DEFAULT_WORLD_ID = "rookguard"
+
+private fun defaultOutfitId(sex: CharacterSex): String =
+    OUTFIT_OPTIONS.first { it.sex == sex }.outfitId
+
+private fun selectedOutfit(outfitId: String): CharacterOutfitOption =
+    OUTFIT_OPTIONS.first { it.outfitId == outfitId }
+
+/**
+ * World selection toggle.
+ */
+@Composable
+private fun WorldSelector(
+    selectedWorldId: String,
+    onWorldSelected: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = "World",
+            color = Color.Gray,
+            fontSize = 12.sp,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        Row(horizontalArrangement = Arrangement.Center) {
+            WORLD_OPTIONS.forEachIndexed { index, world ->
+                if (index > 0) {
+                    Spacer(modifier = Modifier.width(12.dp))
+                }
+                SelectionOption(
+                    label = world.label,
+                    isSelected = world.worldId == selectedWorldId,
+                    onSelect = { onWorldSelected(world.worldId) },
+                    modifier = Modifier.testTag("CharacterCreateScreen_World_${world.worldId}")
+                )
+            }
         }
     }
 }
@@ -231,11 +326,62 @@ private fun SexSelector(
 }
 
 /**
+ * Outfit selection toggle filtered by selected sex.
+ */
+@Composable
+private fun OutfitSelector(
+    selectedSex: CharacterSex,
+    selectedOutfitId: String,
+    onOutfitSelected: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = "Outfit",
+            color = Color.Gray,
+            fontSize = 12.sp,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        Row(horizontalArrangement = Arrangement.Center) {
+            OUTFIT_OPTIONS.filter { it.sex == selectedSex }.forEachIndexed { index, outfit ->
+                if (index > 0) {
+                    Spacer(modifier = Modifier.width(12.dp))
+                }
+                SelectionOption(
+                    label = outfit.label,
+                    isSelected = outfit.outfitId == selectedOutfitId,
+                    onSelect = { onOutfitSelected(outfit.outfitId) },
+                    modifier = Modifier.testTag("CharacterCreateScreen_Outfit_${outfit.outfitId}")
+                )
+            }
+        }
+    }
+}
+
+/**
  * Individual sex option button.
  */
 @Composable
 private fun SexOption(
     sex: CharacterSex,
+    isSelected: Boolean,
+    onSelect: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    SelectionOption(
+        label = sex.displayName,
+        isSelected = isSelected,
+        onSelect = onSelect,
+        modifier = modifier
+    )
+}
+
+/**
+ * Shared option button.
+ */
+@Composable
+private fun SelectionOption(
+    label: String,
     isSelected: Boolean,
     onSelect: () -> Unit,
     modifier: Modifier = Modifier
@@ -252,8 +398,9 @@ private fun SexOption(
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = sex.displayName,
+            text = label,
             color = Color.White,
+            fontSize = 12.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
         )
     }
@@ -266,8 +413,10 @@ private fun SexOption(
 @Composable
 private fun SpritePreview(
     sex: CharacterSex,
+    outfitId: String = defaultOutfitId(sex),
     modifier: Modifier = Modifier
 ) {
+    val outfit = selectedOutfit(outfitId)
     Box(
         modifier = modifier
             .size(128.dp)
@@ -292,7 +441,7 @@ private fun SpritePreview(
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = sex.spriteId,
+                text = outfit.spriteId,
                 color = Color.Gray,
                 fontSize = 10.sp,
                 textAlign = TextAlign.Center,
