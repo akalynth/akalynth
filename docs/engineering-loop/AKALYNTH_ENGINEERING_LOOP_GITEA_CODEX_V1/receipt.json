@@ -26,6 +26,36 @@
       "packet:forgehold"
     ]
   },
+  "validation": {
+    "validated_utc": "2026-06-12T19:21:00Z",
+    "worktree": "/home/sovereign/akalynth-ops/repos/akalynth-codex-forgehold-loop",
+    "commands": [
+      {
+        "command": "git diff --check HEAD~1..HEAD",
+        "status": "passed"
+      },
+      {
+        "command": "npm -w apps/server run verify:quick",
+        "status": "passed",
+        "notes": "Fresh worktree had no runtime DB, so database-dependent civil guarantee checks were skipped as fresh install while character and web economy checks passed."
+      },
+      {
+        "command": "npm -w apps/server run verify:route-surveys",
+        "status": "passed",
+        "notes": "Forgehold shipment investigation, route receipts, and onward route ordering checks passed."
+      },
+      {
+        "command": "ANDROID_HOME=/usr/lib/android-sdk ANDROID_SDK_ROOT=/usr/lib/android-sdk ./gradlew :app:testDebugUnitTest --tests 'com.akalynth.client.protocol.ProtocolParityTest'",
+        "status": "passed",
+        "notes": "Required host Android SDK repair: installed Google command-line tools, Build Tools 34, Platform 35, and accepted SDK licenses."
+      }
+    ],
+    "known_warnings": [
+      "npm ci reported 2 dependency vulnerabilities in the isolated worktree dependency graph.",
+      "Android compile reported existing deprecation warnings for Icons.Filled.KeyboardArrowLeft/Right in DPad.kt.",
+      "apt update still reports intermittent DNS failure for dl.cloudflare.com Caddy repository indexes."
+    ]
+  },
   "non_mutation_boundary": {
     "runtime_trees": "unchanged",
     "runtime_state": "unchanged",
