@@ -36,7 +36,7 @@ Observed areas:
 | Server place ids | `azura:plaza`, `azura:guild_hall` |
 | Server death actions | `death_in_azura`, `first_death_in_azura` |
 | Server property ids | `Azura:H1`, `Azura:H2`, etc. |
-| Character world id | `world_id: 'high_city'`; legacy create input `azura` is accepted and normalized |
+| Character world id | `world_id: 'high_city'`; legacy create input `azura` is rejected by the account-character API |
 | Android map asset | `apps/android/app/src/main/assets/maps/azura.json` |
 | Android serializer | `@SerialName("Azura") AZURA` |
 | Browser map import | `@shared/maps/azura.json` |

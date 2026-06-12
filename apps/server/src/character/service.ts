@@ -5,7 +5,7 @@
 // does not rewrite the core identity path. Records the account linkage + chosen
 // world/sex/outfit and emits privacy-bounded character lifecycle receipts.
 import { CharacterStore } from './store.js';
-import { WORLDS, OUTFITS, worldById, outfitById, outfitsForSex, isSex, normalizeWorldId } from './catalog.js';
+import { WORLDS, OUTFITS, worldById, outfitById, outfitsForSex, isSex } from './catalog.js';
 import { RECEIPT_ACTIONS } from '../persist/types.js';
 
 export type CharacterCreateResult =
@@ -64,8 +64,7 @@ export class CharacterService {
     const { name, world_id, sex, outfit_id } = input;
     if (typeof name !== 'string') return bad('name is required');
     if (typeof world_id !== 'string') return bad('unknown world');
-    const normalizedWorldId = normalizeWorldId(world_id);
-    if (!worldById(normalizedWorldId)) return bad('unknown world');
+    if (!worldById(world_id)) return bad('unknown world');
     if (!isSex(sex)) return bad('sex must be "male" or "female"');
     if (typeof outfit_id !== 'string') return bad('outfit_id is required');
     const outfit = outfitById(outfit_id);
@@ -85,22 +84,22 @@ export class CharacterService {
       character_id: minted.player_id,
       account_id: accountId,
       name: minted.name,
-      world_id: normalizedWorldId,
+      world_id,
       sex,
       outfit_id,
       created_at: new Date(this.d.now()).toISOString(),
       created_receipt: null,
     });
 
-    this.d.emitReceipt({ action: RECEIPT_ACTIONS.CHARACTER_CREATED, accountId, characterId: minted.player_id, inputs: { world_id: normalizedWorldId, sex, outfit_id }, result: 'ok' });
-    this.d.emitReceipt({ action: RECEIPT_ACTIONS.CHARACTER_WORLD_ASSIGNED, accountId, characterId: minted.player_id, inputs: { world_id: normalizedWorldId }, result: 'ok' });
+    this.d.emitReceipt({ action: RECEIPT_ACTIONS.CHARACTER_CREATED, accountId, characterId: minted.player_id, inputs: { world_id, sex, outfit_id }, result: 'ok' });
+    this.d.emitReceipt({ action: RECEIPT_ACTIONS.CHARACTER_WORLD_ASSIGNED, accountId, characterId: minted.player_id, inputs: { world_id }, result: 'ok' });
     this.d.emitReceipt({ action: RECEIPT_ACTIONS.CHARACTER_OUTFIT_SELECTED, accountId, characterId: minted.player_id, inputs: { sex, outfit_id }, result: 'ok' });
 
     return {
       status: 201,
       body: {
         ok: true,
-        character: { character_id: minted.player_id, name: minted.name, world_id: normalizedWorldId, sex, outfit_id },
+        character: { character_id: minted.player_id, name: minted.name, world_id, sex, outfit_id },
         token: minted.token,
         expires_at: minted.expires_at,
       },
