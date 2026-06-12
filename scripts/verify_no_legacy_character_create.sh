@@ -231,12 +231,14 @@ for web_economy_literal in \
   "wallet rejects character owned by another account" \
   "shop purchase requires account session" \
   "shop purchase requires matching csrf" \
+  "auth/csrf rejected shop requests emit no receipts" \
   "shop receipts do not carry account/session/csrf tokens" \
   "work start requires account session" \
   "work start rejects character owned by another account" \
   "work start requires matching csrf" \
   "work tick requires account session" \
   "work tick requires matching csrf" \
+  "auth/csrf rejected work tick emits no receipts" \
   "work tick completes after presence gates" \
   "work completion updates wallet balance" \
   "work receipts include ticks, completion, and wallet credit" \
@@ -245,10 +247,12 @@ for web_economy_literal in \
   "primary buy emitted wallet debit + property purchase" \
   "property list requires account session" \
   "property list requires matching csrf" \
+  "auth/csrf rejected property list emits no listing receipt" \
   "property list succeeds for owner" \
   "resale emits buyer debit + seller credit + transfer" \
   "property unlist requires account session" \
   "property unlist requires matching csrf" \
+  "auth/csrf rejected property unlist emits no unlist receipt" \
   "property unlist succeeds for owner"; do
   if ! grep -Fq "$web_economy_literal" "$ROOT_DIR/apps/server/tools/verify-web-economy.test.ts"; then
     die "Missing web economy gameplay proof: $web_economy_literal"
