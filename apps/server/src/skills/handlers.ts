@@ -166,6 +166,9 @@ export function handleReport(ctx: SkillContext, targetId: string): SkillResult {
 
 export function handleRouteSurvey(ctx: SkillContext, route: 'forgehold' | 'moonspire'): SkillResult {
   if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
+  const routeProgress = ctx.getOnwardRouteProgress?.();
+  if (route === 'forgehold' && routeProgress?.forgeholdSurveyed) return { success: false, reason: 'invalid_target' };
+  if (route === 'moonspire' && routeProgress?.moonspireSurveyed) return { success: false, reason: 'invalid_target' };
 
   const surveyedAt = new Date().toISOString();
   const isForgehold = route === 'forgehold';

@@ -187,6 +187,27 @@ test('Forgehold survey emits server-owned route payload and receipts', async () 
   assert(resolvedSkills.includes('route:survey:forgehold'), 'Forgehold survey should publish route progress after success');
 });
 
+test('Forgehold survey is idempotent after receipt-derived survey', async () => {
+  const { ctx, receipts, sent } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  ctx.skillCooldowns.set('route:survey:forgehold', 0);
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+
+  const surveys = receipts.filter((r) => r.action === ROUTE_SURVEYED_ACTION && r.inputs.route_id === 'forgehold_route_slice_v1');
+  const surveyResults = sent.filter((msg) =>
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as { type?: string }).type === 'skill_result' &&
+    (msg as { skill_id?: string }).skill_id === 'route:survey:forgehold'
+  ) as Array<{ success?: boolean; reason?: string }>;
+
+  assert(surveys.length === 1, 'repeat Forgehold survey must not emit a second route survey receipt');
+  assert(surveyResults.length === 2, 'repeat Forgehold survey should return two skill results');
+  assert(surveyResults[0]?.success === true, 'first Forgehold survey should succeed');
+  assert(surveyResults[1]?.success === false, 'second Forgehold survey should fail');
+  assert(surveyResults[1]?.reason === 'invalid_target', 'second Forgehold survey should be rejected as invalid target');
+});
+
 test('Moonspire survey emits Dream Gate payload without client traversal truth', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:moonspire' });
@@ -204,6 +225,27 @@ test('Moonspire survey emits Dream Gate payload without client traversal truth',
     result.payload?.next_objective?.includes('server-owned dream traversal'),
     'Moonspire payload must not grant client-owned dream traversal'
   );
+});
+
+test('Moonspire survey is idempotent after receipt-derived survey', async () => {
+  const { ctx, receipts, sent } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:moonspire' });
+  ctx.skillCooldowns.set('route:survey:moonspire', 0);
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:moonspire' });
+
+  const surveys = receipts.filter((r) => r.action === ROUTE_SURVEYED_ACTION && r.inputs.route_id === 'moonspire_dream_gate_slice_v1');
+  const surveyResults = sent.filter((msg) =>
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as { type?: string }).type === 'skill_result' &&
+    (msg as { skill_id?: string }).skill_id === 'route:survey:moonspire'
+  ) as Array<{ success?: boolean; reason?: string }>;
+
+  assert(surveys.length === 1, 'repeat Moonspire survey must not emit a second route survey receipt');
+  assert(surveyResults.length === 2, 'repeat Moonspire survey should return two skill results');
+  assert(surveyResults[0]?.success === true, 'first Moonspire survey should succeed');
+  assert(surveyResults[1]?.success === false, 'second Moonspire survey should fail');
+  assert(surveyResults[1]?.reason === 'invalid_target', 'second Moonspire survey should be rejected as invalid target');
 });
 
 test('Soulsteel stabilization emits crafting receipt without wallet or item authority', async () => {
