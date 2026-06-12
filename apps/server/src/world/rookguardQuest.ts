@@ -358,7 +358,7 @@ export function buildOnwardRouteProgress(
             ? 'Stabilize cracked Soulsteel under the quoted no-mint, no-debit economy guard.'
           : receiptProgress.forgeholdShipmentInvestigated
             ? 'Quote Forgehold economy impact before stabilizing cracked Soulsteel.'
-            : 'Investigate the missing Ember Road shipment and stabilize Soulsteel without adding an unreceipted reward.'
+            : 'Survey the Forgehold route board before investigating the missing Ember Road shipment.'
         : 'Finish the Rookguard Codex Path to reveal the Forgehold shipment board.',
       objectives: [
         { id: 'forgehold_route_survey', label: 'Forgehold route survey', system: 'quest' },
@@ -397,7 +397,7 @@ export function buildOnwardRouteProgress(
             ? 'Review the Dream Gate safety boundary before any traversal can be server-authorized.'
           : receiptProgress.dreamGateInterpreted
           ? 'Anchor the interpreted symbols before any Dream Gate traversal can be server-authorized.'
-          : 'Survey a Dream Gate clue and interpret symbols before any traversal is possible.'
+          : 'Survey a Dream Gate clue before interpreting symbols or authorizing traversal.'
         : 'Finish the Rookguard Codex Path to reveal the Moonspire dream-gate rumor.',
       objectives: [
         { id: 'dream_gate_rumor', label: 'Dream Gate rumor discovery', system: 'quest' },

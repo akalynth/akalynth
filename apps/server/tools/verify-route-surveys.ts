@@ -1057,6 +1057,19 @@ test('Forgehold shipment investigation is idempotent after receipt-derived inves
   assert(investigationResults[1]?.reason === 'invalid_target', 'second Forgehold shipment investigation should be rejected as invalid target');
 });
 
+test('newly unlocked onward routes name the first client-visible survey action', async () => {
+  const routes = buildOnwardRouteProgress(completedRookguard);
+  const forgehold = routes.find((route) => route.route_id === 'forgehold_route_slice_v1');
+  const moonspire = routes.find((route) => route.route_id === 'moonspire_dream_gate_slice_v1');
+
+  assert(forgehold, 'Forgehold route projection missing');
+  assert(moonspire, 'Moonspire route projection missing');
+  assert(!forgehold.completed_objective_ids.includes('forgehold_route_survey'), 'fresh Forgehold route should not have survey completed');
+  assert(!moonspire.completed_objective_ids.includes('dream_gate_rumor'), 'fresh Dream Gate route should not have survey completed');
+  assert(forgehold.next_objective.startsWith('Survey the Forgehold route board'), 'fresh Forgehold next objective should name the survey action first');
+  assert(moonspire.next_objective.startsWith('Survey a Dream Gate clue'), 'fresh Dream Gate next objective should name the survey action first');
+});
+
 test('onward route projection is derived from route receipts', async () => {
   const { ctx } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
