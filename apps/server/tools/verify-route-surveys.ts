@@ -6,7 +6,7 @@
 
 import type { WebSocket } from 'ws';
 import type { AntiCheatState, Player } from '../../../packages/shared/types.js';
-import { ASHGLASS_EVIDENCE_RECOVERED_ACTION, DREAM_FRAGMENT_ANCHORED_ACTION, DREAM_GATE_INTERPRETED_ACTION, DREAM_GATE_SEAL_PREPARED_ACTION, FORGEHOLD_ECONOMY_QUOTED_ACTION, FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION, HEARTFORGE_GATE_PREPARED_ACTION, ROUTE_ABUSE_NOTES_REVIEWED_ACTION, ROUTE_SURVEYED_ACTION, SKILL_RESOLVED_ACTION, SKILL_USE_INTENT_ACTION, SOULSTEEL_STABILIZED_ACTION } from '../../../packages/shared/skills.js';
+import { ASHGLASS_EVIDENCE_RECOVERED_ACTION, DREAM_FRAGMENT_ANCHORED_ACTION, DREAM_GATE_INTERPRETED_ACTION, DREAM_GATE_SEAL_PREPARED_ACTION, FORGEHOLD_ECONOMY_QUOTED_ACTION, FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION, HEARTFORGE_GATE_PREPARED_ACTION, ROUTE_ABUSE_NOTES_REVIEWED_ACTION, ROUTE_SURVEYED_ACTION, SKILL_RESOLVED_ACTION, SKILL_USE_INTENT_ACTION, SOULSTEEL_REFINEMENT_AUTHORIZED_ACTION, SOULSTEEL_STABILIZED_ACTION } from '../../../packages/shared/skills.js';
 import { handleUseSkill, type SkillContext } from '../src/skills/index.js';
 import { buildOnwardRouteProgress, type RookguardQuestInput } from '../src/world/rookguardQuest.js';
 import { applyReceiptToOnwardRoutes, clearOnwardRouteProjection, getOnwardRouteReceiptProgress } from '../src/world/onwardRoutes.js';
@@ -101,6 +101,7 @@ test('route objective skills reject out of order without side effects', async ()
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:ashglass' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:refine' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:interpret' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:fragment' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:safety:forgehold' });
@@ -112,13 +113,14 @@ test('route objective skills reject out of order without side effects', async ()
     success?: boolean;
     reason?: string;
   }>;
-  assert(failedResults.length === 10, 'out-of-order route skills should each return a skill_result');
+  assert(failedResults.length === 11, 'out-of-order route skills should each return a skill_result');
   assert(failedResults.every((result) => result.success === false), 'out-of-order route skills should fail');
   assert(failedResults.every((result) => result.reason === 'invalid_target'), 'out-of-order route skills should use invalid_target');
   assert(!receipts.some((r) => r.action === FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION), 'out-of-order shipment must not emit quest receipt');
   assert(!receipts.some((r) => r.action === FORGEHOLD_ECONOMY_QUOTED_ACTION), 'out-of-order economy quote must not emit economy receipt');
   assert(!receipts.some((r) => r.action === SOULSTEEL_STABILIZED_ACTION), 'out-of-order Soulsteel must not emit crafting receipt');
   assert(!receipts.some((r) => r.action === ASHGLASS_EVIDENCE_RECOVERED_ACTION), 'out-of-order Ashglass evidence must not emit evidence receipt');
+  assert(!receipts.some((r) => r.action === SOULSTEEL_REFINEMENT_AUTHORIZED_ACTION), 'out-of-order Soulsteel refinement must not emit authorization receipt');
   assert(!receipts.some((r) => r.action === DREAM_GATE_INTERPRETED_ACTION), 'out-of-order Dream Gate must not emit interpretation receipt');
   assert(!receipts.some((r) => r.action === DREAM_FRAGMENT_ANCHORED_ACTION), 'out-of-order Dream fragment must not emit evidence receipt');
   assert(!receipts.some((r) => r.action === ROUTE_ABUSE_NOTES_REVIEWED_ACTION), 'out-of-order safety review must not emit abuse-note receipt');
@@ -348,6 +350,37 @@ test('Ashglass evidence recovery records crafting evidence without item or econo
   assert(result.payload?.refinement_guard?.item_mint === false, 'Ashglass payload must not mint refinement item');
 });
 
+test('Soulsteel refinement authorization records no item mint or economy authority', async () => {
+  const { ctx, receipts, sent } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:safety:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:gate:heartforge' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:ashglass' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:refine' });
+
+  const refinement = receipts.find((r) => r.action === SOULSTEEL_REFINEMENT_AUTHORIZED_ACTION);
+  assert(refinement, 'missing soulsteel_refinement_authorized receipt');
+  assert(refinement.inputs.route_id === 'forgehold_route_slice_v1', 'Soulsteel refinement route mismatch');
+  assert(refinement.inputs.refinement_id === 'soulsteel_refinement_authorization_v1', 'Soulsteel refinement id mismatch');
+  assert(refinement.inputs.item_minted === false, 'Soulsteel refinement authorization must not mint an item');
+  assert(refinement.inputs.travel_unlocked === false, 'Soulsteel refinement authorization must not unlock travel');
+  assert(refinement.inputs.economy_impact === 'none', 'Soulsteel refinement authorization should not change economy');
+  assert(!receipts.some((r) => r.action === 'wallet_debit'), 'Soulsteel refinement authorization should not debit gold');
+  assert(!receipts.some((r) => r.action === 'wallet_credit'), 'Soulsteel refinement authorization should not credit gold');
+  assert(!receipts.some((r) => r.action === 'item_minted'), 'Soulsteel refinement authorization should not emit item_minted');
+
+  const result = skillResultFor<{ refinement_id?: string; item_minted?: boolean; travel_unlocked?: boolean; economy_impact?: string; refinement_guard?: { item_mint?: boolean } }>(sent, 'route:craft:refine');
+  assert(result?.success === true, 'Soulsteel refinement skill_result should succeed');
+  assert(result.payload?.refinement_id === 'soulsteel_refinement_authorization_v1', 'Soulsteel refinement payload id mismatch');
+  assert(result.payload?.item_minted === false, 'Soulsteel refinement payload must not mint item');
+  assert(result.payload?.travel_unlocked === false, 'Soulsteel refinement payload must not unlock travel');
+  assert(result.payload?.economy_impact === 'none', 'Soulsteel refinement payload economy impact mismatch');
+  assert(result.payload?.refinement_guard?.item_mint === false, 'Soulsteel refinement payload guard must block item mint');
+});
+
 test('Dream Gate seal preparation records server gate without traversal or economy authority', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:moonspire' });
@@ -405,6 +438,7 @@ test('onward route projection is derived from route receipts', async () => {
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:safety:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:gate:heartforge' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:ashglass' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:refine' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:moonspire' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:interpret' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:fragment' });
@@ -425,12 +459,13 @@ test('onward route projection is derived from route receipts', async () => {
   assert(forgehold.completed_objective_ids.includes('forgehold_abuse_notes'), 'Forgehold safety review should project complete');
   assert(forgehold.completed_objective_ids.includes('heartforge_trial_server_gate'), 'Heartforge gate should project complete');
   assert(forgehold.completed_objective_ids.includes('ashglass_evidence_recovery'), 'Ashglass evidence should project complete');
+  assert(forgehold.completed_objective_ids.includes('soulsteel_refinement_authorization'), 'Soulsteel refinement authorization should project complete');
   assert(moonspire.completed_objective_ids.includes('dream_gate_rumor'), 'Moonspire survey should project complete');
   assert(moonspire.completed_objective_ids.includes('symbolic_puzzle_projection'), 'Dream interpretation should project complete');
   assert(moonspire.completed_objective_ids.includes('dream_fragment_evidence'), 'Dream fragment should project complete');
   assert(moonspire.completed_objective_ids.includes('dream_gate_abuse_notes'), 'Dream Gate safety review should project complete');
   assert(moonspire.completed_objective_ids.includes('dream_gate_server_seal'), 'Dream Gate server seal should project complete');
-  assert(forgehold.next_objective.includes('Hold the recovered Ashglass evidence'), 'Forgehold next objective should advance after Ashglass evidence recovery');
+  assert(forgehold.next_objective.includes('Soulsteel refinement is authorized'), 'Forgehold next objective should advance after Soulsteel refinement authorization');
   assert(moonspire.next_objective.includes('Hold the anchored dream fragment'), 'Moonspire next objective should advance after fragment anchoring');
 });
 

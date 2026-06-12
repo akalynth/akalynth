@@ -11,6 +11,7 @@ import {
   PLAYER_REPORTED_ACTION,
   ROUTE_ABUSE_NOTES_REVIEWED_ACTION,
   ROUTE_SURVEYED_ACTION,
+  SOULSTEEL_REFINEMENT_AUTHORIZED_ACTION,
   SOULSTEEL_STABILIZED_ACTION,
   DREAM_GATE_INTERPRETED_ACTION,
   FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION,
@@ -516,6 +517,57 @@ export function handleAshglassEvidenceRecovery(ctx: SkillContext): SkillResult {
       source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
       receipt_action: ASHGLASS_EVIDENCE_RECOVERED_ACTION,
       refinement_guard: refinementGuard,
+      travel_unlocked: false,
+      economy_impact: 'none',
+    },
+  };
+}
+
+export function handleSoulsteelRefinementAuthorization(ctx: SkillContext): SkillResult {
+  if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
+  const routeProgress = ctx.getOnwardRouteProgress?.();
+  if (!routeProgress?.ashglassEvidenceRecovered) return { success: false, reason: 'invalid_target' };
+
+  const authorizedAt = new Date().toISOString();
+  const refinementId = 'soulsteel_refinement_authorization_v1';
+  const requiredEvidence = ['soulsteel_stabilized', 'ashglass_evidence_recovered'];
+  const refinementGuard = {
+    item_mint: false,
+    wallet_debit_gold: 0,
+    wallet_credit_gold: 0,
+    travel_unlocked: false,
+  };
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: SOULSTEEL_REFINEMENT_AUTHORIZED_ACTION,
+    inputs: {
+      route_id: 'forgehold_route_slice_v1',
+      refinement_id: refinementId,
+      required_evidence: requiredEvidence,
+      source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
+      authorized_at: authorizedAt,
+      refinement_guard: refinementGuard,
+      item_minted: false,
+      travel_unlocked: false,
+      economy_impact: 'none',
+    },
+    result: 'ok',
+  });
+
+  return {
+    success: true,
+    payload: {
+      route_id: 'forgehold_route_slice_v1',
+      refinement_id: refinementId,
+      title: 'Soulsteel Refinement Authorization',
+      status: 'authorized',
+      required_evidence: requiredEvidence,
+      next_objective: 'Soulsteel refinement is authorized; final item minting remains a future server receipt.',
+      source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
+      receipt_action: SOULSTEEL_REFINEMENT_AUTHORIZED_ACTION,
+      refinement_guard: refinementGuard,
+      item_minted: false,
       travel_unlocked: false,
       economy_impact: 'none',
     },

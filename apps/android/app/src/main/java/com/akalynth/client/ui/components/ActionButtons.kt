@@ -38,6 +38,7 @@ private val ROUTE_SURVEY_ACTIONS = listOf(
     "route:economy:forgehold" to "Quote",
     "route:craft:soulsteel" to "Steel",
     "route:craft:ashglass" to "Glass",
+    "route:craft:refine" to "Refine",
     "route:gate:heartforge" to "Gate",
     "route:gate:moonspire" to "Seal",
     "route:dream:interpret" to "Gate",

@@ -9,6 +9,7 @@ import {
   HEARTFORGE_GATE_PREPARED_ACTION,
   ROUTE_ABUSE_NOTES_REVIEWED_ACTION,
   ROUTE_SURVEYED_ACTION,
+  SOULSTEEL_REFINEMENT_AUTHORIZED_ACTION,
   SOULSTEEL_STABILIZED_ACTION,
 } from '../../../../packages/shared/skills.js';
 
@@ -20,6 +21,7 @@ export interface OnwardRouteReceiptProgress {
   forgeholdAbuseNotesReviewed: boolean;
   heartforgeGatePrepared: boolean;
   ashglassEvidenceRecovered: boolean;
+  soulsteelRefinementAuthorized: boolean;
   moonspireSurveyed: boolean;
   dreamGateInterpreted: boolean;
   dreamFragmentAnchored: boolean;
@@ -36,6 +38,7 @@ function defaultProgress(): OnwardRouteReceiptProgress {
     forgeholdAbuseNotesReviewed: false,
     heartforgeGatePrepared: false,
     ashglassEvidenceRecovered: false,
+    soulsteelRefinementAuthorized: false,
     moonspireSurveyed: false,
     dreamGateInterpreted: false,
     dreamFragmentAnchored: false,
@@ -95,6 +98,8 @@ export function applyReceiptToOnwardRoutes(receipt: AuditReceipt): void {
     next = { ...current, heartforgeGatePrepared: true };
   } else if (receipt.action === ASHGLASS_EVIDENCE_RECOVERED_ACTION) {
     next = { ...current, ashglassEvidenceRecovered: true };
+  } else if (receipt.action === SOULSTEEL_REFINEMENT_AUTHORIZED_ACTION) {
+    next = { ...current, soulsteelRefinementAuthorized: true };
   } else if (receipt.action === DREAM_GATE_SEAL_PREPARED_ACTION) {
     next = { ...current, dreamGateSealPrepared: true };
   }

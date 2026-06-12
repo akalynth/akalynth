@@ -24,6 +24,7 @@ import {
   handleRouteSurvey,
   handleSoulsteelStabilization,
   handleAshglassEvidenceRecovery,
+  handleSoulsteelRefinementAuthorization,
   handleDreamGateInterpretation,
   handleDreamFragmentAnchor,
   handleRouteSafetyReview,
@@ -213,6 +214,9 @@ async function executeSkill(
 
     case 'route:craft:ashglass':
       return handleAshglassEvidenceRecovery(ctx);
+
+    case 'route:craft:refine':
+      return handleSoulsteelRefinementAuthorization(ctx);
 
     case 'route:gate:heartforge':
       return handleHeartforgeGatePreparation(ctx);
