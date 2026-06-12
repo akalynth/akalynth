@@ -327,6 +327,7 @@ export function ActionsPanel({
           <div className="codex-shelves onward-routes" aria-label="Onward routes">
             {onwardRoutes.map((route) => {
               const completed = new Set(route.completed_objective_ids);
+              const nextObjectiveId = route.objectives.find((objective) => !completed.has(objective.id))?.id ?? null;
               return (
                 <article
                   key={route.route_id}
@@ -340,7 +341,7 @@ export function ActionsPanel({
                   <ul>
                     {route.objectives.map((objective) => (
                       <li key={objective.id} className={completed.has(objective.id) ? 'done' : ''}>
-                        <b>{completed.has(objective.id) ? 'Done' : 'Next'}</b>
+                        <b>{completed.has(objective.id) ? 'Done' : objective.id === nextObjectiveId ? 'Next' : 'Later'}</b>
                         {objective.label}
                         <small>{objective.system}</small>
                       </li>

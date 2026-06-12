@@ -297,6 +297,7 @@ private fun OnwardRoutesPanel(
         routes.forEach { route ->
             val open = route.status == "available"
             val completed = route.completedObjectiveIds.toSet()
+            val nextObjectiveId = route.objectives.firstOrNull { objective -> !completed.contains(objective.id) }?.id
             val systems = route.objectives
                 .map { objective -> objective.system }
                 .distinct()
@@ -323,12 +324,17 @@ private fun OnwardRoutesPanel(
             ) {
                 route.objectives.forEach { objective ->
                     val done = completed.contains(objective.id)
+                    val marker = when {
+                        done -> "Done"
+                        objective.id == nextObjectiveId -> "Next"
+                        else -> "Later"
+                    }
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = if (done) "Done" else "Next",
+                            text = marker,
                             style = MaterialTheme.typography.labelSmall,
                             color = if (done) ClassicShellColors.Good else ClassicShellColors.MutedText,
                             fontWeight = FontWeight.Bold
