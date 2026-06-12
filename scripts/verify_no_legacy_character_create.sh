@@ -308,7 +308,14 @@ for server_literal in \
   "HTTP GET /v1/worlds is public" \
   "HTTP GET /v1/outfits is public" \
   "HTTP GET /v1/outfits filters by sex" \
-  "HTTP POST /v1/characters returns client character + play token"; do
+  "create returns character + play token" \
+  "select 200 + play token" \
+  "HTTP POST /v1/characters/select allows unverified account session" \
+  "HTTP POST /v1/characters returns client character + play token" \
+  "login projection: rookguard character enters Rookguard" \
+  "login projection: high_city character enters Azura runtime map" \
+  "login projection: outfit sprite follows catalog" \
+  "login projection: missing account row falls back guest-safe"; do
   if ! grep -Fq "$server_literal" "$ROOT_DIR/apps/server/tools/verify-character-v2.test.ts"; then
     die "Missing server account-character catalog route proof: $server_literal"
   fi
@@ -434,6 +441,9 @@ for web_economy_literal in \
 done
 
 for gameplay_doc in "$ROOT_DIR/README.md" "$ROOT_DIR/docs/CURRENT_STAGE.md" "$ROOT_DIR/docs/V1_SCOPE.md" "$ROOT_DIR/scripts/README.md"; do
+  if ! grep -Fq 'server create/select play-token handoff and login projection proof' "$gameplay_doc"; then
+    die "Missing server create/select token projection proof wording in ${gameplay_doc#$ROOT_DIR/}"
+  fi
   if ! grep -Fq 'wallet/shop/work/property gameplay route proof' "$gameplay_doc"; then
     die "Missing account-character wallet/gameplay route proof wording in ${gameplay_doc#$ROOT_DIR/}"
   fi
@@ -466,6 +476,10 @@ done
 
 if ! grep -Fq 'Android gameplay wire-authority protocol proof' "$ROOT_DIR/docs/README.md"; then
   die "Missing Android gameplay wire-authority proof wording in docs/README.md"
+fi
+
+if ! grep -Fq 'server create/select play-token handoff and login projection proof' "$ROOT_DIR/docs/README.md"; then
+  die "Missing server create/select token projection proof wording in docs/README.md"
 fi
 
 echo "✅ No legacy create_character protocol path found"
