@@ -43,11 +43,20 @@ jobs:
             --out verify-out
 
       - name: Verify account-character parity
+        if: github.server_url == 'https://github.com'
         run: npm run verify:account-character
+
+      - name: Verify account-character parity (Gitea subset)
+        if: github.server_url != 'https://github.com'
+        run: |
+          bash scripts/verify_protocol_sync.sh
+          npm -w apps/server run verify:quick
+          npm -w apps/server run test:web-economy
+          npm -w apps/debug-client run verify:account-character
 
       - name: Upload verification report
         uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && github.server_url == 'https://github.com'
         with:
           name: verification-report
           path: verify-out/

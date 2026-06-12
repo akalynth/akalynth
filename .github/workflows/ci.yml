@@ -191,6 +191,12 @@ jobs:
         with:
           node-version-file: .nvmrc
 
+      - name: Prepare Gitea job tools
+        if: github.server_url != 'https://github.com'
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends jq
+
       - name: Verify Docker runtime artifacts
         run: npm run verify:docker-runtime
 
@@ -324,7 +330,7 @@ jobs:
 
       - name: Upload verification artifacts
         uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && github.server_url == 'https://github.com'
         with:
           name: akalynth-verification-artifacts
           path: |
@@ -468,7 +474,7 @@ jobs:
 
       - name: Upload load test artifacts
         uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && github.server_url == 'https://github.com'
         with:
           name: loadtest-smoke-results
           path: tools/loadtest/runs/
@@ -536,7 +542,7 @@ jobs:
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && github.server_url == 'https://github.com'
         with:
           name: android-instrumented-results
           path: apps/android/app/build/reports/androidTests/
