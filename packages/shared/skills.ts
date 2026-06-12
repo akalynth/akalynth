@@ -15,6 +15,7 @@ export type SkillId =
   | 'route:economy:forgehold'
   | 'route:craft:soulsteel'
   | 'route:dream:interpret'
+  | 'route:dream:fragment'
   | 'route:quest:shipment';
 
 export type SkillTarget = 'self' | 'player' | 'none';
@@ -105,6 +106,14 @@ export const SKILL_REGISTRY: Record<SkillId, SkillDefinition> = {
     gold_cost: 0,
     debug_only: false,
   },
+  'route:dream:fragment': {
+    id: 'route:dream:fragment',
+    name: 'Anchor Dream Fragment',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
   'route:quest:shipment': {
     id: 'route:quest:shipment',
     name: 'Investigate Missing Shipment',
@@ -141,6 +150,7 @@ export const ROUTE_SURVEYED_ACTION = 'route_surveyed';
 export const FORGEHOLD_ECONOMY_QUOTED_ACTION = 'forgehold_economy_quoted';
 export const SOULSTEEL_STABILIZED_ACTION = 'soulsteel_stabilized';
 export const DREAM_GATE_INTERPRETED_ACTION = 'dream_gate_interpreted';
+export const DREAM_FRAGMENT_ANCHORED_ACTION = 'dream_fragment_anchored';
 export const FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION = 'forgehold_shipment_investigated';
 
 // Moderation v1: Resolution receipt action

@@ -35,7 +35,8 @@ private val ROUTE_SURVEY_ACTIONS = listOf(
     "route:quest:shipment" to "Ship",
     "route:economy:forgehold" to "Quote",
     "route:craft:soulsteel" to "Steel",
-    "route:dream:interpret" to "Gate"
+    "route:dream:interpret" to "Gate",
+    "route:dream:fragment" to "Frag"
 )
 
 @Composable

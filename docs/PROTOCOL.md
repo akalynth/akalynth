@@ -322,7 +322,8 @@ Uses a utility/admin skill by `skill_id` and optional `target_id`.
 Current onward-route skill ids are additive intent-only values:
 `route:survey:forgehold`, `route:quest:shipment`,
 `route:economy:forgehold`, `route:craft:soulsteel`,
-`route:survey:moonspire`, and `route:dream:interpret`.
+`route:survey:moonspire`, `route:dream:interpret`, and
+`route:dream:fragment`.
 The server validates sequencing from receipts and returns `invalid_target`
 without route side-effect receipts when a route step is locked or out of order.
 

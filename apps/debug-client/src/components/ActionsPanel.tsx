@@ -34,6 +34,7 @@ const ROUTE_SURVEY_ACTIONS = [
   { skill_id: 'route:economy:forgehold', label: 'Quote Forgehold Economy', short: 'Quote' },
   { skill_id: 'route:craft:soulsteel', label: 'Stabilize Soulsteel', short: 'Steel' },
   { skill_id: 'route:dream:interpret', label: 'Interpret Dream Gate', short: 'Gate' },
+  { skill_id: 'route:dream:fragment', label: 'Anchor Dream Fragment', short: 'Frag' },
 ] as const;
 
 const VOCATION_ACTIONS: Array<{ vocation: SovereignVocation; label: string; short: string }> = [

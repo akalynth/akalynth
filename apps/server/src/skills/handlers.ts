@@ -3,6 +3,7 @@
 
 import type { SkillContext, SkillResult } from './index.js';
 import {
+  DREAM_FRAGMENT_ANCHORED_ACTION,
   FORGEHOLD_ECONOMY_QUOTED_ACTION,
   PLAYER_REPORTED_ACTION,
   ROUTE_SURVEYED_ACTION,
@@ -328,6 +329,49 @@ export function handleDreamGateInterpretation(ctx: SkillContext): SkillResult {
       next_objective: 'Anchor the interpreted symbols before any Dream Gate traversal can be server-authorized.',
       source_drop: 'drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1',
       receipt_action: DREAM_GATE_INTERPRETED_ACTION,
+      traversal_granted: false,
+      economy_impact: 'none',
+    },
+  };
+}
+
+export function handleDreamFragmentAnchor(ctx: SkillContext): SkillResult {
+  if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
+  const routeProgress = ctx.getOnwardRouteProgress?.();
+  if (!routeProgress?.moonspireSurveyed || !routeProgress.dreamGateInterpreted) {
+    return { success: false, reason: 'invalid_target' };
+  }
+
+  const anchoredAt = new Date().toISOString();
+  const fragmentId = 'moonspire_emotional_residue_fragment_v1';
+  const evidenceObjects = ['silver_thread', 'emotional_residue'];
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: DREAM_FRAGMENT_ANCHORED_ACTION,
+    inputs: {
+      route_id: 'moonspire_dream_gate_slice_v1',
+      fragment_id: fragmentId,
+      evidence_objects: evidenceObjects,
+      source_drop: 'drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1',
+      anchored_at: anchoredAt,
+      traversal_granted: false,
+      economy_impact: 'none',
+    },
+    result: 'ok',
+  });
+
+  return {
+    success: true,
+    payload: {
+      route_id: 'moonspire_dream_gate_slice_v1',
+      fragment_id: fragmentId,
+      title: 'Moonspire Dream Fragment',
+      status: 'anchored',
+      evidence_objects: evidenceObjects,
+      next_objective: 'Hold the anchored dream fragment until traversal is server-authorized.',
+      source_drop: 'drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1',
+      receipt_action: DREAM_FRAGMENT_ANCHORED_ACTION,
       traversal_granted: false,
       economy_impact: 'none',
     },

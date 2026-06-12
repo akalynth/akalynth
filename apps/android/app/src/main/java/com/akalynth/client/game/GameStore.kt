@@ -659,7 +659,8 @@ class GameStore(
             msg.skillId != "route:quest:shipment" &&
             msg.skillId != "route:economy:forgehold" &&
             msg.skillId != "route:craft:soulsteel" &&
-            msg.skillId != "route:dream:interpret"
+            msg.skillId != "route:dream:interpret" &&
+            msg.skillId != "route:dream:fragment"
         ) return
         val title = when (msg.skillId) {
             "route:survey:forgehold" -> "Forgehold Route"
@@ -668,6 +669,7 @@ class GameStore(
             "route:economy:forgehold" -> "Forgehold economy"
             "route:craft:soulsteel" -> "Soulsteel"
             "route:dream:interpret" -> "Dream Gate"
+            "route:dream:fragment" -> "Dream fragment"
             else -> "Route"
         }
         val line = if (msg.success) {
@@ -676,6 +678,7 @@ class GameStore(
                 "route:economy:forgehold" -> "$title quote recorded by server."
                 "route:craft:soulsteel" -> "$title stabilization recorded by server."
                 "route:dream:interpret" -> "$title interpretation recorded by server."
+                "route:dream:fragment" -> "$title evidence anchored by server."
                 else -> "$title survey recorded by server."
             }
         } else {
@@ -872,7 +875,8 @@ class GameStore(
             skillId != "route:quest:shipment" &&
             skillId != "route:economy:forgehold" &&
             skillId != "route:craft:soulsteel" &&
-            skillId != "route:dream:interpret"
+            skillId != "route:dream:interpret" &&
+            skillId != "route:dream:fragment"
         ) return
         wsClient.send(UseSkillMessage(skillId = skillId))
         logSent("use_skill", skillId)

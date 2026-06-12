@@ -1,5 +1,6 @@
 import type { AuditReceipt } from '../../../../packages/shared/types.js';
 import {
+  DREAM_FRAGMENT_ANCHORED_ACTION,
   DREAM_GATE_INTERPRETED_ACTION,
   FORGEHOLD_ECONOMY_QUOTED_ACTION,
   FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION,
@@ -14,6 +15,7 @@ export interface OnwardRouteReceiptProgress {
   soulsteelStabilized: boolean;
   moonspireSurveyed: boolean;
   dreamGateInterpreted: boolean;
+  dreamFragmentAnchored: boolean;
 }
 
 function defaultProgress(): OnwardRouteReceiptProgress {
@@ -24,6 +26,7 @@ function defaultProgress(): OnwardRouteReceiptProgress {
     soulsteelStabilized: false,
     moonspireSurveyed: false,
     dreamGateInterpreted: false,
+    dreamFragmentAnchored: false,
   };
 }
 
@@ -66,6 +69,8 @@ export function applyReceiptToOnwardRoutes(receipt: AuditReceipt): void {
     next = { ...current, soulsteelStabilized: true };
   } else if (receipt.action === DREAM_GATE_INTERPRETED_ACTION) {
     next = { ...current, dreamGateInterpreted: true };
+  } else if (receipt.action === DREAM_FRAGMENT_ANCHORED_ACTION) {
+    next = { ...current, dreamFragmentAnchored: true };
   }
 
   if (next) setProgress(playerId, next);

@@ -289,6 +289,7 @@ export function buildOnwardRouteProgress(
     soulsteelStabilized: false,
     moonspireSurveyed: false,
     dreamGateInterpreted: false,
+    dreamFragmentAnchored: false,
   }
 ): OnwardRouteProgress[] {
   const available = buildRookguardQuestProgress(input).completed;
@@ -303,6 +304,7 @@ export function buildOnwardRouteProgress(
   const moonspireCompleted = [
     ...(receiptProgress.moonspireSurveyed ? ['dream_gate_rumor'] : []),
     ...(receiptProgress.dreamGateInterpreted ? ['symbolic_puzzle_projection'] : []),
+    ...(receiptProgress.dreamFragmentAnchored ? ['dream_fragment_evidence'] : []),
   ];
 
   return [
@@ -340,9 +342,11 @@ export function buildOnwardRouteProgress(
       status,
       unlock_requirement: unlockRequirement,
       next_objective: available
-        ? receiptProgress.dreamGateInterpreted
+        ? receiptProgress.dreamFragmentAnchored
+          ? 'Hold the anchored dream fragment until traversal is server-authorized.'
+          : receiptProgress.dreamGateInterpreted
           ? 'Anchor the interpreted symbols before any Dream Gate traversal can be server-authorized.'
-          : 'Survey a Dream Gate clue and keep dream traversal symbolic until the server owns the gate transition.'
+          : 'Survey a Dream Gate clue and interpret symbols before any traversal is possible.'
         : 'Finish the Rookguard Codex Path to reveal the Moonspire dream-gate rumor.',
       objectives: [
         { id: 'dream_gate_rumor', label: 'Dream Gate rumor discovery', system: 'quest' },
@@ -354,7 +358,7 @@ export function buildOnwardRouteProgress(
       ],
       completed_objective_ids: moonspireCompleted,
       source_drop: 'drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1',
-      receipt_actions: ['tutorial_completed', 'gate_unlock'],
+      receipt_actions: ['route_surveyed', 'dream_gate_interpreted', 'dream_fragment_anchored'],
     },
   ];
 }

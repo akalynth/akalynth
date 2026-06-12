@@ -24,6 +24,7 @@ import {
   handleRouteSurvey,
   handleSoulsteelStabilization,
   handleDreamGateInterpretation,
+  handleDreamFragmentAnchor,
   handleForgeholdShipmentInvestigation,
 } from './handlers.js';
 
@@ -202,6 +203,9 @@ async function executeSkill(
 
     case 'route:dream:interpret':
       return handleDreamGateInterpretation(ctx);
+
+    case 'route:dream:fragment':
+      return handleDreamFragmentAnchor(ctx);
 
     case 'route:quest:shipment':
       return handleForgeholdShipmentInvestigation(ctx);
