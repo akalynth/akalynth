@@ -64,6 +64,11 @@ client parity, or account-owned gameplay routes. It covers `/v1/characters`,
 protocol drift, server shop/work/property gameplay route proof, debug-client guards,
 and Android account-character unit tests.
 
+The public website and four Codex surfaces live in the separate
+`akalynth-site` source repo. Before changing the account portal, beta page,
+Codex routes, public boundary wording, or site-side shop/work/property hooks,
+run `./scripts/verify-account-character-site.sh` from `akalynth-site`.
+
 ## Project Structure
 
 ```

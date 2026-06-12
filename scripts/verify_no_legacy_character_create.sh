@@ -172,6 +172,12 @@ for gameplay_doc in "$ROOT_DIR/README.md" "$ROOT_DIR/docs/CURRENT_STAGE.md" "$RO
   fi
 done
 
+for site_doc in "$ROOT_DIR/README.md" "$ROOT_DIR/docs/CURRENT_STAGE.md" "$ROOT_DIR/docs/V1_SCOPE.md" "$ROOT_DIR/docs/README.md"; do
+  if ! grep -Fq 'verify-account-character-site.sh' "$site_doc"; then
+    die "Missing akalynth-site account/four-surface verifier reference in ${site_doc#$ROOT_DIR/}"
+  fi
+done
+
 for android_ui_doc in "$ROOT_DIR/README.md" "$ROOT_DIR/scripts/README.md"; do
   if ! grep -Fq 'Android character UI compile' "$android_ui_doc"; then
     die "Missing Android character UI compile wording in ${android_ui_doc#$ROOT_DIR/}"
