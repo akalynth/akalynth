@@ -230,6 +230,10 @@ function runestoneDenialText(reason: unknown): string {
   }
 }
 
+type RequiredAccountSession =
+  | { ok: true; account: AccountSessionStatus }
+  | { ok: false; error: string };
+
 function getEventGroupId(event: ChronicleEvent): number | null {
   const ref = event.evidence_ref;
   return typeof ref?.chronicle_event_id === 'number' ? ref.chronicle_event_id : null;
@@ -1357,9 +1361,23 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     }
   }, [config.httpBase]);
 
+  const requireAccountSession = useCallback(
+    async ({ allowUnverified = false }: { allowUnverified?: boolean } = {}): Promise<RequiredAccountSession> => {
+      const account = accountSession.authenticated ? accountSession : await refreshAccountSession();
+      if (!account.authenticated) {
+        return { ok: false, error: account.message ?? ACCOUNT_REQUIRED_MESSAGE };
+      }
+      if (!allowUnverified && !account.emailVerified) {
+        return { ok: false, error: ACCOUNT_UNVERIFIED_MESSAGE };
+      }
+      return { ok: true, account };
+    },
+    [accountSession, refreshAccountSession]
+  );
+
   const loadAccountCharacters = useCallback(async (): Promise<AccountCharacter[]> => {
-    const account = accountSession.authenticated ? accountSession : await refreshAccountSession();
-    if (!account.authenticated) {
+    const account = await requireAccountSession({ allowUnverified: true });
+    if (!account.ok) {
       setAccountCharacters([]);
       return [];
     }
@@ -1390,7 +1408,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
       setAccountCharacters([]);
       return [];
     }
-  }, [accountSession, config.httpBase, refreshAccountSession]);
+  }, [config.httpBase, requireAccountSession]);
 
   const boot = useCallback(
     async (map: MapName = mapName) => {
@@ -1455,13 +1473,8 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
         return { ok: false, error: 'Name, world, sex, and outfit are required' };
       }
 
-      const account = accountSession.authenticated ? accountSession : await refreshAccountSession();
-      if (!account.authenticated) {
-        return { ok: false, error: account.message ?? ACCOUNT_REQUIRED_MESSAGE };
-      }
-      if (!account.emailVerified) {
-        return { ok: false, error: ACCOUNT_UNVERIFIED_MESSAGE };
-      }
+      const account = await requireAccountSession();
+      if (!account.ok) return account;
 
       const catalog = characterCatalog.loaded ? characterCatalog : await loadCharacterCatalog();
       const outfits = catalog.outfits.filter((entry) => entry.sex === sex);
@@ -1524,16 +1537,14 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
         return { ok: false, error: (err as Error).message };
       }
     },
-    [accountSession, boot, characterCatalog, loadAccountCharacters, loadCharacterCatalog, mapName, refreshAccountSession]
+    [boot, characterCatalog, loadAccountCharacters, loadCharacterCatalog, mapName, requireAccountSession]
   );
 
   const selectCharacter = useCallback(
     async (characterId: string): Promise<CreateResult> => {
       if (!characterId) return { ok: false, error: 'Select an existing character first' };
-      const account = accountSession.authenticated ? accountSession : await refreshAccountSession();
-      if (!account.authenticated) {
-        return { ok: false, error: account.message ?? ACCOUNT_REQUIRED_MESSAGE };
-      }
+      const account = await requireAccountSession({ allowUnverified: true });
+      if (!account.ok) return account;
       try {
         const csrf = readCookie(CSRF_COOKIE);
         const headers: Record<string, string> = {
@@ -1578,7 +1589,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
         return { ok: false, error: (err as Error).message };
       }
     },
-    [accountSession, boot, config.httpBase, mapName, refreshAccountSession]
+    [boot, config.httpBase, mapName, requireAccountSession]
   );
 
   // Clear the stored character token and fall back to a guest session.
