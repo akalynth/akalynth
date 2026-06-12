@@ -493,16 +493,16 @@ for site_doc in "$ROOT_DIR/README.md" "$ROOT_DIR/docs/CURRENT_STAGE.md" "$ROOT_D
   if ! grep -Fq 'verify-account-character-site.sh' "$site_doc"; then
     die "Missing akalynth-site account/four-surface verifier reference in ${site_doc#$ROOT_DIR/}"
   fi
-  if ! grep -Fq 'executable site E2D gameplay action proof' "$site_doc"; then
-    die "Missing akalynth-site E2D gameplay proof wording in ${site_doc#$ROOT_DIR/}"
+  if ! grep -Fq 'executable site E2D character and gameplay action proof' "$site_doc"; then
+    die "Missing akalynth-site E2D character/gameplay proof wording in ${site_doc#$ROOT_DIR/}"
   fi
   if ! grep -Fq 'Public, Builder, Operator, Agent' "$site_doc"; then
     die "Missing explicit Public/Builder/Operator/Agent surface taxonomy in ${site_doc#$ROOT_DIR/}"
   fi
 done
 
-if ! grep -Fq 'executable site E2D gameplay action proof' "$ROOT_DIR/scripts/README.md"; then
-  die "Missing akalynth-site E2D gameplay proof wording in scripts/README.md"
+if ! grep -Fq 'executable site E2D character and gameplay action proof' "$ROOT_DIR/scripts/README.md"; then
+  die "Missing akalynth-site E2D character/gameplay proof wording in scripts/README.md"
 fi
 
 for android_ui_doc in "$ROOT_DIR/README.md" "$ROOT_DIR/scripts/README.md"; do

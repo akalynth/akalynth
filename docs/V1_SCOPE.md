@@ -31,8 +31,8 @@ Define what v1 covers and what it explicitly does not. This prevents scope drift
   release claim without named proof artifacts.
   The public account portal and four Codex surfaces (Public, Builder, Operator, Agent)
   are verified in the separate `akalynth-site` repo by
-  `./scripts/verify-account-character-site.sh`, including executable site E2D gameplay action proof
-  for account-scoped shop/work/property requests.
+  `./scripts/verify-account-character-site.sh`, including executable site E2D character and gameplay action proof
+  for account-scoped create/select/shop/work/property requests.
 
 ## Out of Scope (v1)
 

@@ -59,8 +59,8 @@ Implemented-but-not-release-claimed systems include:
   Android account-character token login handoff proof, and Android gameplay wire-authority protocol proof.
   The public account portal and four Codex surfaces (Public, Builder, Operator, Agent)
   are covered in the separate `akalynth-site` repo by
-  `./scripts/verify-account-character-site.sh`, including executable site E2D gameplay action proof
-  for account-scoped shop/work/property requests.
+  `./scripts/verify-account-character-site.sh`, including executable site E2D character and gameplay action proof
+  for account-scoped create/select/shop/work/property requests.
   This is a source-level parity claim, not a production release claim.
 - Property ownership v0 (house buy / list / resale) — receipt-sourced, durable (SQLite schema v13), covered by `apps/server` `npm run verify:property`. Source-level site/debug-client/Android views now exist for account-character property actions and projections, but a production proof run and release claim are still not claimed.
 - Property auctions (resale): open / bid / cancel handlers, world-loop close→settle (wall-clock only triggers emission; settlement truth is the receipt), and a **durable auction projection** (SQLite schema v14, `property_auctions` table, materializer + boot hydration). Proven by `verify:property-auction*` (reducer, gold conservation, handlers, close→settle, and **persistence: projection==DB, idempotent re-materialize, DB-hydration==replay**). Receipts remain the source of truth; the DB is a materialized mirror. Not yet claimed: a production restart proof run, primary/system auction opening, anti-snipe, and the site auction UI.
