@@ -19,6 +19,7 @@ import { hashPassword, verifyPassword } from '../src/account/password.js';
 import { CharacterStore } from '../src/character/store.js';
 import { CharacterService } from '../src/character/service.js';
 import { makeCharacterRouter } from '../src/character/router.js';
+import { accountCharacterLoginProjection } from '../src/character/loginProjection.js';
 import type { CharacterCreateResult } from '../src/api/http.js';
 
 let failed = 0;
@@ -99,8 +100,9 @@ async function main(): Promise<void> {
     return { ok: true, player_id: `p_${name}`, name, token: `play_${name}`, issued_at: Date.now(), expires_at: Date.now() + 3600_000 };
   };
   const receipts: { action: string; accountId: string; characterId?: string; inputs?: Record<string, unknown> }[] = [];
+  const characterStore = new CharacterStore(db);
   const characterService = new CharacterService({
-    store: new CharacterStore(db),
+    store: characterStore,
     mintCharacter,
     issuePlayToken: (cid) => ({ token: `sel_${cid}`, expires_at: Date.now() + 3600_000 }),
     emitReceipt: (e) => receipts.push(e),
@@ -174,6 +176,9 @@ async function main(): Promise<void> {
   check('create returns character + play token', c1body.ok && c1body.character.character_id === 'p_Aria' && c1body.token === 'play_Aria');
   check('create keeps canonical rookguard world id', c1body.character.world_id === 'rookguard');
   check('create persisted account_characters row', (db.prepare('SELECT count(*) c FROM account_characters WHERE account_id=?').get(accountId) as { c: number }).c === 1);
+  const rookguardProjection = accountCharacterLoginProjection(characterStore.findById('p_Aria'));
+  check('login projection: rookguard character enters Rookguard', rookguardProjection.map === 'Rookguard');
+  check('login projection: female outfit with pending sprite stays null', rookguardProjection.sprite_id === null);
   check('receipts: created + world_assigned + outfit_selected', ['character_created', 'character_world_assigned', 'character_outfit_selected'].every((a) => actions().includes(a)));
 
   // ---- create validation ----
@@ -220,6 +225,11 @@ async function main(): Promise<void> {
     { cookie: verifiedCookie, 'x-csrf-token': csrf }
   );
   check('HTTP POST /v1/characters creates canonical high_city character', http.status === 201 && (http.body.character as { world_id?: string } | undefined)?.world_id === 'high_city');
+  const highCityProjection = accountCharacterLoginProjection(characterStore.findById('p_RouterHigh'));
+  check('login projection: high_city character enters Azura runtime map', highCityProjection.map === 'Azura');
+  check('login projection: outfit sprite follows catalog', highCityProjection.sprite_id === 'guard_city_01');
+  const missingProjection = accountCharacterLoginProjection(undefined);
+  check('login projection: missing account row falls back guest-safe', missingProjection.map === 'Rookguard' && missingProjection.sprite_id === null);
 
   // ---- character limit ----
   const c2 = characterService.create(accountId, { name: 'Bree', world_id: 'high_city', sex: 'male', outfit_id: 'male_guard' });

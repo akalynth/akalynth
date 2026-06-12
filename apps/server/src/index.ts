@@ -83,7 +83,7 @@ import { hashPassword, verifyPassword } from './account/password.js';
 import { CharacterStore } from './character/store.js';
 import { CharacterService } from './character/service.js';
 import { makeCharacterRouter } from './character/router.js';
-import { outfitById } from './character/catalog.js';
+import { accountCharacterLoginProjection } from './character/loginProjection.js';
 import { makeWebEconomyRouter, type ShopItemConfig } from './economy/router.js';
 import { publicActorForReceipt, toPublicReceipt } from './audit/public_receipts.js';
 import {
@@ -2201,17 +2201,6 @@ function resolveSessionMe(guest_token: string, expiredReason: string): SessionMe
   };
 }
 
-function mapForAccountCharacter(playerId: string): 'Rookguard' | 'Azura' {
-  const row = characterStore.findById(playerId);
-  if (row?.world_id === 'high_city') return 'Azura';
-  return 'Rookguard';
-}
-
-function spriteForAccountCharacter(playerId: string): string | null {
-  const row = characterStore.findById(playerId);
-  return row ? outfitById(row.outfit_id)?.sprite_id ?? null : null;
-}
-
 // Account character minting. This is internal plumbing for the account-gated
 // /v1/characters route, not a standalone legacy HTTP route.
 type CharacterCreateResult =
@@ -3194,8 +3183,9 @@ function processSessionQueue(s: Session, now: number) {
           });
         }
 
-        const loginMap = authToken ? mapForAccountCharacter(player_id) : 'Rookguard';
-        const spriteId = authToken ? spriteForAccountCharacter(player_id) : null;
+        const accountProjection = authToken ? accountCharacterLoginProjection(characterStore.findById(player_id)) : null;
+        const loginMap = accountProjection?.map ?? 'Rookguard';
+        const spriteId = accountProjection?.sprite_id ?? null;
         const spawn = worlds[loginMap].map.spawn;
 
         s.guestToken = guest_token ?? null;
