@@ -23,6 +23,26 @@ private val DEFAULT_SERVER_URL = BuildConfig.WS_BASE_URL
 private const val MAX_CHAT_MESSAGES = 50
 private const val MAX_DEBUG_LOG = 100
 private const val WITNESS_TTL_MS = 12000L
+private val ROUTE_ACTION_SKILL_IDS = setOf(
+    "route:survey:forgehold",
+    "route:survey:moonspire",
+    "route:safety:forgehold",
+    "route:safety:moonspire",
+    "route:quest:shipment",
+    "route:economy:forgehold",
+    "route:economy:settle",
+    "route:economy:payout",
+    "route:craft:soulsteel",
+    "route:craft:ashglass",
+    "route:craft:refine",
+    "route:craft:mint",
+    "route:gate:heartforge",
+    "route:gate:moonspire",
+    "route:dream:traverse",
+    "route:dream:arrive",
+    "route:dream:interpret",
+    "route:dream:fragment"
+)
 
 class GameStore(
     private val wsClient: WsClient,
@@ -654,24 +674,7 @@ class GameStore(
     }
 
     private fun handleSkillResult(msg: SkillResultMessage) {
-        if (
-            !msg.skillId.startsWith("route:survey:") &&
-            !msg.skillId.startsWith("route:safety:") &&
-            msg.skillId != "route:quest:shipment" &&
-            msg.skillId != "route:economy:forgehold" &&
-            msg.skillId != "route:economy:settle" &&
-            msg.skillId != "route:economy:payout" &&
-            msg.skillId != "route:craft:soulsteel" &&
-            msg.skillId != "route:craft:ashglass" &&
-            msg.skillId != "route:craft:refine" &&
-            msg.skillId != "route:craft:mint" &&
-            msg.skillId != "route:gate:heartforge" &&
-            msg.skillId != "route:gate:moonspire" &&
-            msg.skillId != "route:dream:traverse" &&
-            msg.skillId != "route:dream:arrive" &&
-            msg.skillId != "route:dream:interpret" &&
-            msg.skillId != "route:dream:fragment"
-        ) return
+        if (msg.skillId !in ROUTE_ACTION_SKILL_IDS) return
         val title = when (msg.skillId) {
             "route:survey:forgehold" -> "Forgehold Route"
             "route:survey:moonspire" -> "Moonspire Dream Gate"
@@ -718,9 +721,9 @@ class GameStore(
             it.copy(
                 ui = it.ui.copy(
                     npcDialogue = NpcDialogueStatus(
-                        npcId = "route_survey",
+                        npcId = "route_action",
                         placeId = "onward_routes",
-                        tier = if (msg.success) "surveyed" else "rejected",
+                        tier = if (msg.success) "completed" else "rejected",
                         line = line
                     )
                 )
@@ -899,26 +902,7 @@ class GameStore(
     }
 
     private fun sendRouteAction(skillId: String) {
-        if (
-            skillId != "route:survey:forgehold" &&
-            skillId != "route:survey:moonspire" &&
-            skillId != "route:safety:forgehold" &&
-            skillId != "route:safety:moonspire" &&
-            skillId != "route:quest:shipment" &&
-            skillId != "route:economy:forgehold" &&
-            skillId != "route:economy:settle" &&
-            skillId != "route:economy:payout" &&
-            skillId != "route:craft:soulsteel" &&
-            skillId != "route:craft:ashglass" &&
-            skillId != "route:craft:refine" &&
-            skillId != "route:craft:mint" &&
-            skillId != "route:gate:heartforge" &&
-            skillId != "route:gate:moonspire" &&
-            skillId != "route:dream:traverse" &&
-            skillId != "route:dream:arrive" &&
-            skillId != "route:dream:interpret" &&
-            skillId != "route:dream:fragment"
-        ) return
+        if (skillId !in ROUTE_ACTION_SKILL_IDS) return
         wsClient.send(UseSkillMessage(skillId = skillId))
         logSent("use_skill", skillId)
     }
