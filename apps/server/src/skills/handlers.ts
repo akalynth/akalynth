@@ -516,6 +516,9 @@ export function handleRouteSafetyReview(ctx: SkillContext, route: 'forgehold' | 
   if (route === 'forgehold' && !routeProgress?.soulsteelStabilized) {
     return { success: false, reason: 'invalid_target' };
   }
+  if (route === 'forgehold' && routeProgress?.forgeholdAbuseNotesReviewed) {
+    return { success: false, reason: 'invalid_target' };
+  }
   if (route === 'moonspire' && !routeProgress?.dreamFragmentAnchored) {
     return { success: false, reason: 'invalid_target' };
   }

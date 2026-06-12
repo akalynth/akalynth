@@ -332,6 +332,34 @@ test('route safety reviews explain boundaries without heat or penalties', async 
   assert(moonspireResult.payload?.penalty_applied === false, 'Dream Gate safety payload must not apply penalty');
 });
 
+test('Forgehold safety review is idempotent after receipt-derived boundary review', async () => {
+  const { ctx, receipts, sent } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:safety:forgehold' });
+  ctx.skillCooldowns.set('route:safety:forgehold', 0);
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:safety:forgehold' });
+
+  const forgeholdReviews = receipts.filter((r) =>
+    r.action === ROUTE_ABUSE_NOTES_REVIEWED_ACTION &&
+    r.inputs.route_id === 'forgehold_route_slice_v1'
+  );
+  const safetyResults = sent.filter((msg) =>
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as { type?: string }).type === 'skill_result' &&
+    (msg as { skill_id?: string }).skill_id === 'route:safety:forgehold'
+  ) as Array<{ success?: boolean; reason?: string }>;
+
+  assert(forgeholdReviews.length === 1, 'repeat Forgehold safety review must not emit a second safety receipt');
+  assert(safetyResults.length === 2, 'repeat Forgehold safety review should return two skill results');
+  assert(safetyResults[0]?.success === true, 'first Forgehold safety review should succeed');
+  assert(safetyResults[1]?.success === false, 'second Forgehold safety review should fail');
+  assert(safetyResults[1]?.reason === 'invalid_target', 'second Forgehold safety review should be rejected as invalid target');
+});
+
 test('Heartforge gate preparation records server gate without travel or economy authority', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
