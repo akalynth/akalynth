@@ -103,6 +103,26 @@ for client_contract_literal in \
   fi
 done
 
+for shared_web_gameplay_literal in \
+  'export interface WebShopCatalogResponse' \
+  'export interface WebWalletResponse' \
+  'export interface WebShopPurchaseRequest' \
+  'export interface WebShopPurchaseResponse' \
+  'export interface WebWorkStartRequest' \
+  'export interface WebWorkStartResponse' \
+  'export interface WebWorkTickRequest' \
+  'export interface WebWorkTickResponse' \
+  'export interface WebPropertyBuyRequest' \
+  'export interface WebPropertyBuyResponse' \
+  'export interface WebPropertyListRequest' \
+  'export interface WebPropertyListResponse' \
+  'export interface WebPropertyUnlistRequest' \
+  'export type WebPropertyUnlistResponse = WebPropertyListResponse'; do
+  if ! grep -Fq "$shared_web_gameplay_literal" "$ROOT_DIR/packages/shared/http.ts"; then
+    die "Missing shared web gameplay HTTP type: $shared_web_gameplay_literal"
+  fi
+done
+
 doc_matches="$(
   grep -RInE '\{"name":"Sovereign"\}|Success \(200\):|Guest accounts remain functional|Implement character creation flow|Proposed API surface \(specified in E4\)' "${doc_paths[@]}" \
     --include='CLIENT_CONTRACT_V0_1.md' \
