@@ -108,7 +108,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -191,8 +190,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-          cache: "npm"
-          cache-dependency-path: apps/server/package-lock.json
 
       - name: Verify Docker runtime artifacts
         run: npm run verify:docker-runtime
@@ -522,14 +519,6 @@ jobs:
           echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
           echo "$ANDROID_SDK_ROOT/platform-tools" >> "$GITHUB_PATH"
           echo "$ANDROID_SDK_ROOT/emulator" >> "$GITHUB_PATH"
-
-      - name: Cache Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('apps/android/**/*.gradle.kts', 'apps/android/gradle/libs.versions.toml') }}
 
       - name: Run instrumented Compose UI tests
         uses: reactivecircus/android-emulator-runner@v2
