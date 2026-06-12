@@ -276,6 +276,8 @@ for web_economy_literal in \
   "auth/csrf rejected property list emits no listing receipt" \
   "property list rejects non-owner" \
   "non-owner property list emits no listing receipt" \
+  "property list requires character id" \
+  "missing-character property list emits no listing receipt" \
   "property list rejects invalid price" \
   "invalid-price property list emits no listing receipt" \
   "property list succeeds for owner" \
