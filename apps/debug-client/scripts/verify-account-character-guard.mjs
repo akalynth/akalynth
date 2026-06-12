@@ -1,0 +1,66 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+
+const here = dirname(fileURLToPath(import.meta.url));
+const root = resolve(here, '..');
+
+const files = {
+  characterBar: readFileSync(resolve(root, 'src/components/CharacterBar.tsx'), 'utf8'),
+  gameClient: readFileSync(resolve(root, 'src/hooks/useGameClient.ts'), 'utf8'),
+};
+
+const required = [
+  {
+    label: 'explicit session-required helper',
+    file: 'characterBar',
+    literal:
+      'Sign in with an account session first; character creation and selection are disabled until the session check succeeds.',
+  },
+  {
+    label: 'create fields disabled by missing account session',
+    file: 'characterBar',
+    literal: 'const createFieldsDisabled = busy || sessionRequired;',
+  },
+  {
+    label: 'create submit refreshes account session before POST',
+    file: 'characterBar',
+    literal: 'const next = await onRefreshAccountSession();',
+  },
+  {
+    label: 'create path uses account character API',
+    file: 'gameClient',
+    literal: "httpUrl(config.httpBase, '/v1/characters')",
+  },
+  {
+    label: 'select path uses account character API',
+    file: 'gameClient',
+    literal: "httpUrl(config.httpBase, '/v1/characters/select')",
+  },
+  {
+    label: 'create path requires account session',
+    file: 'gameClient',
+    literal: 'const account = await requireAccountSession();',
+  },
+  {
+    label: 'select path requires account session',
+    file: 'gameClient',
+    literal: 'const account = await requireAccountSession({ allowUnverified: true });',
+  },
+  {
+    label: 'CSRF header is sent when present',
+    file: 'gameClient',
+    literal: "headers['x-csrf-token'] = csrf;",
+  },
+];
+
+const missing = required.filter((entry) => !files[entry.file].includes(entry.literal));
+
+if (missing.length > 0) {
+  for (const entry of missing) {
+    console.error(`missing ${entry.label}: ${entry.literal}`);
+  }
+  process.exit(1);
+}
+
+console.log('debug-client account character guard ok');
