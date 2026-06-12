@@ -65,16 +65,25 @@ built in E0.
 - [IMPLEMENTATION_SEQUENCE.md](./IMPLEMENTATION_SEQUENCE.md)
 - [receipt.txt](./receipt.txt)
 
-## Current-state grounding (why this is net-new)
+## Current-state grounding
 
 - **Historical pre-account baseline.** Server identity was guest sessions + signed
   character tokens (Ed25519, from retired `POST /v1/characters/create`) before
   account-gated character creation moved to `POST /v1/characters`.
-- **akalynth-site is a localStorage-only preview** (`account.html`, `shop.html`,
-  `houses.html`, `app.js`). Nothing is server-backed yet.
-- **Gender/outfit sprites do not exist** — only `base_human_male_01` + themed NPC sprites.
-- The server already has property/house, gold, shop, treasury logic bound to character
-  play; this lane connects it to **accounts** and the **website**.
+- **Current source state.** The public site is a static frontend, not authority:
+  `account.html`, `shop.html`, `houses.html`, and `beta.html` call Akalynth API
+  endpoints for account/session, account-character creation/select, wallet,
+  work, shop, and property actions. Browser storage is limited to
+  non-authoritative UI state such as CSRF fallback and selected-character
+  convenience.
+- **Character catalog state.** The account-character API exposes
+  server-owned world/sex/outfit catalogs. Some female outfit sprite art may
+  still be pending in clients, but the reserved `outfit_id` values are already
+  part of the server contract.
+- **Economy/property state.** Property, wallet, shop, work, and treasury logic
+  remains server-authoritative and receipt-bounded. The website submits
+  account-owned character actions; it does not settle purchases, work payouts,
+  or property ownership locally.
 
 ## Closure
 
