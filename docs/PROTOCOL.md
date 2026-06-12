@@ -52,10 +52,11 @@ create input.
 
 Web economy portal endpoints live on the HTTP control plane under
 `/v1/shop/catalog`, `/v1/shop/purchase`, `/v1/wallet`, `/v1/property/buy`,
-`/v1/property/list`, and `/v1/property/unlist`. They are additive and do not add
-a new WebSocket message type. Mutating endpoints require an account session,
-account-owned character id, and double-submit CSRF header; prices and authority
-remain server-derived and receipt-backed.
+`/v1/property/list`, `/v1/property/unlist`, `/v1/work/start`, and
+`/v1/work/tick`. They are additive and do not add a new WebSocket message type.
+Mutating endpoints require an account session, account-owned character id, and
+double-submit CSRF header; prices, work gates, payouts, and authority remain
+server-derived and receipt-backed.
 
 Server messages may include optional fields for UI context. Clients should tolerate unknown additional fields, but they should not treat unknown message types as valid gameplay authority.
 
