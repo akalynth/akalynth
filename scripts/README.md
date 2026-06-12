@@ -48,8 +48,9 @@ Scripts should be idempotent and documented.
   gate. Runs protocol sync, server account-character tests, server create/select play-token handoff and login projection proof, server wallet/shop/work/property gameplay route proof, debug-client guard, debug-client gameplay wire-authority proof, Android account-character unit tests, Android account-character token login handoff proof, Android gameplay wire-authority protocol proof, and Android character UI compile.
 - Site `./scripts/verify-account-character-site.sh` in `akalynth-site`: focused
   public account portal and Public/Builder/Operator/Agent Codex surface gate.
-  Includes executable site E2D character and gameplay action proof for
-  account-scoped create/select/shop/work/property requests.
+  Wraps `scripts/verify-site-e2d-character-gameplay.mjs`, which includes
+  executable site E2D character and gameplay action proof for account-scoped
+  create/select/shop/work/property requests.
 
 ### Docker runtime scripts
 - `scripts/verify-docker-runtime.sh`: Backs `npm run verify:docker-runtime` (see `infra/README.md`).
