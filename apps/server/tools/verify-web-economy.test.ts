@@ -279,6 +279,10 @@ async function main(): Promise<void> {
   check('shop purchase requires character id', res.status === 400 && res.body.error === 'character_id_required');
   check('missing-character shop purchase emits no debit/mint receipts', receipts.every((r) => r.action !== WALLET_DEBIT_ACTION && r.action !== 'item_minted' && r.action !== 'item_added_to_inventory'));
 
+  res = await request('POST', '/v1/shop/purchase', { character_id: 'p_buyer', shop_key: 'unknown_item' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
+  check('shop purchase rejects unknown shop item', res.status === 400 && res.body.error === 'unknown_shop_item');
+  check('unknown-item shop purchase emits no debit/mint receipts', receipts.every((r) => r.action !== WALLET_DEBIT_ACTION && r.action !== 'item_minted' && r.action !== 'item_added_to_inventory'));
+
   res = await request('POST', '/v1/shop/purchase', { character_id: 'p_buyer', shop_key: 'healing_herb' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
   check('shop purchase without gold is rejected', res.status === 409 && res.body.error === 'insufficient_gold');
   check('rejected shop purchase emitted no debit/mint receipts', receipts.every((r) => r.action !== WALLET_DEBIT_ACTION && r.action !== 'item_minted'));
