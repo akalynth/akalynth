@@ -292,6 +292,10 @@ if ! grep -Fq ':app:compileDebugAndroidTestKotlin' "$ROOT_DIR/package.json"; the
   die "Root verify:account-character must compile Android character UI androidTest sources."
 fi
 
+if ! grep -Fq -- "--tests 'com.akalynth.client.protocol.ProtocolParityTest'" "$ROOT_DIR/package.json"; then
+  die "Root verify:account-character must run Android gameplay wire-authority ProtocolParityTest."
+fi
+
 if ! grep -Fq 'npm run verify:account-character' "$ROOT_DIR/.github/workflows/verify.yml"; then
   die "GitHub verification workflow must run npm run verify:account-character."
 fi
@@ -433,6 +437,9 @@ for gameplay_doc in "$ROOT_DIR/README.md" "$ROOT_DIR/docs/CURRENT_STAGE.md" "$RO
   if ! grep -Fq 'wallet/shop/work/property gameplay route proof' "$gameplay_doc"; then
     die "Missing account-character wallet/gameplay route proof wording in ${gameplay_doc#$ROOT_DIR/}"
   fi
+  if ! grep -Fq 'Android gameplay wire-authority protocol proof' "$gameplay_doc"; then
+    die "Missing Android gameplay wire-authority proof wording in ${gameplay_doc#$ROOT_DIR/}"
+  fi
 done
 
 for site_doc in "$ROOT_DIR/README.md" "$ROOT_DIR/docs/CURRENT_STAGE.md" "$ROOT_DIR/docs/V1_SCOPE.md" "$ROOT_DIR/docs/README.md"; do
@@ -456,5 +463,9 @@ for android_ui_doc in "$ROOT_DIR/README.md" "$ROOT_DIR/scripts/README.md"; do
     die "Missing Android character UI compile wording in ${android_ui_doc#$ROOT_DIR/}"
   fi
 done
+
+if ! grep -Fq 'Android gameplay wire-authority protocol proof' "$ROOT_DIR/docs/README.md"; then
+  die "Missing Android gameplay wire-authority proof wording in docs/README.md"
+fi
 
 echo "✅ No legacy create_character protocol path found"

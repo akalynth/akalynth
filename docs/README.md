@@ -62,7 +62,7 @@ This checks protocol sync, server build, MVP verification, and debug-client buil
 Run `npm run verify:account-character` before changing account-character entry,
 client parity, or account-owned gameplay routes. It covers `/v1/characters`,
 protocol drift, server shop/work/property gameplay route proof, debug-client guards,
-and Android account-character unit tests.
+Android account-character unit tests, and Android gameplay wire-authority protocol proof.
 
 The public website and four Codex surfaces (Public, Builder, Operator, Agent) live
 in the separate `akalynth-site` source repo. Before changing the account portal,
