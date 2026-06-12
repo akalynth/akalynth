@@ -59,6 +59,62 @@ Error response body (all non-200):
 {"ok":false,"error":"invalid_input"}
 ```
 
+### Character Catalogs
+- `GET /v1/worlds` is public.
+- `GET /v1/outfits` is public.
+- `GET /v1/outfits?sex=male` and `GET /v1/outfits?sex=female` return only outfits valid for that sex.
+- World IDs: `rookguard`, `high_city`
+- Sex values: `male`, `female`
+- Outfit IDs: `male_wanderer`, `male_guard`, `male_mage`, `female_wanderer`, `female_guard`, `female_mage`
+
+Worlds response:
+```json
+{"worlds":[{"world_id":"rookguard","name":"Rookguard","description":"The threshold keep where every journey begins."}]}
+```
+
+Outfits response:
+```json
+{"outfits":[{"outfit_id":"male_wanderer","sex":"male","name":"Wanderer","sprite_id":"base_human_male_01"}]}
+```
+
+### Character List
+- `GET /v1/characters` requires an account session cookie.
+- Response contains only characters owned by that account.
+- Response (200):
+```json
+{"characters":[{"character_id":"p_abc123","name":"Sovereign","world_id":"rookguard","sex":"male","outfit_id":"male_wanderer","created_at":"2026-06-12T00:00:00.000Z"}]}
+```
+- Errors:
+  - 401 `not_authenticated` - Account session cookie is missing or invalid
+
+### Character Select
+- `POST /v1/characters/select` requires an account session cookie and matching CSRF header/cookie.
+- Email verification is not required for selecting an existing account-owned character.
+- Request:
+```json
+{"character_id":"p_abc123"}
+```
+- Response (200):
+```json
+{
+  "ok": true,
+  "character": {
+    "character_id": "p_abc123",
+    "name": "Sovereign",
+    "world_id": "rookguard",
+    "sex": "male",
+    "outfit_id": "male_wanderer",
+    "created_at": "2026-06-12T00:00:00.000Z"
+  },
+  "token": "<SIGNED_TOKEN>",
+  "expires_at": 1705852800000
+}
+```
+- Errors:
+  - 401 `not_authenticated` - Account session cookie is missing or invalid
+  - 403 `csrf_failed` - Server received a request without matching CSRF header/cookie
+  - 404 `not_found` - Character is missing or not owned by the account
+
 ## WebSocket
 
 ### Connection
