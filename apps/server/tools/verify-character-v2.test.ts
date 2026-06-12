@@ -10,12 +10,15 @@
  * primitives are injected from index.ts in production). Run: npm run test:character-v2
  */
 import Database from 'better-sqlite3';
+import type { IncomingHttpHeaders, IncomingMessage, ServerResponse } from 'node:http';
+import { Readable } from 'node:stream';
 import { initSchema } from '../src/persist/schema.js';
 import { AccountStore } from '../src/account/store.js';
 import { AccountService, SESSION_COOKIE, CSRF_COOKIE } from '../src/account/service.js';
 import { hashPassword, verifyPassword } from '../src/account/password.js';
 import { CharacterStore } from '../src/character/store.js';
 import { CharacterService } from '../src/character/service.js';
+import { makeCharacterRouter } from '../src/character/router.js';
 import type { CharacterCreateResult } from '../src/api/http.js';
 
 let failed = 0;
@@ -29,6 +32,49 @@ function cookieValue(cookies: string[] | undefined, name: string): string | unde
     if (m) return decodeURIComponent(m[1]);
   }
   return undefined;
+}
+type ResponseCapture = ServerResponse & {
+  bodyText: string;
+  headersOut: Record<string, string | number | readonly string[]>;
+};
+
+function makeReq(
+  method: string,
+  url: string,
+  body?: Record<string, unknown>,
+  headers: IncomingHttpHeaders = {}
+): IncomingMessage {
+  const payload = body ? JSON.stringify(body) : '';
+  let sent = false;
+  const req = new Readable({
+    read() {
+      if (sent) return;
+      sent = true;
+      if (payload) this.push(Buffer.from(payload, 'utf8'));
+      this.push(null);
+    },
+  }) as IncomingMessage;
+  req.method = method;
+  req.url = url;
+  req.headers = headers;
+  return req;
+}
+
+function makeRes(): ResponseCapture {
+  const res = {
+    statusCode: 200,
+    bodyText: '',
+    headersOut: {},
+    setHeader(name: string, value: string | number | readonly string[]) {
+      this.headersOut[name.toLowerCase()] = value;
+      return this as unknown as ServerResponse;
+    },
+    end(chunk?: unknown) {
+      if (chunk != null) this.bodyText += Buffer.isBuffer(chunk) ? chunk.toString('utf8') : String(chunk);
+      return this as unknown as ServerResponse;
+    },
+  };
+  return res as ResponseCapture;
 }
 
 async function main(): Promise<void> {
@@ -81,6 +127,45 @@ async function main(): Promise<void> {
   const me = accountService.sessionAccount(cookies);
   check('sessionAccount resolves accountId + verified', !!me && me.emailVerified === true && me.accountId.startsWith('acc_'));
   const accountId = me!.accountId;
+  const csrf = cookies[CSRF_COOKIE];
+  const verifiedCookie = `${SESSION_COOKIE}=${sess}; ${CSRF_COOKIE}=${csrf}`;
+  const unverifiedCookie = `${SESSION_COOKIE}=sess-unverified; ${CSRF_COOKIE}=csrf-unverified`;
+  const router = makeCharacterRouter({
+    service: characterService,
+    resolveAccount: (parsed) => {
+      if (parsed[SESSION_COOKIE] === sess) return { accountId, emailVerified: true };
+      if (parsed[SESSION_COOKIE] === 'sess-unverified') return { accountId, emailVerified: false };
+      return null;
+    },
+    requireVerifiedForCreate: true,
+  });
+  const request = async (
+    method: string,
+    url: string,
+    body?: Record<string, unknown>,
+    headers?: IncomingHttpHeaders
+  ): Promise<{ status: number; body: Record<string, unknown> }> => {
+    const res = makeRes();
+    await router(makeReq(method, url, body, headers), res);
+    return { status: res.statusCode, body: JSON.parse(res.bodyText || '{}') as Record<string, unknown> };
+  };
+
+  // ---- HTTP router boundary: public catalogs; account session + CSRF + email verification ----
+  let http = await request('GET', '/v1/worlds');
+  check('HTTP GET /v1/worlds is public', http.status === 200 && Array.isArray(http.body.worlds));
+  http = await request('GET', '/v1/characters');
+  check('HTTP GET /v1/characters requires account session', http.status === 401 && http.body.error === 'not_authenticated');
+  http = await request('POST', '/v1/characters', { name: 'NoCookie', world_id: 'rookguard', sex: 'male', outfit_id: 'male_guard' });
+  check('HTTP POST /v1/characters requires account session', http.status === 401 && http.body.error === 'not_authenticated');
+  http = await request('POST', '/v1/characters', { name: 'NoCsrf', world_id: 'rookguard', sex: 'male', outfit_id: 'male_guard' }, { cookie: verifiedCookie });
+  check('HTTP POST /v1/characters requires matching csrf', http.status === 403 && http.body.error === 'csrf_failed');
+  http = await request(
+    'POST',
+    '/v1/characters',
+    { name: 'Unverified', world_id: 'rookguard', sex: 'male', outfit_id: 'male_guard' },
+    { cookie: unverifiedCookie, 'x-csrf-token': 'csrf-unverified' }
+  );
+  check('HTTP POST /v1/characters requires verified email', http.status === 403 && http.body.error === 'email_unverified');
 
   // ---- create character (account-gated, valid) ----
   const c1 = characterService.create(accountId, { name: 'Aria', world_id: 'rookguard', sex: 'female', outfit_id: 'female_mage' });
@@ -109,6 +194,32 @@ async function main(): Promise<void> {
   check('receipt character_selected', actions().includes('character_selected'));
   check('select other account -> 404 (ownership)', characterService.select('acc_other', { character_id: 'p_Aria' }).status === 404);
   check('select unknown character -> 404', characterService.select(accountId, { character_id: 'p_nope' }).status === 404);
+
+  http = await request('GET', '/v1/characters', undefined, { cookie: verifiedCookie });
+  check('HTTP GET /v1/characters lists account characters', http.status === 200 && Array.isArray(http.body.characters) && http.body.characters.length === 1);
+  http = await request(
+    'POST',
+    '/v1/characters/select',
+    { character_id: 'p_Aria' },
+    { cookie: unverifiedCookie, 'x-csrf-token': 'csrf-unverified' }
+  );
+  check('HTTP POST /v1/characters/select allows unverified account session', http.status === 200 && http.body.token === 'sel_p_Aria');
+  http = await request('POST', '/v1/characters/select', { character_id: 'p_Aria' }, { cookie: verifiedCookie });
+  check('HTTP POST /v1/characters/select requires matching csrf', http.status === 403 && http.body.error === 'csrf_failed');
+  http = await request(
+    'POST',
+    '/v1/characters',
+    { name: 'RouterLegacy', world_id: 'azura', sex: 'male', outfit_id: 'male_guard' },
+    { cookie: verifiedCookie, 'x-csrf-token': csrf }
+  );
+  check('HTTP POST /v1/characters rejects legacy azura world id', http.status === 400 && http.body.error === 'invalid_input');
+  http = await request(
+    'POST',
+    '/v1/characters',
+    { name: 'RouterHigh', world_id: 'high_city', sex: 'male', outfit_id: 'male_guard' },
+    { cookie: verifiedCookie, 'x-csrf-token': csrf }
+  );
+  check('HTTP POST /v1/characters creates canonical high_city character', http.status === 201 && (http.body.character as { world_id?: string } | undefined)?.world_id === 'high_city');
 
   // ---- character limit ----
   const c2 = characterService.create(accountId, { name: 'Bree', world_id: 'high_city', sex: 'male', outfit_id: 'male_guard' });
