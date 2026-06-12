@@ -23,7 +23,7 @@
     "verify:quick": "npm run build:packages && node packages/verification-spine/bin/akalynth-verify.js --profile quick --skip-build",
     "verify:full": "npm run build:packages && node packages/verification-spine/bin/akalynth-verify.js --profile full",
     "verify:audit": "npm run build:packages && node packages/verification-spine/bin/akalynth-verify.js --profile audit",
-    "verify:account-character": "bash scripts/verify_protocol_sync.sh && npm -w apps/server run verify:quick && npm -w apps/debug-client run verify:account-character && cd apps/android && ./gradlew testDebugUnitTest --tests 'com.akalynth.client.network.IdentityApiAccountCharacterTest' --tests 'com.akalynth.client.config.BuildConfigPortalTest'",
+    "verify:account-character": "bash scripts/verify_protocol_sync.sh && npm -w apps/server run verify:quick && npm -w apps/server run test:web-economy && npm -w apps/debug-client run verify:account-character && cd apps/android && ./gradlew testDebugUnitTest --tests 'com.akalynth.client.network.IdentityApiAccountCharacterTest' --tests 'com.akalynth.client.config.BuildConfigPortalTest'",
     "verify:showcase": "bash scripts/showcase_local.sh",
     "verify:docker-runtime": "bash scripts/verify-docker-runtime.sh",
     "smoke:docker-runtime": "bash scripts/smoke-docker-runtime.sh",

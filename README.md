@@ -85,7 +85,8 @@ those yourself.
 
 5) Account-character/API parity edits:
 - `npm run verify:account-character` (server `/v1/characters`, protocol docs,
-  debug-client guard, and Android account-character tests)
+  server shop/work/property gameplay route proof, debug-client guard, and
+  Android account-character tests)
 
 6) Focused persistence/receipt/anti-cheat checks (from apps/server):
 - `npm run verify:receipt-hygiene`

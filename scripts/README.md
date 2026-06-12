@@ -45,8 +45,7 @@ Scripts should be idempotent and documented.
 - `scripts/verify_mvp.sh`: End-to-end MVP verification (boots server, runs HTTP/WS scenarios, asserts receipts). Run: `PORT=3101 ./scripts/verify_mvp.sh`
 - `scripts/verify_protocol_sync.sh`: Ensures `docs/PROTOCOL.md` matches `packages/shared/protocol.ts`. Run: `./scripts/verify_protocol_sync.sh`
 - Root `npm run verify:account-character`: focused account-character parity
-  gate. Runs protocol sync, server account-character tests, debug-client guard,
-  and Android account-character unit tests.
+  gate. Runs protocol sync, server account-character tests, server shop/work/property gameplay route proof, debug-client guard, and Android account-character unit tests.
 
 ### Docker runtime scripts
 - `scripts/verify-docker-runtime.sh`: Backs `npm run verify:docker-runtime` (see `infra/README.md`).

@@ -57,6 +57,13 @@ npm run verify:showcase
 
 This checks protocol sync, server build, MVP verification, and debug-client build. It does not start the server or client and does not prove production readiness.
 
+## Account-Character Parity
+
+Run `npm run verify:account-character` before changing account-character entry,
+client parity, or account-owned gameplay routes. It covers `/v1/characters`,
+protocol drift, server shop/work/property gameplay route proof, debug-client guards,
+and Android account-character unit tests.
+
 ## Project Structure
 
 ```
