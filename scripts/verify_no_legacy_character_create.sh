@@ -309,6 +309,8 @@ for web_economy_literal in \
   "already-listed property list emits no second listing receipt" \
   "property buy rejects owned unlisted plot" \
   "owned-unlisted property buy emits no debit/purchase receipt" \
+  "resale property buy without gold is rejected" \
+  "rejected resale emitted no debit/credit/transfer receipt" \
   "resale debits buyer wallet" \
   "resale credits seller wallet" \
   "resale emits buyer debit + seller credit + transfer" \
