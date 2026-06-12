@@ -74,6 +74,73 @@ export interface HttpErrorResponse {
 }
 
 // ============================================================================
+// Account Character API (account-gated create/select; public catalogs)
+// ============================================================================
+
+export type AccountCharacterWorldId = 'rookguard' | 'high_city';
+export type AccountCharacterSex = 'male' | 'female';
+export type AccountCharacterOutfitId =
+  | 'male_wanderer'
+  | 'male_guard'
+  | 'male_mage'
+  | 'female_wanderer'
+  | 'female_guard'
+  | 'female_mage';
+
+export interface AccountCharacterWorldOption {
+  world_id: AccountCharacterWorldId;
+  name: string;
+  description: string;
+}
+
+export interface AccountCharacterOutfitOption {
+  outfit_id: AccountCharacterOutfitId;
+  sex: AccountCharacterSex;
+  name: string;
+  /** null means the server has reserved the outfit id, but art is still pending. */
+  sprite_id: string | null;
+}
+
+export interface AccountCharacterPublic {
+  character_id: string;
+  name: string;
+  world_id: AccountCharacterWorldId;
+  sex: AccountCharacterSex;
+  outfit_id: AccountCharacterOutfitId;
+  created_at?: string;
+}
+
+export interface AccountCharacterWorldsResponse {
+  worlds: AccountCharacterWorldOption[];
+}
+
+export interface AccountCharacterOutfitsResponse {
+  outfits: AccountCharacterOutfitOption[];
+}
+
+export interface AccountCharactersResponse {
+  characters: AccountCharacterPublic[];
+}
+
+export interface AccountCharacterCreateRequest {
+  name: string;
+  world_id: AccountCharacterWorldId;
+  sex: AccountCharacterSex;
+  outfit_id: AccountCharacterOutfitId;
+}
+
+export interface AccountCharacterSelectRequest {
+  character_id: string;
+}
+
+export interface AccountCharacterPlayResponse {
+  ok: true;
+  character: AccountCharacterPublic;
+  token: string;
+  expires_at: number;
+}
+
+// ============================================================================
 // Identity Seal API (additive)
 // ============================================================================
 
