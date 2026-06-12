@@ -60,6 +60,7 @@ class CharacterCreateActivity : Activity() {
     private var selectedWorldId: String? = null
     private var selectedSex: String = "male"
     private var selectedOutfitId: String? = null
+    private var accountEmailVerified = false
     private var busy = false
 
     private var ws: WebSocket? = null
@@ -263,6 +264,7 @@ class CharacterCreateActivity : Activity() {
                     when (result) {
                         is IdentityApi.LoginResult.Success -> {
                             setLoading(false)
+                            accountEmailVerified = result.account.emailVerified
                             val verified = if (result.account.emailVerified) "Email verified" else "Email pending"
                             setStatus("Signed in (${result.account.accountId.take(8)}) - $verified")
                             loadCharacters()
@@ -270,6 +272,7 @@ class CharacterCreateActivity : Activity() {
                         }
                         is IdentityApi.LoginResult.Error -> {
                             setLoading(false)
+                            accountEmailVerified = false
                             setStatus(mapError(result.code, result.message))
                         }
                     }
@@ -288,6 +291,10 @@ class CharacterCreateActivity : Activity() {
         val hasAccountSession = identityApi.hasAccountSession()
         if (!hasAccountSession) {
             setStatus("Sign in required to create a character.")
+            return
+        }
+        if (!accountEmailVerified) {
+            setStatus("Verify your email before creating account characters.")
             return
         }
         if (selectedWorldId.isNullOrBlank() || selectedOutfitId.isNullOrBlank()) {
@@ -428,6 +435,7 @@ class CharacterCreateActivity : Activity() {
             characters.clear()
             characterAdapter.clear()
             selectedCharacterId = null
+            accountEmailVerified = false
             refreshCreateEnabled()
             return
         }
@@ -594,7 +602,7 @@ class CharacterCreateActivity : Activity() {
         selectButton.isEnabled = hasAccount && !busy && selectedCharacterId != null
 
         val nameReady = nameInput.text?.toString()?.trim()?.isNotBlank() == true
-        val canCreate = hasAccount && !busy && nameReady && selectedWorldId != null && selectedOutfitId != null
+        val canCreate = hasAccount && accountEmailVerified && !busy && nameReady && selectedWorldId != null && selectedOutfitId != null
         createButton.text = "Create Character"
         createButton.isEnabled = canCreate
         selectButton.text = if (selectedCharacterId != null) "Play Selected Character" else "No Character Selected"
@@ -604,6 +612,7 @@ class CharacterCreateActivity : Activity() {
         if (!busy) {
             when {
                 !hasAccount -> setStatus("Sign in required to create an account character.")
+                !accountEmailVerified -> setStatus("Verify email before creating; existing characters can still be selected.")
                 selectedWorldId == null || selectedOutfitId == null -> setStatus("Select world and outfit first.")
             }
         }
