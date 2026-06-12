@@ -164,7 +164,8 @@ fi
 for server_literal in \
   "HTTP GET /v1/worlds is public" \
   "HTTP GET /v1/outfits is public" \
-  "HTTP GET /v1/outfits filters by sex"; do
+  "HTTP GET /v1/outfits filters by sex" \
+  "HTTP POST /v1/characters returns client character + play token"; do
   if ! grep -Fq "$server_literal" "$ROOT_DIR/apps/server/tools/verify-character-v2.test.ts"; then
     die "Missing server account-character catalog route proof: $server_literal"
   fi
