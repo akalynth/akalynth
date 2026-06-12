@@ -206,6 +206,7 @@ class GameStore(
             is GameEvent.ToggleChat -> toggleChat()
             is GameEvent.Attack -> sendAttack(event.targetId)
             is GameEvent.WorldEventContribution -> sendWorldEventContribution(event.contributionId)
+            is GameEvent.RouteSurvey -> sendRouteSurvey(event.skillId)
             is GameEvent.TalkToNpc -> talkToNpc(event.npcId)
             is GameEvent.DeclareVocation -> declareVocation(event.vocation)
             is GameEvent.InspectWallet -> inspectWallet()
@@ -374,7 +375,7 @@ class GameStore(
             is WorkContractResultMessage -> handleWorkContractResult(msg)
             is NpcDialogueMessage -> handleNpcDialogue(msg)
             is NpcDialogueErrorMessage -> handleNpcDialogueError(msg)
-            is SkillResultMessage -> {}
+            is SkillResultMessage -> handleSkillResult(msg)
             is ModReportsSnapshotMessage -> {}
             is ModResolveResultMessage -> {}
             is PropertySnapshotMessage -> handlePropertySnapshot(msg)
@@ -652,6 +653,32 @@ class GameStore(
         }
     }
 
+    private fun handleSkillResult(msg: SkillResultMessage) {
+        if (!msg.skillId.startsWith("route:survey:")) return
+        val title = when (msg.skillId) {
+            "route:survey:forgehold" -> "Forgehold Route"
+            "route:survey:moonspire" -> "Moonspire Dream Gate"
+            else -> "Route"
+        }
+        val line = if (msg.success) {
+            "$title survey recorded by server."
+        } else {
+            "$title survey unavailable: ${msg.reason ?: "rejected"}"
+        }
+        _state.update {
+            it.copy(
+                ui = it.ui.copy(
+                    npcDialogue = NpcDialogueStatus(
+                        npcId = "route_survey",
+                        placeId = "onward_routes",
+                        tier = if (msg.success) "surveyed" else "rejected",
+                        line = line
+                    )
+                )
+            )
+        }
+    }
+
     private fun inspectWallet() {
         wsClient.send(InspectWalletMessage)
         logSent("inspect_wallet", "")
@@ -818,6 +845,12 @@ class GameStore(
 
     private fun sendWorldEventContribution(contributionId: String) {
         val skillId = "event:witness_moth_bloom:$contributionId"
+        wsClient.send(UseSkillMessage(skillId = skillId))
+        logSent("use_skill", skillId)
+    }
+
+    private fun sendRouteSurvey(skillId: String) {
+        if (skillId != "route:survey:forgehold" && skillId != "route:survey:moonspire") return
         wsClient.send(UseSkillMessage(skillId = skillId))
         logSent("use_skill", skillId)
     }

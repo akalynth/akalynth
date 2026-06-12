@@ -2,7 +2,7 @@
 // Each handler implements utility/admin functionality using existing primitives
 
 import type { SkillContext, SkillResult } from './index.js';
-import { PLAYER_REPORTED_ACTION } from '../../../../packages/shared/skills.js';
+import { PLAYER_REPORTED_ACTION, ROUTE_SURVEYED_ACTION } from '../../../../packages/shared/skills.js';
 import { createHash } from 'node:crypto';
 
 // ============================================================================
@@ -138,6 +138,51 @@ export function handleReport(ctx: SkillContext, targetId: string): SkillResult {
       reported: true,
       target_id: targetId,
       case_id: caseId,
+    },
+  };
+}
+
+// ============================================================================
+// route:survey:*: First onward-route interaction (read-only, receipt-backed)
+// ============================================================================
+
+export function handleRouteSurvey(ctx: SkillContext, route: 'forgehold' | 'moonspire'): SkillResult {
+  const surveyedAt = new Date().toISOString();
+  const isForgehold = route === 'forgehold';
+  const routeId = isForgehold ? 'forgehold_route_slice_v1' : 'moonspire_dream_gate_slice_v1';
+  const title = isForgehold ? 'Forgehold Route' : 'Moonspire Dream Gate';
+  const nextObjective = isForgehold
+    ? 'Check the Ember Road shipment board, then stabilize cracked Soulsteel under server receipts.'
+    : 'Read the first Dream Gate symbol clue, then wait for server-owned dream traversal.';
+  const systems = isForgehold
+    ? ['quest', 'economy', 'crafting', 'server', 'ui', 'android', 'anti_cheat']
+    : ['quest', 'dream_gate', 'server', 'ui', 'android', 'anti_cheat'];
+  const sourceDrop = isForgehold
+    ? 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1'
+    : 'drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1';
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: ROUTE_SURVEYED_ACTION,
+    inputs: {
+      route_id: routeId,
+      source_drop: sourceDrop,
+      surveyed_at: surveyedAt,
+      systems,
+    },
+    result: 'ok',
+  });
+
+  return {
+    success: true,
+    payload: {
+      route_id: routeId,
+      title,
+      status: 'surveyed',
+      next_objective: nextObjective,
+      source_drop: sourceDrop,
+      systems,
+      receipt_action: ROUTE_SURVEYED_ACTION,
     },
   };
 }

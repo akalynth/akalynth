@@ -29,12 +29,19 @@ private val ROOKGUARD_VOCATION_ACTIONS = listOf(
     SovereignVocation.REAVER to "Rvr"
 )
 
+private val ROUTE_SURVEY_ACTIONS = listOf(
+    "route:survey:forgehold" to "Forge",
+    "route:survey:moonspire" to "Dream"
+)
+
 @Composable
 fun ActionButtons(
     onChat: () -> Unit,
     onChronicle: () -> Unit = {},
     showWitnessMothBloom: Boolean = false,
     onWorldEventContribution: (String) -> Unit = {},
+    showRouteSurveys: Boolean = false,
+    onRouteSurvey: (String) -> Unit = {},
     showRookguardActions: Boolean = false,
     showRookguardVocations: Boolean = false,
     showHighCityActions: Boolean = false,
@@ -124,6 +131,23 @@ fun ActionButtons(
                     contributionId = WorldEventSkillIds.DEFEND_SCRIBES,
                     onWorldEventContribution = onWorldEventContribution
                 )
+            }
+
+            if (showRouteSurveys) {
+                Text(
+                    text = "Routes",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = ClassicShellColors.Brass,
+                    modifier = Modifier.testTag("ActionButtons_RouteSurveys")
+                )
+                ROUTE_SURVEY_ACTIONS.forEach { (skillId, label) ->
+                    ClassicButton(
+                        text = label,
+                        onClick = { onRouteSurvey(skillId) },
+                        compact = true,
+                        modifier = Modifier.testTag("ActionButtons_RouteSurvey_$label")
+                    )
+                }
             }
 
             if (showRookguardActions) {

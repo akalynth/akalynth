@@ -27,6 +27,11 @@ const WITNESS_MOTH_ACTIONS = [
   { skill_id: 'event:witness_moth_bloom:defend_scribes', label: 'Defend scribes', short: 'Guard' },
 ] as const;
 
+const ROUTE_SURVEY_ACTIONS = [
+  { skill_id: 'route:survey:forgehold', label: 'Survey Forgehold', short: 'Forge' },
+  { skill_id: 'route:survey:moonspire', label: 'Survey Dream Gate', short: 'Dream' },
+] as const;
+
 const VOCATION_ACTIONS: Array<{ vocation: SovereignVocation; label: string; short: string }> = [
   { vocation: 'warden', label: 'Warden', short: 'Ward' },
   { vocation: 'cantor', label: 'Cantor', short: 'Cant' },
@@ -92,6 +97,7 @@ export function ActionsPanel({
   const rookguardQuest = loop?.rookguardQuest ?? null;
   const codexProfession = rookguardQuest?.codexProfession ?? null;
   const onwardRoutes = loop?.onwardRoutes ?? [];
+  const routeSurveysOpen = onwardRoutes.some((route) => route.status === 'available');
   const witnessMothOpen =
     stage >= 3 &&
     !!loop?.lastEvent?.startsWith('witness_moth_bloom_') &&
@@ -172,6 +178,16 @@ export function ActionsPanel({
               </button>
             ))}
             {witnessMothOpen && WITNESS_MOTH_ACTIONS.map((action) => (
+              <button
+                key={action.skill_id}
+                className="action-btn mobile-hotbar-btn ritual-btn"
+                onClick={() => onWorldEventAction(action.skill_id)}
+                aria-label={action.label}
+              >
+                {action.short}
+              </button>
+            ))}
+            {routeSurveysOpen && ROUTE_SURVEY_ACTIONS.map((action) => (
               <button
                 key={action.skill_id}
                 className="action-btn mobile-hotbar-btn ritual-btn"
@@ -267,6 +283,19 @@ export function ActionsPanel({
               >
                 {route.status === 'available' ? 'Open' : 'Locked'}: {route.title}
               </i>
+            ))}
+          </div>
+        )}
+        {routeSurveysOpen && (
+          <div className="shop-actions" aria-label="Route survey actions">
+            {ROUTE_SURVEY_ACTIONS.map((action) => (
+              <button
+                key={action.skill_id}
+                className="action-btn shop-btn"
+                onClick={() => onWorldEventAction(action.skill_id)}
+              >
+                {action.label}
+              </button>
             ))}
           </div>
         )}
@@ -370,6 +399,20 @@ export function ActionsPanel({
             <div className="shop-section">
               <div className="shop-header">Witness Moth Bloom</div>
               {WITNESS_MOTH_ACTIONS.map(action => (
+                <button
+                  key={action.skill_id}
+                  className="action-btn shop-btn"
+                  onClick={() => onWorldEventAction(action.skill_id)}
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
+          {routeSurveysOpen && (
+            <div className="shop-section">
+              <div className="shop-header">Onward Routes</div>
+              {ROUTE_SURVEY_ACTIONS.map(action => (
                 <button
                   key={action.skill_id}
                   className="action-btn shop-btn"

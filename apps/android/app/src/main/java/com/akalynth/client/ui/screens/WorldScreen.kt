@@ -56,6 +56,9 @@ fun WorldScreen(
             mapData?.landmarks?.get("guild_hall")?.contains(me.x, me.y)
         } == true
     )
+    val showRouteSurveys = state.progression.loop?.onwardRoutes?.any { route ->
+        route.status == "available"
+    } == true
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -153,6 +156,8 @@ fun WorldScreen(
                 onWorldEventContribution = { contributionId ->
                     onEvent(GameEvent.WorldEventContribution(contributionId))
                 },
+                showRouteSurveys = showRouteSurveys,
+                onRouteSurvey = { skillId -> onEvent(GameEvent.RouteSurvey(skillId)) },
                 showRookguardActions = !state.world.currentMap.isHighCityCompatible,
                 showRookguardVocations = showRookguardVocations,
                 showHighCityActions = state.world.currentMap.isHighCityCompatible,

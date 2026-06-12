@@ -19,6 +19,7 @@ import {
   handlePingTem,
   handleRequestRecap,
   handleReport,
+  handleRouteSurvey,
 } from './handlers.js';
 
 // ============================================================================
@@ -174,6 +175,12 @@ async function executeSkill(
 
     case 'skill_report':
       return handleReport(ctx, targetId!);
+
+    case 'route:survey:forgehold':
+      return handleRouteSurvey(ctx, 'forgehold');
+
+    case 'route:survey:moonspire':
+      return handleRouteSurvey(ctx, 'moonspire');
 
     default:
       return { success: false, reason: 'invalid_skill' };

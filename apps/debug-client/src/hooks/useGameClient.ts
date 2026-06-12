@@ -1085,8 +1085,14 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
                     ? 'Not enough gold'
                     : data.reason === 'invalid_target'
                       ? 'Must be in the guild hall'
-                      : 'Purchase failed';
+                    : 'Purchase failed';
                 return pushToast(s, 'npc', line, 'SHOP');
+              }
+              if (skillId.startsWith('route:survey:')) {
+                const title = typeof payload?.title === 'string' ? payload.title : 'Route';
+                const next = typeof payload?.next_objective === 'string' ? payload.next_objective : 'Survey recorded.';
+                const line = success ? `${title}: ${next}` : 'Route survey unavailable.';
+                return pushToast(s, 'objective', line, 'ROUTE');
               }
               return { ...s, conn };
             }
