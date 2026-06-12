@@ -439,6 +439,10 @@ async function main(): Promise<void> {
   check('property list succeeds for owner', res.status === 200 && getProperty('Azura:H1')?.status === 'listed');
   check('property list emitted property_listed receipt', receipts.at(-1)?.action === PROPERTY_LISTED_ACTION);
 
+  res = await request('POST', '/v1/property/list', { character_id: 'p_buyer', property_id: 'Azura:H1', price_gold: 85 }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
+  check('property list rejects already-listed property', res.status === 409 && res.body.error === 'already_listed');
+  check('already-listed property list emits no second listing receipt', receipts.filter((r) => r.action === PROPERTY_LISTED_ACTION && r.inputs?.property_id === 'Azura:H1').length === 1);
+
   fund('p_seller', 300);
   seedProperty('Azura:H2', 100);
   await request('POST', '/v1/property/buy', { character_id: 'p_seller', property_id: 'Azura:H2' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });

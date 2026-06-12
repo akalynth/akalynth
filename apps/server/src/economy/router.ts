@@ -376,6 +376,7 @@ export function makeWebEconomyRouter(deps: WebEconomyRouterDeps) {
       const prop = deps.getProperty(propertyId);
       if (!prop) return (send(res, 404, { ok: false, error: 'unknown_plot' }), true);
       if (prop.owner_player_id !== characterId) return (send(res, 403, { ok: false, error: 'not_owner' }), true);
+      if (prop.status === 'listed') return (send(res, 409, { ok: false, error: 'already_listed' }), true);
 
       deps.writeReceipt({
         player_id: characterId,

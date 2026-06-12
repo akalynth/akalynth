@@ -305,6 +305,8 @@ for web_economy_literal in \
   "property list rejects unknown plot" \
   "unknown-plot property list emits no listing receipt" \
   "property list succeeds for owner" \
+  "property list rejects already-listed property" \
+  "already-listed property list emits no second listing receipt" \
   "property buy rejects owned unlisted plot" \
   "owned-unlisted property buy emits no debit/purchase receipt" \
   "resale debits buyer wallet" \
