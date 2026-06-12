@@ -236,6 +236,8 @@ for web_economy_literal in \
   "cross-account shop purchase emits no receipts" \
   "shop purchase requires shop key" \
   "missing-key shop purchase emits no debit/mint receipts" \
+  "shop purchase requires character id" \
+  "missing-character shop purchase emits no debit/mint receipts" \
   "shop purchase requires matching csrf" \
   "auth/csrf rejected shop requests emit no receipts" \
   "shop receipts do not carry account/session/csrf tokens" \
