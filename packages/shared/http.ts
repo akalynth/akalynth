@@ -476,6 +476,37 @@ export interface WebShopPurchaseResponse {
   balance_gold: number;
 }
 
+export interface WebWorkStartRequest {
+  character_id: string;
+}
+
+export interface WebWorkStartResponse {
+  ok: true;
+  character_id: string;
+  contract_id: string;
+  contract_type: 'temple_sweep';
+  payout_gold: number;
+  cooldown_seconds: number;
+  min_duration_ms: number;
+}
+
+export interface WebWorkTickRequest {
+  character_id: string;
+  contract_id: string;
+}
+
+export interface WebWorkTickResponse {
+  ok: true;
+  character_id: string;
+  contract_id: string;
+  ticks_observed: number;
+  ticks_required: number;
+  remaining_ms: number;
+  completed: boolean;
+  credited_gold?: number;
+  balance_gold?: number;
+}
+
 export interface WebEconomyProperty {
   property_id: string;
   zone: string;
