@@ -50,7 +50,8 @@ Scripts should be idempotent and documented.
   public account portal and Public/Builder/Operator/Agent Codex surface gate.
   Wraps `scripts/verify-site-e2d-character-gameplay.mjs`, which includes
   executable site E2D character and gameplay action proof for account-scoped
-  create/select/shop/work/property requests.
+  create/select/shop/work/property requests plus explicit no-session/no-CSRF
+  inline helper proof.
 
 ### Docker runtime scripts
 - `scripts/verify-docker-runtime.sh`: Backs `npm run verify:docker-runtime` (see `infra/README.md`).
