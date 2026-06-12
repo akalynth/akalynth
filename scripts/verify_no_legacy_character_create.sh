@@ -114,6 +114,26 @@ for android_token_scope_literal in \
   fi
 done
 
+for android_intent_only_literal in \
+  'data class StartWorkContractMessage(' \
+  '@SerialName("contract_type") val contractType: String = WorkContractType.TEMPLE_SWEEP' \
+  'data class WorkTickMessage(' \
+  '@SerialName("contract_id") val contractId: String' \
+  'data class BuyHouseMessage(' \
+  '@SerialName("property_id") val propertyId: String' \
+  'data class ListHouseMessage(' \
+  'val price: Int' \
+  'data class UnlistHouseMessage(' \
+  'is StartWorkContractMessage -> obj("start_work_contract")' \
+  'is WorkTickMessage -> obj("work_tick") { put("contract_id", msg.contractId) }' \
+  'is BuyHouseMessage -> obj("buy_house") { put("property_id", msg.propertyId) }' \
+  'is ListHouseMessage -> obj("list_house")' \
+  'is UnlistHouseMessage -> obj("unlist_house") { put("property_id", msg.propertyId) }'; do
+  if ! grep -RInF "$android_intent_only_literal" "$ROOT_DIR/apps/android/app/src/main/java/com/akalynth/client/protocol" >/dev/null; then
+    die "Missing Android intent-only gameplay protocol proof literal: $android_intent_only_literal"
+  fi
+done
+
 for debug_client_literal in \
   'create/select handlers use explicit account session guard' \
   'missing account session blocks character actions before request' \
