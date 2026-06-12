@@ -6,7 +6,7 @@
 
 import type { WebSocket } from 'ws';
 import type { AntiCheatState, Player } from '../../../packages/shared/types.js';
-import { DREAM_FRAGMENT_ANCHORED_ACTION, DREAM_GATE_INTERPRETED_ACTION, FORGEHOLD_ECONOMY_QUOTED_ACTION, FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION, HEARTFORGE_GATE_PREPARED_ACTION, ROUTE_ABUSE_NOTES_REVIEWED_ACTION, ROUTE_SURVEYED_ACTION, SKILL_RESOLVED_ACTION, SKILL_USE_INTENT_ACTION, SOULSTEEL_STABILIZED_ACTION } from '../../../packages/shared/skills.js';
+import { DREAM_FRAGMENT_ANCHORED_ACTION, DREAM_GATE_INTERPRETED_ACTION, DREAM_GATE_SEAL_PREPARED_ACTION, FORGEHOLD_ECONOMY_QUOTED_ACTION, FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION, HEARTFORGE_GATE_PREPARED_ACTION, ROUTE_ABUSE_NOTES_REVIEWED_ACTION, ROUTE_SURVEYED_ACTION, SKILL_RESOLVED_ACTION, SKILL_USE_INTENT_ACTION, SOULSTEEL_STABILIZED_ACTION } from '../../../packages/shared/skills.js';
 import { handleUseSkill, type SkillContext } from '../src/skills/index.js';
 import { buildOnwardRouteProgress, type RookguardQuestInput } from '../src/world/rookguardQuest.js';
 import { applyReceiptToOnwardRoutes, clearOnwardRouteProjection, getOnwardRouteReceiptProgress } from '../src/world/onwardRoutes.js';
@@ -105,12 +105,13 @@ test('route objective skills reject out of order without side effects', async ()
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:safety:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:gate:heartforge' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:safety:moonspire' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:gate:moonspire' });
 
   const failedResults = sent.filter((msg) => typeof msg === 'object' && msg !== null && (msg as { type?: string }).type === 'skill_result') as Array<{
     success?: boolean;
     reason?: string;
   }>;
-  assert(failedResults.length === 8, 'out-of-order route skills should each return a skill_result');
+  assert(failedResults.length === 9, 'out-of-order route skills should each return a skill_result');
   assert(failedResults.every((result) => result.success === false), 'out-of-order route skills should fail');
   assert(failedResults.every((result) => result.reason === 'invalid_target'), 'out-of-order route skills should use invalid_target');
   assert(!receipts.some((r) => r.action === FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION), 'out-of-order shipment must not emit quest receipt');
@@ -120,6 +121,7 @@ test('route objective skills reject out of order without side effects', async ()
   assert(!receipts.some((r) => r.action === DREAM_FRAGMENT_ANCHORED_ACTION), 'out-of-order Dream fragment must not emit evidence receipt');
   assert(!receipts.some((r) => r.action === ROUTE_ABUSE_NOTES_REVIEWED_ACTION), 'out-of-order safety review must not emit abuse-note receipt');
   assert(!receipts.some((r) => r.action === HEARTFORGE_GATE_PREPARED_ACTION), 'out-of-order Heartforge gate must not emit server gate receipt');
+  assert(!receipts.some((r) => r.action === DREAM_GATE_SEAL_PREPARED_ACTION), 'out-of-order Dream Gate seal must not emit server seal receipt');
   assert(!receipts.some((r) => r.action === SKILL_RESOLVED_ACTION), 'out-of-order route skills must not resolve');
   assert(resolvedSkills.length === 0, 'out-of-order route skills must not publish route progress');
 });
@@ -314,6 +316,31 @@ test('Heartforge gate preparation records server gate without travel or economy 
   assert(result.payload?.required_proofs?.includes('route_abuse_notes_reviewed'), 'Heartforge gate payload should require safety review');
 });
 
+test('Dream Gate seal preparation records server gate without traversal or economy authority', async () => {
+  const { ctx, receipts, sent } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:moonspire' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:interpret' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:fragment' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:safety:moonspire' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:gate:moonspire' });
+
+  const seal = receipts.find((r) => r.action === DREAM_GATE_SEAL_PREPARED_ACTION);
+  assert(seal, 'missing dream_gate_seal_prepared receipt');
+  assert(seal.inputs.route_id === 'moonspire_dream_gate_slice_v1', 'Dream Gate seal route mismatch');
+  assert(seal.inputs.seal_id === 'moonspire_dream_gate_server_seal_v1', 'Dream Gate seal id mismatch');
+  assert(seal.inputs.traversal_granted === false, 'Dream Gate seal preparation must not grant traversal');
+  assert(seal.inputs.economy_impact === 'none', 'Dream Gate seal preparation should not change economy');
+  assert(!receipts.some((r) => r.action === 'wallet_debit'), 'Dream Gate seal preparation should not debit gold');
+  assert(!receipts.some((r) => r.action === 'item_minted'), 'Dream Gate seal preparation should not mint an item');
+
+  const result = skillResultFor<{ seal_id?: string; traversal_granted?: boolean; economy_impact?: string; required_proofs?: string[] }>(sent, 'route:gate:moonspire');
+  assert(result?.success === true, 'Dream Gate seal skill_result should succeed');
+  assert(result.payload?.seal_id === 'moonspire_dream_gate_server_seal_v1', 'Dream Gate seal payload id mismatch');
+  assert(result.payload?.traversal_granted === false, 'Dream Gate seal payload must not grant traversal');
+  assert(result.payload?.economy_impact === 'none', 'Dream Gate seal payload economy impact mismatch');
+  assert(result.payload?.required_proofs?.includes('route_abuse_notes_reviewed'), 'Dream Gate seal payload should require safety review');
+});
+
 test('Forgehold shipment investigation records quest progress without travel or economy authority', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
@@ -349,6 +376,7 @@ test('onward route projection is derived from route receipts', async () => {
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:interpret' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:fragment' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:safety:moonspire' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:gate:moonspire' });
 
   const progress = getOnwardRouteReceiptProgress('p1');
   const routes = buildOnwardRouteProgress(completedRookguard, progress);
@@ -367,6 +395,7 @@ test('onward route projection is derived from route receipts', async () => {
   assert(moonspire.completed_objective_ids.includes('symbolic_puzzle_projection'), 'Dream interpretation should project complete');
   assert(moonspire.completed_objective_ids.includes('dream_fragment_evidence'), 'Dream fragment should project complete');
   assert(moonspire.completed_objective_ids.includes('dream_gate_abuse_notes'), 'Dream Gate safety review should project complete');
+  assert(moonspire.completed_objective_ids.includes('dream_gate_server_seal'), 'Dream Gate server seal should project complete');
   assert(forgehold.next_objective.includes('Heartforge Trial'), 'Forgehold next objective should advance after safety review');
   assert(moonspire.next_objective.includes('Hold the anchored dream fragment'), 'Moonspire next objective should advance after fragment anchoring');
 });

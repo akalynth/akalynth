@@ -2,6 +2,7 @@ import type { AuditReceipt } from '../../../../packages/shared/types.js';
 import {
   DREAM_FRAGMENT_ANCHORED_ACTION,
   DREAM_GATE_INTERPRETED_ACTION,
+  DREAM_GATE_SEAL_PREPARED_ACTION,
   FORGEHOLD_ECONOMY_QUOTED_ACTION,
   FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION,
   HEARTFORGE_GATE_PREPARED_ACTION,
@@ -21,6 +22,7 @@ export interface OnwardRouteReceiptProgress {
   dreamGateInterpreted: boolean;
   dreamFragmentAnchored: boolean;
   dreamGateAbuseNotesReviewed: boolean;
+  dreamGateSealPrepared: boolean;
 }
 
 function defaultProgress(): OnwardRouteReceiptProgress {
@@ -35,6 +37,7 @@ function defaultProgress(): OnwardRouteReceiptProgress {
     dreamGateInterpreted: false,
     dreamFragmentAnchored: false,
     dreamGateAbuseNotesReviewed: false,
+    dreamGateSealPrepared: false,
   };
 }
 
@@ -87,6 +90,8 @@ export function applyReceiptToOnwardRoutes(receipt: AuditReceipt): void {
     }
   } else if (receipt.action === HEARTFORGE_GATE_PREPARED_ACTION) {
     next = { ...current, heartforgeGatePrepared: true };
+  } else if (receipt.action === DREAM_GATE_SEAL_PREPARED_ACTION) {
+    next = { ...current, dreamGateSealPrepared: true };
   }
 
   if (next) setProgress(playerId, next);

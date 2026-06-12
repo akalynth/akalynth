@@ -36,6 +36,7 @@ const ROUTE_SURVEY_ACTIONS = [
   { skill_id: 'route:economy:forgehold', label: 'Quote Forgehold Economy', short: 'Quote' },
   { skill_id: 'route:craft:soulsteel', label: 'Stabilize Soulsteel', short: 'Steel' },
   { skill_id: 'route:gate:heartforge', label: 'Prepare Heartforge Gate', short: 'Gate' },
+  { skill_id: 'route:gate:moonspire', label: 'Prepare Dream Gate Seal', short: 'Seal' },
   { skill_id: 'route:dream:interpret', label: 'Interpret Dream Gate', short: 'Gate' },
   { skill_id: 'route:dream:fragment', label: 'Anchor Dream Fragment', short: 'Frag' },
 ] as const;
@@ -59,6 +60,7 @@ function routeActionIdsFor(onwardRoutes: NonNullable<PlayLoopProgress['onwardRou
       else if (!completed.has('symbolic_puzzle_projection')) ids.push('route:dream:interpret');
       else if (!completed.has('dream_fragment_evidence')) ids.push('route:dream:fragment');
       else if (!completed.has('dream_gate_abuse_notes')) ids.push('route:safety:moonspire');
+      else if (!completed.has('dream_gate_server_seal')) ids.push('route:gate:moonspire');
     }
   }
   return ids;

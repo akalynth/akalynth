@@ -6,6 +6,7 @@ import {
   DREAM_FRAGMENT_ANCHORED_ACTION,
   FORGEHOLD_ECONOMY_QUOTED_ACTION,
   HEARTFORGE_GATE_PREPARED_ACTION,
+  DREAM_GATE_SEAL_PREPARED_ACTION,
   PLAYER_REPORTED_ACTION,
   ROUTE_ABUSE_NOTES_REVIEWED_ACTION,
   ROUTE_SURVEYED_ACTION,
@@ -399,7 +400,7 @@ export function handleRouteSafetyReview(ctx: SkillContext, route: 'forgehold' | 
     : ['server owns dream traversal', 'server owns fragment evidence', 'no client-owned gate state', 'no client-owned economy change'];
   const nextObjective = isForgehold
     ? 'Carry the unstable Soulsteel proof toward the Heartforge Trial chamber; refinement still requires evidence recovery.'
-    : 'Hold the anchored dream fragment until traversal is server-authorized.';
+    : 'Prepare the Dream Gate server seal without granting traversal yet.';
 
   ctx.audit({
     player_id: ctx.playerId,
@@ -465,6 +466,47 @@ export function handleHeartforgeGatePreparation(ctx: SkillContext): SkillResult 
       source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
       receipt_action: HEARTFORGE_GATE_PREPARED_ACTION,
       travel_unlocked: false,
+      economy_impact: 'none',
+    },
+  };
+}
+
+export function handleDreamGateSealPreparation(ctx: SkillContext): SkillResult {
+  if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
+  const routeProgress = ctx.getOnwardRouteProgress?.();
+  if (!routeProgress?.dreamGateAbuseNotesReviewed) return { success: false, reason: 'invalid_target' };
+
+  const preparedAt = new Date().toISOString();
+  const sealId = 'moonspire_dream_gate_server_seal_v1';
+  const requiredProofs = ['dream_fragment_anchored', 'route_abuse_notes_reviewed'];
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: DREAM_GATE_SEAL_PREPARED_ACTION,
+    inputs: {
+      route_id: 'moonspire_dream_gate_slice_v1',
+      seal_id: sealId,
+      required_proofs: requiredProofs,
+      source_drop: 'drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1',
+      prepared_at: preparedAt,
+      traversal_granted: false,
+      economy_impact: 'none',
+    },
+    result: 'ok',
+  });
+
+  return {
+    success: true,
+    payload: {
+      route_id: 'moonspire_dream_gate_slice_v1',
+      seal_id: sealId,
+      title: 'Moonspire Dream Gate Seal',
+      status: 'prepared',
+      required_proofs: requiredProofs,
+      next_objective: 'Hold the anchored dream fragment until traversal is server-authorized.',
+      source_drop: 'drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1',
+      receipt_action: DREAM_GATE_SEAL_PREPARED_ACTION,
+      traversal_granted: false,
       economy_impact: 'none',
     },
   };

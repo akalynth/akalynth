@@ -293,6 +293,7 @@ export function buildOnwardRouteProgress(
     dreamGateInterpreted: false,
     dreamFragmentAnchored: false,
     dreamGateAbuseNotesReviewed: false,
+    dreamGateSealPrepared: false,
   }
 ): OnwardRouteProgress[] {
   const available = buildRookguardQuestProgress(input).completed;
@@ -311,6 +312,7 @@ export function buildOnwardRouteProgress(
     ...(receiptProgress.dreamGateInterpreted ? ['symbolic_puzzle_projection'] : []),
     ...(receiptProgress.dreamFragmentAnchored ? ['dream_fragment_evidence'] : []),
     ...(receiptProgress.dreamGateAbuseNotesReviewed ? ['dream_gate_abuse_notes'] : []),
+    ...(receiptProgress.dreamGateSealPrepared ? ['dream_gate_server_seal'] : []),
   ];
 
   return [
@@ -352,8 +354,10 @@ export function buildOnwardRouteProgress(
       status,
       unlock_requirement: unlockRequirement,
       next_objective: available
-        ? receiptProgress.dreamGateAbuseNotesReviewed
+        ? receiptProgress.dreamGateSealPrepared
           ? 'Hold the anchored dream fragment until traversal is server-authorized.'
+          : receiptProgress.dreamGateAbuseNotesReviewed
+            ? 'Prepare the Dream Gate server seal without granting traversal yet.'
           : receiptProgress.dreamFragmentAnchored
             ? 'Review the Dream Gate safety boundary before any traversal can be server-authorized.'
           : receiptProgress.dreamGateInterpreted
@@ -364,13 +368,14 @@ export function buildOnwardRouteProgress(
         { id: 'dream_gate_rumor', label: 'Dream Gate rumor discovery', system: 'quest' },
         { id: 'symbolic_puzzle_projection', label: 'Symbolic puzzle projection', system: 'dream_gate' },
         { id: 'dream_fragment_evidence', label: 'Dream fragment evidence object', system: 'server' },
+        { id: 'dream_gate_server_seal', label: 'Dream Gate server seal', system: 'server' },
         { id: 'dream_gate_client_projection', label: 'Read-only client route projection', system: 'ui' },
         { id: 'dream_gate_android_projection', label: 'Android read-only route parity', system: 'android' },
         { id: 'dream_gate_abuse_notes', label: 'No client-owned dream traversal truth', system: 'anti_cheat' },
       ],
       completed_objective_ids: moonspireCompleted,
       source_drop: 'drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1',
-      receipt_actions: ['route_surveyed', 'dream_gate_interpreted', 'dream_fragment_anchored', 'route_abuse_notes_reviewed'],
+      receipt_actions: ['route_surveyed', 'dream_gate_interpreted', 'dream_fragment_anchored', 'route_abuse_notes_reviewed', 'dream_gate_seal_prepared'],
     },
   ];
 }
