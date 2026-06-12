@@ -390,6 +390,10 @@ async function main(): Promise<void> {
   check('property list requires character id', res.status === 400 && res.body.error === 'character_id_required');
   check('missing-character property list emits no listing receipt', receipts.every((r) => r.action !== PROPERTY_LISTED_ACTION));
 
+  res = await request('POST', '/v1/property/list', { character_id: 'p_buyer', price_gold: 75 }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
+  check('property list requires property id', res.status === 400 && res.body.error === 'property_id_required');
+  check('missing-property property list emits no listing receipt', receipts.every((r) => r.action !== PROPERTY_LISTED_ACTION));
+
   res = await request('POST', '/v1/property/list', { character_id: 'p_buyer', property_id: 'Azura:H1', price_gold: 0 }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
   check('property list rejects invalid price', res.status === 400 && res.body.error === 'invalid_price');
   check('invalid-price property list emits no listing receipt', receipts.every((r) => r.action !== PROPERTY_LISTED_ACTION));

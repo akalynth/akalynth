@@ -280,6 +280,8 @@ for web_economy_literal in \
   "non-owner property list emits no listing receipt" \
   "property list requires character id" \
   "missing-character property list emits no listing receipt" \
+  "property list requires property id" \
+  "missing-property property list emits no listing receipt" \
   "property list rejects invalid price" \
   "invalid-price property list emits no listing receipt" \
   "property list succeeds for owner" \
