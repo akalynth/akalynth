@@ -406,6 +406,10 @@ async function main(): Promise<void> {
   check('property list rejects invalid price', res.status === 400 && res.body.error === 'invalid_price');
   check('invalid-price property list emits no listing receipt', receipts.every((r) => r.action !== PROPERTY_LISTED_ACTION));
 
+  res = await request('POST', '/v1/property/list', { character_id: 'p_buyer', property_id: 'Azura:UNKNOWN', price_gold: 75 }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
+  check('property list rejects unknown plot', res.status === 404 && res.body.error === 'unknown_plot');
+  check('unknown-plot property list emits no listing receipt', receipts.every((r) => r.action !== PROPERTY_LISTED_ACTION));
+
   res = await request('POST', '/v1/property/list', { character_id: 'p_buyer', property_id: 'Azura:H1', price_gold: 75 }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
   check('property list succeeds for owner', res.status === 200 && getProperty('Azura:H1')?.status === 'listed');
   check('property list emitted property_listed receipt', receipts.at(-1)?.action === PROPERTY_LISTED_ACTION);
