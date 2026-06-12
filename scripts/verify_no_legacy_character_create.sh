@@ -60,4 +60,15 @@ if [[ -n "$status_matches" ]]; then
   die "Stale account-portal status wording found. Current docs must distinguish the historical E0 receipt from later source implementation."
 fi
 
+site_doc_matches="$(
+  grep -RInE "Today's .localStorage.-only preview|current pages are mockups storing data in the browser" \
+    "$ROOT_DIR/docs/account-portal/AKALYNTH_ACCOUNT_PORTAL_PRODUCT_DECISION_V1/WEBSITE_PORTAL_ROLE.md" \
+    2>/dev/null || true
+)"
+
+if [[ -n "$site_doc_matches" ]]; then
+  echo "$site_doc_matches" >&2
+  die "Stale website portal role wording found. Current docs must describe API-backed static frontend behavior without browser-local authority."
+fi
+
 echo "✅ No legacy create_character protocol path found"

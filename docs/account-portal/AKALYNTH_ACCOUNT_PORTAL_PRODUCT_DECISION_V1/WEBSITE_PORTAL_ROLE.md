@@ -18,10 +18,10 @@ Decision: the **website (akalynth-site) is the first account portal**, but it is
   minting, no economy authority in the browser.
 - It **calls `api.akalynth.com`** for all account/character/economy actions; the server
   is the single source of truth.
-- It does **not** keep `localStorage` as authority once real-account work begins.
-  Today's `localStorage`-only preview (account/shop/houses/app.js) is replaced by real
-  API calls; `localStorage` may hold only non-authoritative UI state (e.g. a session
-  reference if the chosen session mechanism is a bearer token, handled per the E2 model).
+- It does **not** keep browser storage as authority. Current site code calls real
+  account, character, shop, work, wallet, and property APIs; browser storage may
+  hold only non-authoritative UI state such as selected-character convenience or
+  CSRF fallback.
 
 ## Boundary discipline
 
@@ -32,8 +32,9 @@ Decision: the **website (akalynth-site) is the first account portal**, but it is
   preview for that behavior (no overclaiming a live shop/economy that isn't real).
 - CORS, CSRF (if cookie sessions), and the exact session mechanism are fixed in the E2 API lane.
 
-## Migration note
+## Current implementation note
 
-The current pages are mockups storing data in the browser. Converting them is a
-**behavior change** per page; each conversion is its own reviewable step (E5/E8) and
-must preserve a working, honest preview until the server path is live.
+The account, beta, shop, and houses pages are static frontend surfaces that call
+server APIs when available. Future changes remain reviewable per page and must
+preserve a working, honest public boundary, but these pages are no longer
+browser-local authority mockups.
