@@ -1,0 +1,142 @@
+{
+  "lane": "AKALYNTH_ROOKGUARD_MAP_ASSET_TRAINING_BUILD_V1",
+  "object_id": "rookguard-map-asset-training-build",
+  "status": "training_only",
+  "zone_role": "canonical 32x32 tutorial/onboarding zone concept; not canonical gameplay state",
+  "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+  "source_ref": "original_akalynth_training_build_v1",
+  "ip_boundary": {
+    "external_reference_use": "genre constraints only: small onboarding island, basic movement, first signs, safe progression",
+    "no_external_map_derivation": true,
+    "no_external_names_or_layouts": true,
+    "no_copied_art_or_tile_composition": true
+  },
+  "allowed_assets": [
+    {
+      "id": "rg_ground_grass_moss_001",
+      "visual_atom": "ground",
+      "category": "ground",
+      "layer": "ground",
+      "target_dims": [32, 32],
+      "blocks_training_path": false,
+      "description": "Muted moss-grass ground tile for low-pressure tutorial space."
+    },
+    {
+      "id": "rg_ground_packed_dirt_001",
+      "visual_atom": "ground",
+      "category": "ground",
+      "layer": "ground",
+      "target_dims": [32, 32],
+      "blocks_training_path": false,
+      "description": "Packed earth surface for secondary tutorial routes."
+    },
+    {
+      "id": "rg_path_cobble_worn_001",
+      "visual_atom": "paths",
+      "category": "path",
+      "layer": "ground",
+      "target_dims": [32, 32],
+      "blocks_training_path": false,
+      "description": "Worn stone path for central plaza and guild approach."
+    },
+    {
+      "id": "rg_path_dirt_safe_001",
+      "visual_atom": "paths",
+      "category": "path",
+      "layer": "ground",
+      "target_dims": [32, 32],
+      "blocks_training_path": false,
+      "description": "Readable dirt path used for the first spawn-to-gate route."
+    },
+    {
+      "id": "rg_fence_wood_low_001",
+      "visual_atom": "fences",
+      "category": "fence",
+      "layer": "object",
+      "target_dims": [32, 32],
+      "blocks_training_path": true,
+      "description": "Low wooden fence used to frame safe practice areas."
+    },
+    {
+      "id": "rg_training_dummy_straw_001",
+      "visual_atom": "training dummies",
+      "category": "training_dummy",
+      "layer": "object",
+      "target_dims": [32, 32],
+      "blocks_training_path": true,
+      "description": "Non-creature practice target for onboarding visual language."
+    },
+    {
+      "id": "rg_house_thatch_small_001",
+      "visual_atom": "small houses",
+      "category": "small_house",
+      "layer": "object",
+      "target_dims": [64, 64],
+      "blocks_training_path": true,
+      "description": "Original compact thatch-roof tutorial cottage."
+    },
+    {
+      "id": "rg_house_stone_small_001",
+      "visual_atom": "small houses",
+      "category": "small_house",
+      "layer": "object",
+      "target_dims": [64, 64],
+      "blocks_training_path": true,
+      "description": "Original compact stone tutorial cottage."
+    },
+    {
+      "id": "rg_sign_first_instruction_001",
+      "visual_atom": "signs",
+      "category": "sign",
+      "layer": "object",
+      "target_dims": [32, 32],
+      "blocks_training_path": true,
+      "description": "First instruction sign placed near spawn."
+    },
+    {
+      "id": "rg_sign_quest_board_001",
+      "visual_atom": "signs",
+      "category": "sign",
+      "layer": "object",
+      "target_dims": [32, 32],
+      "blocks_training_path": true,
+      "description": "Quest-board style direction sign for training-yard review."
+    },
+    {
+      "id": "rg_gate_tutorial_runed_001",
+      "visual_atom": "gates",
+      "category": "gate",
+      "layer": "object",
+      "target_dims": [32, 64],
+      "blocks_training_path": false,
+      "description": "Runed threshold marker for the tutorial exit target."
+    },
+    {
+      "id": "rg_water_edge_bank_001",
+      "visual_atom": "water edges",
+      "category": "water_edge",
+      "layer": "ground",
+      "target_dims": [32, 32],
+      "blocks_training_path": true,
+      "description": "Original shore/bank border tile used only on valid map edges."
+    },
+    {
+      "id": "rg_cave_mouth_shallow_001",
+      "visual_atom": "cave mouths",
+      "category": "cave_mouth",
+      "layer": "object",
+      "target_dims": [64, 32],
+      "blocks_training_path": true,
+      "description": "Small sealed cave-mouth visual for future tutorial review."
+    },
+    {
+      "id": "rg_marker_chronicle_shrine_001",
+      "visual_atom": "shrine/chronicle markers",
+      "category": "shrine_chronicle_marker",
+      "layer": "object",
+      "target_dims": [32, 64],
+      "blocks_training_path": true,
+      "description": "Chronicle marker for proof/lore placement review."
+    }
+  ]
+}

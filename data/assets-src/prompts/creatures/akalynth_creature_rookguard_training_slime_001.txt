@@ -1,0 +1,7 @@
+Create a single original game asset for Akalynth. Classic early-2000s top-down 2D MMORPG constraints: small, chunky, hand-pixelled, flat and highly readable. Original Akalynth tutorial creature, not copied from any existing game.
+
+RENDERING STYLE: authored at the Classic 32 base (this creature is 32x32), readable when integer-scaled to 64/128. Bold solid 1px dark outline around the whole creature and around major shape breaks. Flat shading with a limited moss-green, teal, and pale-gold palette; hard-edged shadow steps, no soft gradients, no airbrushed lighting, no glossy reflections. Light from the upper-left as simple flat highlight blocks, with a small contact shadow. Transparent background, centered single sprite only, no scene, no ground tile, no UI, no logo, no text.
+
+PERSPECTIVE: top-down slight oblique view, single idle creature atom for a square grid.
+
+Creature (32x32): Rookguard training slime, a harmless-looking tutorial yard blob with a compact rounded silhouette, two tiny dark eyes, a pale-gold practice mark embedded inside the jelly, and a few square drips that read clearly at small sizes. It should feel like a supervised practice target, not a swamp monster, not a boss, and not a copied external creature design.

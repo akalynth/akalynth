@@ -1,0 +1,85 @@
+{
+  "lane": "AKALYNTH_ROOKGUARD_MAP_ASSET_TRAINING_BUILD_V1",
+  "object_id": "rookguard-asset-placement-rules",
+  "status": "training_only",
+  "source_ref": "original_akalynth_training_build_v1",
+  "deterministic_rules": [
+    {
+      "id": "map_dimensions_32x32",
+      "severity": "required",
+      "rule": "seed map width must equal 32 and height must equal 32"
+    },
+    {
+      "id": "asset_ids_registered",
+      "severity": "required",
+      "rule": "every ground legend asset and object asset_id must exist in rookguard.asset-register.json"
+    },
+    {
+      "id": "spawn_exactly_once",
+      "severity": "required",
+      "rule": "seed map must define exactly one spawn coordinate"
+    },
+    {
+      "id": "tutorial_gate_exactly_once",
+      "severity": "required",
+      "rule": "seed map must define exactly one tutorial_gate coordinate and exactly one object with role tutorial_gate"
+    },
+    {
+      "id": "spawn_to_gate_reachable",
+      "severity": "required",
+      "rule": "spawn must reach tutorial_gate through non-blocked training-review tiles"
+    },
+    {
+      "id": "first_sign_near_spawn",
+      "severity": "required",
+      "rule": "exactly one first_instruction_sign object must be within Manhattan distance 5 of spawn"
+    },
+    {
+      "id": "critical_path_clear",
+      "severity": "required",
+      "rule": "blocking objects must not seal the spawn-to-gate path"
+    },
+    {
+      "id": "valid_water_edge_neighbors",
+      "severity": "required",
+      "rule": "each water-edge tile must have at least one neighboring land/path tile and at least one edge or off-map neighbor"
+    },
+    {
+      "id": "no_external_map_geometry",
+      "severity": "required",
+      "rule": "bundle source_ref must be original_akalynth_training_build_v1 and must not claim external map derivation"
+    },
+    {
+      "id": "forbidden_reference_scan",
+      "severity": "required",
+      "rule": "bundle text must not contain forbidden external game/place/NPC names"
+    },
+    {
+      "id": "no_gameplay_promotion",
+      "severity": "required",
+      "rule": "training seed map must not be imported into packages/shared/maps or server runtime world state"
+    }
+  ],
+  "training_walkability_policy": {
+    "scope": "offline preview and review only",
+    "walkable_categories": ["ground", "path", "gate"],
+    "blocking_object_categories": ["fence", "training_dummy", "small_house", "sign", "cave_mouth", "shrine_chronicle_marker"],
+    "does_not_change_server_collision": true
+  },
+  "critical_points": {
+    "spawn": "exactly_once",
+    "tutorial_gate": "exactly_once",
+    "first_instruction_sign": {
+      "exactly_once": true,
+      "max_manhattan_distance_from_spawn": 5
+    }
+  },
+  "manifest_scope": [
+    "rookguard.asset-register.json",
+    "rookguard.map-training.jsonl",
+    "rookguard.seed-map.json",
+    "rookguard.asset-placement-rules.json",
+    "rookguard.preview.html",
+    "claim-boundary.md"
+  ]
+}

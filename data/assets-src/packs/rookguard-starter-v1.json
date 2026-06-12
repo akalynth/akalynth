@@ -1,0 +1,18 @@
+{
+  "pack": "AKALYNTH_ROOKGUARD_STARTER_PACK_V1",
+  "version": 1,
+  "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+  "description": "Prompt-stage Rookguard tutorial visuals. Production backlog only; these are not generated, normalized, atlas-packed, reviewed, or promoted.",
+  "assets": [
+    {
+      "id": "akalynth_creature_rookguard_training_slime_001",
+      "asset_type": "creature",
+      "target_dims": [
+        32,
+        32
+      ],
+      "status": "prompt_written",
+      "prompt_file": "data/assets-src/prompts/creatures/akalynth_creature_rookguard_training_slime_001.txt"
+    }
+  ]
+}

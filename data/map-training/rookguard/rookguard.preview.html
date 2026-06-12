@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en" data-training-only="true">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rookguard Training Map Preview</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #141818;
+      --panel: #202625;
+      --ink: #e8eadf;
+      --muted: #aeb7aa;
+      --grass: #506c3f;
+      --dirt: #8b6a3f;
+      --cobble: #858681;
+      --water-edge: #244f62;
+      --fence: #8a633b;
+      --house: #a55d39;
+      --sign: #d0aa5d;
+      --gate: #4ba6b5;
+      --dummy: #c19b58;
+      --shrine: #6fb3d6;
+      --cave: #2e3130;
+      --spawn: #f1e26f;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font: 14px/1.4 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    main {
+      width: min(1180px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 20px 0 28px;
+    }
+
+    header {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 650;
+      letter-spacing: 0;
+    }
+
+    .badge {
+      color: #101414;
+      background: var(--spawn);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 1fr) 280px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    #map {
+      display: grid;
+      grid-template-columns: repeat(32, minmax(8px, 1fr));
+      aspect-ratio: 1 / 1;
+      border: 1px solid #38413d;
+      background: #0e1111;
+      image-rendering: pixelated;
+      overflow: hidden;
+    }
+
+    .tile {
+      position: relative;
+      min-width: 0;
+      aspect-ratio: 1 / 1;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+    }
+
+    .G { background: var(--grass); }
+    .D { background: var(--dirt); }
+    .P { background: var(--cobble); }
+    .W { background: var(--water-edge); }
+
+    .tile::after {
+      content: "";
+      position: absolute;
+      inset: 22%;
+      border-radius: 2px;
+      opacity: 0;
+    }
+
+    .spawn::after { background: var(--spawn); opacity: 1; border-radius: 50%; }
+    .tutorial_gate::after { background: var(--gate); opacity: 1; inset: 8% 22%; }
+    .first_instruction_sign::after,
+    .direction_sign::after { background: var(--sign); opacity: 1; inset: 18% 28%; }
+    .chronicle_marker::after { background: var(--shrine); opacity: 1; inset: 12% 24%; }
+    .small_house::after { background: var(--house); opacity: 1; inset: 4%; }
+    .cave_mouth::after { background: var(--cave); opacity: 1; inset: 24% 8%; }
+    .training_dummy::after { background: var(--dummy); opacity: 1; inset: 14% 28%; }
+    .training_yard_fence::after { background: var(--fence); opacity: 1; inset: 34% 8%; }
+
+    aside {
+      background: var(--panel);
+      border: 1px solid #38413d;
+      padding: 12px;
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      letter-spacing: 0;
+    }
+
+    dl {
+      display: grid;
+      grid-template-columns: 22px 1fr;
+      gap: 7px 10px;
+      margin: 0;
+    }
+
+    dt {
+      width: 18px;
+      height: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    dd {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    @media (max-width: 760px) {
+      header { align-items: start; flex-direction: column; }
+      .layout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Rookguard 32x32 Training Map Preview</h1>
+      <span class="badge">training-only</span>
+    </header>
+
+    <div class="layout">
+      <section id="map" aria-label="Rookguard training seed map"></section>
+      <aside>
+        <h2>Legend</h2>
+        <dl>
+          <dt class="G"></dt><dd>grass ground</dd>
+          <dt class="D"></dt><dd>dirt path</dd>
+          <dt class="P"></dt><dd>worn cobble</dd>
+          <dt class="W"></dt><dd>water edge</dd>
+          <dt style="background: var(--spawn)"></dt><dd>spawn marker</dd>
+          <dt style="background: var(--gate)"></dt><dd>tutorial gate</dd>
+          <dt style="background: var(--sign)"></dt><dd>sign or board</dd>
+          <dt style="background: var(--house)"></dt><dd>small house</dd>
+          <dt style="background: var(--dummy)"></dt><dd>training dummy</dd>
+          <dt style="background: var(--fence)"></dt><dd>fence</dd>
+          <dt style="background: var(--shrine)"></dt><dd>chronicle marker</dd>
+          <dt style="background: var(--cave)"></dt><dd>cave mouth</dd>
+        </dl>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const TRAINING_MAP_ROWS = [
+      "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+      "WGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGW",
+      "WGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGW",
+      "WGGGGGGGGGGGGPPPPPPGGGGGGGGGGGGW",
+      "WGGGGDGGGGGGGPPPPPPGGGGGGGDGGGGW",
+      "WGGGGDGGGGGGGPPPPPPGGGGGGGDGGGGW",
+      "WGGGGDGGGGGGGPPPPPPGGGGGGGDGGGGW",
+      "WGGGGDGGGGGGGPPPPPPGGGGGGGDGGGGW",
+      "WGGGGDGGGGGGGPPPPPPGGGGGGGDGGGGW",
+      "WGGGGDGGGGGGGGGDGGGGGGGGGGDGGGGW",
+      "WGGGGDGGGGGGGGGDGGGGGGGGGGDGGGGW",
+      "WGGGGDGGGGGGGGGDGGGGGGGGGGDGGGGW",
+      "WGGGGDGGGGGGGGGDGGGGGGGGGGDGGGGW",
+      "WGGGGDGGGGGGGGGDGGGGGGGGGGDGGGGW",
+      "WGGPPPPPPPGGGGGDGGGGGGGGGGDGGGGW",
+      "WGGPPPPPPPGGGGGPPPPPGGGGGGDGGGGW",
+      "WDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDW",
+      "WGGPPPPPPPGGGGGPPPPPGGGGGGDGGGGW",
+      "WGGPPPPPPPGGGGGDGGGGGGGGGGDGGGGW",
+      "WGGGGDGGGGGGGGGDGGGGGGGGGGDGGGGW",
+      "WGGGGDGGGGGGGGGDGGGGGDDDDDDDDGGW",
+      "WGGGGDGGGGGGGGGDGGGGGDDDDDDDDGGW",
+      "WGGGGDGGGGGGGGGDGGGGGDDDDDDDDGGW",
+      "WGGGGDGGGGGGGGGDGGGGGDDDDDDDDGGW",
+      "WGGGGDGGGGGGGGGDGGGGGDDDDDDDDGGW",
+      "WGGGGDGGGGGGGGGDGGGGGDDDDDDDDGGW",
+      "WGGGGDGGGGGGGGGDGGGGGGGGGGGGGGGW",
+      "WGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGW",
+      "WGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGW",
+      "WGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGW",
+      "WGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGW",
+      "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW"
+    ];
+
+    const TRAINING_OBJECTS = [
+      {"id":"spawn","role":"spawn","x":5,"y":16},
+      {"id":"first_instruction_sign","role":"first_instruction_sign","x":7,"y":15},
+      {"id":"quest_board","role":"direction_sign","x":20,"y":18},
+      {"id":"tutorial_gate","role":"tutorial_gate","x":29,"y":16},
+      {"id":"chronicle_marker","role":"chronicle_marker","x":16,"y":15},
+      {"id":"guild_house_west","role":"small_house","x":13,"y":4},
+      {"id":"guild_house_east","role":"small_house","x":17,"y":4},
+      {"id":"sealed_cave_mouth","role":"cave_mouth","x":26,"y":7},
+      {"id":"dummy_west","role":"training_dummy","x":23,"y":22},
+      {"id":"dummy_east","role":"training_dummy","x":25,"y":22},
+      {"id":"fence_top_20","role":"training_yard_fence","x":20,"y":19},
+      {"id":"fence_top_22","role":"training_yard_fence","x":22,"y":19},
+      {"id":"fence_top_24","role":"training_yard_fence","x":24,"y":19},
+      {"id":"fence_top_26","role":"training_yard_fence","x":26,"y":19},
+      {"id":"fence_top_28","role":"training_yard_fence","x":28,"y":19},
+      {"id":"fence_bottom_20","role":"training_yard_fence","x":20,"y":26},
+      {"id":"fence_bottom_22","role":"training_yard_fence","x":22,"y":26},
+      {"id":"fence_bottom_24","role":"training_yard_fence","x":24,"y":26},
+      {"id":"fence_bottom_26","role":"training_yard_fence","x":26,"y":26},
+      {"id":"fence_bottom_28","role":"training_yard_fence","x":28,"y":26},
+      {"id":"fence_left_21","role":"training_yard_fence","x":19,"y":21},
+      {"id":"fence_left_23","role":"training_yard_fence","x":19,"y":23},
+      {"id":"fence_left_25","role":"training_yard_fence","x":19,"y":25},
+      {"id":"fence_right_21","role":"training_yard_fence","x":29,"y":21},
+      {"id":"fence_right_23","role":"training_yard_fence","x":29,"y":23},
+      {"id":"fence_right_25","role":"training_yard_fence","x":29,"y":25}
+    ];
+
+    function renderMap() {
+      const map = document.getElementById('map');
+      const objectByCell = new Map(TRAINING_OBJECTS.map((obj) => [`${obj.x},${obj.y}`, obj.role]));
+      for (let y = 0; y < TRAINING_MAP_ROWS.length; y++) {
+        for (let x = 0; x < TRAINING_MAP_ROWS[y].length; x++) {
+          const tile = document.createElement('div');
+          const role = objectByCell.get(`${x},${y}`);
+          tile.className = `tile ${TRAINING_MAP_ROWS[y][x]}${role ? ` ${role}` : ''}`;
+          tile.title = `${x},${y}${role ? ` ${role}` : ''}`;
+          map.appendChild(tile);
+        }
+      }
+    }
+
+    renderMap();
+  </script>
+</body>
+</html>

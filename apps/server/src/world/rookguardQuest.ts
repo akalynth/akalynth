@@ -1,0 +1,279 @@
+import type {
+  AuditReceipt,
+  RookguardCodexAnchor,
+  RookguardCodexProfession,
+  RookguardCodexShelf,
+  RookguardQuestProgress,
+  SovereignVocation,
+  TutorialStep,
+  TutorialProgress,
+} from '../../../../packages/shared/types.js';
+import {
+  SOVEREIGN_VOCATIONS,
+  TEM_CHALLENGE_RESPONSE,
+  VOCATION_DECLARED_ACTION,
+} from '../../../../packages/shared/types.js';
+
+export interface RookguardQuestInput {
+  tutorial: TutorialProgress;
+  trainingComplete: boolean;
+  vocation: SovereignVocation | null;
+}
+
+function defaultTutorialProgress(): TutorialProgress {
+  return { move: false, chat: false, tem: false, gate: false, complete: false };
+}
+
+function defaultRookguardQuestInput(): RookguardQuestInput {
+  return {
+    tutorial: defaultTutorialProgress(),
+    trainingComplete: false,
+    vocation: null,
+  };
+}
+
+const rookguardQuestByPlayerId = new Map<string, RookguardQuestInput>();
+
+function cloneRookguardQuestInput(input: RookguardQuestInput): RookguardQuestInput {
+  return {
+    tutorial: { ...input.tutorial },
+    trainingComplete: input.trainingComplete,
+    vocation: input.vocation,
+  };
+}
+
+export function getRookguardQuestInput(playerId: string): RookguardQuestInput {
+  return cloneRookguardQuestInput(rookguardQuestByPlayerId.get(playerId) ?? defaultRookguardQuestInput());
+}
+
+export function clearRookguardQuestProjection(): void {
+  rookguardQuestByPlayerId.clear();
+}
+
+function setRookguardQuestInput(playerId: string, next: RookguardQuestInput): void {
+  rookguardQuestByPlayerId.set(playerId, cloneRookguardQuestInput(next));
+}
+
+function validTutorialStep(value: unknown): value is TutorialStep {
+  return value === 'move' || value === 'chat' || value === 'tem' || value === 'gate';
+}
+
+function validVocation(value: unknown): value is SovereignVocation {
+  return typeof value === 'string' && SOVEREIGN_VOCATIONS.includes(value as SovereignVocation);
+}
+
+export function applyReceiptToRookguardQuest(receipt: AuditReceipt): void {
+  const playerId = receipt.actor_id;
+  if (!playerId || receipt.result === 'rejected') return;
+
+  const current = getRookguardQuestInput(playerId);
+  let next: RookguardQuestInput | null = null;
+
+  if (receipt.action === 'tutorial_step_complete' && validTutorialStep(receipt.inputs?.step)) {
+    next = {
+      ...current,
+      tutorial: {
+        ...current.tutorial,
+        [receipt.inputs.step]: true,
+      },
+    };
+  } else if (receipt.action === 'mob_kill') {
+    if (receipt.inputs?.map === 'Rookguard' && receipt.inputs?.mob_type === 'training_slime') {
+      next = {
+        ...current,
+        trainingComplete: true,
+      };
+    }
+  } else if (receipt.action === VOCATION_DECLARED_ACTION && validVocation(receipt.inputs?.vocation)) {
+    next = {
+      ...current,
+      vocation: receipt.inputs.vocation,
+    };
+  } else if (receipt.action === 'gate_unlock' || receipt.action === 'tutorial_completed') {
+    next = {
+      ...current,
+      tutorial: {
+        ...current.tutorial,
+        gate: true,
+        complete: true,
+      },
+    };
+  }
+
+  if (next) setRookguardQuestInput(playerId, next);
+}
+
+export const ROOKGUARD_CODEX_SHELVES: RookguardCodexShelf[] = [
+  {
+    object_id: 'artifacts-codex',
+    title: 'Artifacts Codex',
+    subtitle: 'Relics of Power.',
+    role: 'future_lane',
+    gameplay_hint: 'Future relic and equipment proofs; no Rookguard reward or power grant yet.',
+  },
+  {
+    object_id: 'chronicle-of-ages',
+    title: 'Chronicle of Ages',
+    subtitle: 'Events That Changed The World.',
+    role: 'proof_history',
+    gameplay_hint: 'Read receipts, quest steps, and remembered world events as the player leaves Rookguard.',
+  },
+  {
+    object_id: 'dungeon-codex',
+    title: 'Dungeon Codex',
+    subtitle: 'Places Where History Still Breathes.',
+    role: 'future_lane',
+    gameplay_hint: 'Points forward to First Archive and vault routes; no Rookguard dungeon access yet.',
+  },
+  {
+    object_id: 'emberwilds-atlas',
+    title: 'Emberwilds Atlas',
+    subtitle: 'The volcanic frontier, mapped.',
+    role: 'future_lane',
+    gameplay_hint: 'World-map frontier context for later travel lanes; no Rookguard transition yet.',
+  },
+  {
+    object_id: 'factions-codex',
+    title: 'Factions Codex',
+    subtitle: 'Powers That Shape the World.',
+    role: 'future_lane',
+    gameplay_hint: 'Frames the player as Codex-adjacent, but grants no faction rank or standing yet.',
+  },
+  {
+    object_id: 'heroes-codex',
+    title: 'Heroes Codex',
+    subtitle: 'The First Legends.',
+    role: 'active_profession_lore',
+    gameplay_hint: 'The First Archivist anchors the Rookguard profession oath and visible Codex role.',
+  },
+];
+
+const HEROES_CODEX_ANCHOR: RookguardCodexAnchor = {
+  object_id: 'heroes-codex',
+  status: 'accepted',
+  source: 'AKALYNTH_HEROES_CODEX_V1',
+  evidence: '3f9d4f90...11d630 source',
+  authority: 'Akalynth',
+  related: ROOKGUARD_CODEX_SHELVES.map((shelf) => shelf.object_id),
+};
+
+export const ROOKGUARD_CODEX_PROFESSIONS: Record<SovereignVocation, RookguardCodexProfession> = {
+  warden: {
+    vocation: 'warden',
+    lore_id: 'codex_warden',
+    codex_anchor: HEROES_CODEX_ANCHOR,
+    title: 'Warden of the Accord',
+    oath: 'I keep the record alive by keeping its people standing.',
+    starter_role: 'Protect travelers, escort proof paths, and hold the gate until every required mark is recorded.',
+    starter_actions: ['Escort another player to the Codex arch', 'Hold the training yard line', 'Enter the gate only after all proofs are marked'],
+  },
+  cantor: {
+    vocation: 'cantor',
+    lore_id: 'codex_cantor',
+    codex_anchor: HEROES_CODEX_ANCHOR,
+    title: 'Cantor of the Remembered Word',
+    oath: 'I refuse forgetting by speaking what others can witness.',
+    starter_role: 'Use chat, Tem answers, and public signals to turn private action into shared memory.',
+    starter_actions: ['Send a clear plaza signal', 'Answer Tem cleanly', 'Call out proof events for nearby players'],
+  },
+  hexer: {
+    vocation: 'hexer',
+    lore_id: 'codex_hexer',
+    codex_anchor: HEROES_CODEX_ANCHOR,
+    title: 'Hexer of Unforgotten Marks',
+    oath: 'I read the mark before I trust the mask.',
+    starter_role: 'Inspect proof trails, identity marks, and pressure patterns before claims become accepted memory.',
+    starter_actions: ['Inspect a player identity', 'Read a chronicle entry', 'Check the Codex arch before the gate'],
+  },
+  reaver: {
+    vocation: 'reaver',
+    lore_id: 'codex_reaver',
+    codex_anchor: HEROES_CODEX_ANCHOR,
+    title: 'Reaver of Recorded Consequence',
+    oath: 'I cut only what the ledger can remember.',
+    starter_role: 'Practice decisive combat where every strike, kill, and minted item leaves a durable trail.',
+    starter_actions: ['Defeat a training slime', 'Pick up only minted loot', 'Move through the gate after the Codex mark'],
+  },
+};
+
+export function rookguardGateOpen(input: RookguardQuestInput): boolean {
+  return (
+    input.tutorial.move &&
+    input.tutorial.chat &&
+    input.tutorial.tem &&
+    input.trainingComplete &&
+    input.vocation !== null
+  );
+}
+
+export function rookguardQuestObjective(input: RookguardQuestInput): string {
+  if (!input.tutorial.move) return 'Step onto the move rune';
+  if (!input.tutorial.chat) return 'Send a signal in chat';
+  if (!input.tutorial.tem) return `Answer Tem: ${TEM_CHALLENGE_RESPONSE}`;
+  if (!input.trainingComplete) return 'Practice against a training slime';
+  if (!input.vocation) return 'Choose a vocation at the Rookguard guild hall';
+  if (!input.tutorial.gate) return 'Enter the High City gate';
+  return 'Rookguard Codex path complete';
+}
+
+export function buildRookguardQuestProgress(input: RookguardQuestInput): RookguardQuestProgress {
+  const steps = [
+    {
+      step_id: 'move' as const,
+      label: 'Move rune',
+      complete: input.tutorial.move,
+      receipt_actions: ['tutorial_step_complete'],
+    },
+    {
+      step_id: 'chat' as const,
+      label: 'Chat signal',
+      complete: input.tutorial.chat,
+      receipt_actions: ['tutorial_step_complete'],
+    },
+    {
+      step_id: 'tem' as const,
+      label: 'Tem response',
+      complete: input.tutorial.tem,
+      receipt_actions: ['tem_challenge_passed', 'tutorial_step_complete'],
+    },
+    {
+      step_id: 'training' as const,
+      label: 'Training slime',
+      complete: input.trainingComplete,
+      receipt_actions: ['mob_kill', 'item_minted'],
+    },
+    {
+      step_id: 'profession' as const,
+      label: 'Codex vocation',
+      complete: input.vocation !== null,
+      receipt_actions: ['vocation_declared'],
+    },
+    {
+      step_id: 'gate' as const,
+      label: 'High City gate',
+      complete: input.tutorial.gate,
+      receipt_actions: ['gate_unlock', 'tutorial_completed'],
+    },
+  ];
+
+  const completed = steps.every((step) => step.complete);
+  const phase = !input.tutorial.move || !input.tutorial.chat || !input.tutorial.tem
+    ? 'tutorial'
+    : !input.trainingComplete
+      ? 'training'
+      : !input.vocation
+        ? 'profession'
+        : !input.tutorial.gate
+          ? 'gate'
+          : 'complete';
+
+  return {
+    quest_id: 'rookguard_city_codex_path_v1',
+    title: 'Rookguard Codex Path',
+    phase,
+    steps,
+    codexShelves: ROOKGUARD_CODEX_SHELVES,
+    codexProfession: input.vocation ? ROOKGUARD_CODEX_PROFESSIONS[input.vocation] : null,
+    completed,
+  };
+}
