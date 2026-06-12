@@ -388,6 +388,33 @@ test('Ashglass evidence recovery records crafting evidence without item or econo
   assert(result.payload?.refinement_guard?.item_mint === false, 'Ashglass payload must not mint refinement item');
 });
 
+test('Ashglass evidence recovery is idempotent after receipt-derived evidence', async () => {
+  const { ctx, receipts, sent } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:safety:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:gate:heartforge' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:ashglass' });
+  ctx.skillCooldowns.set('route:craft:ashglass', 0);
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:ashglass' });
+
+  const recoveries = receipts.filter((r) => r.action === ASHGLASS_EVIDENCE_RECOVERED_ACTION);
+  const ashglassResults = sent.filter((msg) =>
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as { type?: string }).type === 'skill_result' &&
+    (msg as { skill_id?: string }).skill_id === 'route:craft:ashglass'
+  ) as Array<{ success?: boolean; reason?: string }>;
+
+  assert(recoveries.length === 1, 'repeat Ashglass recovery must not emit a second evidence receipt');
+  assert(ashglassResults.length === 2, 'repeat Ashglass recovery should return two skill results');
+  assert(ashglassResults[0]?.success === true, 'first Ashglass recovery should succeed');
+  assert(ashglassResults[1]?.success === false, 'second Ashglass recovery should fail');
+  assert(ashglassResults[1]?.reason === 'invalid_target', 'second Ashglass recovery should be rejected as invalid target');
+});
+
 test('Soulsteel refinement authorization records no item mint or economy authority', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });

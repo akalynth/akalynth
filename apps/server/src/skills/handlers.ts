@@ -604,6 +604,7 @@ export function handleAshglassEvidenceRecovery(ctx: SkillContext): SkillResult {
   if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
   const routeProgress = ctx.getOnwardRouteProgress?.();
   if (!routeProgress?.heartforgeGatePrepared) return { success: false, reason: 'invalid_target' };
+  if (routeProgress.ashglassEvidenceRecovered) return { success: false, reason: 'invalid_target' };
 
   const recoveredAt = new Date().toISOString();
   const evidenceObjects = ['ashglass_shard', 'tempered_slag_trace'];
