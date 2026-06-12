@@ -66,6 +66,7 @@ export interface Player {
   hp?: number;
   max_hp?: number;
   reputation?: number;
+  sprite_id?: string | null;
   // Sovereign presence (cosmetic only)
   title?: string | null;
   badges?: string[];
@@ -106,6 +107,7 @@ export interface PlayerPublic {
   hp?: number;
   max_hp?: number;
   reputation?: number;
+  sprite_id?: string | null;
   // Sovereign presence (cosmetic only)
   title?: string | null;
   badges?: string[];

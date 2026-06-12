@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { characterSpriteById, characterSpriteForPlayer, DIRECTION_ROW, FEET_ANCHOR, FRAME_SIZE, type Direction, type CharacterSpriteId } from '../data/characterSprites';
+import { characterSpriteById, characterSpriteForPlayer, isCharacterSpriteId, DIRECTION_ROW, FEET_ANCHOR, FRAME_SIZE, type Direction, type CharacterSpriteId } from '../data/characterSprites';
 import { useCharacterSprites } from '../hooks/useCharacterSprites';
 import { useTileSprites } from '../hooks/useTileSprites';
 import { useWorldVisualAssets } from '../hooks/useWorldVisualAssets';
@@ -374,7 +374,11 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
 
     const drawCharacter = (p: PlayerPublic, color: string, isSelf: boolean) => {
       const spriteOverride = characterSpriteOverrides?.get(p.id) ?? null;
-      const sprite = spriteOverride ? characterSpriteById(spriteOverride) : characterSpriteForPlayer(p.id, isSelf);
+      const sprite = spriteOverride
+        ? characterSpriteById(spriteOverride)
+        : isCharacterSpriteId(p.sprite_id)
+          ? characterSpriteById(p.sprite_id)
+          : characterSpriteForPlayer(p.id, isSelf);
       const previousMotion = characterMotionRef.current.get(p.id) ?? null;
       const previousPosition = previousMotion ? { x: previousMotion.x, y: previousMotion.y } : null;
       const override = characterFrameOverrides?.get(p.id) ?? null;

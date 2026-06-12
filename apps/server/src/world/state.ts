@@ -28,6 +28,7 @@ export function toPublicPlayer(p: Player, includeDeadUntil = false): PlayerPubli
     hp: p.hp,
     max_hp: p.max_hp,
     reputation: p.reputation,
+    sprite_id: p.sprite_id ?? null,
     // Sovereign presence (cosmetic only)
     title: p.title ?? null,
     badges: p.badges ?? [],

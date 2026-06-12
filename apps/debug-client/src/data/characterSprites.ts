@@ -117,6 +117,10 @@ export function characterSpriteById(id: CharacterSpriteId): CharacterSpriteDef {
   return CHARACTER_SPRITES[id];
 }
 
+export function isCharacterSpriteId(id: unknown): id is CharacterSpriteId {
+  return typeof id === 'string' && id in CHARACTER_SPRITES;
+}
+
 export function characterSpriteForPlayer(playerId: string, isSelf: boolean): CharacterSpriteDef {
   if (isSelf) return CHARACTER_SPRITES.base_human_male_01;
   let hash = 0;
