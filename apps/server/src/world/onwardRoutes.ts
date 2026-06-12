@@ -2,6 +2,7 @@ import type { AuditReceipt } from '../../../../packages/shared/types.js';
 import {
   ASHGLASS_EVIDENCE_RECOVERED_ACTION,
   DREAM_FRAGMENT_ANCHORED_ACTION,
+  DREAM_GATE_ARRIVAL_RECORDED_ACTION,
   DREAM_GATE_INTERPRETED_ACTION,
   DREAM_GATE_SEAL_PREPARED_ACTION,
   DREAM_GATE_TRAVERSAL_AUTHORIZED_ACTION,
@@ -31,6 +32,7 @@ export interface OnwardRouteReceiptProgress {
   dreamGateAbuseNotesReviewed: boolean;
   dreamGateSealPrepared: boolean;
   dreamGateTraversalAuthorized: boolean;
+  dreamGateArrivalRecorded: boolean;
 }
 
 function defaultProgress(): OnwardRouteReceiptProgress {
@@ -50,6 +52,7 @@ function defaultProgress(): OnwardRouteReceiptProgress {
     dreamGateAbuseNotesReviewed: false,
     dreamGateSealPrepared: false,
     dreamGateTraversalAuthorized: false,
+    dreamGateArrivalRecorded: false,
   };
 }
 
@@ -112,6 +115,8 @@ export function applyReceiptToOnwardRoutes(receipt: AuditReceipt): void {
     next = { ...current, dreamGateSealPrepared: true };
   } else if (receipt.action === DREAM_GATE_TRAVERSAL_AUTHORIZED_ACTION) {
     next = { ...current, dreamGateTraversalAuthorized: true };
+  } else if (receipt.action === DREAM_GATE_ARRIVAL_RECORDED_ACTION) {
+    next = { ...current, dreamGateArrivalRecorded: true };
   }
 
   if (next) setProgress(playerId, next);

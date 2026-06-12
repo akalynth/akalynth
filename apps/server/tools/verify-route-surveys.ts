@@ -6,7 +6,7 @@
 
 import type { WebSocket } from 'ws';
 import type { AntiCheatState, Player } from '../../../packages/shared/types.js';
-import { ASHGLASS_EVIDENCE_RECOVERED_ACTION, DREAM_FRAGMENT_ANCHORED_ACTION, DREAM_GATE_INTERPRETED_ACTION, DREAM_GATE_SEAL_PREPARED_ACTION, DREAM_GATE_TRAVERSAL_AUTHORIZED_ACTION, FORGEHOLD_ECONOMY_QUOTED_ACTION, FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION, HEARTFORGE_GATE_PREPARED_ACTION, ROUTE_ABUSE_NOTES_REVIEWED_ACTION, ROUTE_SURVEYED_ACTION, SKILL_RESOLVED_ACTION, SKILL_USE_INTENT_ACTION, SOULSTEEL_COMPONENT_MINTED_ACTION, SOULSTEEL_REFINEMENT_AUTHORIZED_ACTION, SOULSTEEL_STABILIZED_ACTION } from '../../../packages/shared/skills.js';
+import { ASHGLASS_EVIDENCE_RECOVERED_ACTION, DREAM_FRAGMENT_ANCHORED_ACTION, DREAM_GATE_ARRIVAL_RECORDED_ACTION, DREAM_GATE_INTERPRETED_ACTION, DREAM_GATE_SEAL_PREPARED_ACTION, DREAM_GATE_TRAVERSAL_AUTHORIZED_ACTION, FORGEHOLD_ECONOMY_QUOTED_ACTION, FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION, HEARTFORGE_GATE_PREPARED_ACTION, ROUTE_ABUSE_NOTES_REVIEWED_ACTION, ROUTE_SURVEYED_ACTION, SKILL_RESOLVED_ACTION, SKILL_USE_INTENT_ACTION, SOULSTEEL_COMPONENT_MINTED_ACTION, SOULSTEEL_REFINEMENT_AUTHORIZED_ACTION, SOULSTEEL_STABILIZED_ACTION } from '../../../packages/shared/skills.js';
 import { handleUseSkill, type SkillContext } from '../src/skills/index.js';
 import { buildOnwardRouteProgress, type RookguardQuestInput } from '../src/world/rookguardQuest.js';
 import { applyReceiptToOnwardRoutes, clearOnwardRouteProjection, getOnwardRouteReceiptProgress } from '../src/world/onwardRoutes.js';
@@ -123,6 +123,7 @@ test('route objective skills reject out of order without side effects', async ()
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:interpret' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:fragment' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:traverse' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:arrive' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:safety:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:gate:heartforge' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:safety:moonspire' });
@@ -132,7 +133,7 @@ test('route objective skills reject out of order without side effects', async ()
     success?: boolean;
     reason?: string;
   }>;
-  assert(failedResults.length === 13, 'out-of-order route skills should each return a skill_result');
+  assert(failedResults.length === 14, 'out-of-order route skills should each return a skill_result');
   assert(failedResults.every((result) => result.success === false), 'out-of-order route skills should fail');
   assert(failedResults.every((result) => result.reason === 'invalid_target'), 'out-of-order route skills should use invalid_target');
   assert(!receipts.some((r) => r.action === FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION), 'out-of-order shipment must not emit quest receipt');
@@ -145,6 +146,7 @@ test('route objective skills reject out of order without side effects', async ()
   assert(!receipts.some((r) => r.action === DREAM_GATE_INTERPRETED_ACTION), 'out-of-order Dream Gate must not emit interpretation receipt');
   assert(!receipts.some((r) => r.action === DREAM_FRAGMENT_ANCHORED_ACTION), 'out-of-order Dream fragment must not emit evidence receipt');
   assert(!receipts.some((r) => r.action === DREAM_GATE_TRAVERSAL_AUTHORIZED_ACTION), 'out-of-order Dream Gate traversal must not emit traversal receipt');
+  assert(!receipts.some((r) => r.action === DREAM_GATE_ARRIVAL_RECORDED_ACTION), 'out-of-order Dream Gate arrival must not emit arrival receipt');
   assert(!receipts.some((r) => r.action === ROUTE_ABUSE_NOTES_REVIEWED_ACTION), 'out-of-order safety review must not emit abuse-note receipt');
   assert(!receipts.some((r) => r.action === HEARTFORGE_GATE_PREPARED_ACTION), 'out-of-order Heartforge gate must not emit server gate receipt');
   assert(!receipts.some((r) => r.action === DREAM_GATE_SEAL_PREPARED_ACTION), 'out-of-order Dream Gate seal must not emit server seal receipt');
@@ -501,6 +503,46 @@ test('Dream Gate traversal authorization records server authority without client
   assert(result.payload?.authority_guard?.client_map_transition === false, 'Dream Gate traversal payload must not grant client map transition');
 });
 
+test('Dream Gate arrival records threshold phase without client map, economy, heat, or item authority', async () => {
+  const { ctx, receipts, sent } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:moonspire' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:interpret' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:fragment' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:safety:moonspire' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:gate:moonspire' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:traverse' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:arrive' });
+
+  const arrival = receipts.find((r) => r.action === DREAM_GATE_ARRIVAL_RECORDED_ACTION);
+  assert(arrival, 'missing dream_gate_arrival_recorded receipt');
+  assert(arrival.inputs.route_id === 'moonspire_dream_gate_slice_v1', 'Dream Gate arrival route mismatch');
+  assert(arrival.inputs.arrival_id === 'moonspire_dream_gate_threshold_arrival_v1', 'Dream Gate arrival id mismatch');
+  assert(arrival.inputs.dream_phase === 'threshold', 'Dream Gate arrival should record threshold phase');
+  assert(arrival.inputs.arrival_state === 'witnessed', 'Dream Gate arrival state mismatch');
+  assert(arrival.inputs.required_traversal === DREAM_GATE_TRAVERSAL_AUTHORIZED_ACTION, 'Dream Gate arrival should require traversal authorization');
+  assert(arrival.inputs.server_transition_recorded === true, 'Dream Gate arrival should record server transition evidence');
+  assert(arrival.inputs.economy_impact === 'none', 'Dream Gate arrival should not change economy');
+  const guard = arrival.inputs.authority_guard as { client_position_authority?: boolean; client_map_transition?: boolean; heat_changed?: boolean; penalty_applied?: boolean; item_mint?: boolean } | undefined;
+  assert(guard?.client_position_authority === false, 'Dream Gate arrival must not grant client position authority');
+  assert(guard.client_map_transition === false, 'Dream Gate arrival must not grant client map transition');
+  assert(guard.heat_changed === false, 'Dream Gate arrival must not change heat');
+  assert(guard.penalty_applied === false, 'Dream Gate arrival must not apply penalties');
+  assert(guard.item_mint === false, 'Dream Gate arrival must not mint items');
+  assert(!receipts.some((r) => r.action === 'wallet_debit'), 'Dream Gate arrival should not debit gold');
+  assert(!receipts.some((r) => r.action === 'wallet_credit'), 'Dream Gate arrival should not credit gold');
+  assert(!receipts.some((r) => r.action === 'item_minted'), 'Dream Gate arrival should not mint an item');
+
+  const result = skillResultFor<{ arrival_id?: string; dream_phase?: string; arrival_state?: string; server_transition_recorded?: boolean; economy_impact?: string; authority_guard?: { client_position_authority?: boolean; client_map_transition?: boolean } }>(sent, 'route:dream:arrive');
+  assert(result?.success === true, 'Dream Gate arrival skill_result should succeed');
+  assert(result.payload?.arrival_id === 'moonspire_dream_gate_threshold_arrival_v1', 'Dream Gate arrival payload id mismatch');
+  assert(result.payload?.dream_phase === 'threshold', 'Dream Gate arrival payload phase mismatch');
+  assert(result.payload?.arrival_state === 'witnessed', 'Dream Gate arrival payload state mismatch');
+  assert(result.payload?.server_transition_recorded === true, 'Dream Gate arrival payload should record server transition');
+  assert(result.payload?.economy_impact === 'none', 'Dream Gate arrival payload economy impact mismatch');
+  assert(result.payload?.authority_guard?.client_position_authority === false, 'Dream Gate arrival payload must not grant client position authority');
+  assert(result.payload?.authority_guard?.client_map_transition === false, 'Dream Gate arrival payload must not grant client map transition');
+});
+
 test('Forgehold shipment investigation records quest progress without travel or economy authority', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
@@ -541,6 +583,7 @@ test('onward route projection is derived from route receipts', async () => {
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:safety:moonspire' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:gate:moonspire' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:traverse' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:arrive' });
 
   const progress = getOnwardRouteReceiptProgress('p1');
   const routes = buildOnwardRouteProgress(completedRookguard, progress);
@@ -564,8 +607,9 @@ test('onward route projection is derived from route receipts', async () => {
   assert(moonspire.completed_objective_ids.includes('dream_gate_abuse_notes'), 'Dream Gate safety review should project complete');
   assert(moonspire.completed_objective_ids.includes('dream_gate_server_seal'), 'Dream Gate server seal should project complete');
   assert(moonspire.completed_objective_ids.includes('dream_gate_traversal_authorization'), 'Dream Gate traversal authorization should project complete');
+  assert(moonspire.completed_objective_ids.includes('dream_gate_arrival_record'), 'Dream Gate arrival should project complete');
   assert(forgehold.next_objective.includes('Carry the minted Soulsteel component'), 'Forgehold next objective should advance after Soulsteel component mint');
-  assert(moonspire.next_objective.includes('Dream Gate traversal is server-authorized'), 'Moonspire next objective should advance after traversal authorization');
+  assert(moonspire.next_objective.includes('Dream Gate threshold arrival is recorded'), 'Moonspire next objective should advance after Dream Gate arrival');
 });
 
 for (const { name, fn } of tests) {

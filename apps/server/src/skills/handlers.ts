@@ -5,6 +5,7 @@ import type { SkillContext, SkillResult } from './index.js';
 import {
   ASHGLASS_EVIDENCE_RECOVERED_ACTION,
   DREAM_FRAGMENT_ANCHORED_ACTION,
+  DREAM_GATE_ARRIVAL_RECORDED_ACTION,
   FORGEHOLD_ECONOMY_QUOTED_ACTION,
   HEARTFORGE_GATE_PREPARED_ACTION,
   DREAM_GATE_SEAL_PREPARED_ACTION,
@@ -721,6 +722,61 @@ export function handleDreamGateTraversalAuthorization(ctx: SkillContext): SkillR
       source_drop: 'drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1',
       receipt_action: DREAM_GATE_TRAVERSAL_AUTHORIZED_ACTION,
       traversal_authorized: true,
+      authority_guard: authorityGuard,
+      economy_impact: 'none',
+    },
+  };
+}
+
+export function handleDreamGateArrivalRecord(ctx: SkillContext): SkillResult {
+  if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
+  const routeProgress = ctx.getOnwardRouteProgress?.();
+  if (!routeProgress?.dreamGateTraversalAuthorized) return { success: false, reason: 'invalid_target' };
+
+  const arrivedAt = new Date().toISOString();
+  const arrivalId = 'moonspire_dream_gate_threshold_arrival_v1';
+  const authorityGuard = {
+    client_position_authority: false,
+    client_map_transition: false,
+    wallet_debit_gold: 0,
+    wallet_credit_gold: 0,
+    item_mint: false,
+    heat_changed: false,
+    penalty_applied: false,
+  };
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: DREAM_GATE_ARRIVAL_RECORDED_ACTION,
+    inputs: {
+      route_id: 'moonspire_dream_gate_slice_v1',
+      arrival_id: arrivalId,
+      dream_phase: 'threshold',
+      arrival_state: 'witnessed',
+      required_traversal: DREAM_GATE_TRAVERSAL_AUTHORIZED_ACTION,
+      source_drop: 'drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1',
+      arrived_at: arrivedAt,
+      server_transition_recorded: true,
+      authority_guard: authorityGuard,
+      economy_impact: 'none',
+    },
+    result: 'ok',
+  });
+
+  return {
+    success: true,
+    payload: {
+      route_id: 'moonspire_dream_gate_slice_v1',
+      arrival_id: arrivalId,
+      title: 'Moonspire Dream Gate Threshold',
+      status: 'arrived',
+      dream_phase: 'threshold',
+      arrival_state: 'witnessed',
+      required_traversal: DREAM_GATE_TRAVERSAL_AUTHORIZED_ACTION,
+      next_objective: 'Dream Gate threshold arrival is recorded by server receipts; client movement remains intent-only.',
+      source_drop: 'drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1',
+      receipt_action: DREAM_GATE_ARRIVAL_RECORDED_ACTION,
+      server_transition_recorded: true,
       authority_guard: authorityGuard,
       economy_impact: 'none',
     },

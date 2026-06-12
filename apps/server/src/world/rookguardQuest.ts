@@ -298,6 +298,7 @@ export function buildOnwardRouteProgress(
     dreamGateAbuseNotesReviewed: false,
     dreamGateSealPrepared: false,
     dreamGateTraversalAuthorized: false,
+    dreamGateArrivalRecorded: false,
   }
 ): OnwardRouteProgress[] {
   const available = buildRookguardQuestProgress(input).completed;
@@ -321,6 +322,7 @@ export function buildOnwardRouteProgress(
     ...(receiptProgress.dreamGateAbuseNotesReviewed ? ['dream_gate_abuse_notes'] : []),
     ...(receiptProgress.dreamGateSealPrepared ? ['dream_gate_server_seal'] : []),
     ...(receiptProgress.dreamGateTraversalAuthorized ? ['dream_gate_traversal_authorization'] : []),
+    ...(receiptProgress.dreamGateArrivalRecorded ? ['dream_gate_arrival_record'] : []),
   ];
 
   return [
@@ -371,8 +373,10 @@ export function buildOnwardRouteProgress(
       status,
       unlock_requirement: unlockRequirement,
       next_objective: available
-        ? receiptProgress.dreamGateTraversalAuthorized
-          ? 'Dream Gate traversal is server-authorized; client movement remains intent-only.'
+        ? receiptProgress.dreamGateArrivalRecorded
+          ? 'Dream Gate threshold arrival is recorded by server receipts; client movement remains intent-only.'
+          : receiptProgress.dreamGateTraversalAuthorized
+          ? 'Record Dream Gate threshold arrival without client-owned position truth.'
           : receiptProgress.dreamGateSealPrepared
           ? 'Authorize Dream Gate traversal from the sealed fragment without client-owned position truth.'
           : receiptProgress.dreamGateAbuseNotesReviewed
@@ -389,13 +393,14 @@ export function buildOnwardRouteProgress(
         { id: 'dream_fragment_evidence', label: 'Dream fragment evidence object', system: 'server' },
         { id: 'dream_gate_server_seal', label: 'Dream Gate server seal', system: 'server' },
         { id: 'dream_gate_traversal_authorization', label: 'Dream Gate traversal authorization', system: 'dream_gate' },
+        { id: 'dream_gate_arrival_record', label: 'Server-recorded Dream Gate threshold arrival', system: 'server' },
         { id: 'dream_gate_client_projection', label: 'Read-only client route projection', system: 'ui' },
         { id: 'dream_gate_android_projection', label: 'Android read-only route parity', system: 'android' },
         { id: 'dream_gate_abuse_notes', label: 'No client-owned dream traversal truth', system: 'anti_cheat' },
       ],
       completed_objective_ids: moonspireCompleted,
       source_drop: 'drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1',
-      receipt_actions: ['route_surveyed', 'dream_gate_interpreted', 'dream_fragment_anchored', 'route_abuse_notes_reviewed', 'dream_gate_seal_prepared', 'dream_gate_traversal_authorized'],
+      receipt_actions: ['route_surveyed', 'dream_gate_interpreted', 'dream_fragment_anchored', 'route_abuse_notes_reviewed', 'dream_gate_seal_prepared', 'dream_gate_traversal_authorized', 'dream_gate_arrival_recorded'],
     },
   ];
 }

@@ -43,6 +43,7 @@ private val ROUTE_SURVEY_ACTIONS = listOf(
     "route:gate:heartforge" to "Gate",
     "route:gate:moonspire" to "Seal",
     "route:dream:traverse" to "Pass",
+    "route:dream:arrive" to "Arrv",
     "route:dream:interpret" to "Gate",
     "route:dream:fragment" to "Frag"
 )
