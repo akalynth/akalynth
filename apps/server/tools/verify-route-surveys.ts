@@ -231,6 +231,30 @@ test('Soulsteel stabilization emits crafting receipt without wallet or item auth
   assert(result.payload?.required_evidence?.includes('ashglass_shard'), 'Soulsteel payload should name Ashglass Shard');
 });
 
+test('Soulsteel stabilization is idempotent after receipt-derived stabilization', async () => {
+  const { ctx, receipts, sent } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
+  ctx.skillCooldowns.set('route:craft:soulsteel', 0);
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
+
+  const stabilizations = receipts.filter((r) => r.action === SOULSTEEL_STABILIZED_ACTION);
+  const stabilizationResults = sent.filter((msg) =>
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as { type?: string }).type === 'skill_result' &&
+    (msg as { skill_id?: string }).skill_id === 'route:craft:soulsteel'
+  ) as Array<{ success?: boolean; reason?: string }>;
+
+  assert(stabilizations.length === 1, 'repeat Soulsteel stabilization must not emit a second stabilization receipt');
+  assert(stabilizationResults.length === 2, 'repeat Soulsteel stabilization should return two skill results');
+  assert(stabilizationResults[0]?.success === true, 'first Soulsteel stabilization should succeed');
+  assert(stabilizationResults[1]?.success === false, 'second Soulsteel stabilization should fail');
+  assert(stabilizationResults[1]?.reason === 'invalid_target', 'second Soulsteel stabilization should be rejected as invalid target');
+});
+
 test('Forgehold economy quote records no-debit no-mint guard', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });

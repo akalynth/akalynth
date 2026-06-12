@@ -213,6 +213,7 @@ export function handleSoulsteelStabilization(ctx: SkillContext): SkillResult {
   if (!routeProgress?.forgeholdSurveyed || !routeProgress.forgeholdShipmentInvestigated || !routeProgress.forgeholdEconomyQuoted) {
     return { success: false, reason: 'invalid_target' };
   }
+  if (routeProgress.soulsteelStabilized) return { success: false, reason: 'invalid_target' };
 
   const craftedAt = new Date().toISOString();
   const quality = 'unstable';
