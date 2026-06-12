@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Akalynth - Simulation Lane</title>
+    <meta
+      name="description"
+      content="Akalynth simulation lane dashboard for the isolated sim-api. Local proof and agent economy runs only."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23090d12'/%3E%3Cpath d='M7 23h18M9 18h14M11 13h10M13 8h6' stroke='%2378d0a8' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Akalynth" />
+    <meta property="og:title" content="Akalynth - Simulation Lane" />
+    <meta property="og:description" content="Dashboard for the isolated Akalynth simulation API lane." />
+    <style>
+      :root {
+        --bg: #090d12;
+        --panel: #111820;
+        --ink: #edf6f2;
+        --ink-soft: #9eb1aa;
+        --line: #24313a;
+        --accent: #78d0a8;
+        --warn: #d9b25a;
+        --muted: #18222b;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: linear-gradient(180deg, #0d141b 0%, var(--bg) 64%);
+        color: var(--ink);
+        font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+        padding: 28px 16px;
+      }
+      main {
+        width: min(960px, 100%);
+        margin: 0 auto;
+      }
+      header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 0 0 22px;
+        border-bottom: 1px solid var(--line);
+      }
+      h1 {
+        margin: 0;
+        font-size: 30px;
+        line-height: 1.15;
+        font-weight: 750;
+      }
+      .subtitle {
+        margin: 8px 0 0;
+        color: var(--ink-soft);
+        max-width: 680px;
+        line-height: 1.55;
+      }
+      .lane {
+        display: inline-flex;
+        align-items: center;
+        min-height: 28px;
+        padding: 4px 10px;
+        border: 1px solid var(--accent);
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 750;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+        margin: 22px 0;
+      }
+      .metric {
+        border: 1px solid var(--line);
+        background: var(--panel);
+        border-radius: 8px;
+        padding: 16px;
+        min-height: 104px;
+      }
+      .label {
+        color: var(--ink-soft);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+      }
+      .value {
+        margin-top: 10px;
+        font-size: 18px;
+        font-weight: 720;
+        overflow-wrap: anywhere;
+      }
+      .section {
+        border-top: 1px solid var(--line);
+        padding-top: 20px;
+        margin-top: 20px;
+      }
+      h2 {
+        margin: 0 0 12px;
+        font-size: 18px;
+      }
+      dl {
+        display: grid;
+        grid-template-columns: 180px 1fr;
+        gap: 10px 18px;
+        margin: 0;
+      }
+      dt { color: var(--ink-soft); }
+      dd { margin: 0; overflow-wrap: anywhere; }
+      a { color: var(--accent); }
+      .notice {
+        background: var(--muted);
+        border-left: 4px solid var(--warn);
+        padding: 14px 16px;
+        color: var(--ink-soft);
+        line-height: 1.55;
+      }
+      @media (max-width: 760px) {
+        header { display: block; }
+        .lane { margin-top: 16px; }
+        .grid { grid-template-columns: 1fr; }
+        dl { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <h1>Akalynth Simulation Lane</h1>
+          <p class="subtitle">
+            A separate API and state lane for proof runs, agent economy
+            simulation, and dashboard inspection. This lane is isolated from
+            beta and staging receipt chains.
+          </p>
+        </div>
+        <span class="lane">Sim</span>
+      </header>
+
+      <section class="grid" aria-label="Simulation lane summary">
+        <div class="metric">
+          <div class="label">API host</div>
+          <div class="value"><a href="https://sim-api.akalynth.com/v1/health">sim-api.akalynth.com</a></div>
+        </div>
+        <div class="metric">
+          <div class="label">Loopback port</div>
+          <div class="value">127.0.0.1:3002</div>
+        </div>
+        <div class="metric">
+          <div class="label">State root</div>
+          <div class="value">/var/lib/akalynth-sim</div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Runtime Custody</h2>
+        <dl>
+          <dt>Dashboard</dt><dd>sim.akalynth.com</dd>
+          <dt>Service</dt><dd>akalynth-sim.service</dd>
+          <dt>Artifact tree</dt><dd>/opt/akalynth-sim</dd>
+          <dt>Receipt chain</dt><dd>/var/lib/akalynth-sim/audit/receipts.jsonl</dd>
+          <dt>SQLite projection</dt><dd>/var/lib/akalynth-sim/data/akalynth.db</dd>
+          <dt>Replay marker</dt><dd>/var/lib/akalynth-sim/data/replay_marker.json</dd>
+          <dt>Chronicle key</dt><dd>/etc/akalynth-sim/chronicle.key</dd>
+        </dl>
+      </section>
+
+      <section class="section">
+        <h2>Boundary</h2>
+        <p class="notice">
+          This dashboard is a static operational surface for the simulation
+          lane. It does not imply launch readiness, Android release readiness,
+          production promotion, or shared state with beta/staging.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

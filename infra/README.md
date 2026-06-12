@@ -12,6 +12,9 @@ Used by automation and operations only.
 - `infra/docker/akalynth-container-entrypoint` — container entrypoint script.
 - `infra/systemd/akalynth.service` — systemd unit for the direct Node runtime
   (sandbox hardened, issue #147; `systemd-analyze security` ~1.4 "OK").
+- `infra/systemd/akalynth-sim.service` — direct Node runtime for the isolated
+  simulation lane (`sim-api.akalynth.com` on loopback port `3002`) with its own
+  `/var/lib/akalynth-sim` state and `/etc/akalynth-sim` chronicle key.
 - `infra/systemd/akalynth-beta.service.d/20-hardening.conf` — drop-in that applies
   the same sandbox to the hand-managed beta unit (audit #147). `MemoryDenyWriteExecute`
   stays false (Node's V8 JIT needs W^X memory).
@@ -28,16 +31,20 @@ Used by automation and operations only.
   `akalynth-site` repository when the marketing/download lane is published.
 - `infra/web/staging/index.html` — static APK download page served by the
   staging site host.
+- `infra/web/sim/index.html` — static operational dashboard for the simulation
+  lane served at `sim.akalynth.com`.
 - `infra/PROVISIONING.md` — runbook for provisioning the prod and dev/Android boxes.
 
 ## Content Drop Boundary
 
-`infra/web/beta/index.html` and `infra/web/staging/index.html` are operational
-APK download page sources for lane access. On ops-dev-01, beta is allowed to
-serve the public `akalynth-site` static marketing/download payload from
-`/var/www/akalynth-beta` while preserving the APK artifacts under
+`infra/web/beta/index.html`, `infra/web/staging/index.html`, and
+`infra/web/sim/index.html` are operational lane page sources. On ops-dev-01,
+beta is allowed to serve the public `akalynth-site` static marketing/download
+payload from `/var/www/akalynth-beta` while preserving the APK artifacts under
 `/var/www/akalynth-beta/download/`. Staging remains an APK-only operational
-page unless a separate staging marketing mirror is approved.
+page unless a separate staging marketing mirror is approved. Sim is a static
+dashboard for the isolated simulation API/state lane, not an APK distribution
+surface.
 
 Website-update prompts inside `drop/` packages target reviewed public
 product/design routes, not these lane pages or live APK artifacts.
@@ -46,6 +53,23 @@ Do not copy raw `drop/` JSON, Markdown, or registry files into `infra/web`, and
 do not use the lane pages to imply that a source package is live gameplay.
 Promote content through reviewed docs, runtime code, receipts, and verifiers
 first.
+
+## Simulation Lane
+
+The sim lane is defined in `docs/SIM_LANE_RUNBOOK.md`.
+
+Lane contract:
+
+- API host: `sim-api.akalynth.com`
+- Static dashboard: `sim.akalynth.com`
+- Loopback port: `3002`
+- Service: `akalynth-sim.service`
+- Runtime artifact tree: `/opt/akalynth-sim`
+- State root: `/var/lib/akalynth-sim`
+- Key/config root: `/etc/akalynth-sim`
+
+The sim lane must not share beta/staging receipt chains, SQLite projections,
+replay markers, or chronicle keys.
 
 ## Docker Server Runtime
 
