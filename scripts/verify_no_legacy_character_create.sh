@@ -240,6 +240,7 @@ for web_economy_literal in \
   "work start rejects character owned by another account" \
   "cross-account work start emits no receipts" \
   "work start requires matching csrf" \
+  "auth/csrf rejected work start emits no receipts" \
   "work tick requires account session" \
   "work tick requires matching csrf" \
   "work tick rejects character owned by another account" \
