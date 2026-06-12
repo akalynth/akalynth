@@ -45,6 +45,7 @@ From the repository root:
 ```bash
 ./scripts/verify_protocol_sync.sh
 ./scripts/verify_mvp.sh
+cd apps/server && npm run verify:agent-economy-simulation && cd ../..
 ```
 
 ## Step 3: Start Server
@@ -116,6 +117,8 @@ npm run verify:showcase
 ```
 
 This checks the documented build/verification path. It does not start the server or client, and it does not replace a human-observed demo.
+It also runs the agent economy simulator verifier documented in
+`docs/AKALYNTH_AGENT_ECONOMY_SIM_PROOF_V1.md`.
 
 ## Known Gaps During Showcase
 

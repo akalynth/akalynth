@@ -23,6 +23,7 @@ npm install
 npm run build
 npm run verify:showcase
 cd apps/server && npm run verify
+cd apps/server && npm run verify:agent-economy-simulation
 ```
 
 If any command is skipped, record why.
@@ -36,6 +37,10 @@ If any command is skipped, record why.
 - Command transcript:
 - Server log:
 - Debug-client observation notes:
+- Agent economy simulator transcript:
+- Agent economy summary JSON:
+- Agent economy training JSONL:
+- Agent economy receipts JSONL:
 
 ## Claims Supported
 
@@ -52,6 +57,9 @@ Mark only claims proven by this run.
 - [ ] Basic movement works
 - [ ] Chat works
 - [ ] Receipts are emitted
+- [ ] Agent economy simulator verifier passes
+- [ ] Agent economy simulator receipts materialize into SQLite projection checks
+- [ ] Worker / homesteader / merchant loop is represented in simulator output
 
 ## Claims Not Supported By Default
 
