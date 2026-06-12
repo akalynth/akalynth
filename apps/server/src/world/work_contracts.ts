@@ -95,7 +95,8 @@ export function startContract(
   playerId: string,
   contractType: WorkContractType,
   nowMs: number,
-  writeReceipt: WriteReceiptFn
+  writeReceipt: WriteReceiptFn,
+  contractIdOverride?: string
 ): StartContractResult {
   // Check if already has active contract
   if (activeContractByPlayer.has(playerId)) {
@@ -113,7 +114,7 @@ export function startContract(
   }
 
   const schedule = WORK_CONTRACT_SCHEDULE[contractType];
-  const contractId = `wc_${randomUUID()}`;
+  const contractId = contractIdOverride ?? `wc_${randomUUID()}`;
 
   // Emit receipt (reducer will update state)
   writeReceipt({
