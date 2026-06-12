@@ -226,15 +226,19 @@ for server_literal in \
 done
 
 for web_economy_literal in \
+  "wallet read requires account session" \
   "wallet read requires account-owned character" \
   "wallet rejects character owned by another account" \
+  "shop purchase requires account session" \
   "shop purchase requires matching csrf" \
   "shop receipts do not carry account/session/csrf tokens" \
+  "work start requires account session" \
   "work start rejects character owned by another account" \
   "work start requires matching csrf" \
   "work tick completes after presence gates" \
   "work completion updates wallet balance" \
   "work receipts include ticks, completion, and wallet credit" \
+  "property buy requires account session" \
   "property buy without gold is rejected" \
   "primary buy emitted wallet debit + property purchase" \
   "property list succeeds for owner" \

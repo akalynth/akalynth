@@ -250,11 +250,17 @@ async function main(): Promise<void> {
   let res = await request('GET', '/v1/shop/catalog');
   check('shop catalog is public', res.status === 200 && Array.isArray(res.body.items));
 
+  res = await request('GET', '/v1/wallet?character_id=p_buyer');
+  check('wallet read requires account session', res.status === 401 && res.body.error === 'not_authenticated');
+
   res = await request('GET', '/v1/wallet?character_id=p_buyer', undefined, { cookie: cookieHeader() });
   check('wallet read requires account-owned character', res.status === 200 && res.body.balance_gold === 0);
 
   res = await request('GET', '/v1/wallet?character_id=p_other', undefined, { cookie: cookieHeader() });
   check('wallet rejects character owned by another account', res.status === 404 && res.body.error === 'character_not_found');
+
+  res = await request('POST', '/v1/shop/purchase', { character_id: 'p_buyer', shop_key: 'healing_herb' });
+  check('shop purchase requires account session', res.status === 401 && res.body.error === 'not_authenticated');
 
   res = await request('POST', '/v1/shop/purchase', { character_id: 'p_buyer', shop_key: 'healing_herb' }, { cookie: cookieHeader(), 'x-csrf-token': 'bad' });
   check('shop purchase requires matching csrf', res.status === 403 && res.body.error === 'csrf_failed');
@@ -273,6 +279,9 @@ async function main(): Promise<void> {
   check('shop item id is derived from mint receipt hash', (res.body.item as { item_id?: string }).item_id === expectedItemId);
   check('shop inventory mirror updated', inventory.get('p_buyer')?.has(expectedItemId) === true);
   check('shop receipts do not carry account/session/csrf tokens', receipts.every((r) => !JSON.stringify(r).includes('sess-ok') && !JSON.stringify(r).includes('csrf-ok')));
+
+  res = await request('POST', '/v1/work/start', { character_id: 'p_buyer' });
+  check('work start requires account session', res.status === 401 && res.body.error === 'not_authenticated');
 
   res = await request('POST', '/v1/work/start', { character_id: 'p_other' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
   check('work start rejects character owned by another account', res.status === 404 && res.body.error === 'character_not_found');
@@ -298,6 +307,9 @@ async function main(): Promise<void> {
 
   resetState();
   seedProperty('Azura:H1', 100);
+  res = await request('POST', '/v1/property/buy', { character_id: 'p_buyer', property_id: 'Azura:H1' });
+  check('property buy requires account session', res.status === 401 && res.body.error === 'not_authenticated');
+
   res = await request('POST', '/v1/property/buy', { character_id: 'p_buyer', property_id: 'Azura:H1' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
   check('property buy without gold is rejected', res.status === 409 && res.body.error === 'insufficient_gold');
   check('rejected property buy emitted no purchase receipt', receipts.every((r) => r.action !== PROPERTY_PURCHASED_ACTION));
