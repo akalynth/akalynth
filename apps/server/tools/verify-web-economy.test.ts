@@ -318,6 +318,11 @@ async function main(): Promise<void> {
   check('work start succeeds', res.status === 200 && res.body.ok === true && typeof contractId === 'string' && contractId.startsWith('wc_'));
   check('work start emits work_contract_started receipt', receipts.at(-1)?.action === WORK_CONTRACT_STARTED_ACTION);
 
+  const workStartedReceiptCount = receipts.filter((r) => r.action === WORK_CONTRACT_STARTED_ACTION).length;
+  res = await request('POST', '/v1/work/start', { character_id: 'p_buyer' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
+  check('work start rejects already active contract', res.status === 409 && res.body.error === 'already_active');
+  check('already-active work start emits no second start receipt', receipts.filter((r) => r.action === WORK_CONTRACT_STARTED_ACTION).length === workStartedReceiptCount);
+
   res = await request('POST', '/v1/work/tick', { character_id: 'p_buyer', contract_id: contractId });
   check('work tick requires account session', res.status === 401 && res.body.error === 'not_authenticated');
   check('no-session work tick emits no receipts', receipts.filter((r) => r.action === WORK_CONTRACT_TICK_RECORDED_ACTION).length === 0);
