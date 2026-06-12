@@ -352,6 +352,8 @@ async function main(): Promise<void> {
   fund('p_buyer', 60);
   res = await request('POST', '/v1/property/buy', { character_id: 'p_buyer', property_id: 'Azura:H2' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
   check('resale property buy succeeds', res.status === 200 && getProperty('Azura:H2')?.owner_player_id === 'p_buyer');
+  check('resale debits buyer wallet', getGoldBalance('p_buyer') === 50);
+  check('resale credits seller wallet', getGoldBalance('p_seller') === 260);
   check('resale emits buyer debit + seller credit + transfer', receipts.slice(-3).map((r) => r.action).join(',') === `${WALLET_DEBIT_ACTION},${WALLET_CREDIT_ACTION},${PROPERTY_TRANSFERRED_ACTION}`);
 
   res = await request('POST', '/v1/property/unlist', { character_id: 'p_buyer', property_id: 'Azura:H1' }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
