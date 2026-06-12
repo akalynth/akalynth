@@ -18,6 +18,21 @@ const required = [
       'Sign in with an account session and CSRF token first; character creation and selection are disabled until the session check succeeds.',
   },
   {
+    label: 'create/select handlers use explicit account session guard',
+    file: 'characterBar',
+    literal: 'function accountSessionGuardMessage(accountSession: AccountSessionStatus): string | null {',
+  },
+  {
+    label: 'missing account session blocks character actions before request',
+    file: 'characterBar',
+    literal: "Sign in to an account before creating or selecting a character.",
+  },
+  {
+    label: 'missing csrf blocks character actions before request',
+    file: 'characterBar',
+    literal: 'const guarded = accountSessionGuardMessage(activeAccountSession);',
+  },
+  {
     label: 'create fields disabled by missing account session or csrf token',
     file: 'characterBar',
     literal: 'const createFieldsDisabled = busy || sessionRequired || !accountSession.csrfReady;',
