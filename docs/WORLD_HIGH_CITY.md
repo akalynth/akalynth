@@ -6,9 +6,13 @@
 > it until the runtime-id migration lane replaces the file/protocol identifiers.
 > Historical receipts and server WebSocket payloads may still contain `Azura`.
 
-High City is the **first major city** after players complete the Rookguard
-onboarding zone. All guests must clear the tutorial checklist in Rookguard
-before the server transfers them here.
+High City is the **first city** a traveler reaches after Rookguard opens its
+gate. Rookguard proves a living hand is present. High City asks what that hand
+will leave behind.
+
+The player-facing name is **High City**. The current runtime map id remains the
+legacy `Azura` compatibility id, and the Rookguard gate tile remains the legacy
+`GateToAzura` identifier until a separate migration lane changes them.
 
 ## Map Specifications
 
@@ -47,13 +51,16 @@ before the server transfers them here.
 ### Spawn Point
 
 - **Coordinates**: (32, 32)
-- **Description**: Center of the city, where new players appear
+- **Description**: Arrival point after Rookguard. Newcomers enter at the center
+  of High City, close enough to see the plaza, the hall, and the marked plots
+  without being promised access, ownership, reward, or progression.
 
 ### Guild Hall (Placeholder)
 
 - **Coordinates**: (16, 10) to (24, 18)
-- **Status**: Placeholder - building exists but no enter logic
-- **Future**: Guilds can claim and customize
+- **Status**: Placeholder - the building exists, but its doors do not open and
+  there is no enter logic.
+- **Future**: Guild use requires a later server-authoritative feature lane.
 
 ### House Plots
 
@@ -63,14 +70,15 @@ before the server transfers them here.
 | H2 | (14, 32) to (16, 34) | Property plot |
 | H3 | (18, 32) to (20, 34) | Property plot |
 
-Players can buy, list, unlist, resell, and run resale auctions for property
-plots through server-authoritative property systems. Entering house interiors is
-still future work.
+Players can buy, list, unlist, resell, and run resale auctions for these three
+property plots through server-authoritative property systems. The plots are
+addresses on the city floor, not implemented interiors.
 
 ### Central Plaza
 
 - **Coordinates**: (26, 48) to (38, 56)
-- **Description**: Open area for gathering and chat
+- **Description**: Open civic floor for arrival, gathering, chat, waiting, and
+  being seen after Rookguard.
 - **Features**: All walkable tiles
 
 ## Lore & Flavor (Player-Facing)
@@ -86,25 +94,26 @@ High City is the first city a traveler reaches after Rookguard opens its gate.
 Rookguard proves a living hand is present. High City asks what that hand will
 leave behind.
 
-The city receives newcomers at its center, under old walls and open sky. It is
-not finished, and it does not pretend to be. Its hall is closed. Its plots are
-marked but mostly unnamed. Its plaza is wide enough for strangers to become a
-public memory before they become a faction, owner, worker, or legend.
+The city receives newcomers at its center, under old walls and open sky. Its
+hall is visible but closed. Its three plots are marked as civic addresses, not
+rooms to enter. Its plaza is wide enough for strangers to become a public memory
+before they become a faction, owner, worker, or legend.
 
 ### The Central Plaza — `(26, 48)` to `(38, 56)`
 
 The heart of the first city and its designated gathering ground. All tiles here
-are walkable; it is built for standing still — for chat, meeting, waiting, and
+are walkable. It is built for standing still — for chat, meeting, waiting, and
 being seen — rather than for passing through.
 
 If Akalynth's culture forms before its content (see `docs/WORLD_EVOLUTION.md`),
 this is the floor it forms on. A traveler who reaches the plaza has already
 crossed Rookguard's threshold. What follows is no longer onboarding; it is the
-beginning of public record.
+beginning of public presence.
 
 ### The Guild Hall — `(16, 10)` to `(24, 18)`
 
-A hall raised before there were guilds to fill it. The doors do not open yet.
+A hall raised before there were guilds to fill it. The doors do not open yet,
+and no interior is currently implemented.
 
 - **Status:** placeholder — the building exists in the map but has no enter logic. Documented as flavor; claiming and customization are future, server-authoritative features.
 - **Player-facing line:** The hall is ready before the oath is. When guilds come, the city will remember who first stood at its doors.
@@ -112,6 +121,7 @@ A hall raised before there were guilds to fill it. The doors do not open yet.
 ### The House Plots — `H1`–`H3`
 
 Three marked plots along the central residential row, just below the Guild Hall.
+They are small on the map by design: first claims, not estates.
 
 - **Status:** property coordinates. Ownership, resale listings, and resale auctions are server-authoritative gameplay/projection systems. Enter-house/interior logic is not implemented.
 - **Player-facing line:** These are not empty squares. They are addresses waiting for a name the Chronicle can hold.

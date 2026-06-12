@@ -75,6 +75,48 @@ export interface LostItemCount {
   qty: number;
 }
 
+export type CharacterSex = 'male' | 'female';
+
+export interface CharacterWorldOption {
+  world_id: string;
+  name: string;
+  description: string;
+}
+
+export interface CharacterOutfitOption {
+  outfit_id: string;
+  sex: CharacterSex;
+  name: string;
+  sprite_id: string | null;
+}
+
+export interface CharacterCatalog {
+  worlds: CharacterWorldOption[];
+  outfits: CharacterOutfitOption[];
+  loading: boolean;
+  loaded: boolean;
+  error: string | null;
+}
+
+export interface AccountSessionStatus {
+  checking: boolean;
+  checked: boolean;
+  authenticated: boolean;
+  message: string | null;
+}
+
+export interface CharacterCreateInput {
+  name: string;
+  world_id: string;
+  sex: CharacterSex;
+  outfit_id: string;
+}
+
+export interface CreateResult {
+  ok: boolean;
+  error?: string;
+}
+
 export interface DeathRecap {
   deathEvent: ChronicleEvent;
   lost: LostItemCount[];
@@ -149,8 +191,11 @@ export interface GameClientApi {
   relog: () => void;
   // Identity v0.1 (#148): create a character (mints a signed token), then play
   // as that character. signOut clears the stored token and falls back to guest.
-  createCharacter: (name: string) => Promise<{ ok: boolean; error?: string }>;
+  createCharacter: (input: CharacterCreateInput) => Promise<CreateResult>;
   signOut: () => void;
+  characterCatalog: CharacterCatalog;
+  accountSession: AccountSessionStatus;
+  refreshAccountSession: () => Promise<AccountSessionStatus>;
   openChat: () => void;
   closeChat: () => void;
   // Property Ownership v0

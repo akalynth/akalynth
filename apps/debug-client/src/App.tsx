@@ -18,7 +18,15 @@ import { CharacterBar } from './components/CharacterBar';
 import { BackpackSheet } from './components/BackpackSheet';
 import { ProofSheet } from './components/ProofSheet';
 import { loadConfig } from './config';
-import type { ConnectionState, SessionInfo, UiStage } from './types';
+import { highCityVisualLandmarksForMap } from './data/highCityVisualLandmarks';
+import type {
+  AccountSessionStatus,
+  CharacterCatalog,
+  CharacterCreateInput,
+  ConnectionState,
+  SessionInfo,
+  UiStage,
+} from './types';
 
 type ChronicleGroup = { day: string; items: ChronicleEvent[] };
 
@@ -222,7 +230,10 @@ interface MobilePlayEntryProps {
   stage: UiStage['stage'];
   conn: ConnectionState;
   hasWorldPlayer: boolean;
-  onCreate: (name: string) => Promise<{ ok: boolean; error?: string }>;
+  characterCatalog: CharacterCatalog;
+  accountSession: AccountSessionStatus;
+  onCreate: (input: CharacterCreateInput) => Promise<{ ok: boolean; error?: string }>;
+  onRefreshAccountSession: () => Promise<AccountSessionStatus>;
   onSignOut: () => void;
   onEnterPlay: () => void;
 }
@@ -232,7 +243,10 @@ function MobilePlayEntry({
   stage,
   conn,
   hasWorldPlayer,
+  characterCatalog,
+  accountSession,
   onCreate,
+  onRefreshAccountSession,
   onSignOut,
   onEnterPlay,
 }: MobilePlayEntryProps) {
@@ -250,7 +264,10 @@ function MobilePlayEntry({
       </div>
       <CharacterBar
         session={session}
+        catalog={characterCatalog}
+        accountSession={accountSession}
         onCreate={onCreate}
+        onRefreshAccountSession={onRefreshAccountSession}
         onSignOut={onSignOut}
       />
       {stage < 1 && (
@@ -306,8 +323,8 @@ export default function App() {
 }
 
 function DebugApp() {
-  const initialMap: MapName = 'Rookguard';
   const config = useMemo(() => loadConfig(), []);
+  const initialMap: MapName = config.defaultMap;
   const studioProofEnabled = import.meta.env.VITE_ENABLE_STUDIO_PROOF === '1';
   const phoneLandscape = useMediaQuery('(max-width: 950px) and (orientation: landscape)');
   const viewport = useViewportSize();
@@ -322,7 +339,10 @@ function DebugApp() {
   const now = useNow();
   const toast = state.toast && now < state.toast.expiresAt ? state.toast : null;
   const activePlaytestLabel = proof?.activeId ?? 'canonical';
-  const objectiveLabel = state.loop?.objective ?? 'Enter Rookguard';
+  const currentMapName = state.world.map.name;
+  const currentMapDisplayName = displayMapName(currentMapName);
+  const objectiveLabel =
+    state.loop?.objective ?? (currentMapDisplayName === 'High City' ? 'Arrive in High City' : 'Enter Rookguard');
   const meHp = state.world.me?.hp;
   const meMaxHp = state.world.me?.max_hp;
   const healthLabel =
@@ -371,7 +391,6 @@ function DebugApp() {
   const ritualReady = isNearLandmark(state.world.me, state.world.map, 'runestone_table');
   const ritualHint = ritualReady ? 'Runestone nearby' : 'No runestone nearby';
   const nearLegendStone = isNearLandmark(state.world.me, state.world.map, 'legend_stone', 2);
-  const currentMapName = state.world.map.name;
   const nearbyNpc = NPC_DEFS.find(n =>
     isInPlace(state.world.me, state.world.map, currentMapName, n.place_id)
   ) ?? null;
@@ -392,6 +411,10 @@ function DebugApp() {
     }
     return m;
   }, [propertyList]);
+  const worldVisualObjects = useMemo(
+    () => highCityVisualLandmarksForMap(state.world.map.name as MapName),
+    [state.world.map.name]
+  );
   const roster = useMemo(() => others.slice().sort((a, b) => a.name.localeCompare(b.name)), [others]);
   const targetName = useMemo(() => {
     if (!state.combat.targetId) return null;
@@ -637,6 +660,7 @@ function DebugApp() {
             onSelectTarget={api.setTarget}
             groundItems={state.groundItems}
             propertyByPlot={propertyByPlot}
+            worldVisualObjects={worldVisualObjects}
           />
           <div className="scene-vignette" />
           {!isDead && healthPct <= 30 && (
@@ -667,10 +691,13 @@ function DebugApp() {
             <div className="hud-card hud-card--identity">
               <span className="hud-kicker">Akalynth</span>
               <strong>{state.session.name ?? 'Phone guest'}</strong>
-              <span>{displayMapName(state.world.map.name)}</span>
+              <span>{currentMapDisplayName}</span>
               <CharacterBar
                 session={state.session}
+                catalog={api.characterCatalog}
+                accountSession={api.accountSession}
                 onCreate={api.createCharacter}
+                onRefreshAccountSession={api.refreshAccountSession}
                 onSignOut={api.signOut}
               />
             </div>
@@ -701,7 +728,10 @@ function DebugApp() {
               stage={state.ui.stage}
               conn={state.conn}
               hasWorldPlayer={Boolean(state.world.me)}
+              characterCatalog={api.characterCatalog}
+              accountSession={api.accountSession}
               onCreate={api.createCharacter}
+              onRefreshAccountSession={api.refreshAccountSession}
               onSignOut={api.signOut}
               onEnterPlay={() => api.setStage(1)}
             />
@@ -774,6 +804,7 @@ function DebugApp() {
               workContract={state.workContract}
               targetName={targetName}
               loop={state.loop}
+              objectiveLabel={objectiveLabel}
               inventory={state.inventory}
               gold={state.gold}
             />

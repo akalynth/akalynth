@@ -41,9 +41,21 @@ export function runLegacyVerifier(
 
   const env = {
     ...ctx.env,
-    AKALYNTH_DB_PATH: ctx.env.AKALYNTH_DB_PATH ?? 'apps/server/data/akalynth.db',
+    AKALYNTH_DB_PATH: ctx.env.AKALYNTH_DB_PATH
+      ? path.resolve(ctx.cwd, ctx.env.AKALYNTH_DB_PATH)
+      : path.resolve(ctx.repoRoot, 'apps/server/data/akalynth.db'),
+    AKALYNTH_RECEIPT_CHAIN_PATH:
+      ctx.env.AKALYNTH_RECEIPT_CHAIN_PATH
+        ? path.resolve(ctx.cwd, ctx.env.AKALYNTH_RECEIPT_CHAIN_PATH)
+        : path.resolve(ctx.repoRoot, 'apps/server/audit/receipts.jsonl'),
+    AKALYNTH_RECEIPTS_PATH:
+      ctx.env.AKALYNTH_RECEIPTS_PATH
+        ? path.resolve(ctx.cwd, ctx.env.AKALYNTH_RECEIPTS_PATH)
+        : path.resolve(ctx.repoRoot, 'apps/server/audit/receipts.jsonl'),
     AKALYNTH_REPLAY_MARKER_PATH:
-      ctx.env.AKALYNTH_REPLAY_MARKER_PATH ?? 'apps/server/data/replay_marker.json',
+      ctx.env.AKALYNTH_REPLAY_MARKER_PATH
+        ? path.resolve(ctx.cwd, ctx.env.AKALYNTH_REPLAY_MARKER_PATH)
+        : path.resolve(ctx.repoRoot, 'apps/server/data/replay_marker.json'),
     ...envOverrides,
   };
 
