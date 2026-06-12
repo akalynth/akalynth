@@ -1,0 +1,428 @@
+import {
+  computeEventHash,
+  computeInputsHash,
+  computeOutputsHash,
+  GENESIS_MARKER,
+} from '@akalynth/coordination-kernel';
+import type {
+  MapName,
+  SimLifeAgentSnapshot,
+  SimLifeFrame,
+  SimLifeGameplanStep,
+  SimLifeReceiptLink,
+  SimLifeSnapshotResponse,
+} from '../../../../packages/shared/http.js';
+import type { MapData } from '../../../../packages/shared/types.js';
+import {
+  PRESENCE_ENTERED_ACTION,
+  PRESENCE_LINGERED_ACTION,
+  PROPERTY_AUCTION_SETTLED_ACTION,
+  PROPERTY_BID_ACTION,
+  WALLET_CREDIT_ACTION,
+  WALLET_DEBIT_ACTION,
+} from '../../../../packages/shared/types.js';
+import { RECEIPT_ACTIONS } from '../persist/types.js';
+
+interface SimMapInput {
+  name: MapName;
+  map: MapData;
+}
+
+interface SimLifeDraftFrame {
+  elapsed_ms: number;
+  label: string;
+  agent_id: string;
+  name: string;
+  role: SimLifeAgentSnapshot['role'];
+  map: MapName;
+  x: number;
+  y: number;
+  intent: string;
+  gold: number;
+  inventory_count: number;
+  status?: SimLifeAgentSnapshot['status'];
+  action: string;
+  inputs: Record<string, unknown>;
+}
+
+interface ReceiptState {
+  sequence: number;
+  prev_hash: string;
+}
+
+const DURATION_MS = 5 * 60 * 1000;
+const SPEED_CONTROLS: SimLifeSnapshotResponse['speed_controls'] = [0, 1, 10, 100];
+
+export function buildSimLifeSnapshot(
+  maps: SimMapInput[],
+  nowMs = Date.now()
+): SimLifeSnapshotResponse {
+  const mapSummaries = maps.map(({ name, map }) => ({
+    name,
+    width: map.width,
+    height: map.height,
+    spawn: map.spawn,
+  }));
+
+  const drafts = buildDraftFrames();
+  const receiptState: ReceiptState = { sequence: 0, prev_hash: GENESIS_MARKER };
+  const timeline: SimLifeFrame[] = drafts.map((draft, idx) => {
+    const receipt = makeSimReceipt(receiptState, draft, nowMs);
+    return {
+      frame: idx,
+      elapsed_ms: draft.elapsed_ms,
+      label: draft.label,
+      agent_id: draft.agent_id,
+      map: draft.map,
+      x: draft.x,
+      y: draft.y,
+      intent: draft.intent,
+      gold: draft.gold,
+      inventory_count: draft.inventory_count,
+      receipt,
+    };
+  });
+
+  const latestByAgent = new Map<string, { draft: SimLifeDraftFrame; receipt: SimLifeReceiptLink }>();
+  for (let i = 0; i < drafts.length; i += 1) {
+    latestByAgent.set(drafts[i].agent_id, { draft: drafts[i], receipt: timeline[i].receipt });
+  }
+
+  const agents: SimLifeAgentSnapshot[] = Array.from(latestByAgent.values()).map(({ draft, receipt }) => ({
+    agent_id: draft.agent_id,
+    name: draft.name,
+    role: draft.role,
+    map: draft.map,
+    x: draft.x,
+    y: draft.y,
+    intent: draft.intent,
+    gold: draft.gold,
+    inventory_count: draft.inventory_count,
+    status: draft.status ?? 'alive',
+    last_receipt: receipt,
+  }));
+
+  return {
+    ok: true,
+    mode: 'sim_life_viewer_v1',
+    authority: {
+      lane: 'sim',
+      authoritative_for_public_world: false,
+      client_truth_allowed: false,
+      source: 'server_deterministic_sim_snapshot',
+      receipt_boundary: 'simulated_receipts_only',
+    },
+    updated_at_ms: nowMs,
+    duration_ms: DURATION_MS,
+    speed_controls: SPEED_CONTROLS,
+    maps: mapSummaries,
+    agents,
+    timeline,
+    first_5min_gameplan: buildFirstFiveMinuteGameplan(),
+    receipt_actions_covered: [
+      PRESENCE_ENTERED_ACTION,
+      PRESENCE_LINGERED_ACTION,
+      'work_contract_completed',
+      WALLET_CREDIT_ACTION,
+      WALLET_DEBIT_ACTION,
+      'item_minted',
+      'item_added_to_inventory',
+      'item_dropped_to_world',
+      PROPERTY_BID_ACTION,
+      PROPERTY_AUCTION_SETTLED_ACTION,
+      'combat_resolved',
+      'death',
+      RECEIPT_ACTIONS.WORLD_EVENT_CONTRIBUTION,
+    ],
+  };
+}
+
+function makeSimReceipt(
+  state: ReceiptState,
+  frame: SimLifeDraftFrame,
+  nowMs: number
+): SimLifeReceiptLink {
+  const sequence = state.sequence + 1;
+  const timestamp = new Date(nowMs - DURATION_MS + frame.elapsed_ms).toISOString();
+  const inputs = {
+    ...frame.inputs,
+    sim_life_viewer: true,
+    elapsed_ms: frame.elapsed_ms,
+    map: frame.map,
+    x: frame.x,
+    y: frame.y,
+    intent: frame.intent,
+  };
+  const body = {
+    sequence,
+    timestamp,
+    prev_hash: state.prev_hash,
+    actor_id: frame.agent_id,
+    action: frame.action,
+    inputs,
+    result: 'ok',
+    inputs_hash: computeInputsHash(inputs),
+    outputs_hash: computeOutputsHash('ok'),
+  };
+  const event_hash = computeEventHash(body);
+  state.sequence = sequence;
+  state.prev_hash = event_hash;
+  return {
+    sequence,
+    timestamp,
+    action: frame.action,
+    actor_id: frame.agent_id,
+    event_hash,
+    prev_hash: body.prev_hash,
+    inputs_hash: body.inputs_hash,
+    outputs_hash: body.outputs_hash,
+    result: 'ok',
+  };
+}
+
+function buildDraftFrames(): SimLifeDraftFrame[] {
+  return [
+    {
+      elapsed_ms: 0,
+      label: 'Workers enter Rookguard',
+      agent_id: 'sim:worker:1',
+      name: 'Sim Worker 1',
+      role: 'worker',
+      map: 'Rookguard',
+      x: 6,
+      y: 6,
+      intent: 'enter_rookguard',
+      gold: 0,
+      inventory_count: 0,
+      action: PRESENCE_ENTERED_ACTION,
+      inputs: { place_id: 'rookguard', reason: 'first_five_minute_spawn' },
+    },
+    {
+      elapsed_ms: 30_000,
+      label: 'Merchant reaches Azura market',
+      agent_id: 'sim:merchant:1',
+      name: 'Sim Merchant 1',
+      role: 'merchant',
+      map: 'Azura',
+      x: 24,
+      y: 31,
+      intent: 'scan_market',
+      gold: 1600,
+      inventory_count: 0,
+      action: PRESENCE_ENTERED_ACTION,
+      inputs: { place_id: 'azura:plaza', reason: 'market_route' },
+    },
+    {
+      elapsed_ms: 60_000,
+      label: 'Homesteader checks the first affordable plot',
+      agent_id: 'sim:homesteader:1',
+      name: 'Sim Homesteader 1',
+      role: 'homesteader',
+      map: 'Azura',
+      x: 14,
+      y: 32,
+      intent: 'inspect_house_plot',
+      gold: 520,
+      inventory_count: 0,
+      action: PRESENCE_LINGERED_ACTION,
+      inputs: { place_id: 'azura', linger_ms: 60_000, reason: 'plot_inspection' },
+    },
+    {
+      elapsed_ms: 90_000,
+      label: 'Worker completes a temple sweep',
+      agent_id: 'sim:worker:1',
+      name: 'Sim Worker 1',
+      role: 'worker',
+      map: 'Rookguard',
+      x: 9,
+      y: 9,
+      intent: 'complete_work_contract',
+      gold: 25,
+      inventory_count: 0,
+      action: 'work_contract_completed',
+      inputs: { contract_type: 'temple_sweep', payout_gold: 25, ticks_observed: 3 },
+    },
+    {
+      elapsed_ms: 120_000,
+      label: 'Work payout is credited',
+      agent_id: 'sim:worker:1',
+      name: 'Sim Worker 1',
+      role: 'worker',
+      map: 'Rookguard',
+      x: 10,
+      y: 9,
+      intent: 'receive_work_payout',
+      gold: 25,
+      inventory_count: 0,
+      action: WALLET_CREDIT_ACTION,
+      inputs: { amount: 25, reason: 'work_contract:temple_sweep' },
+    },
+    {
+      elapsed_ms: 150_000,
+      label: 'Training loot is minted and picked up',
+      agent_id: 'sim:worker:1',
+      name: 'Sim Worker 1',
+      role: 'worker',
+      map: 'Rookguard',
+      x: 11,
+      y: 10,
+      intent: 'pickup_training_loot',
+      gold: 25,
+      inventory_count: 1,
+      action: 'item_added_to_inventory',
+      inputs: { item_id: 'sim_item_training_slime_goo_1', item_type: 'training_slime_goo', source: 'item_minted' },
+    },
+    {
+      elapsed_ms: 180_000,
+      label: 'Homesteader buys a plot',
+      agent_id: 'sim:homesteader:1',
+      name: 'Sim Homesteader 1',
+      role: 'homesteader',
+      map: 'Azura',
+      x: 14,
+      y: 32,
+      intent: 'buy_property',
+      gold: 20,
+      inventory_count: 0,
+      action: WALLET_DEBIT_ACTION,
+      inputs: { amount: 500, reason: 'property_purchase:Azura:H1', property_id: 'Azura:H1' },
+    },
+    {
+      elapsed_ms: 210_000,
+      label: 'Merchant places an auction bid',
+      agent_id: 'sim:merchant:1',
+      name: 'Sim Merchant 1',
+      role: 'merchant',
+      map: 'Azura',
+      x: 18,
+      y: 32,
+      intent: 'place_house_bid',
+      gold: 700,
+      inventory_count: 0,
+      action: PROPERTY_BID_ACTION,
+      inputs: { property_id: 'Azura:H2', amount: 900 },
+    },
+    {
+      elapsed_ms: 225_000,
+      label: 'Auction sale settles on-chain',
+      agent_id: 'sim:merchant:1',
+      name: 'Sim Merchant 1',
+      role: 'merchant',
+      map: 'Azura',
+      x: 19,
+      y: 32,
+      intent: 'auction_sale_settled',
+      gold: 700,
+      inventory_count: 0,
+      action: PROPERTY_AUCTION_SETTLED_ACTION,
+      inputs: { property_id: 'Azura:H2', seller_id: 'sim:merchant:2', winner_id: 'sim:merchant:1', amount: 900 },
+    },
+    {
+      elapsed_ms: 240_000,
+      label: 'Merchant survives a combat pass',
+      agent_id: 'sim:merchant:2',
+      name: 'Sim Merchant 2',
+      role: 'merchant',
+      map: 'Azura',
+      x: 32,
+      y: 32,
+      intent: 'resolve_combat',
+      gold: 4000,
+      inventory_count: 1,
+      action: 'combat_resolved',
+      inputs: { target_id: 'sim:worker:1', outcome: 'training_knockout' },
+    },
+    {
+      elapsed_ms: 270_000,
+      label: 'Worker death/drop is visible but simulated',
+      agent_id: 'sim:worker:1',
+      name: 'Sim Worker 1',
+      role: 'worker',
+      map: 'Azura',
+      x: 33,
+      y: 32,
+      intent: 'death_drop',
+      gold: 25,
+      inventory_count: 0,
+      status: 'dead',
+      action: 'death',
+      inputs: { killer_id: 'sim:merchant:2', dropped_item_count: 1, reason: 'training_combat' },
+    },
+    {
+      elapsed_ms: 285_000,
+      label: 'Dropped item appears in the world',
+      agent_id: 'sim:worker:1',
+      name: 'Sim Worker 1',
+      role: 'worker',
+      map: 'Azura',
+      x: 33,
+      y: 32,
+      intent: 'item_drop_visible',
+      gold: 25,
+      inventory_count: 0,
+      status: 'dead',
+      action: 'item_dropped_to_world',
+      inputs: { item_id: 'sim_item_training_slime_goo_1', item_type: 'training_slime_goo', reason: 'death_drop' },
+    },
+    {
+      elapsed_ms: 300_000,
+      label: 'World event contribution closes the loop',
+      agent_id: 'sim:merchant:2',
+      name: 'Sim Merchant 2',
+      role: 'merchant',
+      map: 'Azura',
+      x: 28,
+      y: 27,
+      intent: 'world_event_contribution',
+      gold: 4000,
+      inventory_count: 1,
+      action: RECEIPT_ACTIONS.WORLD_EVENT_CONTRIBUTION,
+      inputs: { event_id: 'witness_moth_bloom', contribution: 'defend_scribes' },
+    },
+  ];
+}
+
+function buildFirstFiveMinuteGameplan(): SimLifeGameplanStep[] {
+  return [
+    {
+      minute: 0,
+      title: 'Arrive and become visible',
+      agent_id: 'sim:worker:1',
+      map: 'Rookguard',
+      visible_action: 'A worker appears in Rookguard and starts moving from receipt-backed presence.',
+      receipt_actions: [PRESENCE_ENTERED_ACTION],
+    },
+    {
+      minute: 1,
+      title: 'Work loop starts paying out',
+      agent_id: 'sim:worker:1',
+      map: 'Rookguard',
+      visible_action: 'The worker completes a temple sweep and receives gold.',
+      receipt_actions: ['work_contract_completed', WALLET_CREDIT_ACTION],
+    },
+    {
+      minute: 2,
+      title: 'Items enter the world',
+      agent_id: 'sim:worker:1',
+      map: 'Rookguard',
+      visible_action: 'A loot pickup changes inventory count and links back to item receipts.',
+      receipt_actions: ['item_minted', 'item_added_to_inventory'],
+    },
+    {
+      minute: 3,
+      title: 'Property economy becomes visible',
+      agent_id: 'sim:homesteader:1',
+      map: 'Azura',
+      visible_action: 'The homesteader spends gold on a house plot while a merchant bids at auction.',
+      receipt_actions: [WALLET_DEBIT_ACTION, PROPERTY_BID_ACTION, PROPERTY_AUCTION_SETTLED_ACTION],
+    },
+    {
+      minute: 4,
+      title: 'Risk and world event proof',
+      agent_id: 'sim:merchant:2',
+      map: 'Azura',
+      visible_action: 'Combat/death, item drop, and a world event contribution are visible as simulated proof beats.',
+      receipt_actions: ['combat_resolved', 'death', 'item_dropped_to_world', RECEIPT_ACTIONS.WORLD_EVENT_CONTRIBUTION],
+    },
+  ];
+}

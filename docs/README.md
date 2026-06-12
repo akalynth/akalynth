@@ -149,6 +149,7 @@ Verification, governance, and proof docs:
 - [Verification Spine API v1](./VERIFICATION_SPINE_API.md) - the mandatory pre-merge verification system contract
 - [Spine Lock v1](./SPINE_V1.md) - locked spine surface and verifier registration rules
 - [Simulation Lane Runbook](./SIM_LANE_RUNBOOK.md) - `sim-api.akalynth.com` / `sim.akalynth.com` lane contract, state custody, and verification steps
+- [Sim Life Viewer v1](./SIM_LIFE_VIEWER_V1.md) - first-five-minute visible-agent dashboard and `/v1/sim/snapshot` contract
 - [Governance Invariants](./GOVERNANCE_INVARIANTS.md) - civil guarantees and auditability constraints
 - [Repo Hygiene Architecture](./REPO_HYGIENE_ARCHITECTURE.md) - root/doc/archive/drop cleanup rules
 - [Constitutional Amendment Process](./CONSTITUTIONAL_AMENDMENTS.md) - formal process for modifying constitutional files
