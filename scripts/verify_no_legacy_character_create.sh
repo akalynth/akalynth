@@ -264,6 +264,8 @@ for web_economy_literal in \
   "no-session property buy emits no purchase receipt" \
   "property buy rejects character owned by another account" \
   "cross-account property buy emits no receipts" \
+  "property buy requires character id" \
+  "missing-character property buy emits no debit/purchase receipt" \
   "property buy requires matching csrf" \
   "auth/csrf rejected property buy emits no purchase receipt" \
   "property buy without gold is rejected" \
