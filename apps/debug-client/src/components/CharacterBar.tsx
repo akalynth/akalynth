@@ -42,10 +42,9 @@ interface CharacterBarProps {
 }
 
 /**
- * Identity v0.1 (#148). When signed in as a created character, shows the name +
- * a sign-out (back to guest). Otherwise shows a "create a character" form that
- * mints a signed token and reconnects as that character. Guest play remains the
- * default — this bar is purely additive.
+ * Account-character entry. When signed in as a selected character, shows the
+ * name + sign-out. Otherwise this form requires an account session before it
+ * can select or create a server-backed character through /v1/characters.
  */
 export function CharacterBar({
   session,
