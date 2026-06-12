@@ -115,6 +115,50 @@ Outfits response:
   - 403 `csrf_failed` - Server received a request without matching CSRF header/cookie
   - 404 `not_found` - Character is missing or not owned by the account
 
+### Web Gameplay HTTP
+- These endpoints are for account-owned character gameplay from the static web portal.
+- `GET /v1/shop/catalog` is public.
+- `GET /v1/wallet?character_id=<character_id>` requires an account session cookie and returns only account-owned character wallet state.
+- `POST /v1/shop/purchase`, `POST /v1/work/start`, `POST /v1/work/tick`, `POST /v1/property/buy`, `POST /v1/property/list`, and `POST /v1/property/unlist` require an account session cookie, matching CSRF header/cookie, and an account-owned `character_id`.
+- Gameplay mutations are receipt-backed. Clients do not create wallet, item, work, or property authority locally.
+
+Shop catalog response:
+```json
+{"items":[{"shop_key":"healing_herb","item_type":"healing_herb","name":"Healing Herb","tag":"Consumable","description":"A server-authoritative in-game item.","price_gold":5,"currency":"gold"}]}
+```
+
+Wallet response:
+```json
+{"ok":true,"character_id":"p_abc123","balance_gold":10}
+```
+
+Shop purchase request:
+```json
+{"character_id":"p_abc123","shop_key":"healing_herb"}
+```
+
+Work start request:
+```json
+{"character_id":"p_abc123"}
+```
+
+Work tick request:
+```json
+{"character_id":"p_abc123","contract_id":"wc_abc123"}
+```
+
+Property mutation request:
+```json
+{"character_id":"p_abc123","property_id":"Azura:H1","price_gold":75}
+```
+
+Common errors:
+- 400 `character_id_required`, `shop_key_required`, `contract_id_required`, `property_id_required`, `invalid_price`
+- 401 `not_authenticated`
+- 403 `csrf_failed`, `not_owner`
+- 404 `character_not_found`, `unknown_plot`
+- 409 `insufficient_gold`
+
 ## WebSocket
 
 ### Connection

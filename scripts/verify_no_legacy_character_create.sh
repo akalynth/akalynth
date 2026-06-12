@@ -92,7 +92,12 @@ for client_contract_literal in \
   'GET /v1/characters` requires an account session cookie' \
   '### Character Select' \
   'POST /v1/characters/select` requires an account session cookie and matching CSRF header/cookie' \
-  'Email verification is not required for selecting an existing account-owned character'; do
+  'Email verification is not required for selecting an existing account-owned character' \
+  '### Web Gameplay HTTP' \
+  'GET /v1/shop/catalog` is public' \
+  'GET /v1/wallet?character_id=<character_id>` requires an account session cookie' \
+  'POST /v1/shop/purchase`, `POST /v1/work/start`, `POST /v1/work/tick`, `POST /v1/property/buy`, `POST /v1/property/list`, and `POST /v1/property/unlist` require an account session cookie' \
+  'Gameplay mutations are receipt-backed'; do
   if ! grep -Fq "$client_contract_literal" "$ROOT_DIR/docs/CLIENT_CONTRACT_V0_1.md"; then
     die "Missing account-character client contract section: $client_contract_literal"
   fi
