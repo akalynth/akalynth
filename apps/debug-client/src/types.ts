@@ -98,10 +98,20 @@ export interface CharacterCatalog {
   error: string | null;
 }
 
+export interface AccountCharacter {
+  character_id: string;
+  name: string;
+  world_id: string;
+  sex: CharacterSex;
+  outfit_id: string;
+  created_at?: string;
+}
+
 export interface AccountSessionStatus {
   checking: boolean;
   checked: boolean;
   authenticated: boolean;
+  emailVerified: boolean;
   message: string | null;
 }
 
@@ -189,13 +199,17 @@ export interface GameClientApi {
   setStage: (stage: UiStage['stage']) => void;
   toggleMap: (map: MapName) => void;
   relog: () => void;
-  // Identity v0.1 (#148): create a character (mints a signed token), then play
-  // as that character. signOut clears the stored token and falls back to guest.
+  // Identity v0.1 (#148): create/select a character (mints or issues a signed
+  // token), then play as that character. signOut clears the stored token and
+  // falls back to guest.
   createCharacter: (input: CharacterCreateInput) => Promise<CreateResult>;
+  selectCharacter: (characterId: string) => Promise<CreateResult>;
   signOut: () => void;
   characterCatalog: CharacterCatalog;
+  accountCharacters: AccountCharacter[];
   accountSession: AccountSessionStatus;
   refreshAccountSession: () => Promise<AccountSessionStatus>;
+  loadAccountCharacters: () => Promise<AccountCharacter[]>;
   openChat: () => void;
   closeChat: () => void;
   // Property Ownership v0

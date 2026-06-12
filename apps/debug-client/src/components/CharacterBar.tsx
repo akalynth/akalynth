@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import type {
   AccountSessionStatus,
+  AccountCharacter,
   CharacterCatalog,
   CharacterCreateInput,
   CharacterSex,
@@ -30,10 +31,13 @@ if (typeof document !== 'undefined' && !document.getElementById(STYLE_ID)) {
 interface CharacterBarProps {
   session: SessionInfo;
   onCreate: (input: CharacterCreateInput) => Promise<{ ok: boolean; error?: string }>;
+  onSelect: (characterId: string) => Promise<{ ok: boolean; error?: string }>;
   onSignOut: () => void;
   catalog: CharacterCatalog;
+  accountCharacters: AccountCharacter[];
   accountSession: AccountSessionStatus;
   onRefreshAccountSession: () => Promise<AccountSessionStatus>;
+  onLoadAccountCharacters: () => Promise<AccountCharacter[]>;
 }
 
 /**
@@ -45,10 +49,13 @@ interface CharacterBarProps {
 export function CharacterBar({
   session,
   onCreate,
+  onSelect,
   onSignOut,
   catalog,
+  accountCharacters,
   accountSession,
   onRefreshAccountSession,
+  onLoadAccountCharacters,
 }: CharacterBarProps) {
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
@@ -56,6 +63,7 @@ export function CharacterBar({
   const [worldId, setWorldId] = useState('');
   const [sex, setSex] = useState<CharacterSex>('male');
   const [outfitId, setOutfitId] = useState('');
+  const [selectedCharacterId, setSelectedCharacterId] = useState('');
   const outfitOptions = useMemo(
     () => catalog.outfits.filter((entry) => entry.sex === sex),
     [catalog.outfits, sex]
@@ -76,6 +84,15 @@ export function CharacterBar({
     setOutfitId(outfitOptions[0].outfit_id);
   }, [outfitOptions, outfitId]);
 
+  useEffect(() => {
+    if (!accountCharacters.length) {
+      setSelectedCharacterId('');
+      return;
+    }
+    if (accountCharacters.some((character) => character.character_id === selectedCharacterId)) return;
+    setSelectedCharacterId(accountCharacters[0].character_id);
+  }, [accountCharacters, selectedCharacterId]);
+
   if (session.authenticated) {
     return (
       <div className="character-bar character-bar--signed" aria-label="character identity">
@@ -94,6 +111,7 @@ export function CharacterBar({
     setBusy(true);
     setError(null);
     const trimmed = name.trim();
+    let emailVerified = accountSession.emailVerified;
     if (!accountSession.authenticated) {
       const next = await onRefreshAccountSession();
       if (!next.authenticated) {
@@ -101,6 +119,18 @@ export function CharacterBar({
         setBusy(false);
         return;
       }
+      void onLoadAccountCharacters();
+      emailVerified = next.emailVerified;
+      if (!next.emailVerified) {
+        setError('Verify email before creating; existing characters can still be selected.');
+        setBusy(false);
+        return;
+      }
+    }
+    if (!emailVerified) {
+      setError('Verify email before creating; existing characters can still be selected.');
+      setBusy(false);
+      return;
     }
     if (!trimmed) {
       setError('Name is required');
@@ -124,25 +154,79 @@ export function CharacterBar({
     }
   };
 
+  const selectExisting = async () => {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    if (!accountSession.authenticated) {
+      const next = await onRefreshAccountSession();
+      if (!next.authenticated) {
+        setError(next.message ?? 'Sign in to an account before selecting a character');
+        setBusy(false);
+        return;
+      }
+    }
+    const characterId = selectedCharacterId || accountCharacters[0]?.character_id || '';
+    if (!characterId) {
+      setError('No existing characters to select');
+      setBusy(false);
+      return;
+    }
+    const result = await onSelect(characterId);
+    setBusy(false);
+    if (!result.ok) {
+      setError(result.error ?? 'Could not select character');
+    }
+  };
+
   const canCreate =
     !busy &&
     !!catalog.loaded &&
     !catalog.loading &&
     accountSession.authenticated &&
+    accountSession.emailVerified &&
     name.trim().length > 0 &&
     !!worldId &&
     !!outfitId;
+  const canSelect = !busy && accountSession.authenticated && !!selectedCharacterId;
 
   const accountHelper = accountSession.authenticated
-    ? 'Account session ready'
+    ? accountSession.emailVerified
+      ? 'Account session ready'
+      : 'Verify email before creating; existing characters can still be selected.'
     : accountSession.checking
       ? 'Checking account session'
       : accountSession.message ?? 'Sign in to an account before creating a character';
 
   return (
     <form className="character-bar" aria-label="create character" onSubmit={submit}>
-      <span className="character-bar-kicker">Account session required · create a character</span>
+      <span className="character-bar-kicker">Account session required · select or create a character</span>
       <span className="character-bar-helper">{accountHelper}</span>
+      {accountSession.authenticated && accountCharacters.length > 0 && (
+        <>
+          <select
+            className="character-bar-input"
+            value={selectedCharacterId}
+            onChange={(e) => setSelectedCharacterId(e.target.value)}
+            disabled={busy}
+            aria-label="existing account character"
+          >
+            {accountCharacters.map((character) => (
+              <option key={character.character_id} value={character.character_id}>
+                {character.name} · {character.world_id} · {character.outfit_id}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="character-bar-btn"
+            onClick={() => void selectExisting()}
+            disabled={!canSelect}
+          >
+            {busy ? 'Selecting...' : 'Play selected'}
+          </button>
+        </>
+      )}
       <input
         className="character-bar-input"
         type="text"
