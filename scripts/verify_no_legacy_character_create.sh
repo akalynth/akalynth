@@ -229,12 +229,14 @@ for web_economy_literal in \
   "wallet read requires account session" \
   "wallet read requires account-owned character" \
   "wallet rejects character owned by another account" \
+  "cross-account wallet read emits no receipts" \
   "shop purchase requires account session" \
   "shop purchase requires matching csrf" \
   "auth/csrf rejected shop requests emit no receipts" \
   "shop receipts do not carry account/session/csrf tokens" \
   "work start requires account session" \
   "work start rejects character owned by another account" \
+  "cross-account work start emits no receipts" \
   "work start requires matching csrf" \
   "work tick requires account session" \
   "work tick requires matching csrf" \
