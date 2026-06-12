@@ -250,11 +250,15 @@ for web_economy_literal in \
   "property list requires account session" \
   "property list requires matching csrf" \
   "auth/csrf rejected property list emits no listing receipt" \
+  "property list rejects non-owner" \
+  "non-owner property list emits no listing receipt" \
   "property list succeeds for owner" \
   "resale emits buyer debit + seller credit + transfer" \
   "property unlist requires account session" \
   "property unlist requires matching csrf" \
   "auth/csrf rejected property unlist emits no unlist receipt" \
+  "property unlist rejects non-owner" \
+  "non-owner property unlist emits no second unlist receipt" \
   "property unlist succeeds for owner"; do
   if ! grep -Fq "$web_economy_literal" "$ROOT_DIR/apps/server/tools/verify-web-economy.test.ts"; then
     die "Missing web economy gameplay proof: $web_economy_literal"
