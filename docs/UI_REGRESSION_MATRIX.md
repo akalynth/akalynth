@@ -174,16 +174,16 @@ C4 → ChronicleSheetTest.correctIconsForEventKinds()
 |----|--------|------|--------|------------------|-----------|
 | N1 | Enter create screen | n/a | n/a | none | Create button disabled when name empty |
 | N2 | Name input | n/a | n/a | none | Max length 16 enforced |
-| N3 | Sex select | n/a | n/a | none | Selection toggles preview sprite |
-| N4 | Create submit | n/a | immediate | `character_created` emitted | Emits (name, sex); starter outfit auto-assigned |
+| N3 | World/sex/outfit select | n/a | n/a | none | Selection toggles preview sprite and outfit id |
+| N4 | Create submit | n/a | immediate | `character_created` emitted | Emits v2 payload: name, world id, sex, outfit id |
 
 ### Test Coverage
 
 ```text
 N1 → CharacterCreateScreenTest.createDisabledWhenNameEmpty()
 N2 → CharacterCreateScreenTest.nameMaxLength16()
-N3 → CharacterCreateScreenTest.sexSelectionTogglesSprite()
-N4 → CharacterCreateScreenTest.createEmitsCorrectData()
+N3 → CharacterCreateScreenTest.worldSexOutfitSelectionTogglesSprite()
+N4 → CharacterCreateScreenTest.createEmitsCorrectV2Payload()
 ```
 
 ---

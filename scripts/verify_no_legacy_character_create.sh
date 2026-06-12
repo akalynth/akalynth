@@ -71,6 +71,20 @@ if [[ -n "$doc_matches" ]]; then
   die "Stale account-character contract wording found. Document POST /v1/characters with account session, CSRF, world_id, sex, outfit_id, and 201 response."
 fi
 
+ui_doc_matches="$(
+  grep -RInE 'No outfit picker in v0|Starter outfit auto-assigned|TBD \(server: world_state PlayerPublic\)|onCharacterCreated: \(name: String, sex|Emits \(name, sex\)|createEmitsCorrectData' \
+    "$ROOT_DIR/docs/UI_PROPOSAL.md" \
+    "$ROOT_DIR/docs/UI_IMPLEMENTATION_PROPOSAL.md" \
+    "$ROOT_DIR/docs/UI_MAPPING_CHECKLIST.md" \
+    "$ROOT_DIR/docs/UI_REGRESSION_MATRIX.md" \
+    2>/dev/null || true
+)"
+
+if [[ -n "$ui_doc_matches" ]]; then
+  echo "$ui_doc_matches" >&2
+  die "Stale UI character creation docs found. UI docs must describe account-character v2 with world_id, sex, and outfit_id."
+fi
+
 status_matches="$(
   grep -RInE 'Status: \*\*decided / no implementation\*\*|closed_account_portal_product_decision_recorded_no_implementation' \
     "$ROOT_DIR/docs/account-portal/AKALYNTH_ACCOUNT_PORTAL_PRODUCT_DECISION_V1/ACCOUNT_PORTAL_DECISION.md" \

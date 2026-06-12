@@ -939,10 +939,12 @@ fun ChronicleEventRow(event: ChronicleEvent, onClick: () -> Unit) {
 ```kotlin
 @Composable
 fun CharacterCreateScreen(
-    onCharacterCreated: (name: String, sex: Sex) -> Unit
+    onCharacterCreated: (name: String, worldId: String, sex: Sex, outfitId: String) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
+    var selectedWorldId by remember { mutableStateOf("rookguard") }
     var selectedSex by remember { mutableStateOf(Sex.MALE) }
+    var selectedOutfitId by remember { mutableStateOf("male_wanderer") }
 
     Column(
         modifier = Modifier
@@ -986,6 +988,14 @@ fun CharacterCreateScreen(
 
         Spacer(Modifier.height(24.dp))
 
+        // World selection
+        WorldSelector(
+            selectedWorldId = selectedWorldId,
+            onWorldSelected = { selectedWorldId = it }
+        )
+
+        Spacer(Modifier.height(24.dp))
+
         // Sex selection
         Text("Sex:", color = Color.White.copy(alpha = 0.7f))
         Spacer(Modifier.height(8.dp))
@@ -1003,11 +1013,20 @@ fun CharacterCreateScreen(
             )
         }
 
+        Spacer(Modifier.height(24.dp))
+
+        // Outfit selection
+        OutfitSelector(
+            selectedSex = selectedSex,
+            selectedOutfitId = selectedOutfitId,
+            onOutfitSelected = { selectedOutfitId = it }
+        )
+
         Spacer(Modifier.height(48.dp))
 
         // Create button
         Button(
-            onClick = { onCharacterCreated(name, selectedSex) },
+            onClick = { onCharacterCreated(name, selectedWorldId, selectedSex, selectedOutfitId) },
             enabled = name.isNotBlank(),
             colors = ButtonDefaults.buttonColors(containerColor = Color.Gold),
             modifier = Modifier
@@ -1249,7 +1268,9 @@ After implementation, verify against UI_PROPOSAL.md v0.3:
 - [ ] Tap expands to recap sheet
 - [ ] Chronicle shows events grouped by day
 - [ ] Sex selection at character creation
-- [ ] Starter outfit auto-assigned
+- [ ] World selection at character creation
+- [ ] Outfit selection at character creation
+- [ ] Create callback emits name, world id, sex, and outfit id
 
 ---
 
