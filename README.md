@@ -86,7 +86,8 @@ those yourself.
 5) Account-character/API parity edits:
 - `npm run verify:account-character` (server `/v1/characters`, protocol docs,
   server create/select play-token handoff and login projection proof,
-  server wallet/shop/work/property gameplay route proof, debug-client guard, and
+  server wallet/shop/work/property gameplay route proof, debug-client guard and
+  debug-client gameplay wire-authority proof, and
   Android account-character unit tests plus Android character UI compile and
   Android gameplay wire-authority protocol proof)
 - For the public account portal and the four Codex surfaces (Public, Builder, Operator, Agent), run

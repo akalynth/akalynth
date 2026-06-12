@@ -150,6 +150,7 @@ for android_wire_authority_literal in \
 done
 
 for debug_client_literal in \
+  'debug gameplay wire authority verifier is wired' \
   'create/select handlers use explicit account session guard' \
   'missing account session blocks character actions before request' \
   'missing csrf blocks character actions before request' \
@@ -165,6 +166,21 @@ for debug_client_literal in \
   'house unlist remains token-scoped intent only'; do
   if ! grep -Fq "$debug_client_literal" "$ROOT_DIR/apps/debug-client/scripts/verify-account-character-guard.mjs"; then
     die "Missing debug-client account-character verifier proof: $debug_client_literal"
+  fi
+done
+
+for debug_wire_literal in \
+  'function assertNoClientAuthorityFields(label, body)' \
+  "for (const field of ['character_id', 'player_id', 'x:', 'y:', 'account_id', 'csrf'])" \
+  "assertIntentOnlyAction('startWork'" \
+  "assertIntentOnlyAction('tickWork'" \
+  "assertIntentOnlyAction('buyHouse'" \
+  "assertIntentOnlyAction('listHouse'" \
+  "assertIntentOnlyAction('unlistHouse'" \
+  'create/select responses validate play token handoff' \
+  'token login prefers selected account character token'; do
+  if ! grep -Fq "$debug_wire_literal" "$ROOT_DIR/apps/debug-client/scripts/verify-debug-gameplay-wire-authority.mjs"; then
+    die "Missing debug-client gameplay wire-authority proof: $debug_wire_literal"
   fi
 done
 
