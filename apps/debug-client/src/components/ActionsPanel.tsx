@@ -49,6 +49,9 @@ const ROUTE_ACTIONS = [
 ] as const;
 
 type RouteActionId = typeof ROUTE_ACTIONS[number]['skill_id'];
+const ROUTE_ACTION_BY_ID = new Map<RouteActionId, typeof ROUTE_ACTIONS[number]>(
+  ROUTE_ACTIONS.map((action) => [action.skill_id, action]),
+);
 
 function routeActionIdsFor(onwardRoutes: NonNullable<PlayLoopProgress['onwardRoutes']>): RouteActionId[] {
   const ids: RouteActionId[] = [];
@@ -146,7 +149,10 @@ export function ActionsPanel({
   const codexProfession = rookguardQuest?.codexProfession ?? null;
   const onwardRoutes = loop?.onwardRoutes ?? [];
   const routeActionIds = routeActionIdsFor(onwardRoutes);
-  const routeActions = ROUTE_ACTIONS.filter((action) => routeActionIds.includes(action.skill_id));
+  const routeActions = routeActionIds.flatMap((skillId) => {
+    const action = ROUTE_ACTION_BY_ID.get(skillId);
+    return action ? [action] : [];
+  });
   const routeActionsOpen = routeActions.length > 0;
   const witnessMothOpen =
     stage >= 3 &&
