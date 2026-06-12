@@ -231,6 +231,8 @@ for web_economy_literal in \
   "wallet rejects character owned by another account" \
   "cross-account wallet read emits no receipts" \
   "shop purchase requires account session" \
+  "shop purchase rejects character owned by another account" \
+  "cross-account shop purchase emits no receipts" \
   "shop purchase requires matching csrf" \
   "auth/csrf rejected shop requests emit no receipts" \
   "shop receipts do not carry account/session/csrf tokens" \
@@ -240,11 +242,15 @@ for web_economy_literal in \
   "work start requires matching csrf" \
   "work tick requires account session" \
   "work tick requires matching csrf" \
+  "work tick rejects character owned by another account" \
+  "cross-account work tick emits no receipts" \
   "auth/csrf rejected work tick emits no receipts" \
   "work tick completes after presence gates" \
   "work completion updates wallet balance" \
   "work receipts include ticks, completion, and wallet credit" \
   "property buy requires account session" \
+  "property buy rejects character owned by another account" \
+  "cross-account property buy emits no receipts" \
   "property buy without gold is rejected" \
   "primary buy emitted wallet debit + property purchase" \
   "property list requires account session" \
