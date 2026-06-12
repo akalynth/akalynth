@@ -430,6 +430,7 @@ export function handleDreamGateInterpretation(ctx: SkillContext): SkillResult {
   if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
   const routeProgress = ctx.getOnwardRouteProgress?.();
   if (!routeProgress?.moonspireSurveyed) return { success: false, reason: 'invalid_target' };
+  if (routeProgress.dreamGateInterpreted) return { success: false, reason: 'invalid_target' };
 
   const interpretedAt = new Date().toISOString();
   const symbols = ['Door', 'Mirror', 'Water'];
@@ -478,6 +479,7 @@ export function handleDreamFragmentAnchor(ctx: SkillContext): SkillResult {
   if (!routeProgress?.moonspireSurveyed || !routeProgress.dreamGateInterpreted) {
     return { success: false, reason: 'invalid_target' };
   }
+  if (routeProgress.dreamFragmentAnchored) return { success: false, reason: 'invalid_target' };
 
   const anchoredAt = new Date().toISOString();
   const fragmentId = 'moonspire_emotional_residue_fragment_v1';
@@ -525,6 +527,9 @@ export function handleRouteSafetyReview(ctx: SkillContext, route: 'forgehold' | 
     return { success: false, reason: 'invalid_target' };
   }
   if (route === 'moonspire' && !routeProgress?.dreamFragmentAnchored) {
+    return { success: false, reason: 'invalid_target' };
+  }
+  if (route === 'moonspire' && routeProgress?.dreamGateAbuseNotesReviewed) {
     return { success: false, reason: 'invalid_target' };
   }
 

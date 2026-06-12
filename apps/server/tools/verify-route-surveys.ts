@@ -369,6 +369,28 @@ test('Dream Gate interpretation records symbolic state without traversal or econ
   assert(result.payload?.required_fragments?.includes('emotional_residue'), 'Dream Gate payload should name Emotional Residue');
 });
 
+test('Dream Gate interpretation is idempotent after receipt-derived interpretation', async () => {
+  const { ctx, receipts, sent } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:moonspire' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:interpret' });
+  ctx.skillCooldowns.set('route:dream:interpret', 0);
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:interpret' });
+
+  const interpretations = receipts.filter((r) => r.action === DREAM_GATE_INTERPRETED_ACTION);
+  const interpretationResults = sent.filter((msg) =>
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as { type?: string }).type === 'skill_result' &&
+    (msg as { skill_id?: string }).skill_id === 'route:dream:interpret'
+  ) as Array<{ success?: boolean; reason?: string }>;
+
+  assert(interpretations.length === 1, 'repeat Dream Gate interpretation must not emit a second interpretation receipt');
+  assert(interpretationResults.length === 2, 'repeat Dream Gate interpretation should return two skill results');
+  assert(interpretationResults[0]?.success === true, 'first Dream Gate interpretation should succeed');
+  assert(interpretationResults[1]?.success === false, 'second Dream Gate interpretation should fail');
+  assert(interpretationResults[1]?.reason === 'invalid_target', 'second Dream Gate interpretation should be rejected as invalid target');
+});
+
 test('Dream fragment evidence anchors without traversal or economy authority', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:moonspire' });
@@ -390,6 +412,29 @@ test('Dream fragment evidence anchors without traversal or economy authority', a
   assert(result.payload?.traversal_granted === false, 'Dream fragment payload must not grant traversal');
   assert(result.payload?.economy_impact === 'none', 'Dream fragment payload economy impact mismatch');
   assert(result.payload?.evidence_objects?.includes('emotional_residue'), 'Dream fragment payload should name Emotional Residue');
+});
+
+test('Dream fragment anchor is idempotent after receipt-derived fragment', async () => {
+  const { ctx, receipts, sent } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:moonspire' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:interpret' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:fragment' });
+  ctx.skillCooldowns.set('route:dream:fragment', 0);
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:fragment' });
+
+  const fragments = receipts.filter((r) => r.action === DREAM_FRAGMENT_ANCHORED_ACTION);
+  const fragmentResults = sent.filter((msg) =>
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as { type?: string }).type === 'skill_result' &&
+    (msg as { skill_id?: string }).skill_id === 'route:dream:fragment'
+  ) as Array<{ success?: boolean; reason?: string }>;
+
+  assert(fragments.length === 1, 'repeat Dream fragment anchor must not emit a second fragment receipt');
+  assert(fragmentResults.length === 2, 'repeat Dream fragment anchor should return two skill results');
+  assert(fragmentResults[0]?.success === true, 'first Dream fragment anchor should succeed');
+  assert(fragmentResults[1]?.success === false, 'second Dream fragment anchor should fail');
+  assert(fragmentResults[1]?.reason === 'invalid_target', 'second Dream fragment anchor should be rejected as invalid target');
 });
 
 test('route safety reviews explain boundaries without heat or penalties', async () => {
@@ -447,6 +492,33 @@ test('Forgehold safety review is idempotent after receipt-derived boundary revie
   assert(safetyResults[0]?.success === true, 'first Forgehold safety review should succeed');
   assert(safetyResults[1]?.success === false, 'second Forgehold safety review should fail');
   assert(safetyResults[1]?.reason === 'invalid_target', 'second Forgehold safety review should be rejected as invalid target');
+});
+
+test('Dream Gate safety review is idempotent after receipt-derived boundary review', async () => {
+  const { ctx, receipts, sent } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:moonspire' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:interpret' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:fragment' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:safety:moonspire' });
+  ctx.skillCooldowns.set('route:safety:moonspire', 0);
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:safety:moonspire' });
+
+  const dreamGateReviews = receipts.filter((r) =>
+    r.action === ROUTE_ABUSE_NOTES_REVIEWED_ACTION &&
+    r.inputs.route_id === 'moonspire_dream_gate_slice_v1'
+  );
+  const safetyResults = sent.filter((msg) =>
+    typeof msg === 'object' &&
+    msg !== null &&
+    (msg as { type?: string }).type === 'skill_result' &&
+    (msg as { skill_id?: string }).skill_id === 'route:safety:moonspire'
+  ) as Array<{ success?: boolean; reason?: string }>;
+
+  assert(dreamGateReviews.length === 1, 'repeat Dream Gate safety review must not emit a second boundary receipt');
+  assert(safetyResults.length === 2, 'repeat Dream Gate safety review should return two skill results');
+  assert(safetyResults[0]?.success === true, 'first Dream Gate safety review should succeed');
+  assert(safetyResults[1]?.success === false, 'second Dream Gate safety review should fail');
+  assert(safetyResults[1]?.reason === 'invalid_target', 'second Dream Gate safety review should be rejected as invalid target');
 });
 
 test('Heartforge gate preparation records server gate without travel or economy authority', async () => {
