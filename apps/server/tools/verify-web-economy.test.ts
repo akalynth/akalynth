@@ -348,6 +348,10 @@ async function main(): Promise<void> {
   check('work tick rejects unknown contract', res.status === 409 && res.body.error === 'invalid_contract');
   check('unknown-contract work tick emits no receipts', receipts.length === receiptCountAfterWorkStart);
 
+  res = await request('POST', '/v1/work/tick', { character_id: 'p_buyer', contract_id: contractId }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
+  check('work tick rejects insufficient presence', res.status === 409 && res.body.error === 'insufficient_presence');
+  check('insufficient-presence work tick emits no receipts', receipts.length === receiptCountAfterWorkStart);
+
   for (let i = 0; i < 6; i++) {
     logicalNowMs += 5_000;
     res = await request('POST', '/v1/work/tick', { character_id: 'p_buyer', contract_id: contractId }, { cookie: cookieHeader(), 'x-csrf-token': 'csrf-ok' });
