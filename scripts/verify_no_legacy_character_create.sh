@@ -255,6 +255,8 @@ for web_economy_literal in \
   "cross-account work tick emits no receipts" \
   "auth/csrf rejected work tick emits no receipts" \
   "missing contract work tick emits no receipts" \
+  "work tick requires character id" \
+  "missing-character work tick emits no receipts" \
   "work tick completes after presence gates" \
   "work completion updates wallet balance" \
   "work receipts include ticks, completion, and wallet credit" \
