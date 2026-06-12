@@ -62,8 +62,13 @@ done
 for android_catalog_literal in \
   'fun `load worlds uses v1 worlds and filters legacy ids`()' \
   'fun `load outfits uses v1 outfits and filters invalid catalog entries`()' \
+  'fun `create character posts session cookie csrf header and v2 body`()' \
+  'fun `select character posts session cookie and csrf header`()' \
   'assertEquals("/v1/worlds", requestedPath())' \
-  'assertEquals("/v1/outfits", requestedPath())'; do
+  'assertEquals("/v1/outfits", requestedPath())' \
+  'assertEquals("/v1/characters", request()["path"])' \
+  'assertEquals("/v1/characters/select", request()["path"])' \
+  'assertEquals("csrf-test", request()["csrf"])'; do
   if ! grep -Fq "$android_catalog_literal" "$ROOT_DIR/apps/android/app/src/test/java/com/akalynth/client/network/IdentityApiAccountCharacterTest.kt"; then
     die "Missing Android account-character catalog route proof: $android_catalog_literal"
   fi
