@@ -6,7 +6,7 @@
 
 import type { WebSocket } from 'ws';
 import type { AntiCheatState, Player } from '../../../packages/shared/types.js';
-import { ASHGLASS_EVIDENCE_RECOVERED_ACTION, DREAM_FRAGMENT_ANCHORED_ACTION, DREAM_GATE_ARRIVAL_RECORDED_ACTION, DREAM_GATE_INTERPRETED_ACTION, DREAM_GATE_SEAL_PREPARED_ACTION, DREAM_GATE_TRAVERSAL_AUTHORIZED_ACTION, FORGEHOLD_ECONOMY_QUOTED_ACTION, FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION, HEARTFORGE_GATE_PREPARED_ACTION, ROUTE_ABUSE_NOTES_REVIEWED_ACTION, ROUTE_SURVEYED_ACTION, SKILL_RESOLVED_ACTION, SKILL_USE_INTENT_ACTION, SOULSTEEL_COMPONENT_MINTED_ACTION, SOULSTEEL_REFINEMENT_AUTHORIZED_ACTION, SOULSTEEL_STABILIZED_ACTION } from '../../../packages/shared/skills.js';
+import { ASHGLASS_EVIDENCE_RECOVERED_ACTION, DREAM_FRAGMENT_ANCHORED_ACTION, DREAM_GATE_ARRIVAL_RECORDED_ACTION, DREAM_GATE_INTERPRETED_ACTION, DREAM_GATE_SEAL_PREPARED_ACTION, DREAM_GATE_TRAVERSAL_AUTHORIZED_ACTION, FORGEHOLD_COMPONENT_SETTLED_ACTION, FORGEHOLD_ECONOMY_QUOTED_ACTION, FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION, HEARTFORGE_GATE_PREPARED_ACTION, ROUTE_ABUSE_NOTES_REVIEWED_ACTION, ROUTE_SURVEYED_ACTION, SKILL_RESOLVED_ACTION, SKILL_USE_INTENT_ACTION, SOULSTEEL_COMPONENT_MINTED_ACTION, SOULSTEEL_REFINEMENT_AUTHORIZED_ACTION, SOULSTEEL_STABILIZED_ACTION } from '../../../packages/shared/skills.js';
 import { handleUseSkill, type SkillContext } from '../src/skills/index.js';
 import { buildOnwardRouteProgress, type RookguardQuestInput } from '../src/world/rookguardQuest.js';
 import { applyReceiptToOnwardRoutes, clearOnwardRouteProjection, getOnwardRouteReceiptProgress } from '../src/world/onwardRoutes.js';
@@ -120,6 +120,7 @@ test('route objective skills reject out of order without side effects', async ()
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:ashglass' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:refine' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:mint' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:settle' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:interpret' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:fragment' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:traverse' });
@@ -133,7 +134,7 @@ test('route objective skills reject out of order without side effects', async ()
     success?: boolean;
     reason?: string;
   }>;
-  assert(failedResults.length === 14, 'out-of-order route skills should each return a skill_result');
+  assert(failedResults.length === 15, 'out-of-order route skills should each return a skill_result');
   assert(failedResults.every((result) => result.success === false), 'out-of-order route skills should fail');
   assert(failedResults.every((result) => result.reason === 'invalid_target'), 'out-of-order route skills should use invalid_target');
   assert(!receipts.some((r) => r.action === FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION), 'out-of-order shipment must not emit quest receipt');
@@ -142,6 +143,7 @@ test('route objective skills reject out of order without side effects', async ()
   assert(!receipts.some((r) => r.action === ASHGLASS_EVIDENCE_RECOVERED_ACTION), 'out-of-order Ashglass evidence must not emit evidence receipt');
   assert(!receipts.some((r) => r.action === SOULSTEEL_REFINEMENT_AUTHORIZED_ACTION), 'out-of-order Soulsteel refinement must not emit authorization receipt');
   assert(!receipts.some((r) => r.action === SOULSTEEL_COMPONENT_MINTED_ACTION), 'out-of-order Soulsteel component mint must not emit route mint receipt');
+  assert(!receipts.some((r) => r.action === FORGEHOLD_COMPONENT_SETTLED_ACTION), 'out-of-order Forgehold settlement must not emit economy receipt');
   assert(!receipts.some((r) => r.action === 'item_minted'), 'out-of-order Soulsteel component mint must not emit item mint receipt');
   assert(!receipts.some((r) => r.action === DREAM_GATE_INTERPRETED_ACTION), 'out-of-order Dream Gate must not emit interpretation receipt');
   assert(!receipts.some((r) => r.action === DREAM_FRAGMENT_ANCHORED_ACTION), 'out-of-order Dream fragment must not emit evidence receipt');
@@ -443,6 +445,49 @@ test('Soulsteel component mint records item and inventory receipts without walle
   assert(result.payload?.economy_impact === 'item_mint_only', 'Soulsteel mint payload economy impact mismatch');
 });
 
+test('Forgehold component settlement records valuation without wallet, item transfer, travel, heat, or penalty authority', async () => {
+  const { ctx, receipts, sent } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:safety:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:gate:heartforge' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:ashglass' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:refine' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:mint' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:settle' });
+
+  const settlement = receipts.find((r) => r.action === FORGEHOLD_COMPONENT_SETTLED_ACTION);
+  assert(settlement, 'missing forgehold_component_settled receipt');
+  assert(settlement.inputs.route_id === 'forgehold_route_slice_v1', 'Forgehold settlement route mismatch');
+  assert(settlement.inputs.settlement_id === 'forgehold_soulsteel_component_settlement_v1', 'Forgehold settlement id mismatch');
+  assert(settlement.inputs.item_type === 'refined_soulsteel_component', 'Forgehold settlement item type mismatch');
+  assert(settlement.inputs.required_component === SOULSTEEL_COMPONENT_MINTED_ACTION, 'Forgehold settlement should require component mint');
+  assert(settlement.inputs.appraised_value_gold === 25, 'Forgehold settlement should record appraised value');
+  assert(settlement.inputs.settlement_state === 'ledgered', 'Forgehold settlement state mismatch');
+  assert(settlement.inputs.economy_impact === 'valuation_only', 'Forgehold settlement should be valuation-only');
+  const guard = settlement.inputs.settlement_guard as { wallet_debit_gold?: number; wallet_credit_gold?: number; direct_wallet_mutation?: boolean; item_transfer?: boolean; travel_unlocked?: boolean; heat_changed?: boolean; penalty_applied?: boolean } | undefined;
+  assert(guard?.wallet_debit_gold === 0, 'Forgehold settlement should not debit gold');
+  assert(guard.wallet_credit_gold === 0, 'Forgehold settlement should not credit gold');
+  assert(guard.direct_wallet_mutation === false, 'Forgehold settlement must not directly mutate wallet');
+  assert(guard.item_transfer === false, 'Forgehold settlement must not transfer items');
+  assert(guard.travel_unlocked === false, 'Forgehold settlement must not unlock travel');
+  assert(guard.heat_changed === false, 'Forgehold settlement must not change heat');
+  assert(guard.penalty_applied === false, 'Forgehold settlement must not apply penalties');
+  assert(!receipts.some((r) => r.action === 'wallet_debit'), 'Forgehold settlement should not emit wallet debit');
+  assert(!receipts.some((r) => r.action === 'wallet_credit'), 'Forgehold settlement should not emit wallet credit');
+
+  const result = skillResultFor<{ settlement_id?: string; appraised_value_gold?: number; settlement_state?: string; economy_impact?: string; settlement_guard?: { direct_wallet_mutation?: boolean; item_transfer?: boolean } }>(sent, 'route:economy:settle');
+  assert(result?.success === true, 'Forgehold settlement skill_result should succeed');
+  assert(result.payload?.settlement_id === 'forgehold_soulsteel_component_settlement_v1', 'Forgehold settlement payload id mismatch');
+  assert(result.payload?.appraised_value_gold === 25, 'Forgehold settlement payload should carry value');
+  assert(result.payload?.settlement_state === 'ledgered', 'Forgehold settlement payload state mismatch');
+  assert(result.payload?.economy_impact === 'valuation_only', 'Forgehold settlement payload economy impact mismatch');
+  assert(result.payload?.settlement_guard?.direct_wallet_mutation === false, 'Forgehold settlement payload must not mutate wallet');
+  assert(result.payload?.settlement_guard?.item_transfer === false, 'Forgehold settlement payload must not transfer item');
+});
+
 test('Dream Gate seal preparation records server gate without traversal or economy authority', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:moonspire' });
@@ -577,6 +622,7 @@ test('onward route projection is derived from route receipts', async () => {
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:ashglass' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:refine' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:mint' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:settle' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:moonspire' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:interpret' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:fragment' });
@@ -601,6 +647,7 @@ test('onward route projection is derived from route receipts', async () => {
   assert(forgehold.completed_objective_ids.includes('ashglass_evidence_recovery'), 'Ashglass evidence should project complete');
   assert(forgehold.completed_objective_ids.includes('soulsteel_refinement_authorization'), 'Soulsteel refinement authorization should project complete');
   assert(forgehold.completed_objective_ids.includes('soulsteel_component_mint'), 'Soulsteel component mint should project complete');
+  assert(forgehold.completed_objective_ids.includes('forgehold_component_settlement'), 'Forgehold component settlement should project complete');
   assert(moonspire.completed_objective_ids.includes('dream_gate_rumor'), 'Moonspire survey should project complete');
   assert(moonspire.completed_objective_ids.includes('symbolic_puzzle_projection'), 'Dream interpretation should project complete');
   assert(moonspire.completed_objective_ids.includes('dream_fragment_evidence'), 'Dream fragment should project complete');
@@ -608,7 +655,7 @@ test('onward route projection is derived from route receipts', async () => {
   assert(moonspire.completed_objective_ids.includes('dream_gate_server_seal'), 'Dream Gate server seal should project complete');
   assert(moonspire.completed_objective_ids.includes('dream_gate_traversal_authorization'), 'Dream Gate traversal authorization should project complete');
   assert(moonspire.completed_objective_ids.includes('dream_gate_arrival_record'), 'Dream Gate arrival should project complete');
-  assert(forgehold.next_objective.includes('Carry the minted Soulsteel component'), 'Forgehold next objective should advance after Soulsteel component mint');
+  assert(forgehold.next_objective.includes('Forgehold component settlement is ledgered'), 'Forgehold next objective should advance after component settlement');
   assert(moonspire.next_objective.includes('Dream Gate threshold arrival is recorded'), 'Moonspire next objective should advance after Dream Gate arrival');
 });
 

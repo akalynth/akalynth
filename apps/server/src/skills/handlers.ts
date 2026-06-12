@@ -6,6 +6,7 @@ import {
   ASHGLASS_EVIDENCE_RECOVERED_ACTION,
   DREAM_FRAGMENT_ANCHORED_ACTION,
   DREAM_GATE_ARRIVAL_RECORDED_ACTION,
+  FORGEHOLD_COMPONENT_SETTLED_ACTION,
   FORGEHOLD_ECONOMY_QUOTED_ACTION,
   HEARTFORGE_GATE_PREPARED_ACTION,
   DREAM_GATE_SEAL_PREPARED_ACTION,
@@ -293,6 +294,62 @@ export function handleForgeholdEconomyQuote(ctx: SkillContext): SkillResult {
       receipt_action: FORGEHOLD_ECONOMY_QUOTED_ACTION,
       economy_guard: economyGuard,
       economy_impact: 'none',
+    },
+  };
+}
+
+export function handleForgeholdComponentSettlement(ctx: SkillContext): SkillResult {
+  if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
+  const routeProgress = ctx.getOnwardRouteProgress?.();
+  if (!routeProgress?.soulsteelComponentMinted) return { success: false, reason: 'invalid_target' };
+
+  const settledAt = new Date().toISOString();
+  const settlementId = 'forgehold_soulsteel_component_settlement_v1';
+  const appraisedValueGold = 25;
+  const settlementGuard = {
+    wallet_debit_gold: 0,
+    wallet_credit_gold: 0,
+    direct_wallet_mutation: false,
+    item_transfer: false,
+    travel_unlocked: false,
+    heat_changed: false,
+    penalty_applied: false,
+  };
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: FORGEHOLD_COMPONENT_SETTLED_ACTION,
+    inputs: {
+      route_id: 'forgehold_route_slice_v1',
+      settlement_id: settlementId,
+      item_type: 'refined_soulsteel_component',
+      required_component: SOULSTEEL_COMPONENT_MINTED_ACTION,
+      appraised_value_gold: appraisedValueGold,
+      settlement_state: 'ledgered',
+      source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
+      settled_at: settledAt,
+      settlement_guard: settlementGuard,
+      economy_impact: 'valuation_only',
+    },
+    result: 'ok',
+  });
+
+  return {
+    success: true,
+    payload: {
+      route_id: 'forgehold_route_slice_v1',
+      settlement_id: settlementId,
+      title: 'Forgehold Soulsteel Ledger',
+      status: 'ledgered',
+      item_type: 'refined_soulsteel_component',
+      required_component: SOULSTEEL_COMPONENT_MINTED_ACTION,
+      appraised_value_gold: appraisedValueGold,
+      settlement_state: 'ledgered',
+      next_objective: 'Forgehold component settlement is ledgered without unreceipted wallet mutation.',
+      source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
+      receipt_action: FORGEHOLD_COMPONENT_SETTLED_ACTION,
+      settlement_guard: settlementGuard,
+      economy_impact: 'valuation_only',
     },
   };
 }

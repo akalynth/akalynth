@@ -292,6 +292,7 @@ export function buildOnwardRouteProgress(
     ashglassEvidenceRecovered: false,
     soulsteelRefinementAuthorized: false,
     soulsteelComponentMinted: false,
+    forgeholdComponentSettled: false,
     moonspireSurveyed: false,
     dreamGateInterpreted: false,
     dreamFragmentAnchored: false,
@@ -314,6 +315,7 @@ export function buildOnwardRouteProgress(
     ...(receiptProgress.ashglassEvidenceRecovered ? ['ashglass_evidence_recovery'] : []),
     ...(receiptProgress.soulsteelRefinementAuthorized ? ['soulsteel_refinement_authorization'] : []),
     ...(receiptProgress.soulsteelComponentMinted ? ['soulsteel_component_mint'] : []),
+    ...(receiptProgress.forgeholdComponentSettled ? ['forgehold_component_settlement'] : []),
   ];
   const moonspireCompleted = [
     ...(receiptProgress.moonspireSurveyed ? ['dream_gate_rumor'] : []),
@@ -332,8 +334,10 @@ export function buildOnwardRouteProgress(
       status,
       unlock_requirement: unlockRequirement,
       next_objective: available
-        ? receiptProgress.soulsteelComponentMinted
-          ? 'Carry the minted Soulsteel component as the first Forgehold crafting reward.'
+        ? receiptProgress.forgeholdComponentSettled
+          ? 'Forgehold component settlement is ledgered without unreceipted wallet mutation.'
+          : receiptProgress.soulsteelComponentMinted
+          ? 'Settle the minted Soulsteel component in the Forgehold ledger before any payout exists.'
           : receiptProgress.soulsteelRefinementAuthorized
           ? 'Mint the refined Soulsteel component under server inventory receipts.'
           : receiptProgress.ashglassEvidenceRecovered
@@ -359,13 +363,14 @@ export function buildOnwardRouteProgress(
         { id: 'ashglass_evidence_recovery', label: 'Ashglass evidence recovery', system: 'crafting' },
         { id: 'soulsteel_refinement_authorization', label: 'Soulsteel refinement authorization', system: 'crafting' },
         { id: 'soulsteel_component_mint', label: 'Soulsteel component mint', system: 'crafting' },
+        { id: 'forgehold_component_settlement', label: 'Forgehold component ledger settlement', system: 'economy' },
         { id: 'forgehold_client_projection', label: 'Read-only client route projection', system: 'ui' },
         { id: 'forgehold_android_projection', label: 'Android read-only route parity', system: 'android' },
         { id: 'forgehold_abuse_notes', label: 'No client-truth crafting or shipment claims', system: 'anti_cheat' },
       ],
       completed_objective_ids: forgeholdCompleted,
       source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
-      receipt_actions: ['route_surveyed', 'forgehold_shipment_investigated', 'forgehold_economy_quoted', 'soulsteel_stabilized', 'route_abuse_notes_reviewed', 'heartforge_gate_prepared', 'ashglass_evidence_recovered', 'soulsteel_refinement_authorized', 'soulsteel_component_minted', 'item_minted', 'item_added_to_inventory'],
+      receipt_actions: ['route_surveyed', 'forgehold_shipment_investigated', 'forgehold_economy_quoted', 'soulsteel_stabilized', 'route_abuse_notes_reviewed', 'heartforge_gate_prepared', 'ashglass_evidence_recovered', 'soulsteel_refinement_authorized', 'soulsteel_component_minted', 'forgehold_component_settled', 'item_minted', 'item_added_to_inventory'],
     },
     {
       route_id: 'moonspire_dream_gate_slice_v1',

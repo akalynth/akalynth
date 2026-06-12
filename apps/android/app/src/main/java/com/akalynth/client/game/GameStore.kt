@@ -659,6 +659,7 @@ class GameStore(
             !msg.skillId.startsWith("route:safety:") &&
             msg.skillId != "route:quest:shipment" &&
             msg.skillId != "route:economy:forgehold" &&
+            msg.skillId != "route:economy:settle" &&
             msg.skillId != "route:craft:soulsteel" &&
             msg.skillId != "route:craft:ashglass" &&
             msg.skillId != "route:craft:refine" &&
@@ -677,6 +678,7 @@ class GameStore(
             "route:safety:moonspire" -> "Dream Gate safety"
             "route:quest:shipment" -> "Forgehold shipment"
             "route:economy:forgehold" -> "Forgehold economy"
+            "route:economy:settle" -> "Forgehold ledger"
             "route:craft:soulsteel" -> "Soulsteel"
             "route:craft:ashglass" -> "Ashglass evidence"
             "route:craft:refine" -> "Soulsteel refinement"
@@ -694,6 +696,7 @@ class GameStore(
                 "route:safety:forgehold", "route:safety:moonspire" -> "$title boundary reviewed by server."
                 "route:quest:shipment" -> "$title investigation recorded by server."
                 "route:economy:forgehold" -> "$title quote recorded by server."
+                "route:economy:settle" -> "$title settlement recorded by server."
                 "route:craft:soulsteel" -> "$title stabilization recorded by server."
                 "route:craft:ashglass" -> "$title recovered by server."
                 "route:craft:refine" -> "$title authorized by server."
@@ -900,6 +903,7 @@ class GameStore(
             skillId != "route:safety:moonspire" &&
             skillId != "route:quest:shipment" &&
             skillId != "route:economy:forgehold" &&
+            skillId != "route:economy:settle" &&
             skillId != "route:craft:soulsteel" &&
             skillId != "route:craft:ashglass" &&
             skillId != "route:craft:refine" &&

@@ -20,6 +20,7 @@ import {
   handlePingTem,
   handleRequestRecap,
   handleReport,
+  handleForgeholdComponentSettlement,
   handleForgeholdEconomyQuote,
   handleRouteSurvey,
   handleSoulsteelStabilization,
@@ -219,6 +220,9 @@ async function executeSkill(
 
     case 'route:economy:forgehold':
       return handleForgeholdEconomyQuote(ctx);
+
+    case 'route:economy:settle':
+      return handleForgeholdComponentSettlement(ctx);
 
     case 'route:craft:soulsteel':
       return handleSoulsteelStabilization(ctx);

@@ -255,6 +255,7 @@ private fun routeActionSkillIdsFor(routes: List<OnwardRouteProgress>): List<Stri
                 !completed.contains("ashglass_evidence_recovery") -> listOf("route:craft:ashglass")
                 !completed.contains("soulsteel_refinement_authorization") -> listOf("route:craft:refine")
                 !completed.contains("soulsteel_component_mint") -> listOf("route:craft:mint")
+                !completed.contains("forgehold_component_settlement") -> listOf("route:economy:settle")
                 else -> emptyList()
             }
             "moonspire_dream_gate_slice_v1" -> when {
