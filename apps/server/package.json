@@ -54,6 +54,8 @@
     "verify:property-auction-handlers": "tsx tools/verify-property-auction-handlers.ts",
     "verify:property-auction-settle": "tsx tools/verify-property-auction-settle.ts",
     "verify:property-auction-persistence": "tsx tools/verify-property-auction-persistence.ts",
+    "simulate:agent-economy": "tsx tools/run-agent-economy-simulation.ts",
+    "verify:agent-economy-simulation": "tsx tools/verify-agent-economy-simulation.ts",
     "test:account-auth": "tsx tools/verify-account-auth.test.ts",
     "test:character-v2": "tsx tools/verify-character-v2.test.ts",
     "test:web-economy": "tsx tools/verify-web-economy.test.ts",

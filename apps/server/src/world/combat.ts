@@ -178,6 +178,7 @@ export interface CombatContext {
   getRngCommitRefV1?: (
     targetId: string
   ) => { chronicle_seq: number; chronicle_hash: string } | undefined;
+  getInventoryCommitSalt?: (targetId: string, seedHash: string) => string | undefined;
 }
 
 // ============================================================================
@@ -373,7 +374,7 @@ export function handleAttackIntent(ctx: CombatContext): AttackResult {
   // The opening (salt + items) is held by the player/operator via an out-of-band
   // channel; WITHOUT it the verifier produces outcome_derivation: 'unsupported'.
   // inventory_size stays public because it is needed to compute drop count K.
-  const invSalt = rngRevealHex32().slice(0, 32); // 16 bytes → 32 hex chars
+  const invSalt = (ctx.getInventoryCommitSalt?.(targetId, seedHash) ?? rngRevealHex32()).slice(0, 32); // 16 bytes → 32 hex chars
   const inventoryCommit = computeInventoryCommit(invSalt, rngProofItems);
   const inventorySize = rngProofItems.length;
   // invSalt is intentionally not stored; it goes out of scope here.
