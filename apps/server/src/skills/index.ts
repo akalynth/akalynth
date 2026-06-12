@@ -20,6 +20,7 @@ import {
   handlePingTem,
   handleRequestRecap,
   handleReport,
+  handleForgeholdEconomyQuote,
   handleRouteSurvey,
   handleSoulsteelStabilization,
   handleDreamGateInterpretation,
@@ -192,6 +193,9 @@ async function executeSkill(
 
     case 'route:survey:moonspire':
       return handleRouteSurvey(ctx, 'moonspire');
+
+    case 'route:economy:forgehold':
+      return handleForgeholdEconomyQuote(ctx);
 
     case 'route:craft:soulsteel':
       return handleSoulsteelStabilization(ctx);

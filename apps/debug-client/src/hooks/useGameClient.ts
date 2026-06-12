@@ -1088,7 +1088,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
                     : 'Purchase failed';
                 return pushToast(s, 'npc', line, 'SHOP');
               }
-              if (skillId.startsWith('route:survey:') || skillId === 'route:quest:shipment' || skillId === 'route:craft:soulsteel' || skillId === 'route:dream:interpret') {
+              if (skillId.startsWith('route:survey:') || skillId === 'route:quest:shipment' || skillId === 'route:economy:forgehold' || skillId === 'route:craft:soulsteel' || skillId === 'route:dream:interpret') {
                 const title = typeof payload?.title === 'string' ? payload.title : 'Route';
                 const next = typeof payload?.next_objective === 'string' ? payload.next_objective : 'Survey recorded.';
                 const marker = typeof payload?.quality === 'string'

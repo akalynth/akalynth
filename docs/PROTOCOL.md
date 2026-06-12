@@ -319,6 +319,12 @@ Interacts with an NPC by `npc_id`.
 #### `use_skill`
 
 Uses a utility/admin skill by `skill_id` and optional `target_id`.
+Current onward-route skill ids are additive intent-only values:
+`route:survey:forgehold`, `route:quest:shipment`,
+`route:economy:forgehold`, `route:craft:soulsteel`,
+`route:survey:moonspire`, and `route:dream:interpret`.
+The server validates sequencing from receipts and returns `invalid_target`
+without route side-effect receipts when a route step is locked or out of order.
 
 #### `get_mod_reports`
 

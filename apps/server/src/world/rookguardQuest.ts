@@ -285,6 +285,7 @@ export function buildOnwardRouteProgress(
   receiptProgress: OnwardRouteReceiptProgress = {
     forgeholdSurveyed: false,
     forgeholdShipmentInvestigated: false,
+    forgeholdEconomyQuoted: false,
     soulsteelStabilized: false,
     moonspireSurveyed: false,
     dreamGateInterpreted: false,
@@ -296,6 +297,7 @@ export function buildOnwardRouteProgress(
   const forgeholdCompleted = [
     ...(receiptProgress.forgeholdSurveyed ? ['forgehold_route_survey'] : []),
     ...(receiptProgress.forgeholdShipmentInvestigated ? ['forgehold_missing_shipment'] : []),
+    ...(receiptProgress.forgeholdEconomyQuoted ? ['forgehold_economy_receipts'] : []),
     ...(receiptProgress.soulsteelStabilized ? ['soulsteel_stabilization'] : []),
   ];
   const moonspireCompleted = [
@@ -312,8 +314,10 @@ export function buildOnwardRouteProgress(
       next_objective: available
         ? receiptProgress.soulsteelStabilized
           ? 'Carry the unstable Soulsteel proof toward the Heartforge Trial chamber; refinement still requires evidence recovery.'
+          : receiptProgress.forgeholdEconomyQuoted
+            ? 'Stabilize cracked Soulsteel under the quoted no-mint, no-debit economy guard.'
           : receiptProgress.forgeholdShipmentInvestigated
-            ? 'Stabilize cracked Soulsteel without adding an unreceipted reward.'
+            ? 'Quote Forgehold economy impact before stabilizing cracked Soulsteel.'
             : 'Investigate the missing Ember Road shipment and stabilize Soulsteel without adding an unreceipted reward.'
         : 'Finish the Rookguard Codex Path to reveal the Forgehold shipment board.',
       objectives: [
@@ -328,7 +332,7 @@ export function buildOnwardRouteProgress(
       ],
       completed_objective_ids: forgeholdCompleted,
       source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
-      receipt_actions: ['tutorial_completed', 'gate_unlock'],
+      receipt_actions: ['route_surveyed', 'forgehold_shipment_investigated', 'forgehold_economy_quoted', 'soulsteel_stabilized'],
     },
     {
       route_id: 'moonspire_dream_gate_slice_v1',

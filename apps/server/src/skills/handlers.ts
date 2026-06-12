@@ -3,6 +3,7 @@
 
 import type { SkillContext, SkillResult } from './index.js';
 import {
+  FORGEHOLD_ECONOMY_QUOTED_ACTION,
   PLAYER_REPORTED_ACTION,
   ROUTE_SURVEYED_ACTION,
   SOULSTEEL_STABILIZED_ACTION,
@@ -198,7 +199,7 @@ export function handleRouteSurvey(ctx: SkillContext, route: 'forgehold' | 'moons
 export function handleSoulsteelStabilization(ctx: SkillContext): SkillResult {
   if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
   const routeProgress = ctx.getOnwardRouteProgress?.();
-  if (!routeProgress?.forgeholdSurveyed || !routeProgress.forgeholdShipmentInvestigated) {
+  if (!routeProgress?.forgeholdSurveyed || !routeProgress.forgeholdShipmentInvestigated || !routeProgress.forgeholdEconomyQuoted) {
     return { success: false, reason: 'invalid_target' };
   }
 
@@ -213,6 +214,7 @@ export function handleSoulsteelStabilization(ctx: SkillContext): SkillResult {
       route_id: 'forgehold_route_slice_v1',
       quality,
       required_evidence: requiredEvidence,
+      required_economy_quote: FORGEHOLD_ECONOMY_QUOTED_ACTION,
       source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
       crafted_at: craftedAt,
       economy_impact: 'none',
@@ -230,8 +232,57 @@ export function handleSoulsteelStabilization(ctx: SkillContext): SkillResult {
       status: 'stabilized',
       next_objective: 'Carry the unstable Soulsteel proof toward the Heartforge Trial chamber; refinement still requires evidence recovery.',
       required_evidence: requiredEvidence,
+      required_economy_quote: FORGEHOLD_ECONOMY_QUOTED_ACTION,
       source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
       receipt_action: SOULSTEEL_STABILIZED_ACTION,
+      economy_impact: 'none',
+    },
+  };
+}
+
+export function handleForgeholdEconomyQuote(ctx: SkillContext): SkillResult {
+  if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
+  const routeProgress = ctx.getOnwardRouteProgress?.();
+  if (!routeProgress?.forgeholdSurveyed || !routeProgress.forgeholdShipmentInvestigated) {
+    return { success: false, reason: 'invalid_target' };
+  }
+
+  const quotedAt = new Date().toISOString();
+  const quoteId = 'forgehold_soulsteel_quote_v1';
+  const economyGuard = {
+    wallet_debit_gold: 0,
+    wallet_credit_gold: 0,
+    item_mint: false,
+    item_transfer: false,
+  };
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: FORGEHOLD_ECONOMY_QUOTED_ACTION,
+    inputs: {
+      route_id: 'forgehold_route_slice_v1',
+      quote_id: quoteId,
+      crafting_id: 'soulsteel_stabilization_v1',
+      source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
+      quoted_at: quotedAt,
+      economy_guard: economyGuard,
+      economy_impact: 'none',
+    },
+    result: 'ok',
+  });
+
+  return {
+    success: true,
+    payload: {
+      route_id: 'forgehold_route_slice_v1',
+      quote_id: quoteId,
+      crafting_id: 'soulsteel_stabilization_v1',
+      title: 'Forgehold Economy Quote',
+      status: 'quoted',
+      next_objective: 'Stabilize cracked Soulsteel under the quoted no-mint, no-debit economy guard.',
+      source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
+      receipt_action: FORGEHOLD_ECONOMY_QUOTED_ACTION,
+      economy_guard: economyGuard,
       economy_impact: 'none',
     },
   };

@@ -6,7 +6,7 @@
 
 import type { WebSocket } from 'ws';
 import type { AntiCheatState, Player } from '../../../packages/shared/types.js';
-import { DREAM_GATE_INTERPRETED_ACTION, FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION, ROUTE_SURVEYED_ACTION, SKILL_RESOLVED_ACTION, SKILL_USE_INTENT_ACTION, SOULSTEEL_STABILIZED_ACTION } from '../../../packages/shared/skills.js';
+import { DREAM_GATE_INTERPRETED_ACTION, FORGEHOLD_ECONOMY_QUOTED_ACTION, FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION, ROUTE_SURVEYED_ACTION, SKILL_RESOLVED_ACTION, SKILL_USE_INTENT_ACTION, SOULSTEEL_STABILIZED_ACTION } from '../../../packages/shared/skills.js';
 import { handleUseSkill, type SkillContext } from '../src/skills/index.js';
 import { buildOnwardRouteProgress, type RookguardQuestInput } from '../src/world/rookguardQuest.js';
 import { applyReceiptToOnwardRoutes, clearOnwardRouteProjection, getOnwardRouteReceiptProgress } from '../src/world/onwardRoutes.js';
@@ -98,6 +98,7 @@ test('route objective skills reject out of order without side effects', async ()
   const { ctx, receipts, sent, resolvedSkills } = context();
 
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:interpret' });
 
@@ -105,10 +106,11 @@ test('route objective skills reject out of order without side effects', async ()
     success?: boolean;
     reason?: string;
   }>;
-  assert(failedResults.length === 3, 'out-of-order route skills should each return a skill_result');
+  assert(failedResults.length === 4, 'out-of-order route skills should each return a skill_result');
   assert(failedResults.every((result) => result.success === false), 'out-of-order route skills should fail');
   assert(failedResults.every((result) => result.reason === 'invalid_target'), 'out-of-order route skills should use invalid_target');
   assert(!receipts.some((r) => r.action === FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION), 'out-of-order shipment must not emit quest receipt');
+  assert(!receipts.some((r) => r.action === FORGEHOLD_ECONOMY_QUOTED_ACTION), 'out-of-order economy quote must not emit economy receipt');
   assert(!receipts.some((r) => r.action === SOULSTEEL_STABILIZED_ACTION), 'out-of-order Soulsteel must not emit crafting receipt');
   assert(!receipts.some((r) => r.action === DREAM_GATE_INTERPRETED_ACTION), 'out-of-order Dream Gate must not emit interpretation receipt');
   assert(!receipts.some((r) => r.action === SKILL_RESOLVED_ACTION), 'out-of-order route skills must not resolve');
@@ -157,6 +159,7 @@ test('Soulsteel stabilization emits crafting receipt without wallet or item auth
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
 
   const craft = receipts.find((r) => r.action === SOULSTEEL_STABILIZED_ACTION);
@@ -164,15 +167,44 @@ test('Soulsteel stabilization emits crafting receipt without wallet or item auth
   assert(craft.inputs.route_id === 'forgehold_route_slice_v1', 'Soulsteel route mismatch');
   assert(craft.inputs.quality === 'unstable', 'first Soulsteel quality should be unstable');
   assert(craft.inputs.economy_impact === 'none', 'Soulsteel prototype should not silently change economy');
+  assert(craft.inputs.required_economy_quote === FORGEHOLD_ECONOMY_QUOTED_ACTION, 'Soulsteel should require the Forgehold economy quote');
   assert(!receipts.some((r) => r.action === 'wallet_debit'), 'Soulsteel prototype should not debit gold');
   assert(!receipts.some((r) => r.action === 'item_minted'), 'Soulsteel prototype should not mint an item');
 
-  const result = skillResultFor<{ crafting_id?: string; quality?: string; economy_impact?: string; required_evidence?: string[] }>(sent, 'route:craft:soulsteel');
+  const result = skillResultFor<{ crafting_id?: string; quality?: string; economy_impact?: string; required_evidence?: string[]; required_economy_quote?: string }>(sent, 'route:craft:soulsteel');
   assert(result?.success === true, 'Soulsteel skill_result should succeed');
   assert(result.payload?.crafting_id === 'soulsteel_stabilization_v1', 'Soulsteel payload crafting id mismatch');
   assert(result.payload?.quality === 'unstable', 'Soulsteel payload quality mismatch');
   assert(result.payload?.economy_impact === 'none', 'Soulsteel payload economy impact mismatch');
+  assert(result.payload?.required_economy_quote === FORGEHOLD_ECONOMY_QUOTED_ACTION, 'Soulsteel payload should name required economy quote');
   assert(result.payload?.required_evidence?.includes('ashglass_shard'), 'Soulsteel payload should name Ashglass Shard');
+});
+
+test('Forgehold economy quote records no-debit no-mint guard', async () => {
+  const { ctx, receipts, sent } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
+
+  const quote = receipts.find((r) => r.action === FORGEHOLD_ECONOMY_QUOTED_ACTION);
+  assert(quote, 'missing forgehold_economy_quoted receipt');
+  assert(quote.inputs.route_id === 'forgehold_route_slice_v1', 'Forgehold economy quote route mismatch');
+  assert(quote.inputs.quote_id === 'forgehold_soulsteel_quote_v1', 'Forgehold economy quote id mismatch');
+  assert(quote.inputs.economy_impact === 'none', 'Forgehold economy quote should record no economy impact');
+  assert(!receipts.some((r) => r.action === 'wallet_debit'), 'Forgehold economy quote should not debit gold');
+  assert(!receipts.some((r) => r.action === 'wallet_credit'), 'Forgehold economy quote should not credit gold');
+  assert(!receipts.some((r) => r.action === 'item_minted'), 'Forgehold economy quote should not mint an item');
+
+  const guard = quote.inputs.economy_guard as { wallet_debit_gold?: number; wallet_credit_gold?: number; item_mint?: boolean } | undefined;
+  assert(guard?.wallet_debit_gold === 0, 'Forgehold economy quote should specify zero wallet debit');
+  assert(guard.wallet_credit_gold === 0, 'Forgehold economy quote should specify zero wallet credit');
+  assert(guard.item_mint === false, 'Forgehold economy quote should specify no item mint');
+
+  const result = skillResultFor<{ quote_id?: string; economy_impact?: string; economy_guard?: { item_mint?: boolean } }>(sent, 'route:economy:forgehold');
+  assert(result?.success === true, 'Forgehold economy quote skill_result should succeed');
+  assert(result.payload?.quote_id === 'forgehold_soulsteel_quote_v1', 'Forgehold economy quote payload id mismatch');
+  assert(result.payload?.economy_impact === 'none', 'Forgehold economy quote payload economy impact mismatch');
+  assert(result.payload?.economy_guard?.item_mint === false, 'Forgehold economy quote payload should specify no item mint');
 });
 
 test('Dream Gate interpretation records symbolic state without traversal or economy authority', async () => {
@@ -224,6 +256,7 @@ test('onward route projection is derived from route receipts', async () => {
   const { ctx } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:moonspire' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:dream:interpret' });
@@ -237,6 +270,7 @@ test('onward route projection is derived from route receipts', async () => {
   assert(moonspire, 'Moonspire route projection missing');
   assert(forgehold.completed_objective_ids.includes('forgehold_route_survey'), 'Forgehold survey should project complete');
   assert(forgehold.completed_objective_ids.includes('forgehold_missing_shipment'), 'Forgehold shipment should project complete');
+  assert(forgehold.completed_objective_ids.includes('forgehold_economy_receipts'), 'Forgehold economy quote should project complete');
   assert(forgehold.completed_objective_ids.includes('soulsteel_stabilization'), 'Soulsteel should project complete');
   assert(moonspire.completed_objective_ids.includes('dream_gate_rumor'), 'Moonspire survey should project complete');
   assert(moonspire.completed_objective_ids.includes('symbolic_puzzle_projection'), 'Dream interpretation should project complete');
