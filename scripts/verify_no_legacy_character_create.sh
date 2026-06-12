@@ -250,6 +250,7 @@ for web_economy_literal in \
   "work completion updates wallet balance" \
   "work receipts include ticks, completion, and wallet credit" \
   "property buy requires account session" \
+  "no-session property buy emits no purchase receipt" \
   "property buy rejects character owned by another account" \
   "cross-account property buy emits no receipts" \
   "property buy requires matching csrf" \
