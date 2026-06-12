@@ -54,7 +54,7 @@ Implemented-but-not-release-claimed systems include:
 - Account-character entry v2 — account/session + CSRF-gated `GET/POST /v1/characters`,
   world/sex/outfit catalogs, site/debug-client/Android create/select paths, and
   client-side missing-session/CSRF helpers. Covered by `npm run
-  verify:account-character`, including server shop/work/property gameplay route proof.
+  verify:account-character`, including server wallet/shop/work/property gameplay route proof.
   The public account portal and four Codex surfaces are covered in the separate
   `akalynth-site` repo by `./scripts/verify-account-character-site.sh`.
   This is a source-level parity claim, not a production release claim.
