@@ -656,18 +656,21 @@ class GameStore(
     private fun handleSkillResult(msg: SkillResultMessage) {
         if (
             !msg.skillId.startsWith("route:survey:") &&
+            msg.skillId != "route:quest:shipment" &&
             msg.skillId != "route:craft:soulsteel" &&
             msg.skillId != "route:dream:interpret"
         ) return
         val title = when (msg.skillId) {
             "route:survey:forgehold" -> "Forgehold Route"
             "route:survey:moonspire" -> "Moonspire Dream Gate"
+            "route:quest:shipment" -> "Forgehold shipment"
             "route:craft:soulsteel" -> "Soulsteel"
             "route:dream:interpret" -> "Dream Gate"
             else -> "Route"
         }
         val line = if (msg.success) {
             when (msg.skillId) {
+                "route:quest:shipment" -> "$title investigation recorded by server."
                 "route:craft:soulsteel" -> "$title stabilization recorded by server."
                 "route:dream:interpret" -> "$title interpretation recorded by server."
                 else -> "$title survey recorded by server."
@@ -863,6 +866,7 @@ class GameStore(
         if (
             skillId != "route:survey:forgehold" &&
             skillId != "route:survey:moonspire" &&
+            skillId != "route:quest:shipment" &&
             skillId != "route:craft:soulsteel" &&
             skillId != "route:dream:interpret"
         ) return

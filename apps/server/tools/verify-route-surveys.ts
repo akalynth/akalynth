@@ -6,7 +6,7 @@
 
 import type { WebSocket } from 'ws';
 import type { AntiCheatState, Player } from '../../../packages/shared/types.js';
-import { DREAM_GATE_INTERPRETED_ACTION, ROUTE_SURVEYED_ACTION, SKILL_RESOLVED_ACTION, SKILL_USE_INTENT_ACTION, SOULSTEEL_STABILIZED_ACTION } from '../../../packages/shared/skills.js';
+import { DREAM_GATE_INTERPRETED_ACTION, FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION, ROUTE_SURVEYED_ACTION, SKILL_RESOLVED_ACTION, SKILL_USE_INTENT_ACTION, SOULSTEEL_STABILIZED_ACTION } from '../../../packages/shared/skills.js';
 import { handleUseSkill, type SkillContext } from '../src/skills/index.js';
 
 function assert(condition: unknown, msg: string): asserts condition {
@@ -138,6 +138,31 @@ test('Dream Gate interpretation records symbolic state without traversal or econ
   assert(result.payload?.traversal_granted === false, 'Dream Gate payload must not grant traversal');
   assert(result.payload?.meanings?.includes('hidden memory'), 'Dream Gate payload should include hidden memory meaning');
   assert(result.payload?.required_fragments?.includes('emotional_residue'), 'Dream Gate payload should name Emotional Residue');
+});
+
+test('Forgehold shipment investigation records quest progress without travel or economy authority', async () => {
+  const { ctx, receipts, sent } = context();
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
+
+  const investigation = receipts.find((r) => r.action === FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION);
+  assert(investigation, 'missing forgehold_shipment_investigated receipt');
+  assert(investigation.inputs.route_id === 'forgehold_route_slice_v1', 'Forgehold investigation route mismatch');
+  assert(investigation.inputs.route_state === 'investigating', 'Forgehold route state should be investigating');
+  assert(investigation.inputs.travel_unlocked === false, 'Forgehold investigation must not unlock travel');
+  assert(investigation.inputs.economy_impact === 'none', 'Forgehold investigation should not change economy');
+  assert(!receipts.some((r) => r.action === 'wallet_debit'), 'Forgehold investigation should not debit gold');
+  assert(!receipts.some((r) => r.action === 'item_minted'), 'Forgehold investigation should not mint an item');
+
+  const result = sent.find((msg) => typeof msg === 'object' && msg !== null && (msg as { type?: string }).type === 'skill_result') as {
+    success?: boolean;
+    payload?: { quest_id?: string; route_state?: string; travel_unlocked?: boolean; evidence_objects?: string[]; contradiction?: string };
+  } | undefined;
+  assert(result?.success === true, 'Forgehold investigation skill_result should succeed');
+  assert(result.payload?.quest_id === 'forgehold_missing_shipment_v1', 'Forgehold investigation quest id mismatch');
+  assert(result.payload?.route_state === 'investigating', 'Forgehold investigation payload state mismatch');
+  assert(result.payload?.travel_unlocked === false, 'Forgehold investigation payload must not unlock travel');
+  assert(result.payload?.evidence_objects?.includes('charred_shipment_plate'), 'Forgehold investigation payload should name Charred Shipment Plate');
+  assert(result.payload?.contradiction === 'departed / undeparted', 'Forgehold investigation payload should name contradiction');
 });
 
 console.log('\n✓ all route survey checks passed');

@@ -22,6 +22,7 @@ import {
   handleRouteSurvey,
   handleSoulsteelStabilization,
   handleDreamGateInterpretation,
+  handleForgeholdShipmentInvestigation,
 } from './handlers.js';
 
 // ============================================================================
@@ -189,6 +190,9 @@ async function executeSkill(
 
     case 'route:dream:interpret':
       return handleDreamGateInterpretation(ctx);
+
+    case 'route:quest:shipment':
+      return handleForgeholdShipmentInvestigation(ctx);
 
     default:
       return { success: false, reason: 'invalid_skill' };

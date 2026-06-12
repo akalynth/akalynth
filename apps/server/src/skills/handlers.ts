@@ -7,6 +7,7 @@ import {
   ROUTE_SURVEYED_ACTION,
   SOULSTEEL_STABILIZED_ACTION,
   DREAM_GATE_INTERPRETED_ACTION,
+  FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION,
 } from '../../../../packages/shared/skills.js';
 import { createHash } from 'node:crypto';
 
@@ -265,6 +266,48 @@ export function handleDreamGateInterpretation(ctx: SkillContext): SkillResult {
       source_drop: 'drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1',
       receipt_action: DREAM_GATE_INTERPRETED_ACTION,
       traversal_granted: false,
+      economy_impact: 'none',
+    },
+  };
+}
+
+export function handleForgeholdShipmentInvestigation(ctx: SkillContext): SkillResult {
+  const investigatedAt = new Date().toISOString();
+  const evidenceObjects = ['broken_route_seal', 'charred_shipment_plate'];
+  const contradiction = 'departed / undeparted';
+  const routeState = 'investigating';
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION,
+    inputs: {
+      route_id: 'forgehold_route_slice_v1',
+      act_id: 'act_01_missing_shipment',
+      route_state: routeState,
+      evidence_objects: evidenceObjects,
+      contradiction,
+      source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
+      investigated_at: investigatedAt,
+      travel_unlocked: false,
+      economy_impact: 'none',
+    },
+    result: 'ok',
+  });
+
+  return {
+    success: true,
+    payload: {
+      route_id: 'forgehold_route_slice_v1',
+      quest_id: 'forgehold_missing_shipment_v1',
+      act_id: 'act_01_missing_shipment',
+      route_state: routeState,
+      status: 'investigating',
+      evidence_objects: evidenceObjects,
+      contradiction,
+      next_objective: 'Recover Ashglass Shard evidence before any route reopening or Soulsteel refinement can be server-authorized.',
+      source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
+      receipt_action: FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION,
+      travel_unlocked: false,
       economy_impact: 'none',
     },
   };
