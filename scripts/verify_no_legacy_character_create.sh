@@ -256,6 +256,7 @@ for server_literal in \
 done
 
 for web_economy_literal in \
+  "shop catalog is public" \
   "wallet read requires account session" \
   "wallet read requires account-owned character" \
   "wallet rejects character owned by another account" \
@@ -272,6 +273,10 @@ for web_economy_literal in \
   "rejected shop purchase emitted no inventory receipt" \
   "shop purchase requires matching csrf" \
   "auth/csrf rejected shop requests emit no receipts" \
+  "shop purchase succeeds" \
+  "shop purchase emits debit -> mint -> inventory receipts" \
+  "shop item id is derived from mint receipt hash" \
+  "shop inventory mirror updated" \
   "shop receipts do not carry account/session/csrf tokens" \
   "work start requires account session" \
   "work start rejects character owned by another account" \
@@ -280,6 +285,8 @@ for web_economy_literal in \
   "auth/csrf rejected work start emits no receipts" \
   "work start requires character id" \
   "missing-character work start emits no receipts" \
+  "work start succeeds" \
+  "work start emits work_contract_started receipt" \
   "work start rejects already active contract" \
   "already-active work start emits no second start receipt" \
   "work tick requires account session" \
@@ -313,6 +320,9 @@ for web_economy_literal in \
   "property buy requires matching csrf" \
   "auth/csrf rejected property buy emits no purchase receipt" \
   "property buy without gold is rejected" \
+  "rejected property buy emitted no purchase receipt" \
+  "primary property buy succeeds" \
+  "primary property buy owns plot" \
   "primary buy emitted wallet debit + property purchase" \
   "property buy rejects own plot" \
   "own-plot property buy emits no debit/purchase receipt" \
@@ -331,16 +341,19 @@ for web_economy_literal in \
   "property list rejects unknown plot" \
   "unknown-plot property list emits no listing receipt" \
   "property list succeeds for owner" \
+  "property list emitted property_listed receipt" \
   "property list rejects already-listed property" \
   "already-listed property list emits no second listing receipt" \
   "property buy rejects owned unlisted plot" \
   "owned-unlisted property buy emits no debit/purchase receipt" \
   "resale property buy without gold is rejected" \
   "rejected resale emitted no debit/credit/transfer receipt" \
+  "resale property buy succeeds" \
   "resale debits buyer wallet" \
   "resale credits seller wallet" \
   "resale emits buyer debit + seller credit + transfer" \
   "property unlist requires account session" \
+  "property unlist emitted property_unlisted receipt" \
   "property unlist rejects not-listed property" \
   "not-listed property unlist emits no second unlist receipt" \
   "no-session property unlist emits no second unlist receipt" \
