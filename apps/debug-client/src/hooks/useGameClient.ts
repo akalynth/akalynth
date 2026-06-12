@@ -1462,9 +1462,9 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     [attachHandlers, config.wsBase, hydrateToken, hydrateWorld, mapName, resetSessionState]
   );
 
-  // Identity v0.1 (#148): create a character (mints a signed token), persist it,
-  // then reconnect as that character. Returns an error string for the UI on
-  // failure (name taken / invalid / rate limited).
+  // Account-character entry: create through POST /v1/characters, persist the
+  // returned play token, then reconnect as that character. Returns an error
+  // string for the UI on failure (name taken / invalid / rate limited).
   const createCharacter = useCallback(
     async ({ name, world_id, sex, outfit_id }: CharacterCreateInput): Promise<CreateResult> => {
       const trimmed = name.trim();

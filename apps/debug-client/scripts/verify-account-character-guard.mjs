@@ -63,4 +63,23 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
+const forbidden = [
+  'mints a signed token',
+  'Guest play remains',
+  'guest play remains',
+];
+
+const stale = Object.entries(files).flatMap(([file, text]) =>
+  forbidden
+    .filter((literal) => text.includes(literal))
+    .map((literal) => ({ file, literal }))
+);
+
+if (stale.length > 0) {
+  for (const entry of stale) {
+    console.error(`stale account-character wording in ${entry.file}: ${entry.literal}`);
+  }
+  process.exit(1);
+}
+
 console.log('debug-client account character guard ok');
