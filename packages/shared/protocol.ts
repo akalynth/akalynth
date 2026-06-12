@@ -1,7 +1,7 @@
 // Akalynth Protocol Messages
 // All messages sent over WebSocket
 
-import type { Direction, Element, PlayerPublic, PropertyAuctionKind, PropertyAuctionDenialReason, PropertyDenialReason, PropertyStatus, RunestoneDenialReason, SovereignVocation } from './types.js';
+import type { Direction, Element, PlayerPublic, PlayLoopProgress, PropertyAuctionKind, PropertyAuctionDenialReason, PropertyDenialReason, PropertyStatus, RunestoneDenialReason, SovereignVocation } from './types.js';
 import { ELEMENTS, SOVEREIGN_VOCATIONS, TEM_CHALLENGE_RESPONSE } from './types.js';
 import type { MapName } from './http.js';
 
@@ -383,6 +383,12 @@ export interface MoveResultMessage extends BaseMessage {
   y: number;
   reason: string | null;
   map?: MapName;
+}
+
+export interface LoopUpdateMessage extends BaseMessage {
+  type: 'loop_update';
+  event: string;
+  loop: PlayLoopProgress;
 }
 
 export interface PlayerMovedMessage extends BaseMessage {
@@ -913,6 +919,7 @@ export type ServerMessage =
   | LoginAckMessage
   | WorldStateMessage
   | MoveResultMessage
+  | LoopUpdateMessage
   | PlayerMovedMessage
   | PlayerJoinedMessage
   | PlayerLeftMessage
@@ -995,6 +1002,12 @@ export const ServerMessages = {
     y,
     reason,
     map,
+  }),
+
+  loopUpdate: (event: string, loop: PlayLoopProgress): LoopUpdateMessage => ({
+    type: 'loop_update',
+    event,
+    loop,
   }),
 
   playerMoved: (player_id: string, x: number, y: number): PlayerMovedMessage => ({

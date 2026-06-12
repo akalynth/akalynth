@@ -99,7 +99,8 @@ function isNearLandmark(player: PlayerPublic | null, map: MapData, key: string, 
 }
 
 const NPC_DEFS = [
-  { npc_id: 'rookguard_guide', place_id: 'rookguard', label: 'Guide' },
+  { npc_id: 'rookguard_guide', place_id: 'rookguard:plaza', label: 'Guide' },
+  { npc_id: 'rookguard_steward', place_id: 'rookguard:guild_hall', label: 'Rookguard Steward' },
   { npc_id: 'azura_herald',   place_id: 'azura:plaza',      label: 'Herald' },
   { npc_id: 'azura_steward',  place_id: 'azura:guild_hall', label: 'Steward' },
 ] as const;
@@ -805,6 +806,7 @@ function DebugApp() {
               onAttack={api.sendAttack}
               onRitual={api.castRunestone}
               onTalk={api.talkToNpc}
+              onDeclareVocation={api.declareVocation}
               onPickup={api.pickupItem}
               onStartWork={api.startWork}
               onTickWork={api.tickWork}

@@ -1,4 +1,4 @@
-import type { PlayLoopProgress } from '@shared/types';
+import type { PlayLoopProgress, SovereignVocation } from '@shared/types';
 import {
   isUsableItemType,
   itemLabel,
@@ -27,12 +27,20 @@ const WITNESS_MOTH_ACTIONS = [
   { skill_id: 'event:witness_moth_bloom:defend_scribes', label: 'Defend scribes', short: 'Guard' },
 ] as const;
 
+const VOCATION_ACTIONS: Array<{ vocation: SovereignVocation; label: string; short: string }> = [
+  { vocation: 'warden', label: 'Warden', short: 'Ward' },
+  { vocation: 'cantor', label: 'Cantor', short: 'Cant' },
+  { vocation: 'hexer', label: 'Hexer', short: 'Hex' },
+  { vocation: 'reaver', label: 'Reaver', short: 'Reav' },
+];
+
 interface ActionsPanelProps {
   stage: 0 | 1 | 2 | 3;
   compact?: boolean;
   onAttack: () => void;
   onRitual: () => void;
   onTalk: (npcId: string) => void;
+  onDeclareVocation: (vocation: SovereignVocation) => void;
   onPickup: (itemId: string) => void;
   onStartWork: () => void;
   onTickWork: () => void;
@@ -59,6 +67,7 @@ export function ActionsPanel({
   onAttack,
   onRitual,
   onTalk,
+  onDeclareVocation,
   onPickup,
   onStartWork,
   onTickWork,
@@ -79,6 +88,9 @@ export function ActionsPanel({
   gold,
 }: ActionsPanelProps) {
   const inGuildHall = nearbyNpc?.npc_id === 'azura_steward';
+  const inRookguardProfessionHall = nearbyNpc?.npc_id === 'rookguard_steward';
+  const rookguardQuest = loop?.rookguardQuest ?? null;
+  const codexProfession = rookguardQuest?.codexProfession ?? null;
   const witnessMothOpen =
     stage >= 3 &&
     !!loop?.lastEvent?.startsWith('witness_moth_bloom_') &&
@@ -148,6 +160,16 @@ export function ActionsPanel({
                 Work
               </button>
             )}
+            {inRookguardProfessionHall && VOCATION_ACTIONS.map((action) => (
+              <button
+                key={action.vocation}
+                className="action-btn mobile-hotbar-btn ritual-btn"
+                onClick={() => onDeclareVocation(action.vocation)}
+                aria-label={`Declare ${action.label}`}
+              >
+                {action.short}
+              </button>
+            ))}
             {witnessMothOpen && WITNESS_MOTH_ACTIONS.map((action) => (
               <button
                 key={action.skill_id}
@@ -203,6 +225,37 @@ export function ActionsPanel({
           <i className={loop?.tem ? 'done' : ''}>Tem</i>
           <i className={loop?.gate ? 'done' : ''}>Gate</i>
         </div>
+        {rookguardQuest && (
+          <div className="quest-flags" aria-label={`${rookguardQuest.title} progress`}>
+            {rookguardQuest.steps.map((step) => (
+              <i key={step.step_id} className={step.complete ? 'done' : ''}>
+                {step.label}
+              </i>
+            ))}
+          </div>
+        )}
+        {codexProfession && (
+          <div className="codex-profession" aria-label="Codex profession">
+            <span>Codex</span>
+            <strong>{codexProfession.title}</strong>
+            <p>{codexProfession.oath}</p>
+            <small>{codexProfession.codex_anchor.object_id} · {codexProfession.codex_anchor.status}</small>
+            <ul>
+              {codexProfession.starter_actions.map((action) => (
+                <li key={action}>{action}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {rookguardQuest?.codexShelves && (
+          <div className="codex-shelves" aria-label="Codex shelves">
+            {rookguardQuest.codexShelves.map((shelf) => (
+              <i key={shelf.object_id} className={shelf.role === 'active_profession_lore' ? 'active' : ''} title={shelf.gameplay_hint}>
+                {shelf.title}
+              </i>
+            ))}
+          </div>
+        )}
       </div>
       {gold > 0 && <div className="gold-display">Gold: {gold}</div>}
       {nearLegendStone && (
@@ -282,6 +335,22 @@ export function ActionsPanel({
                 </button>
               ))}
             </div>
+          )}
+          {inRookguardProfessionHall && (
+            <>
+              <div className="npc-line">Choose a vocation</div>
+              <div className="shop-actions" aria-label="Vocation choices">
+                {VOCATION_ACTIONS.map((action) => (
+                  <button
+                    key={action.vocation}
+                    className="action-btn shop-btn"
+                    onClick={() => onDeclareVocation(action.vocation)}
+                  >
+                    {action.label}
+                  </button>
+                ))}
+              </div>
+            </>
           )}
           {witnessMothOpen && (
             <div className="shop-section">

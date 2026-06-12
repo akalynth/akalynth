@@ -328,7 +328,7 @@ export function runAgentEconomySimulation(input: AgentSimulationInput): AgentEco
 function runNpcDialogueTrainingPhase(agents: SimAgent[]): AgentNpcDialogueSample[] {
   const samples: AgentNpcDialogueSample[] = [];
   const configs = [
-    { agentId: 'sim:worker:1', npcId: 'rookguard_guide', placeId: 'rookguard' as PlaceId },
+    { agentId: 'sim:worker:1', npcId: 'rookguard_guide', placeId: 'rookguard:plaza' as PlaceId },
     { agentId: 'sim:merchant:1', npcId: 'azura_herald', placeId: 'azura' as PlaceId },
     { agentId: 'sim:merchant:2', npcId: 'azura_steward', placeId: 'azura' as PlaceId },
   ];

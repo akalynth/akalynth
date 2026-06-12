@@ -1,29 +1,53 @@
 import type { MapName } from '@shared/http';
 import type { WorldVisualAssetId, WorldVisualObjectPlacement } from './worldVisualAssets';
 
-function obj(assetId: WorldVisualAssetId, x: number, y: number, instance = 0): WorldVisualObjectPlacement {
-  return { id: `high-city:${assetId}:${x}:${y}:${instance}`, assetId, x, y };
+function obj(assetId: WorldVisualAssetId, x: number, y: number, instance = 0, prefix = 'high-city'): WorldVisualObjectPlacement {
+  return { id: `${prefix}:${assetId}:${x}:${y}:${instance}`, assetId, x, y };
 }
 
-function row(assetId: WorldVisualAssetId, x1: number, x2: number, y: number): WorldVisualObjectPlacement[] {
+function row(assetId: WorldVisualAssetId, x1: number, x2: number, y: number, prefix = 'high-city'): WorldVisualObjectPlacement[] {
   const out: WorldVisualObjectPlacement[] = [];
-  for (let x = x1; x <= x2; x += 1) out.push(obj(assetId, x, y));
+  for (let x = x1; x <= x2; x += 1) out.push(obj(assetId, x, y, 0, prefix));
   return out;
 }
 
-function col(assetId: WorldVisualAssetId, x: number, y1: number, y2: number): WorldVisualObjectPlacement[] {
+function col(assetId: WorldVisualAssetId, x: number, y1: number, y2: number, prefix = 'high-city'): WorldVisualObjectPlacement[] {
   const out: WorldVisualObjectPlacement[] = [];
-  for (let y = y1; y <= y2; y += 1) out.push(obj(assetId, x, y));
+  for (let y = y1; y <= y2; y += 1) out.push(obj(assetId, x, y, 0, prefix));
   return out;
 }
 
-function floorPatch(assetId: WorldVisualAssetId, x1: number, y1: number, x2: number, y2: number): WorldVisualObjectPlacement[] {
+function floorPatch(assetId: WorldVisualAssetId, x1: number, y1: number, x2: number, y2: number, prefix = 'high-city'): WorldVisualObjectPlacement[] {
   const out: WorldVisualObjectPlacement[] = [];
   for (let y = y1; y <= y2; y += 1) {
-    for (let x = x1; x <= x2; x += 1) out.push(obj(assetId, x, y));
+    for (let x = x1; x <= x2; x += 1) out.push(obj(assetId, x, y, 0, prefix));
   }
   return out;
 }
+
+const ROOKGUARD_VISUAL_LANDMARKS: WorldVisualObjectPlacement[] = [
+  // Plaza and tutorial corridor. Display only; tutorial tile codes remain the
+  // server authority for movement/chat/Tem/gate behavior.
+  ...floorPatch('floor_cobble_01', 1, 1, 10, 6, 'rookguard'),
+  obj('notice_board', 9, 4, 0, 'rookguard'),
+  obj('bench', 3, 5, 0, 'rookguard'),
+  obj('banner_blue', 2, 1, 0, 'rookguard'),
+
+  // Guild/profession hall. The shared `guild_hall` landmark is the place
+  // boundary; these sprites do not create doors, interiors, or access rules.
+  ...floorPatch('floor_stone_01', 11, 1, 18, 6, 'rookguard'),
+  ...row('wall_stone_north', 11, 18, 1, 'rookguard'),
+  obj('door_wood_closed_south', 14, 5, 0, 'rookguard'),
+  obj('weapon_rack', 13, 4, 0, 'rookguard'),
+  obj('bookshelf', 17, 3, 0, 'rookguard'),
+  obj('banner_red', 18, 2, 0, 'rookguard'),
+
+  // Training yard around the existing Rookguard training mob. The slime pool is
+  // a visual cue only; mob HP, attacks, drops, and respawns remain server state.
+  ...floorPatch('floor_cobble_01', 12, 12, 17, 17, 'rookguard'),
+  obj('slime_pool', 14, 14, 0, 'rookguard'),
+  obj('weapon_rack', 12, 17, 1, 'rookguard'),
+];
 
 const HIGH_CITY_VISUAL_LANDMARKS: WorldVisualObjectPlacement[] = [
   // Arrival spine: a civic road from the Guild Hall down through the spawn
@@ -78,5 +102,7 @@ const HIGH_CITY_VISUAL_LANDMARKS: WorldVisualObjectPlacement[] = [
 ];
 
 export function highCityVisualLandmarksForMap(mapName: MapName): WorldVisualObjectPlacement[] {
-  return mapName === 'Azura' ? HIGH_CITY_VISUAL_LANDMARKS : [];
+  if (mapName === 'Azura') return HIGH_CITY_VISUAL_LANDMARKS;
+  if (mapName === 'Rookguard') return ROOKGUARD_VISUAL_LANDMARKS;
+  return [];
 }

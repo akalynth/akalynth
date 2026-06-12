@@ -17,9 +17,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.akalynth.client.actions.WorldEventSkillIds
+import com.akalynth.client.protocol.SovereignVocation
 import com.akalynth.client.ui.theme.ClassicButton
 import com.akalynth.client.ui.theme.ClassicDock
 import com.akalynth.client.ui.theme.ClassicShellColors
+
+private val ROOKGUARD_VOCATION_ACTIONS = listOf(
+    SovereignVocation.WARDEN to "Wdn",
+    SovereignVocation.CANTOR to "Cnt",
+    SovereignVocation.HEXER to "Hex",
+    SovereignVocation.REAVER to "Rvr"
+)
 
 @Composable
 fun ActionButtons(
@@ -28,8 +36,10 @@ fun ActionButtons(
     showWitnessMothBloom: Boolean = false,
     onWorldEventContribution: (String) -> Unit = {},
     showRookguardActions: Boolean = false,
+    showRookguardVocations: Boolean = false,
     showHighCityActions: Boolean = false,
     onTalkToNpc: (String) -> Unit = {},
+    onDeclareVocation: (SovereignVocation) -> Unit = {},
     onInspectWallet: () -> Unit = {},
     onStartWork: () -> Unit = {},
     onTickWork: () -> Unit = {},
@@ -129,6 +139,29 @@ fun ActionButtons(
                     compact = true,
                     modifier = Modifier.testTag("ActionButtons_Talk_RookguardGuide")
                 )
+                if (showRookguardVocations) {
+                    ClassicButton(
+                        text = "Steward",
+                        onClick = { onTalkToNpc("rookguard_steward") },
+                        compact = true,
+                        modifier = Modifier.testTag("ActionButtons_Talk_RookguardSteward")
+                    )
+                    Text(
+                        text = "Codex",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = ClassicShellColors.MutedText,
+                        modifier = Modifier.testTag("ActionButtons_RookguardCodexVocations")
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                        ROOKGUARD_VOCATION_ACTIONS.forEach { (vocation, label) ->
+                            VocationChip(
+                                label = label,
+                                tag = "ActionButtons_Declare_${vocation.name}",
+                                onClick = { onDeclareVocation(vocation) }
+                            )
+                        }
+                    }
+                }
             }
 
             if (showHighCityActions) {
@@ -188,6 +221,31 @@ fun ActionButtons(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun VocationChip(
+    label: String,
+    tag: String,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .width(44.dp)
+            .height(32.dp)
+            .clip(CircleShape)
+            .background(ClassicShellColors.Stone.copy(alpha = 0.92f))
+            .border(1.dp, ClassicShellColors.Brass.copy(alpha = 0.75f), CircleShape)
+            .clickable { onClick() }
+            .testTag(tag),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = ClassicShellColors.Text
+        )
     }
 }
 

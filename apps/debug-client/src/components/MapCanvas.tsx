@@ -66,6 +66,7 @@ const OVERLAY_ALPHA = { visible: 1, faded: 0.35, hidden: 0 } as const;
 // (and re-trigger the draw effect) on every render.
 const EMPTY_WORLD_OBJECTS: WorldVisualObjectPlacement[] = [];
 const EMPTY_DEBUG_OVERLAYS: MapDebugOverlay[] = [];
+const ROOKGUARD_TRAINING_SLIME_SPRITE_ID = 'akalynth_creature_rookguard_training_slime_001';
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -372,7 +373,42 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
       ctx.restore();
     };
 
+    const drawRookguardTrainingSlime = (p: PlayerPublic) => {
+      const dead = p.status === 'dead';
+      const px = p.x * TILE_SIZE;
+      const py = p.y * TILE_SIZE;
+      const cx = px + TILE_SIZE / 2;
+      const cy = py + TILE_SIZE * 0.6;
+
+      ctx.save();
+      if (dead) ctx.globalAlpha = 0.42;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+      ctx.fillRect(px + 7, py + 24, 18, 4);
+      ctx.fillStyle = dead ? '#7f8790' : '#1f7a5b';
+      ctx.strokeStyle = '#0b2019';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, 12, 9, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = dead ? '#a6adb7' : '#55c89b';
+      ctx.fillRect(px + 10, py + 11, 9, 4);
+      ctx.fillStyle = dead ? '#d2d6dc' : '#f1d36a';
+      ctx.fillRect(px + 14, py + 17, 4, 4);
+      ctx.fillStyle = '#07130f';
+      ctx.fillRect(px + 11, py + 18, 3, 3);
+      ctx.fillRect(px + 20, py + 18, 3, 3);
+      ctx.fillStyle = dead ? '#8a93a5' : '#0b0c10';
+      ctx.font = `${nameFontPx}px "DM Sans", sans-serif`;
+      ctx.fillText(p.name, px + 2, py - 2);
+      ctx.restore();
+    };
+
     const drawCharacter = (p: PlayerPublic, color: string, isSelf: boolean) => {
+      if (p.sprite_id === ROOKGUARD_TRAINING_SLIME_SPRITE_ID) {
+        drawRookguardTrainingSlime(p);
+        return;
+      }
       const spriteOverride = characterSpriteOverrides?.get(p.id) ?? null;
       const sprite = spriteOverride
         ? characterSpriteById(spriteOverride)

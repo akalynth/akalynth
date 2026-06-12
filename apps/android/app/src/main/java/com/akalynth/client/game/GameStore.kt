@@ -206,6 +206,7 @@ class GameStore(
             is GameEvent.Attack -> sendAttack(event.targetId)
             is GameEvent.WorldEventContribution -> sendWorldEventContribution(event.contributionId)
             is GameEvent.TalkToNpc -> talkToNpc(event.npcId)
+            is GameEvent.DeclareVocation -> declareVocation(event.vocation)
             is GameEvent.InspectWallet -> inspectWallet()
             is GameEvent.BuyHouse -> buyHouse(event.propertyId)
             is GameEvent.ListHouse -> listHouse(event.propertyId, event.price)
@@ -645,6 +646,11 @@ class GameStore(
     private fun talkToNpc(npcId: String) {
         wsClient.send(TalkToNpcMessage(npcId = npcId))
         logSent("talk_to_npc", npcId)
+    }
+
+    private fun declareVocation(vocation: SovereignVocation) {
+        wsClient.send(DeclareVocationMessage(vocation = vocation))
+        logSent("declare_vocation", vocation.name.lowercase())
     }
 
     private fun startWorkContract() {

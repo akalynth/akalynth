@@ -13,6 +13,7 @@ export interface MobDef {
   map: MapName;
   x: number;
   y: number;
+  sprite_id?: string | null;
   respawn_ms: number;
 }
 
@@ -33,6 +34,8 @@ export interface MobHitResult {
 // Definitions
 // ============================================================================
 
+const ROOKGUARD_TRAINING_SLIME_SPRITE_ID = 'akalynth_creature_rookguard_training_slime_001';
+
 const MOB_DEFS: MobDef[] = [
   {
     mob_type: 'training_slime',
@@ -41,6 +44,7 @@ const MOB_DEFS: MobDef[] = [
     map: 'Rookguard',
     x: 14,
     y: 14,
+    sprite_id: ROOKGUARD_TRAINING_SLIME_SPRITE_ID,
     respawn_ms: 30_000,
   },
   {
@@ -107,6 +111,7 @@ export function mobToPublicPlayer(mob: MobState): PlayerPublic {
       x: mob.def.x,
       y: mob.def.y,
       status: 'dead',
+      sprite_id: mob.def.sprite_id ?? null,
       badges: ['mob'],
       mark: 'training_mob',
     };
@@ -118,6 +123,7 @@ export function mobToPublicPlayer(mob: MobState): PlayerPublic {
     x: mob.def.x,
     y: mob.def.y,
     status: 'alive',
+    sprite_id: mob.def.sprite_id ?? null,
     badges: ['mob'],
     mark: 'training_mob',
   };

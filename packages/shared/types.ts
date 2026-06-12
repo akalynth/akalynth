@@ -79,6 +79,21 @@ export type PlayerState = 'connected' | 'authenticated' | 'in_world';
 
 export type TutorialStep = 'move' | 'chat' | 'tem' | 'gate';
 
+export type RookguardQuestStepId =
+  | 'move'
+  | 'chat'
+  | 'tem'
+  | 'training'
+  | 'profession'
+  | 'gate';
+
+export type RookguardQuestPhase =
+  | 'tutorial'
+  | 'training'
+  | 'profession'
+  | 'gate'
+  | 'complete';
+
 export interface TutorialProgress {
   move: boolean;
   chat: boolean;
@@ -87,9 +102,62 @@ export interface TutorialProgress {
   complete: boolean;
 }
 
+export interface RookguardQuestStep {
+  step_id: RookguardQuestStepId;
+  label: string;
+  complete: boolean;
+  receipt_actions: string[];
+}
+
+export type RookguardCodexShelfId =
+  | 'artifacts-codex'
+  | 'chronicle-of-ages'
+  | 'dungeon-codex'
+  | 'emberwilds-atlas'
+  | 'factions-codex'
+  | 'heroes-codex';
+
+export interface RookguardCodexShelf {
+  object_id: RookguardCodexShelfId;
+  title: string;
+  subtitle: string;
+  role: 'active_profession_lore' | 'proof_history' | 'future_lane';
+  gameplay_hint: string;
+}
+
+export interface RookguardCodexAnchor {
+  object_id: 'heroes-codex';
+  status: 'accepted';
+  source: 'AKALYNTH_HEROES_CODEX_V1';
+  evidence: '3f9d4f90...11d630 source';
+  authority: 'Akalynth';
+  related: RookguardCodexShelfId[];
+}
+
+export interface RookguardCodexProfession {
+  vocation: SovereignVocation;
+  lore_id: 'codex_warden' | 'codex_cantor' | 'codex_hexer' | 'codex_reaver';
+  codex_anchor: RookguardCodexAnchor;
+  title: string;
+  oath: string;
+  starter_role: string;
+  starter_actions: string[];
+}
+
+export interface RookguardQuestProgress {
+  quest_id: 'rookguard_city_codex_path_v1';
+  title: string;
+  phase: RookguardQuestPhase;
+  steps: RookguardQuestStep[];
+  codexShelves: RookguardCodexShelf[];
+  codexProfession?: RookguardCodexProfession | null;
+  completed: boolean;
+}
+
 export interface PlayLoopProgress extends TutorialProgress {
   gateOpen: boolean;
   objective: string;
+  rookguardQuest?: RookguardQuestProgress;
   lastEvent?: string | null;
   teaser?: {
     id: 'ember_road_marker';
@@ -140,6 +208,10 @@ export type LandmarkGroupWire = Record<string, LandmarkWire>;
 export type LandmarksWire = Record<string, LandmarkWire | LandmarkGroupWire | LandmarkWire[]> & {
   guild_hall?: Landmark;
   plaza?: Landmark;
+  profession_hall?: Landmark;
+  quest_board?: Landmark;
+  training_yard?: Landmark;
+  codex_arch?: Landmark;
   house_plots?: HousePlot[];
   tutorial?: {
     move: Landmark;

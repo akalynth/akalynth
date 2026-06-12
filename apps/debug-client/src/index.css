@@ -277,6 +277,85 @@ body {
   color: var(--proof);
 }
 
+.quest-flags {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.25rem;
+}
+
+.quest-flags i {
+  min-width: 0;
+  padding: 0.22rem 0.28rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 7px;
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-style: normal;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quest-flags i.done {
+  border-color: rgba(74, 222, 128, 0.44);
+  color: var(--proof);
+}
+
+.codex-profession {
+  display: grid;
+  gap: 0.28rem;
+  min-width: 0;
+  padding-top: 0.15rem;
+}
+
+.codex-profession p {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.72rem;
+  line-height: 1.25;
+}
+
+.codex-profession small {
+  color: var(--muted);
+  font-size: 0.62rem;
+  line-height: 1.1;
+}
+
+.codex-profession ul {
+  display: grid;
+  gap: 0.18rem;
+  margin: 0;
+  padding-left: 1rem;
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.2;
+}
+
+.codex-shelves {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.22rem;
+}
+
+.codex-shelves i {
+  min-width: 0;
+  padding: 0.2rem 0.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 7px;
+  color: var(--muted);
+  font-size: 0.58rem;
+  font-style: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.codex-shelves i.active {
+  border-color: rgba(240, 200, 60, 0.44);
+  color: var(--accent-strong);
+}
+
 .action-locked {
   color: var(--muted);
 }
@@ -2536,6 +2615,8 @@ body {
 .hud-card span,
 .proof-chip span,
 .mission-card span,
+.codex-profession span,
+.codex-profession small,
 .chat-from,
 .nearby-title,
 .property-ledger-stat {
@@ -2549,7 +2630,8 @@ body {
 .chronicle-title,
 .recap-title,
 .chat-sheet__header span,
-.mission-card strong {
+.mission-card strong,
+.codex-profession strong {
   color: var(--classic-gold);
   text-shadow: 0 1px 0 #050505, 1px 0 0 #050505;
 }
@@ -2558,7 +2640,8 @@ body {
 .proof-chip--pass strong,
 .proof-pill,
 .hp-bar-fill,
-.mission-flags i.done {
+.mission-flags i.done,
+.quest-flags i.done {
   color: var(--classic-green);
 }
 
@@ -2605,6 +2688,8 @@ body {
 }
 
 .mission-flags i,
+.quest-flags i,
+.codex-shelves i,
 .hotbar-slot {
   border: 1px solid #111;
   border-top-color: #5e5b53;
@@ -2617,10 +2702,17 @@ body {
   text-shadow: 0 1px 0 #050505;
 }
 
-.mission-flags i.done {
+.mission-flags i.done,
+.quest-flags i.done {
   border-top-color: #5f8f42;
   border-left-color: #5f8f42;
   color: var(--classic-green);
+}
+
+.codex-shelves i.active {
+  border-top-color: #7c744f;
+  border-left-color: #7c744f;
+  color: var(--classic-gold);
 }
 
 .action-btn.cooling,

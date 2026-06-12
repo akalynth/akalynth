@@ -24,7 +24,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.akalynth.client.game.GameEvent
 import com.akalynth.client.game.GameState
+import com.akalynth.client.game.MapRepository
 import com.akalynth.client.network.EndpointInfo
+import com.akalynth.client.protocol.MapName
+import com.akalynth.client.protocol.PlayerPublic
 import com.akalynth.client.ui.diagnostics.DiagnosticsFormatter
 import com.akalynth.client.ui.components.*
 import com.akalynth.client.ui.components.chronicle.ChronicleSheet
@@ -42,6 +45,16 @@ fun WorldScreen(
     val endpoint = EndpointInfo.fromWsUrl(state.session.serverUrl)
     val nowMs = rememberNowMs()
     val reconnectLabel = DiagnosticsFormatter.reconnectCountdownLabel(state.ui.connectionDiagnostics, nowMs)
+    val mapData = remember(context, state.world.currentMap) {
+        MapRepository.load(context, state.world.currentMap)
+    }
+    val showRookguardVocations = isRookguardGuildHallContext(
+        map = state.world.currentMap,
+        me = state.world.me,
+        inGuildHall = state.world.me?.let { me ->
+            mapData?.landmarks?.get("guild_hall")?.contains(me.x, me.y)
+        } == true
+    )
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -133,8 +146,10 @@ fun WorldScreen(
                     onEvent(GameEvent.WorldEventContribution(contributionId))
                 },
                 showRookguardActions = !state.world.currentMap.isHighCityCompatible,
+                showRookguardVocations = showRookguardVocations,
                 showHighCityActions = state.world.currentMap.isHighCityCompatible,
                 onTalkToNpc = { npcId -> onEvent(GameEvent.TalkToNpc(npcId)) },
+                onDeclareVocation = { vocation -> onEvent(GameEvent.DeclareVocation(vocation)) },
                 onInspectWallet = { onEvent(GameEvent.InspectWallet) },
                 onStartWork = { onEvent(GameEvent.StartWorkContract) },
                 onTickWork = { onEvent(GameEvent.TickWorkContract) },
@@ -222,6 +237,16 @@ private fun rememberNowMs(): Long {
         }
     }
     return nowMs
+}
+
+private fun isRookguardGuildHallContext(
+    map: MapName,
+    me: PlayerPublic?,
+    inGuildHall: Boolean
+): Boolean {
+    if (map != MapName.ROOKGUARD || me == null || !inGuildHall) return false
+    val badges = me.badges ?: emptyList()
+    return badges.none { it.startsWith("vocation_") }
 }
 
 private fun propertyStatusLabel(status: com.akalynth.client.game.PropertyResultStatus?): String? {

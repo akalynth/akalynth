@@ -33,6 +33,7 @@ private val TILE_UNKNOWN = Color(0xFF111313)
 private val PLAYER_SELF = Color(0xFF42E66B)
 private val PLAYER_OTHER = Color(0xFF8FD3D6)
 private val PLAYER_DEAD = Color(0xFF9E9E9E)
+private const val ROOKGUARD_TRAINING_SLIME_SPRITE_ID = "akalynth_creature_rookguard_training_slime_001"
 
 private val OVERLAY_COBBLE = Color(0xFF6B6150)
 private val OVERLAY_STONE = Color(0xFF484B45)
@@ -366,6 +367,11 @@ private fun DrawScope.drawPlayer(
     isSelf: Boolean,
     spriteId: String?
 ) {
+    if (spriteId == ROOKGUARD_TRAINING_SLIME_SPRITE_ID) {
+        drawRookguardTrainingSlime(x = x, y = y, radius = radius, isDead = isDead)
+        return
+    }
+
     val color = when {
         isDead -> PLAYER_DEAD
         spriteId == "guard_city_01" -> Color(0xFF6FA8DC)
@@ -409,4 +415,47 @@ private fun DrawScope.drawPlayer(
             strokeWidth = radius * 0.18f
         )
     }
+}
+
+private fun DrawScope.drawRookguardTrainingSlime(
+    x: Float,
+    y: Float,
+    radius: Float,
+    isDead: Boolean
+) {
+    val alpha = if (isDead) 0.42f else 1f
+    val body = if (isDead) PLAYER_DEAD else Color(0xFF1F7A5B)
+    val highlight = if (isDead) Color(0xFFA6ADB7) else Color(0xFF55C89B)
+    val mark = if (isDead) Color(0xFFD2D6DC) else Color(0xFFF1D36A)
+
+    drawOval(
+        color = Color.Black.copy(alpha = 0.28f),
+        topLeft = Offset(x - radius * 0.78f, y + radius * 0.46f),
+        size = Size(radius * 1.56f, radius * 0.32f)
+    )
+    drawOval(
+        color = body.copy(alpha = alpha),
+        topLeft = Offset(x - radius, y - radius * 0.7f),
+        size = Size(radius * 2f, radius * 1.45f)
+    )
+    drawOval(
+        color = highlight.copy(alpha = alpha),
+        topLeft = Offset(x - radius * 0.58f, y - radius * 0.55f),
+        size = Size(radius * 0.82f, radius * 0.36f)
+    )
+    drawRect(
+        color = mark.copy(alpha = alpha),
+        topLeft = Offset(x - radius * 0.1f, y - radius * 0.1f),
+        size = Size(radius * 0.28f, radius * 0.28f)
+    )
+    drawRect(
+        color = Color(0xFF07130F).copy(alpha = alpha),
+        topLeft = Offset(x - radius * 0.45f, y - radius * 0.02f),
+        size = Size(radius * 0.18f, radius * 0.18f)
+    )
+    drawRect(
+        color = Color(0xFF07130F).copy(alpha = alpha),
+        topLeft = Offset(x + radius * 0.32f, y - radius * 0.02f),
+        size = Size(radius * 0.18f, radius * 0.18f)
+    )
 }

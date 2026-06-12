@@ -5,6 +5,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import com.akalynth.client.actions.WorldEventSkillIds
+import com.akalynth.client.protocol.SovereignVocation
 import com.akalynth.client.ui.theme.AkalynthTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -76,5 +77,37 @@ class ActionButtonsTest {
             .performClick()
 
         assertTrue(tapped)
+    }
+
+    @Test
+    fun rookguardCodexVocationControlsEmitVocationIntents() {
+        val vocations = mutableListOf<SovereignVocation>()
+
+        composeTestRule.setContent {
+            AkalynthTheme(darkTheme = true) {
+                ActionButtons(
+                    onChat = {},
+                    showRookguardActions = true,
+                    showRookguardVocations = true,
+                    onDeclareVocation = { vocations.add(it) }
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag("ActionButtons_RookguardCodexVocations").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("ActionButtons_Declare_WARDEN").performClick()
+        composeTestRule.onNodeWithTag("ActionButtons_Declare_CANTOR").performClick()
+        composeTestRule.onNodeWithTag("ActionButtons_Declare_HEXER").performClick()
+        composeTestRule.onNodeWithTag("ActionButtons_Declare_REAVER").performClick()
+
+        assertEquals(
+            listOf(
+                SovereignVocation.WARDEN,
+                SovereignVocation.CANTOR,
+                SovereignVocation.HEXER,
+                SovereignVocation.REAVER
+            ),
+            vocations
+        )
     }
 }

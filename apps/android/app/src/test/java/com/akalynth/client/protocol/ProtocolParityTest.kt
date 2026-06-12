@@ -170,6 +170,29 @@ class ProtocolParityTest {
     }
 
     @Test
+    fun `declare vocation omits client identity and coordinates`() {
+        val obj = json.decodeFromString<JsonObject>(
+            MessageSerializer.encodeClient(DeclareVocationMessage(SovereignVocation.HEXER))
+        )
+        assertEquals("declare_vocation", obj["type"]!!.jsonPrimitive.content)
+        assertEquals("hexer", obj["vocation"]!!.jsonPrimitive.content)
+        assertNoClientAuthorityFields(obj)
+    }
+
+    @Test
+    fun `rookguard training slime sprite id decodes as display-only player metadata`() {
+        val message = MessageSerializer.decodeServer(
+            """{"type":"world_state","map":"Rookguard","player":{"id":"p","name":"n","x":1,"y":1},"nearby_players":[{"id":"mob:training_slime","name":"Training Slime","x":14,"y":14,"status":"alive","sprite_id":"akalynth_creature_rookguard_training_slime_001","badges":["mob"],"mark":"training_mob"}]}"""
+        ) as WorldStateMessage
+
+        val slime = message.nearbyPlayers.single()
+        assertEquals("mob:training_slime", slime.id)
+        assertEquals("akalynth_creature_rookguard_training_slime_001", slime.spriteId)
+        assertEquals(listOf("mob"), slime.badges)
+        assertEquals("training_mob", slime.mark)
+    }
+
+    @Test
     fun `property gameplay messages omit client identity and coordinates`() {
         val buyObj = json.decodeFromString<JsonObject>(
             MessageSerializer.encodeClient(BuyHouseMessage("HighCity:H1"))

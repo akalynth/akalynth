@@ -319,7 +319,7 @@
             <div class="toolbar">
               <div>
                 <strong id="frameLabel">Loading sim snapshot</strong>
-                <div class="clock" id="clock">00:00 / 05:00</div>
+                <div class="clock" id="clock">00:00 / 30:00</div>
               </div>
               <div class="speed" aria-label="Playback speed">
                 <button data-speed="0" class="active">Pause</button>
@@ -339,7 +339,7 @@
             <div class="event-list" id="events"></div>
           </section>
 
-          <section class="plan" id="plan" aria-label="First five minute gameplan"></section>
+          <section class="plan" id="plan" aria-label="Rookguard 0-30 minute gameplan"></section>
         </div>
 
         <aside class="side">
@@ -436,10 +436,11 @@
 
       function renderEvents(data) {
         const events = document.getElementById('events');
-        events.innerHTML = data.first_5min_gameplan.map((step) => `
-          <div class="event" data-minute="${step.minute}">
-            <strong>${step.minute}:00 ${escapeHtml(step.title)}</strong>
-            ${escapeHtml(step.agent_id)}<br />
+        const plan = data.rookguard_0_30_gameplan || [];
+        events.innerHTML = plan.map((step) => `
+          <div class="event" data-from="${step.from_minute}" data-to="${step.to_minute}">
+            <strong>${step.from_minute}:00-${step.to_minute}:00 ${escapeHtml(step.title)}</strong>
+            ${escapeHtml(step.playtest_check)}<br />
             ${step.receipt_actions.map(escapeHtml).join(', ')}
           </div>
         `).join('');
@@ -447,12 +448,13 @@
 
       function renderPlan(data) {
         const plan = document.getElementById('plan');
-        plan.innerHTML = '<h2>First 5min Gameplan</h2>' + data.first_5min_gameplan.map((step) => `
+        const rows = data.rookguard_0_30_gameplan || [];
+        plan.innerHTML = '<h2>Rookguard 0-30min Gameplan</h2>' + rows.map((step) => `
           <div class="plan-row">
-            <div class="minute">${step.minute}:00</div>
+            <div class="minute">${step.from_minute}-${step.to_minute}</div>
             <div>
               <div class="plan-title">${escapeHtml(step.title)}</div>
-              <div class="plan-copy">${escapeHtml(step.visible_action)}</div>
+              <div class="plan-copy">${escapeHtml(step.player_goal)}</div>
               <div class="actions">${step.receipt_actions.map(escapeHtml).join(' / ')}</div>
             </div>
           </div>
@@ -470,8 +472,10 @@
         document.getElementById('status').textContent = `${data.mode} - ${data.authority.receipt_boundary}`;
 
         document.querySelectorAll('.event').forEach((node) => {
-          const minute = Number(node.dataset.minute);
-          node.classList.toggle('active', Math.floor(state.cursorMs / 60000) === minute);
+          const minute = Math.floor(state.cursorMs / 60000);
+          const from = Number(node.dataset.from);
+          const to = Number(node.dataset.to);
+          node.classList.toggle('active', minute >= from && minute < to);
         });
 
         const positions = agentPositions(data, state.cursorMs);

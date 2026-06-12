@@ -63,7 +63,7 @@ export interface NpcDialogueVariation {
 const NPC_REGISTRY: NpcDef[] = [
   {
     npc_id: 'rookguard_guide',
-    place_id: 'rookguard',
+    place_id: 'rookguard:plaza',
     tiers: {
       stranger: {
         intent_id: 'guide_gate_steps',
@@ -132,21 +132,47 @@ const NPC_REGISTRY: NpcDef[] = [
     place_id: 'rookguard:guild_hall',
     tiers: {
       stranger: {
-        intent_id: 'steward_open_hall',
+        intent_id: 'steward_profession_choice',
         openers: ['The guild hall is open to all.', 'Welcome to the guild hall.', 'The hall doors are open to any.'],
-        must_convey: [],
-        may_convey: [{ fact_id: 'offer_help', text: 'How may I assist you?' }],
+        must_convey: [
+          {
+            fact_id: 'profession_choice',
+            text: 'At the end of Rookguard, choose a vocation: Warden, Cantor, Hexer, or Reaver.',
+          },
+          {
+            fact_id: 'codex_record',
+            text: 'The Heroes Codex remembers the First Archivist, the one who refused forgetting.',
+          },
+          {
+            fact_id: 'codex_not_power',
+            text: 'The Codex arch records the choice as identity proof, not as a power grant.',
+          },
+        ],
+        may_convey: [
+          { fact_id: 'quest_board', text: 'The quest board points toward the training yard before the profession mark.' },
+          { fact_id: 'shelves', text: 'Artifacts, Chronicle, Dungeon, Atlas, Factions, and Heroes shelves wait at the arch.' },
+        ],
       },
       seen: {
-        intent_id: 'steward_returning',
+        intent_id: 'steward_profession_reminder',
         openers: ['Back again?', 'Returning so soon?', 'You again — good.'],
-        must_convey: [{ fact_id: 'hall_remembers', text: 'The hall remembers those who visit.' }],
-        may_convey: [],
+        must_convey: [
+          {
+            fact_id: 'vocation_receipt',
+            text: 'Your vocation declaration writes a receipt, changes your visible badge, and binds a Heroes Codex role.',
+          },
+        ],
+        may_convey: [
+          { fact_id: 'training_yard', text: 'The gate waits until training and Codex vocation proof are both marked.' },
+        ],
       },
       recognized: {
-        intent_id: 'steward_noted',
+        intent_id: 'steward_codex_noted',
         openers: ["You've spent considerable time here.", 'You are no stranger to these walls.', 'The hall knows your footsteps.'],
-        must_convey: [{ fact_id: 'guild_notes', text: 'The guild takes note.' }],
+        must_convey: [
+          { fact_id: 'guild_notes', text: 'The guild and Codex both take note, but neither invents your choice.' },
+          { fact_id: 'first_archivist', text: 'If you do not record it, the First Archivist would say you have not earned it.' },
+        ],
         may_convey: [],
       },
     },

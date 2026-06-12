@@ -71,7 +71,8 @@ Simulation life viewer snapshots live on the HTTP control plane under
 new WebSocket message type and does not accept client truth. The response is a
 server-generated deterministic sim timeline for the public sim dashboard:
 visible agent positions, roles, intents, gold, inventory counts, timeline
-frames, first-five-minute plan steps, and hash-linked simulated receipt records.
+frames, first-five-minute plan steps, Rookguard 0-30 minute plan steps, and
+hash-linked simulated receipt records.
 Clients may pause or timelapse through returned frames, but must not submit
 positions, inventory, gold, or receipt claims back to the server.
 
@@ -140,6 +141,7 @@ interface BaseMessage {
 | `login_ack` | Returns login result, player identity, token fields, and optional failure reason. |
 | `world_state` | Initial world snapshot containing `map`, the current player, and nearby players. |
 | `move_result` | Result of a move intent. The server returns authoritative coordinates and optional `map`. |
+| `loop_update` | Objective/progression update. The loop payload may include Rookguard quest and Codex profession state. |
 | `player_moved` | Broadcast that another player moved. |
 | `player_joined` | Broadcast that another player entered the world. |
 | `player_left` | Broadcast that a player left. |
@@ -254,7 +256,28 @@ Requests pressure metrics over optional `since` and `until` timestamps.
 
 #### `declare_vocation`
 
-Declares the player's vocation.
+Declares the player's vocation/profession identity. Accepted values are
+`warden`, `cantor`, `hexer`, and `reaver`. In Rookguard, the server accepts this
+only after movement, chat, Tem, and training-slime proof while the player is in
+`rookguard:guild_hall`. The server emits `vocation_declared`, updates the
+receipt-derived identity projection, changes the visible vocation badge, and
+attaches the selected Heroes Codex profession profile to loop state. It does not
+grant gold, items, XP, stat power, or standalone access by itself.
+
+#### `loop_update`
+
+Sends a server-owned objective/progression projection. The shared
+`PlayLoopProgress` contract is additive: older clients may ignore fields they do
+not recognize. Rookguard loop payloads can include:
+
+- `rookguardQuest.steps`: movement, chat, Tem, training, profession, and gate
+  completion flags with receipt action names that prove each step;
+- `rookguardQuest.codexShelves`: Artifacts Codex, Chronicle of Ages, Dungeon
+  Codex, Emberwilds Atlas, Factions Codex, and Heroes Codex shelf descriptors;
+- `rookguardQuest.codexProfession`: selected vocation profile anchored to
+  `heroes-codex` / `AKALYNTH_HEROES_CODEX_V1` after `vocation_declared`.
+
+Clients render this state only; they do not send quest progress or Codex truth.
 
 #### `inspect_player`
 

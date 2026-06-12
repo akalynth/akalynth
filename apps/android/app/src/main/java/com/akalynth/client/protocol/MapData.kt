@@ -12,8 +12,10 @@ data class MapData(
     val height: Int,
     val spawn: MapSpawn,
     // Row-major tile codes; index = y * width + x. Values are TileCode ordinals.
-    val tiles: List<Int>
-    // landmarks exists in the JSON but is skipped via ignoreUnknownKeys at decode time.
+    val tiles: List<Int>,
+    // Display/context landmarks from the shared map JSON. UI may use these to show contextual
+    // controls, but server authority still owns movement, collision, and action acceptance.
+    val landmarks: Map<String, MapLandmark> = emptyMap()
 ) {
     // Tile code at (x, y), or TileCode.WALL when out of bounds.
     fun tileAt(x: Int, y: Int): TileCode {
@@ -24,6 +26,17 @@ data class MapData(
 
 @Serializable
 data class MapSpawn(val x: Int, val y: Int)
+
+@Serializable
+data class MapLandmark(
+    val x: Int,
+    val y: Int,
+    val width: Int,
+    val height: Int
+) {
+    fun contains(px: Int, py: Int): Boolean =
+        px >= x && py >= y && px < x + width && py < y + height
+}
 
 // Tile codes, mirroring TileCode in packages/shared/types.ts.
 // The numeric values are the wire/JSON contract and MUST NOT change without the server.

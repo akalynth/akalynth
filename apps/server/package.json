@@ -50,6 +50,8 @@
     "rulebook:genesis": "tsx tools/genesis-rulebook.ts",
     "install-hooks": "bash scripts/install-hooks.sh",
     "verify:mob-loot": "tsx tools/verify-mob-loot.ts",
+    "verify:rookguard-quest": "tsx tools/verify-rookguard-quest.ts",
+    "verify:rookguard-codex-path": "tsx tools/verify-rookguard-codex-path.ts",
     "verify:item-pickup-type": "tsx tools/verify-item-pickup-type.ts",
     "verify:property-auction-handlers": "tsx tools/verify-property-auction-handlers.ts",
     "verify:property-auction-settle": "tsx tools/verify-property-auction-settle.ts",

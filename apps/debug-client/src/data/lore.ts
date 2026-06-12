@@ -30,14 +30,38 @@ export const LANDMARK_LORE: Record<string, LoreEntry> = {
   guild_hall: {
     title: 'Guild Hall',
     body:
-      'The hall is ready before the oath is. Its doors do not open yet, ' +
-      'and no interior is currently implemented.',
+      'Rookguard keeps its last lesson here: choose a vocation, read the ' +
+      'quest board, then leave only when the gate proof is complete.',
   },
   plaza: {
     title: 'Central Plaza',
     body:
-      'The city receives newcomers here after Rookguard: a civic floor for ' +
-      'chat, meeting, waiting, and being seen.',
+      'The first civic floor in Rookguard. The guide and herald can see ' +
+      'newcomers here before the High City gate opens.',
+  },
+  profession_hall: {
+    title: 'Profession Hall',
+    body:
+      'The end-of-Rookguard choice point. Warden, Cantor, Hexer, and Reaver bind ' +
+      'Heroes Codex roles through the existing vocation receipt.',
+  },
+  quest_board: {
+    title: 'Quest Board',
+    body:
+      'A planning board for starter quests. It describes training-yard proof; ' +
+      'it does not grant rewards by itself.',
+  },
+  training_yard: {
+    title: 'Training Yard',
+    body:
+      'A safe yard for starter monster practice. Server mobs, hits, deaths, ' +
+      'and loot stay authoritative.',
+  },
+  codex_arch: {
+    title: 'Codex Arch',
+    body:
+      'A record arch beside the profession hall. Heroes, Chronicle, Factions, ' +
+      'Artifacts, Dungeon, and Emberwilds shelves frame the first Codex-style choice.',
   },
   house_plots: {
     title: 'House Plot',
@@ -88,6 +112,10 @@ export const LANDMARK_MARKERS: Record<string, { glyph: string; color: string }> 
   legend_stone: { glyph: '!', color: '#61d8c6' },
   guild_hall: { glyph: 'G', color: '#c98bdb' },
   plaza: { glyph: 'P', color: '#7fd1a6' },
+  profession_hall: { glyph: 'V', color: '#e8d56f' },
+  quest_board: { glyph: 'Q', color: '#e0a86b' },
+  training_yard: { glyph: 'Y', color: '#d87963' },
+  codex_arch: { glyph: 'C', color: '#9db4ff' },
   house_plots: { glyph: 'H', color: '#e0a86b' },
 };
 

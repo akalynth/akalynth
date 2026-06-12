@@ -6,6 +6,7 @@ import type {
   AttackIntentMessage,
   RunestoneCastMessage,
   TalkToNpcMessage,
+  DeclareVocationMessage,
   UseSkillMessage,
   PickupItemMessage,
   StartWorkContractMessage,
@@ -25,6 +26,7 @@ import {
   type MapData,
   type PlayerPublic,
   type PlayLoopProgress,
+  type SovereignVocation,
 } from '@shared/types';
 import { getMap } from '../data/maps';
 import type {
@@ -678,6 +680,11 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
 
   const talkToNpc = useCallback((npcId: string) => {
     const payload: TalkToNpcMessage = { type: 'talk_to_npc', npc_id: npcId };
+    send(payload);
+  }, [send]);
+
+  const declareVocation = useCallback((vocation: SovereignVocation) => {
+    const payload: DeclareVocationMessage = { type: 'declare_vocation', vocation };
     send(payload);
   }, [send]);
 
@@ -1674,6 +1681,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     sendAttack,
     castRunestone,
     talkToNpc,
+    declareVocation,
     useSkill,
     pickupItem,
     startWork,

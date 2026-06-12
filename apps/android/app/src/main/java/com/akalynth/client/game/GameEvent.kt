@@ -1,6 +1,7 @@
 package com.akalynth.client.game
 
 import com.akalynth.client.protocol.Direction
+import com.akalynth.client.protocol.SovereignVocation
 import com.akalynth.client.protocol.WitnessResponse
 
 sealed class GameEvent {
@@ -25,6 +26,9 @@ sealed class GameEvent {
 
     // NPC dialogue
     data class TalkToNpc(val npcId: String) : GameEvent()
+
+    // Rookguard Codex profession
+    data class DeclareVocation(val vocation: SovereignVocation) : GameEvent()
 
     // High City economy/property intents
     data object InspectWallet : GameEvent()

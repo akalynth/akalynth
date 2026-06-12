@@ -31,7 +31,6 @@ import {
   LEGEND_REFUSED_ACTION,
   LEGEND_SIGHTED_ACTION,
   RUMOR_SEEDED_ACTION,
-  TEM_CHALLENGE_RESPONSE,
 } from '../../../packages/shared/types.js';
 import { TileCode } from '../../../packages/shared/types.js';
 import {
@@ -219,6 +218,14 @@ import {
   startWitnessMothBloom,
   witnessMothBloomPublicState,
 } from './world/world-events.js';
+import {
+  ROOKGUARD_CODEX_PROFESSIONS,
+  buildRookguardQuestProgress,
+  getRookguardQuestInput,
+  rookguardGateOpen,
+  rookguardQuestObjective,
+  type RookguardQuestInput,
+} from './world/rookguardQuest.js';
 import { buildSimLifeSnapshot } from './simulation/simLifeSnapshot.js';
 import { chronicleAppend } from './witness/chronicleAdapter.js';
 import { verifyRulebookOrExit } from './rulebook/verifyRulebook.js';
@@ -785,6 +792,10 @@ type Session = {
   attackFailures: number[]; // timestamps of failed attacks
   skillCooldowns: Map<string, number>;
   heraldMet: boolean;
+  rookguardQuest: {
+    trainingComplete: boolean;
+    vocation: SovereignVocation | null;
+  };
 };
 
 const sessions = new Map<string, Session>();
@@ -2692,14 +2703,21 @@ function applyCors(req: IncomingMessage, res: ServerResponse): boolean {
   return true;
 }
 
+function rookguardQuestInputFor(s: Session): RookguardQuestInput {
+  return {
+    tutorial: s.tutorial,
+    trainingComplete: s.rookguardQuest.trainingComplete,
+    vocation: s.rookguardQuest.vocation,
+  };
+}
+
 function playLoopFor(s: Session) {
-  const gateOpen = s.tutorial.move && s.tutorial.chat && s.tutorial.tem;
+  const rookguardQuestInput = rookguardQuestInputFor(s);
+  const gateOpen = rookguardGateOpen(rookguardQuestInput);
   const bloom = witnessMothBloomPublicState(witnessMothBloom);
   let objective = 'Step onto the move rune';
 
-  if (!s.tutorial.move) objective = 'Step onto the move rune';
-  else if (!s.tutorial.chat) objective = 'Send a signal in chat';
-  else if (!s.tutorial.tem) objective = `Answer Tem: ${TEM_CHALLENGE_RESPONSE}`;
+  if (s.currentMap === 'Rookguard') objective = rookguardQuestObjective(rookguardQuestInput);
   else if (!s.tutorial.gate) objective = 'Enter the High City gate';
   else if (!s.heraldMet) objective = 'Seek the High City herald in the southern plaza';
   else if (bloom.phase === 'signal' || bloom.phase === 'investigation') objective = 'Help resolve the Witness Moth Bloom above High City';
@@ -2709,6 +2727,7 @@ function playLoopFor(s: Session) {
     ...s.tutorial,
     gateOpen,
     objective,
+    rookguardQuest: buildRookguardQuestProgress(rookguardQuestInput),
     lastEvent: bloom.phase === 'idle' ? null : `witness_moth_bloom_${bloom.phase}`,
     ...(bloom.teaser ? { teaser: bloom.teaser } : {}),
   };
@@ -2716,11 +2735,14 @@ function playLoopFor(s: Session) {
 
 function sendLoopUpdate(s: Session, event: string) {
   if (!s.player || s.ws.readyState !== WebSocket.OPEN) return;
-  s.ws.send(JSON.stringify({
-    type: 'loop_update',
-    event,
+  send(s.ws, ServerMessages.loopUpdate(event, playLoopFor(s)));
+}
+
+function toPublicSessionPlayer(s: Session, includeDeadUntil = false) {
+  return {
+    ...toPublicPlayer(s.player!, includeDeadUntil),
     loop: playLoopFor(s),
-  }));
+  };
 }
 
 function broadcastToMap(map: 'Rookguard' | 'Azura', message: ServerMessage, excludeConnId?: string) {
@@ -2775,7 +2797,7 @@ function applyRespawnNow(s: Session, now: number) {
     nearby.push(mobToPublicPlayer(mob));
   }
 
-  send(s.ws, ServerMessages.worldState(s.currentMap, toPublicPlayer(s.player!, true), nearby));
+  send(s.ws, ServerMessages.worldState(s.currentMap, toPublicSessionPlayer(s, true), nearby));
   s.respawnTimer = null;
 }
 
@@ -2790,7 +2812,7 @@ function sendWorldStateRefresh(s: Session): void {
   const echo = getEchoForMap(s.currentMap);
   if (echo) nearby.push(echoToPublicPlayer(echo));
   for (const mob of getMobsForMap(s.currentMap)) nearby.push(mobToPublicPlayer(mob));
-  send(s.ws, ServerMessages.worldState(s.currentMap, toPublicPlayer(s.player!, true), nearby));
+  send(s.ws, ServerMessages.worldState(s.currentMap, toPublicSessionPlayer(s, true), nearby));
 }
 
 // Apply death to a player slain by a mob (HP hit 0). Mirrors the kill_self path.
@@ -2939,6 +2961,10 @@ wss.on('connection', (ws, req: IncomingMessage) => {
     attackFailures: [],
     skillCooldowns: new Map(),
     heraldMet: false,
+    rookguardQuest: {
+      trainingComplete: false,
+      vocation: null,
+    },
   };
 
   sessions.set(connId, s);
@@ -3218,15 +3244,27 @@ function processSessionQueue(s: Session, now: number) {
         }
 
         const accountProjection = authToken ? accountCharacterLoginProjection(characterStore.findById(player_id)) : null;
-        const loginMap = accountProjection?.map ?? 'Rookguard';
+        const restoredRookguardQuest = getRookguardQuestInput(player_id);
+        const restoredIdentity = getIdentity(player_id);
+        let loginMap = accountProjection?.map ?? 'Rookguard';
+        if (loginMap === 'Rookguard' && restoredRookguardQuest.tutorial.complete) {
+          loginMap = 'Azura';
+        }
         const spriteId = accountProjection?.sprite_id ?? null;
         const spawn = worlds[loginMap].map.spawn;
+        const hydratedTutorial = loginMap === 'Azura'
+          ? { ...restoredRookguardQuest.tutorial, gate: true, complete: true }
+          : restoredRookguardQuest.tutorial;
 
         s.guestToken = guest_token ?? null;
         s.currentMap = loginMap;
-        s.tutorial = { move: false, chat: false, tem: false, gate: false, complete: loginMap === 'Azura' };
+        s.tutorial = hydratedTutorial;
         s.ledgerHesitationArmed = false;
         s.ledgerHesitationDeathTs = null;
+        s.rookguardQuest = {
+          trainingComplete: restoredRookguardQuest.trainingComplete,
+          vocation: restoredRookguardQuest.vocation,
+        };
         s.player = {
           id: player_id,
           name,
@@ -3239,6 +3277,7 @@ function processSessionQueue(s: Session, now: number) {
           max_hp: PLAYER_MAX_HP,
           reputation: 0,
           sprite_id: spriteId,
+          badges: restoredIdentity.vocation ? [VOCATION_COSMETICS[restoredIdentity.vocation].badge] : [],
           caps: [],
         };
 
@@ -3383,7 +3422,7 @@ function processSessionQueue(s: Session, now: number) {
 
         audit.write({ player_id: s.player!.id, action: 'enter_world', inputs: {}, result: 'ok' });
 
-        send(s.ws, ServerMessages.worldState(s.currentMap, toPublicPlayer(s.player!, true), nearby));
+        send(s.ws, ServerMessages.worldState(s.currentMap, toPublicSessionPlayer(s, true), nearby));
 
         // Send inventory snapshot (Phase 2)
         const playerItems = getPlayerInventoryIds(s.player!.id);
@@ -3439,6 +3478,7 @@ function processSessionQueue(s: Session, now: number) {
         const out = handleTemResponse(s.anti.state, msg.response);
         if (out.outcome === 'passed') {
           audit.write({ player_id: s.player!.id, action: 'tem_challenge_passed', inputs: {}, result: 'passed' });
+          let rookguardTemCompleted = false;
           if (s.currentMap === 'Rookguard' && !s.tutorial.tem) {
             s.tutorial.tem = true;
             audit.write({
@@ -3447,7 +3487,9 @@ function processSessionQueue(s: Session, now: number) {
               inputs: { step: 'tem' },
               result: 'ok',
             });
+            rookguardTemCompleted = true;
           }
+          if (rookguardTemCompleted) sendLoopUpdate(s, 'rookguard_tem_complete');
         } else if (out.outcome === 'failed') {
           applyThrottle(s.anti.state, now);
           audit.write({
@@ -3492,6 +3534,7 @@ function processSessionQueue(s: Session, now: number) {
               inputs: { via: 'chat' },
               result: 'passed',
             });
+            let rookguardTemCompleted = false;
             if (s.currentMap === 'Rookguard' && !s.tutorial.tem) {
               s.tutorial.tem = true;
               audit.write({
@@ -3500,7 +3543,9 @@ function processSessionQueue(s: Session, now: number) {
                 inputs: { step: 'tem', via: 'chat' },
                 result: 'ok',
               });
+              rookguardTemCompleted = true;
             }
+            if (rookguardTemCompleted) sendLoopUpdate(s, 'rookguard_tem_complete');
             break;
           }
           if (out.outcome === 'failed') {
@@ -3562,6 +3607,7 @@ function processSessionQueue(s: Session, now: number) {
             inputs: { step: 'chat' },
             result: 'ok',
           });
+          sendLoopUpdate(s, 'rookguard_chat_complete');
         }
 
         // Admin command: /legendary [tier] - mint a legendary item (DEBUG_MODE only)
@@ -3998,6 +4044,7 @@ function processSessionQueue(s: Session, now: number) {
                 inputs: { step: 'move' },
                 result: 'ok',
               });
+              sendLoopUpdate(s, 'rookguard_move_complete');
             }
 
             if (tile === TileCode.TutorialTem && !s.tutorial.tem) {
@@ -4014,7 +4061,7 @@ function processSessionQueue(s: Session, now: number) {
             }
 
             if (tile === TileCode.GateToAzura && !s.tutorial.complete) {
-              if (s.tutorial.move && s.tutorial.chat && s.tutorial.tem) {
+              if (rookguardGateOpen(rookguardQuestInputFor(s))) {
                 s.tutorial.gate = true;
                 s.tutorial.complete = true;
                 audit.write({
@@ -4029,6 +4076,7 @@ function processSessionQueue(s: Session, now: number) {
                   inputs: {},
                   result: 'ok',
                 });
+                sendLoopUpdate(s, 'rookguard_codex_path_complete');
 
                 // Transfer to Azura spawn immediately.
                 worlds.Rookguard.players.delete(s.player!.id);
@@ -4055,7 +4103,7 @@ function processSessionQueue(s: Session, now: number) {
                   nearbyAzura.push(mobToPublicPlayer(mob));
                 }
 
-                send(s.ws, ServerMessages.worldState(s.currentMap, toPublicPlayer(s.player!, true), nearbyAzura));
+                send(s.ws, ServerMessages.worldState(s.currentMap, toPublicSessionPlayer(s, true), nearbyAzura));
                 broadcastToMap('Azura', ServerMessages.playerJoined(toPublicPlayer(s.player!)), s.connId);
 
                 finalX = s.player!.x;
@@ -4541,6 +4589,10 @@ function processSessionQueue(s: Session, now: number) {
                 itemType: slime.itemType,
               });
               broadcastToMap(s.currentMap, ServerMessages.worldItemAdded(slime.itemId, slime.itemType, mob.def.x, mob.def.y));
+              if (s.currentMap === 'Rookguard' && !s.rookguardQuest.trainingComplete) {
+                s.rookguardQuest.trainingComplete = true;
+                sendLoopUpdate(s, 'rookguard_training_complete');
+              }
             }
           }
           break;
@@ -5004,13 +5056,28 @@ function processSessionQueue(s: Session, now: number) {
       // ====================================================================
 
       case 'declare_vocation': {
-        if (!requireAuth(s)) break;
+        if (!requireWorld(s)) break;
         if (!s.player) break;
 
         const vocation = msg.vocation;
         if (!SOVEREIGN_VOCATIONS.includes(vocation)) break;
+        const playerPlace = getCurrentPlace(s.player.id);
+        const readyForCodex =
+          s.currentMap === 'Rookguard' &&
+          playerPlace === 'rookguard:guild_hall' &&
+          s.tutorial.move &&
+          s.tutorial.chat &&
+          s.tutorial.tem &&
+          s.rookguardQuest.trainingComplete;
+
+        if (!readyForCodex) {
+          send(s.ws, ServerMessages.error('invalid_message', 'vocation_requires_rookguard_codex_path'));
+          sendLoopUpdate(s, 'rookguard_profession_not_ready');
+          break;
+        }
 
         const cosmetics = VOCATION_COSMETICS[vocation];
+        const codexProfession = ROOKGUARD_CODEX_PROFESSIONS[vocation];
 
         // Update badges for visual purposes only (identity truth comes from getIdentity())
         // Additive: filter old vocation_* badges, then add new badge
@@ -5023,10 +5090,18 @@ function processSessionQueue(s: Session, now: number) {
         audit.write({
           player_id: s.player.id,
           action: VOCATION_DECLARED_ACTION,
-          inputs: { vocation, badge: cosmetics.badge },
+          inputs: {
+            vocation,
+            badge: cosmetics.badge,
+            codex_lore_id: codexProfession.lore_id,
+            codex_title: codexProfession.title,
+            starter_role: codexProfession.starter_role,
+          },
           result: 'ok',
         });
-        // Badge is part of PlayerPublic, will sync on next world_state
+        s.rookguardQuest.vocation = vocation;
+        sendWorldStateRefresh(s);
+        sendLoopUpdate(s, 'rookguard_profession_declared');
         break;
       }
 

@@ -371,6 +371,17 @@ export interface SimLifeGameplanStep {
   receipt_actions: string[];
 }
 
+export interface SimLifeRookguardGameplanStep {
+  from_minute: number;
+  to_minute: number;
+  title: string;
+  player_goal: string;
+  server_state_touched: string[];
+  receipt_actions: string[];
+  anti_cheat_notes: string;
+  playtest_check: string;
+}
+
 export interface SimLifeSnapshotResponse {
   ok: true;
   mode: 'sim_life_viewer_v1';
@@ -393,6 +404,7 @@ export interface SimLifeSnapshotResponse {
   agents: SimLifeAgentSnapshot[];
   timeline: SimLifeFrame[];
   first_5min_gameplan: SimLifeGameplanStep[];
+  rookguard_0_30_gameplan: SimLifeRookguardGameplanStep[];
   receipt_actions_covered: string[];
 }
 

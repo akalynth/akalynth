@@ -1,4 +1,4 @@
-import type { Direction, MapData, PlayerPublic, PlayerStatus, PlayLoopProgress } from '@shared/types';
+import type { Direction, MapData, PlayerPublic, PlayerStatus, PlayLoopProgress, SovereignVocation } from '@shared/types';
 import type {
   AccountCharacterCreateRequest,
   AccountCharacterOutfitOption,
@@ -163,6 +163,7 @@ export interface GameClientApi {
   sendAttack: () => void;
   castRunestone: () => void;
   talkToNpc: (npcId: string) => void;
+  declareVocation: (vocation: SovereignVocation) => void;
   useSkill: (skillId: string) => void;
   pickupItem: (itemId: string) => void;
   startWork: () => void;

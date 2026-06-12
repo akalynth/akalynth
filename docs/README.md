@@ -139,6 +139,8 @@ Core docs:
 - [Manifesto](./MANIFESTO.md) - narrative manifesto: the world's tone, the Ledger, and why it endures
 - [World: High City](./WORLD_HIGH_CITY.md) - first-city layout, spawn zone, landmarks
 - [World: Rookguard](./WORLD_ROOKGUARD.md) - mandatory 32×32 onboarding/training map
+- [Rookguard First 30 Minutes v1](./ROOKGUARD_FIRST_30_MINUTES_V1.md) - 0-30 minute onboarding experience and sim-visible game plan
+- [Rookguard City Expansion v1](./ROOKGUARD_CITY_EXPANSION_V1.md) - plaza/guild/profession/training/Codex landmarks and first wiring slice
 - [World Evolution](./WORLD_EVOLUTION.md) - epochs, sunsets, and founder-absence survival rules
 - [Akalynth Lore Bible](./AKALYNTH_LORE_BIBLE.md) - current lore authority and naming boundary
 - [Drop Source Index](./DROP_SOURCE_INDEX.md) - imported source material for future lore/gameplay/assets; not runtime authority
@@ -149,7 +151,7 @@ Verification, governance, and proof docs:
 - [Verification Spine API v1](./VERIFICATION_SPINE_API.md) - the mandatory pre-merge verification system contract
 - [Spine Lock v1](./SPINE_V1.md) - locked spine surface and verifier registration rules
 - [Simulation Lane Runbook](./SIM_LANE_RUNBOOK.md) - `sim-api.akalynth.com` / `sim.akalynth.com` lane contract, state custody, and verification steps
-- [Sim Life Viewer v1](./SIM_LIFE_VIEWER_V1.md) - first-five-minute visible-agent dashboard and `/v1/sim/snapshot` contract
+- [Sim Life Viewer v1](./SIM_LIFE_VIEWER_V1.md) - visible-agent dashboard, Rookguard 0-30 gameplan, and `/v1/sim/snapshot` contract
 - [Governance Invariants](./GOVERNANCE_INVARIANTS.md) - civil guarantees and auditability constraints
 - [Repo Hygiene Architecture](./REPO_HYGIENE_ARCHITECTURE.md) - root/doc/archive/drop cleanup rules
 - [Constitutional Amendment Process](./CONSTITUTIONAL_AMENDMENTS.md) - formal process for modifying constitutional files

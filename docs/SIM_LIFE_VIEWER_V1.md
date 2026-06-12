@@ -22,8 +22,9 @@ The endpoint returns:
 
 - sim agents with `agent_id`, role, map, position, intent, gold, inventory count,
   status, and last receipt link;
-- timeline frames for the first five minutes;
+- timeline frames across the 30-minute sim playback window;
 - first-five-minute gameplan rows;
+- Rookguard 0-30 minute gameplan rows;
 - speed controls supported by the dashboard: pause, `1x`, `10x`, `100x`;
 - hash-linked simulated receipt records for every visible frame.
 
@@ -39,6 +40,21 @@ no client gold, and no client receipt claims.
 | 2 | Loot enters inventory and changes the visible item count. | `item_minted`, `item_added_to_inventory` |
 | 3 | Property and auction economy become visible in Azura. | `wallet_debit`, `property_bid`, `property_auction_settled` |
 | 4 | Combat/death risk, item drop, and world-event contribution close the loop. | `combat_resolved`, `death`, `item_dropped_to_world`, `world_event_contribution` |
+
+## Rookguard 0-30min Gameplan
+
+The dashboard renders the 30-minute Rookguard experience from
+`rookguard_0_30_gameplan`. The plan is documented in
+`docs/ROOKGUARD_FIRST_30_MINUTES_V1.md` and covers:
+
+- movement proof;
+- local chat proof;
+- Tem challenge proof;
+- runestone ritual proof;
+- legend stone refusal proof;
+- training slime starter-combat proof;
+- profession/vocation declaration proof with Heroes Codex framing;
+- gate completion proof.
 
 ## Authority Boundary
 
@@ -56,4 +72,5 @@ no client gold, and no client receipt claims.
 3. Select `1x`, `10x`, and `100x`.
 4. Confirm agents move only between receipt-backed frames.
 5. Confirm each agent card shows intent, gold, inventory count, and receipt hash.
-6. Confirm `https://sim-api.akalynth.com/v1/sim/snapshot` returns HTTP `200`.
+6. Confirm the plan header reads `Rookguard 0-30min Gameplan`.
+7. Confirm `https://sim-api.akalynth.com/v1/sim/snapshot` returns HTTP `200`.
