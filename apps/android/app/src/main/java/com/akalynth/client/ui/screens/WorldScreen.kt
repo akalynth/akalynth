@@ -58,6 +58,9 @@ fun WorldScreen(
             playerName = state.session.playerName,
             me = state.world.me,
             playerCount = state.world.otherPlayers.size,
+            gold = state.economy.gold,
+            propertyCount = state.economy.properties.size,
+            propertyStatus = propertyStatusLabel(state.economy.lastPropertyResult),
             connectionState = state.connection,
             modifier = Modifier.align(Alignment.TopStart)
         )
@@ -213,6 +216,21 @@ private fun rememberNowMs(): Long {
         }
     }
     return nowMs
+}
+
+private fun propertyStatusLabel(status: com.akalynth.client.game.PropertyResultStatus?): String? {
+    if (status == null) return null
+    val action = when (status.action) {
+        "buy_house" -> "Buy"
+        "list_house" -> "List"
+        "unlist_house" -> "Unlist"
+        else -> status.action
+    }
+    return if (status.success) {
+        "$action ${status.propertyId}: ok"
+    } else {
+        "$action ${status.propertyId}: ${status.reason ?: "failed"}"
+    }
 }
 
 private fun copyTextToClipboard(

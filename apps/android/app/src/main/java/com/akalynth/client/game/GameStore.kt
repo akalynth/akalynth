@@ -361,7 +361,7 @@ class GameStore(
             is EvidenceSnapshotMessage -> {}
             is PressureMetricsSnapshotMessage -> {}
             is PlayerInspectMessage -> {}
-            is WalletSnapshotMessage -> {}
+            is WalletSnapshotMessage -> handleWalletSnapshot(msg)
             is TitheResultMessage -> {}
             is WorkContractStartedMessage -> {}
             is WorkProgressMessage -> {}
@@ -371,10 +371,10 @@ class GameStore(
             is SkillResultMessage -> {}
             is ModReportsSnapshotMessage -> {}
             is ModResolveResultMessage -> {}
-            is PropertySnapshotMessage -> {}
-            is PropertyStateMessage -> {}
+            is PropertySnapshotMessage -> handlePropertySnapshot(msg)
+            is PropertyStateMessage -> handlePropertyState(msg)
             is HouseSoldMessage -> {}
-            is PropertyResultMessage -> {}
+            is PropertyResultMessage -> handlePropertyResult(msg)
             is PropertyLedgerMessage -> {}
             is PropertyAuctionStateMessage -> {}
             is HouseAuctionSettledMessage -> {}
@@ -513,6 +513,45 @@ class GameStore(
     private fun handlePlayerLeft(msg: PlayerLeftMessage) {
         val others = _state.value.world.otherPlayers - msg.playerId
         _state.update { it.copy(world = it.world.copy(otherPlayers = others)) }
+    }
+
+    private fun handleWalletSnapshot(msg: WalletSnapshotMessage) {
+        _state.update { it.copy(economy = it.economy.copy(gold = msg.gold)) }
+    }
+
+    private fun handlePropertySnapshot(msg: PropertySnapshotMessage) {
+        _state.update {
+            it.copy(
+                economy = it.economy.copy(
+                    properties = msg.properties.associateBy { property -> property.propertyId }
+                )
+            )
+        }
+    }
+
+    private fun handlePropertyState(msg: PropertyStateMessage) {
+        _state.update {
+            it.copy(
+                economy = it.economy.copy(
+                    properties = it.economy.properties + (msg.property.propertyId to msg.property)
+                )
+            )
+        }
+    }
+
+    private fun handlePropertyResult(msg: PropertyResultMessage) {
+        _state.update {
+            it.copy(
+                economy = it.economy.copy(
+                    lastPropertyResult = PropertyResultStatus(
+                        action = msg.action,
+                        propertyId = msg.propertyId,
+                        success = msg.success,
+                        reason = msg.reason
+                    )
+                )
+            )
+        }
     }
 
     private fun inspectWallet() {
