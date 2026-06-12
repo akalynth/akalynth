@@ -153,6 +153,10 @@ if ! grep -Fq ':app:compileDebugAndroidTestKotlin' "$ROOT_DIR/package.json"; the
   die "Root verify:account-character must compile Android character UI androidTest sources."
 fi
 
+if ! grep -Fq 'npm run verify:account-character' "$ROOT_DIR/.github/workflows/verify.yml"; then
+  die "GitHub verification workflow must run npm run verify:account-character."
+fi
+
 if ! grep -Fq "run('npm', ['run', 'test:web-economy']);" "$ROOT_DIR/apps/server/tools/verify-server.mjs"; then
   die "Server verify:quick must include test:web-economy gameplay route proof."
 fi
