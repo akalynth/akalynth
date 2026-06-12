@@ -530,6 +530,14 @@ NPC dialogue error response.
 #### `skill_result`
 
 Utility/admin skill result.
+For onward-route skills, successful results echo the completed `skill_id` with
+route-owned payload fields such as `title`, `next_objective`, and optional
+status markers including `quality`, `gate_state`, or `route_state`. Browser and
+Android clients must treat this payload as server-authored feedback only and
+must not infer travel, wallet, inventory, heat, or position changes from it.
+Locked, out-of-order, duplicate, or otherwise unavailable route actions return
+`success: false` with `reason: "invalid_target"` and no route side-effect
+receipt.
 
 #### `mod_reports_snapshot`
 
