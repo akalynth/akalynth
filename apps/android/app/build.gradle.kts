@@ -25,6 +25,7 @@ android {
             buildConfigField("String", "WS_BASE_URL", "\"ws://10.0.2.2:3000\"")
             buildConfigField("String", "HTTP_BASE_URL", "\"http://10.0.2.2:3000\"")
             buildConfigField("String", "PORTAL_ACCOUNT_URL", "\"http://10.0.2.2:8099/account.html\"")
+            buildConfigField("String", "FDROID_REPO_URL", "\"https://fdroid.akalynth.com/fdroid/repo\"")
         }
         create("beta") {
             // Beta server: wss://beta-api.akalynth.com
@@ -33,6 +34,7 @@ android {
             buildConfigField("String", "WS_BASE_URL", "\"wss://beta-api.akalynth.com\"")
             buildConfigField("String", "HTTP_BASE_URL", "\"https://beta-api.akalynth.com\"")
             buildConfigField("String", "PORTAL_ACCOUNT_URL", "\"https://beta.akalynth.com/account.html\"")
+            buildConfigField("String", "FDROID_REPO_URL", "\"https://fdroid.akalynth.com/fdroid/repo\"")
         }
         create("staging") {
             // Staging server: wss://staging-api.akalynth.com
@@ -41,6 +43,7 @@ android {
             buildConfigField("String", "WS_BASE_URL", "\"wss://staging-api.akalynth.com\"")
             buildConfigField("String", "HTTP_BASE_URL", "\"https://staging-api.akalynth.com\"")
             buildConfigField("String", "PORTAL_ACCOUNT_URL", "\"https://staging.akalynth.com/account.html\"")
+            buildConfigField("String", "FDROID_REPO_URL", "\"https://fdroid.akalynth.com/fdroid/repo\"")
         }
         release {
             isMinifyEnabled = true
@@ -51,6 +54,7 @@ android {
             buildConfigField("String", "WS_BASE_URL", "\"wss://api.akalynth.com\"")
             buildConfigField("String", "HTTP_BASE_URL", "\"https://api.akalynth.com\"")
             buildConfigField("String", "PORTAL_ACCOUNT_URL", "\"https://akalynth.com/account.html\"")
+            buildConfigField("String", "FDROID_REPO_URL", "\"https://fdroid.akalynth.com/fdroid/repo\"")
         }
     }
 
