@@ -7,7 +7,7 @@ import type Database from 'better-sqlite3';
 // Schema Version
 // ============================================================================
 
-export const SCHEMA_VERSION = 19;
+export const SCHEMA_VERSION = 20;
 
 // ============================================================================
 // DDL Statements
@@ -308,6 +308,7 @@ CREATE TABLE IF NOT EXISTS accounts (
   password_hash   TEXT NOT NULL,
   email_verified  INTEGER NOT NULL DEFAULT 0,
   status          TEXT NOT NULL DEFAULT 'registered_unverified',
+  roles           TEXT NOT NULL DEFAULT '["player"]',
   created_at      TEXT NOT NULL,
   created_receipt TEXT DEFAULT NULL,
   updated_at      TEXT DEFAULT NULL
@@ -614,6 +615,9 @@ function runMigration(db: Database.Database, version: number): void {
     case 19:
       migrateToV19(db);
       break;
+    case 20:
+      migrateToV20(db);
+      break;
     default:
       throw new Error(`Unknown schema version: ${version}`);
   }
@@ -891,6 +895,22 @@ function migrateToV19(db: Database.Database): void {
     'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
   );
   insertMeta.run('schema_version', '19');
+}
+
+function migrateToV20(db: Database.Database): void {
+  // Account roles v1: add a roles column to accounts (JSON array of role strings),
+  // default '["player"]'. Enables admin/operator/builder/agent gating of the Codex
+  // operator surfaces. Additive + idempotent; no existing rows are modified.
+  const columns = db.prepare(`PRAGMA table_info(accounts)`).all() as Array<{ name: string }>;
+  const hasRoles = columns.some((c) => c.name === 'roles');
+  if (!hasRoles) {
+    db.exec(`ALTER TABLE accounts ADD COLUMN roles TEXT NOT NULL DEFAULT '["player"]';`);
+  }
+
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', '20');
 }
 
 function ensureWorldEventEvidenceColumns(db: Database.Database): void {

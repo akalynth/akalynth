@@ -64,6 +64,8 @@
     "test:web-economy": "tsx tools/verify-web-economy.test.ts",
     "test:cors": "tsx tools/verify-cors.test.ts",
     "test:account-email": "tsx tools/verify-account-email.test.ts",
+    "test:account-roles": "tsx tools/verify-account-roles.test.ts",
+    "grant:account-role": "tsx tools/grant-account-role.ts",
     "test:principal-seal": "tsx tools/verify-principal-identity-seal.test.ts"
   },
   "dependencies": {

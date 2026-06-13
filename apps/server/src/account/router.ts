@@ -15,6 +15,9 @@ function send(res: ServerResponse, r: AccountResponse): void {
   res.statusCode = r.status;
   res.setHeader('content-type', 'application/json; charset=utf-8');
   if (r.cookies && r.cookies.length) res.setHeader('Set-Cookie', r.cookies);
+  if (r.headers) {
+    for (const [k, v] of Object.entries(r.headers)) res.setHeader(k, v);
+  }
   res.end(JSON.stringify(r.body));
 }
 
@@ -102,6 +105,15 @@ export function makeAccountRouter(deps: AccountRouterDeps) {
     }
     if (path === '/v1/accounts/me' && method === 'GET') {
       send(res, service.me(ctx(req)));
+      return true;
+    }
+    if (path === '/v1/accounts/authorize' && method === 'GET') {
+      // Caddy forward_auth gate for operator Codex surfaces. surface from query;
+      // original path from the X-Forwarded-Uri header Caddy sets on the subrequest.
+      const url = new URL(req.url ?? '/', 'http://localhost');
+      const surface = url.searchParams.get('surface') ?? '';
+      const requestedUri = header(req, 'x-forwarded-uri') ?? '';
+      send(res, service.authorize(ctx(req), surface, requestedUri));
       return true;
     }
     if (path === '/v1/accounts/password-reset/request' && method === 'POST') {

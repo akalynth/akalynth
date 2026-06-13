@@ -290,6 +290,7 @@ export interface AccountRow {
   password_hash: string; // Argon2id encoded string (salt + params embedded)
   email_verified: number; // 0 | 1 (SQLite boolean)
   status: AccountStatus;
+  roles: string; // JSON array of role strings, e.g. '["player"]' or '["operator"]'
   created_at: string; // ISO8601
   created_receipt: string | null; // account_created receipt hash
   updated_at: string | null; // ISO8601
