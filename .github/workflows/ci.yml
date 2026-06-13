@@ -487,7 +487,9 @@ jobs:
     permissions:
       contents: read
     needs: [changes]
-    if: (github.event_name == 'push' || needs.changes.outputs.full_ci_required == 'true') && github.server_url == 'https://github.com'
+    # Runs on both GitHub and the self-hosted Gitea runner (KVM + Android SDK prepped below).
+    # Artifact upload stays GitHub-only (see the upload step) since Gitea artifact storage differs.
+    if: github.event_name == 'push' || needs.changes.outputs.full_ci_required == 'true'
 
     steps:
       - uses: actions/checkout@v4
