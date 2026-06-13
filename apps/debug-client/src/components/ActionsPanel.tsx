@@ -1,4 +1,5 @@
 import type { PlayLoopProgress, SovereignVocation } from '@shared/types';
+import { respectRankForReputation } from '@shared/types';
 import {
   isUsableItemType,
   itemLabel,
@@ -115,6 +116,7 @@ interface ActionsPanelProps {
   objectiveLabel: string;
   inventory: InventoryItemRef[];
   gold: number;
+  reputation: number;
 }
 
 export function ActionsPanel({
@@ -142,7 +144,9 @@ export function ActionsPanel({
   objectiveLabel,
   inventory,
   gold,
+  reputation,
 }: ActionsPanelProps) {
+  const respectRank = respectRankForReputation(reputation);
   const inGuildHall = nearbyNpc?.npc_id === 'azura_steward';
   const inRookguardProfessionHall = nearbyNpc?.npc_id === 'rookguard_steward';
   const rookguardQuest = loop?.rookguardQuest ?? null;
@@ -376,6 +380,7 @@ export function ActionsPanel({
         )}
       </div>
       {gold > 0 && <div className="gold-display">Gold: {gold}</div>}
+      <div className="gold-display">Respect: {respectRank} ({reputation})</div>
       {nearLegendStone && (
         <div className="legend-stone-hint">A legend stone pulses nearby. It refuses approach.</div>
       )}

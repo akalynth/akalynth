@@ -208,6 +208,17 @@ export interface PlayerPublic {
   loop?: PlayLoopProgress;
 }
 
+export type RespectRank = 'Frayed' | 'Unproven' | 'Known' | 'Trusted' | 'Honored';
+
+export function respectRankForReputation(reputation: number | undefined | null): RespectRank {
+  const value = Number.isFinite(reputation) ? Number(reputation) : 0;
+  if (value <= -5) return 'Frayed';
+  if (value < 3) return 'Unproven';
+  if (value < 10) return 'Known';
+  if (value < 25) return 'Trusted';
+  return 'Honored';
+}
+
 // ============================================================================
 // Map Data
 // ============================================================================

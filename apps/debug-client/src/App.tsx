@@ -3,6 +3,7 @@ import type { MapName } from '@shared/http';
 import { displayMapName } from '@shared/http';
 import type { ChronicleEvent } from '@shared/protocol';
 import type { MapData, PlayerPublic } from '@shared/types';
+import { respectRankForReputation } from '@shared/types';
 import { useGameClient } from './hooks/useGameClient';
 import { useExistenceMode } from './hooks/useExistenceMode';
 import { MapCanvas } from './components/MapCanvas';
@@ -367,6 +368,8 @@ function DebugApp() {
       ? Math.max(0, Math.min(100, Math.round((meHp / meMaxHp) * 100)))
       : 100;
   const isDead = state.world.me?.status === 'dead';
+  const respectValue = state.world.me?.reputation ?? 0;
+  const respectRank = respectRankForReputation(respectValue);
   const playerPositionLabel = state.world.me ? `${state.world.me.x},${state.world.me.y}` : '--';
   const showMobilePlayEntry = phoneLandscape && (state.ui.stage < 1 || !state.world.me);
   // Latch a blocking death popup; only the player dismisses it by signing back in.
@@ -731,6 +734,10 @@ function DebugApp() {
                 </div>
               </div>
               <div>
+                <span>Respect</span>
+                <strong>{respectRank} ({respectValue})</strong>
+              </div>
+              <div>
                 <span>Link</span>
                 <strong>{state.conn.phase}</strong>
               </div>
@@ -825,6 +832,7 @@ function DebugApp() {
               objectiveLabel={objectiveLabel}
               inventory={state.inventory}
               gold={state.gold}
+              reputation={respectValue}
             />
           </div>
         </section>
