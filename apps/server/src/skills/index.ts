@@ -36,6 +36,7 @@ import {
   handleDreamGateTraversalAuthorization,
   handleDreamGateArrivalRecord,
   handleForgeholdShipmentInvestigation,
+  handleRookguardCanalFishing,
 } from './handlers.js';
 
 // ============================================================================
@@ -265,6 +266,9 @@ async function executeSkill(
 
     case 'route:quest:shipment':
       return handleForgeholdShipmentInvestigation(ctx);
+
+    case 'activity:fishing:rookguard':
+      return handleRookguardCanalFishing(ctx);
 
     default:
       return { success: false, reason: 'invalid_skill' };

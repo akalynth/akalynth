@@ -28,6 +28,7 @@ const WITNESS_MOTH_ACTIONS = [
 ] as const;
 
 const ROUTE_ACTIONS = [
+  { skill_id: 'activity:fishing:rookguard', label: 'Fish Rookguard canal', short: 'Fish' },
   { skill_id: 'route:survey:forgehold', label: 'Survey Forgehold', short: 'Forge' },
   { skill_id: 'route:survey:moonspire', label: 'Survey Dream Gate', short: 'Dream' },
   { skill_id: 'route:safety:forgehold', label: 'Review Forgehold Safety', short: 'FSafe' },
@@ -54,7 +55,7 @@ const ROUTE_ACTION_BY_ID = new Map<RouteActionId, typeof ROUTE_ACTIONS[number]>(
 );
 
 function routeActionIdsFor(onwardRoutes: NonNullable<PlayLoopProgress['onwardRoutes']>): RouteActionId[] {
-  const ids: RouteActionId[] = [];
+  const ids: RouteActionId[] = ['activity:fishing:rookguard'];
   for (const route of onwardRoutes) {
     if (route.status !== 'available') continue;
     const completed = new Set(route.completed_objective_ids);

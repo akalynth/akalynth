@@ -27,7 +27,8 @@ export type SkillId =
   | 'route:dream:arrive'
   | 'route:dream:interpret'
   | 'route:dream:fragment'
-  | 'route:quest:shipment';
+  | 'route:quest:shipment'
+  | 'activity:fishing:rookguard';
 
 export type SkillTarget = 'self' | 'player' | 'none';
 
@@ -221,6 +222,14 @@ export const SKILL_REGISTRY: Record<SkillId, SkillDefinition> = {
     gold_cost: 0,
     debug_only: false,
   },
+  'activity:fishing:rookguard': {
+    id: 'activity:fishing:rookguard',
+    name: 'Fish the Rookguard canal',
+    cooldown_ms: 20_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
 };
 
 export const SKILL_IDS = Object.keys(SKILL_REGISTRY) as SkillId[];
@@ -261,6 +270,7 @@ export const DREAM_GATE_ARRIVAL_RECORDED_ACTION = 'dream_gate_arrival_recorded';
 export const DREAM_GATE_INTERPRETED_ACTION = 'dream_gate_interpreted';
 export const DREAM_FRAGMENT_ANCHORED_ACTION = 'dream_fragment_anchored';
 export const FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION = 'forgehold_shipment_investigated';
+export const ROOKGUARD_CANAL_FISHED_ACTION = 'rookguard_canal_fished';
 
 // Moderation v1: Resolution receipt action
 export const MODERATION_RESOLVED_ACTION = 'moderation_resolved';

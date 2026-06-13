@@ -20,6 +20,7 @@ import {
   SOULSTEEL_STABILIZED_ACTION,
   DREAM_GATE_INTERPRETED_ACTION,
   FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION,
+  ROOKGUARD_CANAL_FISHED_ACTION,
 } from '../../../../packages/shared/skills.js';
 import { createHash } from 'node:crypto';
 
@@ -156,6 +157,59 @@ export function handleReport(ctx: SkillContext, targetId: string): SkillResult {
       reported: true,
       target_id: targetId,
       case_id: caseId,
+    },
+  };
+}
+
+// ============================================================================
+// activity:fishing:rookguard: Non-economy chill activity with receipt proof
+// ============================================================================
+
+export function handleRookguardCanalFishing(ctx: SkillContext): SkillResult {
+  const fishedAt = new Date().toISOString();
+  const activityId = 'rookguard_canal_fishing_v1';
+  const catchState = 'nothing_tradeable';
+  const respectDelta = 1;
+  const activityGuard = {
+    wallet_debit_gold: 0,
+    wallet_credit_gold: 0,
+    item_mint: false,
+    item_transfer: false,
+    xp_awarded: 0,
+    travel_unlocked: false,
+    heat_changed: false,
+    penalty_applied: false,
+  };
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: ROOKGUARD_CANAL_FISHED_ACTION,
+    inputs: {
+      activity_id: activityId,
+      place_id: 'rookguard_canal',
+      fished_at: fishedAt,
+      catch_state: catchState,
+      respect_delta: respectDelta,
+      activity_guard: activityGuard,
+      economy_impact: 'none',
+    },
+    result: 'ok',
+  });
+
+  return {
+    success: true,
+    payload: {
+      activity_id: activityId,
+      title: 'Rookguard Canal Fishing',
+      status: 'reflected',
+      place_id: 'rookguard_canal',
+      catch_state: catchState,
+      respect_delta: respectDelta,
+      line: 'You fish beside the Rookguard canal. Nothing worth selling bites, but the town notices patience.',
+      next_objective: 'Repeat quiet activities for social texture; economy rewards stay locked behind explicit receipts.',
+      receipt_action: ROOKGUARD_CANAL_FISHED_ACTION,
+      activity_guard: activityGuard,
+      economy_impact: 'none',
     },
   };
 }
