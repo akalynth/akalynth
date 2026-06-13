@@ -37,6 +37,7 @@ class CharacterCreateActivity : Activity() {
     private lateinit var accountPortalButton: Button
     private lateinit var selectButton: Button
     private lateinit var createButton: Button
+    private lateinit var changeOutfitButton: Button
     private lateinit var progress: ProgressBar
     private lateinit var statusText: TextView
     private lateinit var characterSpinner: Spinner
@@ -125,7 +126,13 @@ class CharacterCreateActivity : Activity() {
             isEnabled = false
             onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                    selectedCharacterId = characters.getOrNull(position)?.characterId
+                    val character = characters.getOrNull(position)
+                    selectedCharacterId = character?.characterId
+                    if (character != null) {
+                        selectedSex = character.sex
+                        sexSpinner.setSelection(if (character.sex.equals("female", ignoreCase = true)) 1 else 0)
+                        refreshOutfitSpinner(character.outfitId)
+                    }
                     refreshCreateEnabled()
                 }
 
@@ -208,6 +215,12 @@ class CharacterCreateActivity : Activity() {
             isEnabled = false
         }
 
+        changeOutfitButton = Button(this).apply {
+            text = "Save Outfit For Selected"
+            setOnClickListener { onChangeOutfitTapped() }
+            isEnabled = false
+        }
+
         progress = ProgressBar(this).apply {
             visibility = View.GONE
         }
@@ -238,6 +251,7 @@ class CharacterCreateActivity : Activity() {
         root.addView(TextView(this).apply { text = "Outfit"; textSize = 12f },
             LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
         root.addView(outfitSpinner, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+        root.addView(changeOutfitButton, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
         root.addView(createButton, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
         root.addView(progress, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
         root.addView(statusText, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
@@ -340,6 +354,44 @@ class CharacterCreateActivity : Activity() {
                                 connectWsAndLogin(result.token)
                             }
                             is IdentityApi.CharacterCreateResult.Error -> {
+                                setLoading(false)
+                                setStatus(mapError(result.code, result.message))
+                            }
+                        }
+                    }
+                }
+            }
+        )
+    }
+
+    private fun onChangeOutfitTapped() {
+        if (busy) return
+        val characterId = selectedCharacterId
+        val outfitId = selectedOutfitId
+        if (characterId.isNullOrBlank() || outfitId.isNullOrBlank()) {
+            setStatus("Select a character and outfit first.")
+            return
+        }
+        if (!identityApi.hasAccountSession()) {
+            setStatus("Sign in required to change outfit.")
+            return
+        }
+
+        setLoading(true)
+        setStatus("Saving outfit...")
+        identityApi.updateCharacterOutfit(
+            characterId = characterId,
+            outfitId = outfitId,
+            callback = object : IdentityApi.OutfitUpdateCallback {
+                override fun onResult(result: IdentityApi.CharacterOutfitResult) {
+                    mainHandler.post {
+                        when (result) {
+                            is IdentityApi.CharacterOutfitResult.Success -> {
+                                setLoading(false)
+                                setStatus("Outfit saved for ${result.character.name.ifBlank { result.character.characterId }}.")
+                                loadCharacters()
+                            }
+                            is IdentityApi.CharacterOutfitResult.Error -> {
                                 setLoading(false)
                                 setStatus(mapError(result.code, result.message))
                             }
@@ -490,8 +542,8 @@ class CharacterCreateActivity : Activity() {
         })
     }
 
-    private fun refreshOutfitSpinner() {
-        val selectedOutfit = selectedOutfitId
+    private fun refreshOutfitSpinner(selectedOutfitOverride: String? = null) {
+        val selectedOutfit = selectedOutfitOverride ?: selectedOutfitId
         filteredOutfits.clear()
         filteredOutfits.addAll(
             outfits.filter { it.sex.equals(selectedSex, ignoreCase = true) }
@@ -615,12 +667,14 @@ class CharacterCreateActivity : Activity() {
         loginButton.isEnabled = !busy
         accountPortalButton.isEnabled = !busy
         selectButton.isEnabled = hasAccount && !busy && selectedCharacterId != null
+        changeOutfitButton.isEnabled = hasAccount && !busy && selectedCharacterId != null && selectedOutfitId != null
 
         val nameReady = nameInput.text?.toString()?.trim()?.isNotBlank() == true
         val canCreate = hasAccount && accountEmailVerified && !busy && nameReady && selectedWorldId != null && selectedOutfitId != null
         createButton.text = "Create Character"
         createButton.isEnabled = canCreate
         selectButton.text = if (selectedCharacterId != null) "Play Selected Character" else "No Character Selected"
+        changeOutfitButton.text = if (selectedCharacterId != null) "Save Outfit For Selected" else "Select Character Before Outfit Save"
         nameInput.isEnabled = !busy
         emailInput.isEnabled = !busy
         passwordInput.isEnabled = !busy
