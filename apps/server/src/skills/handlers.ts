@@ -934,6 +934,12 @@ export function handleForgeholdShipmentInvestigation(ctx: SkillContext): SkillRe
   const evidenceObjects = ['broken_route_seal', 'charred_shipment_plate'];
   const contradiction = 'departed / undeparted';
   const routeState = 'investigating';
+  const authorityGuard = {
+    travel_unlocked: false,
+    economy_impact: 'none',
+    heat_changed: false,
+    penalty_applied: false,
+  };
 
   ctx.audit({
     player_id: ctx.playerId,
@@ -948,6 +954,7 @@ export function handleForgeholdShipmentInvestigation(ctx: SkillContext): SkillRe
       investigated_at: investigatedAt,
       travel_unlocked: false,
       economy_impact: 'none',
+      authority_guard: authorityGuard,
     },
     result: 'ok',
   });
@@ -967,6 +974,7 @@ export function handleForgeholdShipmentInvestigation(ctx: SkillContext): SkillRe
       receipt_action: FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION,
       travel_unlocked: false,
       economy_impact: 'none',
+      authority_guard: authorityGuard,
     },
   };
 }
