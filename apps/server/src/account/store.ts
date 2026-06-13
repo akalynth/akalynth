@@ -17,8 +17,10 @@ export class AccountStore {
 
   insertAccount(row: {
     account_id: string;
-    email: string;
-    email_lower: string;
+    email: string | null;
+    email_lower: string | null;
+    handle: string | null;
+    handle_lower: string | null;
     password_hash: string;
     status: AccountStatus;
     created_at: string;
@@ -26,14 +28,18 @@ export class AccountStore {
   }): void {
     this.db
       .prepare(
-        `INSERT INTO accounts (account_id, email, email_lower, password_hash, email_verified, status, created_at, created_receipt, updated_at)
-         VALUES (@account_id, @email, @email_lower, @password_hash, 0, @status, @created_at, @created_receipt, @created_at)`,
+        `INSERT INTO accounts (account_id, email, email_lower, handle, handle_lower, password_hash, email_verified, status, created_at, created_receipt, updated_at)
+         VALUES (@account_id, @email, @email_lower, @handle, @handle_lower, @password_hash, 0, @status, @created_at, @created_receipt, @created_at)`,
       )
       .run(row);
   }
 
   findByEmailLower(emailLower: string): AccountRow | undefined {
     return this.db.prepare(`SELECT * FROM accounts WHERE email_lower = ?`).get(emailLower) as AccountRow | undefined;
+  }
+
+  findByHandleLower(handleLower: string): AccountRow | undefined {
+    return this.db.prepare(`SELECT * FROM accounts WHERE handle_lower = ?`).get(handleLower) as AccountRow | undefined;
   }
 
   findById(accountId: string): AccountRow | undefined {
@@ -50,6 +56,13 @@ export class AccountStore {
     this.db
       .prepare(`UPDATE accounts SET password_hash = ?, updated_at = ? WHERE account_id = ?`)
       .run(passwordHash, whenIso, accountId);
+  }
+
+  /** Replace an account's roles (rolesJson = JSON array of role strings). */
+  setRoles(accountId: string, rolesJson: string, whenIso: string): void {
+    this.db
+      .prepare(`UPDATE accounts SET roles = ?, updated_at = ? WHERE account_id = ?`)
+      .run(rolesJson, whenIso, accountId);
   }
 
   // ---- email verifications ----

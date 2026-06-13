@@ -16,6 +16,12 @@ export interface PathConfig {
   requireKey?: boolean; // if true, throw if key not configured
 }
 
+export const RECEIPT_CHAIN_PATH_ENV = 'AKALYNTH_RECEIPT_CHAIN_PATH';
+export const LEGACY_RECEIPTS_PATH_ENV = 'AKALYNTH_RECEIPTS_PATH';
+export const DB_PATH_ENV = 'AKALYNTH_DB_PATH';
+export const REPLAY_MARKER_PATH_ENV = 'AKALYNTH_REPLAY_MARKER_PATH';
+export const CHRONICLE_KEY_PATH_ENV = 'CHRONICLE_KEY_PATH';
+
 /**
  * True if NODE_ENV=production OR AKALYNTH_ENV=production
  */
@@ -45,16 +51,16 @@ export function resolveChainPaths(
   config?: PathConfig
 ): ChainPaths {
   const receiptsRel =
-    process.env.AKALYNTH_RECEIPT_CHAIN_PATH ??
-    process.env.AKALYNTH_RECEIPTS_PATH ??
+    process.env[RECEIPT_CHAIN_PATH_ENV] ??
+    process.env[LEGACY_RECEIPTS_PATH_ENV] ??
     'audit/receipts.jsonl';
 
-  const keyRel = process.env.CHRONICLE_KEY_PATH ?? null;
+  const keyRel = process.env[CHRONICLE_KEY_PATH_ENV] ?? null;
 
   // These defaults match runtime conventions
-  const dbRel = process.env.AKALYNTH_DB_PATH ?? 'data/akalynth.db';
+  const dbRel = process.env[DB_PATH_ENV] ?? 'data/akalynth.db';
   const markerRel =
-    process.env.AKALYNTH_REPLAY_MARKER_PATH ?? 'data/replay_marker.json';
+    process.env[REPLAY_MARKER_PATH_ENV] ?? 'data/replay_marker.json';
 
   const receiptsPath = path.resolve(repoRoot, receiptsRel);
   const dbPath = path.resolve(repoRoot, dbRel);

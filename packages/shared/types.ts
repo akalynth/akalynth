@@ -510,7 +510,8 @@ export type WalletCreditReason =
   // Auction lane: escrow is represented by receipt sequence + derived balance
   // state, not a treasury escrow ledger.
   | `auction_refund:${string}`   // Outbid bidder made whole (auction_refund:<property_id>)
-  | `auction_sale:${string}`;    // Resale auction: seller credited on settle (auction_sale:<property_id>)
+  | `auction_sale:${string}`     // Resale auction: seller credited on settle (auction_sale:<property_id>)
+  | `forgehold_payout:${string}`; // Forgehold route payout (forgehold_payout:<settlement_id>)
 
 export type WalletDebitReason =
   | 'temple_tithe'                  // Sink: voluntary tithe

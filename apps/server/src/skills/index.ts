@@ -4,6 +4,7 @@
 import type { WebSocket } from 'ws';
 import type { Player, AntiCheatState } from '../../../../packages/shared/types.js';
 import type { UseSkillMessage, SkillRejectionReason } from '../../../../packages/shared/protocol.js';
+import type { OnwardRouteReceiptProgress } from '../world/onwardRoutes.js';
 import { ServerMessages } from '../../../../packages/shared/protocol.js';
 import {
   SKILL_REGISTRY,
@@ -19,9 +20,21 @@ import {
   handlePingTem,
   handleRequestRecap,
   handleReport,
+  handleForgeholdComponentPayout,
+  handleForgeholdComponentSettlement,
+  handleForgeholdEconomyQuote,
   handleRouteSurvey,
   handleSoulsteelStabilization,
+  handleAshglassEvidenceRecovery,
+  handleSoulsteelRefinementAuthorization,
+  handleSoulsteelComponentMint,
   handleDreamGateInterpretation,
+  handleDreamFragmentAnchor,
+  handleRouteSafetyReview,
+  handleHeartforgeGatePreparation,
+  handleDreamGateSealPreparation,
+  handleDreamGateTraversalAuthorization,
+  handleDreamGateArrivalRecord,
   handleForgeholdShipmentInvestigation,
 } from './handlers.js';
 
@@ -36,6 +49,7 @@ export interface SkillContext {
   antiState: AntiCheatState;
   skillCooldowns: Map<string, number>;
   onwardRoutesAvailable?: boolean;
+  getOnwardRouteProgress?: () => OnwardRouteReceiptProgress;
   // Audit write function
   audit: (receipt: {
     player_id: string;
@@ -57,6 +71,19 @@ export interface SkillContext {
   send: (msg: unknown) => void;
   // Optional post-success hook for derived projections owned outside skills
   onSkillResolved?: (skillId: SkillId) => void;
+  // Optional server-owned inventory mint authority for route rewards.
+  mintItemToInventory?: (
+    itemType: string,
+    meta: Record<string, unknown>,
+    reason: string,
+    source: string
+  ) => { item_id: string; item_type: string };
+  syncInventory?: () => void;
+  creditWallet?: (
+    amount: number,
+    reason: string,
+    source: string
+  ) => { balance_gold: number };
 }
 
 export interface SkillResult {
@@ -191,11 +218,50 @@ async function executeSkill(
     case 'route:survey:moonspire':
       return handleRouteSurvey(ctx, 'moonspire');
 
+    case 'route:safety:forgehold':
+      return handleRouteSafetyReview(ctx, 'forgehold');
+
+    case 'route:safety:moonspire':
+      return handleRouteSafetyReview(ctx, 'moonspire');
+
+    case 'route:economy:forgehold':
+      return handleForgeholdEconomyQuote(ctx);
+
+    case 'route:economy:settle':
+      return handleForgeholdComponentSettlement(ctx);
+
+    case 'route:economy:payout':
+      return handleForgeholdComponentPayout(ctx);
+
     case 'route:craft:soulsteel':
       return handleSoulsteelStabilization(ctx);
 
+    case 'route:craft:ashglass':
+      return handleAshglassEvidenceRecovery(ctx);
+
+    case 'route:craft:refine':
+      return handleSoulsteelRefinementAuthorization(ctx);
+
+    case 'route:craft:mint':
+      return handleSoulsteelComponentMint(ctx);
+
+    case 'route:gate:heartforge':
+      return handleHeartforgeGatePreparation(ctx);
+
+    case 'route:gate:moonspire':
+      return handleDreamGateSealPreparation(ctx);
+
+    case 'route:dream:traverse':
+      return handleDreamGateTraversalAuthorization(ctx);
+
+    case 'route:dream:arrive':
+      return handleDreamGateArrivalRecord(ctx);
+
     case 'route:dream:interpret':
       return handleDreamGateInterpretation(ctx);
+
+    case 'route:dream:fragment':
+      return handleDreamFragmentAnchor(ctx);
 
     case 'route:quest:shipment':
       return handleForgeholdShipmentInvestigation(ctx);

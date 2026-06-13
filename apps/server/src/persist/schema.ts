@@ -7,7 +7,7 @@ import type Database from 'better-sqlite3';
 // Schema Version
 // ============================================================================
 
-export const SCHEMA_VERSION = 19;
+export const SCHEMA_VERSION = 21;
 
 // ============================================================================
 // DDL Statements
@@ -303,16 +303,20 @@ CREATE INDEX IF NOT EXISTS idx_property_auctions_status ON property_auctions(sta
 const DDL_ACCOUNTS = `
 CREATE TABLE IF NOT EXISTS accounts (
   account_id      TEXT PRIMARY KEY,
-  email           TEXT NOT NULL,
-  email_lower     TEXT NOT NULL,
+  email           TEXT,
+  email_lower     TEXT,
+  handle          TEXT,
+  handle_lower    TEXT,
   password_hash   TEXT NOT NULL,
   email_verified  INTEGER NOT NULL DEFAULT 0,
   status          TEXT NOT NULL DEFAULT 'registered_unverified',
+  roles           TEXT NOT NULL DEFAULT '["player"]',
   created_at      TEXT NOT NULL,
   created_receipt TEXT DEFAULT NULL,
   updated_at      TEXT DEFAULT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_email_lower ON accounts(email_lower);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_handle_lower ON accounts(handle_lower);
 `;
 
 const DDL_ACCOUNT_EMAIL_VERIFICATIONS = `
@@ -614,6 +618,12 @@ function runMigration(db: Database.Database, version: number): void {
     case 19:
       migrateToV19(db);
       break;
+    case 20:
+      migrateToV20(db);
+      break;
+    case 21:
+      migrateToV21(db);
+      break;
     default:
       throw new Error(`Unknown schema version: ${version}`);
   }
@@ -891,6 +901,63 @@ function migrateToV19(db: Database.Database): void {
     'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
   );
   insertMeta.run('schema_version', '19');
+}
+
+function migrateToV20(db: Database.Database): void {
+  // Account roles v1: add a roles column to accounts (JSON array of role strings),
+  // default '["player"]'. Enables admin/operator/builder/agent gating of the Codex
+  // operator surfaces. Additive + idempotent; no existing rows are modified.
+  const columns = db.prepare(`PRAGMA table_info(accounts)`).all() as Array<{ name: string }>;
+  const hasRoles = columns.some((c) => c.name === 'roles');
+  if (!hasRoles) {
+    db.exec(`ALTER TABLE accounts ADD COLUMN roles TEXT NOT NULL DEFAULT '["player"]';`);
+  }
+
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', '20');
+}
+
+function migrateToV21(db: Database.Database): void {
+  // Nickname accounts v1: make email/email_lower NULLABLE and add handle/handle_lower
+  // (unique). SQLite cannot drop NOT NULL via ALTER, so rebuild the accounts table,
+  // preserving every existing column (incl. roles from v20). No accounts reference
+  // accounts via FK, so the drop/rename is safe. Idempotent: skip if handle exists.
+  const cols = db.prepare(`PRAGMA table_info(accounts)`).all() as Array<{ name: string }>;
+  if (!cols.some((c) => c.name === 'handle')) {
+    db.exec(`
+      CREATE TABLE accounts_v21 (
+        account_id      TEXT PRIMARY KEY,
+        email           TEXT,
+        email_lower     TEXT,
+        handle          TEXT,
+        handle_lower    TEXT,
+        password_hash   TEXT NOT NULL,
+        email_verified  INTEGER NOT NULL DEFAULT 0,
+        status          TEXT NOT NULL DEFAULT 'registered_unverified',
+        roles           TEXT NOT NULL DEFAULT '["player"]',
+        created_at      TEXT NOT NULL,
+        created_receipt TEXT DEFAULT NULL,
+        updated_at      TEXT DEFAULT NULL
+      );
+      INSERT INTO accounts_v21
+        (account_id, email, email_lower, handle, handle_lower, password_hash,
+         email_verified, status, roles, created_at, created_receipt, updated_at)
+        SELECT account_id, email, email_lower, NULL, NULL, password_hash,
+               email_verified, status, roles, created_at, created_receipt, updated_at
+        FROM accounts;
+      DROP TABLE accounts;
+      ALTER TABLE accounts_v21 RENAME TO accounts;
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_email_lower ON accounts(email_lower);
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_handle_lower ON accounts(handle_lower);
+    `);
+  }
+
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', '21');
 }
 
 function ensureWorldEventEvidenceColumns(db: Database.Database): void {

@@ -285,11 +285,14 @@ export type AccountStatus =
 
 export interface AccountRow {
   account_id: string;
-  email: string; // PII — DB only, never receipted
-  email_lower: string; // normalized for lookup/uniqueness
+  email: string | null; // PII — DB only, never receipted. Null for nickname-only accounts.
+  email_lower: string | null; // normalized for lookup/uniqueness; null when no email
+  handle: string | null; // optional nickname identifier
+  handle_lower: string | null; // normalized for lookup/uniqueness; null when no handle
   password_hash: string; // Argon2id encoded string (salt + params embedded)
   email_verified: number; // 0 | 1 (SQLite boolean)
   status: AccountStatus;
+  roles: string; // JSON array of role strings, e.g. '["player"]' or '["operator"]'
   created_at: string; // ISO8601
   created_receipt: string | null; // account_created receipt hash
   updated_at: string | null; // ISO8601

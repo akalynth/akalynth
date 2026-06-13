@@ -285,22 +285,50 @@ export function buildOnwardRouteProgress(
   receiptProgress: OnwardRouteReceiptProgress = {
     forgeholdSurveyed: false,
     forgeholdShipmentInvestigated: false,
+    forgeholdEconomyQuoted: false,
     soulsteelStabilized: false,
+    forgeholdAbuseNotesReviewed: false,
+    heartforgeGatePrepared: false,
+    ashglassEvidenceRecovered: false,
+    soulsteelRefinementAuthorized: false,
+    soulsteelComponentMinted: false,
+    forgeholdComponentSettled: false,
+    forgeholdComponentPayoutCredited: false,
     moonspireSurveyed: false,
     dreamGateInterpreted: false,
+    dreamFragmentAnchored: false,
+    dreamGateAbuseNotesReviewed: false,
+    dreamGateSealPrepared: false,
+    dreamGateTraversalAuthorized: false,
+    dreamGateArrivalRecorded: false,
   }
 ): OnwardRouteProgress[] {
   const available = buildRookguardQuestProgress(input).completed;
   const status = available ? 'available' : 'locked';
   const unlockRequirement = 'Complete Rookguard Codex Path: move, chat, Tem, training slime, vocation, and High City gate receipts.';
   const forgeholdCompleted = [
+    ...(available ? ['forgehold_client_projection', 'forgehold_android_projection'] : []),
     ...(receiptProgress.forgeholdSurveyed ? ['forgehold_route_survey'] : []),
     ...(receiptProgress.forgeholdShipmentInvestigated ? ['forgehold_missing_shipment'] : []),
+    ...(receiptProgress.forgeholdEconomyQuoted ? ['forgehold_economy_receipts'] : []),
     ...(receiptProgress.soulsteelStabilized ? ['soulsteel_stabilization'] : []),
+    ...(receiptProgress.forgeholdAbuseNotesReviewed ? ['forgehold_abuse_notes'] : []),
+    ...(receiptProgress.heartforgeGatePrepared ? ['heartforge_trial_server_gate'] : []),
+    ...(receiptProgress.ashglassEvidenceRecovered ? ['ashglass_evidence_recovery'] : []),
+    ...(receiptProgress.soulsteelRefinementAuthorized ? ['soulsteel_refinement_authorization'] : []),
+    ...(receiptProgress.soulsteelComponentMinted ? ['soulsteel_component_mint'] : []),
+    ...(receiptProgress.forgeholdComponentSettled ? ['forgehold_component_settlement'] : []),
+    ...(receiptProgress.forgeholdComponentPayoutCredited ? ['forgehold_component_payout'] : []),
   ];
   const moonspireCompleted = [
+    ...(available ? ['dream_gate_client_projection', 'dream_gate_android_projection'] : []),
     ...(receiptProgress.moonspireSurveyed ? ['dream_gate_rumor'] : []),
     ...(receiptProgress.dreamGateInterpreted ? ['symbolic_puzzle_projection'] : []),
+    ...(receiptProgress.dreamFragmentAnchored ? ['dream_fragment_evidence'] : []),
+    ...(receiptProgress.dreamGateAbuseNotesReviewed ? ['dream_gate_abuse_notes'] : []),
+    ...(receiptProgress.dreamGateSealPrepared ? ['dream_gate_server_seal'] : []),
+    ...(receiptProgress.dreamGateTraversalAuthorized ? ['dream_gate_traversal_authorization'] : []),
+    ...(receiptProgress.dreamGateArrivalRecorded ? ['dream_gate_arrival_record'] : []),
   ];
 
   return [
@@ -310,25 +338,46 @@ export function buildOnwardRouteProgress(
       status,
       unlock_requirement: unlockRequirement,
       next_objective: available
-        ? receiptProgress.soulsteelStabilized
-          ? 'Carry the unstable Soulsteel proof toward the Heartforge Trial chamber; refinement still requires evidence recovery.'
+        ? receiptProgress.forgeholdComponentPayoutCredited
+          ? 'Forgehold payout is credited by wallet receipt and the component remains server-traceable.'
+          : receiptProgress.forgeholdComponentSettled
+          ? 'Credit the Forgehold payout through a wallet receipt before the component leaves custody.'
+          : receiptProgress.soulsteelComponentMinted
+          ? 'Settle the minted Soulsteel component in the Forgehold ledger before any payout exists.'
+          : receiptProgress.soulsteelRefinementAuthorized
+          ? 'Mint the refined Soulsteel component under server inventory receipts.'
+          : receiptProgress.ashglassEvidenceRecovered
+          ? 'Authorize Soulsteel refinement from recovered Ashglass evidence.'
+          : receiptProgress.heartforgeGatePrepared
+          ? 'Recover Ashglass evidence before any Soulsteel refinement can be server-authorized.'
+          : receiptProgress.forgeholdAbuseNotesReviewed
+            ? 'Prepare the Heartforge Trial server gate without unlocking travel yet.'
+          : receiptProgress.soulsteelStabilized
+            ? 'Review the Forgehold safety boundary before the Heartforge Trial chamber.'
+          : receiptProgress.forgeholdEconomyQuoted
+            ? 'Stabilize cracked Soulsteel under the quoted no-mint, no-debit economy guard.'
           : receiptProgress.forgeholdShipmentInvestigated
-            ? 'Stabilize cracked Soulsteel without adding an unreceipted reward.'
-            : 'Investigate the missing Ember Road shipment and stabilize Soulsteel without adding an unreceipted reward.'
+            ? 'Quote Forgehold economy impact before stabilizing cracked Soulsteel.'
+            : 'Survey the Forgehold route board before investigating the missing Ember Road shipment.'
         : 'Finish the Rookguard Codex Path to reveal the Forgehold shipment board.',
       objectives: [
         { id: 'forgehold_route_survey', label: 'Forgehold route survey', system: 'quest' },
         { id: 'forgehold_missing_shipment', label: 'Missing shipment investigation', system: 'quest' },
         { id: 'forgehold_economy_receipts', label: 'Receipt-backed Forgehold economy proof', system: 'economy' },
         { id: 'soulsteel_stabilization', label: 'Soulsteel stabilization crafting', system: 'crafting' },
+        { id: 'forgehold_abuse_notes', label: 'No client-truth crafting or shipment claims', system: 'anti_cheat' },
         { id: 'heartforge_trial_server_gate', label: 'Heartforge Trial server gate', system: 'server' },
+        { id: 'ashglass_evidence_recovery', label: 'Ashglass evidence recovery', system: 'crafting' },
+        { id: 'soulsteel_refinement_authorization', label: 'Soulsteel refinement authorization', system: 'crafting' },
+        { id: 'soulsteel_component_mint', label: 'Soulsteel component mint', system: 'crafting' },
+        { id: 'forgehold_component_settlement', label: 'Forgehold component ledger settlement', system: 'economy' },
+        { id: 'forgehold_component_payout', label: 'Forgehold wallet payout receipt', system: 'economy' },
         { id: 'forgehold_client_projection', label: 'Read-only client route projection', system: 'ui' },
         { id: 'forgehold_android_projection', label: 'Android read-only route parity', system: 'android' },
-        { id: 'forgehold_abuse_notes', label: 'No client-truth crafting or shipment claims', system: 'anti_cheat' },
       ],
       completed_objective_ids: forgeholdCompleted,
       source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
-      receipt_actions: ['tutorial_completed', 'gate_unlock'],
+      receipt_actions: ['route_surveyed', 'forgehold_shipment_investigated', 'forgehold_economy_quoted', 'soulsteel_stabilized', 'route_abuse_notes_reviewed', 'heartforge_gate_prepared', 'ashglass_evidence_recovered', 'soulsteel_refinement_authorized', 'soulsteel_component_minted', 'forgehold_component_settled', 'forgehold_component_payout_credited', 'wallet_credit', 'item_minted', 'item_added_to_inventory'],
     },
     {
       route_id: 'moonspire_dream_gate_slice_v1',
@@ -336,21 +385,34 @@ export function buildOnwardRouteProgress(
       status,
       unlock_requirement: unlockRequirement,
       next_objective: available
-        ? receiptProgress.dreamGateInterpreted
+        ? receiptProgress.dreamGateArrivalRecorded
+          ? 'Dream Gate threshold arrival is recorded by server receipts; client movement remains intent-only.'
+          : receiptProgress.dreamGateTraversalAuthorized
+          ? 'Record Dream Gate threshold arrival without client-owned position truth.'
+          : receiptProgress.dreamGateSealPrepared
+          ? 'Authorize Dream Gate traversal from the sealed fragment without client-owned position truth.'
+          : receiptProgress.dreamGateAbuseNotesReviewed
+            ? 'Prepare the Dream Gate server seal without granting traversal yet.'
+          : receiptProgress.dreamFragmentAnchored
+            ? 'Review the Dream Gate safety boundary before any traversal can be server-authorized.'
+          : receiptProgress.dreamGateInterpreted
           ? 'Anchor the interpreted symbols before any Dream Gate traversal can be server-authorized.'
-          : 'Survey a Dream Gate clue and keep dream traversal symbolic until the server owns the gate transition.'
+          : 'Survey a Dream Gate clue before interpreting symbols or authorizing traversal.'
         : 'Finish the Rookguard Codex Path to reveal the Moonspire dream-gate rumor.',
       objectives: [
         { id: 'dream_gate_rumor', label: 'Dream Gate rumor discovery', system: 'quest' },
         { id: 'symbolic_puzzle_projection', label: 'Symbolic puzzle projection', system: 'dream_gate' },
         { id: 'dream_fragment_evidence', label: 'Dream fragment evidence object', system: 'server' },
+        { id: 'dream_gate_abuse_notes', label: 'No client-owned dream traversal truth', system: 'anti_cheat' },
+        { id: 'dream_gate_server_seal', label: 'Dream Gate server seal', system: 'server' },
+        { id: 'dream_gate_traversal_authorization', label: 'Dream Gate traversal authorization', system: 'dream_gate' },
+        { id: 'dream_gate_arrival_record', label: 'Server-recorded Dream Gate threshold arrival', system: 'server' },
         { id: 'dream_gate_client_projection', label: 'Read-only client route projection', system: 'ui' },
         { id: 'dream_gate_android_projection', label: 'Android read-only route parity', system: 'android' },
-        { id: 'dream_gate_abuse_notes', label: 'No client-owned dream traversal truth', system: 'anti_cheat' },
       ],
       completed_objective_ids: moonspireCompleted,
       source_drop: 'drop/AKALYNTH_MOONSPIRE_DREAM_GATE_SLICE_V1',
-      receipt_actions: ['tutorial_completed', 'gate_unlock'],
+      receipt_actions: ['route_surveyed', 'dream_gate_interpreted', 'dream_fragment_anchored', 'route_abuse_notes_reviewed', 'dream_gate_seal_prepared', 'dream_gate_traversal_authorized', 'dream_gate_arrival_recorded'],
     },
   ];
 }

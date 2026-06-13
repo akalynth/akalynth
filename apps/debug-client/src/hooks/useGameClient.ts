@@ -71,6 +71,26 @@ const ACCOUNT_CHARACTER_OUTFIT_IDS = new Set([
   'female_guard',
   'female_mage',
 ]);
+const ROUTE_ACTION_SKILL_IDS = new Set([
+  'route:survey:forgehold',
+  'route:survey:moonspire',
+  'route:safety:forgehold',
+  'route:safety:moonspire',
+  'route:quest:shipment',
+  'route:economy:forgehold',
+  'route:economy:settle',
+  'route:economy:payout',
+  'route:craft:soulsteel',
+  'route:craft:ashglass',
+  'route:craft:refine',
+  'route:craft:mint',
+  'route:gate:heartforge',
+  'route:gate:moonspire',
+  'route:dream:traverse',
+  'route:dream:arrive',
+  'route:dream:interpret',
+  'route:dream:fragment',
+]);
 
 function wsUrl(base: string): string {
   if (base.startsWith('ws://') || base.startsWith('wss://')) return base;
@@ -1088,9 +1108,9 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
                     : 'Purchase failed';
                 return pushToast(s, 'npc', line, 'SHOP');
               }
-              if (skillId.startsWith('route:survey:') || skillId === 'route:quest:shipment' || skillId === 'route:craft:soulsteel' || skillId === 'route:dream:interpret') {
+              if (ROUTE_ACTION_SKILL_IDS.has(skillId)) {
                 const title = typeof payload?.title === 'string' ? payload.title : 'Route';
-                const next = typeof payload?.next_objective === 'string' ? payload.next_objective : 'Survey recorded.';
+                const next = typeof payload?.next_objective === 'string' ? payload.next_objective : 'Route action recorded.';
                 const marker = typeof payload?.quality === 'string'
                   ? ` [${payload.quality}]`
                   : typeof payload?.gate_state === 'string'
@@ -1098,7 +1118,8 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
                     : typeof payload?.route_state === 'string'
                       ? ` [${payload.route_state}]`
                     : '';
-                const line = success ? `${title}${marker}: ${next}` : 'Route action unavailable.';
+                const reason = typeof data.reason === 'string' ? data.reason : 'rejected';
+                const line = success ? `${title}${marker}: ${next}` : `Route action unavailable: ${reason}`;
                 return pushToast(s, 'objective', line, 'ROUTE');
               }
               return { ...s, conn };
