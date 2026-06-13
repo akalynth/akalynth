@@ -1,0 +1,5 @@
+Create a single original SEAMLESS terrain tile for Akalynth. Classic late-1990s/2000s top-down 2D MMORPG look: flat, chunky, hand-pixelled, highly readable. Original Akalynth world tile, not copied from any existing game.
+
+RENDERING STYLE: 32x32 seamless tile, straight top-down view, must tile cleanly in all directions. FLAT hard-edged shading with a small limited palette — a base tone, one darker shade and one lighter highlight; NO soft gradients, NO airbrushed lighting. Faint cracks may carry crisp 1px dark detail, but DO NOT put an outline/border around the whole tile and DO NOT add shadows at the tile edges (it must be seamless). No objects, no characters, no text. Slightly desaturated earthy dark-fantasy palette.
+
+Tile: rough worn grey stone ground — cool desaturated greys with a darker shade and a lighter highlight, faint hairline cracks, a few small flat pebble flecks, and a hint of moss in one or two cracks. Solid natural rock floor; the signature Akalynth keep/dungeon flooring.

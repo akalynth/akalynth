@@ -1,0 +1,29 @@
+{
+  "asset_id": "akalynth_tile_stone_ground_001",
+  "game": "Akalynth",
+  "asset_type": "tile",
+  "biome": null,
+  "status": "manifest_recorded",
+  "dimensions_px": [
+    32,
+    32
+  ],
+  "dimensions_target_px": [
+    32,
+    32
+  ],
+  "camera": "top_down_slight_isometric",
+  "background": "opaque",
+  "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+  "prompt_file": "data/assets-src/prompts/tiles/akalynth_tile_stone_ground_001.txt",
+  "raw_file": "data/assets-src/_raw/akalynth_tile_stone_ground_001_raw.png",
+  "cleaned_file": "data/assets-src/sprites/tile__stone_ground.png",
+  "sha256": "ff1880cf72d3f2c2bfea95cec5388fcbdfee9da9c63dd14c078964a666315690",
+  "tilemap_test": null,
+  "license_status": "original_generated_asset",
+  "review_status": "needs_human_review",
+  "tile_code": 1,
+  "mechanics": null,
+  "copyright_boundary": "original generated asset; no copied third-party sprite, UI, logo, or map layout",
+  "notes": "Generated via gpt-image-1 from akalynth_tile_stone_ground_001.txt (--background opaque), normalized to 32x32 opaque with normalize.py (32-color median-cut quantize). Seamless full-fill stone-ground tile; display-only link to TileCode.STONE(1). Candidate pending human review/hand-polish."
+}

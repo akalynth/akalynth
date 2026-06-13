@@ -41,6 +41,7 @@ private fun loadWorldSprites(context: Context): WorldSprites {
     val tiles = buildMap {
         loadSprite(context, "sprites/tile_grass.png")?.let { put(TileCode.GRASS, it) }
         loadSprite(context, "sprites/tile_water.png")?.let { put(TileCode.WATER, it) }
+        loadSprite(context, "sprites/tile_stone.png")?.let { put(TileCode.STONE, it) }
         loadSprite(context, "sprites/tile_wall.png")?.let { put(TileCode.WALL, it) }
     }
     val creatures = buildMap {
