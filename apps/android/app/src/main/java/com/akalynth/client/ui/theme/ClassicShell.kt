@@ -50,6 +50,16 @@ fun classicPanelBrush(): Brush = Brush.verticalGradient(
     )
 )
 
+fun akalynthWallpaperBrush(): Brush = Brush.verticalGradient(
+    colors = listOf(
+        ClassicShellColors.Void,
+        Color(0xFF0E1718),
+        Color(0xFF1A1710),
+        Color(0xFF231A0B),
+        ClassicShellColors.Void
+    )
+)
+
 @Composable
 fun ClassicPanel(
     modifier: Modifier = Modifier,

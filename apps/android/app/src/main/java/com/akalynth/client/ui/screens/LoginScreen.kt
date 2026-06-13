@@ -46,6 +46,7 @@ import com.akalynth.client.ui.diagnostics.DiagnosticsFormatter
 import com.akalynth.client.ui.theme.ClassicButton
 import com.akalynth.client.ui.theme.ClassicPanel
 import com.akalynth.client.ui.theme.ClassicShellColors
+import com.akalynth.client.ui.theme.akalynthWallpaperBrush
 import kotlinx.coroutines.delay
 
 @Composable
@@ -73,7 +74,7 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ClassicShellColors.Void)
+            .background(akalynthWallpaperBrush())
             .padding(18.dp),
         contentAlignment = Alignment.Center
     ) {
