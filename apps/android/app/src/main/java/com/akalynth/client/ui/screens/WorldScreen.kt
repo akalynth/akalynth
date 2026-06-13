@@ -58,13 +58,16 @@ fun WorldScreen(
     )
     val routeActionSkillIds = routeActionSkillIdsFor(state.progression.loop?.onwardRoutes ?: emptyList())
     val showRouteActions = routeActionSkillIds.isNotEmpty()
+    // Debug-only: render a local tile-showcase map (grass/stone/water/wall patches around spawn)
+    // for art verification. Display-only; server state is untouched.
+    var showcaseMap by remember { mutableStateOf(false) }
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(ClassicShellColors.Void)
     ) {
         GameCanvas(
-            map = state.world.currentMap,
+            map = if (showcaseMap) MapName.TILE_SHOWCASE else state.world.currentMap,
             me = state.world.me,
             others = state.world.otherPlayers.values.toList(),
             modifier = Modifier.fillMaxSize()
@@ -137,6 +140,12 @@ fun WorldScreen(
                 onClick = { onEvent(GameEvent.ToggleDebugDrawer) },
                 compact = true,
                 modifier = Modifier.testTag("WorldScreen_Debug")
+            )
+            ClassicButton(
+                text = if (showcaseMap) "MAP" else "TILES",
+                onClick = { showcaseMap = !showcaseMap },
+                compact = true,
+                modifier = Modifier.testTag("WorldScreen_TileShowcase")
             )
         }
 

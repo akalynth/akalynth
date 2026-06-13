@@ -36,5 +36,11 @@ object MapLore {
             title = "Spawn",
             body = "The center of High City, where new arrivals appear after clearing Rookguard.",
         )
+        MapName.TILE_SHOWCASE -> SpawnInfo(
+            x = 2,
+            y = 2,
+            title = "Spawn",
+            body = "Debug tile-showcase map for art verification.",
+        )
     }
 }
