@@ -27,6 +27,7 @@ import com.akalynth.client.game.GameState
 import com.akalynth.client.game.MapRepository
 import com.akalynth.client.network.EndpointInfo
 import com.akalynth.client.protocol.MapName
+import com.akalynth.client.protocol.OnwardRouteProgress
 import com.akalynth.client.protocol.PlayerPublic
 import com.akalynth.client.ui.diagnostics.DiagnosticsFormatter
 import com.akalynth.client.ui.components.*
@@ -55,6 +56,8 @@ fun WorldScreen(
             mapData?.landmarks?.get("guild_hall")?.contains(me.x, me.y)
         } == true
     )
+    val routeActionSkillIds = routeActionSkillIdsFor(state.progression.loop?.onwardRoutes ?: emptyList())
+    val showRouteActions = routeActionSkillIds.isNotEmpty()
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -103,6 +106,13 @@ fun WorldScreen(
             )
         }
 
+        OnwardRoutesPanel(
+            routes = state.progression.loop?.onwardRoutes ?: emptyList(),
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 12.dp)
+        )
+
         Row(
             modifier = Modifier
                 .align(Alignment.TopEnd)
@@ -145,6 +155,9 @@ fun WorldScreen(
                 onWorldEventContribution = { contributionId ->
                     onEvent(GameEvent.WorldEventContribution(contributionId))
                 },
+                showRouteActions = showRouteActions,
+                routeActionSkillIds = routeActionSkillIds,
+                onRouteAction = { skillId -> onEvent(GameEvent.RouteAction(skillId)) },
                 showRookguardActions = !state.world.currentMap.isHighCityCompatible,
                 showRookguardVocations = showRookguardVocations,
                 showHighCityActions = state.world.currentMap.isHighCityCompatible,
@@ -222,6 +235,132 @@ fun WorldScreen(
                 }
             ) {
                 Text(error)
+            }
+        }
+    }
+}
+
+private fun routeActionSkillIdsFor(routes: List<OnwardRouteProgress>): List<String> {
+    return routes.flatMap { route ->
+        if (route.status != "available") return@flatMap emptyList()
+        val completed = route.completedObjectiveIds.toSet()
+        when (route.routeId) {
+            "forgehold_route_slice_v1" -> when {
+                !completed.contains("forgehold_route_survey") -> listOf("route:survey:forgehold")
+                !completed.contains("forgehold_missing_shipment") -> listOf("route:quest:shipment")
+                !completed.contains("forgehold_economy_receipts") -> listOf("route:economy:forgehold")
+                !completed.contains("soulsteel_stabilization") -> listOf("route:craft:soulsteel")
+                !completed.contains("forgehold_abuse_notes") -> listOf("route:safety:forgehold")
+                !completed.contains("heartforge_trial_server_gate") -> listOf("route:gate:heartforge")
+                !completed.contains("ashglass_evidence_recovery") -> listOf("route:craft:ashglass")
+                !completed.contains("soulsteel_refinement_authorization") -> listOf("route:craft:refine")
+                !completed.contains("soulsteel_component_mint") -> listOf("route:craft:mint")
+                !completed.contains("forgehold_component_settlement") -> listOf("route:economy:settle")
+                !completed.contains("forgehold_component_payout") -> listOf("route:economy:payout")
+                else -> emptyList()
+            }
+            "moonspire_dream_gate_slice_v1" -> when {
+                !completed.contains("dream_gate_rumor") -> listOf("route:survey:moonspire")
+                !completed.contains("symbolic_puzzle_projection") -> listOf("route:dream:interpret")
+                !completed.contains("dream_fragment_evidence") -> listOf("route:dream:fragment")
+                !completed.contains("dream_gate_abuse_notes") -> listOf("route:safety:moonspire")
+                !completed.contains("dream_gate_server_seal") -> listOf("route:gate:moonspire")
+                !completed.contains("dream_gate_traversal_authorization") -> listOf("route:dream:traverse")
+                !completed.contains("dream_gate_arrival_record") -> listOf("route:dream:arrive")
+                else -> emptyList()
+            }
+            else -> emptyList()
+        }
+    }
+}
+
+@Composable
+private fun OnwardRoutesPanel(
+    routes: List<OnwardRouteProgress>,
+    modifier: Modifier = Modifier
+) {
+    if (routes.isEmpty()) return
+
+    ClassicPanel(
+        modifier = modifier
+            .widthIn(max = 260.dp)
+            .testTag("WorldScreen_OnwardRoutes"),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Text(
+            text = "Next routes",
+            style = MaterialTheme.typography.labelMedium,
+            color = ClassicShellColors.Brass,
+            fontWeight = FontWeight.Bold
+        )
+        routes.forEach { route ->
+            val open = route.status == "available"
+            val completed = route.completedObjectiveIds.toSet()
+            val nextObjectiveId = if (open) {
+                route.objectives.firstOrNull { objective -> !completed.contains(objective.id) }?.id
+            } else {
+                null
+            }
+            val routeStepObjectives = route.objectives.filter { objective ->
+                objective.system != "ui" && objective.system != "android"
+            }
+            val routeStepCompleted = routeStepObjectives.count { objective -> completed.contains(objective.id) }
+            val systems = route.objectives
+                .map { objective -> objective.system }
+                .distinct()
+                .joinToString(", ")
+            Text(
+                text = "${if (open) "Open" else "Locked"}: ${route.title} ($routeStepCompleted/${routeStepObjectives.size})",
+                style = MaterialTheme.typography.labelSmall,
+                color = if (open) ClassicShellColors.Good else ClassicShellColors.MutedText,
+                modifier = Modifier.testTag("WorldScreen_OnwardRoute_${route.routeId}")
+            )
+            Text(
+                text = route.nextObjective,
+                style = MaterialTheme.typography.bodySmall,
+                color = ClassicShellColors.Text
+            )
+            Text(
+                text = systems,
+                style = MaterialTheme.typography.labelSmall,
+                color = ClassicShellColors.Rune
+            )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(3.dp),
+                modifier = Modifier.testTag("WorldScreen_OnwardRouteObjectives_${route.routeId}")
+            ) {
+                route.objectives.forEach { objective ->
+                    val done = completed.contains(objective.id)
+                    val marker = when {
+                        done -> "Done"
+                        !open -> "Locked"
+                        objective.id == nextObjectiveId -> "Next"
+                        else -> "Later"
+                    }
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = marker,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (done) ClassicShellColors.Good else ClassicShellColors.MutedText,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = objective.label,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (done) ClassicShellColors.Good else ClassicShellColors.Text,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = objective.system,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = ClassicShellColors.Rune
+                        )
+                    }
+                }
             }
         }
     }

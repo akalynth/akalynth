@@ -220,12 +220,14 @@ import {
 } from './world/world-events.js';
 import {
   ROOKGUARD_CODEX_PROFESSIONS,
+  buildOnwardRouteProgress,
   buildRookguardQuestProgress,
   getRookguardQuestInput,
   rookguardGateOpen,
   rookguardQuestObjective,
   type RookguardQuestInput,
 } from './world/rookguardQuest.js';
+import { getOnwardRouteReceiptProgress } from './world/onwardRoutes.js';
 import { buildSimLifeSnapshot } from './simulation/simLifeSnapshot.js';
 import { chronicleAppend } from './witness/chronicleAdapter.js';
 import { verifyRulebookOrExit } from './rulebook/verifyRulebook.js';
@@ -2053,6 +2055,44 @@ function mintLegendaryItem(
   return itemId;
 }
 
+function mintItemToInventory(
+  playerId: string,
+  itemType: string,
+  meta: Record<string, unknown>,
+  reason: string,
+  source: string
+): { item_id: string; item_type: string } {
+  const writtenReceipt = audit.write({
+    action: 'item_minted',
+    player_id: playerId,
+    inputs: {
+      item_type: itemType,
+      meta,
+      reason,
+    },
+    result: 'ok',
+  });
+
+  const mintHash = computeReceiptHash(writtenReceipt);
+  const itemId = generateItemId(mintHash);
+
+  audit.write({
+    action: 'item_added_to_inventory',
+    player_id: playerId,
+    inputs: {
+      item_id: itemId,
+      slot: null,
+      source,
+    },
+    result: 'ok',
+  });
+
+  if (!inventory.has(playerId)) inventory.set(playerId, new Set());
+  inventory.get(playerId)!.add(itemId);
+
+  return { item_id: itemId, item_type: itemType };
+}
+
 /**
  * Handle player dropping an item.
  * Returns true on success, false if item not in inventory.
@@ -2728,6 +2768,10 @@ function playLoopFor(s: Session) {
     gateOpen,
     objective,
     rookguardQuest: buildRookguardQuestProgress(rookguardQuestInput),
+    onwardRoutes: buildOnwardRouteProgress(
+      rookguardQuestInput,
+      s.player ? getOnwardRouteReceiptProgress(s.player.id) : undefined
+    ),
     lastEvent: bloom.phase === 'idle' ? null : `witness_moth_bloom_${bloom.phase}`,
     ...(bloom.teaser ? { teaser: bloom.teaser } : {}),
   };
@@ -5846,11 +5890,38 @@ function processSessionQueue(s: Session, now: number) {
           ws: s.ws,
           antiState: s.anti.state,
           skillCooldowns: s.skillCooldowns,
+          onwardRoutesAvailable: buildRookguardQuestProgress(rookguardQuestInputFor(s)).completed,
+          getOnwardRouteProgress: () => getOnwardRouteReceiptProgress(s.player!.id),
           audit: (receipt) => audit.write(receipt),
           findPlayerOnline: findPlayerByIdOnline,
           issueTem: issueTemChallenge,
           getChronicle: (pid, limit) => persist.getChronicleForPlayer(pid, limit),
           send: (m) => send(s.ws, m as ServerMessage),
+          onSkillResolved: (skillId) => {
+            if (skillId.startsWith('route:')) sendLoopUpdate(s, 'onward_route_progress');
+          },
+          mintItemToInventory: (itemType, meta, reason, source) =>
+            mintItemToInventory(s.player!.id, itemType, meta, reason, source),
+          syncInventory: () => {
+            const invIds = getPlayerInventoryIds(s.player!.id);
+            const invItems = invIds.map(id => ({
+              item_id: id,
+              item_type: persist.getItem(id)?.item_type ?? 'unknown',
+              slot: null,
+            }));
+            send(s.ws, ServerMessages.inventorySnapshot(invItems));
+          },
+          creditWallet: (amount, reason) => {
+            audit.write({
+              player_id: s.player!.id,
+              action: WALLET_CREDIT_ACTION,
+              inputs: { amount, reason: reason as WalletCreditReason },
+              result: 'ok',
+            });
+            const balance = getGoldBalance(s.player!.id);
+            send(s.ws, ServerMessages.walletSnapshot(balance));
+            return { balance_gold: balance };
+          },
         };
 
         handleUseSkill(skillCtx, msg);

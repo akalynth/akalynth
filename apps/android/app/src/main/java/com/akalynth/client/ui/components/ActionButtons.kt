@@ -29,12 +29,37 @@ private val ROOKGUARD_VOCATION_ACTIONS = listOf(
     SovereignVocation.REAVER to "Rvr"
 )
 
+private val ROUTE_ACTIONS = listOf(
+    "route:survey:forgehold" to "Forge",
+    "route:survey:moonspire" to "Dream",
+    "route:safety:forgehold" to "FSafe",
+    "route:safety:moonspire" to "DSafe",
+    "route:quest:shipment" to "Ship",
+    "route:economy:forgehold" to "Quote",
+    "route:economy:settle" to "Settle",
+    "route:economy:payout" to "Pay",
+    "route:craft:soulsteel" to "Steel",
+    "route:craft:ashglass" to "Glass",
+    "route:craft:refine" to "Refine",
+    "route:craft:mint" to "Mint",
+    "route:gate:heartforge" to "HGate",
+    "route:gate:moonspire" to "Seal",
+    "route:dream:traverse" to "Pass",
+    "route:dream:arrive" to "Arrv",
+    "route:dream:interpret" to "Interp",
+    "route:dream:fragment" to "Frag"
+)
+private val ROUTE_ACTION_LABELS = ROUTE_ACTIONS.toMap()
+
 @Composable
 fun ActionButtons(
     onChat: () -> Unit,
     onChronicle: () -> Unit = {},
     showWitnessMothBloom: Boolean = false,
     onWorldEventContribution: (String) -> Unit = {},
+    showRouteActions: Boolean = false,
+    routeActionSkillIds: List<String> = ROUTE_ACTIONS.map { it.first },
+    onRouteAction: (String) -> Unit = {},
     showRookguardActions: Boolean = false,
     showRookguardVocations: Boolean = false,
     showHighCityActions: Boolean = false,
@@ -48,6 +73,10 @@ fun ActionButtons(
     onUnlistHouse: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val routeActions = routeActionSkillIds.mapNotNull { skillId ->
+        ROUTE_ACTION_LABELS[skillId]?.let { label -> skillId to label }
+    }
+
     ClassicDock(modifier = modifier) {
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -124,6 +153,23 @@ fun ActionButtons(
                     contributionId = WorldEventSkillIds.DEFEND_SCRIBES,
                     onWorldEventContribution = onWorldEventContribution
                 )
+            }
+
+            if (showRouteActions && routeActions.isNotEmpty()) {
+                Text(
+                    text = "Routes",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = ClassicShellColors.Brass,
+                    modifier = Modifier.testTag("ActionButtons_RouteActions")
+                )
+                routeActions.forEach { (skillId, label) ->
+                    ClassicButton(
+                        text = label,
+                        onClick = { onRouteAction(skillId) },
+                        compact = true,
+                        modifier = Modifier.testTag("ActionButtons_RouteAction_$label")
+                    )
+                }
             }
 
             if (showRookguardActions) {

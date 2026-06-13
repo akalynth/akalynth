@@ -23,6 +23,26 @@ private val DEFAULT_SERVER_URL = BuildConfig.WS_BASE_URL
 private const val MAX_CHAT_MESSAGES = 50
 private const val MAX_DEBUG_LOG = 100
 private const val WITNESS_TTL_MS = 12000L
+private val ROUTE_ACTION_SKILL_IDS = setOf(
+    "route:survey:forgehold",
+    "route:survey:moonspire",
+    "route:safety:forgehold",
+    "route:safety:moonspire",
+    "route:quest:shipment",
+    "route:economy:forgehold",
+    "route:economy:settle",
+    "route:economy:payout",
+    "route:craft:soulsteel",
+    "route:craft:ashglass",
+    "route:craft:refine",
+    "route:craft:mint",
+    "route:gate:heartforge",
+    "route:gate:moonspire",
+    "route:dream:traverse",
+    "route:dream:arrive",
+    "route:dream:interpret",
+    "route:dream:fragment"
+)
 
 class GameStore(
     private val wsClient: WsClient,
@@ -97,6 +117,7 @@ class GameStore(
             is LoginAckMessage -> if (msg.ok != false) "ok, id=${msg.playerId}" else "fail: ${msg.reason}"
             is WorldStateMessage -> "map=${msg.map}, players=${msg.nearbyPlayers.size}"
             is MoveResultMessage -> "ok=${msg.ok}, pos=(${msg.x},${msg.y})"
+            is LoopUpdateMessage -> "${msg.event}: ${msg.loop.objective}"
             is PlayerMovedMessage -> "${msg.playerId} -> (${msg.x},${msg.y})"
             is PlayerJoinedMessage -> msg.player.name
             is PlayerLeftMessage -> msg.playerId
@@ -205,6 +226,7 @@ class GameStore(
             is GameEvent.ToggleChat -> toggleChat()
             is GameEvent.Attack -> sendAttack(event.targetId)
             is GameEvent.WorldEventContribution -> sendWorldEventContribution(event.contributionId)
+            is GameEvent.RouteAction -> sendRouteAction(event.skillId)
             is GameEvent.TalkToNpc -> talkToNpc(event.npcId)
             is GameEvent.DeclareVocation -> declareVocation(event.vocation)
             is GameEvent.InspectWallet -> inspectWallet()
@@ -341,6 +363,7 @@ class GameStore(
             is LoginAckMessage -> handleLoginAck(msg)
             is WorldStateMessage -> handleWorldState(msg)
             is MoveResultMessage -> handleMoveResult(msg)
+            is LoopUpdateMessage -> handleLoopUpdate(msg)
             is PlayerMovedMessage -> handlePlayerMoved(msg)
             is PlayerJoinedMessage -> handlePlayerJoined(msg)
             is PlayerLeftMessage -> handlePlayerLeft(msg)
@@ -372,7 +395,7 @@ class GameStore(
             is WorkContractResultMessage -> handleWorkContractResult(msg)
             is NpcDialogueMessage -> handleNpcDialogue(msg)
             is NpcDialogueErrorMessage -> handleNpcDialogueError(msg)
-            is SkillResultMessage -> {}
+            is SkillResultMessage -> handleSkillResult(msg)
             is ModReportsSnapshotMessage -> {}
             is ModResolveResultMessage -> {}
             is PropertySnapshotMessage -> handlePropertySnapshot(msg)
@@ -474,6 +497,18 @@ class GameStore(
                     currentMap = msg.map,
                     me = msg.player,
                     otherPlayers = others
+                ),
+                progression = it.progression.copy(loop = msg.player.loop)
+            )
+        }
+    }
+
+    private fun handleLoopUpdate(msg: LoopUpdateMessage) {
+        _state.update {
+            it.copy(
+                progression = it.progression.copy(
+                    loop = msg.loop,
+                    lastEvent = msg.event
                 )
             )
         }
@@ -632,6 +667,64 @@ class GameStore(
                     npcDialogue = NpcDialogueStatus(
                         npcId = msg.npcId,
                         error = msg.error
+                    )
+                )
+            )
+        }
+    }
+
+    private fun handleSkillResult(msg: SkillResultMessage) {
+        if (msg.skillId !in ROUTE_ACTION_SKILL_IDS) return
+        val title = when (msg.skillId) {
+            "route:survey:forgehold" -> "Forgehold Route"
+            "route:survey:moonspire" -> "Moonspire Dream Gate"
+            "route:safety:forgehold" -> "Forgehold safety"
+            "route:safety:moonspire" -> "Dream Gate safety"
+            "route:quest:shipment" -> "Forgehold shipment"
+            "route:economy:forgehold" -> "Forgehold economy"
+            "route:economy:settle" -> "Forgehold ledger"
+            "route:economy:payout" -> "Forgehold payout"
+            "route:craft:soulsteel" -> "Soulsteel"
+            "route:craft:ashglass" -> "Ashglass evidence"
+            "route:craft:refine" -> "Soulsteel refinement"
+            "route:craft:mint" -> "Soulsteel component"
+            "route:gate:heartforge" -> "Heartforge gate"
+            "route:gate:moonspire" -> "Dream Gate seal"
+            "route:dream:traverse" -> "Dream Gate traversal"
+            "route:dream:arrive" -> "Dream Gate arrival"
+            "route:dream:interpret" -> "Dream Gate"
+            "route:dream:fragment" -> "Dream fragment"
+            else -> "Route"
+        }
+        val line = if (msg.success) {
+            when (msg.skillId) {
+                "route:safety:forgehold", "route:safety:moonspire" -> "$title boundary reviewed by server."
+                "route:quest:shipment" -> "$title investigation recorded by server."
+                "route:economy:forgehold" -> "$title quote recorded by server."
+                "route:economy:settle" -> "$title settlement recorded by server."
+                "route:economy:payout" -> "$title credited by server."
+                "route:craft:soulsteel" -> "$title stabilization recorded by server."
+                "route:craft:ashglass" -> "$title recovered by server."
+                "route:craft:refine" -> "$title authorized by server."
+                "route:craft:mint" -> "$title minted by server."
+                "route:gate:heartforge", "route:gate:moonspire" -> "$title prepared by server."
+                "route:dream:traverse" -> "$title authorized by server."
+                "route:dream:arrive" -> "$title recorded by server."
+                "route:dream:interpret" -> "$title interpretation recorded by server."
+                "route:dream:fragment" -> "$title evidence anchored by server."
+                else -> "$title survey recorded by server."
+            }
+        } else {
+            "$title action unavailable: ${msg.reason ?: "rejected"}"
+        }
+        _state.update {
+            it.copy(
+                ui = it.ui.copy(
+                    npcDialogue = NpcDialogueStatus(
+                        npcId = "route_action",
+                        placeId = "onward_routes",
+                        tier = if (msg.success) "completed" else "rejected",
+                        line = line
                     )
                 )
             )
@@ -804,6 +897,12 @@ class GameStore(
 
     private fun sendWorldEventContribution(contributionId: String) {
         val skillId = "event:witness_moth_bloom:$contributionId"
+        wsClient.send(UseSkillMessage(skillId = skillId))
+        logSent("use_skill", skillId)
+    }
+
+    private fun sendRouteAction(skillId: String) {
+        if (skillId !in ROUTE_ACTION_SKILL_IDS) return
         wsClient.send(UseSkillMessage(skillId = skillId))
         logSent("use_skill", skillId)
     }

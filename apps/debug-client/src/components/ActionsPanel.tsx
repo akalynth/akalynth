@@ -27,6 +27,62 @@ const WITNESS_MOTH_ACTIONS = [
   { skill_id: 'event:witness_moth_bloom:defend_scribes', label: 'Defend scribes', short: 'Guard' },
 ] as const;
 
+const ROUTE_ACTIONS = [
+  { skill_id: 'route:survey:forgehold', label: 'Survey Forgehold', short: 'Forge' },
+  { skill_id: 'route:survey:moonspire', label: 'Survey Dream Gate', short: 'Dream' },
+  { skill_id: 'route:safety:forgehold', label: 'Review Forgehold Safety', short: 'FSafe' },
+  { skill_id: 'route:safety:moonspire', label: 'Review Dream Gate Safety', short: 'DSafe' },
+  { skill_id: 'route:quest:shipment', label: 'Investigate Shipment', short: 'Ship' },
+  { skill_id: 'route:economy:forgehold', label: 'Quote Forgehold Economy', short: 'Quote' },
+  { skill_id: 'route:economy:settle', label: 'Settle Forgehold Ledger', short: 'Settle' },
+  { skill_id: 'route:economy:payout', label: 'Credit Forgehold Payout', short: 'Pay' },
+  { skill_id: 'route:craft:soulsteel', label: 'Stabilize Soulsteel', short: 'Steel' },
+  { skill_id: 'route:craft:ashglass', label: 'Recover Ashglass Evidence', short: 'Glass' },
+  { skill_id: 'route:craft:refine', label: 'Authorize Soulsteel Refinement', short: 'Refine' },
+  { skill_id: 'route:craft:mint', label: 'Mint Soulsteel Component', short: 'Mint' },
+  { skill_id: 'route:gate:heartforge', label: 'Prepare Heartforge Gate', short: 'HGate' },
+  { skill_id: 'route:gate:moonspire', label: 'Prepare Dream Gate Seal', short: 'Seal' },
+  { skill_id: 'route:dream:traverse', label: 'Authorize Dream Gate Traversal', short: 'Pass' },
+  { skill_id: 'route:dream:arrive', label: 'Record Dream Gate Arrival', short: 'Arrv' },
+  { skill_id: 'route:dream:interpret', label: 'Interpret Dream Gate', short: 'Interp' },
+  { skill_id: 'route:dream:fragment', label: 'Anchor Dream Fragment', short: 'Frag' },
+] as const;
+
+type RouteActionId = typeof ROUTE_ACTIONS[number]['skill_id'];
+const ROUTE_ACTION_BY_ID = new Map<RouteActionId, typeof ROUTE_ACTIONS[number]>(
+  ROUTE_ACTIONS.map((action) => [action.skill_id, action]),
+);
+
+function routeActionIdsFor(onwardRoutes: NonNullable<PlayLoopProgress['onwardRoutes']>): RouteActionId[] {
+  const ids: RouteActionId[] = [];
+  for (const route of onwardRoutes) {
+    if (route.status !== 'available') continue;
+    const completed = new Set(route.completed_objective_ids);
+    if (route.route_id === 'forgehold_route_slice_v1') {
+      if (!completed.has('forgehold_route_survey')) ids.push('route:survey:forgehold');
+      else if (!completed.has('forgehold_missing_shipment')) ids.push('route:quest:shipment');
+      else if (!completed.has('forgehold_economy_receipts')) ids.push('route:economy:forgehold');
+      else if (!completed.has('soulsteel_stabilization')) ids.push('route:craft:soulsteel');
+      else if (!completed.has('forgehold_abuse_notes')) ids.push('route:safety:forgehold');
+      else if (!completed.has('heartforge_trial_server_gate')) ids.push('route:gate:heartforge');
+      else if (!completed.has('ashglass_evidence_recovery')) ids.push('route:craft:ashglass');
+      else if (!completed.has('soulsteel_refinement_authorization')) ids.push('route:craft:refine');
+      else if (!completed.has('soulsteel_component_mint')) ids.push('route:craft:mint');
+      else if (!completed.has('forgehold_component_settlement')) ids.push('route:economy:settle');
+      else if (!completed.has('forgehold_component_payout')) ids.push('route:economy:payout');
+    } else if (route.route_id === 'moonspire_dream_gate_slice_v1') {
+      if (!completed.has('dream_gate_rumor')) ids.push('route:survey:moonspire');
+      else if (!completed.has('symbolic_puzzle_projection')) ids.push('route:dream:interpret');
+      else if (!completed.has('dream_fragment_evidence')) ids.push('route:dream:fragment');
+      else if (!completed.has('dream_gate_abuse_notes')) ids.push('route:safety:moonspire');
+      else if (!completed.has('dream_gate_server_seal')) ids.push('route:gate:moonspire');
+      else if (!completed.has('dream_gate_traversal_authorization')) ids.push('route:dream:traverse');
+      else if (!completed.has('dream_gate_arrival_record')) ids.push('route:dream:arrive');
+    }
+  }
+  return ids;
+}
+
 const VOCATION_ACTIONS: Array<{ vocation: SovereignVocation; label: string; short: string }> = [
   { vocation: 'warden', label: 'Warden', short: 'Ward' },
   { vocation: 'cantor', label: 'Cantor', short: 'Cant' },
@@ -91,6 +147,13 @@ export function ActionsPanel({
   const inRookguardProfessionHall = nearbyNpc?.npc_id === 'rookguard_steward';
   const rookguardQuest = loop?.rookguardQuest ?? null;
   const codexProfession = rookguardQuest?.codexProfession ?? null;
+  const onwardRoutes = loop?.onwardRoutes ?? [];
+  const routeActionIds = routeActionIdsFor(onwardRoutes);
+  const routeActions = routeActionIds.flatMap((skillId) => {
+    const action = ROUTE_ACTION_BY_ID.get(skillId);
+    return action ? [action] : [];
+  });
+  const routeActionsOpen = routeActions.length > 0;
   const witnessMothOpen =
     stage >= 3 &&
     !!loop?.lastEvent?.startsWith('witness_moth_bloom_') &&
@@ -180,6 +243,16 @@ export function ActionsPanel({
                 {action.short}
               </button>
             ))}
+            {routeActionsOpen && routeActions.map((action) => (
+              <button
+                key={action.skill_id}
+                className="action-btn mobile-hotbar-btn ritual-btn"
+                onClick={() => onWorldEventAction(action.skill_id)}
+                aria-label={action.label}
+              >
+                {action.short}
+              </button>
+            ))}
             {stage >= 2 && hotbarItems.map((item) => {
               const usable = isUsableItemType(item.item_type);
               const label = itemLabel(item.item_type);
@@ -253,6 +326,51 @@ export function ActionsPanel({
               <i key={shelf.object_id} className={shelf.role === 'active_profession_lore' ? 'active' : ''} title={shelf.gameplay_hint}>
                 {shelf.title}
               </i>
+            ))}
+          </div>
+        )}
+        {onwardRoutes.length > 0 && (
+          <div className="codex-shelves onward-routes" aria-label="Onward routes">
+            {onwardRoutes.map((route) => {
+              const completed = new Set(route.completed_objective_ids);
+              const routeOpen = route.status === 'available';
+              const nextObjectiveId = routeOpen ? route.objectives.find((objective) => !completed.has(objective.id))?.id ?? null : null;
+              const routeStepObjectives = route.objectives.filter((objective) => objective.system !== 'ui' && objective.system !== 'android');
+              const routeStepCompleted = routeStepObjectives.filter((objective) => completed.has(objective.id)).length;
+              return (
+                <article
+                  key={route.route_id}
+                  className={`onward-route-card ${routeOpen ? 'active' : ''}`}
+                  title={`Source: ${route.source_drop}`}
+                >
+                  <strong>
+                    {routeOpen ? 'Open' : 'Locked'}: {route.title} ({routeStepCompleted}/{routeStepObjectives.length})
+                  </strong>
+                  <span>{route.next_objective}</span>
+                  <ul>
+                    {route.objectives.map((objective) => (
+                      <li key={objective.id} className={completed.has(objective.id) ? 'done' : ''}>
+                        <b>{completed.has(objective.id) ? 'Done' : !routeOpen ? 'Locked' : objective.id === nextObjectiveId ? 'Next' : 'Later'}</b>
+                        {objective.label}
+                        <small>{objective.system}</small>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              );
+            })}
+          </div>
+        )}
+        {routeActionsOpen && (
+          <div className="shop-actions" aria-label="Route actions">
+            {routeActions.map((action) => (
+              <button
+                key={action.skill_id}
+                className="action-btn shop-btn"
+                onClick={() => onWorldEventAction(action.skill_id)}
+              >
+                {action.label}
+              </button>
             ))}
           </div>
         )}
@@ -356,6 +474,20 @@ export function ActionsPanel({
             <div className="shop-section">
               <div className="shop-header">Witness Moth Bloom</div>
               {WITNESS_MOTH_ACTIONS.map(action => (
+                <button
+                  key={action.skill_id}
+                  className="action-btn shop-btn"
+                  onClick={() => onWorldEventAction(action.skill_id)}
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          )}
+          {routeActionsOpen && (
+            <div className="shop-section">
+              <div className="shop-header">Onward Routes</div>
+              {routeActions.map(action => (
                 <button
                   key={action.skill_id}
                   className="action-btn shop-btn"

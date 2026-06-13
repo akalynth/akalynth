@@ -9,7 +9,25 @@ export type SkillId =
   | 'skill_inspect'
   | 'skill_ping_tem'
   | 'skill_request_recap'
-  | 'skill_report';
+  | 'skill_report'
+  | 'route:survey:forgehold'
+  | 'route:survey:moonspire'
+  | 'route:safety:forgehold'
+  | 'route:safety:moonspire'
+  | 'route:economy:forgehold'
+  | 'route:economy:settle'
+  | 'route:economy:payout'
+  | 'route:craft:soulsteel'
+  | 'route:craft:ashglass'
+  | 'route:craft:refine'
+  | 'route:craft:mint'
+  | 'route:gate:heartforge'
+  | 'route:gate:moonspire'
+  | 'route:dream:traverse'
+  | 'route:dream:arrive'
+  | 'route:dream:interpret'
+  | 'route:dream:fragment'
+  | 'route:quest:shipment';
 
 export type SkillTarget = 'self' | 'player' | 'none';
 
@@ -59,6 +77,150 @@ export const SKILL_REGISTRY: Record<SkillId, SkillDefinition> = {
     gold_cost: 0,
     debug_only: false,
   },
+  'route:survey:forgehold': {
+    id: 'route:survey:forgehold',
+    name: 'Survey Forgehold Route',
+    cooldown_ms: 30_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
+  'route:survey:moonspire': {
+    id: 'route:survey:moonspire',
+    name: 'Survey Moonspire Dream Gate',
+    cooldown_ms: 30_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
+  'route:safety:forgehold': {
+    id: 'route:safety:forgehold',
+    name: 'Review Forgehold Safety',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
+  'route:safety:moonspire': {
+    id: 'route:safety:moonspire',
+    name: 'Review Dream Gate Safety',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
+  'route:economy:forgehold': {
+    id: 'route:economy:forgehold',
+    name: 'Quote Forgehold Economy',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
+  'route:economy:settle': {
+    id: 'route:economy:settle',
+    name: 'Settle Forgehold Ledger',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
+  'route:economy:payout': {
+    id: 'route:economy:payout',
+    name: 'Credit Forgehold Payout',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
+  'route:craft:soulsteel': {
+    id: 'route:craft:soulsteel',
+    name: 'Stabilize Soulsteel',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
+  'route:craft:ashglass': {
+    id: 'route:craft:ashglass',
+    name: 'Recover Ashglass Evidence',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
+  'route:craft:refine': {
+    id: 'route:craft:refine',
+    name: 'Authorize Soulsteel Refinement',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
+  'route:craft:mint': {
+    id: 'route:craft:mint',
+    name: 'Mint Soulsteel Component',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
+  'route:gate:heartforge': {
+    id: 'route:gate:heartforge',
+    name: 'Prepare Heartforge Gate',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
+  'route:gate:moonspire': {
+    id: 'route:gate:moonspire',
+    name: 'Prepare Dream Gate Seal',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
+  'route:dream:traverse': {
+    id: 'route:dream:traverse',
+    name: 'Authorize Dream Gate Traversal',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
+  'route:dream:arrive': {
+    id: 'route:dream:arrive',
+    name: 'Record Dream Gate Arrival',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
+  'route:dream:interpret': {
+    id: 'route:dream:interpret',
+    name: 'Interpret Dream Gate',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
+  'route:dream:fragment': {
+    id: 'route:dream:fragment',
+    name: 'Anchor Dream Fragment',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
+  'route:quest:shipment': {
+    id: 'route:quest:shipment',
+    name: 'Investigate Missing Shipment',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
 };
 
 export const SKILL_IDS = Object.keys(SKILL_REGISTRY) as SkillId[];
@@ -83,6 +245,22 @@ export const SKILL_USE_INTENT_ACTION = 'skill_use_intent';
 export const SKILL_RESOLVED_ACTION = 'skill_resolved';
 export const SKILL_REJECTED_ACTION = 'skill_rejected';
 export const PLAYER_REPORTED_ACTION = 'player_reported';
+export const ROUTE_SURVEYED_ACTION = 'route_surveyed';
+export const ROUTE_ABUSE_NOTES_REVIEWED_ACTION = 'route_abuse_notes_reviewed';
+export const FORGEHOLD_ECONOMY_QUOTED_ACTION = 'forgehold_economy_quoted';
+export const FORGEHOLD_COMPONENT_SETTLED_ACTION = 'forgehold_component_settled';
+export const FORGEHOLD_COMPONENT_PAYOUT_CREDITED_ACTION = 'forgehold_component_payout_credited';
+export const SOULSTEEL_STABILIZED_ACTION = 'soulsteel_stabilized';
+export const ASHGLASS_EVIDENCE_RECOVERED_ACTION = 'ashglass_evidence_recovered';
+export const SOULSTEEL_REFINEMENT_AUTHORIZED_ACTION = 'soulsteel_refinement_authorized';
+export const SOULSTEEL_COMPONENT_MINTED_ACTION = 'soulsteel_component_minted';
+export const HEARTFORGE_GATE_PREPARED_ACTION = 'heartforge_gate_prepared';
+export const DREAM_GATE_SEAL_PREPARED_ACTION = 'dream_gate_seal_prepared';
+export const DREAM_GATE_TRAVERSAL_AUTHORIZED_ACTION = 'dream_gate_traversal_authorized';
+export const DREAM_GATE_ARRIVAL_RECORDED_ACTION = 'dream_gate_arrival_recorded';
+export const DREAM_GATE_INTERPRETED_ACTION = 'dream_gate_interpreted';
+export const DREAM_FRAGMENT_ANCHORED_ACTION = 'dream_fragment_anchored';
+export const FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION = 'forgehold_shipment_investigated';
 
 // Moderation v1: Resolution receipt action
 export const MODERATION_RESOLVED_ACTION = 'moderation_resolved';

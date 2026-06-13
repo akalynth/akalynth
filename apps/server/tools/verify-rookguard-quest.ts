@@ -14,6 +14,7 @@ import {
 } from '@akalynth/coordination-kernel';
 import {
   applyReceiptToRookguardQuest,
+  buildOnwardRouteProgress,
   buildRookguardQuestProgress,
   clearRookguardQuestProjection,
   getRookguardQuestInput,
@@ -114,9 +115,19 @@ function replay(receipts: AuditReceipt[]) {
 test('initial quest starts at the move objective', () => {
   const state = input();
   const quest = buildRookguardQuestProgress(state);
+  const routes = buildOnwardRouteProgress(state);
   assert(quest.phase === 'tutorial', `expected tutorial phase, got ${quest.phase}`);
   assert(rookguardQuestObjective(state) === 'Step onto the move rune', 'initial objective mismatch');
   assert(!rookguardGateOpen(state), 'gate must not open before tutorial/training/profession');
+  assert(routes.every((route) => route.status === 'locked'), 'onward routes must start locked');
+  assert(
+    routes.some((route) => route.route_id === 'forgehold_route_slice_v1' && route.objectives.some((objective) => objective.system === 'crafting')),
+    'Forgehold route should expose the crafting objective without unlocking it'
+  );
+  assert(
+    routes.some((route) => route.route_id === 'moonspire_dream_gate_slice_v1' && route.objectives.some((objective) => objective.system === 'dream_gate')),
+    'Moonspire route should expose the Dream Gate objective without unlocking it'
+  );
 });
 
 test('move chat and Tem lead to training, not the gate', () => {
@@ -160,6 +171,7 @@ test('gate step completes the Rookguard Codex path', () => {
     vocation: 'hexer',
   });
   const quest = buildRookguardQuestProgress(state);
+  const routes = buildOnwardRouteProgress(state);
   const byStep = Object.fromEntries(quest.steps.map((step) => [step.step_id, step]));
 
   assert(quest.completed, 'quest should be complete');
@@ -183,6 +195,11 @@ test('gate step completes the Rookguard Codex path', () => {
   assert(byStep.training.receipt_actions.includes('mob_kill'), 'training step must cite mob_kill proof');
   assert(byStep.profession.receipt_actions.includes('vocation_declared'), 'profession step must cite vocation proof');
   assert(byStep.gate.receipt_actions.includes('tutorial_completed'), 'gate step must cite tutorial completion proof');
+  assert(routes.every((route) => route.status === 'available'), 'completed Rookguard path should make onward routes available');
+  assert(
+    routes.every((route) => route.receipt_actions.includes('tutorial_completed') && route.receipt_actions.includes('gate_unlock')),
+    'onward routes should cite existing Rookguard completion receipts'
+  );
 });
 
 test('receipt projection restores partial Rookguard Codex path', () => {

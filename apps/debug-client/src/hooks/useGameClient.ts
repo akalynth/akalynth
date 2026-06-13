@@ -71,6 +71,26 @@ const ACCOUNT_CHARACTER_OUTFIT_IDS = new Set([
   'female_guard',
   'female_mage',
 ]);
+const ROUTE_ACTION_SKILL_IDS = new Set([
+  'route:survey:forgehold',
+  'route:survey:moonspire',
+  'route:safety:forgehold',
+  'route:safety:moonspire',
+  'route:quest:shipment',
+  'route:economy:forgehold',
+  'route:economy:settle',
+  'route:economy:payout',
+  'route:craft:soulsteel',
+  'route:craft:ashglass',
+  'route:craft:refine',
+  'route:craft:mint',
+  'route:gate:heartforge',
+  'route:gate:moonspire',
+  'route:dream:traverse',
+  'route:dream:arrive',
+  'route:dream:interpret',
+  'route:dream:fragment',
+]);
 
 function wsUrl(base: string): string {
   if (base.startsWith('ws://') || base.startsWith('wss://')) return base;
@@ -1085,8 +1105,22 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
                     ? 'Not enough gold'
                     : data.reason === 'invalid_target'
                       ? 'Must be in the guild hall'
-                      : 'Purchase failed';
+                    : 'Purchase failed';
                 return pushToast(s, 'npc', line, 'SHOP');
+              }
+              if (ROUTE_ACTION_SKILL_IDS.has(skillId)) {
+                const title = typeof payload?.title === 'string' ? payload.title : 'Route';
+                const next = typeof payload?.next_objective === 'string' ? payload.next_objective : 'Route action recorded.';
+                const marker = typeof payload?.quality === 'string'
+                  ? ` [${payload.quality}]`
+                  : typeof payload?.gate_state === 'string'
+                    ? ` [${payload.gate_state}]`
+                    : typeof payload?.route_state === 'string'
+                      ? ` [${payload.route_state}]`
+                    : '';
+                const reason = typeof data.reason === 'string' ? data.reason : 'rejected';
+                const line = success ? `${title}${marker}: ${next}` : `Route action unavailable: ${reason}`;
+                return pushToast(s, 'objective', line, 'ROUTE');
               }
               return { ...s, conn };
             }
