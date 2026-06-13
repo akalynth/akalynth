@@ -22,6 +22,15 @@ import {
 export const SESSION_COOKIE = 'akalynth_session';
 export const CSRF_COOKIE = 'akalynth_csrf';
 
+// Operator Codex surface gating (AKALYNTH_OPERATOR_CODEX_GATE_V1): which account
+// roles may view each surface. 'admin' implies all; operators also see 'agent'.
+export const SURFACE_ROLE_MAP: Record<string, string[]> = {
+  operator: ['admin', 'operator'],
+  builder: ['admin', 'builder'],
+  agent: ['admin', 'operator', 'agent'],
+};
+export const ADMIN_LOGIN_PATH = '/operator/login';
+
 const MIN_PASSWORD_LEN = 8;
 const MAX_PASSWORD_LEN = 200;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -64,6 +73,7 @@ export interface AccountResponse {
   status: number;
   body: unknown;
   cookies?: string[];
+  headers?: Record<string, string>;
 }
 
 const iso = (ms: number) => new Date(ms).toISOString();
@@ -77,6 +87,18 @@ function normalizeEmail(email: string): { email: string; lower: string } | null 
 
 function validPassword(p: string): boolean {
   return typeof p === 'string' && p.length >= MIN_PASSWORD_LEN && p.length <= MAX_PASSWORD_LEN;
+}
+
+/** Parse the accounts.roles JSON column into a string[]; defaults to ['player']. */
+function parseAccountRoles(rolesJson: string | null | undefined): string[] {
+  if (typeof rolesJson !== 'string' || !rolesJson) return ['player'];
+  try {
+    const v = JSON.parse(rolesJson);
+    if (Array.isArray(v)) return v.filter((r): r is string => typeof r === 'string');
+  } catch {
+    // fall through
+  }
+  return ['player'];
 }
 
 export class AccountService {
@@ -255,8 +277,40 @@ export class AccountService {
     if (!acct) return { status: 401, body: { ok: false, error: 'not_authenticated' } };
     return {
       status: 200,
-      body: { ok: true, account: { account_id: acct.account_id, email_verified: acct.email_verified === 1, status: acct.status, created_at: acct.created_at } },
+      body: { ok: true, account: { account_id: acct.account_id, email_verified: acct.email_verified === 1, status: acct.status, roles: parseAccountRoles(acct.roles), created_at: acct.created_at } },
     };
+  }
+
+  /**
+   * GET /v1/accounts/authorize — Caddy forward_auth gate for the operator Codex
+   * surfaces. 200 if the session's account holds a role permitting `surface`;
+   * 302 to the admin login (with ?next=) when unauthenticated; 403 when signed in
+   * without the role. Read-only GET subrequest (no body, no cookies set).
+   */
+  authorize(ctx: RequestCtx, surface: string, requestedUri: string): AccountResponse {
+    const allowed = SURFACE_ROLE_MAP[surface];
+    if (!allowed) return { status: 400, body: { ok: false, error: 'unknown_surface' } };
+
+    // Only allow a same-site, path-absolute next; reject protocol-relative ('//')
+    // and absolute URLs to avoid an open redirect off the login page.
+    const safeNext = requestedUri.startsWith('/') && !requestedUri.startsWith('//');
+    const next = safeNext ? requestedUri : `/${surface}/`;
+    const loginRedirect: AccountResponse = {
+      status: 302,
+      body: { ok: false, error: 'not_authenticated' },
+      headers: { Location: `${ADMIN_LOGIN_PATH}?next=${encodeURIComponent(next)}`, 'Cache-Control': 'no-store' },
+    };
+
+    const session = this.resolveSession(ctx);
+    if (!session) return loginRedirect;
+    const acct = this.d.store.findById(session.account_id);
+    if (!acct) return loginRedirect;
+
+    const roles = parseAccountRoles(acct.roles);
+    if (roles.some((r) => allowed.includes(r))) {
+      return { status: 200, body: { ok: true, surface, roles }, headers: { 'Cache-Control': 'no-store' } };
+    }
+    return { status: 403, body: { ok: false, error: 'forbidden_surface', surface }, headers: { 'Cache-Control': 'no-store' } };
   }
 
   /** POST /v1/accounts/logout — requires session + matching CSRF double-submit. */

@@ -52,6 +52,13 @@ export class AccountStore {
       .run(passwordHash, whenIso, accountId);
   }
 
+  /** Replace an account's roles (rolesJson = JSON array of role strings). */
+  setRoles(accountId: string, rolesJson: string, whenIso: string): void {
+    this.db
+      .prepare(`UPDATE accounts SET roles = ?, updated_at = ? WHERE account_id = ?`)
+      .run(rolesJson, whenIso, accountId);
+  }
+
   // ---- email verifications ----
 
   insertVerification(row: {
