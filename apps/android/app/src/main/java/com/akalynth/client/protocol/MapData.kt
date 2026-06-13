@@ -1,6 +1,16 @@
 package com.akalynth.client.protocol
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.jsonObject
 
 // Canonical static map data, mirroring packages/shared/maps/*.json and the MapData shape in
 // packages/shared/types.ts. Bundled as a read-only client asset so the Android client renders
@@ -15,6 +25,7 @@ data class MapData(
     val tiles: List<Int>,
     // Display/context landmarks from the shared map JSON. UI may use these to show contextual
     // controls, but server authority still owns movement, collision, and action acceptance.
+    @Serializable(with = LenientLandmarksSerializer::class)
     val landmarks: Map<String, MapLandmark> = emptyMap()
 ) {
     // Tile code at (x, y), or TileCode.WALL when out of bounds.
@@ -26,6 +37,33 @@ data class MapData(
 
 @Serializable
 data class MapSpawn(val x: Int, val y: Int)
+
+/**
+ * Tolerant deserializer for the `landmarks` map. The canonical maps carry a heterogeneous shape:
+ * flat rects (`"plaza":{x,y,width,height}`) alongside nested groups (`"tutorial":{move,chat,tem}`).
+ * Strict `Map<String, MapLandmark>` decoding throws on the nested group, which previously failed the
+ * whole (display-only) MapData decode and blanked the tile grid. Keep only flat MapLandmark-shaped
+ * entries; ignore the rest. Server authority is unaffected — this is render context only.
+ */
+private object LenientLandmarksSerializer : KSerializer<Map<String, MapLandmark>> {
+    private val delegate = MapSerializer(String.serializer(), MapLandmark.serializer())
+    override val descriptor: SerialDescriptor = delegate.descriptor
+
+    override fun deserialize(decoder: Decoder): Map<String, MapLandmark> {
+        val input = decoder as? JsonDecoder ?: return emptyMap()
+        val obj = input.decodeJsonElement().jsonObject
+        val result = LinkedHashMap<String, MapLandmark>()
+        for ((key, value) in obj) {
+            if (value is JsonObject && "x" in value && "y" in value && "width" in value && "height" in value) {
+                result[key] = input.json.decodeFromJsonElement(MapLandmark.serializer(), value)
+            }
+        }
+        return result
+    }
+
+    override fun serialize(encoder: Encoder, value: Map<String, MapLandmark>) =
+        delegate.serialize(encoder, value)
+}
 
 @Serializable
 data class MapLandmark(
