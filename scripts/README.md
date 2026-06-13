@@ -11,6 +11,7 @@ Scripts should be idempotent and documented.
 - MVP / smoke: `verify_mvp.sh`, `showcase_local.sh`, `studio-smoke.mjs`
 - Account-character parity: root `npm run verify:account-character`
 - Docker runtime: `verify-docker-runtime.sh`, `smoke-docker-runtime.sh`, `render-docker-runtime.sh`
+- Edge ops: `add-plane-c-android-peer.sh`, `verify-plane-c-ollama.sh`, `open-graphene-termux.sh`, `open-graphene-droidvnc.sh`, `deploy-temp-android-novnc-lane.sh`, `deploy-temp-rustdesk-server.sh`
 - Policy guards / hooks: `phase_gate.ts`, `precommit-hook.sh`, `refuse_windows.{js,sh}`, `warn_protocol_change.sh`, `require-chronicle.js`
 - Formatting: `format_ts.sh`
 - Verification harness: `verify/` (see `verify/README.md`)
@@ -31,6 +32,37 @@ Scripts should be idempotent and documented.
 
 ### Root scripts
 - `scripts/bootstrap_linux.sh`: Linux-only bootstrap for system deps (apt installs node/npm/git/build tools). Run: `sudo ./scripts/bootstrap_linux.sh`
+- `scripts/add-plane-c-android-peer.sh`: Dry-run or apply the GrapheneOS
+  Android Plane C WireGuard peer on `edge02`/`wg-edge-03`. Run:
+  `PEER_PUBLIC_KEY='<android-public-key>' scripts/add-plane-c-android-peer.sh`
+  for validation, then add `APPLY=1` once the Android public key and SSH access
+  are confirmed. Android private keys must remain on the phone.
+- `scripts/verify-plane-c-ollama.sh`: Verify the private-only Ollama path
+  `Android -> WireGuard Plane C -> 10.46.0.1:11434`. Run:
+  `SSH_TARGET='<edge02-ssh-target>' scripts/verify-plane-c-ollama.sh`, adding
+  `PEER_PUBLIC_KEY='<android-public-key>'` to require the Android peer and
+  `ANDROID_SERIAL='<adb-serial>'` to test Android-side TCP reachability.
+- `scripts/open-graphene-termux.sh`: Open Termux on the active GrapheneOS
+  emulator clone, defaulting to `emulator-5576`, and mirror it with `scrcpy`
+  when `scrcpy` and a graphical display are available. Run:
+  `ANDROID_SERIAL=emulator-5576 scripts/open-graphene-termux.sh`.
+- `scripts/open-graphene-droidvnc.sh`: Open droidVNC-NG on the active
+  GrapheneOS emulator clone, defaulting to `emulator-5576`, and mirror it with
+  `scrcpy` when `scrcpy` and a graphical display are available. Run:
+  `ANDROID_SERIAL=emulator-5576 scripts/open-graphene-droidvnc.sh`.
+- `scripts/deploy-temp-android-novnc-lane.sh`: Create a temporary public
+  HTTPS/noVNC lane on `edge02` to Android droidVNC-NG over Plane C. It refuses
+  raw public VNC, requires a dedicated `PUBLIC_HOSTNAME`, generates a random
+  URL path plus Caddy basic-auth password, and installs a systemd timer that
+  tears the lane down after `DURATION=4h` by default. Run from `goal0-edge-01`:
+  `PUBLIC_HOSTNAME='<temporary-dns-name>' SSH_TARGET=edge02 scripts/deploy-temp-android-novnc-lane.sh`.
+- `scripts/deploy-temp-rustdesk-server.sh`: Create a temporary public RustDesk
+  OSS server on `edge02` with `hbbs` and `hbbr`, using TCP `21115-21119` and
+  UDP `21116`. It downloads verified RustDesk server binaries, writes systemd
+  services, outputs the RustDesk client ID server / relay / key values, and
+  installs a cleanup timer that removes the services and generated server key
+  after `DURATION=4h` by default. Run from `goal0-edge-01`:
+  `PUBLIC_ADDR='89.213.118.222' SSH_TARGET=edge02 scripts/deploy-temp-rustdesk-server.sh`.
 - `scripts/ci_invariant_guard.sh`: CI guard enforcing API-first invariants (checks required verification scripts on runtime changes). Run: `./scripts/ci_invariant_guard.sh`
 - `scripts/format_ts.sh`: Prettier formatter for a single TS/TSX file (used by tooling via `CLAUDE_FILE_PATH`). Run: `CLAUDE_FILE_PATH=path/to/file.ts ./scripts/format_ts.sh`
 - `scripts/phase_gate.ts`: PreToolUse hook that blocks high-risk/forbidden edits unless `verify:quick` passes. Invoked by hook runner (reads JSON on stdin).
