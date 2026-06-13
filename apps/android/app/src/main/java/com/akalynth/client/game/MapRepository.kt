@@ -15,6 +15,7 @@ object MapRepository {
         MapName.ROOKGUARD -> "maps/rookguard.json"
         MapName.AZURA -> "maps/azura.json"
         MapName.HIGH_CITY -> "maps/azura.json"
+        MapName.TILE_SHOWCASE -> "maps/tile_showcase.json"
     }
 
     // Returns MapData for map, or null if the asset is missing/unreadable. Cached per map.

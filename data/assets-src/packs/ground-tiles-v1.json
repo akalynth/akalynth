@@ -1,0 +1,13 @@
+{
+  "pack": "AKALYNTH_GROUND_TILES_PACK_V1",
+  "version": 1,
+  "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+  "description": "Priority opaque, seamless ground/terrain tiles for the base TileCode set. Each is a full-fill terrain tile (not a transparent cut-out) so the world renders solid instead of dark. Display-only TileCode intent (never authority): grass->GRASS(0), stone_ground->STONE(1), water->WATER(3); dirt_path/cobblestone are town ground variants. Production backlog only — all prompt_written; NOT generated/cleaned/normalized/reviewed/promoted. Generation needs OPENAI_API_KEY (tools/asset-gen/.env, --background opaque) plus the human style-board + review gate per FACTORY.md.",
+  "assets": [
+    { "id": "akalynth_tile_grass_001", "asset_type": "tile", "target_dims": [32, 32], "status": "prompt_written", "prompt_file": "data/assets-src/prompts/tiles/akalynth_tile_grass_001.txt" },
+    { "id": "akalynth_tile_stone_ground_001", "asset_type": "tile", "target_dims": [32, 32], "status": "prompt_written", "prompt_file": "data/assets-src/prompts/tiles/akalynth_tile_stone_ground_001.txt" },
+    { "id": "akalynth_tile_water_001", "asset_type": "tile", "target_dims": [32, 32], "status": "prompt_written", "prompt_file": "data/assets-src/prompts/tiles/akalynth_tile_water_001.txt" },
+    { "id": "akalynth_tile_dirt_path_001", "asset_type": "tile", "target_dims": [32, 32], "status": "prompt_written", "prompt_file": "data/assets-src/prompts/tiles/akalynth_tile_dirt_path_001.txt" },
+    { "id": "akalynth_tile_cobblestone_001", "asset_type": "tile", "target_dims": [32, 32], "status": "prompt_written", "prompt_file": "data/assets-src/prompts/tiles/akalynth_tile_cobblestone_001.txt" }
+  ]
+}

@@ -18,7 +18,7 @@ each asset lineage (prompt + raw + cleaned + hash), a lifecycle gate, and a hard
 | `dimensions_px` | [int,int] \| null | Actual cleaned-PNG size; `null` before a cleaned PNG exists. Each value a multiple of 32. |
 | `dimensions_target_px` | [int,int] | Intended size (multiple of 32: 32x32 / 32x64 / 64x64). |
 | `camera` | string | `"top_down_slight_isometric"`. |
-| `background` | string | `"transparent"`. |
+| `background` | string | `"transparent"` for cut-out objects/sprites; `"opaque"` for seamless terrain tiles (full fill, matches `generate.ts --background opaque`). |
 | `style_contract` | string | `"nostalgic_top_down_mmo_readability_original_akalynth_assets_v1"`. |
 | `prompt_file` | string \| null | Path under `data/assets-src/prompts/…`, or `null` for hand-authored. |
 | `raw_file` | string \| null | Raw generator output under `data/assets-src/_raw/…` (gitignored), or `null`. |

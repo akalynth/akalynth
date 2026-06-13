@@ -89,7 +89,9 @@ function validateFactorySidecar(jsonPath: string, pngPath: string) {
   if (!ASSET_TYPES.has(m.asset_type as string)) fail(f, `asset_type '${m.asset_type}' invalid`);
   if (!LIFECYCLE.includes(m.status as string)) fail(f, `status '${m.status}' invalid`);
   if (m.style_contract !== STYLE_CONTRACT) fail(f, 'style_contract mismatch');
-  if (m.background !== 'transparent') fail(f, 'background must be transparent');
+  // Cut-out objects/sprites are transparent; seamless terrain TILES are an opaque full fill
+  // (matches generate.ts --background opaque). Both are valid.
+  if (m.background !== 'transparent' && m.background !== 'opaque') fail(f, "background must be 'transparent' or 'opaque'");
   if (m.camera !== 'top_down_slight_isometric') fail(f, 'camera invalid');
   if (!['hand_authored', 'original_generated_asset'].includes(m.license_status as string)) fail(f, 'license_status invalid');
   if (!['needs_human_review', 'approved', 'legacy'].includes(m.review_status as string)) fail(f, 'review_status invalid');
