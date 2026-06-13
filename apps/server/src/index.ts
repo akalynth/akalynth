@@ -1314,7 +1314,9 @@ const characterService = new CharacterService({
 const handleCharacter = makeCharacterRouter({
   service: characterService,
   resolveAccount: (cookies) => accountService.sessionAccount(cookies),
-  requireVerifiedForCreate: true,
+  // Email verification is a later, non-blocking lane (AKALYNTH_ACCOUNT_NICKNAME_V1):
+  // characters can be created on an unverified (or email-less nickname) account.
+  requireVerifiedForCreate: false,
 });
 const handleEconomy = makeWebEconomyRouter({
   resolveAccount: (cookies) => accountService.sessionAccount(cookies),

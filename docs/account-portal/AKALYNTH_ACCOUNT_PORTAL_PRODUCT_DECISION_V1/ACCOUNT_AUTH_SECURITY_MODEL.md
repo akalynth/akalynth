@@ -35,6 +35,14 @@ contract that E1/E2/E3 implementations MUST satisfy. No code here.
 - Register, login, reset-request, and resend-verification responses must **not reveal
   whether an email exists** (uniform messages, uniform timing where feasible,
   consistent status codes).
+- **Nickname (handle) exception (AKALYNTH_ACCOUNT_NICKNAME_V1):** nickname
+  availability *is* disclosed — registration returns `handle_taken` (409) when a
+  nickname is in use, because a nickname sign-up must tell the user it is taken (same
+  posture as the principal/identity API). Email stays no-enumeration: an email is only
+  attached when free, and an email-only signup with an existing email still returns the
+  uniform success. Login stays uniform (`invalid_credentials`) for nickname and email
+  alike. Email verification is a later, non-blocking lane; nickname-only accounts have
+  no email-based password recovery (disclosed to the user at signup).
 
 ## Sessions
 

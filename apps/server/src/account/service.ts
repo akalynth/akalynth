@@ -85,6 +85,18 @@ function normalizeEmail(email: string): { email: string; lower: string } | null 
   return { email: trimmed, lower: trimmed.toLowerCase() };
 }
 
+// Nickname (handle) rules mirror the principal system (principal/service.ts): 3–32
+// chars, letters/digits/_/-, starting with a letter; a small reserved set is denied.
+const HANDLE_RE = /^[A-Za-z][A-Za-z0-9_-]{2,31}$/;
+const RESERVED_HANDLES = new Set(['admin', 'moderator', 'project', 'system', 'support', 'official', 'akalynth']);
+function normalizeHandle(handle: string): { handle: string; lower: string } | null {
+  const trimmed = handle.trim();
+  if (!HANDLE_RE.test(trimmed)) return null;
+  const lower = trimmed.toLowerCase();
+  if (RESERVED_HANDLES.has(lower) || lower.startsWith('guest_') || lower.startsWith('deleted_')) return null;
+  return { handle: trimmed, lower };
+}
+
 function validPassword(p: string): boolean {
   return typeof p === 'string' && p.length >= MIN_PASSWORD_LEN && p.length <= MAX_PASSWORD_LEN;
 }
@@ -134,57 +146,108 @@ export class AccountService {
     ];
   }
 
-  /** POST /v1/accounts/register — uniform response (no enumeration). */
-  async register(input: { email?: unknown; password?: unknown }): Promise<AccountResponse> {
+  /**
+   * POST /v1/accounts/register — nickname-or-email signup.
+   * Nickname (handle) is the primary identifier; email is OPTIONAL and verified
+   * later (a non-blocking lane). At least one of handle/email is required, plus a
+   * valid password. Handle uniqueness is disclosed (handle_taken) — handles are
+   * inherently enumerable, like the principal API. Email keeps the uniform,
+   * no-enumeration response and is only attached if free. Backward-compatible:
+   * `{ email, password }` (no handle) still works for existing clients.
+   */
+  async register(input: { handle?: unknown; email?: unknown; password?: unknown }): Promise<AccountResponse> {
     const now = this.d.now();
-    // Uniform success body regardless of whether the email already exists.
-    const uniform: AccountResponse = {
-      status: 200,
-      body: { ok: true, message: 'If this email can be registered, a verification link has been sent.' },
-    };
-
-    const norm = typeof input.email === 'string' ? normalizeEmail(input.email) : null;
-    if (!norm || !validPassword(input.password as string)) {
-      // Shape errors (bad email/password) are safe to report without enumeration.
-      return { status: 400, body: { ok: false, error: 'invalid_input', message: `Provide a valid email and a password of at least ${MIN_PASSWORD_LEN} characters.` } };
+    if (!validPassword(input.password as string)) {
+      return { status: 400, body: { ok: false, error: 'invalid_input', message: `Provide a password of at least ${MIN_PASSWORD_LEN} characters.` } };
+    }
+    const wantsHandle = typeof input.handle === 'string' && (input.handle as string).trim() !== '';
+    const wantsEmail = typeof input.email === 'string' && (input.email as string).trim() !== '';
+    if (!wantsHandle && !wantsEmail) {
+      return { status: 400, body: { ok: false, error: 'invalid_input', message: 'Provide a nickname or an email.' } };
     }
 
-    const existing = this.d.store.findByEmailLower(norm.lower);
-    if (existing) {
-      // Do not reveal existence; in a fuller flow we'd email "you already have an
-      // account". Return the same uniform response.
-      return uniform;
+    // Handle: validate + uniqueness (explicit errors).
+    let handle: string | null = null;
+    let handleLower: string | null = null;
+    if (wantsHandle) {
+      const h = normalizeHandle(input.handle as string);
+      if (!h) {
+        return { status: 400, body: { ok: false, error: 'invalid_handle', message: 'Nickname must be 3-32 characters: letters, digits, _ or -, starting with a letter.' } };
+      }
+      if (this.d.store.findByHandleLower(h.lower)) {
+        return { status: 409, body: { ok: false, error: 'handle_taken', message: 'That nickname is taken.' } };
+      }
+      handle = h.handle;
+      handleLower = h.lower;
+    }
+
+    // Email: optional, no-enumeration. Only attach if shape-valid AND free.
+    const uniformEmailBody = { ok: true, message: 'If this email can be registered, a verification link has been sent.' };
+    let email: string | null = null;
+    let emailLower: string | null = null;
+    if (wantsEmail) {
+      const norm = normalizeEmail(input.email as string);
+      if (!norm) {
+        return { status: 400, body: { ok: false, error: 'invalid_input', message: 'Provide a valid email address.' } };
+      }
+      if (!this.d.store.findByEmailLower(norm.lower)) {
+        email = norm.email;
+        emailLower = norm.lower;
+      }
+      // If taken: silently skip attaching the email (no enumeration). A nickname is
+      // still created below; an email-only signup with a taken email creates nothing.
+    }
+
+    if (!wantsHandle && wantsEmail && !email) {
+      // Legacy email-only signup, email already registered -> uniform success, no creation.
+      return { status: 200, body: uniformEmailBody };
     }
 
     const accountId = newId('acc');
     const passwordHash = await this.d.hashPassword(input.password as string);
     this.d.store.insertAccount({
       account_id: accountId,
-      email: norm.email,
-      email_lower: norm.lower,
+      email,
+      email_lower: emailLower,
+      handle,
+      handle_lower: handleLower,
       password_hash: passwordHash,
-      status: 'registered_unverified',
+      status: email ? 'registered_unverified' : 'active',
       created_at: iso(now),
       created_receipt: null,
     });
     this.d.emitReceipt({ action: RECEIPT_ACTIONS.ACCOUNT_CREATED, accountId, result: 'ok' });
 
-    // Issue an email-verification token (delivery is E3; dev mode logs it).
-    const token = newToken();
-    this.d.store.insertVerification({
-      id: newId('ev'),
-      account_id: accountId,
-      token_hash: hashToken(token),
-      created_at: iso(now),
-      expires_at: iso(addSec(now, this.d.config.verificationTtlSec)),
-    });
-    this.d.emitReceipt({ action: RECEIPT_ACTIONS.ACCOUNT_EMAIL_VERIFICATION_REQUESTED, accountId, result: 'ok' });
-    this.d.logLink?.('verify', accountId, token);
-    this.d.deliverEmail?.({ kind: 'verify', accountId, email: norm.email, token });
+    let devToken: string | undefined;
+    if (email) {
+      // Issue an email-verification token (deferred lane; delivery is E3).
+      const token = newToken();
+      this.d.store.insertVerification({
+        id: newId('ev'),
+        account_id: accountId,
+        token_hash: hashToken(token),
+        created_at: iso(now),
+        expires_at: iso(addSec(now, this.d.config.verificationTtlSec)),
+      });
+      this.d.emitReceipt({ action: RECEIPT_ACTIONS.ACCOUNT_EMAIL_VERIFICATION_REQUESTED, accountId, result: 'ok' });
+      this.d.logLink?.('verify', accountId, token);
+      this.d.deliverEmail?.({ kind: 'verify', accountId, email, token });
+      if (this.d.config.devExposeLinks) devToken = token;
+    }
 
-    return this.d.config.devExposeLinks
-      ? { status: 200, body: { ...(uniform.body as object), dev_verification_token: token } }
-      : uniform;
+    const account = { account_id: accountId, handle, email_verified: false, status: email ? 'registered_unverified' : 'active' };
+    const body: Record<string, unknown> = { ok: true, account };
+    // Recovery posture: nickname-only accounts have no email-based reset.
+    if (!email) {
+      body.recovery = 'none';
+      body.loss_warning = 'No email is set on this account, so there is no password recovery. Add an email later to enable recovery.';
+    } else {
+      body.recovery = 'email_pending_verification';
+      body.message = uniformEmailBody.message;
+      if (devToken) body.dev_verification_token = devToken;
+    }
+    // 200 for the legacy email path (no handle); 201 when a nickname account is created.
+    return { status: wantsHandle ? 201 : 200, body };
   }
 
   /** POST /v1/accounts/verify-email — consume a verification token. */
@@ -203,15 +266,31 @@ export class AccountService {
     return { status: 200, body: { ok: true } };
   }
 
-  /** POST /v1/accounts/login — uniform invalid-credentials; sets session + CSRF cookies. */
-  async login(input: { email?: unknown; password?: unknown }, ctx: RequestCtx): Promise<AccountResponse> {
+  /**
+   * POST /v1/accounts/login — sign in with a nickname OR an email.
+   * Accepts `identifier` (preferred), or legacy `email`, or `handle`. An
+   * '@'-containing identifier is resolved as an email, otherwise as a nickname.
+   * Uniform invalid-credentials (no enumeration); sets session + CSRF cookies.
+   */
+  async login(input: { identifier?: unknown; email?: unknown; handle?: unknown; password?: unknown }, ctx: RequestCtx): Promise<AccountResponse> {
     const now = this.d.now();
     const invalid: AccountResponse = { status: 401, body: { ok: false, error: 'invalid_credentials' } };
 
-    const norm = typeof input.email === 'string' ? normalizeEmail(input.email) : null;
-    if (!norm || typeof input.password !== 'string') return invalid;
+    const idRaw =
+      typeof input.identifier === 'string' ? input.identifier
+      : typeof input.email === 'string' ? input.email
+      : typeof input.handle === 'string' ? input.handle
+      : '';
+    const id = idRaw.trim();
+    if (!id || typeof input.password !== 'string') return invalid;
 
-    const acct = this.d.store.findByEmailLower(norm.lower);
+    let acct;
+    if (id.includes('@')) {
+      const norm = normalizeEmail(id);
+      acct = norm ? this.d.store.findByEmailLower(norm.lower) : undefined;
+    } else {
+      acct = this.d.store.findByHandleLower(id.toLowerCase());
+    }
     if (!acct) {
       this.d.emitReceipt({ action: RECEIPT_ACTIONS.ACCOUNT_LOGIN_FAILED, accountId: null, inputs: { reason: 'no_account' }, result: 'rejected' });
       return invalid;
@@ -242,7 +321,7 @@ export class AccountService {
 
     return {
       status: 200,
-      body: { ok: true, account: { account_id: acct.account_id, email_verified: acct.email_verified === 1, status: acct.status }, csrf_token: csrf },
+      body: { ok: true, account: { account_id: acct.account_id, handle: acct.handle, email_verified: acct.email_verified === 1, status: acct.status }, csrf_token: csrf },
       cookies: this.sessionCookies(token, csrf),
     };
   }
@@ -277,7 +356,7 @@ export class AccountService {
     if (!acct) return { status: 401, body: { ok: false, error: 'not_authenticated' } };
     return {
       status: 200,
-      body: { ok: true, account: { account_id: acct.account_id, email_verified: acct.email_verified === 1, status: acct.status, roles: parseAccountRoles(acct.roles), created_at: acct.created_at } },
+      body: { ok: true, account: { account_id: acct.account_id, handle: acct.handle, has_email: !!acct.email_lower, email_verified: acct.email_verified === 1, status: acct.status, roles: parseAccountRoles(acct.roles), created_at: acct.created_at } },
     };
   }
 
@@ -333,7 +412,7 @@ export class AccountService {
     const norm = typeof input.email === 'string' ? normalizeEmail(input.email) : null;
     if (!norm) return uniform;
     const acct = this.d.store.findByEmailLower(norm.lower);
-    if (!acct) return uniform;
+    if (!acct || !acct.email) return uniform;
 
     const token = newToken();
     this.d.store.insertReset({
