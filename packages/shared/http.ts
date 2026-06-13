@@ -91,6 +91,10 @@ export interface AccountCharacterWorldOption {
   world_id: AccountCharacterWorldId;
   name: string;
   description: string;
+  /** Player-facing short label; additive catalog metadata. */
+  tagline?: string;
+  /** Player-facing district names; descriptive only, not a movement/access grant. */
+  districts?: string[];
 }
 
 export interface AccountCharacterOutfitOption {

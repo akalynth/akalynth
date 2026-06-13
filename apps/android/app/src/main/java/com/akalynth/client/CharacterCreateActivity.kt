@@ -392,7 +392,11 @@ class CharacterCreateActivity : Activity() {
                     worlds.clear()
                     worlds.addAll(items)
                     worldAdapter.clear()
-                    worldAdapter.addAll(items.map { it.name.ifBlank { it.worldId } })
+                    worldAdapter.addAll(items.map { world ->
+                        val name = world.name.ifBlank { world.worldId }
+                        val tagline = world.tagline.ifBlank { world.districts.take(2).joinToString(", ") }
+                        if (tagline.isBlank()) name else "$name - $tagline"
+                    })
                     if (items.isNotEmpty()) {
                         selectedWorldId = items[0].worldId
                         worldSpinner.setSelection(0)

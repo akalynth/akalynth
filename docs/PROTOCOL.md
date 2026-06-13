@@ -48,7 +48,9 @@ and do not add a WebSocket message type. Catalog reads are public. Character
 list/select require an account session; create requires an account session,
 double-submit CSRF, verified email, and exact canonical `world_id` values
 (`rookguard` or `high_city`). Legacy `azura` is not accepted as account-character
-create input.
+create input. World catalog rows may include additive player-facing `tagline`
+and `districts` metadata. These fields are descriptive only; they do not grant
+map access, movement authority, rewards, or progression.
 
 Web economy portal endpoints live on the HTTP control plane under
 `/v1/shop/catalog`, `/v1/shop/purchase`, `/v1/wallet`, `/v1/property/buy`,

@@ -50,7 +50,9 @@ class IdentityApi(
 
     data class World(
         val worldId: String,
-        val name: String
+        val name: String,
+        val tagline: String,
+        val districts: List<String>
     )
 
     data class Outfit(
@@ -311,7 +313,22 @@ class IdentityApi(
                     val entry = arr.optJSONObject(i) ?: continue
                     val worldId = entry.optString("world_id")
                     if (VALID_WORLD_IDS.contains(worldId)) {
-                        out.add(World(worldId = worldId, name = entry.optString("name")))
+                        val districts = entry.optJSONArray("districts")
+                        val districtNames = ArrayList<String>()
+                        if (districts != null) {
+                            for (j in 0 until districts.length()) {
+                                val district = districts.optString(j)
+                                if (district.isNotBlank()) districtNames.add(district)
+                            }
+                        }
+                        out.add(
+                            World(
+                                worldId = worldId,
+                                name = entry.optString("name"),
+                                tagline = entry.optString("tagline"),
+                                districts = districtNames
+                            )
+                        )
                     }
                 }
                 out
