@@ -3,6 +3,7 @@ package com.akalynth.client.ui.components
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -19,6 +20,12 @@ import com.akalynth.client.protocol.MapName
 import com.akalynth.client.protocol.PlayerPublic
 import com.akalynth.client.protocol.PlayerStatus
 import com.akalynth.client.protocol.TileCode
+import com.akalynth.client.ui.render.ApplyRequestedFrameRate
+import com.akalynth.client.ui.render.EntityInterpolator
+import com.akalynth.client.ui.render.RenderClock
+import com.akalynth.client.ui.render.TilePos
+import com.akalynth.client.ui.render.rememberThermalTargetFps
+import kotlin.math.floor
 
 // Tile colors keyed by the canonical TileCode (mirrors packages/shared/types.ts TileCode).
 private val TILE_GRASS = Color(0xFF275522)
@@ -64,8 +71,11 @@ private fun colorFor(tile: TileCode): Color = when (tile) {
  * Renders the world around the player using the real canonical map tile grid
  * (see [MapRepository] / `packages/shared/maps`). Out-of-bounds cells render as wall.
  *
- * Display-only: the server remains authoritative for walkability and collision. Tiles are read
- * solely to draw, never to gate movement.
+ * Display-only: the server remains authoritative for walkability, collision, and position. The
+ * incoming integer tile positions are fed into a render-layer [EntityInterpolator] so the camera
+ * and other players glide smoothly between confirmed tiles instead of teleporting; nothing here is
+ * ever computed as truth or sent back. Redraws are paced by a [RenderClock] (capped, thermal-aware)
+ * that parks when the world is still.
  */
 @Composable
 fun GameCanvas(
@@ -78,90 +88,128 @@ fun GameCanvas(
     // Loaded once per map; MapRepository caches across recompositions.
     val mapData: MapData? = remember(map) { MapRepository.load(context, map) }
 
+    val interpolator = remember { EntityInterpolator() }
+    val targetFps = rememberThermalTargetFps(baseFps = 30)
+    ApplyRequestedFrameRate(targetFps.value)
+    val clock = remember { RenderClock(targetFps = { targetFps.value }) }
+
+    // A stable signature of the authoritative positions: changes only when a real position does,
+    // so we feed new glide targets (and prune absent entities) exactly on snapshot changes rather
+    // than on every recomposition.
+    val snapshotKey = buildString {
+        append(me?.id).append('@').append(me?.x).append(',').append(me?.y)
+        others.forEach { append('|').append(it.id).append('@').append(it.x).append(',').append(it.y) }
+    }
+    LaunchedEffect(snapshotKey) {
+        val now = clock.nowMs()
+        me?.let { interpolator.setTarget(it.id, it.x, it.y, now) }
+        others.forEach { interpolator.setTarget(it.id, it.x, it.y, now) }
+        val live = buildSet {
+            me?.let { add(it.id) }
+            others.forEach { add(it.id) }
+        }
+        interpolator.retain(live)
+        clock.wake()
+    }
+
+    // Choreographer-paced redraw loop; parks when motion settles.
+    LaunchedEffect(clock) {
+        clock.run { now -> interpolator.isAnimating(now) }
+    }
+
     Canvas(
         modifier = modifier.background(Color(0xFF090A0A))
     ) {
+        val player = me ?: return@Canvas
+        val now = clock.frameTimeMs.value
+        val camera = interpolator.positionOf(player.id, now)
+            ?: TilePos(player.x.toFloat(), player.y.toFloat())
+        val camX = camera.x
+        val camY = camera.y
+
         val tileSize = 36.dp.toPx()
         val centerX = size.width / 2
         val centerY = size.height / 2
+        // +3 tiles of margin so sub-tile camera scrolling never reveals an unpainted edge.
+        val visibleTilesX = (size.width / tileSize / 2).toInt() + 3
+        val visibleTilesY = (size.height / tileSize / 2).toInt() + 3
+        val baseTileX = floor(camX).toInt()
+        val baseTileY = floor(camY).toInt()
+        val visualLandmarks = highCityVisualLandmarksFor(map)
 
-        me?.let { player ->
-            val visibleTilesX = (size.width / tileSize / 2).toInt() + 2
-            val visibleTilesY = (size.height / tileSize / 2).toInt() + 2
-            val visualLandmarks = highCityVisualLandmarksFor(map)
+        for (dy in -visibleTilesY..visibleTilesY) {
+            for (dx in -visibleTilesX..visibleTilesX) {
+                val tileX = baseTileX + dx
+                val tileY = baseTileY + dy
 
-            for (dy in -visibleTilesY..visibleTilesY) {
-                for (dx in -visibleTilesX..visibleTilesX) {
-                    val tileX = player.x + dx
-                    val tileY = player.y + dy
+                val screenX = centerX + (tileX - camX) * tileSize - tileSize / 2
+                val screenY = centerY + (tileY - camY) * tileSize - tileSize / 2
 
-                    val screenX = centerX + (dx * tileSize) - tileSize / 2
-                    val screenY = centerY + (dy * tileSize) - tileSize / 2
+                // Real tile from canonical map data; wall outside bounds. If the asset failed to
+                // load, fall back to a neutral void rather than fabricating terrain.
+                val tile = mapData?.tileAt(tileX, tileY) ?: TileCode.UNKNOWN
 
-                    // Real tile from canonical map data; wall outside bounds. If the asset failed to
-                    // load, fall back to a neutral void rather than fabricating terrain.
-                    val tile = mapData?.tileAt(tileX, tileY) ?: TileCode.UNKNOWN
-
-                    drawRect(
-                        color = colorFor(tile),
-                        topLeft = Offset(screenX, screenY),
-                        size = Size(tileSize - 1, tileSize - 1)
-                    )
-                }
-            }
-
-            drawHighCityVisualLandmarks(
-                landmarks = visualLandmarks.filter { it.isFloor },
-                player = player,
-                tileSize = tileSize,
-                centerX = centerX,
-                centerY = centerY
-            )
-            drawHighCityVisualLandmarks(
-                landmarks = visualLandmarks.filterNot { it.isFloor },
-                player = player,
-                tileSize = tileSize,
-                centerX = centerX,
-                centerY = centerY
-            )
-
-            // Draw other players
-            others.forEach { other ->
-                val offsetX = (other.x - player.x) * tileSize
-                val offsetY = (other.y - player.y) * tileSize
-
-                drawPlayer(
-                    x = centerX + offsetX,
-                    y = centerY + offsetY,
-                    radius = tileSize / 3,
-                    isDead = other.status == PlayerStatus.DEAD,
-                    isSelf = false,
-                    spriteId = other.spriteId
+                drawRect(
+                    color = colorFor(tile),
+                    topLeft = Offset(screenX, screenY),
+                    size = Size(tileSize - 1, tileSize - 1)
                 )
             }
+        }
 
-            // Draw self (always center)
+        drawHighCityVisualLandmarks(
+            landmarks = visualLandmarks.filter { it.isFloor },
+            cameraX = camX,
+            cameraY = camY,
+            tileSize = tileSize,
+            centerX = centerX,
+            centerY = centerY
+        )
+        drawHighCityVisualLandmarks(
+            landmarks = visualLandmarks.filterNot { it.isFloor },
+            cameraX = camX,
+            cameraY = camY,
+            tileSize = tileSize,
+            centerX = centerX,
+            centerY = centerY
+        )
+
+        // Other players, drawn at their smoothed positions but with authoritative status/sprite.
+        others.forEach { other ->
+            val pos = interpolator.positionOf(other.id, now)
+                ?: TilePos(other.x.toFloat(), other.y.toFloat())
             drawPlayer(
-                x = centerX,
-                y = centerY,
-                radius = tileSize / 2.7f,
-                isDead = player.status == PlayerStatus.DEAD,
-                isSelf = true,
-                spriteId = player.spriteId
+                x = centerX + (pos.x - camX) * tileSize,
+                y = centerY + (pos.y - camY) * tileSize,
+                radius = tileSize / 3,
+                isDead = other.status == PlayerStatus.DEAD,
+                isSelf = false,
+                spriteId = other.spriteId
             )
         }
+
+        // Draw self (always at the camera centre, since the camera follows the smoothed self).
+        drawPlayer(
+            x = centerX,
+            y = centerY,
+            radius = tileSize / 2.7f,
+            isDead = player.status == PlayerStatus.DEAD,
+            isSelf = true,
+            spriteId = player.spriteId
+        )
     }
 }
 
 private fun DrawScope.drawHighCityVisualLandmarks(
     landmarks: List<HighCityVisualLandmark>,
-    player: PlayerPublic,
+    cameraX: Float,
+    cameraY: Float,
     tileSize: Float,
     centerX: Float,
     centerY: Float
 ) {
     landmarks.forEach { landmark ->
-        val topLeft = tileTopLeft(landmark.x, landmark.y, player, tileSize, centerX, centerY)
+        val topLeft = tileTopLeft(landmark.x, landmark.y, cameraX, cameraY, tileSize, centerX, centerY)
         drawHighCityVisualLandmark(landmark, topLeft, tileSize)
     }
 }
@@ -169,13 +217,14 @@ private fun DrawScope.drawHighCityVisualLandmarks(
 private fun tileTopLeft(
     tileX: Int,
     tileY: Int,
-    player: PlayerPublic,
+    cameraX: Float,
+    cameraY: Float,
     tileSize: Float,
     centerX: Float,
     centerY: Float
 ): Offset {
-    val offsetX = (tileX - player.x) * tileSize
-    val offsetY = (tileY - player.y) * tileSize
+    val offsetX = (tileX - cameraX) * tileSize
+    val offsetY = (tileY - cameraY) * tileSize
     return Offset(
         x = centerX + offsetX - tileSize / 2,
         y = centerY + offsetY - tileSize / 2
