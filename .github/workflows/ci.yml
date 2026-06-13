@@ -482,7 +482,10 @@ jobs:
 
   android-instrumented:
     name: Android instrumented tests (Compose UI)
-    runs-on: [self-hosted, ubuntu-24.04]
+    # GitHub: its self-hosted runner. Gitea: the dedicated host-executor runner
+    # (akalynth-host-emulator, label `android-emulator`) which has /dev/kvm + the Android SDK;
+    # the container-executor Gitea runners can't boot an emulator, hence a separate label.
+    runs-on: ${{ github.server_url == 'https://github.com' && fromJSON('["self-hosted", "ubuntu-24.04"]') || 'android-emulator' }}
     timeout-minutes: 30
     permissions:
       contents: read
