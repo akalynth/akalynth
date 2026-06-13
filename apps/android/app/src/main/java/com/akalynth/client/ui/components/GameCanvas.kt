@@ -10,9 +10,12 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.akalynth.client.game.MapRepository
 import com.akalynth.client.protocol.MapData
@@ -24,8 +27,11 @@ import com.akalynth.client.ui.render.ApplyRequestedFrameRate
 import com.akalynth.client.ui.render.EntityInterpolator
 import com.akalynth.client.ui.render.RenderClock
 import com.akalynth.client.ui.render.TilePos
+import com.akalynth.client.ui.render.WorldSprite
 import com.akalynth.client.ui.render.rememberThermalTargetFps
+import com.akalynth.client.ui.render.rememberWorldSprites
 import kotlin.math.floor
+import kotlin.math.roundToInt
 
 // Tile colors keyed by the canonical TileCode (mirrors packages/shared/types.ts TileCode).
 private val TILE_GRASS = Color(0xFF275522)
@@ -92,6 +98,8 @@ fun GameCanvas(
     val targetFps = rememberThermalTargetFps(baseFps = 30)
     ApplyRequestedFrameRate(targetFps.value)
     val clock = remember { RenderClock(targetFps = { targetFps.value }) }
+    // Display-only pixel art bundled in assets; absent keys fall back to procedural shapes below.
+    val sprites = rememberWorldSprites()
 
     // A stable signature of the authoritative positions: changes only when a real position does,
     // so we feed new glide targets (and prune absent entities) exactly on snapshot changes rather
@@ -149,11 +157,16 @@ fun GameCanvas(
                 // load, fall back to a neutral void rather than fabricating terrain.
                 val tile = mapData?.tileAt(tileX, tileY) ?: TileCode.UNKNOWN
 
-                drawRect(
-                    color = colorFor(tile),
-                    topLeft = Offset(screenX, screenY),
-                    size = Size(tileSize - 1, tileSize - 1)
-                )
+                val tileSprite = sprites.tiles[tile]
+                if (tileSprite != null) {
+                    drawTileSprite(tileSprite, screenX, screenY, tileSize)
+                } else {
+                    drawRect(
+                        color = colorFor(tile),
+                        topLeft = Offset(screenX, screenY),
+                        size = Size(tileSize - 1, tileSize - 1)
+                    )
+                }
             }
         }
 
@@ -178,14 +191,21 @@ fun GameCanvas(
         others.forEach { other ->
             val pos = interpolator.positionOf(other.id, now)
                 ?: TilePos(other.x.toFloat(), other.y.toFloat())
-            drawPlayer(
-                x = centerX + (pos.x - camX) * tileSize,
-                y = centerY + (pos.y - camY) * tileSize,
-                radius = tileSize / 3,
-                isDead = other.status == PlayerStatus.DEAD,
-                isSelf = false,
-                spriteId = other.spriteId
-            )
+            val ex = centerX + (pos.x - camX) * tileSize
+            val ey = centerY + (pos.y - camY) * tileSize
+            val creatureSprite = other.spriteId?.let { sprites.creatures[it] }
+            if (creatureSprite != null && other.status != PlayerStatus.DEAD) {
+                drawCreatureSprite(creatureSprite, ex, ey, tileSize)
+            } else {
+                drawPlayer(
+                    x = ex,
+                    y = ey,
+                    radius = tileSize / 3,
+                    isDead = other.status == PlayerStatus.DEAD,
+                    isSelf = false,
+                    spriteId = other.spriteId
+                )
+            }
         }
 
         // Draw self (always at the camera centre, since the camera follows the smoothed self).
@@ -198,6 +218,41 @@ fun GameCanvas(
             spriteId = player.spriteId
         )
     }
+}
+
+/**
+ * Draw a tile sprite into the cell whose top-left is ([cellX],[cellY]). Multi-tile sprites are
+ * bottom-anchored (a 1x2 wall fills this cell and extends one tile upward, the classic top-down
+ * look). Nearest-neighbor filtering keeps the pixel art crisp.
+ */
+private fun DrawScope.drawTileSprite(sprite: WorldSprite, cellX: Float, cellY: Float, tileSize: Float) {
+    val wPx = sprite.tilesWide * tileSize
+    val hPx = sprite.tilesTall * tileSize
+    val topY = cellY - (sprite.tilesTall - 1) * tileSize
+    drawImage(
+        image = sprite.image,
+        srcOffset = IntOffset.Zero,
+        srcSize = IntSize(sprite.image.width, sprite.image.height),
+        dstOffset = IntOffset(cellX.roundToInt(), topY.roundToInt()),
+        dstSize = IntSize(wPx.roundToInt(), hPx.roundToInt()),
+        filterQuality = FilterQuality.None
+    )
+}
+
+/** Draw a creature sprite with its feet near the tile centre ([cx],[cy]); tall sprites rise upward. */
+private fun DrawScope.drawCreatureSprite(sprite: WorldSprite, cx: Float, cy: Float, tileSize: Float) {
+    val wPx = sprite.tilesWide * tileSize
+    val hPx = sprite.tilesTall * tileSize
+    val left = cx - wPx / 2f
+    val top = (cy + tileSize / 2f) - hPx
+    drawImage(
+        image = sprite.image,
+        srcOffset = IntOffset.Zero,
+        srcSize = IntSize(sprite.image.width, sprite.image.height),
+        dstOffset = IntOffset(left.roundToInt(), top.roundToInt()),
+        dstSize = IntSize(wPx.roundToInt(), hPx.roundToInt()),
+        filterQuality = FilterQuality.None
+    )
 }
 
 private fun DrawScope.drawHighCityVisualLandmarks(
