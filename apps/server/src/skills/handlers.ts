@@ -161,6 +161,54 @@ export function handleReport(ctx: SkillContext, targetId: string): SkillResult {
 }
 
 // ============================================================================
+// social:gift:gold: Fixed-size player-to-player gold gift
+// ============================================================================
+
+export function handleGiftGold(ctx: SkillContext, targetId: string): SkillResult {
+  if (targetId === ctx.playerId) return { success: false, reason: 'invalid_target' };
+  const target = ctx.findPlayerOnline(targetId);
+  if (!target) return { success: false, reason: 'target_not_found' };
+  if (!ctx.debitWallet || !ctx.creditWalletForPlayer) return { success: false, reason: 'invalid_target' };
+
+  const amount = 1;
+  const debitReason = `player_gift:${targetId}`;
+  const creditReason = `player_gift:${ctx.playerId}`;
+  const debit = ctx.debitWallet(amount, debitReason);
+  if (!debit.ok) return { success: false, reason: 'invalid_skill', payload: { error: 'insufficient_gold' } };
+  const credit = ctx.creditWalletForPlayer(targetId, amount, creditReason);
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: 'player_gold_gifted',
+    inputs: {
+      target_id: targetId,
+      amount_gold: amount,
+      sender_debit_reason: debitReason,
+      target_credit_reason: creditReason,
+      sender_balance_gold: debit.balance_gold,
+      target_balance_gold: credit.balance_gold,
+      trade_kind: 'gift',
+      economy_impact: 'player_to_player_transfer',
+    },
+    result: 'ok',
+  });
+
+  return {
+    success: true,
+    payload: {
+      target_id: targetId,
+      target_name: target.name,
+      amount_gold: amount,
+      sender_balance_gold: debit.balance_gold,
+      target_balance_gold: credit.balance_gold,
+      trade_kind: 'gift',
+      receipt_action: 'player_gold_gifted',
+      economy_impact: 'player_to_player_transfer',
+    },
+  };
+}
+
+// ============================================================================
 // route:survey:*: First onward-route interaction (read-only, receipt-backed)
 // ============================================================================
 

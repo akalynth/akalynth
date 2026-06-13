@@ -812,6 +812,7 @@ function DebugApp() {
               onTickWork={api.tickWork}
               onBuy={api.useSkill}
               onWorldEventAction={api.useSkill}
+              onGiftGold={() => state.combat.targetId && api.useSkill('social:gift:gold', state.combat.targetId)}
               onUseItem={(itemId) => api.useSkill('item:use:' + itemId)}
               attackReady={attackReady}
               ritualReady={ritualReady}

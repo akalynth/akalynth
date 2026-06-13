@@ -5922,6 +5922,27 @@ function processSessionQueue(s: Session, now: number) {
             send(s.ws, ServerMessages.walletSnapshot(balance));
             return { balance_gold: balance };
           },
+          debitWallet: (amount, reason) => {
+            if (!canAfford(s.player!.id, amount)) return { ok: false, reason: 'insufficient_gold' };
+            audit.write({
+              player_id: s.player!.id,
+              action: WALLET_DEBIT_ACTION,
+              inputs: { amount, reason: reason as WalletDebitReason },
+              result: 'ok',
+            });
+            const balance = getGoldBalance(s.player!.id);
+            send(s.ws, ServerMessages.walletSnapshot(balance));
+            return { ok: true, balance_gold: balance };
+          },
+          creditWalletForPlayer: (playerId, amount, reason) => {
+            audit.write({
+              player_id: playerId,
+              action: WALLET_CREDIT_ACTION,
+              inputs: { amount, reason: reason as WalletCreditReason },
+              result: 'ok',
+            });
+            return { balance_gold: getGoldBalance(playerId) };
+          },
         };
 
         handleUseSkill(skillCtx, msg);
