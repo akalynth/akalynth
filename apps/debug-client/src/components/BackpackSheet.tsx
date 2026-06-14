@@ -19,6 +19,24 @@ interface InventoryGroup {
   firstItemId: string;
 }
 
+const EQUIPMENT_SLOTS = ['hand', 'body', 'trinket'] as const;
+
+function slotLabel(slot: string): string {
+  return slot
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function equippedLoadout(items: InventoryItemRef[]): Array<{ slot: string; itemType: string | null }> {
+  return EQUIPMENT_SLOTS.map((slot) => {
+    const item = items.find((entry) => entry.slot === slot);
+    return {
+      slot,
+      itemType: item?.item_type ?? null,
+    };
+  });
+}
+
 function groupedInventory(items: InventoryItemRef[]): InventoryGroup[] {
   const groups = new Map<string, InventoryGroup>();
   for (const item of items) {
@@ -43,6 +61,7 @@ function groupedInventory(items: InventoryItemRef[]): InventoryGroup[] {
 export function BackpackSheet({ open, inventory, onClose, onUseItem }: BackpackSheetProps) {
   if (!open) return null;
   const groups = groupedInventory(inventory);
+  const loadout = equippedLoadout(inventory);
 
   return (
     <div className="mobile-sheet-layer mobile-sheet-layer--backpack">
@@ -63,6 +82,22 @@ export function BackpackSheet({ open, inventory, onClose, onUseItem }: BackpackS
         <div className="backpack-sheet__body">
           {groups.length === 0 && (
             <div className="backpack-empty">No items carried.</div>
+          )}
+          {groups.length > 0 && (
+            <div className="backpack-row" aria-label="Equipped loadout">
+              <div className="backpack-row__icon" aria-hidden="true">
+                Eq
+              </div>
+              <div className="backpack-row__main">
+                <strong>Equipped Loadout</strong>
+                <span>
+                  {loadout
+                    .map(({ slot, itemType }) => `${slotLabel(slot)}: ${itemType ? itemLabel(itemType) : 'empty'}`)
+                    .join(' · ')}
+                </span>
+              </div>
+              <span className="backpack-held-label">Slots</span>
+            </div>
           )}
           {groups.map((group) => {
             const label = itemLabel(group.itemType);

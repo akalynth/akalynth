@@ -242,7 +242,7 @@ fun WorldScreen(
 }
 
 private fun routeActionSkillIdsFor(routes: List<OnwardRouteProgress>): List<String> {
-    return routes.flatMap { route ->
+    return listOf("activity:fishing:rookguard") + routes.flatMap { route ->
         if (route.status != "available") return@flatMap emptyList()
         val completed = route.completedObjectiveIds.toSet()
         when (route.routeId) {

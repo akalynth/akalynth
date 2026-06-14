@@ -708,8 +708,10 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     send(payload);
   }, [send]);
 
-  const useSkill = useCallback((skillId: string) => {
-    const payload: UseSkillMessage = { type: 'use_skill', skill_id: skillId };
+  const useSkill = useCallback((skillId: string, targetId?: string) => {
+    const payload: UseSkillMessage = targetId
+      ? { type: 'use_skill', skill_id: skillId, target_id: targetId }
+      : { type: 'use_skill', skill_id: skillId };
     send(payload);
   }, [send]);
 
@@ -1107,6 +1109,17 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
                       ? 'Must be in the guild hall'
                     : 'Purchase failed';
                 return pushToast(s, 'npc', line, 'SHOP');
+              }
+              if (skillId === 'social:gift:gold') {
+                const targetName = typeof payload?.target_name === 'string' ? payload.target_name : 'target';
+                const amount = typeof payload?.amount_gold === 'number' ? payload.amount_gold : 1;
+                const errorHint = payload?.error;
+                const line = success
+                  ? `Gifted ${amount}g to ${targetName}`
+                  : errorHint === 'insufficient_gold'
+                    ? 'Not enough gold to gift'
+                    : 'Gift failed';
+                return pushToast(s, 'npc', line, 'GIFT');
               }
               if (ROUTE_ACTION_SKILL_IDS.has(skillId)) {
                 const title = typeof payload?.title === 'string' ? payload.title : 'Route';

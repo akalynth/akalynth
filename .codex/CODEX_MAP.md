@@ -1,7 +1,8 @@
 # Akalynth Codex Full Set Map
 
-Regenerated 2026-06-06 for the **dev box** `ops-dev-01` from the current
-workspace and the user-level Codex home at `/home/sovereign/.codex/`.
+Regenerated 2026-06-14 for the **dev box** `Ubuntu-jammy-latest-amd64-base`
+from the current workspace and the user-level Codex home at
+`/home/g0admin/.codex/`.
 
 > A separate **production** box uses `/root/.codex/config.toml` and the live
 > tree `/opt/akalynth`. The previous version of this map described that prod
@@ -10,17 +11,16 @@ workspace and the user-level Codex home at `/home/sovereign/.codex/`.
 
 ## Host And Authority
 
-- Host: `ops-dev-01`
-- Active workspace: `/home/sovereign/akalynth-ops/repos/akalynth`
-- User Codex config: `/home/sovereign/.codex/config.toml` (active authority)
+- Host: `Ubuntu-jammy-latest-amd64-base`
+- Active workspace: `/opt/goal0/sources/akalynth`
+- User Codex config: `/home/g0admin/.codex/config.toml` (active authority)
 - Model: `gpt-5.5`, reasoning effort `xhigh`, plan-mode effort `xhigh`
 - Approval reviewer: `user`
-- Trusted projects (from config): `/`, `/home/sovereign`,
-  `/home/sovereign/akalynth-ops`, `/home/sovereign/akalynth-ops/repos`,
-  `/home/sovereign/akalynth-ops/repos/akalynth`,
-  `/home/sovereign/akalynth-ops/repos/akalynth-site`
-- Enabled plugins: `github@openai-curated` (enabled)
-- Disabled plugins: `cloudflare@openai-curated` (disabled)
+- Trusted projects (from config): `/home/g0admin`, `/opt/goal0`,
+  `/opt/goal0/sources/akalynth`
+- Enabled plugins: `akalynth-studio@akalynth-private`, `github@openai-curated`,
+  `game-studio@openai-curated`, `superpowers@openai-curated`
+- Disabled plugins: none observed in the active config
 
 This is the active local authority source. Treat it as higher priority than
 repo examples unless the user explicitly says to apply the repo example posture.
@@ -37,7 +37,7 @@ re-install can only ever resolve back to the one source.
 | `.claude/skills/` | 21 | yes | **Canonical source.** Edit skills only here. |
 | `plugins/akalynth-studio/skills/` | 9 | yes | Curated Codex plugin pack — 9 relative symlinks (`../../../.claude/skills/<name>`) into canonical. |
 | `.agents/skills` | symlink | no (gitignored) | `→ ../.claude/skills`. Agent-runtime store; sees all 21. |
-| `/home/sovereign/.codex/skills/` | 21 symlinks | n/a (global) | Each akalynth skill `→ <repo>/.claude/skills/<name>` (absolute). `.system/` (5) left as real dirs. |
+| `/home/g0admin/.codex/skills/` | 21 symlinks | n/a (global) | Each akalynth skill `→ /opt/goal0/sources/akalynth/.claude/skills/<name>` (absolute). `.system/` left as real dirs. |
 | `.codex/skills/akalynth-system-audit/` | 1 | yes | **Intentional exception:** a Codex project-skill in `skill.md`+`README.md` form with audit-specific content; not part of the duplicated set. Left as-is. |
 
 The 5 formerly-orphan skills (`economy-steward`, `game-server-steward`,
@@ -57,10 +57,13 @@ dereference the symlinks at pack time, e.g. `cp -RL plugins/akalynth-studio
 - Project-scoped Codex skill count (`.codex/skills/`): 1
 - Akalynth Studio plugin skill count: 9
 - Claude Code skill count (`.claude/skills/`): 21 (canonical source)
-- User-level Codex skill count (`/home/sovereign/.codex/skills/`): 21
-- User system skill count (`/home/sovereign/.codex/skills/.system/`): 5
-- Enabled cached user plugin count: 1 (`github`)
-- Cached-on-disk user plugin count: 2 (`github` enabled, `cloudflare` disabled)
+- User-level Codex skill count (`/home/g0admin/.codex/skills/`): 21
+- User system skill dir (`/home/g0admin/.codex/skills/.system/`): present
+- Enabled cached user plugin count: 4 (`akalynth-studio`, `github`,
+  `game-studio`, `superpowers`)
+- Cached-on-disk plugin manifests observed: `akalynth-studio`, `github`,
+  `game-studio`, `superpowers`, plus remote connector caches under
+  `openai-curated-remote`
 
 ## Akalynth Repo Posture
 
@@ -102,7 +105,7 @@ Source: `.codex/config.toml.example`
 
 - Manifest: `plugins/akalynth-studio/.codex-plugin/plugin.json`
 - Skills root: `plugins/akalynth-studio/skills/`
-- Version `0.1.0`, Author `VaultSovereign`, License `UNLICENSED`
+- Version `0.2.0`, Author `VaultSovereign`, License `UNLICENSED`
 - Repository: `https://github.com/VaultSovereign/akalynth`
 - Skills (9): `anti-cheat-steward`, `delegation-steward`, `deploy-steward`,
   `gameplay-loop-designer`, `map-and-lore-builder`, `protocol-guardian`,
@@ -110,7 +113,7 @@ Source: `.codex/config.toml.example`
 
 ## User-Level Skills
 
-`/home/sovereign/.codex/skills/` (21): `akalynth-system-audit`,
+`/home/g0admin/.codex/skills/` (21): `akalynth-system-audit`,
 `android-client`, `anti-cheat-steward`, `ci-steward`,
 `classic-32-art-pipeline`, `content-designer`, `coordination-kernel-steward`,
 `debug-client`, `delegation-steward`, `deploy-steward`, `economy-steward`,
@@ -121,17 +124,18 @@ Source: `.codex/config.toml.example`
 
 ## User System Skills
 
-`/home/sovereign/.codex/skills/.system/` (5): `imagegen`, `openai-docs`,
+`/home/g0admin/.codex/skills/.system/`: `imagegen`, `openai-docs`,
 `plugin-creator`, `skill-creator`, `skill-installer`.
 
 ## Cached User Plugins
 
-`/home/sovereign/.codex/plugins/cache/openai-curated/`
+`/home/g0admin/.codex/plugins/cache/`
 
-- `github` (enabled): repository, PR/issue triage, CI debugging, publish flow.
+- `akalynth-studio` (enabled from `akalynth-private`): local Akalynth skill pack.
+- `github` (enabled from `openai-curated`): repository, PR/issue triage, CI debugging, publish flow.
   Skills: `github`, `gh-address-comments`, `gh-fix-ci`, `yeet`.
-  Self-contained payload at `.../github/2cb26e7b/`.
-- `cloudflare` (disabled): cached on disk but not enabled in config.
+- `game-studio` (enabled from `openai-curated`): browser game workflows.
+- `superpowers` (enabled from `openai-curated`): planning, TDD, debugging, and delivery workflows.
 
 ## Routing Matrix
 
@@ -151,12 +155,12 @@ Source: `.codex/config.toml.example`
 
 ## Sovereign Operating Rules For Akalynth
 
-- Treat `/home/sovereign/.codex/config.toml` as the active user sovereign source
+- Treat `/home/g0admin/.codex/config.toml` as the active user sovereign source
   on this dev box.
 - Treat `.codex/config.toml.example` as Akalynth's recommended posture template,
   not active config.
 - Prefer `.claude/skills/` as the canonical skill source; avoid hand-editing the
-  installed copies (`.agents/skills/`, `/home/sovereign/.codex/skills/`).
+  installed copies (`.agents/skills/`, `/home/g0admin/.codex/skills/`).
 - Prefer cached user plugins for external systems (currently GitHub).
 - Do not place secrets, private keys, tokens, or production credential values in
   repo docs or config.
@@ -171,16 +175,13 @@ Source: `.codex/config.toml.example`
 
 ## Maintenance Notes
 
-- 2026-06-06: pruned `/home/sovereign/.codex/.tmp/plugins/` (a 78 MB clone of
-  `github.com/openai/plugins.git`, the full curated marketplace index). It is a
-  cache and may re-sync when Codex next needs the marketplace; the enabled
-  `github` plugin payload is unaffected (lives in `plugins/cache/`).
-- Open item: `/home/sovereign/.codex/logs_2.sqlite` is large (~212 MB). Vacuum
-  only while Codex is **not** running (the DB has live `-wal`/`-shm` files):
-  `sqlite3 ~/.codex/logs_2.sqlite 'VACUUM;'`.
+- 2026-06-14: installed the local `akalynth-private` marketplace from
+  `/opt/goal0/sources/akalynth` and enabled `akalynth-studio@akalynth-private`.
+- 2026-06-14: installed `github@openai-curated`; `game-studio@openai-curated`
+  and `superpowers@openai-curated` were already enabled and left as-is.
 - 2026-06-06: collapsed the five skill stores to a single source
   (`.claude/skills/`, now 21). `plugins/akalynth-studio/skills/` (9),
-  `.agents/skills`, and the akalynth entries in `/home/sovereign/.codex/skills/`
+  `.agents/skills`, and the akalynth entries in `/home/g0admin/.codex/skills/`
   are now symlinks into it; `.codex/skills/akalynth-system-audit/` kept as an
   intentional Codex-format exception. See Skill Stores above.
 - Tightened `.gitignore` (`.agents/skills/` → `.agents/skills`) so the new
@@ -194,6 +195,6 @@ Source: `.codex/config.toml.example`
 - Akalynth plugin manifest: `plugins/akalynth-studio/.codex-plugin/plugin.json`
 - Akalynth plugin skills: `plugins/akalynth-studio/skills/*/SKILL.md`
 - Claude Code skills (canonical source): `.claude/skills/*/SKILL.md`
-- User sovereign config: `/home/sovereign/.codex/config.toml`
-- User system skills: `/home/sovereign/.codex/skills/.system/*/SKILL.md`
-- Cached plugin manifests: `/home/sovereign/.codex/plugins/cache/openai-curated/*/<hash>/.codex-plugin/plugin.json`
+- User sovereign config: `/home/g0admin/.codex/config.toml`
+- User system skills: `/home/g0admin/.codex/skills/.system/*/SKILL.md`
+- Cached plugin manifests: `/home/g0admin/.codex/plugins/cache/*/*/*/.codex-plugin/plugin.json`

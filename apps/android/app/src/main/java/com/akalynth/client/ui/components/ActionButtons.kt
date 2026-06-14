@@ -47,7 +47,8 @@ private val ROUTE_ACTIONS = listOf(
     "route:dream:traverse" to "Pass",
     "route:dream:arrive" to "Arrv",
     "route:dream:interpret" to "Interp",
-    "route:dream:fragment" to "Frag"
+    "route:dream:fragment" to "Frag",
+    "activity:fishing:rookguard" to "Fish"
 )
 private val ROUTE_ACTION_LABELS = ROUTE_ACTIONS.toMap()
 
