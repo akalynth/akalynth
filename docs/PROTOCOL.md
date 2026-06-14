@@ -43,12 +43,14 @@ type. Clients must not submit roles or capabilities over WebSocket; authority is
 derived server-side from principal state where principal-gated surfaces use it.
 
 Account-character endpoints live on the HTTP control plane under `/v1/worlds`,
-`/v1/outfits`, `/v1/characters`, and `/v1/characters/select`. They are additive
-and do not add a WebSocket message type. Catalog reads are public. Character
-list/select require an account session; create requires an account session,
-double-submit CSRF, verified email, and exact canonical `world_id` values
-(`rookguard` or `high_city`). Legacy `azura` is not accepted as account-character
-create input.
+`/v1/outfits`, `/v1/characters`, `/v1/characters/select`, and
+`/v1/characters/outfit`. They are additive and do not add a WebSocket message
+type. Catalog reads are public. Character list/select/outfit-change require an
+account session; mutating account-character endpoints require double-submit
+CSRF. Create additionally requires verified email and exact canonical
+`world_id` values (`rookguard` or `high_city`). Legacy `azura` is not accepted
+as account-character create input. Outfit changes keep the existing character
+sex/world immutable and accept only a catalog outfit for that character sex.
 
 Web economy portal endpoints live on the HTTP control plane under
 `/v1/shop/catalog`, `/v1/shop/purchase`, `/v1/wallet`, `/v1/property/buy`,
