@@ -126,4 +126,39 @@ export class CharacterService {
       },
     };
   }
+
+  updateOutfit(accountId: string, input: { character_id?: unknown; outfit_id?: unknown }): CharacterResult {
+    const cid = input.character_id;
+    const outfitId = input.outfit_id;
+    if (typeof cid !== 'string') return bad('character_id is required');
+    if (typeof outfitId !== 'string') return bad('outfit_id is required');
+    const row = this.d.store.findById(cid);
+    if (!row || row.account_id !== accountId) return { status: 404, body: { ok: false, error: 'not_found' } };
+    const outfit = outfitById(outfitId);
+    if (!outfit || outfit.sex !== row.sex) return bad('unknown outfit for the character sex');
+
+    this.d.store.updateOutfit(cid, outfitId);
+    this.d.emitReceipt({
+      action: RECEIPT_ACTIONS.CHARACTER_OUTFIT_SELECTED,
+      accountId,
+      characterId: cid,
+      inputs: { sex: row.sex, previous_outfit_id: row.outfit_id, outfit_id: outfitId },
+      result: 'ok',
+    });
+
+    return {
+      status: 200,
+      body: {
+        ok: true,
+        character: {
+          character_id: row.character_id,
+          name: row.name,
+          world_id: row.world_id,
+          sex: row.sex,
+          outfit_id: outfitId,
+          created_at: row.created_at,
+        },
+      },
+    };
+  }
 }

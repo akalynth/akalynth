@@ -11,7 +11,7 @@ The protocol authority is:
 - `packages/shared/protocol.golden.json`
 - `scripts/verify_protocol_sync.sh`
 
-`packages/shared/protocol.ts` exports `PROTOCOL_VERSION = '2.0.0'`. v2.0.0 accepts the house-auction protocol surface: auction open/bid/cancel client intents, auction state and settlement server broadcasts, and widened `property_result` action/reason values. Clients with exhaustive `property_result.action` or `property_result.reason` handling must tolerate the auction values listed here.
+`packages/shared/protocol.ts` exports `PROTOCOL_VERSION = '2.1.0'`. v2.1.0 is additive over v2.0.0 and records `loop_update` as a first-class server progression message. v2.0.0 accepts the house-auction protocol surface: auction open/bid/cancel client intents, auction state and settlement server broadcasts, and widened `property_result` action/reason values. Clients with exhaustive `property_result.action` or `property_result.reason` handling must tolerate the auction values listed here.
 
 This document is documentation only. It does not change shared types, runtime handlers, generated artifacts, clients, deployment state, or live service behavior.
 
@@ -43,14 +43,17 @@ type. Clients must not submit roles or capabilities over WebSocket; authority is
 derived server-side from principal state where principal-gated surfaces use it.
 
 Account-character endpoints live on the HTTP control plane under `/v1/worlds`,
-`/v1/outfits`, `/v1/characters`, and `/v1/characters/select`. They are additive
-and do not add a WebSocket message type. Catalog reads are public. Character
-list/select require an account session; create requires an account session,
-double-submit CSRF, verified email, and exact canonical `world_id` values
-(`rookguard` or `high_city`). Legacy `azura` is not accepted as account-character
-create input. World catalog rows may include additive player-facing `tagline`
-and `districts` metadata. These fields are descriptive only; they do not grant
-map access, movement authority, rewards, or progression.
+`/v1/outfits`, `/v1/characters`, `/v1/characters/select`, and
+`/v1/characters/outfit`. They are additive and do not add a WebSocket message
+type. Catalog reads are public. Character list/select/outfit-change require an
+account session; mutating account-character endpoints require double-submit
+CSRF. Create additionally requires verified email and exact canonical
+`world_id` values (`rookguard` or `high_city`). Legacy `azura` is not accepted
+as account-character create input. Outfit changes keep the existing character
+sex/world immutable and accept only a catalog outfit for that character sex.
+World catalog rows may include additive player-facing `tagline` and `districts`
+metadata. These fields are descriptive only; they do not grant map access,
+movement authority, rewards, or progression.
 
 Web economy portal endpoints live on the HTTP control plane under
 `/v1/shop/catalog`, `/v1/shop/purchase`, `/v1/wallet`, `/v1/property/buy`,

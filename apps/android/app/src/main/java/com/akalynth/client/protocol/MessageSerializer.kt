@@ -10,7 +10,7 @@ import kotlinx.serialization.json.put
 /**
  * Encodes outgoing [ClientMessage]s and decodes incoming [ServerMessage]s.
  *
- * Wire format follows `packages/shared/protocol.ts` (PROTOCOL_VERSION 2.0.0) exactly. Outgoing
+ * Wire format follows `packages/shared/protocol.ts` (PROTOCOL_VERSION 2.1.0) exactly. Outgoing
  * frames are built explicitly (per the existing client convention) rather than via polymorphic
  * kotlinx serialization, which keeps the `type` discriminator unambiguous and lets us omit absent
  * optional fields. Decoding dispatches on the `type` field; anything unknown or malformed becomes an

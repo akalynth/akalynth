@@ -1,12 +1,12 @@
 {
-  "version": "2.0.0",
-  "generatedAt": "2026-06-12T03:19:53.091Z",
+  "version": "2.1.0",
+  "generatedAt": "2026-06-13T23:43:24.932Z",
   "source": {
-    "path": "/home/sovereign/akalynth-ops/repos/akalynth/packages/shared/protocol.ts",
-    "hash": "sha256:39ca33ff5c39774dfd3b37ea8a4b1b7bbbc0cefce829b5ba93dcc4a788ac9013"
+    "path": "/home/g0admin/.config/superpowers/worktrees/akalynth/codex-goal0-lane-pr-cleanup/packages/shared/protocol.ts",
+    "hash": "sha256:01fb3e7d873ced32e3fc9f7a7275584f87c869748677bb1eda1ef4112db04d79"
   },
   "surface": {
-    "version": "2.0.0",
+    "version": "2.1.0",
     "messages": {
       "client": {
         "AttackIntentMessage": {
@@ -1016,6 +1016,26 @@
             },
             "type": {
               "type": "'login_ack'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "LoopUpdateMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "event": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "loop": {
+              "type": "PlayLoopProgress",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'loop_update'",
               "optional": false,
               "readonly": false
             }
