@@ -1023,16 +1023,21 @@ test('Forgehold shipment investigation records quest progress without travel or 
   assert(investigation.inputs.route_state === 'investigating', 'Forgehold route state should be investigating');
   assert(investigation.inputs.travel_unlocked === false, 'Forgehold investigation must not unlock travel');
   assert(investigation.inputs.economy_impact === 'none', 'Forgehold investigation should not change economy');
+  const guard = investigation.inputs.authority_guard as { heat_changed?: boolean; penalty_applied?: boolean } | undefined;
+  assert(guard?.heat_changed === false, 'Forgehold investigation must not change anti-cheat heat');
+  assert(guard.penalty_applied === false, 'Forgehold investigation must not apply penalties');
   assert(!receipts.some((r) => r.action === 'wallet_debit'), 'Forgehold investigation should not debit gold');
   assert(!receipts.some((r) => r.action === 'item_minted'), 'Forgehold investigation should not mint an item');
 
-  const result = skillResultFor<{ quest_id?: string; route_state?: string; travel_unlocked?: boolean; evidence_objects?: string[]; contradiction?: string }>(sent, 'route:quest:shipment');
+  const result = skillResultFor<{ quest_id?: string; route_state?: string; travel_unlocked?: boolean; evidence_objects?: string[]; contradiction?: string; authority_guard?: { heat_changed?: boolean; penalty_applied?: boolean } }>(sent, 'route:quest:shipment');
   assert(result?.success === true, 'Forgehold investigation skill_result should succeed');
   assert(result.payload?.quest_id === 'forgehold_missing_shipment_v1', 'Forgehold investigation quest id mismatch');
   assert(result.payload?.route_state === 'investigating', 'Forgehold investigation payload state mismatch');
   assert(result.payload?.travel_unlocked === false, 'Forgehold investigation payload must not unlock travel');
   assert(result.payload?.evidence_objects?.includes('charred_shipment_plate'), 'Forgehold investigation payload should name Charred Shipment Plate');
   assert(result.payload?.contradiction === 'departed / undeparted', 'Forgehold investigation payload should name contradiction');
+  assert(result.payload?.authority_guard?.heat_changed === false, 'Forgehold investigation payload must not change heat');
+  assert(result.payload.authority_guard.penalty_applied === false, 'Forgehold investigation payload must not apply penalties');
 });
 
 test('Forgehold shipment investigation is idempotent after receipt-derived investigation', async () => {
