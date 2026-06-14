@@ -80,6 +80,11 @@ fun HUD(
                 style = MaterialTheme.typography.bodySmall,
                 color = ClassicShellColors.MutedText
             )
+            Text(
+                text = "Respect: ${respectRankFor(player.reputation)} (${player.reputation ?: 0})",
+                style = MaterialTheme.typography.bodySmall,
+                color = ClassicShellColors.Rune
+            )
 
             if (player.status == PlayerStatus.DEAD) {
                 Text(
@@ -138,5 +143,16 @@ fun HUD(
                 color = ClassicShellColors.MutedText
             )
         }
+    }
+}
+
+private fun respectRankFor(reputation: Int?): String {
+    val value = reputation ?: 0
+    return when {
+        value <= -5 -> "Frayed"
+        value < 3 -> "Unproven"
+        value < 10 -> "Known"
+        value < 25 -> "Trusted"
+        else -> "Honored"
     }
 }
