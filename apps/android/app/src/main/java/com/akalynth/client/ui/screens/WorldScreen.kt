@@ -35,6 +35,7 @@ import com.akalynth.client.ui.components.chronicle.ChronicleSheet
 import com.akalynth.client.ui.theme.ClassicButton
 import com.akalynth.client.ui.theme.ClassicPanel
 import com.akalynth.client.ui.theme.ClassicShellColors
+import com.akalynth.client.ui.theme.akalynthWallpaperBrush
 import kotlinx.coroutines.delay
 
 @Composable
@@ -61,7 +62,7 @@ fun WorldScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ClassicShellColors.Void)
+            .background(akalynthWallpaperBrush())
     ) {
         GameCanvas(
             map = state.world.currentMap,
