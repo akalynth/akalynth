@@ -8,11 +8,25 @@ export interface WorldOption {
   world_id: string;
   name: string;
   description: string;
+  tagline: string;
+  districts: string[];
 }
 
 export const WORLDS: WorldOption[] = [
-  { world_id: 'rookguard', name: 'Rookguard', description: 'The threshold keep where every journey begins.' },
-  { world_id: 'high_city', name: 'High City', description: 'The city of plazas, halls, and landmarks beyond the gate.' },
+  {
+    world_id: 'rookguard',
+    name: 'Rookguard',
+    tagline: 'Threshold keep',
+    description: 'The threshold keep where every journey begins.',
+    districts: ['Plaza', 'Training Yard', 'Guild Hall', 'Canal'],
+  },
+  {
+    world_id: 'high_city',
+    name: 'High City',
+    tagline: 'First planned city',
+    description: 'The city of plazas, halls, and landmarks beyond the gate.',
+    districts: ['Market Spine', 'Temple Steps', 'Craft Quarter', 'House Rows'],
+  },
 ];
 
 export interface OutfitOption {

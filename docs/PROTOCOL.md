@@ -51,6 +51,9 @@ CSRF. Create additionally requires verified email and exact canonical
 `world_id` values (`rookguard` or `high_city`). Legacy `azura` is not accepted
 as account-character create input. Outfit changes keep the existing character
 sex/world immutable and accept only a catalog outfit for that character sex.
+World catalog rows may include additive player-facing `tagline` and `districts`
+metadata. These fields are descriptive only; they do not grant map access,
+movement authority, rewards, or progression.
 
 Web economy portal endpoints live on the HTTP control plane under
 `/v1/shop/catalog`, `/v1/shop/purchase`, `/v1/wallet`, `/v1/property/buy`,
