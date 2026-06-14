@@ -30,14 +30,27 @@ export const LANDMARK_LORE: Record<string, LoreEntry> = {
   guild_hall: {
     title: 'Guild Hall',
     body:
-      'Rookguard keeps its last lesson here: choose a vocation, read the ' +
-      'quest board, then leave only when the gate proof is complete.',
+      'A civic hall for server-backed choices. In Rookguard it holds the ' +
+      'starter vocation lesson; in High City it is the first place where work, ' +
+      'property, and civic receipts become visible.',
   },
   plaza: {
     title: 'Central Plaza',
     body:
-      'The first civic floor in Rookguard. The guide and herald can see ' +
-      'newcomers here before the High City gate opens.',
+      'The public floor of a city. Rookguard uses it for arrival and guidance; ' +
+      'High City uses it as the first open square after the gate.',
+  },
+  tutorial: {
+    title: 'Tutorial Corridor',
+    body:
+      'The opening proof lane: movement, chat, and Tem checks must be completed ' +
+      'before the server lets the character cross into High City.',
+  },
+  gate_to_azura: {
+    title: 'Gate to High City',
+    body:
+      'The server-owned transition from Rookguard into High City. It opens only ' +
+      'after the tutorial checklist is complete and records the arrival path.',
   },
   profession_hall: {
     title: 'Profession Hall',
@@ -112,6 +125,8 @@ export const LANDMARK_MARKERS: Record<string, { glyph: string; color: string }> 
   legend_stone: { glyph: '!', color: '#61d8c6' },
   guild_hall: { glyph: 'G', color: '#c98bdb' },
   plaza: { glyph: 'P', color: '#7fd1a6' },
+  tutorial: { glyph: 'T', color: '#61d8c6' },
+  gate_to_azura: { glyph: 'A', color: '#9db4ff' },
   profession_hall: { glyph: 'V', color: '#e8d56f' },
   quest_board: { glyph: 'Q', color: '#e0a86b' },
   training_yard: { glyph: 'Y', color: '#d87963' },
