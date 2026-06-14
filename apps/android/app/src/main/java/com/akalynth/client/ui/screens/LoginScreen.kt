@@ -37,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.akalynth.client.BuildConfig
 import com.akalynth.client.game.GameEvent
 import com.akalynth.client.game.GameState
 import com.akalynth.client.game.HealthCheckState
@@ -273,6 +274,11 @@ fun LoginScreen(
                 }
             )
 
+            FirstStartStatusPanel(
+                endpoint = endpoint,
+                healthCheck = state.ui.healthCheck
+            )
+
             state.session.guestToken?.let {
                 Text(
                     text = "Returning player",
@@ -281,6 +287,46 @@ fun LoginScreen(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun FirstStartStatusPanel(
+    endpoint: EndpointInfo,
+    healthCheck: HealthCheckState
+) {
+    ClassicPanel(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("LoginScreen_FirstStartStatusPanel"),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = "First-start checks",
+            style = MaterialTheme.typography.labelLarge,
+            color = ClassicShellColors.Brass,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.testTag("LoginScreen_FirstStartTitle")
+        )
+        Text(
+            text = firstStartWorldStatus(healthCheck),
+            style = MaterialTheme.typography.bodySmall,
+            color = ClassicShellColors.MutedText,
+            modifier = Modifier.testTag("LoginScreen_FirstStartWorldStatus")
+        )
+        Text(
+            text = "Android updates: ${BuildConfig.FDROID_REPO_URL}",
+            style = MaterialTheme.typography.bodySmall,
+            color = ClassicShellColors.MutedText,
+            modifier = Modifier.testTag("LoginScreen_FDroidRepo")
+        )
+        Text(
+            text = "Installed client: ${endpoint.appVersion} (${endpoint.buildType})",
+            style = MaterialTheme.typography.bodySmall,
+            color = ClassicShellColors.MutedText,
+            modifier = Modifier.testTag("LoginScreen_FirstStartAppVersion")
+        )
     }
 }
 
@@ -395,6 +441,14 @@ private fun EndpointStatusPanel(
         )
     }
 }
+
+private fun firstStartWorldStatus(healthCheck: HealthCheckState): String =
+    when (healthCheck) {
+        is HealthCheckState.Checking -> "World endpoint: checking..."
+        is HealthCheckState.Reachable -> "World endpoint: reachable, server ${healthCheck.version}, tick ${healthCheck.tickMs}ms"
+        is HealthCheckState.Unreachable -> "World endpoint: unreachable, ${healthCheck.message}"
+        is HealthCheckState.Unknown -> "World endpoint: waiting for first check"
+    }
 
 @Composable
 private fun rememberNowMs(): Long {

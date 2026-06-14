@@ -10,6 +10,7 @@ export type SkillId =
   | 'skill_ping_tem'
   | 'skill_request_recap'
   | 'skill_report'
+  | 'social:gift:gold'
   | 'route:survey:forgehold'
   | 'route:survey:moonspire'
   | 'route:safety:forgehold'
@@ -76,6 +77,14 @@ export const SKILL_REGISTRY: Record<SkillId, SkillDefinition> = {
     cooldown_ms: 300_000, // 5 minutes
     target: 'player',
     gold_cost: 0,
+    debug_only: false,
+  },
+  'social:gift:gold': {
+    id: 'social:gift:gold',
+    name: 'Gift 1 Gold',
+    cooldown_ms: 10_000,
+    target: 'player',
+    gold_cost: 1,
     debug_only: false,
   },
   'route:survey:forgehold': {

@@ -9,7 +9,7 @@ package com.akalynth.client.protocol
  */
 object Protocol {
     /** Mirror of protocol.ts `PROTOCOL_VERSION`. */
-    const val PROTOCOL_VERSION: String = "2.0.0"
+    const val PROTOCOL_VERSION: String = "2.1.0"
 
     enum class VersionCompatibility {
         /** Exact match. */

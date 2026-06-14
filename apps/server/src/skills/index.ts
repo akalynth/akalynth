@@ -20,6 +20,7 @@ import {
   handlePingTem,
   handleRequestRecap,
   handleReport,
+  handleGiftGold,
   handleForgeholdComponentPayout,
   handleForgeholdComponentSettlement,
   handleForgeholdEconomyQuote,
@@ -84,6 +85,15 @@ export interface SkillContext {
     amount: number,
     reason: string,
     source: string
+  ) => { balance_gold: number };
+  debitWallet?: (
+    amount: number,
+    reason: string
+  ) => { ok: true; balance_gold: number } | { ok: false; reason: 'insufficient_gold' };
+  creditWalletForPlayer?: (
+    playerId: string,
+    amount: number,
+    reason: string
   ) => { balance_gold: number };
 }
 
@@ -212,6 +222,9 @@ async function executeSkill(
 
     case 'skill_report':
       return handleReport(ctx, targetId!);
+
+    case 'social:gift:gold':
+      return handleGiftGold(ctx, targetId!);
 
     case 'route:survey:forgehold':
       return handleRouteSurvey(ctx, 'forgehold');

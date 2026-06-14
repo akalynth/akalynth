@@ -1,5 +1,6 @@
 // HTTP router for the character + catalog surface (E4). handleHttp delegates
-// /v1/worlds, /v1/outfits, /v1/characters, /v1/characters/select here. The
+// /v1/worlds, /v1/outfits, /v1/characters, /v1/characters/select, and
+// /v1/characters/outfit here. The
 // character endpoints require an account session (resolved from the cookie);
 // create additionally requires a verified email.
 import type { IncomingMessage, ServerResponse } from 'node:http';
@@ -93,6 +94,12 @@ export function makeCharacterRouter(deps: CharacterRouterDeps) {
       if (!a) return (send(res, { status: 401, body: { ok: false, error: 'not_authenticated' } }), true);
       if (!csrfOk(req, cookies)) return (send(res, { status: 403, body: { ok: false, error: 'csrf_failed' } }), true);
       return (send(res, service.select(a.accountId, await readJson(req))), true);
+    }
+    if (path === '/v1/characters/outfit' && method === 'POST') {
+      const a = account();
+      if (!a) return (send(res, { status: 401, body: { ok: false, error: 'not_authenticated' } }), true);
+      if (!csrfOk(req, cookies)) return (send(res, { status: 403, body: { ok: false, error: 'csrf_failed' } }), true);
+      return (send(res, service.updateOutfit(a.accountId, await readJson(req))), true);
     }
 
     send(res, { status: 404, body: { ok: false, error: 'not_found' } });

@@ -133,11 +133,21 @@ export interface AccountCharacterSelectRequest {
   character_id: string;
 }
 
+export interface AccountCharacterOutfitUpdateRequest {
+  character_id: string;
+  outfit_id: AccountCharacterOutfitId;
+}
+
 export interface AccountCharacterPlayResponse {
   ok: true;
   character: AccountCharacterPublic;
   token: string;
   expires_at: number;
+}
+
+export interface AccountCharacterOutfitUpdateResponse {
+  ok: true;
+  character: AccountCharacterPublic;
 }
 
 // ============================================================================

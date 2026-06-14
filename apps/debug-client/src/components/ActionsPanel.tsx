@@ -103,6 +103,7 @@ interface ActionsPanelProps {
   onTickWork: () => void;
   onBuy: (skillId: string) => void;
   onWorldEventAction: (skillId: string) => void;
+  onGiftGold: () => void;
   onUseItem: (itemId: string) => void;
   attackReady: boolean;
   ritualReady: boolean;
@@ -130,6 +131,7 @@ export function ActionsPanel({
   onTickWork,
   onBuy,
   onWorldEventAction,
+  onGiftGold,
   onUseItem,
   attackReady,
   ritualReady,
@@ -385,6 +387,15 @@ export function ActionsPanel({
         <>
           <div className="target-line">Target: {targetName ?? 'none'}</div>
           {!targetName && <div className="action-hint">Tap a player to target</div>}
+          {targetName && (
+            <button
+              className="action-btn ritual-btn"
+              onClick={onGiftGold}
+              disabled={gold < 1}
+            >
+              Gift 1g
+            </button>
+          )}
           <button
             className={`action-btn ${attackReady ? '' : 'cooling'}`}
             onClick={() => attackReady && onAttack()}

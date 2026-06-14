@@ -122,16 +122,26 @@ function parseTomlShape(file) {
   return data;
 }
 
-function listFiles(dir) {
+function listFiles(dir, options = {}) {
+  const { followSymlinkDirs = false } = options;
   if (!fs.existsSync(rel(dir))) return [];
   const out = [];
   const stack = [rel(dir)];
+  const seenDirectories = new Set();
   while (stack.length > 0) {
     const current = stack.pop();
+    const realCurrent = fs.realpathSync(current);
+    if (seenDirectories.has(realCurrent)) continue;
+    seenDirectories.add(realCurrent);
     for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
       const abs = path.join(current, entry.name);
       if (entry.isDirectory()) stack.push(abs);
       if (entry.isFile()) out.push(posix(path.relative(root, abs)));
+      if (entry.isSymbolicLink() && followSymlinkDirs) {
+        const stat = fs.statSync(abs);
+        if (stat.isDirectory()) stack.push(abs);
+        if (stat.isFile()) out.push(posix(path.relative(root, abs)));
+      }
     }
   }
   return out.sort();
@@ -139,7 +149,7 @@ function listFiles(dir) {
 
 function checkForbiddenMaterial(files) {
   const forbidden = [
-    { name: "stale Claude path", re: /\.claude\//i },
+    { name: "stale Claude path", re: /\.claude\/(?!skills(?:\/|\b))/i },
     { name: "stale CLAUDE.md reference", re: /\bCLAUDE\.md\b/ },
     { name: "active Copilot instruction", re: /\bcopilot\b/i },
     { name: "GitHub token", re: /\b(github_pat_[A-Za-z0-9_]+|gh[pousr]_[A-Za-z0-9_]+)\b/ },
@@ -157,7 +167,9 @@ function checkForbiddenMaterial(files) {
 }
 
 function checkSkillFiles(skillsDir) {
-  const skillFiles = listFiles(skillsDir).filter((file) => /\/SKILL\.md$/.test(file) || /\/skill\.md$/.test(file));
+  const skillFiles = listFiles(skillsDir, { followSymlinkDirs: true }).filter(
+    (file) => /\/SKILL\.md$/.test(file) || /\/skill\.md$/.test(file),
+  );
   if (skillFiles.length === 0) fail(`no skill files under ${skillsDir}`);
 
   const names = new Map();
