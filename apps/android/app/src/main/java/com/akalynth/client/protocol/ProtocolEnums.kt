@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 /**
  * Shared protocol enums + string-constant tables.
  *
- * Values mirror `packages/shared/protocol.ts` / `types.ts` (PROTOCOL_VERSION 2.0.0). The TS contract
+ * Values mirror `packages/shared/protocol.ts` / `types.ts` (PROTOCOL_VERSION 2.1.0). The TS contract
  * is authoritative; do not diverge. Reason/status fields that are open-ended on the server are kept
  * as plain [String] on the message classes (with the known values catalogued here) so an
  * unrecognised future value never crashes decode.

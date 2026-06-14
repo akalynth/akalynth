@@ -517,6 +517,7 @@ export const MAX_GOLD_AMOUNT = 1_000_000;
 export type WalletCreditReason =
   | 'work_contract'              // Faucet: earned through labor (future)
   | 'debug_grant'                // Debug-only: admin grant
+  | `player_gift:${string}`      // Player gift receipt (player_gift:<sender_id>)
   | `property_sale:${string}`    // Resale: seller credited (property_sale:<property_id>)
   // Auction lane: escrow is represented by receipt sequence + derived balance
   // state, not a treasury escrow ledger.
@@ -527,6 +528,7 @@ export type WalletCreditReason =
 export type WalletDebitReason =
   | 'temple_tithe'                  // Sink: voluntary tithe
   | 'debug_burn'                    // Debug-only: admin burn
+  | `player_gift:${string}`         // Player gift receipt (player_gift:<target_id>)
   | `action_cost:${string}`         // Costed action: action_cost:<action_type>
   | `property_purchase:${string}`   // Primary sale sink (property_purchase:<property_id>)
   | `property_transfer:${string}`   // Resale buyer debit (property_transfer:<property_id>)

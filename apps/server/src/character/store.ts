@@ -26,6 +26,12 @@ export class CharacterStore {
       .get(characterId) as AccountCharacterRow | undefined;
   }
 
+  updateOutfit(characterId: string, outfitId: string): void {
+    this.db
+      .prepare(`UPDATE account_characters SET outfit_id = ? WHERE character_id = ?`)
+      .run(outfitId, characterId);
+  }
+
   countForAccount(accountId: string): number {
     return (this.db.prepare(`SELECT count(*) c FROM account_characters WHERE account_id = ?`).get(accountId) as { c: number }).c;
   }

@@ -5,7 +5,7 @@ set -euo pipefail
 # and the single-source / symlink invariant established by the skill-store
 # collapse (see .codex/CODEX_MAP.md). Canonical source: .claude/skills/.
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 SKILLS_DIR="$ROOT_DIR/.claude/skills"
 PLUGIN_SKILLS="$ROOT_DIR/plugins/akalynth-studio/skills"
 CODEX_AUDIT="$ROOT_DIR/.codex/skills/akalynth-system-audit/skill.md"

@@ -782,7 +782,7 @@ function DebugApp() {
               <strong>{smokeLabel}</strong>
             </div>
           </div>
-          {state.ui.stage >= 3 && <NearbyList players={roster} />}
+          {state.ui.stage >= 3 && <NearbyList me={state.world.me} players={roster} />}
           {state.ui.stage >= 3 && propertyList.length > 0 && (
             <PropertyLedger
               properties={propertyList}
@@ -819,6 +819,7 @@ function DebugApp() {
               onTickWork={api.tickWork}
               onBuy={api.useSkill}
               onWorldEventAction={api.useSkill}
+              onGiftGold={() => state.combat.targetId && api.useSkill('social:gift:gold', state.combat.targetId)}
               onUseItem={(itemId) => api.useSkill('item:use:' + itemId)}
               attackReady={attackReady}
               ritualReady={ritualReady}

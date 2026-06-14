@@ -7,7 +7,7 @@ import kotlinx.serialization.json.JsonElement
 /**
  * Server -> Client messages.
  *
- * Mirrors `packages/shared/protocol.ts` (PROTOCOL_VERSION 2.0.0). protocol.ts is the authoritative
+ * Mirrors `packages/shared/protocol.ts` (PROTOCOL_VERSION 2.1.0). protocol.ts is the authoritative
  * contract; this file follows it and must not diverge.
  *
  * Open-ended `reason` / `code` / `status` fields stay as plain [String] (known values catalogued in
