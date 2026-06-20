@@ -32,6 +32,7 @@ Important gates:
 - DEBUG-only messages must not be treated as normal client capabilities
 - moderation report and resolution messages are currently gated by authenticated session plus DEBUG mode; this document does not claim a role-based admin policy unless server code adds one
 - optional fields are compatibility surfaces, not authority transfers to the client
+- chill-zone gather intents (`gather_intent`, `deliver_intent`) and gather broadcasts are inert unless `CHILL_ZONE_GATHER_ENABLED` is set (default off)
 
 ## Compatibility Notes
 
@@ -132,6 +133,8 @@ interface BaseMessage {
 | `open_house_auction` | Owner opens a resale auction on an owned plot. |
 | `place_house_bid` | Places a gold bid on an open auction (escrow + outbid refund). |
 | `cancel_house_auction` | Owner cancels a resale auction (only with zero bids). |
+| `gather_intent` | Starts gathering at `node_id`. Gated by `CHILL_ZONE_GATHER_ENABLED` (default off). |
+| `deliver_intent` | Delivers held gather item at `station_id`. Gated by `CHILL_ZONE_GATHER_ENABLED` (default off). |
 
 ## Server → Client Messages
 
@@ -181,6 +184,12 @@ interface BaseMessage {
 | `property_ledger` | Ownership ledger (anonymized history + sale count) for a property. |
 | `property_auction_state` | Open-auction state (anonymized) after open/bid/cancel. |
 | `house_auction_settled` | Zone broadcast when an auction closes and settles (winner/seller/price). |
+| `gather_snapshot` | Gather node and station projection for the active zone. |
+| `gather_node_update` | Single gather node state update. |
+| `gather_result` | Result of a `gather_intent` with optional `GatherRejectReason`. |
+| `gather_progress` | In-progress gather progress for a `node_id`. |
+| `gather_completed` | Gather finished; held-slot `item_type` for the `node_id`. |
+| `deliver_result` | Result of a `deliver_intent`; success may emit a `delivery_recorded` receipt. |
 
 ## Client → Server Details
 
@@ -392,6 +401,14 @@ refunds that bidder the exact prior amount (`property_bid_refunded` +
 
 Owner cancels a resale auction — allowed **only while it has zero bids**.
 
+#### `gather_intent`
+
+Starts gathering at `node_id`. The server validates zone membership, node availability, range, held-slot capacity, and the `CHILL_ZONE_GATHER_ENABLED` runtime gate (default off). Responses use `gather_result`, `gather_progress`, and `gather_completed`.
+
+#### `deliver_intent`
+
+Delivers the held gather item at `station_id`. The server validates range, held-slot contents, and the `CHILL_ZONE_GATHER_ENABLED` runtime gate (default off). Success emits a `delivery_recorded` receipt and returns `deliver_result`; step 4 may grant a non-tradeable `tending_token` reward string without gold or economy credit.
+
 ## Server → Client Details
 
 #### `welcome`
@@ -571,6 +588,30 @@ Zone broadcast when an auction closes and settles: `property_id`, `plot_id`,
 `zone`, `winner_name` (null = no bids), `seller_name` (null = primary), `price`,
 `sale_count`. Emitted by the world-loop close→settle trigger. Auction truth comes
 only from the `property_auction_settled` receipt, never from wall-clock.
+
+#### `gather_snapshot`
+
+Projects all gather `nodes` and `stations` in the active zone. Each node carries `node_id`, `zone`, coordinates, `state` (`available`, `depleting`, `depleted`), and optional `respawn_at_ms`.
+
+#### `gather_node_update`
+
+Broadcasts a single `node` state change using the shared `GatherNodePublic` shape.
+
+#### `gather_result`
+
+Result of a `gather_intent` with `ok`, optional `node_id`, `complete_at_ms`, and optional `reason` from `GatherRejectReason` (`unknown_zone`, `node_not_found`, `node_not_available`, `out_of_range`, `already_gathering`, `held_slot_full`, `held_slot_empty`, `station_not_found`).
+
+#### `gather_progress`
+
+In-progress gather tick for `node_id` with authoritative `progress_pct`.
+
+#### `gather_completed`
+
+Gather finished for `node_id`; `item_type` names the held-slot item the server now owns.
+
+#### `deliver_result`
+
+Result of a `deliver_intent` with `ok`, optional `station_id`, `item_type`, `source_node_id`, `reward`, and optional `reason` from `GatherRejectReason`.
 
 ## Contract Type Literals
 
