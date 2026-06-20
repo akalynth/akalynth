@@ -207,20 +207,72 @@ function validateWorldVisualSidecar(jsonPath: string, pngPath: string) {
   if (!Array.isArray(sp) || sp.length !== 2 || typeof sp[0] !== 'number' || typeof sp[1] !== 'number') fail(f, 'rendering.anchor.source_pixels must be numeric [x,y]');
 }
 
+const UI_PACK_REL = `data/assets-src/sprites/ui/ui_gameplay_v1.json`;
+
+function validateUiGameplayPack(packPath: string, uiDir: string) {
+  const f = repoRel(packPath);
+  let pack: Record<string, unknown>;
+  try {
+    pack = JSON.parse(readFileSync(packPath, 'utf8'));
+  } catch (e) {
+    fail(f, `invalid JSON (${e})`);
+    return new Set<string>();
+  }
+  const assets = pack.assets;
+  if (!Array.isArray(assets) || assets.length === 0) {
+    fail(f, 'pack.assets must be a non-empty array');
+    return new Set<string>();
+  }
+  const covered = new Set<string>();
+  for (const a of assets as Array<Record<string, unknown>>) {
+    const file = a.file;
+    if (typeof file !== 'string' || !file.endsWith('.png')) {
+      fail(f, 'asset.file must be a .png filename');
+      continue;
+    }
+    covered.add(file);
+    const pngPath = path.join(uiDir, file);
+    if (!existsSync(pngPath)) {
+      fail(f, `asset.file missing PNG: ${file}`);
+      continue;
+    }
+    if (a.mechanics !== null) fail(f, `${file}: mechanics MUST be null`);
+    if (a.style_contract !== STYLE_CONTRACT) fail(f, `${file}: style_contract mismatch`);
+    const dp = a.dimensions_px;
+    const buf = readFileSync(pngPath);
+    const dims = pngDims(buf);
+    if (!dims) { fail(f, `${file}: cannot read PNG dimensions`); continue; }
+    if (!Array.isArray(dp) || dp[0] !== dims[0] || dp[1] !== dims[1]) {
+      fail(f, `${file}: dimensions_px ${JSON.stringify(dp)} != actual ${dims[0]}x${dims[1]}`);
+    }
+  }
+  return covered;
+}
+
 function run() {
   // A-1 pairing over sprites/ recursively.
   const entries = existsSync(SPRITES) ? walkFiles(SPRITES) : [];
   const pngs = entries.filter((e) => e.endsWith('.png'));
   const jsons = entries.filter((e) => e.endsWith('.json'));
   const rels = new Set(entries.map((e) => repoRel(e)));
+  const uiDir = path.join(SPRITES, 'ui');
+  const uiPackPath = path.join(REPO_ROOT, UI_PACK_REL);
+  const uiPackFiles = existsSync(uiPackPath)
+    ? validateUiGameplayPack(uiPackPath, uiDir)
+    : new Set<string>();
 
   for (const pngPath of pngs) {
     const rel = repoRel(pngPath);
+    const relFromSprites = path.relative(SPRITES, pngPath);
+    if (relFromSprites.startsWith(`ui${path.sep}`)) {
+      const base = path.basename(pngPath);
+      if (!uiPackFiles.has(base)) fail(rel, 'missing ui_gameplay_v1.json entry');
+      continue;
+    }
     const sidecarRel = rel.replace(/\.png$/, '.json');
     const sidecarPath = path.join(REPO_ROOT, sidecarRel);
     if (!rels.has(sidecarRel)) fail(rel, 'missing sidecar JSON');
     else {
-      const relFromSprites = path.relative(SPRITES, pngPath);
       if (relFromSprites.startsWith(`characters${path.sep}`)) validateVisualSpritesheetSidecar(sidecarPath, pngPath, 'character');
       else if (relFromSprites.startsWith(`creatures${path.sep}`)) validateVisualSpritesheetSidecar(sidecarPath, pngPath, 'creature');
       else if (relFromSprites.startsWith(`world${path.sep}`)) validateWorldVisualSidecar(sidecarPath, pngPath);
@@ -229,6 +281,7 @@ function run() {
   }
   for (const jsonPath of jsons) {
     const rel = repoRel(jsonPath);
+    if (rel === UI_PACK_REL) continue;
     const pngRel = rel.replace(/\.json$/, '.png');
     if (!rels.has(pngRel)) fail(rel, 'orphan sidecar (no matching PNG)');
   }
