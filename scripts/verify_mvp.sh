@@ -159,10 +159,21 @@ try_receipt() {
 }
 run_ws_scenario() {
   local scenario="$1" token="$2" timeout_s="${3:-$AKALYNTH_WS_TIMEOUT_SECONDS}"
-  run_timeout "$timeout_s" node "$HARNESS" \
-    --ws-url "$WS_URL" \
-    --guest-token "$token" \
-    --scenario "$SCENARIOS_DIR/$scenario.json" || true
+  local mode="${4:-}"
+  local outfile
+  outfile="$(mktemp)"
+  local -a cmd=(
+    node "$HARNESS"
+    --ws-url "$WS_URL"
+    --guest-token "$token"
+    --scenario "$SCENARIOS_DIR/$scenario.json"
+  )
+  if [[ "$mode" == "summary" ]]; then
+    cmd+=(--summary-only)
+  fi
+  run_timeout "$timeout_s" "${cmd[@]}" >"$outfile" 2>/dev/null || true
+  cat "$outfile"
+  rm -f "$outfile"
 }
 run_ws_scenario_bg() {
   local scenario="$1" token="$2" outfile="$3" timeout_s="${4:-$AKALYNTH_WS_TIMEOUT_SECONDS}"
@@ -217,13 +228,14 @@ wait_ws_bg_ok() {
 }
 assert_ws_ok() {
   local label="$1" json="$2"
-  if ! echo "$json" | jq -e '.ok == true' >/dev/null 2>&1; then
-    local failures
-    failures="$(echo "$json" | jq -r '.failures[]?' 2>/dev/null || true)"
+  if ! printf '%s' "$json" | jq -e '.ok' >/dev/null 2>&1; then
+    local failures ok_val
+    failures="$(printf '%s' "$json" | jq -r '.failures[]?' 2>/dev/null || true)"
+    ok_val="$(printf '%s' "$json" | jq -r '.ok // "parse_error"' 2>/dev/null || echo parse_error)"
     if [[ -z "$failures" ]]; then
       local preview
       preview="$(printf '%s' "$json" | tr '\n' ' ' | head -c 240)"
-      die "$label failed: unknown_failure (json_len=${#json}; preview=${preview:-<empty>})"
+      die "$label failed: harness_not_ok (ok=$ok_val; json_len=${#json}; preview=${preview:-<empty>})"
     fi
     die "$label failed: $failures"
   fi
@@ -446,7 +458,7 @@ poll_json "Invalid JSON from /v1/world/Azura/state" \
   "$HTTP_URL/v1/world/Azura/state" '.ok == true' >/dev/null
 log "Baseline WS flow..."
 read -r PLAYER_ID GUEST_TOKEN <<<"$(mint_guest)"
-BASELINE_JSON="$(run_ws_scenario baseline "$GUEST_TOKEN" "$AKALYNTH_WS_TIMEOUT_SECONDS")"
+BASELINE_JSON="$(run_ws_scenario baseline "$GUEST_TOKEN" "$AKALYNTH_WS_TIMEOUT_SECONDS" summary)"
 assert_ws_ok "baseline" "$BASELINE_JSON"
 wait_for_receipt "session_guest_minted" "$PLAYER_ID" '(.receipts | length) > 0' >/dev/null
 if ! try_receipt "tem_challenge_issued" "$PLAYER_ID" \

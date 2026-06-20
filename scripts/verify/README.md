@@ -41,6 +41,7 @@ Flags:
 - `--guest-token <token>` (required): guest session token.
 - `--scenario <file>` (required): scenario JSON path.
 - `--timeout-ms <ms>` (optional): overrides the scenario `duration_ms` bound.
+- `--summary-only` (optional): omit `messages`/`events` from stdout JSON (keeps `ok`, `scenario`, `failures`).
 - `--ready-file <path>` (optional): writes a `{ ready: true, scenario, at_ms }`
   marker once bootstrap completes (used to synchronize multi-client runs).
 

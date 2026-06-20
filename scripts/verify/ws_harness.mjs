@@ -18,12 +18,13 @@ function parseArgs(argv) {
     else if (arg === '--scenario') out.scenarioPath = argv[++i];
     else if (arg === '--timeout-ms') out.timeoutMs = Number(argv[++i]);
     else if (arg === '--ready-file') out.readyFile = argv[++i];
+    else if (arg === '--summary-only') out.summaryOnly = true;
   }
   return out;
 }
 
 function usage() {
-  return 'Usage: node ws_harness.mjs --ws-url <ws> --guest-token <token> --scenario <file> [--timeout-ms <ms>] [--ready-file <path>]';
+  return 'Usage: node ws_harness.mjs --ws-url <ws> --guest-token <token> --scenario <file> [--timeout-ms <ms>] [--ready-file <path>] [--summary-only]';
 }
 
 function sleep(ms) {
@@ -225,13 +226,16 @@ async function run() {
     }
   }
 
-  return {
+  const report = {
     ok: failures.length === 0,
     scenario: scenario.name ?? path.basename(args.scenarioPath),
-    messages,
-    events: sentEvents,
     failures,
   };
+  if (!args.summaryOnly) {
+    report.messages = messages;
+    report.events = sentEvents;
+  }
+  return report;
 }
 
 run()
