@@ -11,7 +11,12 @@ A social-first, low-grind MMO prototype — a TypeScript monorepo (`apps/`,
 
 ## Skills (single source of truth)
 
-- **Canonical source: `.claude/skills/`** (21 skills). Edit skills **only** here.
+- **Canonical source: `.claude/skills/`** (21 steward skills + meta/handoff skills).
+  Edit skills **only** here.
+- **Session handoff:** `akalynth-continue` — read
+  `.claude/skills/akalynth-continue/references/CONTINUATION_STATE.md` before
+  resuming beta Android, gather, or Goal0 UI inspect work. Mirror to Claude Code
+  with `./scripts/sync-claude-continue-skill.sh`.
 - Every other store is a symlink into it: the Codex plugin
   `plugins/akalynth-studio/skills/` (9 curated), the gitignored runtime
   `.agents/skills`, and `~/.codex/skills/`. CI enforces this via
