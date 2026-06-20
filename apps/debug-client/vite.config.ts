@@ -12,6 +12,7 @@ export default defineConfig({
     alias: {
       '@shared': path.resolve(__dirname, '../../packages/shared'),
     },
+    extensions: ['.ts', '.tsx', '.mjs', '.js', '.mts', '.jsx', '.json'],
   },
   server: {
     port: 5173,
