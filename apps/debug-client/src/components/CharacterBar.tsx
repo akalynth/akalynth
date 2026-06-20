@@ -288,10 +288,15 @@ export function CharacterBar({
       >
         {catalog.worlds.map((world) => (
           <option key={world.world_id} value={world.world_id}>
-            {world.name}
+            {world.tagline ? `${world.name} - ${world.tagline}` : world.name}
           </option>
         ))}
       </select>
+      {catalog.worlds.find((world) => world.world_id === worldId)?.districts?.length ? (
+        <span className="character-bar-helper">
+          Districts: {catalog.worlds.find((world) => world.world_id === worldId)?.districts?.join(', ')}
+        </span>
+      ) : null}
       <select
         className="character-bar-input"
         value={sex}

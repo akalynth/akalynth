@@ -1,0 +1,30 @@
+{
+  "name": "akalynth-studio",
+  "version": "0.2.0",
+  "description": "Private Akalynth game-server studio skills for lightweight MMO design, deploy, and audit work.",
+  "author": {
+    "name": "VaultSovereign",
+    "email": "admin@akalynth.com",
+    "url": "https://github.com/VaultSovereign"
+  },
+  "homepage": "https://github.com/VaultSovereign/akalynth",
+  "repository": "https://github.com/VaultSovereign/akalynth",
+  "license": "UNLICENSED",
+  "keywords": ["akalynth", "mmo", "game-server", "codex"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Akalynth Studio",
+    "shortDescription": "Private MMO server design and deploy skills.",
+    "longDescription": "A lightweight private skill pack for Akalynth server cartography, gameplay loop design, protocol stewardship, receipt-chain custody, anti-cheat work, map/lore building, deploy verification, and test running.",
+    "developerName": "VaultSovereign",
+    "category": "Developer Tools",
+    "capabilities": ["Read", "Write", "Interactive"],
+    "websiteURL": "https://github.com/VaultSovereign/akalynth",
+    "defaultPrompt": [
+      "Audit the Akalynth server bootstrap.",
+      "Design a small gameplay loop.",
+      "Check protocol compatibility."
+    ],
+    "brandColor": "#2E7D5B"
+  }
+}

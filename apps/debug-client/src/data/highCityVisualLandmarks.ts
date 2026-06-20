@@ -99,6 +99,42 @@ const HIGH_CITY_VISUAL_LANDMARKS: WorldVisualObjectPlacement[] = [
   obj('bench', 27, 56, 2),
   obj('bench', 36, 56, 3),
   obj('notice_board', 32, 49, 3),
+
+  // Market Spine: display-only vendor silhouettes and awnings so the planned
+  // market district reads as a place. Shop authority remains the server economy
+  // endpoints; these stalls do not create prices, inventory, or interactions.
+  ...floorPatch('floor_cobble_01', 42, 22, 55, 32),
+  obj('market_food_stall', 44, 26),
+  obj('market_cloth_stall', 49, 26),
+  obj('market_food_stall', 54, 26, 1),
+  obj('market_awning_overlay', 44, 25),
+  obj('market_awning_overlay', 49, 25, 1),
+  obj('market_awning_overlay', 54, 25, 2),
+  obj('bench', 46, 31, 4),
+  obj('notice_board', 52, 31, 4),
+
+  // Temple Steps: readable civic destination near the plaza. No healing,
+  // respawn, tithe, or work-contract mechanics are attached to these visuals.
+  ...floorPatch('floor_stone_01', 45, 42, 57, 50),
+  ...row('wall_stone_north', 46, 56, 42),
+  obj('wall_stone_corner_nw', 45, 42, 1),
+  obj('wall_stone_corner_ne', 57, 42, 1),
+  obj('stone_column', 47, 45, 1),
+  obj('stone_column', 55, 45, 1),
+  obj('banner_blue', 48, 47, 3),
+  obj('banner_red', 54, 47, 3),
+  obj('fountain', 51, 49, 2),
+
+  // Craft Quarter: workshop flavor for future equipment/spellcraft loops. The
+  // racks and benches are visual only; crafting remains receipt-gated elsewhere.
+  ...floorPatch('floor_wood_01', 5, 43, 18, 55),
+  ...row('wall_stone_north', 6, 17, 43),
+  obj('weapon_rack', 8, 48, 2),
+  obj('weapon_rack', 15, 48, 3),
+  obj('table_small', 11, 51),
+  obj('chest_small', 17, 54),
+  obj('bookshelf', 6, 46),
+  obj('door_wood_closed_south', 12, 55, 1),
 ];
 
 export function highCityVisualLandmarksForMap(mapName: MapName): WorldVisualObjectPlacement[] {

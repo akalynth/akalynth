@@ -41,7 +41,8 @@ private val ROUTE_ACTION_SKILL_IDS = setOf(
     "route:dream:traverse",
     "route:dream:arrive",
     "route:dream:interpret",
-    "route:dream:fragment"
+    "route:dream:fragment",
+    "activity:fishing:rookguard"
 )
 
 class GameStore(
@@ -694,10 +695,12 @@ class GameStore(
             "route:dream:arrive" -> "Dream Gate arrival"
             "route:dream:interpret" -> "Dream Gate"
             "route:dream:fragment" -> "Dream fragment"
+            "activity:fishing:rookguard" -> "Rookguard fishing"
             else -> "Route"
         }
         val line = if (msg.success) {
             when (msg.skillId) {
+                "activity:fishing:rookguard" -> "Rookguard fishing reflected by server."
                 "route:safety:forgehold", "route:safety:moonspire" -> "$title boundary reviewed by server."
                 "route:quest:shipment" -> "$title investigation recorded by server."
                 "route:economy:forgehold" -> "$title quote recorded by server."

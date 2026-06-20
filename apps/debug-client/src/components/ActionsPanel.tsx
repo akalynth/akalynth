@@ -1,4 +1,5 @@
 import type { PlayLoopProgress, SovereignVocation } from '@shared/types';
+import { respectRankForReputation } from '@shared/types';
 import {
   isUsableItemType,
   itemLabel,
@@ -28,6 +29,7 @@ const WITNESS_MOTH_ACTIONS = [
 ] as const;
 
 const ROUTE_ACTIONS = [
+  { skill_id: 'activity:fishing:rookguard', label: 'Fish Rookguard canal', short: 'Fish' },
   { skill_id: 'route:survey:forgehold', label: 'Survey Forgehold', short: 'Forge' },
   { skill_id: 'route:survey:moonspire', label: 'Survey Dream Gate', short: 'Dream' },
   { skill_id: 'route:safety:forgehold', label: 'Review Forgehold Safety', short: 'FSafe' },
@@ -54,7 +56,7 @@ const ROUTE_ACTION_BY_ID = new Map<RouteActionId, typeof ROUTE_ACTIONS[number]>(
 );
 
 function routeActionIdsFor(onwardRoutes: NonNullable<PlayLoopProgress['onwardRoutes']>): RouteActionId[] {
-  const ids: RouteActionId[] = [];
+  const ids: RouteActionId[] = ['activity:fishing:rookguard'];
   for (const route of onwardRoutes) {
     if (route.status !== 'available') continue;
     const completed = new Set(route.completed_objective_ids);
@@ -102,6 +104,7 @@ interface ActionsPanelProps {
   onTickWork: () => void;
   onBuy: (skillId: string) => void;
   onWorldEventAction: (skillId: string) => void;
+  onGiftGold: () => void;
   onUseItem: (itemId: string) => void;
   attackReady: boolean;
   ritualReady: boolean;
@@ -115,6 +118,7 @@ interface ActionsPanelProps {
   objectiveLabel: string;
   inventory: InventoryItemRef[];
   gold: number;
+  reputation: number;
 }
 
 export function ActionsPanel({
@@ -129,6 +133,7 @@ export function ActionsPanel({
   onTickWork,
   onBuy,
   onWorldEventAction,
+  onGiftGold,
   onUseItem,
   attackReady,
   ritualReady,
@@ -142,7 +147,9 @@ export function ActionsPanel({
   objectiveLabel,
   inventory,
   gold,
+  reputation,
 }: ActionsPanelProps) {
+  const respectRank = respectRankForReputation(reputation);
   const inGuildHall = nearbyNpc?.npc_id === 'azura_steward';
   const inRookguardProfessionHall = nearbyNpc?.npc_id === 'rookguard_steward';
   const rookguardQuest = loop?.rookguardQuest ?? null;
@@ -376,6 +383,7 @@ export function ActionsPanel({
         )}
       </div>
       {gold > 0 && <div className="gold-display">Gold: {gold}</div>}
+      <div className="gold-display">Respect: {respectRank} ({reputation})</div>
       {nearLegendStone && (
         <div className="legend-stone-hint">A legend stone pulses nearby. It refuses approach.</div>
       )}
@@ -384,6 +392,15 @@ export function ActionsPanel({
         <>
           <div className="target-line">Target: {targetName ?? 'none'}</div>
           {!targetName && <div className="action-hint">Tap a player to target</div>}
+          {targetName && (
+            <button
+              className="action-btn ritual-btn"
+              onClick={onGiftGold}
+              disabled={gold < 1}
+            >
+              Gift 1g
+            </button>
+          )}
           <button
             className={`action-btn ${attackReady ? '' : 'cooling'}`}
             onClick={() => attackReady && onAttack()}

@@ -174,7 +174,7 @@ export interface GameClientApi {
   castRunestone: () => void;
   talkToNpc: (npcId: string) => void;
   declareVocation: (vocation: SovereignVocation) => void;
-  useSkill: (skillId: string) => void;
+  useSkill: (skillId: string, targetId?: string) => void;
   pickupItem: (itemId: string) => void;
   startWork: () => void;
   tickWork: () => void;

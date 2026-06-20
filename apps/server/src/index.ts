@@ -854,8 +854,21 @@ interface WorldItem {
 }
 const worldItems: Map<string, Map<string, WorldItem>> = new Map();
 
-// Track which players have received starter kits (in-memory, per process)
-const starterKitMinted = new Set<string>();
+const STARTER_KIT_SOURCE = 'rookguard_starter_kit_v1';
+const STARTER_KIT_ITEMS = [
+  {
+    item_type: 'rookguard_training_blade',
+    meta: { source: STARTER_KIT_SOURCE, equipment_slot: 'hand', grants_power: false },
+  },
+  {
+    item_type: 'rookguard_threadbare_cloak',
+    meta: { source: STARTER_KIT_SOURCE, equipment_slot: 'body', grants_power: false },
+  },
+  {
+    item_type: 'rookguard_patience_charm',
+    meta: { source: STARTER_KIT_SOURCE, equipment_slot: 'trinket', grants_power: false },
+  },
+] as const;
 
 // Combat cooldown tracking (Phase 3)
 const lastAttackAt = new Map<string, number>();
@@ -1981,19 +1994,12 @@ function ownerHistoryToPublic(p: PropertyProjection): PropertyOwnerHistoryEntry[
 
 /**
  * Mint starter kit for new players entering Rookguard.
- * Items: torch, ration, mark_token
+ * Items are basic equipment-flavored inventory proofs, not power grants.
  */
 function mintStarterKit(playerId: string): void {
-  if (starterKitMinted.has(playerId)) return;
-  starterKitMinted.add(playerId);
+  if (playerHasStarterKit(playerId)) return;
 
-  const items = [
-    { item_type: 'torch', meta: {} },
-    { item_type: 'ration', meta: {} },
-    { item_type: 'mark_token', meta: {} },
-  ];
-
-  for (const itemDef of items) {
+  for (const itemDef of STARTER_KIT_ITEMS) {
     // 1. Write mint receipt and get the actual written receipt back
     const writtenReceipt = audit.write({
       action: 'item_minted',
@@ -2001,7 +2007,7 @@ function mintStarterKit(playerId: string): void {
       inputs: {
         item_type: itemDef.item_type,
         meta: itemDef.meta,
-        reason: 'onboarding',
+        reason: STARTER_KIT_SOURCE,
       },
       result: 'ok',
     });
@@ -2016,8 +2022,9 @@ function mintStarterKit(playerId: string): void {
       player_id: playerId,
       inputs: {
         item_id: itemId,
+        item_type: itemDef.item_type,
         slot: null,
-        source: 'mint',
+        source: STARTER_KIT_SOURCE,
       },
       result: 'ok',
     });
@@ -2026,6 +2033,20 @@ function mintStarterKit(playerId: string): void {
     if (!inventory.has(playerId)) inventory.set(playerId, new Set());
     inventory.get(playerId)!.add(itemId);
   }
+}
+
+function playerHasStarterKit(playerId: string): boolean {
+  for (const itemId of getPlayerInventoryIds(playerId)) {
+    const item = persist.getItem(itemId);
+    if (!item?.meta_json) continue;
+    try {
+      const meta = JSON.parse(item.meta_json) as Record<string, unknown>;
+      if (meta.source === STARTER_KIT_SOURCE) return true;
+    } catch {
+      // Malformed item metadata should not block a legitimate starter kit.
+    }
+  }
+  return false;
 }
 
 /**
@@ -6077,6 +6098,27 @@ function processSessionQueue(s: Session, now: number) {
             const balance = getGoldBalance(s.player!.id);
             send(s.ws, ServerMessages.walletSnapshot(balance));
             return { balance_gold: balance };
+          },
+          debitWallet: (amount, reason) => {
+            if (!canAfford(s.player!.id, amount)) return { ok: false, reason: 'insufficient_gold' };
+            audit.write({
+              player_id: s.player!.id,
+              action: WALLET_DEBIT_ACTION,
+              inputs: { amount, reason: reason as WalletDebitReason },
+              result: 'ok',
+            });
+            const balance = getGoldBalance(s.player!.id);
+            send(s.ws, ServerMessages.walletSnapshot(balance));
+            return { ok: true, balance_gold: balance };
+          },
+          creditWalletForPlayer: (playerId, amount, reason) => {
+            audit.write({
+              player_id: playerId,
+              action: WALLET_CREDIT_ACTION,
+              inputs: { amount, reason: reason as WalletCreditReason },
+              result: 'ok',
+            });
+            return { balance_gold: getGoldBalance(playerId) };
           },
         };
 

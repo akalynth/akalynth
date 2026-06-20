@@ -35,6 +35,7 @@ import com.akalynth.client.ui.components.chronicle.ChronicleSheet
 import com.akalynth.client.ui.theme.ClassicButton
 import com.akalynth.client.ui.theme.ClassicPanel
 import com.akalynth.client.ui.theme.ClassicShellColors
+import com.akalynth.client.ui.theme.akalynthWallpaperBrush
 import kotlinx.coroutines.delay
 
 @Composable
@@ -58,13 +59,10 @@ fun WorldScreen(
     )
     val routeActionSkillIds = routeActionSkillIdsFor(state.progression.loop?.onwardRoutes ?: emptyList())
     val showRouteActions = routeActionSkillIds.isNotEmpty()
-    // Debug-only: render a local tile-showcase map (grass/stone/water/wall patches around spawn)
-    // for art verification. Display-only; server state is untouched.
-    var showcaseMap by remember { mutableStateOf(false) }
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ClassicShellColors.Void)
+            .background(akalynthWallpaperBrush())
     ) {
         GameCanvas(
             map = if (showcaseMap) MapName.TILE_SHOWCASE else state.world.currentMap,
@@ -250,7 +248,7 @@ fun WorldScreen(
 }
 
 private fun routeActionSkillIdsFor(routes: List<OnwardRouteProgress>): List<String> {
-    return routes.flatMap { route ->
+    return listOf("activity:fishing:rookguard") + routes.flatMap { route ->
         if (route.status != "available") return@flatMap emptyList()
         val completed = route.completedObjectiveIds.toSet()
         when (route.routeId) {

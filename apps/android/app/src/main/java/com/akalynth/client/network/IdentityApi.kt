@@ -33,6 +33,7 @@ class IdentityApi(
         private const val CSRF_COOKIE = "akalynth_csrf"
         private const val ACCOUNT_CREATE_PATH = "/v1/characters"
         private const val CHARACTER_SELECT_PATH = "/v1/characters/select"
+        private const val CHARACTER_OUTFIT_PATH = "/v1/characters/outfit"
         private const val LOGIN_PATH = "/v1/accounts/login"
         private const val WORLDS_PATH = "/v1/worlds"
         private const val OUTFITS_PATH = "/v1/outfits"
@@ -50,7 +51,9 @@ class IdentityApi(
 
     data class World(
         val worldId: String,
-        val name: String
+        val name: String,
+        val tagline: String,
+        val districts: List<String>
     )
 
     data class Outfit(
@@ -110,6 +113,18 @@ class IdentityApi(
 
     interface CreateCallback {
         fun onResult(result: CharacterCreateResult)
+    }
+
+    sealed class CharacterOutfitResult {
+        data class Success(val character: Character) : CharacterOutfitResult()
+        data class Error(
+            val code: String,
+            val message: String
+        ) : CharacterOutfitResult()
+    }
+
+    interface OutfitUpdateCallback {
+        fun onResult(result: CharacterOutfitResult)
     }
 
     sealed class PrincipalResult {
@@ -199,6 +214,28 @@ class IdentityApi(
         )
     }
 
+    fun updateCharacterOutfit(characterId: String, outfitId: String, callback: OutfitUpdateCallback) {
+        val sessionError = accountSessionError("outfit change")
+        if (sessionError != null) {
+            callback.onResult(CharacterOutfitResult.Error(sessionError.code, sessionError.message))
+            return
+        }
+        if (characterId.isBlank() || !VALID_OUTFIT_IDS.contains(outfitId)) {
+            callback.onResult(
+                CharacterOutfitResult.Error(
+                    code = "invalid_input",
+                    message = "Select an existing character and a valid outfit."
+                )
+            )
+            return
+        }
+        val json = JSONObject().apply {
+            put("character_id", characterId)
+            put("outfit_id", outfitId)
+        }
+        postJsonOutfitUpdate(json, callback)
+    }
+
     private fun parseAccountCharacterResponse(obj: JSONObject): CharacterCreateResult {
         if (!obj.optBoolean("ok", false)) {
             return CharacterCreateResult.Error(
@@ -237,6 +274,24 @@ class IdentityApi(
             token = token,
             issuedAt = obj.optLong("issued_at", 0L),
             expiresAt = expiresAt
+        )
+    }
+
+    private fun parseAccountCharacterObject(obj: JSONObject): Character? {
+        val worldId = obj.optString("world_id")
+        val sex = obj.optString("sex")
+        val outfitId = obj.optString("outfit_id")
+        if (!VALID_WORLD_IDS.contains(worldId) || !VALID_SEXES.contains(sex) || !VALID_OUTFIT_IDS.contains(outfitId)) {
+            return null
+        }
+        val characterId = obj.optString("character_id")
+        if (characterId.isBlank()) return null
+        return Character(
+            characterId = characterId,
+            name = obj.optString("name"),
+            worldId = worldId,
+            sex = sex,
+            outfitId = outfitId
         )
     }
 
@@ -311,7 +366,22 @@ class IdentityApi(
                     val entry = arr.optJSONObject(i) ?: continue
                     val worldId = entry.optString("world_id")
                     if (VALID_WORLD_IDS.contains(worldId)) {
-                        out.add(World(worldId = worldId, name = entry.optString("name")))
+                        val districts = entry.optJSONArray("districts")
+                        val districtNames = ArrayList<String>()
+                        if (districts != null) {
+                            for (j in 0 until districts.length()) {
+                                val district = districts.optString(j)
+                                if (district.isNotBlank()) districtNames.add(district)
+                            }
+                        }
+                        out.add(
+                            World(
+                                worldId = worldId,
+                                name = entry.optString("name"),
+                                tagline = entry.optString("tagline"),
+                                districts = districtNames
+                            )
+                        )
                     }
                 }
                 out
@@ -479,6 +549,56 @@ class IdentityApi(
                         serverMessage = obj?.optString("message")?.takeIf { s -> s.isNotBlank() }
                     )
                     onError(Pair(code, message))
+                }
+            }
+        })
+    }
+
+    private fun postJsonOutfitUpdate(
+        json: JSONObject,
+        callback: OutfitUpdateCallback
+    ) {
+        val body = json.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
+        val requestBuilder = Request.Builder()
+            .url("$endpoint$CHARACTER_OUTFIT_PATH")
+            .post(body)
+            .header("Content-Type", "application/json; charset=utf-8")
+            .header("Accept", "application/json")
+        val cookieHeader = buildCookieHeader()
+        if (cookieHeader.isNotEmpty()) requestBuilder.header("Cookie", cookieHeader)
+        val csrf = csrfToken.ifBlank { getCsrfCookie() }
+        if (csrf.isNotBlank()) requestBuilder.header("x-csrf-token", csrf)
+
+        client.newCall(requestBuilder.build()).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                callback.onResult(CharacterOutfitResult.Error("network_error", e.message ?: "Network error"))
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    val setCookies = it.headers("Set-Cookie")
+                    if (setCookies.isNotEmpty()) {
+                        storeCookies(setCookies)
+                    }
+                    val raw = it.body?.string() ?: ""
+                    val obj = runCatching { JSONObject(raw) }.getOrNull()
+                    if (it.isSuccessful && obj != null && obj.optBoolean("ok", false)) {
+                        val character = obj.optJSONObject("character")?.let { c -> parseAccountCharacterObject(c) }
+                        if (character != null) {
+                            callback.onResult(CharacterOutfitResult.Success(character))
+                            return
+                        }
+                    }
+
+                    val code = obj?.optString("error")?.takeIf { s -> s.isNotBlank() }
+                        ?: obj?.optString("code")?.takeIf { s -> s.isNotBlank() }
+                        ?: "http_${it.code}"
+                    val message = accountCharacterErrorMessage(
+                        statusCode = it.code,
+                        code = code,
+                        serverMessage = obj?.optString("message")?.takeIf { s -> s.isNotBlank() }
+                    )
+                    callback.onResult(CharacterOutfitResult.Error(code, message))
                 }
             }
         })

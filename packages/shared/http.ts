@@ -91,6 +91,10 @@ export interface AccountCharacterWorldOption {
   world_id: AccountCharacterWorldId;
   name: string;
   description: string;
+  /** Player-facing short label; additive catalog metadata. */
+  tagline?: string;
+  /** Player-facing district names; descriptive only, not a movement/access grant. */
+  districts?: string[];
 }
 
 export interface AccountCharacterOutfitOption {
@@ -133,11 +137,21 @@ export interface AccountCharacterSelectRequest {
   character_id: string;
 }
 
+export interface AccountCharacterOutfitUpdateRequest {
+  character_id: string;
+  outfit_id: AccountCharacterOutfitId;
+}
+
 export interface AccountCharacterPlayResponse {
   ok: true;
   character: AccountCharacterPublic;
   token: string;
   expires_at: number;
+}
+
+export interface AccountCharacterOutfitUpdateResponse {
+  ok: true;
+  character: AccountCharacterPublic;
 }
 
 // ============================================================================

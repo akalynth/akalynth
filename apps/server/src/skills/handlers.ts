@@ -20,6 +20,7 @@ import {
   SOULSTEEL_STABILIZED_ACTION,
   DREAM_GATE_INTERPRETED_ACTION,
   FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION,
+  ROOKGUARD_CANAL_FISHED_ACTION,
 } from '../../../../packages/shared/skills.js';
 import { createHash } from 'node:crypto';
 
@@ -156,6 +157,106 @@ export function handleReport(ctx: SkillContext, targetId: string): SkillResult {
       reported: true,
       target_id: targetId,
       case_id: caseId,
+    },
+  };
+}
+
+// social:gift:gold: Fixed-size player-to-player gold gift
+// ============================================================================
+
+export function handleGiftGold(ctx: SkillContext, targetId: string): SkillResult {
+  if (targetId === ctx.playerId) return { success: false, reason: 'invalid_target' };
+  const target = ctx.findPlayerOnline(targetId);
+  if (!target) return { success: false, reason: 'target_not_found' };
+  if (!ctx.debitWallet || !ctx.creditWalletForPlayer) return { success: false, reason: 'invalid_target' };
+
+  const amount = 1;
+  const debitReason = `player_gift:${targetId}`;
+  const creditReason = `player_gift:${ctx.playerId}`;
+  const debit = ctx.debitWallet(amount, debitReason);
+  if (!debit.ok) return { success: false, reason: 'invalid_skill', payload: { error: 'insufficient_gold' } };
+  const credit = ctx.creditWalletForPlayer(targetId, amount, creditReason);
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: 'player_gold_gifted',
+    inputs: {
+      target_id: targetId,
+      amount_gold: amount,
+      sender_debit_reason: debitReason,
+      target_credit_reason: creditReason,
+      sender_balance_gold: debit.balance_gold,
+      target_balance_gold: credit.balance_gold,
+      trade_kind: 'gift',
+      economy_impact: 'player_to_player_transfer',
+    },
+    result: 'ok',
+  });
+
+  return {
+    success: true,
+    payload: {
+      target_id: targetId,
+      target_name: target.name,
+      amount_gold: amount,
+      sender_balance_gold: debit.balance_gold,
+      target_balance_gold: credit.balance_gold,
+      trade_kind: 'gift',
+      receipt_action: 'player_gold_gifted',
+      economy_impact: 'player_to_player_transfer',
+    },
+  };
+}
+
+// ============================================================================
+// activity:fishing:rookguard: Non-economy chill activity with receipt proof
+// ============================================================================
+
+export function handleRookguardCanalFishing(ctx: SkillContext): SkillResult {
+  const fishedAt = new Date().toISOString();
+  const activityId = 'rookguard_canal_fishing_v1';
+  const catchState = 'nothing_tradeable';
+  const respectDelta = 1;
+  const activityGuard = {
+    wallet_debit_gold: 0,
+    wallet_credit_gold: 0,
+    item_mint: false,
+    item_transfer: false,
+    xp_awarded: 0,
+    travel_unlocked: false,
+    heat_changed: false,
+    penalty_applied: false,
+  };
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: ROOKGUARD_CANAL_FISHED_ACTION,
+    inputs: {
+      activity_id: activityId,
+      place_id: 'rookguard_canal',
+      fished_at: fishedAt,
+      catch_state: catchState,
+      respect_delta: respectDelta,
+      activity_guard: activityGuard,
+      economy_impact: 'none',
+    },
+    result: 'ok',
+  });
+
+  return {
+    success: true,
+    payload: {
+      activity_id: activityId,
+      title: 'Rookguard Canal Fishing',
+      status: 'reflected',
+      place_id: 'rookguard_canal',
+      catch_state: catchState,
+      respect_delta: respectDelta,
+      line: 'You fish beside the Rookguard canal. Nothing worth selling bites, but the town notices patience.',
+      next_objective: 'Repeat quiet activities for social texture; economy rewards stay locked behind explicit receipts.',
+      receipt_action: ROOKGUARD_CANAL_FISHED_ACTION,
+      activity_guard: activityGuard,
+      economy_impact: 'none',
     },
   };
 }
@@ -934,6 +1035,12 @@ export function handleForgeholdShipmentInvestigation(ctx: SkillContext): SkillRe
   const evidenceObjects = ['broken_route_seal', 'charred_shipment_plate'];
   const contradiction = 'departed / undeparted';
   const routeState = 'investigating';
+  const authorityGuard = {
+    travel_unlocked: false,
+    economy_impact: 'none',
+    heat_changed: false,
+    penalty_applied: false,
+  };
 
   ctx.audit({
     player_id: ctx.playerId,
@@ -948,6 +1055,7 @@ export function handleForgeholdShipmentInvestigation(ctx: SkillContext): SkillRe
       investigated_at: investigatedAt,
       travel_unlocked: false,
       economy_impact: 'none',
+      authority_guard: authorityGuard,
     },
     result: 'ok',
   });
@@ -967,6 +1075,7 @@ export function handleForgeholdShipmentInvestigation(ctx: SkillContext): SkillRe
       receipt_action: FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION,
       travel_unlocked: false,
       economy_impact: 'none',
+      authority_guard: authorityGuard,
     },
   };
 }
