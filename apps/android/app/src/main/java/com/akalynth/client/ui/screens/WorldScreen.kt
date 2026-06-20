@@ -59,6 +59,7 @@ fun WorldScreen(
     )
     val routeActionSkillIds = routeActionSkillIdsFor(state.progression.loop?.onwardRoutes ?: emptyList())
     val showRouteActions = routeActionSkillIds.isNotEmpty()
+    var showcaseMap by remember { mutableStateOf(false) }
     Box(
         modifier = Modifier
             .fillMaxSize()
