@@ -15,8 +15,8 @@ android {
         applicationId = "com.akalynth.client"
         minSdk = 26
         targetSdk = 35
-        versionCode = 9
-        versionName = "0.1.7-beta-shell-polish"
+        versionCode = 10
+        versionName = "0.1.8-beta-character-sprites"
     }
 
     buildTypes {
