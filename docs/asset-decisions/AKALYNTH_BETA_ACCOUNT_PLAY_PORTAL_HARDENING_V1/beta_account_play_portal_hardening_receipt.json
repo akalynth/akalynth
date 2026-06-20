@@ -1,0 +1,60 @@
+{
+  "id": "AKALYNTH_BETA_ACCOUNT_PLAY_PORTAL_HARDENING_V1",
+  "status": "closed_beta_account_play_portal_verifier_added",
+  "scope": "beta account.html to /play/ portal contract verification",
+  "source_paths": [
+    "infra/web/beta/account.html",
+    "apps/debug-client/src/identity.ts",
+    "apps/debug-client/src/config.ts",
+    "apps/android/app/build.gradle.kts",
+    "apps/android/app/src/test/java/com/akalynth/client/config/BuildConfigPortalTest.kt",
+    "scripts/verify-beta-account-play-portal.mjs",
+    "package.json"
+  ],
+  "contract": {
+    "account_portal_url": "https://beta.akalynth.com/account.html",
+    "play_url": "https://beta.akalynth.com/play/",
+    "api_origin": "https://beta-api.akalynth.com",
+    "local_storage_identity_key": "akalynth.identity.v1",
+    "character_select_endpoint": "/v1/characters/select",
+    "character_create_endpoint": "/v1/characters",
+    "android_beta_portal_url": "https://beta.akalynth.com/account.html"
+  },
+  "verification": {
+    "npm run verify:beta-account-play-portal": "pass",
+    "git diff --check": "pass",
+    "report": "validation/beta_account_play_portal_report.json",
+    "npm run verify:account-character": "environment_blocked_at_android_gradle_java_25_0_3"
+  },
+  "acceptance": {
+    "account_html_public_200": "pass",
+    "play_public_200": "pass",
+    "account_page_targets_beta_api": "pass",
+    "email_verification_gate_and_resend_contract": "pass",
+    "character_list_select_create_contract": "pass",
+    "play_token_saved_to_local_storage": "pass",
+    "play_redirect_contract": "pass",
+    "debug_client_identity_key_contract": "pass",
+    "android_beta_portal_url_contract": "pass",
+    "credential_free_verifier_recorded": "pass"
+  },
+  "claims": {
+    "repeatable_beta_account_play_portal_verifier_added": true,
+    "credential_free": true,
+    "live_public_200_checks_included": true,
+    "runtime_trees_changed": false,
+    "runtime_state_changed": false,
+    "key_config_custody_changed": false,
+    "caddy_changed": false,
+    "service_restart_performed": false,
+    "deployment_performed": false,
+    "server_protocol_changed": false,
+    "shared_types_changed": false,
+    "gameplay_authority_changed": false
+  },
+  "notes": [
+    "This lane verifies source and public availability only.",
+    "A real credentialed login/create/select walkthrough remains a separate operator action because it mutates account/character state.",
+    "The broader account-character gate passed protocol sync, server quick checks, server web-economy checks, and debug-client guards before the Android Gradle phase failed because the host only exposes OpenJDK 25.0.3; Kotlin/Gradle failed parsing JavaVersion 25.0.3 before running Android tests."
+  ]
+}

@@ -1,0 +1,212 @@
+{
+  "id": "AKALYNTH_BETA_ACCOUNT_PLAY_PORTAL_HARDENING_V1",
+  "status": "pass",
+  "generated_at": "2026-06-20T21:15:04.369Z",
+  "scope": "beta static account portal, account-character play token handoff, debug-client /play/ identity bootstrap, Android beta portal URL",
+  "checks": [
+    {
+      "id": "account_page_targets_beta_api",
+      "status": "pass",
+      "evidence": {
+        "file": "accountHtml",
+        "literal": "const API = 'https://beta-api.akalynth.com';"
+      }
+    },
+    {
+      "id": "account_page_and_debug_client_share_identity_key",
+      "status": "pass",
+      "evidence": {
+        "file": "accountHtml",
+        "literal": "const IDENTITY_KEY = 'akalynth.identity.v1';"
+      }
+    },
+    {
+      "id": "debug_client_reads_same_identity_key",
+      "status": "pass",
+      "evidence": {
+        "file": "debugIdentity",
+        "literal": "const KEY = 'akalynth.identity.v1';"
+      }
+    },
+    {
+      "id": "account_page_redirects_to_play_path",
+      "status": "pass",
+      "evidence": {
+        "file": "accountHtml",
+        "literal": "const PLAY_PATH = '/play/';"
+      }
+    },
+    {
+      "id": "login_uses_account_api",
+      "status": "pass",
+      "evidence": {
+        "file": "accountHtml",
+        "literal": "api('POST', '/v1/accounts/login'"
+      }
+    },
+    {
+      "id": "session_check_uses_me_api",
+      "status": "pass",
+      "evidence": {
+        "file": "accountHtml",
+        "literal": "api('GET', '/v1/accounts/me'"
+      }
+    },
+    {
+      "id": "email_verification_gate_present",
+      "status": "pass",
+      "evidence": {
+        "file": "accountHtml",
+        "literal": "if (!data.email_verified) { show('view-unverified'); return; }"
+      }
+    },
+    {
+      "id": "resend_verification_uses_api",
+      "status": "pass",
+      "evidence": {
+        "file": "accountHtml",
+        "literal": "api('POST', '/v1/accounts/verify/resend'"
+      }
+    },
+    {
+      "id": "character_list_uses_account_character_api",
+      "status": "pass",
+      "evidence": {
+        "file": "accountHtml",
+        "literal": "api('GET', '/v1/characters')"
+      }
+    },
+    {
+      "id": "play_button_uses_character_select",
+      "status": "pass",
+      "evidence": {
+        "file": "accountHtml",
+        "literal": "api('POST', '/v1/characters/select', { character_id: characterId })"
+      }
+    },
+    {
+      "id": "create_character_uses_account_character_api",
+      "status": "pass",
+      "evidence": {
+        "file": "accountHtml",
+        "literal": "api('POST', '/v1/characters', { name, sex, outfit_id, world_id: 'rookguard' })"
+      }
+    },
+    {
+      "id": "select_response_persists_play_token_identity",
+      "status": "pass",
+      "evidence": {
+        "file": "accountHtml",
+        "pattern": "/const identity = \\{ playerId: data\\.character\\?\\.character_id, name: data\\.character\\?\\.name, token: data\\.token, expiresAt: data\\.expires_at \\};\\s*localStorage\\.setItem\\(IDENTITY_KEY, JSON\\.stringify\\(identity\\)\\);\\s*window\\.location\\.href = PLAY_PATH;/s"
+      }
+    },
+    {
+      "id": "create_response_persists_play_token_identity",
+      "status": "pass",
+      "evidence": {
+        "file": "accountHtml",
+        "pattern": "/const identity = \\{ playerId: data\\.character\\?\\.character_id, name: data\\.character\\?\\.name, token: data\\.token, expiresAt: data\\.expires_at \\};\\s*localStorage\\.setItem\\(IDENTITY_KEY, JSON\\.stringify\\(identity\\)\\);\\s*window\\.location\\.href = PLAY_PATH;/s"
+      }
+    },
+    {
+      "id": "sign_out_clears_web_identity",
+      "status": "pass",
+      "evidence": {
+        "file": "accountHtml",
+        "literal": "localStorage.removeItem(IDENTITY_KEY);"
+      }
+    },
+    {
+      "id": "csrf_header_sent_for_account_requests",
+      "status": "pass",
+      "evidence": {
+        "file": "accountHtml",
+        "literal": "headers: { 'Content-Type': 'application/json', 'x-csrf-token': getCsrf() },"
+      }
+    },
+    {
+      "id": "account_requests_include_session_cookies",
+      "status": "pass",
+      "evidence": {
+        "file": "accountHtml",
+        "literal": "credentials: 'include',"
+      }
+    },
+    {
+      "id": "debug_client_prefers_stored_unexpired_identity",
+      "status": "pass",
+      "evidence": {
+        "file": "debugIdentity",
+        "literal": "export function hasValidToken(identity: StoredIdentity | null, nowMs: number = Date.now()): boolean {"
+      }
+    },
+    {
+      "id": "debug_client_production_uses_same_origin_http",
+      "status": "pass",
+      "evidence": {
+        "file": "debugConfig",
+        "literal": "return window.location.origin;"
+      }
+    },
+    {
+      "id": "debug_client_production_uses_same_origin_ws",
+      "status": "pass",
+      "evidence": {
+        "file": "debugConfig",
+        "literal": "return `${wsProto}//${url.host}`;"
+      }
+    },
+    {
+      "id": "android_beta_portal_targets_beta_account_page",
+      "status": "pass",
+      "evidence": {
+        "file": "androidGradle",
+        "literal": "buildConfigField(\"String\", \"PORTAL_ACCOUNT_URL\", \"\\\"https://beta.akalynth.com/account.html\\\"\")"
+      }
+    },
+    {
+      "id": "android_portal_test_rejects_api_hosts",
+      "status": "pass",
+      "evidence": {
+        "file": "androidPortalTest",
+        "literal": "assertFalse(portalUrl.contains(\"beta-api.akalynth.com\"))"
+      }
+    },
+    {
+      "id": "android_portal_test_requires_account_html",
+      "status": "pass",
+      "evidence": {
+        "file": "androidPortalTest",
+        "literal": "assertTrue(portalUrl.endsWith(\"/account.html\"))"
+      }
+    },
+    {
+      "id": "live_account.html_returns_200",
+      "status": "pass",
+      "evidence": {
+        "url": "https://beta.akalynth.com/account.html",
+        "statusCode": 200,
+        "contentType": "text/html; charset=utf-8",
+        "lastModified": "Sat, 20 Jun 2026 21:01:03 GMT",
+        "server": "Caddy"
+      }
+    },
+    {
+      "id": "live_play__returns_200",
+      "status": "pass",
+      "evidence": {
+        "url": "https://beta.akalynth.com/play/",
+        "statusCode": 200,
+        "contentType": "text/html; charset=utf-8",
+        "lastModified": "Sat, 20 Jun 2026 21:01:03 GMT",
+        "server": "Caddy"
+      }
+    }
+  ],
+  "notes": [
+    "Does not require account credentials.",
+    "Does not mutate runtime trees, runtime state, key/config custody, Caddy, or services.",
+    "Live checks are limited to public HTTPS HEAD status for beta.akalynth.com/account.html and beta.akalynth.com/play/."
+  ],
+  "completed_at": "2026-06-20T21:15:05.272Z"
+}
