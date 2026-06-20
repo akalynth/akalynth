@@ -158,6 +158,12 @@ class GameStore(
             is PropertyLedgerMessage -> "${msg.propertyId}: ${msg.ownerHistory.size} entries"
             is PropertyAuctionStateMessage -> "${msg.propertyId} next=${msg.minNext}"
             is HouseAuctionSettledMessage -> "${msg.plotId} price=${msg.price}"
+            is GatherSnapshotMessage -> "${msg.nodes.size} nodes, ${msg.stations.size} stations"
+            is GatherNodeUpdateMessage -> "${msg.node.nodeId}=${msg.node.state}"
+            is GatherResultMessage -> if (msg.ok) "gather ${msg.nodeId}" else "gather reject ${msg.reason}"
+            is GatherProgressMessage -> "${msg.nodeId} ${msg.progressPct.toInt()}%"
+            is GatherCompletedMessage -> "${msg.nodeId} -> ${msg.itemType}"
+            is DeliverResultMessage -> if (msg.ok) "deliver ${msg.itemType}" else "deliver reject ${msg.reason}"
             is UnknownMessage -> (msg.type?.let { "$it " } ?: "") + msg.raw.take(50)
         }
         val entry = DebugLogEntry(
@@ -226,6 +232,8 @@ class GameStore(
             is GameEvent.SendChat -> sendChat(event.message)
             is GameEvent.ToggleChat -> toggleChat()
             is GameEvent.Attack -> sendAttack(event.targetId)
+            is GameEvent.Gather -> sendGather(event.nodeId)
+            is GameEvent.Deliver -> sendDeliver(event.stationId)
             is GameEvent.WorldEventContribution -> sendWorldEventContribution(event.contributionId)
             is GameEvent.RouteAction -> sendRouteAction(event.skillId)
             is GameEvent.TalkToNpc -> talkToNpc(event.npcId)
@@ -406,6 +414,12 @@ class GameStore(
             is PropertyLedgerMessage -> {}
             is PropertyAuctionStateMessage -> {}
             is HouseAuctionSettledMessage -> {}
+            is GatherSnapshotMessage -> handleGatherSnapshot(msg)
+            is GatherNodeUpdateMessage -> handleGatherNodeUpdate(msg)
+            is GatherResultMessage -> handleGatherResult(msg)
+            is GatherProgressMessage -> handleGatherProgress(msg)
+            is GatherCompletedMessage -> handleGatherCompleted(msg)
+            is DeliverResultMessage -> handleDeliverResult(msg)
             is UnknownMessage -> {} // Ignore unknown
         }
     }
@@ -821,9 +835,25 @@ class GameStore(
     }
 
     private fun handleError(msg: ErrorMessage) {
-        if (msg.code == "token_invalid" || msg.code == "token_expired") {
+        val staleGuest = msg.code == "not_authenticated" &&
+            msg.message.contains("guest token", ignoreCase = true)
+        val authCleared = msg.code == "token_invalid" ||
+            msg.code == "token_expired" ||
+            staleGuest
+        if (authCleared) {
             identityStore.clear()
             prefs.edit().remove(KEY_GUEST_TOKEN).apply()
+            _state.update {
+                it.copy(session = it.session.copy(guestToken = null))
+            }
+        }
+        if (staleGuest) {
+            val live = wsClient.connectionState.value
+            if (live is ConnectionState.Connected || live is ConnectionState.Authenticating) {
+                wsClient.send(LoginMessage(guestToken = null))
+                logSent("login", "fresh_guest_after_stale")
+                return
+            }
         }
         _state.update {
             it.copy(ui = it.ui.copy(errorMessage = "${msg.code}: ${msg.message}"))
@@ -898,6 +928,103 @@ class GameStore(
         logSent("attack_intent", targetId)
     }
 
+    private fun sendGather(nodeId: String) {
+        if (nodeId.isBlank()) return
+        wsClient.send(GatherIntentMessage(nodeId))
+        logSent("gather_intent", nodeId)
+    }
+
+    private fun sendDeliver(stationId: String) {
+        if (stationId.isBlank()) return
+        wsClient.send(DeliverIntentMessage(stationId))
+        logSent("deliver_intent", stationId)
+    }
+
+    private fun handleGatherSnapshot(msg: GatherSnapshotMessage) {
+        val nodes = msg.nodes.associateBy { it.nodeId }
+        val stations = msg.stations.associateBy { it.stationId }
+        _state.update {
+            it.copy(
+                gather = it.gather.copy(
+                    nodes = nodes,
+                    stations = stations,
+                    activeNodeId = null,
+                    progressPct = 0f,
+                )
+            )
+        }
+    }
+
+    private fun handleGatherNodeUpdate(msg: GatherNodeUpdateMessage) {
+        val nodes = _state.value.gather.nodes + (msg.node.nodeId to msg.node)
+        _state.update { it.copy(gather = it.gather.copy(nodes = nodes)) }
+    }
+
+    private fun handleGatherResult(msg: GatherResultMessage) {
+        _state.update { state ->
+            if (msg.ok) {
+                state.copy(
+                    gather = state.gather.copy(
+                        activeNodeId = msg.nodeId,
+                        progressPct = 0f,
+                        status = "Gathering…",
+                    )
+                )
+            } else {
+                state.copy(
+                    gather = state.gather.copy(
+                        status = "Gather rejected: ${msg.reason ?: "rejected"}",
+                    )
+                )
+            }
+        }
+    }
+
+    private fun handleGatherProgress(msg: GatherProgressMessage) {
+        if (msg.nodeId != _state.value.gather.activeNodeId) return
+        _state.update {
+            it.copy(gather = it.gather.copy(progressPct = msg.progressPct))
+        }
+    }
+
+    private fun handleGatherCompleted(msg: GatherCompletedMessage) {
+        _state.update {
+            it.copy(
+                gather = it.gather.copy(
+                    activeNodeId = null,
+                    progressPct = 0f,
+                    heldItemType = msg.itemType,
+                    status = "Gathered ${msg.itemType}",
+                )
+            )
+        }
+    }
+
+    private fun handleDeliverResult(msg: DeliverResultMessage) {
+        _state.update { state ->
+            if (msg.ok) {
+                val reward = msg.reward
+                state.copy(
+                    gather = state.gather.copy(
+                        heldItemType = null,
+                        tendingTokens = state.gather.tendingTokens + if (reward != null) 1 else 0,
+                        status = if (reward != null) {
+                            "Delivered ${msg.itemType} → +1 $reward"
+                        } else {
+                            "Delivered ${msg.itemType}"
+                        },
+                    )
+                )
+            } else {
+                state.copy(
+                    gather = state.gather.copy(
+                        status = "Deliver rejected: ${msg.reason ?: "rejected"}",
+                    )
+                )
+            }
+        }
+    }
+
     private fun sendWorldEventContribution(contributionId: String) {
         val skillId = "event:witness_moth_bloom:$contributionId"
         wsClient.send(UseSkillMessage(skillId = skillId))
@@ -911,8 +1038,29 @@ class GameStore(
     }
 
     private fun sendTemResponse(response: String) {
-        wsClient.send(TemResponseMessage(response))
-        logSent("tem_response", response)
+        val trimmed = response.trim()
+        if (trimmed.isEmpty()) return
+
+        if (!trimmed.equals(TemContracts.CHALLENGE_RESPONSE, ignoreCase = true)) {
+            val challenge = _state.value.ui.temChallenge ?: return
+            _state.update {
+                it.copy(
+                    ui = it.ui.copy(
+                        temChallenge = challenge.copy(
+                            inlineError = "Type ${TemContracts.CHALLENGE_RESPONSE} exactly (case does not matter)."
+                        )
+                    )
+                )
+            }
+            appendSystemChat(
+                from = "Tem",
+                message = "That answer did not match. Tap \"I'm here — confirm\" or type ${TemContracts.CHALLENGE_RESPONSE}."
+            )
+            return
+        }
+
+        wsClient.send(TemResponseMessage(TemContracts.CHALLENGE_RESPONSE))
+        logSent("tem_response", TemContracts.CHALLENGE_RESPONSE)
         _state.update { it.copy(ui = it.ui.copy(temChallenge = null)) }
     }
 
@@ -927,7 +1075,22 @@ class GameStore(
     }
 
     private fun dismissTemChallenge() {
+        appendSystemChat(
+            from = "Tem",
+            message = "Time expired. Movement stays slowed briefly — a new prompt will appear when ready."
+        )
         _state.update { it.copy(ui = it.ui.copy(temChallenge = null)) }
+    }
+
+    private fun appendSystemChat(from: String, message: String) {
+        val entry = ChatEntry(
+            id = "system-${System.currentTimeMillis()}",
+            from = from,
+            message = message,
+            timestamp = System.currentTimeMillis()
+        )
+        val messages = (_state.value.world.chatMessages + entry).takeLast(MAX_CHAT_MESSAGES)
+        _state.update { it.copy(world = it.world.copy(chatMessages = messages)) }
     }
 
     private fun dismissWitnessRequest() {

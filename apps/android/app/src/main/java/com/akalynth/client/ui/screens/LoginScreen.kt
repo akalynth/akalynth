@@ -317,7 +317,11 @@ private fun FirstStartStatusPanel(
             modifier = Modifier.testTag("LoginScreen_FirstStartWorldStatus")
         )
         Text(
-            text = "Android updates: ${BuildConfig.FDROID_REPO_URL}",
+            text = if (endpoint.buildType.equals("beta", ignoreCase = true)) {
+                "Beta updates: checked from server on launch"
+            } else {
+                "Android updates: ${BuildConfig.FDROID_REPO_URL}"
+            },
             style = MaterialTheme.typography.bodySmall,
             color = ClassicShellColors.MutedText,
             modifier = Modifier.testTag("LoginScreen_FDroidRepo")

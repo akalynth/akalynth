@@ -53,9 +53,9 @@ const targetCooldownByPlayer = new Map<string, number>();
 
 export function getWitnessPromptText(kind: WitnessTriggerKind): string {
   if (kind === 'heat_penalty') {
-    return "The Ledger stirs. Confirm what you saw.";
+    return 'Did the nearby player move like a human, not a bot?';
   }
-  return "The Ledger stirs. Confirm what you saw.";
+  return 'Did the recent action nearby look human to you?';
 }
 
 // Request ID generation moved to caller (uses randomUUID)

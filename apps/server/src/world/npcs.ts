@@ -71,9 +71,9 @@ const NPC_REGISTRY: NpcDef[] = [
         must_convey: [
           {
             fact_id: 'gate_steps',
-            text: "Step onto the glowing rune ahead, then send a chat signal, then answer Tem's challenge.",
+            text: 'Move rune (3,2), chat signal, Tem rune (7,2), training slime (14,14), guild-hall vocation, then the gate.',
           },
-          { fact_id: 'gate_opens', text: 'The gate to High City opens when all three are done.' },
+          { fact_id: 'gate_opens', text: 'The gate opens only after move, chat, Tem, slime practice, and Codex vocation receipts.' },
         ],
         may_convey: [
           { fact_id: 'no_rush', text: 'Many pass through here; none need rush it.' },
@@ -83,7 +83,7 @@ const NPC_REGISTRY: NpcDef[] = [
         intent_id: 'guide_gate_reminder',
         openers: ['Still finding your way?', 'Need another pass?', 'Back at the gate?'],
         must_convey: [
-          { fact_id: 'gate_steps_short', text: 'Move rune, then chat, then answer Tem — the gate will open.' },
+          { fact_id: 'gate_steps_short', text: 'Move, chat, Tem, then attack the training slime at (14,14) before vocation and gate.' },
         ],
         may_convey: [],
       },

@@ -88,6 +88,7 @@ fun GameCanvas(
     map: MapName,
     me: PlayerPublic?,
     others: List<PlayerPublic>,
+    objectiveMarkers: List<Pair<Int, Int>> = emptyList(),
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -186,6 +187,17 @@ fun GameCanvas(
             centerX = centerX,
             centerY = centerY
         )
+
+        objectiveMarkers.forEach { (tileX, tileY) ->
+            val screenX = centerX + (tileX - camX) * tileSize - tileSize / 2
+            val screenY = centerY + (tileY - camY) * tileSize - tileSize / 2
+            drawRect(
+                color = OVERLAY_BRASS.copy(alpha = 0.55f),
+                topLeft = Offset(screenX, screenY),
+                size = Size(tileSize - 2, tileSize - 2),
+                style = Stroke(width = 3f)
+            )
+        }
 
         // Other players, drawn at their smoothed positions but with authoritative status/sprite.
         others.forEach { other ->

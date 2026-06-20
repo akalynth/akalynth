@@ -1,0 +1,174 @@
+{
+  "pack": "ui_gameplay_v1",
+  "assets": [
+    {
+      "asset_id": "akalynth_ui_ui_panel_frame",
+      "file": "ui_panel_frame.png",
+      "dimensions_px": [
+        48,
+        48
+      ],
+      "slice_px": 8,
+      "kind": "nine_slice",
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "copyright_boundary": "original procedural pixel art; display-only UI chrome"
+    },
+    {
+      "asset_id": "akalynth_ui_ui_button_frame",
+      "file": "ui_button_frame.png",
+      "dimensions_px": [
+        32,
+        32
+      ],
+      "slice_px": 6,
+      "kind": "nine_slice",
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "copyright_boundary": "original procedural pixel art; display-only UI chrome"
+    },
+    {
+      "asset_id": "akalynth_ui_ui_button_pressed_frame",
+      "file": "ui_button_pressed_frame.png",
+      "dimensions_px": [
+        32,
+        32
+      ],
+      "slice_px": 6,
+      "kind": "nine_slice",
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "copyright_boundary": "original procedural pixel art; display-only UI chrome"
+    },
+    {
+      "asset_id": "akalynth_ui_ui_dock_frame",
+      "file": "ui_dock_frame.png",
+      "dimensions_px": [
+        40,
+        40
+      ],
+      "slice_px": 8,
+      "kind": "nine_slice",
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "copyright_boundary": "original procedural pixel art; display-only UI chrome"
+    },
+    {
+      "asset_id": "akalynth_ui_ui_dpad_frame",
+      "file": "ui_dpad_frame.png",
+      "dimensions_px": [
+        64,
+        64
+      ],
+      "slice_px": 10,
+      "kind": "nine_slice",
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "copyright_boundary": "original procedural pixel art; display-only UI chrome"
+    },
+    {
+      "asset_id": "akalynth_ui_ui_action_ring",
+      "file": "ui_action_ring.png",
+      "dimensions_px": [
+        32,
+        32
+      ],
+      "slice_px": 0,
+      "kind": "circle",
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "copyright_boundary": "original procedural pixel art; display-only UI chrome"
+    },
+    {
+      "asset_id": "akalynth_ui_ui_action_ring_pressed",
+      "file": "ui_action_ring_pressed.png",
+      "dimensions_px": [
+        32,
+        32
+      ],
+      "slice_px": 0,
+      "kind": "circle",
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "copyright_boundary": "original procedural pixel art; display-only UI chrome"
+    },
+    {
+      "asset_id": "akalynth_ui_ui_action_ring_danger",
+      "file": "ui_action_ring_danger.png",
+      "dimensions_px": [
+        32,
+        32
+      ],
+      "slice_px": 0,
+      "kind": "circle",
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "copyright_boundary": "original procedural pixel art; display-only UI chrome"
+    },
+    {
+      "asset_id": "akalynth_ui_ui_dpad_button",
+      "file": "ui_dpad_button.png",
+      "dimensions_px": [
+        32,
+        32
+      ],
+      "slice_px": 0,
+      "kind": "circle",
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "copyright_boundary": "original procedural pixel art; display-only UI chrome"
+    },
+    {
+      "asset_id": "akalynth_ui_ui_dpad_button_pressed",
+      "file": "ui_dpad_button_pressed.png",
+      "dimensions_px": [
+        32,
+        32
+      ],
+      "slice_px": 0,
+      "kind": "circle",
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "copyright_boundary": "original procedural pixel art; display-only UI chrome"
+    },
+    {
+      "asset_id": "akalynth_ui_ui_hp_fill",
+      "file": "ui_hp_fill.png",
+      "dimensions_px": [
+        16,
+        4
+      ],
+      "slice_px": 2,
+      "kind": "bar",
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "copyright_boundary": "original procedural pixel art; display-only UI chrome"
+    },
+    {
+      "asset_id": "akalynth_ui_ui_mp_fill",
+      "file": "ui_mp_fill.png",
+      "dimensions_px": [
+        16,
+        4
+      ],
+      "slice_px": 2,
+      "kind": "bar",
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "copyright_boundary": "original procedural pixel art; display-only UI chrome"
+    },
+    {
+      "asset_id": "akalynth_ui_ui_bar_track",
+      "file": "ui_bar_track.png",
+      "dimensions_px": [
+        16,
+        6
+      ],
+      "slice_px": 2,
+      "kind": "bar",
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "copyright_boundary": "original procedural pixel art; display-only UI chrome"
+    }
+  ]
+}

@@ -2,6 +2,8 @@ package com.akalynth.client.game
 
 import com.akalynth.client.BuildConfig
 import com.akalynth.client.network.ConnectionState
+import com.akalynth.client.protocol.GatherNodePublic
+import com.akalynth.client.protocol.GatherStationPublic
 import com.akalynth.client.protocol.MapName
 import com.akalynth.client.protocol.PlayLoopProgress
 import com.akalynth.client.protocol.PlayerPublic
@@ -14,6 +16,7 @@ data class GameState(
     val world: WorldState = WorldState(),
     val progression: ProgressionState = ProgressionState(),
     val economy: EconomyState = EconomyState(),
+    val gather: GatherState = GatherState(),
     val ui: UiState = UiState()
 ) {
     companion object {
@@ -47,6 +50,18 @@ data class EconomyState(
     val lastPropertyResult: PropertyResultStatus? = null,
     val work: WorkContractStatus? = null
 )
+
+data class GatherState(
+    val nodes: Map<String, GatherNodePublic> = emptyMap(),
+    val stations: Map<String, GatherStationPublic> = emptyMap(),
+    val activeNodeId: String? = null,
+    val progressPct: Float = 0f,
+    val heldItemType: String? = null,
+    val tendingTokens: Int = 0,
+    val status: String? = null,
+) {
+    val isEnabled: Boolean get() = nodes.isNotEmpty() || stations.isNotEmpty()
+}
 
 data class PropertyResultStatus(
     val action: String,
@@ -98,7 +113,8 @@ data class DebugLogEntry(
 data class TemChallengeData(
     val challengeId: String,
     val message: String,
-    val expiresAt: Long
+    val expiresAt: Long,
+    val inlineError: String? = null
 )
 
 data class WitnessRequestData(

@@ -6,12 +6,16 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import com.akalynth.client.ui.components.ClientUpdateOverlay
+import com.akalynth.client.update.ClientUpdateController
+import com.akalynth.client.update.ClientUpdateState
 import com.akalynth.client.game.GameStore
 import com.akalynth.client.game.GameEvent
 import com.akalynth.client.network.ConnectionState
@@ -31,6 +35,7 @@ class MainActivity : ComponentActivity() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var autoConnectPending = false
     private lateinit var gameStore: GameStore
+    private lateinit var clientUpdateController: ClientUpdateController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,18 +44,30 @@ class MainActivity : ComponentActivity() {
 
         val wsClient = WsClient(BuildConfig.WS_BASE_URL, scope)
         gameStore = GameStore(wsClient, scope, applicationContext)
+        clientUpdateController = ClientUpdateController(applicationContext)
 
         setContent {
             AkalynthTheme(darkTheme = true) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     val state by gameStore.state.collectAsState()
-                    LaunchedEffect(state.connection) {
-                        if (autoConnectPending && state.connection is ConnectionState.Idle) {
+                    val updateState by clientUpdateController.state.collectAsState()
+                    val updateController = remember { clientUpdateController }
+
+                    LaunchedEffect(Unit) {
+                        updateController.checkAndUpdate()
+                    }
+                    LaunchedEffect(state.connection, updateState) {
+                        if (
+                            autoConnectPending &&
+                            state.connection is ConnectionState.Idle &&
+                            !updateController.blocksLogin
+                        ) {
                             autoConnectPending = false
                             gameStore.onEvent(GameEvent.Connect)
                         }
                     }
 
+                    Box(modifier = Modifier.fillMaxSize()) {
                     when (state.connection) {
                         is ConnectionState.Idle,
                         is ConnectionState.Disconnected,
@@ -82,6 +99,14 @@ class MainActivity : ComponentActivity() {
                                 onEvent = gameStore::onEvent
                             )
                         }
+                    }
+                    if (updateState is ClientUpdateState.Checking ||
+                        updateState is ClientUpdateState.Downloading ||
+                        updateState is ClientUpdateState.ReadyToInstall ||
+                        updateState is ClientUpdateState.Failed
+                    ) {
+                        ClientUpdateOverlay(updateState)
+                    }
                     }
                 }
             }

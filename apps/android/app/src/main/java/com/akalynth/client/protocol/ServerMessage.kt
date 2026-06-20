@@ -577,5 +577,71 @@ data class HouseAuctionSettledMessage(
     @SerialName("sale_count") val saleCount: Int
 ) : ServerMessage()
 
+// Chill-Zone Gather v0 (Step 2) — server-authoritative node/station registry + outcomes.
+@Serializable
+data class GatherNodePublic(
+    @SerialName("node_id") val nodeId: String,
+    val zone: String,
+    val x: Int,
+    val y: Int,
+    val state: String,
+    @SerialName("respawn_at_ms") val respawnAtMs: Long? = null,
+)
+
+@Serializable
+data class GatherStationPublic(
+    @SerialName("station_id") val stationId: String,
+    val zone: String,
+    val x: Int,
+    val y: Int,
+)
+
+@Serializable
+@SerialName("gather_snapshot")
+data class GatherSnapshotMessage(
+    val nodes: List<GatherNodePublic> = emptyList(),
+    val stations: List<GatherStationPublic> = emptyList(),
+) : ServerMessage()
+
+@Serializable
+@SerialName("gather_node_update")
+data class GatherNodeUpdateMessage(
+    val node: GatherNodePublic,
+) : ServerMessage()
+
+@Serializable
+@SerialName("gather_result")
+data class GatherResultMessage(
+    val ok: Boolean,
+    @SerialName("node_id") val nodeId: String? = null,
+    @SerialName("complete_at_ms") val completeAtMs: Long? = null,
+    val reason: String? = null,
+) : ServerMessage()
+
+@Serializable
+@SerialName("gather_progress")
+data class GatherProgressMessage(
+    @SerialName("node_id") val nodeId: String,
+    @SerialName("progress_pct") val progressPct: Float,
+) : ServerMessage()
+
+@Serializable
+@SerialName("gather_completed")
+data class GatherCompletedMessage(
+    @SerialName("node_id") val nodeId: String,
+    @SerialName("item_type") val itemType: String,
+) : ServerMessage()
+
+@Serializable
+@SerialName("deliver_result")
+data class DeliverResultMessage(
+    val ok: Boolean,
+    @SerialName("station_id") val stationId: String? = null,
+    @SerialName("item_type") val itemType: String? = null,
+    @SerialName("source_node_id") val sourceNodeId: String? = null,
+    val reward: String? = null,
+    val reason: String? = null,
+) : ServerMessage()
+
 // Fallback for unknown / unparseable messages (forward-compat, never crashes decode).
 data class UnknownMessage(val raw: String = "", val type: String? = null) : ServerMessage()

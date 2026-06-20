@@ -209,12 +209,12 @@ export function rookguardGateOpen(input: RookguardQuestInput): boolean {
 }
 
 export function rookguardQuestObjective(input: RookguardQuestInput): string {
-  if (!input.tutorial.move) return 'Step onto the move rune';
-  if (!input.tutorial.chat) return 'Send a signal in chat';
-  if (!input.tutorial.tem) return `Answer Tem: ${TEM_CHALLENGE_RESPONSE}`;
-  if (!input.trainingComplete) return 'Practice against a training slime';
-  if (!input.vocation) return 'Choose a vocation at the Rookguard guild hall';
-  if (!input.tutorial.gate) return 'Enter the High City gate';
+  if (!input.tutorial.move) return 'Step onto the glowing move rune (east plaza, tile 3,2)';
+  if (!input.tutorial.chat) return 'Open Chat and send any message in Rookguard';
+  if (!input.tutorial.tem) return `Walk to the Tem rune (tile 7,2) and answer ${TEM_CHALLENGE_RESPONSE}`;
+  if (!input.trainingComplete) return 'Walk southeast to the training slime (tile 14,14) and tap Attack';
+  if (!input.vocation) return 'Enter the guild hall and choose a Codex vocation';
+  if (!input.tutorial.gate) return 'Walk onto the golden High City gate when it opens';
   return 'Rookguard Codex path complete';
 }
 

@@ -112,10 +112,12 @@ class ProtocolParityTest {
             OpenHouseAuctionMessage("prop1", minBid = 500, minIncrementGold = 50, durationS = 3600) to "open_house_auction",
             PlaceHouseBidMessage("prop1", amount = 600) to "place_house_bid",
             CancelHouseAuctionMessage("prop1") to "cancel_house_auction",
+            GatherIntentMessage("node_e") to "gather_intent",
+            DeliverIntentMessage("station_a") to "deliver_intent",
         )
 
-        // 36 client message types in protocol.ts ClientMessage union.
-        assertEquals(36, cases.size)
+        // 38 client message types in protocol.ts ClientMessage union.
+        assertEquals(38, cases.size)
         for ((msg, expectedType) in cases) {
             val frame = MessageSerializer.encodeClient(msg)
             assertEquals("wrong type for ${msg::class.simpleName}", expectedType, typeOf(frame))
@@ -283,10 +285,16 @@ class ProtocolParityTest {
             """{"type":"property_ledger","property_id":"pr","owner_history":[],"sale_count":0}""" to PropertyLedgerMessage::class.java,
             """{"type":"property_auction_state","property_id":"pr","kind":"resale","current_high":600,"high_bidder_name":"Ari","min_next":650,"scheduled_close":1760000000000}""" to PropertyAuctionStateMessage::class.java,
             """{"type":"house_auction_settled","property_id":"pr","plot_id":"pl","zone":"z","winner_name":"Ari","seller_name":"Sol","price":600,"sale_count":2}""" to HouseAuctionSettledMessage::class.java,
+            """{"type":"gather_snapshot","nodes":[{"node_id":"n1","zone":"Rookguard","x":5,"y":5,"state":"available","respawn_at_ms":null}],"stations":[{"station_id":"s1","zone":"Rookguard","x":8,"y":8}]}""" to GatherSnapshotMessage::class.java,
+            """{"type":"gather_node_update","node":{"node_id":"n1","zone":"Rookguard","x":5,"y":5,"state":"depleted","respawn_at_ms":6000}}""" to GatherNodeUpdateMessage::class.java,
+            """{"type":"gather_result","ok":true,"node_id":"n1","complete_at_ms":1000}""" to GatherResultMessage::class.java,
+            """{"type":"gather_progress","node_id":"n1","progress_pct":42.5}""" to GatherProgressMessage::class.java,
+            """{"type":"gather_completed","node_id":"n1","item_type":"herb_bundle"}""" to GatherCompletedMessage::class.java,
+            """{"type":"deliver_result","ok":true,"station_id":"s1","item_type":"herb_bundle","reward":"tending_token"}""" to DeliverResultMessage::class.java,
         )
 
-        // 44 server message types in protocol.ts ServerMessage union.
-        assertEquals(44, frames.size)
+        // 50 server message types in protocol.ts ServerMessage union.
+        assertEquals(50, frames.size)
         for ((frame, cls) in frames) {
             val decoded = MessageSerializer.decodeServer(frame)
             assertEquals("wrong decode for $frame", cls, decoded.javaClass)

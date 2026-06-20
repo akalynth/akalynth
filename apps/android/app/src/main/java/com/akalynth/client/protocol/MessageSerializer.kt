@@ -159,6 +159,14 @@ object MessageSerializer {
             is CancelHouseAuctionMessage -> obj("cancel_house_auction") {
                 put("property_id", msg.propertyId)
             }
+
+            is GatherIntentMessage -> obj("gather_intent") {
+                put("node_id", msg.nodeId)
+            }
+
+            is DeliverIntentMessage -> obj("deliver_intent") {
+                put("station_id", msg.stationId)
+            }
         }
         return json.encodeToString(JsonObject.serializer(), obj)
     }
@@ -213,6 +221,12 @@ object MessageSerializer {
                 "property_ledger" -> json.decodeFromString<PropertyLedgerMessage>(raw)
                 "property_auction_state" -> json.decodeFromString<PropertyAuctionStateMessage>(raw)
                 "house_auction_settled" -> json.decodeFromString<HouseAuctionSettledMessage>(raw)
+                "gather_snapshot" -> json.decodeFromString<GatherSnapshotMessage>(raw)
+                "gather_node_update" -> json.decodeFromString<GatherNodeUpdateMessage>(raw)
+                "gather_result" -> json.decodeFromString<GatherResultMessage>(raw)
+                "gather_progress" -> json.decodeFromString<GatherProgressMessage>(raw)
+                "gather_completed" -> json.decodeFromString<GatherCompletedMessage>(raw)
+                "deliver_result" -> json.decodeFromString<DeliverResultMessage>(raw)
                 else -> UnknownMessage(raw, type)
             }
         } catch (e: Exception) {

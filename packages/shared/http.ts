@@ -41,6 +41,20 @@ export interface HealthResponse {
   built_at?: string;
 }
 
+/** Public Android client update manifest (beta/staging lanes). Additive HTTP surface. */
+export interface AndroidClientUpdateResponse {
+  ok: true;
+  lane: 'beta' | 'staging';
+  version_code: number;
+  version_name: string;
+  apk_url: string;
+  apk_sha256: string;
+  size_bytes: number;
+  /** When true, clients should block login until the update is installed. */
+  required: boolean;
+  published_at: string;
+}
+
 export interface MapsListResponse {
   maps: Array<{ name: MapName; width: number; height: number }>;
 }

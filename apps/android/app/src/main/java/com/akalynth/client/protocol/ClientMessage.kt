@@ -334,3 +334,20 @@ data class CancelHouseAuctionMessage(
 ) : ClientMessage() {
     override val type: String = "cancel_house_auction"
 }
+
+// Chill-Zone Gather v0 (Step 2) — client sends intent only; server owns the outcome.
+@Serializable
+@SerialName("gather_intent")
+data class GatherIntentMessage(
+    @SerialName("node_id") val nodeId: String
+) : ClientMessage() {
+    override val type: String = "gather_intent"
+}
+
+@Serializable
+@SerialName("deliver_intent")
+data class DeliverIntentMessage(
+    @SerialName("station_id") val stationId: String
+) : ClientMessage() {
+    override val type: String = "deliver_intent"
+}

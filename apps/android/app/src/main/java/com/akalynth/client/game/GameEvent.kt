@@ -21,6 +21,10 @@ sealed class GameEvent {
     // Combat
     data class Attack(val targetId: String) : GameEvent()
 
+    // Chill-Zone Gather v0
+    data class Gather(val nodeId: String) : GameEvent()
+    data class Deliver(val stationId: String) : GameEvent()
+
     // World events
     data class WorldEventContribution(val contributionId: String) : GameEvent()
     data class RouteAction(val skillId: String) : GameEvent()
