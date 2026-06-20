@@ -14,16 +14,16 @@ data class WorldSprite(val image: ImageBitmap, val tilesWide: Int, val tilesTall
 
 /**
  * Display-only sprite set bundled under app `assets/sprites/`. Maps a display [TileCode] or a
- * creature `spriteId` to original Akalynth pixel art; any key without a sprite falls back to the
- * procedural shapes in GameCanvas.
+ * creature/character `spriteId` to original Akalynth pixel art; any key without a sprite falls
+ * back to the procedural shapes in GameCanvas.
  *
  * Lockstep: the server stays authoritative — these images never gate movement, and the TileCode
- * link here is display-only, never authority. (Proof-of-concept set: the atlas builder and the
- * full tile/overlay art are not in place yet, so coverage is intentionally partial.)
+ * link here is display-only, never authority.
  */
 class WorldSprites(
     val tiles: Map<TileCode, WorldSprite>,
     val creatures: Map<String, WorldSprite>,
+    val characters: Map<String, WorldSprite>,
 )
 
 private const val NATIVE_TILE_PX = 32
@@ -47,7 +47,14 @@ private fun loadWorldSprites(context: Context): WorldSprites {
     val creatures = buildMap {
         loadSprite(context, "sprites/creature_bog_slime.png")?.let { put(TRAINING_SLIME_SPRITE_ID, it) }
     }
-    return WorldSprites(tiles, creatures)
+    // Character sprites: idle-south frame extracted from the 256x256 walk spritesheet,
+    // normalized to 32x32. Display-only; sprite_id values mirror catalog.ts outfit entries.
+    val characters = buildMap {
+        loadSprite(context, "sprites/characters/base_human_male_01.png")?.let { put("base_human_male_01", it) }
+        loadSprite(context, "sprites/characters/guard_city_01.png")?.let { put("guard_city_01", it) }
+        loadSprite(context, "sprites/characters/mage_apprentice_01.png")?.let { put("mage_apprentice_01", it) }
+    }
+    return WorldSprites(tiles, creatures, characters)
 }
 
 private fun loadSprite(context: Context, assetPath: String): WorldSprite? = try {

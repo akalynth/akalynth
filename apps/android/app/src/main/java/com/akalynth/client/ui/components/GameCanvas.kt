@@ -205,7 +205,7 @@ fun GameCanvas(
                 ?: TilePos(other.x.toFloat(), other.y.toFloat())
             val ex = centerX + (pos.x - camX) * tileSize
             val ey = centerY + (pos.y - camY) * tileSize
-            val creatureSprite = other.spriteId?.let { sprites.creatures[it] }
+            val creatureSprite = other.spriteId?.let { sprites.creatures[it] ?: sprites.characters[it] }
             if (creatureSprite != null && other.status != PlayerStatus.DEAD) {
                 drawCreatureSprite(creatureSprite, ex, ey, tileSize)
             } else {
@@ -221,14 +221,19 @@ fun GameCanvas(
         }
 
         // Draw self (always at the camera centre, since the camera follows the smoothed self).
-        drawPlayer(
-            x = centerX,
-            y = centerY,
-            radius = tileSize / 2.7f,
-            isDead = player.status == PlayerStatus.DEAD,
-            isSelf = true,
-            spriteId = player.spriteId
-        )
+        val selfSprite = player.spriteId?.let { sprites.characters[it] }
+        if (selfSprite != null && player.status != PlayerStatus.DEAD) {
+            drawCreatureSprite(selfSprite, centerX, centerY, tileSize)
+        } else {
+            drawPlayer(
+                x = centerX,
+                y = centerY,
+                radius = tileSize / 2.7f,
+                isDead = player.status == PlayerStatus.DEAD,
+                isSelf = true,
+                spriteId = player.spriteId
+            )
+        }
     }
 }
 
