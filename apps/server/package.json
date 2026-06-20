@@ -26,6 +26,7 @@
     "test:lifecycle-fixtures": "tsx tools/verify-lifecycle-fixtures.test.ts",
     "test:build-info": "tsx tools/verify-build-info.test.ts",
     "test:lifecycle": "tsx tools/verify-lifecycle.test.ts",
+    "test:gather": "tsx tools/verify-gather.test.ts",
     "verify:receipt-hygiene": "node ../../scripts/require-chronicle.js && npm run verify:lifecycle && npm run verify:chronicle-chain && bash ../../scripts/test-chain-discipline.sh",
     "verify:rate-limits": "tsx tools/verify-rate-limits.ts",
     "verify:evidence": "tsx tools/verify-evidence.ts",
