@@ -1,7 +1,7 @@
 {
   "id": "AKALYNTH_BETA_ACCOUNT_PLAY_PORTAL_HARDENING_V1",
   "status": "pass",
-  "generated_at": "2026-06-20T21:15:04.369Z",
+  "generated_at": "2026-06-20T21:58:47.363Z",
   "scope": "beta static account portal, account-character play token handoff, debug-client /play/ identity bootstrap, Android beta portal URL",
   "checks": [
     {
@@ -37,6 +37,38 @@
       }
     },
     {
+      "id": "account_page_links_register_support_page",
+      "status": "pass",
+      "evidence": {
+        "file": "accountHtml",
+        "literal": "href=\"/register.html\""
+      }
+    },
+    {
+      "id": "account_page_links_forgot_support_page",
+      "status": "pass",
+      "evidence": {
+        "file": "accountHtml",
+        "literal": "href=\"/forgot.html\""
+      }
+    },
+    {
+      "id": "account_page_handles_verify_query_token",
+      "status": "pass",
+      "evidence": {
+        "file": "accountHtml",
+        "literal": "params.get('verify')"
+      }
+    },
+    {
+      "id": "account_page_redirects_reset_query_to_forgot_page",
+      "status": "pass",
+      "evidence": {
+        "file": "accountHtml",
+        "literal": "window.location.replace(`/forgot.html?reset=${encodeURIComponent(reset)}`);"
+      }
+    },
+    {
       "id": "login_uses_account_api",
       "status": "pass",
       "evidence": {
@@ -53,11 +85,19 @@
       }
     },
     {
+      "id": "account_page_me_uses_account_object_contract",
+      "status": "pass",
+      "evidence": {
+        "file": "accountHtml",
+        "literal": "if (!ok || !data.account) {"
+      }
+    },
+    {
       "id": "email_verification_gate_present",
       "status": "pass",
       "evidence": {
         "file": "accountHtml",
-        "literal": "if (!data.email_verified) { show('view-unverified'); return; }"
+        "literal": "if (!data.account.email_verified) { show('view-unverified'); return; }"
       }
     },
     {
@@ -66,6 +106,38 @@
       "evidence": {
         "file": "accountHtml",
         "literal": "api('POST', '/v1/accounts/verify/resend'"
+      }
+    },
+    {
+      "id": "server_routes_resend_verification_api",
+      "status": "pass",
+      "evidence": {
+        "file": "accountRouter",
+        "literal": "path === '/v1/accounts/verify/resend'"
+      }
+    },
+    {
+      "id": "server_resend_requires_csrf",
+      "status": "pass",
+      "evidence": {
+        "file": "accountService",
+        "literal": "resendVerification(ctx: RequestCtx): AccountResponse"
+      }
+    },
+    {
+      "id": "shared_http_exports_resend_response_type",
+      "status": "pass",
+      "evidence": {
+        "file": "sharedHttp",
+        "literal": "export interface AccountVerifyResendResponse"
+      }
+    },
+    {
+      "id": "protocol_doc_names_resend_endpoint",
+      "status": "pass",
+      "evidence": {
+        "file": "protocolDoc",
+        "literal": "`/v1/accounts/verify/resend`"
       }
     },
     {
@@ -93,11 +165,19 @@
       }
     },
     {
+      "id": "account_page_has_expires_at_fallback",
+      "status": "pass",
+      "evidence": {
+        "file": "accountHtml",
+        "literal": "Date.now() + DEFAULT_PLAY_TOKEN_TTL_MS"
+      }
+    },
+    {
       "id": "select_response_persists_play_token_identity",
       "status": "pass",
       "evidence": {
         "file": "accountHtml",
-        "pattern": "/const identity = \\{ playerId: data\\.character\\?\\.character_id, name: data\\.character\\?\\.name, token: data\\.token, expiresAt: data\\.expires_at \\};\\s*localStorage\\.setItem\\(IDENTITY_KEY, JSON\\.stringify\\(identity\\)\\);\\s*window\\.location\\.href = PLAY_PATH;/s"
+        "literal": "localStorage.setItem(IDENTITY_KEY, JSON.stringify(identityFromPlayResponse(data)));"
       }
     },
     {
@@ -105,7 +185,7 @@
       "status": "pass",
       "evidence": {
         "file": "accountHtml",
-        "pattern": "/const identity = \\{ playerId: data\\.character\\?\\.character_id, name: data\\.character\\?\\.name, token: data\\.token, expiresAt: data\\.expires_at \\};\\s*localStorage\\.setItem\\(IDENTITY_KEY, JSON\\.stringify\\(identity\\)\\);\\s*window\\.location\\.href = PLAY_PATH;/s"
+        "literal": "localStorage.setItem(IDENTITY_KEY, JSON.stringify(identityFromPlayResponse(data)));"
       }
     },
     {
@@ -133,6 +213,38 @@
       }
     },
     {
+      "id": "register_page_uses_register_api",
+      "status": "pass",
+      "evidence": {
+        "file": "registerHtml",
+        "literal": "post('/v1/accounts/register'"
+      }
+    },
+    {
+      "id": "register_page_can_verify_dev_token",
+      "status": "pass",
+      "evidence": {
+        "file": "registerHtml",
+        "literal": "post('/v1/accounts/verify-email'"
+      }
+    },
+    {
+      "id": "forgot_page_uses_reset_request_api",
+      "status": "pass",
+      "evidence": {
+        "file": "forgotHtml",
+        "literal": "post('/v1/accounts/password-reset/request'"
+      }
+    },
+    {
+      "id": "forgot_page_uses_reset_confirm_api",
+      "status": "pass",
+      "evidence": {
+        "file": "forgotHtml",
+        "literal": "post('/v1/accounts/password-reset/confirm'"
+      }
+    },
+    {
       "id": "debug_client_prefers_stored_unexpired_identity",
       "status": "pass",
       "evidence": {
@@ -154,6 +266,46 @@
       "evidence": {
         "file": "debugConfig",
         "literal": "return `${wsProto}//${url.host}`;"
+      }
+    },
+    {
+      "id": "live_smoke_requires_live_ack",
+      "status": "pass",
+      "evidence": {
+        "file": "liveSmokeScript",
+        "literal": "Refusing to mutate beta without --live"
+      }
+    },
+    {
+      "id": "live_smoke_uses_playwright_core",
+      "status": "pass",
+      "evidence": {
+        "file": "liveSmokeScript",
+        "literal": "await import('playwright-core')"
+      }
+    },
+    {
+      "id": "live_smoke_sets_localstorage_identity_key",
+      "status": "pass",
+      "evidence": {
+        "file": "liveSmokeScript",
+        "literal": "window.localStorage.setItem(key, value);"
+      }
+    },
+    {
+      "id": "live_smoke_asserts_token_login_not_guest",
+      "status": "pass",
+      "evidence": {
+        "file": "liveSmokeScript",
+        "literal": "frame.type === 'login' && frame.token_present && !frame.guest_token_present"
+      }
+    },
+    {
+      "id": "live_smoke_omits_secret_tokens_from_receipt",
+      "status": "pass",
+      "evidence": {
+        "file": "liveSmokeScript",
+        "literal": "play_token_saved: false"
       }
     },
     {
@@ -181,25 +333,10 @@
       }
     },
     {
-      "id": "live_account.html_returns_200",
-      "status": "pass",
+      "id": "live_https_checks",
+      "status": "skipped",
       "evidence": {
-        "url": "https://beta.akalynth.com/account.html",
-        "statusCode": 200,
-        "contentType": "text/html; charset=utf-8",
-        "lastModified": "Sat, 20 Jun 2026 21:01:03 GMT",
-        "server": "Caddy"
-      }
-    },
-    {
-      "id": "live_play__returns_200",
-      "status": "pass",
-      "evidence": {
-        "url": "https://beta.akalynth.com/play/",
-        "statusCode": 200,
-        "contentType": "text/html; charset=utf-8",
-        "lastModified": "Sat, 20 Jun 2026 21:01:03 GMT",
-        "server": "Caddy"
+        "reason": "--skip-live"
       }
     }
   ],
@@ -208,5 +345,5 @@
     "Does not mutate runtime trees, runtime state, key/config custody, Caddy, or services.",
     "Live checks are limited to public HTTPS HEAD status for beta.akalynth.com/account.html and beta.akalynth.com/play/."
   ],
-  "completed_at": "2026-06-20T21:15:05.272Z"
+  "completed_at": "2026-06-20T21:58:47.364Z"
 }

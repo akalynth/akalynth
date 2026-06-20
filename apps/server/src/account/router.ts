@@ -93,6 +93,10 @@ export function makeAccountRouter(deps: AccountRouterDeps) {
       send(res, service.verifyEmail(await readJson(req)));
       return true;
     }
+    if (path === '/v1/accounts/verify/resend' && method === 'POST') {
+      send(res, service.resendVerification(ctx(req)));
+      return true;
+    }
     if (path === '/v1/accounts/login' && method === 'POST') {
       const rl = deps.loginLimiter.check(`login:${clientIp(req)}`);
       if (!rl.ok) return (rateLimited(res, rl.retryAfterSec), true);

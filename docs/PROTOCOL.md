@@ -56,6 +56,15 @@ World catalog rows may include additive player-facing `tagline` and `districts`
 metadata. These fields are descriptive only; they do not grant map access,
 movement authority, rewards, or progression.
 
+Account portal support endpoints live on the HTTP control plane under
+`/v1/accounts/register`, `/v1/accounts/login`, `/v1/accounts/logout`,
+`/v1/accounts/me`, `/v1/accounts/verify-email`,
+`/v1/accounts/verify/resend`, `/v1/accounts/password-reset/request`, and
+`/v1/accounts/password-reset/confirm`. They are additive and do not add a
+WebSocket message type. Resend/logout are account-session gated and require
+double-submit CSRF; verification and reset tokens are plaintext only in transit
+and hashed at rest.
+
 Web economy portal endpoints live on the HTTP control plane under
 `/v1/shop/catalog`, `/v1/shop/purchase`, `/v1/wallet`, `/v1/property/buy`,
 `/v1/property/list`, `/v1/property/unlist`, `/v1/work/start`, and

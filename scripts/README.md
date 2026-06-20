@@ -11,6 +11,7 @@ Scripts should be idempotent and documented.
 - MVP / smoke: `verify_mvp.sh`, `showcase_local.sh`, `studio-smoke.mjs`
 - Account-character parity: root `npm run verify:account-character`
 - Beta account/play portal: root `npm run verify:beta-account-play-portal`
+- Beta account/play live smoke: root `npm run smoke:beta-account-play`
 - Docker runtime: `verify-docker-runtime.sh`, `smoke-docker-runtime.sh`, `render-docker-runtime.sh`
 - Edge ops: `add-plane-c-android-peer.sh`, `verify-plane-c-ollama.sh`, `open-graphene-termux.sh`, `open-graphene-droidvnc.sh`, `deploy-temp-android-novnc-lane.sh`, `deploy-temp-rustdesk-server.sh`
 - Policy guards / hooks: `phase_gate.ts`, `precommit-hook.sh`, `refuse_windows.{js,sh}`, `warn_protocol_change.sh`, `require-chronicle.js`
@@ -81,6 +82,14 @@ Scripts should be idempotent and documented.
   the beta account page, account-character token handoff, `/play/` identity
   bootstrap, Android beta portal URL, and public `200` checks. Run:
   `npm run verify:beta-account-play-portal`.
+- `scripts/smoke-beta-account-play.mjs`: Live beta account/play smoke. It
+  creates a disposable account and character, verifies API create/select,
+  token WebSocket login, and by default uses Playwright to prove that
+  `akalynth.identity.v1` in localStorage makes `/play/` send token login and
+  reach `world_state`. Run `npm run smoke:beta-account-play`; use
+  `npm run smoke:beta-account-play:api` to skip the browser leg. The script
+  requires `--live` when called directly and writes a redacted receipt under
+  `.tmp/beta-account-play-smoke/` unless `--report` is supplied.
 - Root `npm run verify:account-character`: focused account-character parity
   gate. Runs protocol sync, server account-character tests, server create/select play-token handoff and login projection proof, shared account-character HTTP type proof, server wallet/shop/work/property gameplay route proof, debug-client guard, debug-client gameplay wire-authority proof, Android account-character unit tests, Android account-character token login handoff proof, Android gameplay wire-authority protocol proof, and Android character UI compile.
 - Site `./scripts/verify-account-character-site.sh` in `akalynth-site`: focused

@@ -405,6 +405,41 @@ export class AccountService {
     return { status: 200, body: { ok: true }, cookies: this.clearCookies() };
   }
 
+  /** POST /v1/accounts/verify/resend — reissue verification for the signed-in account. */
+  resendVerification(ctx: RequestCtx): AccountResponse {
+    const session = this.resolveSession(ctx);
+    if (!session) return { status: 401, body: { ok: false, error: 'not_authenticated' } };
+    const csrfCookie = ctx.cookies[CSRF_COOKIE];
+    if (!csrfCookie || !ctx.csrfHeader || !safeEqual(csrfCookie, ctx.csrfHeader)) {
+      return { status: 403, body: { ok: false, error: 'csrf_failed' } };
+    }
+    const acct = this.d.store.findById(session.account_id);
+    if (!acct) return { status: 401, body: { ok: false, error: 'not_authenticated' } };
+    if (!acct.email) {
+      return { status: 400, body: { ok: false, error: 'no_email', message: 'Add an email before requesting verification.' } };
+    }
+    if (acct.email_verified === 1) {
+      return { status: 200, body: { ok: true, status: 'already_verified', message: 'Email is already verified.' } };
+    }
+
+    const now = this.d.now();
+    const token = newToken();
+    this.d.store.insertVerification({
+      id: newId('ev'),
+      account_id: acct.account_id,
+      token_hash: hashToken(token),
+      created_at: iso(now),
+      expires_at: iso(addSec(now, this.d.config.verificationTtlSec)),
+    });
+    this.d.emitReceipt({ action: RECEIPT_ACTIONS.ACCOUNT_EMAIL_VERIFICATION_REQUESTED, accountId: acct.account_id, result: 'ok' });
+    this.d.logLink?.('verify', acct.account_id, token);
+    this.d.deliverEmail?.({ kind: 'verify', accountId: acct.account_id, email: acct.email, token });
+
+    const body: Record<string, unknown> = { ok: true, status: 'sent', message: 'Verification email sent.' };
+    if (this.d.config.devExposeLinks) body.dev_verification_token = token;
+    return { status: 200, body };
+  }
+
   /** POST /v1/accounts/password-reset/request — uniform response (no enumeration). */
   resetRequest(input: { email?: unknown }): AccountResponse {
     const now = this.d.now();

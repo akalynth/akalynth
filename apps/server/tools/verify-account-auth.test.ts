@@ -65,6 +65,17 @@ async function main(): Promise<void> {
   const vrow = db.prepare('SELECT token_hash FROM account_email_verifications').get() as { token_hash: string };
   check('verification token stored hashed', !!vrow && vrow.token_hash !== vToken && vrow.token_hash.length === 64);
 
+  // unverified sessions can request a replacement verification email, with CSRF.
+  const preVerifyLogin = await svc.login({ email: EMAIL, password: PW }, { cookies: {} });
+  const preVerifySess = cookieValue(preVerifyLogin.cookies, SESSION_COOKIE);
+  const preVerifyCsrf = cookieValue(preVerifyLogin.cookies, CSRF_COOKIE);
+  const preVerifyCtx = { cookies: { [SESSION_COOKIE]: preVerifySess!, [CSRF_COOKIE]: preVerifyCsrf! } };
+  check('resend verify wrong csrf -> 403', svc.resendVerification({ cookies: preVerifyCtx.cookies, csrfHeader: 'wrong' }).status === 403);
+  const resend = svc.resendVerification({ cookies: preVerifyCtx.cookies, csrfHeader: preVerifyCsrf });
+  const resendToken = (resend.body as { dev_verification_token?: string }).dev_verification_token;
+  check('resend verify 200 + token', resend.status === 200 && typeof resendToken === 'string');
+  check('resend verify token stored hashed', (db.prepare('SELECT count(*) c FROM account_email_verifications').get() as { c: number }).c === 2);
+
   // register (same email) — no enumeration, no new account
   const reg2 = await svc.register({ email: 'player@example.com', password: PW });
   check('duplicate register: uniform 200', reg2.status === 200);
@@ -81,6 +92,7 @@ async function main(): Promise<void> {
   check('email_verified set', (db.prepare('SELECT email_verified e FROM accounts').get() as { e: number }).e === 1);
   check('receipt account_email_verified', actions().includes('account_email_verified'));
   check('verify-email reused token -> 400', svc.verifyEmail({ token: vToken }).status === 400);
+  check('resend after verified -> already_verified', (svc.resendVerification({ cookies: preVerifyCtx.cookies, csrfHeader: preVerifyCsrf }).body as { status?: string }).status === 'already_verified');
 
   // login wrong password
   const badLogin = await svc.login({ email: EMAIL, password: 'wrong' }, { cookies: {} });

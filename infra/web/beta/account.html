@@ -127,6 +127,7 @@
     <div class="card">
       <p class="card-title">Sign in</p>
       <div id="login-error" class="notice notice-error" style="display:none"></div>
+      <div id="login-notice" class="notice" style="display:none"></div>
       <div class="field">
         <label for="email">Email</label>
         <input id="email" type="email" autocomplete="username" placeholder="you@example.com" />
@@ -205,6 +206,7 @@
 const API = 'https://beta-api.akalynth.com';
 const IDENTITY_KEY = 'akalynth.identity.v1';
 const PLAY_PATH = '/play/';
+const DEFAULT_PLAY_TOKEN_TTL_MS = 15 * 60 * 1000;
 
 // ── helpers ─────────────────────────────────────────────────────────────────
 
@@ -236,12 +238,26 @@ function setError(id, msg) {
   el.style.display = msg ? '' : 'none';
 }
 
+function setNotice(id, msg, kind) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = `notice notice-${kind}`;
+  el.style.display = msg ? '' : 'none';
+}
+
 function setBtn(id, loading, label) {
   const btn = document.getElementById(id);
   btn.disabled = loading;
   btn.innerHTML = loading
     ? '<span class="spinner spinner-sm"></span>'
     : label;
+}
+
+function identityFromPlayResponse(data) {
+  const expiresAt = typeof data.expires_at === 'number'
+    ? data.expires_at
+    : Date.now() + DEFAULT_PLAY_TOKEN_TTL_MS;
+  return { playerId: data.character?.character_id, name: data.character?.name, token: data.token, expiresAt };
 }
 
 // ── outfit catalog ───────────────────────────────────────────────────────────
@@ -313,8 +329,7 @@ async function playCharacter(characterId, btnEl) {
     return;
   }
   // Save token so the game client auto-connects as this character
-  const identity = { playerId: data.character?.character_id, name: data.character?.name, token: data.token, expiresAt: data.expires_at };
-  localStorage.setItem(IDENTITY_KEY, JSON.stringify(identity));
+  localStorage.setItem(IDENTITY_KEY, JSON.stringify(identityFromPlayResponse(data)));
   window.location.href = PLAY_PATH;
 }
 
@@ -332,8 +347,7 @@ async function createAndPlay() {
   setBtn('confirm-create-btn', false, 'Create &amp; Play');
   if (!ok) { setError('create-error', data?.error ?? 'Could not create character.'); return; }
 
-  const identity = { playerId: data.character?.character_id, name: data.character?.name, token: data.token, expiresAt: data.expires_at };
-  localStorage.setItem(IDENTITY_KEY, JSON.stringify(identity));
+  localStorage.setItem(IDENTITY_KEY, JSON.stringify(identityFromPlayResponse(data)));
   window.location.href = PLAY_PATH;
 }
 
@@ -347,18 +361,36 @@ async function signOut() {
 
 async function resendVerification() {
   setBtn('resend-btn', true);
-  const { ok } = await api('POST', '/v1/accounts/verify/resend');
+  const { ok, data } = await api('POST', '/v1/accounts/verify/resend');
   setBtn('resend-btn', false, 'Resend verification email');
   const n = document.getElementById('resend-notice');
   if (ok) {
-    n.className = 'notice notice-ok'; n.textContent = 'Verification email sent.';
+    n.className = 'notice notice-ok'; n.textContent = data?.message ?? 'Verification email sent.';
   } else {
-    n.className = 'notice notice-error'; n.textContent = 'Could not send — try again later.';
+    n.className = 'notice notice-error'; n.textContent = data?.message ?? 'Could not send — try again later.';
   }
   n.style.display = '';
 }
 
 // ── boot ─────────────────────────────────────────────────────────────────────
+
+async function handleQueryAction() {
+  const params = new URLSearchParams(window.location.search);
+  const reset = params.get('reset');
+  if (reset) {
+    window.location.replace(`/forgot.html?reset=${encodeURIComponent(reset)}`);
+    return { redirected: true };
+  }
+
+  const verify = params.get('verify');
+  if (!verify) return null;
+  const { ok, data } = await api('POST', '/v1/accounts/verify-email', { token: verify });
+  window.history.replaceState({}, document.title, window.location.pathname);
+  return {
+    kind: ok ? 'ok' : 'error',
+    message: ok ? 'Email verified. Sign in to continue.' : (data?.error ?? 'Verification link is invalid or expired.'),
+  };
+}
 
 async function boot() {
   show('view-loading');
@@ -366,9 +398,16 @@ async function boot() {
   loadOutfits('male');
   loadOutfits('female');
 
+  const queryNotice = await handleQueryAction();
+  if (queryNotice?.redirected) return;
+
   const { ok, data } = await api('GET', '/v1/accounts/me');
-  if (!ok || !data.authenticated) { show('view-login'); return; }
-  if (!data.email_verified) { show('view-unverified'); return; }
+  if (!ok || !data.account) {
+    show('view-login');
+    if (queryNotice) setNotice('login-notice', queryNotice.message, queryNotice.kind);
+    return;
+  }
+  if (!data.account.email_verified) { show('view-unverified'); return; }
 
   show('view-characters');
   await renderCharacters();

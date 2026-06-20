@@ -88,6 +88,18 @@ export interface HttpErrorResponse {
 }
 
 // ============================================================================
+// Account Auth API (static portal support; account-gated where noted)
+// ============================================================================
+
+export interface AccountVerifyResendResponse {
+  ok: true;
+  status: 'sent' | 'already_verified';
+  message: string;
+  /** Present only when the server is configured to expose dev links. */
+  dev_verification_token?: string;
+}
+
+// ============================================================================
 // Account Character API (account-gated create/select; public catalogs)
 // ============================================================================
 
