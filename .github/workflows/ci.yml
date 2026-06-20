@@ -173,7 +173,7 @@ jobs:
     permissions:
       contents: read
     needs: changes
-    if: github.event_name == 'push' || needs.changes.outputs.full_ci_required == 'true'
+    if: github.server_url != 'https://github.com' || github.event_name == 'push' || needs.changes.outputs.full_ci_required == 'true'
 
     steps:
       - uses: actions/checkout@v4
@@ -345,7 +345,7 @@ jobs:
     permissions:
       contents: read
     needs: [changes, verify]
-    if: github.event_name == 'push' || needs.changes.outputs.full_ci_required == 'true'
+    if: github.server_url != 'https://github.com' || github.event_name == 'push' || needs.changes.outputs.full_ci_required == 'true'
 
     steps:
       - uses: actions/checkout@v4

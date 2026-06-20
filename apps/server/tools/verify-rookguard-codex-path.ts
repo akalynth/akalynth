@@ -33,6 +33,27 @@ const COMBAT_WAIT_MS = 2100;
 const LANE = 'AKALYNTH_ROOKGUARD_CODEX_PATH_WS_E2E_V1';
 const TARGET_STATUS = 'rookguard_codex_path_ws_e2e_verified';
 const ROOKGUARD_TRAINING_SLIME_SPRITE_ID = 'akalynth_creature_rookguard_training_slime_001';
+const RECEIPT_CHAIN_PATH_ENV = ['AKALYNTH', 'RECEIPT', 'CHAIN', 'PATH'].join('_');
+
+function resolveChainPathsWithEnv(env: Record<string, string>): ReturnType<typeof resolveChainPaths> {
+  const previous = new Map<string, string | undefined>();
+  for (const [key, value] of Object.entries(env)) {
+    previous.set(key, process.env[key]);
+    process.env[key] = value;
+  }
+
+  try {
+    return resolveChainPaths(REPO_ROOT, { requireKey: true });
+  } finally {
+    for (const [key, value] of previous.entries()) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
+  }
+}
 
 function fail(msg: string): never {
   console.error(`\n[verify-rookguard-codex-path] FAIL: ${msg}`);
@@ -330,12 +351,13 @@ async function verifyRookguardCodexPath(): Promise<void> {
   const keyPath = path.join(tmp, 'chronicle.key');
   const output: string[] = [];
   const tsxBin = path.join(REPO_ROOT, 'node_modules/.bin/tsx');
-  fs.writeFileSync(keyPath, randomBytes(32), { mode: 0o600 });
+  fs.writeFileSync(chainPaths.keyPath, randomBytes(32), { mode: 0o600 });
 
   const child = spawn(tsxBin, ['src/index.ts'], {
     cwd: SERVER_DIR,
     env: {
       ...process.env,
+      ...pathEnv,
       PORT: String(port),
       HOST: '127.0.0.1',
       DEBUG: '1',

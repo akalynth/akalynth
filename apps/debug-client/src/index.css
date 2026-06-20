@@ -3229,6 +3229,439 @@ body {
   font-size: 0.85rem;
 }
 
+/* ============================================================================
+   Sim Life Rookguard Timelapse - display-only training lane
+   ============================================================================ */
+
+.sim-life-shell {
+  min-height: 100vh;
+  background:
+    linear-gradient(135deg, rgba(13, 17, 23, 0.96), rgba(16, 24, 28, 0.94)),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 7px);
+  color: #eef3ff;
+}
+
+.sim-life-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid rgba(240, 200, 60, 0.2);
+  background: rgba(8, 12, 18, 0.86);
+}
+
+.sim-life-eyebrow {
+  color: #8ed6c9;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.sim-life-header h1 {
+  margin: 0.12rem 0 0;
+  font-size: 1.2rem;
+  letter-spacing: 0;
+}
+
+.sim-life-header__meta {
+  display: grid;
+  justify-items: end;
+  gap: 0.22rem;
+  font-size: 0.82rem;
+  color: #99a6b8;
+}
+
+.sim-life-header__meta strong {
+  color: #f0c83c;
+  font-size: 0.78rem;
+}
+
+.sim-life-main {
+  display: grid;
+  grid-template-columns: minmax(560px, 1fr) 390px;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.sim-life-map-panel,
+.sim-life-panel {
+  border: 1px solid rgba(142, 214, 201, 0.16);
+  border-radius: 8px;
+  background: rgba(10, 15, 22, 0.84);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.sim-life-map-panel {
+  display: grid;
+  gap: 0.8rem;
+  min-width: 0;
+  padding: 0.8rem;
+}
+
+.sim-life-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+}
+
+.sim-life-toolbar > div:first-child {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.sim-life-toolbar strong {
+  color: #f0c83c;
+  font-size: 1.05rem;
+}
+
+.sim-life-toolbar span {
+  color: #a8b3c5;
+  font-size: 0.82rem;
+}
+
+.sim-life-speed {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.sim-life-speed button,
+.sim-life-milestones button,
+.sim-life-plan button {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  background: rgba(20, 29, 40, 0.92);
+  color: #d7dfec;
+  cursor: pointer;
+  font: inherit;
+}
+
+.sim-life-speed button {
+  min-width: 3.1rem;
+  padding: 0.38rem 0.45rem;
+  font-size: 0.78rem;
+}
+
+.sim-life-speed button.is-active,
+.sim-life-milestones button.is-active,
+.sim-life-plan button.is-active {
+  border-color: #f0c83c;
+  color: #f7e9a7;
+  background: rgba(92, 72, 24, 0.35);
+}
+
+.sim-life-map-wrap {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  overflow: auto;
+}
+
+.sim-life-map {
+  display: grid;
+  width: min(76vh, 100%);
+  min-width: 520px;
+  aspect-ratio: 1 / 1;
+  border: 1px solid rgba(240, 200, 60, 0.26);
+  background: #0b1015;
+  image-rendering: pixelated;
+}
+
+.sim-life-tile {
+  position: relative;
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: inset 0 0 0 1px rgba(4, 8, 12, 0.35);
+  cursor: crosshair;
+  overflow: hidden;
+}
+
+.sim-life-tile--G { background: #4f6c3f; }
+.sim-life-tile--D { background: #8a6b3f; }
+.sim-life-tile--P { background: #858681; }
+.sim-life-tile--W { background: #244f62; }
+
+.sim-life-tile--blocked::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(135deg, rgba(8, 11, 16, 0.24) 0 2px, transparent 2px 7px);
+  pointer-events: none;
+}
+
+.sim-life-tile.is-selected {
+  z-index: 3;
+  outline: 2px solid #f0c83c;
+  outline-offset: -2px;
+}
+
+.sim-life-object,
+.sim-life-agent {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  color: #071018;
+  font-size: 0.42rem;
+  font-weight: 800;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.sim-life-object {
+  inset: 16%;
+  border: 1px solid rgba(0, 0, 0, 0.42);
+  border-radius: 3px;
+  background: #d1a85d;
+}
+
+.sim-life-object--spawn {
+  border-radius: 50%;
+  background: #f1e26f;
+}
+
+.sim-life-object--tutorial_gate { background: #4ba6b5; }
+.sim-life-object--first_instruction_sign,
+.sim-life-object--direction_sign { background: #d0aa5d; }
+.sim-life-object--chronicle_marker { background: #75b9db; }
+.sim-life-object--small_house { background: #a55d39; }
+.sim-life-object--cave_mouth { background: #2e3130; color: #e8eadf; }
+.sim-life-object--training_dummy { background: #c19b58; }
+.sim-life-object--training_yard_fence { inset: 35% 8%; background: #8a633b; }
+
+.sim-life-agent {
+  right: 4%;
+  bottom: 4%;
+  width: 58%;
+  height: 58%;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.32);
+}
+
+.sim-life-agent--player { background: #8ec6ff; }
+.sim-life-agent--guide { background: #9ce5b8; }
+.sim-life-agent--steward { background: #d8a6ff; }
+.sim-life-agent--slime { background: #86d96b; }
+.sim-life-agent--gate { background: #57d3e8; }
+.sim-life-agent.is-muted { opacity: 0.38; }
+
+.sim-life-scrubber {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.sim-life-scrubber input[type="range"] {
+  width: 100%;
+  accent-color: #f0c83c;
+}
+
+.sim-life-milestones {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.sim-life-milestones button {
+  display: grid;
+  min-height: 3.4rem;
+  padding: 0.4rem 0.35rem;
+  gap: 0.1rem;
+}
+
+.sim-life-milestones span,
+.sim-life-plan span {
+  color: #8ed6c9;
+  font-size: 0.7rem;
+}
+
+.sim-life-milestones strong,
+.sim-life-plan strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.78rem;
+}
+
+.sim-life-receipt-rail {
+  position: relative;
+  height: 1.2rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sim-life-receipt-rail button {
+  position: absolute;
+  top: 50%;
+  width: 0.42rem;
+  height: 0.9rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #8ed6c9;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+}
+
+.sim-life-receipt-rail button.is-active {
+  width: 0.64rem;
+  height: 1.05rem;
+  background: #f0c83c;
+  box-shadow: 0 0 0 3px rgba(240, 200, 60, 0.18);
+}
+
+.sim-life-side {
+  display: grid;
+  gap: 0.8rem;
+  align-content: start;
+  min-width: 0;
+}
+
+.sim-life-panel {
+  padding: 0.85rem;
+}
+
+.sim-life-panel h2 {
+  margin: 0 0 0.65rem;
+  color: #f7e9a7;
+  font-size: 0.92rem;
+  letter-spacing: 0;
+}
+
+.sim-life-panel dl {
+  display: grid;
+  gap: 0.42rem 0.6rem;
+  grid-template-columns: 7.4rem minmax(0, 1fr);
+  margin: 0;
+}
+
+.sim-life-panel dt {
+  color: #8ed6c9;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.sim-life-panel dd {
+  min-width: 0;
+  margin: 0;
+  color: #d7dfec;
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+
+.sim-life-panel p {
+  margin: 0.45rem 0 0;
+  color: #a8b3c5;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.sim-life-register {
+  display: grid;
+  gap: 0.32rem;
+  max-height: 17rem;
+  overflow: auto;
+}
+
+.sim-life-register__row {
+  display: grid;
+  grid-template-columns: 0.8rem 5.9rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.42rem;
+  color: #d7dfec;
+  font-size: 0.75rem;
+}
+
+.sim-life-register__row code {
+  min-width: 0;
+  color: #f2d67b;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.sim-life-register__row em {
+  color: #99a6b8;
+  font-size: 0.7rem;
+  font-style: normal;
+}
+
+.sim-life-swatch {
+  width: 0.68rem;
+  height: 0.68rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.sim-life-swatch--ground { background: #4f6c3f; }
+.sim-life-swatch--path { background: #858681; }
+.sim-life-swatch--fence { background: #8a633b; }
+.sim-life-swatch--training_dummy { background: #c19b58; }
+.sim-life-swatch--small_house { background: #a55d39; }
+.sim-life-swatch--sign { background: #d0aa5d; }
+.sim-life-swatch--gate { background: #4ba6b5; }
+.sim-life-swatch--water_edge { background: #244f62; }
+.sim-life-swatch--cave_mouth { background: #2e3130; }
+.sim-life-swatch--shrine_chronicle_marker { background: #75b9db; }
+
+.sim-life-plan {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.sim-life-plan button {
+  display: grid;
+  justify-items: start;
+  gap: 0.15rem;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.sim-life-plan small {
+  color: #99a6b8;
+  font-size: 0.72rem;
+  overflow-wrap: anywhere;
+}
+
+.sim-life-panel--boundary {
+  border-color: rgba(240, 200, 60, 0.2);
+}
+
+@media (max-width: 1080px) {
+  .sim-life-main {
+    grid-template-columns: 1fr;
+  }
+
+  .sim-life-map {
+    min-width: min(520px, 100vw - 3.6rem);
+  }
+}
+
+@media (max-width: 680px) {
+  .sim-life-header {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .sim-life-main {
+    padding: 0.6rem;
+  }
+
+  .sim-life-toolbar,
+  .sim-life-header__meta {
+    align-items: start;
+    justify-items: start;
+    flex-direction: column;
+  }
+
+  .sim-life-milestones {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sim-life-panel dl {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Responsive existence mode */
 @media (max-width: 768px) {
   .existence-main {
