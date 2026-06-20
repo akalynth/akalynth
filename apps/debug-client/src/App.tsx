@@ -12,6 +12,7 @@ import { PropertyLedger } from './components/PropertyLedger';
 import { ChatSheet } from './components/ChatSheet';
 import { TopBar } from './components/TopBar';
 import { NearbyList } from './components/NearbyList';
+import { GatherPanel } from './components/GatherPanel';
 import { ExistenceShell } from './components/ExistenceShell';
 import { VisualSmokeReview } from './components/VisualSmokeReview';
 import { CharacterBar } from './components/CharacterBar';
@@ -784,6 +785,14 @@ function DebugApp() {
               onBuy={api.buyHouse}
               onList={api.listHouse}
               onUnlist={api.unlistHouse}
+            />
+          )}
+          {state.ui.stage >= 3 && (
+            <GatherPanel
+              gather={state.gather}
+              me={state.world.me}
+              onGather={api.sendGather}
+              onDeliver={api.sendDeliver}
             />
           )}
           <div

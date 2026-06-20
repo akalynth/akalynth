@@ -972,6 +972,51 @@ body {
   gap: 0.25rem;
 }
 
+/* Chill-Zone Gather v0 (Step 2) — gather panel */
+.gather-card {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid #1f2937;
+  background: rgba(15, 23, 42, 0.9);
+  width: min(240px, 42vw);
+  z-index: 6;
+}
+.gather-title { font-weight: 700; margin-bottom: 0.35rem; color: var(--muted); font-size: 0.9rem; }
+.gather-held { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.4rem; }
+.gather-list { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 0.4rem; }
+.gather-row { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; }
+.gather-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gather-state { color: var(--muted); font-size: 0.72rem; }
+.gather-dot { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: #475569; flex: none; }
+.gather-dot.available { background: #34d399; }
+.gather-dot.depleting { background: #fbbf24; }
+.gather-dot.depleted { background: #ef4444; }
+.gather-dot.station { background: #60a5fa; }
+.gather-btn {
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.4rem;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #e2e8f0;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+.gather-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.gather-progress {
+  position: relative;
+  height: 0.7rem;
+  border-radius: 0.4rem;
+  background: #1e293b;
+  overflow: hidden;
+  margin-bottom: 0.4rem;
+}
+.gather-progress-bar { height: 100%; background: #34d399; transition: width 0.1s linear; }
+.gather-progress-label { position: absolute; top: -0.05rem; right: 0.3rem; font-size: 0.62rem; color: #e2e8f0; }
+.gather-status { font-size: 0.74rem; color: var(--muted); }
+
 /* Property Ownership v0 — Property Ledger panel */
 .property-ledger {
   display: flex;

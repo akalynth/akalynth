@@ -15,6 +15,10 @@ import type {
   GetChronicleMessage,
   ChronicleEvent,
   PropertyPublic,
+  GatherIntentMessage,
+  DeliverIntentMessage,
+  GatherNodePublic,
+  GatherStationPublic,
 } from '@shared/protocol';
 import type { AccountCharacterCreateRequest, AccountCharacterPlayResponse, MapName } from '@shared/http';
 import { normalizeMapName } from '@shared/http';
@@ -154,6 +158,7 @@ function initialState(mapName: MapName): GameClientState {
     inventory: [],
     gold: 0,
     properties: new Map(),
+    gather: { nodes: new Map(), stations: new Map(), activeNodeId: null, progressPct: 0, held: null, status: null },
   };
 }
 
@@ -474,6 +479,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
         inventory: [],
         gold: 0,
         properties: new Map(),
+        gather: { ...s.gather, nodes: new Map(), stations: new Map(), activeNodeId: null, progressPct: 0 },
       };
     },
     [clearMoveTimer]
@@ -715,6 +721,17 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
 
   const pickupItem = useCallback((itemId: string) => {
     const payload: PickupItemMessage = { type: 'pickup_item', item_id: itemId };
+    send(payload);
+  }, [send]);
+
+  // Chill-Zone Gather v0 (Step 2): client sends intent only; server owns the outcome.
+  const sendGather = useCallback((nodeId: string) => {
+    const payload: GatherIntentMessage = { type: 'gather_intent', node_id: nodeId };
+    send(payload);
+  }, [send]);
+
+  const sendDeliver = useCallback((stationId: string) => {
+    const payload: DeliverIntentMessage = { type: 'deliver_intent', station_id: stationId };
     send(payload);
   }, [send]);
 
@@ -1281,6 +1298,56 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
               };
               return { ...s, conn, world: { ...s.world, me }, toast };
             }
+            // Chill-Zone Gather v0 (Step 2)
+            case 'gather_snapshot': {
+              const nodes = new Map<string, GatherNodePublic>();
+              for (const n of (data.nodes ?? []) as GatherNodePublic[]) nodes.set(n.node_id, n);
+              const stations = new Map<string, GatherStationPublic>();
+              for (const st of (data.stations ?? []) as GatherStationPublic[]) stations.set(st.station_id, st);
+              return { ...s, conn, gather: { ...s.gather, nodes, stations } };
+            }
+
+            case 'gather_node_update': {
+              const node = data.node as GatherNodePublic | undefined;
+              if (!node || typeof node.node_id !== 'string') return { ...s, conn };
+              const nodes = new Map(s.gather.nodes);
+              nodes.set(node.node_id, node);
+              return { ...s, conn, gather: { ...s.gather, nodes } };
+            }
+
+            case 'gather_result': {
+              if (data.ok === true) {
+                const nodeId = typeof data.node_id === 'string' ? data.node_id : null;
+                return { ...s, conn, gather: { ...s.gather, activeNodeId: nodeId, progressPct: 0, status: 'Gathering…' } };
+              }
+              const reason = typeof data.reason === 'string' ? data.reason : 'rejected';
+              return { ...s, conn, gather: { ...s.gather, status: `Gather rejected: ${reason}` } };
+            }
+
+            case 'gather_progress': {
+              if (data.node_id !== s.gather.activeNodeId) return { ...s, conn };
+              const pct = typeof data.progress_pct === 'number' ? data.progress_pct : s.gather.progressPct;
+              return { ...s, conn, gather: { ...s.gather, progressPct: pct } };
+            }
+
+            case 'gather_completed': {
+              const itemType = typeof data.item_type === 'string' ? data.item_type : 'item';
+              return {
+                ...s,
+                conn,
+                gather: { ...s.gather, activeNodeId: null, progressPct: 0, held: { item_type: itemType }, status: `Gathered ${itemType}` },
+              };
+            }
+
+            case 'deliver_result': {
+              if (data.ok === true) {
+                const itemType = typeof data.item_type === 'string' ? data.item_type : 'item';
+                return { ...s, conn, gather: { ...s.gather, held: null, status: `Delivered ${itemType}` } };
+              }
+              const reason = typeof data.reason === 'string' ? data.reason : 'rejected';
+              return { ...s, conn, gather: { ...s.gather, status: `Deliver rejected: ${reason}` } };
+            }
+
             default:
               return { ...s, conn };
           }
@@ -1744,6 +1811,8 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     buyHouse,
     listHouse,
     unlistHouse,
+    sendGather,
+    sendDeliver,
   };
 
   return [state, api];

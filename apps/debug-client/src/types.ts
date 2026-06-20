@@ -7,7 +7,7 @@ import type {
   AccountCharacterWorldOption,
   MapName,
 } from '@shared/http';
-import type { ChronicleEvent, PropertyPublic } from '@shared/protocol';
+import type { ChronicleEvent, PropertyPublic, GatherNodePublic, GatherStationPublic } from '@shared/protocol';
 
 export type InputDirection =
   | Direction
@@ -154,6 +154,15 @@ export interface GameClientState {
   gold: number;
   // Property Ownership v0: house registry, keyed by property_id (server-authoritative).
   properties: Map<string, PropertyPublic>;
+  // Chill-Zone Gather v0 (Step 2): server-authoritative node/station registry + local gather UI state.
+  gather: {
+    nodes: Map<string, GatherNodePublic>;
+    stations: Map<string, GatherStationPublic>;
+    activeNodeId: string | null;
+    progressPct: number;
+    held: { item_type: string } | null;
+    status: string | null;
+  };
 }
 
 export interface GameClientApi {
@@ -202,4 +211,7 @@ export interface GameClientApi {
   buyHouse: (propertyId: string) => void;
   listHouse: (propertyId: string, price: number) => void;
   unlistHouse: (propertyId: string) => void;
+  // Chill-Zone Gather v0 (Step 2)
+  sendGather: (nodeId: string) => void;
+  sendDeliver: (stationId: string) => void;
 }
