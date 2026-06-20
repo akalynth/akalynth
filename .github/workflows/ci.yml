@@ -482,12 +482,17 @@ jobs:
 
   android-instrumented:
     name: Android instrumented tests (Compose UI)
-    runs-on: [self-hosted, ubuntu-24.04]
+    # GitHub: its self-hosted runner. Gitea: the dedicated host-executor runner
+    # (akalynth-host-emulator, label `android-emulator`) which has /dev/kvm + the Android SDK;
+    # the container-executor Gitea runners can't boot an emulator, hence a separate label.
+    runs-on: ${{ github.server_url == 'https://github.com' && fromJSON('["self-hosted", "ubuntu-24.04"]') || 'android-emulator' }}
     timeout-minutes: 30
     permissions:
       contents: read
     needs: [changes]
-    if: (github.event_name == 'push' || needs.changes.outputs.full_ci_required == 'true') && github.server_url == 'https://github.com'
+    # Runs on both GitHub and the self-hosted Gitea runner (KVM + Android SDK prepped below).
+    # Artifact upload stays GitHub-only (see the upload step) since Gitea artifact storage differs.
+    if: github.event_name == 'push' || needs.changes.outputs.full_ci_required == 'true'
 
     steps:
       - uses: actions/checkout@v4
