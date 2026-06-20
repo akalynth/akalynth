@@ -1,20 +1,20 @@
-# Copilot Delegation
+# Codex Delegation
 
-> **Purpose:** Explain the delegation pattern Akalynth uses to keep architecture-critical work inside guardrails, and how it is realized today via `.claude/skills/`.
+> **Purpose:** Explain the delegation pattern Akalynth uses to keep architecture-critical work inside guardrails, and how it is realized today through the `.codex` operating map, Codex skills/plugins, and the canonical skill source.
 >
-> **Current implementation note:** This document was written when delegation targets lived in `.claude/agents/` and `.claude/commands/`, with a root `CLAUDE.md`. The repository has since consolidated on **`.claude/skills/`** (each skill is a `SKILL.md` with `name` + `description` frontmatter). There is no `.claude/agents/`, no `.claude/commands/`, and no root `CLAUDE.md` today. Concrete paths below have been updated to match the current layout; the conceptual sections still use "custom agent" language generically. See **[FLAGGED FOR HUMAN]** at the end for a recommended deeper reconciliation.
+> **Current implementation note:** The active local map for Codex is `.codex/CODEX_MAP.md`. Akalynth's authored skill source is still `.claude/skills/` (each skill is a `SKILL.md` with `name` + `description` frontmatter), while Codex consumes those skills through the user-level `~/.codex/skills/` symlinks and the curated `plugins/akalynth-studio/skills/` plugin surface. There is no `.claude/agents/`, no `.claude/commands/`, and no root `CLAUDE.md` workflow to maintain.
 
-## What is Copilot Delegation?
+## What is Codex Delegation?
 
-**Copilot delegation** is a development pattern where a general-purpose AI coding assistant (like GitHub Copilot) delegates specialized tasks to **focused skills (custom agents)**—domain experts with specific knowledge, tools, and constraints.
+**Codex delegation** is a development pattern where a general-purpose AI coding assistant routes specialized tasks through **focused skills** -- domain experts with specific knowledge, tools, and constraints.
 
-Think of it as a senior engineer (the general Copilot) managing a team of specialized engineers (the skills under `.claude/skills/`), where each specialist has deep expertise in one area.
+Think of it as a senior engineer (Codex) consulting a team of specialized engineers. The working entry point is `.codex/CODEX_MAP.md`; the authored skill bodies live in `.claude/skills/`; Codex sees those skills through the configured user/plugin skill stores.
 
 ## Core Concept
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│              General Copilot (Manager)                  │
+│              General Codex (Manager)                    │
 │  • Understands full repository context                  │
 │  • Routes tasks to appropriate specialists              │
 │  • Validates overall integration                        │
@@ -39,19 +39,19 @@ Akalynth has **strict architectural constraints** that are easy to violate accid
 
 ### 1. **Receipt-First Architecture**
 - ❌ Bad: Add a feature, then add receipts as afterthought
-- ✅ Good: Custom agent ensures receipts are designed first, code follows
+- ✅ Good: Codex skill ensures receipts are designed first, code follows
 
 ### 2. **Server Authority**
 - ❌ Bad: Client sends coordinates, server validates
-- ✅ Good: Custom agent enforces intent-only pattern
+- ✅ Good: Codex skill enforces intent-only pattern
 
 ### 3. **Civil Guarantees (G1-G15)**
 - ❌ Bad: Introduce RNG that's not reproducible
-- ✅ Good: Custom agent blocks non-deterministic changes
+- ✅ Good: Codex skill blocks non-deterministic changes
 
 ### 4. **Anti-Cheat Vigilance**
 - ❌ Bad: Add movement feature that bypasses speed checks
-- ✅ Good: Custom agent validates against detector patterns
+- ✅ Good: Codex skill validates against detector patterns
 
 ## How It Works
 
@@ -59,7 +59,7 @@ Akalynth has **strict architectural constraints** that are easy to violate accid
 ```
 User: "Add item drop evidence for players"
      ↓
-Copilot: *writes code directly*
+Codex: *writes code directly*
      ↓
 Result: May violate receipts-first, forget audit trail, 
         or introduce client-authoritative pattern
@@ -69,11 +69,11 @@ Result: May violate receipts-first, forget audit trail,
 ```
 User: "Add item drop evidence for players"
      ↓
-Copilot: *recognizes this is chronicle/receipt evidence work*
+Codex: *recognizes this is chronicle/receipt evidence work*
      ↓
-Copilot: *delegates to receipt-chain-steward skill*
+Codex: *loads the receipt-chain-steward skill*
      ↓
-Skill (Custom Agent):
+Skill:
   - Validates against Civil Guarantees
   - Ensures receipt-driven design
   - Uses existing explainDeathDrops() function
@@ -83,11 +83,285 @@ Skill (Custom Agent):
 Result: Architecturally sound implementation
 ```
 
-## Akalynth's Skill (Custom Agent) System
+## Engineering Loop: From Delegated Task To Git Push
+
+Codex delegation does not end when code compiles. For Akalynth, delegation carries work through a bounded engineering loop before code is allowed to leave the local worktree:
+
+```text
+User intent
+  ↓
+Codex reads .codex/CODEX_MAP.md
+  ↓
+Codex identifies affected domains
+  ↓
+Codex loads relevant skill(s)
+  ↓
+Codex makes bounded implementation
+  ↓
+Codex runs focused verification
+  ↓
+Codex records evidence
+  ↓
+Codex commits with domain-aware message
+  ↓
+Codex pushes only after gates pass
+```
+
+The goal is to prevent architecture-critical work from reaching Git history without the same constraints that governed implementation.
+
+### Core Rule
+
+A Codex-assisted git push is allowed only when the implementation, evidence, and commit message all preserve the delegated domain contract.
+
+That means:
+
+1. The task was routed through `.codex/CODEX_MAP.md`.
+2. The relevant skill constraints were applied.
+3. The changed files match the delegated scope.
+4. Verification commands were run.
+5. Any skipped checks are explicitly named.
+6. The commit message records the domain and evidence path.
+7. The push does not include unrelated worktree changes.
+
+### Engineering Loop Authority Boundaries
+
+The engineering loop separates authority, execution, evidence, verification, and presentation.
+
+| Layer | Owner | Purpose |
+|---|---|---|
+| User intent | Human operator | Defines the requested outcome |
+| Routing authority | `.codex/CODEX_MAP.md` | Determines which skills apply |
+| Domain constraints | `.claude/skills/*/SKILL.md` | Defines what must not be violated |
+| Execution | Codex / local runtime | Edits files and runs commands |
+| Evidence | Terminal output, diffs, receipts, manifests | Shows what happened |
+| Verification | Tests, linters, domain verifiers | Checks the result |
+| Git custody | Branch, commit, push | Transfers local work into shared history |
+| Review | Human or delegated reviewer | Accepts or rejects the pushed work |
+
+Codex may execute the loop, but it does not become the authority. The authority remains in the project map, skill source, tests, verifiers, and Git history.
+
+### Delegated Git Push Contract
+
+Before pushing, Codex should produce a small, auditable push record.
+
+```markdown
+Delegated push record:
+- Task:
+- Branch:
+- Skills used:
+- Files changed:
+- Domain constraints checked:
+- Verification commands run:
+- Verification result:
+- Known gaps:
+- Commit hash:
+- Push target:
+```
+
+Example:
+
+```markdown
+Delegated push record:
+- Task: Add player-visible death drop evidence endpoint
+- Branch: feat/death-drop-evidence
+- Skills used:
+  - receipt-chain-steward
+  - protocol-guardian
+  - test-runner
+- Files changed:
+  - apps/server/src/ws/evidence.ts
+  - packages/shared/protocol.ts
+  - docs/PROTOCOL.md
+  - apps/server/test/death-drop-evidence.test.ts
+- Domain constraints checked:
+  - Receipt-first evidence path
+  - Ownership validation before data exposure
+  - Read-only evidence endpoint
+  - Protocol/docs parity
+- Verification commands run:
+  - npm run verify
+  - npm run verify:skills
+  - npm test -- death-drop-evidence
+- Verification result:
+  - Passed locally
+- Known gaps:
+  - No browser client UI added
+- Commit hash:
+  - <hash after commit>
+- Push target:
+  - origin feat/death-drop-evidence
+```
+
+This record is not a replacement for tests. It is a custody note for the operator and reviewer.
+
+### Engineering Loop Phases
+
+#### Phase 0: Worktree Preflight
+
+Before Codex edits anything, inspect the current Git state:
+
+```bash
+git status --short
+git branch --show-current
+git remote -v
+```
+
+Codex should not mix delegated work with unrelated local changes. If unrelated changes exist, refuse the push until the operator commits them separately, stashes them, or explicitly includes them in this delegated task.
+
+#### Phase 1: Route The Task
+
+Codex reads `.codex/CODEX_MAP.md`, identifies the domain lane, and names the selected skills before implementation.
+
+```markdown
+Delegation route:
+- Primary skill: receipt-chain-steward
+- Supporting skill: protocol-guardian
+- Verification skill: test-runner
+- Reason: request adds player-visible evidence over the WebSocket protocol
+```
+
+#### Phase 2: Bound The Scope
+
+Before editing, Codex defines the expected file boundary. If implementation requires expanding scope, Codex stops and restates the new boundary and any additional skill required.
+
+```markdown
+Expected scope:
+- packages/shared/protocol.ts
+- apps/server/src/ws/*
+- apps/server/src/receipts/*
+- docs/PROTOCOL.md
+- tests covering evidence access
+Out of scope:
+- client UI redesign
+- combat balance
+- map data changes
+- unrelated refactors
+```
+
+#### Phase 3: Implement Under Skill Constraints
+
+Implementation must follow the relevant skill's hard constraints. Receipt evidence work preserves append-only evidence, ownership validation, stable receipt identifiers, deterministic explanation paths, and no client-authoritative claims. Protocol work preserves shared type updates, server/client handler parity when applicable, docs parity, and receipt/event schema sync. Anti-cheat work preserves deterministic detection, evidenced heat changes, explainable enforcement, and no enforcement without a receipt path.
+
+#### Phase 4: Focused Verification
+
+Codex chooses verification commands through `test-runner` or the relevant domain skill. The minimum loop should be:
+
+```bash
+git diff --check
+npm run verify:skills
+npm run verify
+```
+
+Domain-specific commands should be added when applicable, such as `npm test -- death-drop-evidence`, `npm test -- protocol`, `npm test -- anticheat`, `npm test -- movement`, `npm run lint`, or `npm run typecheck`. A check is only verified if Codex names the command and reports the observed result.
+
+If a required command fails, the loop does not proceed to push unless the operator explicitly authorizes a failing push.
+
+#### Phase 5: Evidence Capture
+
+For architecture-critical changes, Codex leaves enough evidence for another operator to reconstruct the work: diff summary, verification output, tests, schema/docs changes, generated manifests, and commit hash. High-risk work may add a local manifest under `docs/evidence/<YYYY-MM-DD>-<task-slug>.md`.
+
+#### Phase 6: Commit Discipline
+
+The commit preserves the delegation boundary. Recommended format:
+
+```text
+<domain>: <imperative summary>
+
+Delegation:
+- Primary skill: <skill>
+- Supporting skills: <skills>
+Evidence:
+- <commands run>
+- <tests added/updated>
+- <manifest path if present>
+Constraints:
+- <constraint checked>
+- <constraint checked>
+Known gaps:
+- <gap or none>
+```
+
+Suggested sequence:
+
+```bash
+git add <scoped files>
+git diff --cached --stat
+git diff --cached --check
+git commit
+```
+
+Codex should avoid `git add .` unless the worktree has already been proven clean and every changed file belongs to the delegated task.
+
+#### Phase 7: Push Gate
+
+Before push:
+
+```bash
+git status --short
+git log --oneline -1
+git diff origin/$(git branch --show-current)..HEAD --stat
+```
+
+Push is allowed only when the worktree is clean, the latest commit matches the delegated task, verification passed or gaps are explicitly authorized, and the target branch is correct. Prefer feature branches; if a protected branch rejects the push, push a feature branch and leave review instructions.
+
+### Git Push Decision Table
+
+| Condition | Action |
+|---|---|
+| Worktree has unrelated changes | Refuse push |
+| Skill constraints not applied | Refuse push |
+| Required tests failed | Refuse push |
+| Verification command unavailable | Record gap; ask operator only if push depends on it |
+| Docs changed without protocol/schema sync | Refuse push |
+| Protocol changed without shared type update | Refuse push |
+| Receipt feature lacks receipt/evidence path | Refuse push |
+| Anti-cheat enforcement lacks evidence | Refuse push |
+| Commit includes unrelated refactor | Split commit |
+| All gates pass | Push feature branch |
+
+### Push Refusal Examples
+
+```text
+Refused — violates git push custody: unrelated worktree changes detected.
+Unrelated files:
+- apps/client/src/theme.ts
+- notes/local-debug.md
+Required correction:
+- remove, stash, or separately commit unrelated files before this delegated push.
+```
+
+```text
+Refused — violates delegation contract: protocol files changed without protocol-guardian route.
+Changed files:
+- packages/shared/protocol.ts
+- docs/PROTOCOL.md
+Required correction:
+- re-run review through protocol-guardian before commit/push.
+```
+
+```text
+Refused — violates verification gate: `npm run verify` failed.
+Observed result:
+- Type error in apps/server/src/ws/evidence.ts
+Required correction:
+- fix the failure and rerun verification before push.
+```
+
+```text
+Refused — violates scoped commit discipline: staged diff includes local config.
+Staged file:
+- .env.local
+Required correction:
+- unstage the file and verify `.gitignore` coverage.
+```
+
+## Akalynth's Codex Skill System
 
 ### Directory Structure
 
-Delegation targets live under `.claude/skills/`, one directory per skill, each containing a `SKILL.md`:
+The active Codex entry point is `.codex/CODEX_MAP.md`. It records the local dev-box authority, skill stores, plugin surfaces, and routing matrix.
+
+Authored Akalynth skills live under `.claude/skills/`, one directory per skill, each containing a `SKILL.md`:
 
 ```text
 .claude/
@@ -105,12 +379,26 @@ Delegation targets live under `.claude/skills/`, one directory per skill, each c
 │   ├── ci-steward/SKILL.md
 │   ├── deploy-steward/SKILL.md
 │   ├── test-runner/SKILL.md
+│   ├── git-push-steward/SKILL.md          # Git custody / push boundary
 │   ├── delegation-steward/SKILL.md          # Turns requests into delegated tasks/issues
 │   └── akalynth-system-audit/SKILL.md
-└── settings.json                            # Permissions
+└── settings.json                            # Claude Code permission allowlist
 ```
 
-> The full, authoritative list of skills is whatever exists under `.claude/skills/`. The set above reflects the current tree and may change.
+Codex-facing surfaces point back to that authored source:
+
+```text
+.codex/
+├── CODEX_MAP.md                             # Active Codex map for this dev box
+├── config.toml.example                      # Recommended Codex posture template
+└── skills/
+    └── akalynth-system-audit/               # Project Codex-format audit skill
+
+plugins/akalynth-studio/skills/              # Curated Codex plugin skills
+~/.codex/skills/                             # User-level Akalynth skill symlinks
+```
+
+> The authored source for Akalynth domain skills is `.claude/skills/`. Codex should read `.codex/CODEX_MAP.md` first for routing and then use the relevant skill. Do not hand-edit installed copies under `.agents/skills` or `~/.codex/skills`.
 
 ### Skill Anatomy
 
@@ -123,7 +411,7 @@ Each skill is a `SKILL.md` file with:
 5. **Operating Principles** — how to approach tasks
 6. **Project Context** — Akalynth-specific knowledge
 
-Example (abridged) from `.claude/skills/anti-cheat-steward/SKILL.md`:
+Example (abridged) from `.claude/skills/anti-cheat-steward/SKILL.md`, consumed by Codex through the configured skill stores:
 
 ```markdown
 ---
@@ -142,7 +430,7 @@ Separate these concerns:
 
 ## When to Use Delegation
 
-### ✅ Use Custom Agents For:
+### ✅ Use Codex Skills For:
 
 1. **Architecture-Critical Changes**
    - Protocol modifications
@@ -179,15 +467,15 @@ Separate these concerns:
 ## Benefits for Akalynth
 
 ### 1. **Constraint Enforcement**
-Custom agents act as **guardrails** for complex architectural rules:
+Codex skills act as **guardrails** for complex architectural rules:
 
 ```typescript
-// WITHOUT AGENT: Easy to forget
+// WITHOUT SKILL CONTEXT: Easy to forget
 function handleMove(x: number, y: number) {
   player.position = {x, y};  // ❌ Client-authoritative!
 }
 
-// WITH AGENT: Enforces intent-only pattern
+// WITH SKILL CONTEXT: Enforces intent-only pattern
 function handleMoveIntent(direction: Direction) {
   // Validate intent
   // Server computes new position
@@ -197,11 +485,10 @@ function handleMoveIntent(direction: Direction) {
 ```
 
 ### 2. **Knowledge Preservation**
-Agents capture tribal knowledge that's scattered across:
+Skills capture tribal knowledge that's scattered across:
 - `docs/ARCHITECTURE.md`
 - `docs/PROTOCOL.md`
 - `docs/ANTICHEAT.md`
-- `CLAUDE.md`
 - Comments in code
 
 ### 3. **Consistency**
@@ -211,18 +498,18 @@ Same task → same approach, every time:
 - Always check tiles are walkable before movement
 
 ### 4. **Reduced Review Burden**
-Pull requests from custom agents need less scrutiny because constraints are pre-validated.
+Pull requests produced with the right skill context need less scrutiny because constraints are pre-validated.
 
 ### 5. **Faster Onboarding**
-New contributors can rely on agents to teach them patterns:
-- "Use anticheat agent to add detection signal"
-- Agent guides them through proper pattern
+New contributors can rely on skills to teach them patterns:
+- "Use anti-cheat-steward to add a detection signal"
+- Skill guidance walks them through proper pattern
 
-## Creating Custom Agents for Akalynth
+## Creating Or Updating Codex Skills For Akalynth
 
 ### Step 1: Identify the Domain
 
-Good agent candidates:
+Good skill candidates:
 - **Protocol Engineer** - WebSocket message types, client/server contract
 - **Anticheat Engineer** - Detector patterns, Tem challenges, heat scoring
 - **World Engineer** - Map data, movement validation, spawn points
@@ -251,9 +538,9 @@ Scope:
 - Direction validation
 
 Out of scope:
-- Combat mechanics (separate agent)
-- Inventory system (separate agent)
-- Chat (separate agent)
+- Combat mechanics (separate skill)
+- Inventory system (separate skill)
+- Chat (separate skill)
 ```
 
 ### Step 4: Add Operating Principles
@@ -301,7 +588,7 @@ Scope:
 
 Explicitly out of scope:
 - [Other feature areas]
-- [Changes requiring different agent]
+- [Changes requiring a different skill]
 
 Operating principles:
 - [How to approach tasks]
@@ -328,9 +615,9 @@ if (perfectCadence) {
 }
 ```
 
-**With anticheat-engineer agent:**
+**With anti-cheat-steward:**
 ```typescript
-// Agent ensures proper pattern:
+// Skill guidance ensures proper pattern:
 // 1. Detect pattern
 // 2. Update heat score
 // 3. Emit receipt
@@ -357,9 +644,9 @@ interface MoveResult {
 }
 ```
 
-**With protocol-engineer agent:**
+**With protocol-guardian:**
 ```typescript
-// Agent ensures:
+// Skill guidance ensures:
 // 1. Update docs/PROTOCOL.md
 // 2. Update packages/shared/protocol.ts
 // 3. Add server handler
@@ -374,7 +661,7 @@ interface MoveResult {
 
 **Delegation flow:**
 ```
-Copilot recognizes: chronicle/receipt evidence work
+Codex recognizes: chronicle/receipt evidence work
     ↓
 Delegates to: receipt-chain-steward
     ↓
@@ -389,18 +676,18 @@ Skill implements:
 
 ## Integration with General Guidance
 
-General, project-wide guidance (project overview, build/test commands, commit discipline, MVP scope) lives in the top-level docs — primarily `README.md`, `docs/ARCHITECTURE.md`, and `docs/CURRENT_STAGE.md`. (There is no root `CLAUDE.md` in this repository today.) Skills are **specialists** that operate within that guidance but add domain-specific knowledge.
+General, project-wide guidance (project overview, build/test commands, commit discipline, MVP scope) lives in the top-level docs and Codex entry points — primarily `AGENTS.md`, `README.md`, `.codex/CODEX_MAP.md`, `docs/ARCHITECTURE.md`, and `docs/CURRENT_STAGE.md`. Skills are **specialists** that operate within that guidance but add domain-specific knowledge.
 
 ### Division of Responsibility
 
-**General guidance** (`README.md`, `docs/ARCHITECTURE.md`, `docs/CURRENT_STAGE.md`):
+**General guidance** (`AGENTS.md`, `README.md`, `.codex/CODEX_MAP.md`, `docs/ARCHITECTURE.md`, `docs/CURRENT_STAGE.md`):
 - Project overview
 - Build/test commands
 - File structure
 - Commit discipline
 - MVP scope
 
-**Skills / Custom Agents** (Domain Specialists):
+**Skills** (Domain Specialists):
 - Specific feature constraints
 - Domain-specific patterns
 - Technical decision rationale
@@ -413,7 +700,7 @@ User: "Add Tem challenge for chat spam"
     ↓
 General docs (ARCHITECTURE.md / ANTICHEAT.md): Context on Tem + anticheat pipeline
     ↓
-Copilot: Recognizes this is anticheat work
+Codex: Recognizes this is anti-cheat work
     ↓
 Skill (anti-cheat-steward): Implements with proper:
   - Heat scoring
@@ -425,7 +712,7 @@ Skill (anti-cheat-steward): Implements with proper:
 
 ## Skills and Validation
 
-### Skills (`.claude/skills/*/SKILL.md`)
+### Skills (`.codex/CODEX_MAP.md` routing -> `.claude/skills/*/SKILL.md` source)
 
 **Purpose:** Domain expertise for both quick checks and full implementation
 
@@ -436,47 +723,65 @@ Skill (anti-cheat-steward): Implements with proper:
 - `receipt-chain-steward` — append-only receipt chain
 - `ci-steward` — CI gates and verification workflow
 - `test-runner` — running and triaging tests
+- `git-push-steward` — commit and push custody, scoped staging, and push-readiness gates
 
 **When to use:** Building features, refactoring domains, or running a focused review within a domain's constraints.
 
-> Historical note: earlier revisions of this doc split delegation into `.claude/commands/*.md` (quick checks) and `.claude/agents/*.md` (full implementation). Those directories no longer exist; both roles are now served by skills under `.claude/skills/`.
+> Historical note: earlier revisions of this guide split delegation into `.claude/commands/*.md` (quick checks) and `.claude/agents/*.md` (full implementation). Those directories no longer exist. Codex routing is documented in `.codex/CODEX_MAP.md`, and domain instructions are authored under `.claude/skills/`.
 
 ## Best Practices
 
 ### 1. **Delegate Early**
 ```
-❌ Try yourself first, call agent if stuck
+❌ Try yourself first, load skill if stuck
 ✅ Recognize domain, delegate immediately
 ```
 
-### 2. **Trust the Agent**
+### 2. **Trust the Skill Context**
 ```
-❌ Agent implements → You rewrite → Lose constraints
-✅ Agent implements → You review → Trust expertise
+❌ Skill guidance leads → You rewrite blindly → Lose constraints
+✅ Skill guidance leads → You review → Preserve expertise
 ```
 
-### 3. **Scope Agents Narrowly**
+### 3. **Scope Skills Narrowly**
 ```
 ❌ "world-and-combat-and-inventory-engineer"
 ✅ "world-engineer", "combat-engineer", "inventory-engineer"
 ```
 
-### 4. **Update Agents with Learnings**
+### 4. **Update Skills with Learnings**
 ```
 When you discover a new constraint or pattern:
-→ Update the relevant agent's hard constraints
+→ Update the relevant skill's hard constraints
 → Prevents future violations
 ```
 
-### 5. **Use Commands for Validation**
+### 5. **Use Verification Commands**
 ```
 Before PR:
-→ Run verification: @verify
-→ Check anticheat: @anticheat
-→ Validate protocol: @protocol
+-> Route via `.codex/CODEX_MAP.md`
+-> Use `test-runner` for command choice
+-> Run focused checks such as `npm run verify`, `npm run verify:skills`, or the relevant domain verifier
 ```
 
-## Future Agent Opportunities
+### 6. **Delegate Through The Git Boundary**
+
+Do not stop delegation at implementation. Implementation skills decide how code should change, `test-runner` decides how it should be checked, and `git-push-steward` decides whether it is safe to commit and push.
+
+```text
+Bad:
+Codex implements feature → git add . → git commit → git push
+
+Good:
+Codex implements feature under domain skill
+  → verifies through test-runner
+  → stages scoped files
+  → commits with evidence
+  → push gate through git-push-steward
+  → pushes feature branch
+```
+
+## Future Skill Opportunities
 
 Based on Akalynth's architecture, consider creating:
 
@@ -507,7 +812,7 @@ Based on Akalynth's architecture, consider creating:
 
 ## Measuring Success
 
-A good custom agent:
+A good Codex skill:
 
 1. **Catches violations** before code review
 2. **Teaches patterns** to developers
@@ -515,63 +820,67 @@ A good custom agent:
 4. **Reduces bugs** from architectural misunderstandings
 5. **Speeds up** experienced developers (less decision fatigue)
 
+A good delegated engineering loop:
+
+- prevents unrelated changes from entering commits
+- makes every pushed branch reconstructable
+- records which skills governed the work
+- records which verification commands were run
+- names skipped or failed checks honestly
+- keeps Git history aligned with architecture boundaries
+- lets another operator replay the reasoning from map → skill → diff → test → commit
+
 ## Anti-Patterns to Avoid
 
 ### 1. Over-Delegation
 ```
-❌ Create agent for every tiny feature
-✅ Create agents for architectural domains
+❌ Create a skill for every tiny feature
+✅ Create skills for architectural domains
 ```
 
-### 2. Under-Specified Agents
+### 2. Under-Specified Skills
 ```
 ❌ "You are the engineer. Do engineering."
 ✅ "You enforce receipts-first. Reject non-deterministic RNG."
 ```
 
-### 3. Overlapping Agents
+### 3. Overlapping Skills
 ```
-❌ Two agents both handle movement logic
+❌ Two skills both handle movement logic
 ✅ Clear boundaries: world-engineer = logic, protocol-engineer = messages
 ```
 
-### 4. Ignoring Agent Refusals
+### 4. Ignoring Skill Refusals
 ```
-❌ Agent refuses → Ask general Copilot instead
-✅ Agent refuses → Understand why → Fix approach
+❌ Skill refuses → Ask unguided Codex instead
+✅ Skill refuses → Understand why → Fix approach
 ```
 
 ## Conclusion
 
-Copilot delegation is Akalynth's **force multiplier** for maintaining architectural integrity at scale. By encoding domain expertise into custom agents, the project ensures that:
+Codex delegation is Akalynth's **force multiplier** for maintaining architectural integrity at scale. By encoding domain expertise into Codex skills, the project ensures that:
 
 - Complex constraints are enforced automatically
 - New contributors learn patterns through guided implementation
 - Code reviews focus on business logic, not architectural correctness
 - Tribal knowledge is preserved and accessible
 
-As the project grows, custom agents become increasingly valuable—they're living documentation that **actively participates** in development rather than passively sitting in `/docs`.
+As the project grows, Codex skills become increasingly valuable—they're living documentation that **actively participates** in development rather than passively sitting in `/docs`.
 
 ## Further Reading
 
+- `.codex/CODEX_MAP.md` — Codex routing, local authority, skill stores
 - `docs/ARCHITECTURE.md` — System architecture
 - `docs/PROTOCOL.md` — WebSocket protocol
 - `docs/ANTICHEAT.md` — Anti-cheat system
 - `.claude/skills/delegation-steward/SKILL.md` — How requests become delegated tasks
 - `.claude/skills/anti-cheat-steward/SKILL.md` — Example domain skill
-- `.claude/skills/` — All available skills (the authoritative list)
+- `.claude/skills/` — Authored Akalynth domain skill source
 
 ---
 
 ## Maintainer note
 
-Concrete paths and examples in this guide have been updated to the current
-`.claude/skills/` layout (there is no `.claude/agents/`, `.claude/commands/`, or root
-`CLAUDE.md`). The named specialists referenced throughout — `protocol-engineer`,
-`anticheat-engineer`, `world-engineer`, `chronicle-evidence-engineer` — are
-**illustrative future skills**, not skills that exist today; the authoritative list is
-whatever lives under `.claude/skills/`.
+This guide is now Codex-facing. `.codex/CODEX_MAP.md` is the operational routing map; `.claude/skills/` remains the authored source for Akalynth domain skills; Codex consumes those skills through the configured user and plugin surfaces.
 
-Open decision for maintainers: whether to keep this conceptual guide (which still uses
-the older "custom agents vs commands" framing generically) or retire it in favor of the
-per-skill `SKILL.md` files. This is a documentation-strategy choice, not a factual fix.
+Keep this guide as the human-readable overview. Put detailed domain rules in the per-skill `SKILL.md` files and keep `.codex/CODEX_MAP.md` aligned with the actual routing surface.

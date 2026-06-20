@@ -6,6 +6,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); the pack version
 lives in `plugins/akalynth-studio/.codex-plugin/plugin.json`. See the
 `release-steward` skill for the release process.
 
+## [Unreleased]
+
+### Added
+- `git-push-steward` skill for Git custody, scoped staging, verification
+  evidence, and push-boundary checks.
+- Codex delegation engineering-loop docs covering worktree preflight, domain
+  routing, evidence capture, commit discipline, and push readiness.
+
 ## [0.2.0] - 2026-06-06
 
 ### Added
