@@ -27,6 +27,7 @@
     "verify:beta-account-play-portal": "node scripts/verify-beta-account-play-portal.mjs",
     "smoke:beta-account-play": "node scripts/smoke-beta-account-play.mjs --live",
     "smoke:beta-account-play:api": "node scripts/smoke-beta-account-play.mjs --live --no-browser",
+    "smoke:beta-account-play:real": "node scripts/smoke-beta-account-play.mjs --live --real-account",
     "verify:showcase": "bash scripts/showcase_local.sh",
     "verify:docker-runtime": "bash scripts/verify-docker-runtime.sh",
     "smoke:docker-runtime": "bash scripts/smoke-docker-runtime.sh",

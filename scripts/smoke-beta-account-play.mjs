@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { access } from 'node:fs/promises';
 import os from 'node:os';
@@ -20,6 +20,10 @@ const defaults = {
   browser: true,
   live: false,
   timeoutMs: 15000,
+  realAccount: false,
+  emailEnv: 'AKALYNTH_BETA_SMOKE_EMAIL',
+  passwordEnv: 'AKALYNTH_BETA_SMOKE_PASSWORD',
+  characterName: '',
 };
 
 function parseArgs(argv) {
@@ -40,6 +44,10 @@ function parseArgs(argv) {
     else if (arg === '--chrome') args.chrome = readValue();
     else if (arg === '--timeout-ms') args.timeoutMs = Number(readValue());
     else if (arg === '--no-browser') args.browser = false;
+    else if (arg === '--real-account') args.realAccount = true;
+    else if (arg === '--email-env') args.emailEnv = readValue();
+    else if (arg === '--password-env') args.passwordEnv = readValue();
+    else if (arg === '--character-name') args.characterName = readValue();
     else if (arg === '--help') {
       console.log([
         'Usage: node scripts/smoke-beta-account-play.mjs --live [options]',
@@ -56,6 +64,10 @@ function parseArgs(argv) {
         '  --chrome <file>     Chrome/Chromium executable for Playwright.',
         '  --timeout-ms <n>    Browser/WS timeout. Default: 15000',
         '  --no-browser        Skip the Playwright localStorage autoconnect proof.',
+        '  --real-account      Use an existing verified account instead of creating a disposable one.',
+        '  --email-env <name>  Env var for real-account email. Default: AKALYNTH_BETA_SMOKE_EMAIL',
+        '  --password-env <name> Env var for real-account password. Default: AKALYNTH_BETA_SMOKE_PASSWORD',
+        '  --character-name <name> Select this real-account character name. Default: first listed character.',
       ].join('\n'));
       process.exit(0);
     } else {
@@ -73,6 +85,12 @@ function parseArgs(argv) {
 
 function redactId(value) {
   return typeof value === 'string' && value ? `${value.slice(0, 10)}...` : null;
+}
+
+function hashPrefix(value) {
+  return typeof value === 'string' && value
+    ? createHash('sha256').update(value).digest('hex').slice(0, 16)
+    : null;
 }
 
 function bodySummary(body) {
@@ -311,60 +329,114 @@ async function main() {
   };
 
   try {
-    const suffix = randomSuffix();
-    const handle = `Smoke${suffix}`.slice(0, 24);
-    const email = `akalynth-smoke-${suffix}@example.invalid`;
-    const password = randomBytes(24).toString('base64url');
-    const charName = `Smk${suffix}`.slice(0, 18);
-
     const accountHtml = await textRequest('GET account.html', new URL('/account.html', args.webBase).href);
     addCheck('account.html_200', accountHtml.res.status === 200);
     addCheck('account.html_links_support_pages', accountHtml.text.includes('/register.html') && accountHtml.text.includes('/forgot.html'));
     const playHtml = await textRequest('GET play/', new URL('/play/', args.webBase).href);
     addCheck('play_200', playHtml.res.status === 200);
 
-    const reg = await request('POST', `${args.apiBase}/v1/accounts/register`, { handle, email, password }, { name: 'POST accounts/register' });
-    addCheck('register_201', reg.res.status === 201, { status: reg.res.status });
-    const devTokenPresent = typeof reg.body?.dev_verification_token === 'string' && reg.body.dev_verification_token.length > 0;
-    if (devTokenPresent) {
-      const ver = await request('POST', `${args.apiBase}/v1/accounts/verify-email`, { token: reg.body.dev_verification_token }, { name: 'POST accounts/verify-email' });
-      addCheck('verify_email_200_when_dev_token_present', ver.res.status === 200 && ver.body?.ok === true, { status: ver.res.status });
+    const mode = args.realAccount ? 'real-account' : 'disposable-account';
+    let csrfToken = '';
+    let accountReceipt;
+    let character;
+    let playToken = '';
+    let devTokenPresent = false;
+
+    if (args.realAccount) {
+      const email = process.env[args.emailEnv] ?? '';
+      const password = process.env[args.passwordEnv] ?? '';
+      addCheck('real_account_email_env_present', email.length > 0, { env: args.emailEnv });
+      addCheck('real_account_password_env_present', password.length > 0, { env: args.passwordEnv });
+
+      const login = await request('POST', `${args.apiBase}/v1/accounts/login`, { email, password }, { name: 'POST accounts/login(real)' });
+      csrfToken = login.body?.csrf_token || '';
+      addCheck('login_200', login.res.status === 200 && login.body?.ok === true, { status: login.res.status });
+      addCheck('login_csrf_returned', typeof csrfToken === 'string' && csrfToken.length > 10);
+      addCheck('session_cookie_set', jar.has('akalynth_session'));
+      addCheck('csrf_cookie_set', jar.has('akalynth_csrf'));
+
+      const me = await request('GET', `${args.apiBase}/v1/accounts/me`, undefined, { name: 'GET accounts/me' });
+      addCheck('me_200', me.res.status === 200 && me.body?.ok === true, { status: me.res.status });
+      addCheck('real_account_email_verified', me.body?.account?.email_verified === true);
+
+      const list = await request('GET', `${args.apiBase}/v1/characters`, undefined, { name: 'GET characters(real)' });
+      const characters = Array.isArray(list.body?.characters) ? list.body.characters : [];
+      addCheck('characters_list_200', list.res.status === 200 && Array.isArray(list.body?.characters), { status: list.res.status });
+      addCheck('characters_list_non_empty', characters.length > 0, { character_count: characters.length });
+      character = args.characterName
+        ? characters.find((entry) => entry.name === args.characterName)
+        : characters[0];
+      addCheck('real_account_character_selected', Boolean(character?.character_id), {
+        requested_character_name: args.characterName || null,
+        character_count: characters.length,
+      });
+
+      accountReceipt = {
+        email_domain: email.includes('@') ? email.split('@').pop() : null,
+        email_sha256_prefix: hashPrefix(email.trim().toLowerCase()),
+        account_id_prefix: redactId(me.body.account?.account_id),
+        status: me.body.account?.status ?? null,
+        email_verified: Boolean(me.body.account?.email_verified),
+      };
+    } else {
+      const suffix = randomSuffix();
+      const handle = `Smoke${suffix}`.slice(0, 24);
+      const email = `akalynth-smoke-${suffix}@example.invalid`;
+      const password = randomBytes(24).toString('base64url');
+      const charName = `Smk${suffix}`.slice(0, 18);
+
+      const reg = await request('POST', `${args.apiBase}/v1/accounts/register`, { handle, email, password }, { name: 'POST accounts/register' });
+      addCheck('register_201', reg.res.status === 201, { status: reg.res.status });
+      devTokenPresent = typeof reg.body?.dev_verification_token === 'string' && reg.body.dev_verification_token.length > 0;
+      if (devTokenPresent) {
+        const ver = await request('POST', `${args.apiBase}/v1/accounts/verify-email`, { token: reg.body.dev_verification_token }, { name: 'POST accounts/verify-email' });
+        addCheck('verify_email_200_when_dev_token_present', ver.res.status === 200 && ver.body?.ok === true, { status: ver.res.status });
+      }
+
+      const login = await request('POST', `${args.apiBase}/v1/accounts/login`, { email, password }, { name: 'POST accounts/login' });
+      csrfToken = login.body?.csrf_token || '';
+      addCheck('login_200', login.res.status === 200 && login.body?.ok === true, { status: login.res.status });
+      addCheck('login_csrf_returned', typeof csrfToken === 'string' && csrfToken.length > 10);
+      addCheck('session_cookie_set', jar.has('akalynth_session'));
+      addCheck('csrf_cookie_set', jar.has('akalynth_csrf'));
+
+      const me = await request('GET', `${args.apiBase}/v1/accounts/me`, undefined, { name: 'GET accounts/me' });
+      addCheck('me_200', me.res.status === 200 && me.body?.ok === true, { status: me.res.status });
+
+      const resend = await request('POST', `${args.apiBase}/v1/accounts/verify/resend`, undefined, { name: 'POST accounts/verify/resend', headers: { 'x-csrf-token': csrfToken } });
+      addCheck('resend_verification_endpoint_reachable', resend.res.status === 200 && resend.body?.ok === true, { status: resend.res.status });
+
+      const outfits = await request('GET', `${args.apiBase}/v1/outfits?sex=male`, undefined, { name: 'GET outfits?sex=male' });
+      const outfit = outfits.body?.outfits?.[0];
+      addCheck('outfits_available', outfits.res.status === 200 && typeof outfit?.outfit_id === 'string', { status: outfits.res.status });
+
+      const beforeChars = await request('GET', `${args.apiBase}/v1/characters`, undefined, { name: 'GET characters(before)' });
+      addCheck('characters_before_200', beforeChars.res.status === 200 && Array.isArray(beforeChars.body?.characters), { status: beforeChars.res.status });
+
+      const create = await request('POST', `${args.apiBase}/v1/characters`, {
+        name: charName,
+        sex: 'male',
+        outfit_id: outfit.outfit_id,
+        world_id: 'rookguard',
+      }, { name: 'POST characters', headers: { 'x-csrf-token': csrfToken } });
+      addCheck('character_create_201', create.res.status === 201 && create.body?.ok === true, { status: create.res.status });
+      character = create.body.character;
+
+      const list = await request('GET', `${args.apiBase}/v1/characters`, undefined, { name: 'GET characters(after)' });
+      addCheck('characters_after_contains_created', list.res.status === 200 && Array.isArray(list.body?.characters) && list.body.characters.some((entry) => entry.character_id === character.character_id));
+
+      accountReceipt = {
+        handle,
+        email_domain: email.split('@')[1],
+        account_id_prefix: redactId(me.body.account?.account_id),
+        status: me.body.account?.status ?? null,
+        email_verified: Boolean(me.body.account?.email_verified),
+        dev_verification_token_present: devTokenPresent,
+      };
     }
 
-    const login = await request('POST', `${args.apiBase}/v1/accounts/login`, { email, password }, { name: 'POST accounts/login' });
-    const csrfToken = login.body?.csrf_token || '';
-    addCheck('login_200', login.res.status === 200 && login.body?.ok === true, { status: login.res.status });
-    addCheck('login_csrf_returned', typeof csrfToken === 'string' && csrfToken.length > 10);
-    addCheck('session_cookie_set', jar.has('akalynth_session'));
-    addCheck('csrf_cookie_set', jar.has('akalynth_csrf'));
-
-    const me = await request('GET', `${args.apiBase}/v1/accounts/me`, undefined, { name: 'GET accounts/me' });
-    addCheck('me_200', me.res.status === 200 && me.body?.ok === true, { status: me.res.status });
-
-    const resend = await request('POST', `${args.apiBase}/v1/accounts/verify/resend`, undefined, { name: 'POST accounts/verify/resend', headers: { 'x-csrf-token': csrfToken } });
-    addCheck('resend_verification_endpoint_reachable', resend.res.status === 200 && resend.body?.ok === true, { status: resend.res.status });
-
-    const outfits = await request('GET', `${args.apiBase}/v1/outfits?sex=male`, undefined, { name: 'GET outfits?sex=male' });
-    const outfit = outfits.body?.outfits?.[0];
-    addCheck('outfits_available', outfits.res.status === 200 && typeof outfit?.outfit_id === 'string', { status: outfits.res.status });
-
-    const beforeChars = await request('GET', `${args.apiBase}/v1/characters`, undefined, { name: 'GET characters(before)' });
-    addCheck('characters_before_200', beforeChars.res.status === 200 && Array.isArray(beforeChars.body?.characters), { status: beforeChars.res.status });
-
-    const create = await request('POST', `${args.apiBase}/v1/characters`, {
-      name: charName,
-      sex: 'male',
-      outfit_id: outfit.outfit_id,
-      world_id: 'rookguard',
-    }, { name: 'POST characters', headers: { 'x-csrf-token': csrfToken } });
-    addCheck('character_create_201', create.res.status === 201 && create.body?.ok === true, { status: create.res.status });
-    const character = create.body.character;
-
-    const list = await request('GET', `${args.apiBase}/v1/characters`, undefined, { name: 'GET characters(after)' });
-    addCheck('characters_after_contains_created', list.res.status === 200 && Array.isArray(list.body?.characters) && list.body.characters.some((entry) => entry.character_id === character.character_id));
-
     const select = await request('POST', `${args.apiBase}/v1/characters/select`, { character_id: character.character_id }, { name: 'POST characters/select', headers: { 'x-csrf-token': csrfToken } });
-    const playToken = select.body?.token || '';
+    playToken = select.body?.token || '';
     addCheck('character_select_200', select.res.status === 200 && select.body?.ok === true, { status: select.res.status });
     addCheck('play_token_issued', typeof playToken === 'string' && playToken.length > 20, { expires_at_present: typeof select.body?.expires_at === 'number' });
 
@@ -394,25 +466,25 @@ async function main() {
 
     report = {
       receipt: 'AKALYNTH_BETA_ACCOUNT_PLAY_SMOKE_V2',
+      mode,
       status: 'pass',
       started_at: startedAt,
       finished_at: new Date().toISOString(),
       live_targets: { account_url: new URL('/account.html', args.webBase).href, play_url: new URL('/play/', args.webBase).href, api_base: args.apiBase, websocket: args.wsUrl },
-      disposable_account: {
-        handle,
-        email_domain: email.split('@')[1],
-        account_id_prefix: redactId(me.body.account?.account_id),
-        status: me.body.account?.status ?? null,
-        email_verified: Boolean(me.body.account?.email_verified),
-        dev_verification_token_present: devTokenPresent,
-      },
-      created_character: {
+      ...(args.realAccount ? { real_account: accountReceipt } : { disposable_account: accountReceipt }),
+      ...(args.realAccount ? { selected_character: {
         character_id_prefix: redactId(character.character_id),
         name: character.name,
         world_id: character.world_id,
         sex: character.sex,
         outfit_id: character.outfit_id,
-      },
+      } } : { created_character: {
+        character_id_prefix: redactId(character.character_id),
+        name: character.name,
+        world_id: character.world_id,
+        sex: character.sex,
+        outfit_id: character.outfit_id,
+      } }),
       browser,
       token_custody: {
         password_saved: false,
@@ -428,6 +500,7 @@ async function main() {
   } catch (error) {
     report = {
       receipt: 'AKALYNTH_BETA_ACCOUNT_PLAY_SMOKE_V2',
+      mode: args.realAccount ? 'real-account' : 'disposable-account',
       status: 'fail',
       started_at: startedAt,
       finished_at: new Date().toISOString(),

@@ -82,14 +82,17 @@ Scripts should be idempotent and documented.
   the beta account page, account-character token handoff, `/play/` identity
   bootstrap, Android beta portal URL, and public `200` checks. Run:
   `npm run verify:beta-account-play-portal`.
-- `scripts/smoke-beta-account-play.mjs`: Live beta account/play smoke. It
-  creates a disposable account and character, verifies API create/select,
-  token WebSocket login, and by default uses Playwright to prove that
+- `scripts/smoke-beta-account-play.mjs`: Live beta account/play smoke. By
+  default it creates a disposable account and character, verifies API
+  create/select, token WebSocket login, and uses Playwright to prove that
   `akalynth.identity.v1` in localStorage makes `/play/` send token login and
   reach `world_state`. Run `npm run smoke:beta-account-play`; use
-  `npm run smoke:beta-account-play:api` to skip the browser leg. The script
-  requires `--live` when called directly and writes a redacted receipt under
-  `.tmp/beta-account-play-smoke/` unless `--report` is supplied.
+  `npm run smoke:beta-account-play:api` to skip the browser leg. For an
+  existing beta account, set `AKALYNTH_BETA_SMOKE_EMAIL` and
+  `AKALYNTH_BETA_SMOKE_PASSWORD`, then run
+  `npm run smoke:beta-account-play:real -- --report <receipt.json>`. The
+  script requires `--live` when called directly and writes a redacted receipt
+  under `.tmp/beta-account-play-smoke/` unless `--report` is supplied.
 - Root `npm run verify:account-character`: focused account-character parity
   gate. Runs protocol sync, server account-character tests, server create/select play-token handoff and login projection proof, shared account-character HTTP type proof, server wallet/shop/work/property gameplay route proof, debug-client guard, debug-client gameplay wire-authority proof, Android account-character unit tests, Android account-character token login handoff proof, Android gameplay wire-authority protocol proof, and Android character UI compile.
 - Site `./scripts/verify-account-character-site.sh` in `akalynth-site`: focused
