@@ -1,7 +1,7 @@
 {
   "name": "baseline",
   "auto_tem": true,
-  "duration_ms": 5000,
+  "duration_ms": 10000,
   "events": [
     { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 200 },
     { "send": { "type": "move_intent", "direction": "east" }, "delay_ms": 200 },

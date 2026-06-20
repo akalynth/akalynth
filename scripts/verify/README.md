@@ -105,6 +105,6 @@ The process exits `0` when `ok` is `true` and `2` otherwise.
 `verify_mvp.sh` pins public feed delays to zero and uses explicit ports:
 
 - `PORT` and `TRINITY_PORT` (default `PORT+1`)
-- `TIMEOUT_SECONDS`, `DEATH_RESPAWN_DELAY_MS_OVERRIDE`
+- `AKALYNTH_WS_TIMEOUT_SECONDS`, `DEATH_RESPAWN_DELAY_MS_OVERRIDE`
 - `PUBLIC_RECEIPTS_DELAY_MS=0`, `PUBLIC_RECEIPTS_DELAY_PROFILE=default`, `PUBLIC_RECEIPTS_JITTER_MS=0`
 - `RUNESTONE_TEST_FORCE_FACE=shadow` for trinity

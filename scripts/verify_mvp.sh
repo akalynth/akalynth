@@ -16,7 +16,8 @@ HARNESS="$ROOT_DIR/scripts/verify/ws_harness.mjs"
 PORT="${PORT:-3100}"
 HTTP_URL="${HTTP_URL:-http://127.0.0.1:$PORT}"
 WS_URL="${WS_URL:-ws://127.0.0.1:$PORT}"
-TIMEOUT_SECONDS="${TIMEOUT_SECONDS:-12}"
+# Generic TIMEOUT_SECONDS is often set by CI runners; do not inherit it.
+AKALYNTH_WS_TIMEOUT_SECONDS="${AKALYNTH_WS_TIMEOUT_SECONDS:-20}"
 DEATH_TIMEOUT_SECONDS="${DEATH_TIMEOUT_SECONDS:-40}"
 DEATH_RESPAWN_DELAY_MS_OVERRIDE="${DEATH_RESPAWN_DELAY_MS_OVERRIDE:-300}"
 log() { echo -e "🧪 $*"; }
@@ -157,14 +158,14 @@ try_receipt() {
   return 1
 }
 run_ws_scenario() {
-  local scenario="$1" token="$2" timeout_s="${3:-$TIMEOUT_SECONDS}"
+  local scenario="$1" token="$2" timeout_s="${3:-$AKALYNTH_WS_TIMEOUT_SECONDS}"
   run_timeout "$timeout_s" node "$HARNESS" \
     --ws-url "$WS_URL" \
     --guest-token "$token" \
     --scenario "$SCENARIOS_DIR/$scenario.json" || true
 }
 run_ws_scenario_bg() {
-  local scenario="$1" token="$2" outfile="$3" timeout_s="${4:-$TIMEOUT_SECONDS}"
+  local scenario="$1" token="$2" outfile="$3" timeout_s="${4:-$AKALYNTH_WS_TIMEOUT_SECONDS}"
   local ready_file="${5:-}"
   rm -f "$outfile" "${outfile}.code"
   if [[ -n "$ready_file" ]]; then
@@ -196,7 +197,7 @@ wait_for_file() {
   die "$desc"
 }
 wait_ws_bg_ok() {
-  local label="$1" outfile="$2" timeout_s="${3:-$TIMEOUT_SECONDS}"
+  local label="$1" outfile="$2" timeout_s="${3:-$AKALYNTH_WS_TIMEOUT_SECONDS}"
   local deadline=$((SECONDS + timeout_s))
   while (( SECONDS < deadline )); do
     if [[ -f "${outfile}.code" ]]; then
@@ -219,7 +220,12 @@ assert_ws_ok() {
   if ! echo "$json" | jq -e '.ok == true' >/dev/null 2>&1; then
     local failures
     failures="$(echo "$json" | jq -r '.failures[]?' 2>/dev/null || true)"
-    die "$label failed: ${failures:-unknown_failure}"
+    if [[ -z "$failures" ]]; then
+      local preview
+      preview="$(printf '%s' "$json" | tr '\n' ' ' | head -c 240)"
+      die "$label failed: unknown_failure (json_len=${#json}; preview=${preview:-<empty>})"
+    fi
+    die "$label failed: $failures"
   fi
 }
 mint_guest() {
@@ -440,7 +446,7 @@ poll_json "Invalid JSON from /v1/world/Azura/state" \
   "$HTTP_URL/v1/world/Azura/state" '.ok == true' >/dev/null
 log "Baseline WS flow..."
 read -r PLAYER_ID GUEST_TOKEN <<<"$(mint_guest)"
-BASELINE_JSON="$(run_ws_scenario baseline "$GUEST_TOKEN")"
+BASELINE_JSON="$(run_ws_scenario baseline "$GUEST_TOKEN" "$AKALYNTH_WS_TIMEOUT_SECONDS")"
 assert_ws_ok "baseline" "$BASELINE_JSON"
 wait_for_receipt "session_guest_minted" "$PLAYER_ID" '(.receipts | length) > 0' >/dev/null
 if ! try_receipt "tem_challenge_issued" "$PLAYER_ID" \
