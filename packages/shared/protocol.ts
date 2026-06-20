@@ -311,6 +311,20 @@ export interface CancelHouseAuctionMessage extends BaseMessage {
   property_id: string;
 }
 
+// ============================================================================
+// Chill-Zone Gather v0 (Step 2) — Client → Server intents
+// ============================================================================
+
+export interface GatherIntentMessage extends BaseMessage {
+  type: 'gather_intent';
+  node_id: string;
+}
+
+export interface DeliverIntentMessage extends BaseMessage {
+  type: 'deliver_intent';
+  station_id: string;
+}
+
 export type ClientMessage =
   | ConnectMessage
   | LoginMessage
@@ -347,7 +361,9 @@ export type ClientMessage =
   | GetPropertyLedgerMessage
   | OpenHouseAuctionMessage
   | PlaceHouseBidMessage
-  | CancelHouseAuctionMessage;
+  | CancelHouseAuctionMessage
+  | GatherIntentMessage
+  | DeliverIntentMessage;
 
 // ============================================================================
 // Server → Client Messages
@@ -914,6 +930,80 @@ export interface HouseAuctionSettledMessage extends BaseMessage {
   sale_count: number;
 }
 
+// ============================================================================
+// Chill-Zone Gather v0 (Step 2) — Server → Client
+// ============================================================================
+
+export type GatherNodeState = 'available' | 'depleting' | 'depleted';
+
+export interface GatherNodePublic {
+  node_id: string;
+  zone: string;
+  x: number;
+  y: number;
+  state: GatherNodeState;
+  respawn_at_ms: number | null;
+}
+
+export interface GatherStationPublic {
+  station_id: string;
+  zone: string;
+  x: number;
+  y: number;
+}
+
+// Lowercase mirror of the gather state-machine reject codes
+// (apps/server/src/world/gather.ts RejectCode).
+export type GatherRejectReason =
+  | 'unknown_zone'
+  | 'node_not_found'
+  | 'node_not_available'
+  | 'out_of_range'
+  | 'already_gathering'
+  | 'held_slot_full'
+  | 'held_slot_empty'
+  | 'station_not_found';
+
+export interface GatherSnapshotMessage extends BaseMessage {
+  type: 'gather_snapshot';
+  nodes: GatherNodePublic[];
+  stations: GatherStationPublic[];
+}
+
+export interface GatherNodeUpdateMessage extends BaseMessage {
+  type: 'gather_node_update';
+  node: GatherNodePublic;
+}
+
+export interface GatherResultMessage extends BaseMessage {
+  type: 'gather_result';
+  ok: boolean;
+  node_id?: string;
+  complete_at_ms?: number;
+  reason?: GatherRejectReason;
+}
+
+export interface GatherProgressMessage extends BaseMessage {
+  type: 'gather_progress';
+  node_id: string;
+  progress_pct: number;
+}
+
+export interface GatherCompletedMessage extends BaseMessage {
+  type: 'gather_completed';
+  node_id: string;
+  item_type: string;
+}
+
+export interface DeliverResultMessage extends BaseMessage {
+  type: 'deliver_result';
+  ok: boolean;
+  station_id?: string;
+  item_type?: string;
+  source_node_id?: string;
+  reason?: GatherRejectReason;
+}
+
 export type ServerMessage =
   | WelcomeMessage
   | LoginAckMessage
@@ -958,7 +1048,13 @@ export type ServerMessage =
   | PropertyResultMessage
   | PropertyLedgerMessage
   | PropertyAuctionStateMessage
-  | HouseAuctionSettledMessage;
+  | HouseAuctionSettledMessage
+  | GatherSnapshotMessage
+  | GatherNodeUpdateMessage
+  | GatherResultMessage
+  | GatherProgressMessage
+  | GatherCompletedMessage
+  | DeliverResultMessage;
 
 // ============================================================================
 // Message Factories
@@ -993,6 +1089,58 @@ export const ServerMessages = {
     map,
     player,
     nearby_players,
+  }),
+
+  // Chill-Zone Gather v0 (Step 2)
+  gatherSnapshot: (nodes: GatherNodePublic[], stations: GatherStationPublic[]): GatherSnapshotMessage => ({
+    type: 'gather_snapshot',
+    nodes,
+    stations,
+  }),
+
+  gatherNodeUpdate: (node: GatherNodePublic): GatherNodeUpdateMessage => ({
+    type: 'gather_node_update',
+    node,
+  }),
+
+  gatherResult: (
+    ok: boolean,
+    node_id?: string,
+    complete_at_ms?: number,
+    reason?: GatherRejectReason
+  ): GatherResultMessage => ({
+    type: 'gather_result',
+    ok,
+    node_id,
+    complete_at_ms,
+    reason,
+  }),
+
+  gatherProgress: (node_id: string, progress_pct: number): GatherProgressMessage => ({
+    type: 'gather_progress',
+    node_id,
+    progress_pct,
+  }),
+
+  gatherCompleted: (node_id: string, item_type: string): GatherCompletedMessage => ({
+    type: 'gather_completed',
+    node_id,
+    item_type,
+  }),
+
+  deliverResult: (
+    ok: boolean,
+    station_id?: string,
+    item_type?: string,
+    source_node_id?: string,
+    reason?: GatherRejectReason
+  ): DeliverResultMessage => ({
+    type: 'deliver_result',
+    ok,
+    station_id,
+    item_type,
+    source_node_id,
+    reason,
   }),
 
   moveResult: (ok: boolean, x: number, y: number, reason: string | null = null, map?: MapName): MoveResultMessage => ({
@@ -1699,6 +1847,17 @@ export function parseClientMessage(data: unknown): ClientMessage | null {
     case 'cancel_house_auction': {
       if (typeof msg.property_id !== 'string') return null;
       return { type: 'cancel_house_auction', property_id: msg.property_id };
+    }
+
+    // Chill-Zone Gather v0 (Step 2)
+    case 'gather_intent': {
+      if (typeof msg.node_id !== 'string') return null;
+      return { type: 'gather_intent', node_id: msg.node_id };
+    }
+
+    case 'deliver_intent': {
+      if (typeof msg.station_id !== 'string') return null;
+      return { type: 'deliver_intent', station_id: msg.station_id };
     }
 
     default:

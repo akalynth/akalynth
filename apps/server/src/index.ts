@@ -7,7 +7,7 @@ import type { Duplex } from 'node:stream';
 import { WebSocketServer, WebSocket } from 'ws';
 import { createHash, randomUUID } from 'node:crypto';
 
-import type { ClientMessage, LostItemSummary, ServerMessage, PropertyPublic, PropertyOwnerHistoryEntry } from '../../../packages/shared/protocol.js';
+import type { ClientMessage, LostItemSummary, ServerMessage, PropertyPublic, PropertyOwnerHistoryEntry, GatherRejectReason, GatherNodePublic } from '../../../packages/shared/protocol.js';
 import { PROTOCOL_VERSION, ServerMessages, parseClientMessage } from '../../../packages/shared/protocol.js';
 import type { Player, TutorialProgress } from '../../../packages/shared/types.js';
 import { loadBuildInfo } from './build-info.js';
@@ -97,6 +97,22 @@ import { createAntiCheatRuntime, hydrateAntiCheatRuntime, onChat, onMoveApplied,
 import { createAntiCheatPriorStore } from './anticheat/priors.js';
 import { applyThrottle, checkTemTimeout, handleTemResponse, issueTemChallenge, isThrottled } from './anticheat/tem.js';
 import { loadSharedMap, createWorldState, toPublicPlayer } from './world/state.js';
+import {
+  createGatherSystem,
+  startGather,
+  deliver,
+  tickGather,
+  onPlayerLeave,
+  getPlayerGather,
+  gatherProgressPct,
+  isGatherEnabled,
+  DEFAULT_GATHER_CONFIG,
+  AZURA_GATHER_NODES,
+  AZURA_STATIONS,
+  DELIVERY_RECORDED_ACTION,
+  type GatherSystem,
+  type GatherNode,
+} from './world/gather.js';
 import { indexFor, tryMove } from './world/movement.js';
 import {
   registerMapPlaces,
@@ -1798,6 +1814,12 @@ if (hydrateWitnessMothBloomRuntime(witnessMothBloom, persist.getWorldEvent(WITNE
 registerMapPlaces(worlds.Rookguard.map, 'Rookguard');
 registerMapPlaces(worlds.Azura.map, 'Azura');
 
+// Chill-Zone Gather v0 (Step 2): server-authoritative gather system for the Azura
+// chill zone. Null (inert) unless CHILL_ZONE_GATHER_ENABLED is set (default off).
+const gatherSystem: GatherSystem | null = isGatherEnabled()
+  ? createGatherSystem(DEFAULT_GATHER_CONFIG, AZURA_GATHER_NODES, AZURA_STATIONS)
+  : null;
+
 // Load item system state from SQLite (Phase 2) - after worlds is declared
 loadInventories();
 loadWorldItems();
@@ -2801,6 +2823,17 @@ function broadcastToMap(map: 'Rookguard' | 'Azura', message: ServerMessage, excl
   }
 }
 
+function gatherNodePublic(node: GatherNode): GatherNodePublic {
+  return {
+    node_id: node.node_id,
+    zone: node.zone,
+    x: node.x,
+    y: node.y,
+    state: node.state,
+    respawn_at_ms: node.respawn_at_ms,
+  };
+}
+
 function applyRespawnNow(s: Session, now: number) {
   if (!s.player) return;
   const w = worldFor(s);
@@ -3052,6 +3085,18 @@ wss.on('connection', (ws, req: IncomingMessage) => {
     // Work contract failure on disconnect
     if (s.player && getActiveContract(s.player.id)) {
       failContract(s.player.id, 'disconnect', (r) => audit.write(r));
+    }
+
+    // Chill-Zone Gather v0 (Step 2): release any in-progress gather + held slot.
+    if (gatherSystem && s.player) {
+      const g = getPlayerGather(gatherSystem, s.player.id);
+      onPlayerLeave(gatherSystem, s.player.id);
+      if (g.state === 'gathering') {
+        const node = gatherSystem.zones.get(g.zone)?.nodes.get(g.node_id);
+        if (node) {
+          broadcastToMap(g.zone as 'Rookguard' | 'Azura', ServerMessages.gatherNodeUpdate(gatherNodePublic(node)));
+        }
+      }
     }
 
     // Presence cleanup on disconnect
@@ -3481,6 +3526,17 @@ function processSessionQueue(s: Session, now: number) {
         // Send property snapshot (Property Ownership v0) so the client can
         // render ownership/market state immediately.
         send(s.ws, ServerMessages.propertySnapshot(getAllProperties().map(propertyToPublic)));
+
+        // Chill-Zone Gather v0 (Step 2): send the node registry for the current zone.
+        if (gatherSystem) {
+          const gz = gatherSystem.zones.get(s.currentMap);
+          if (gz) {
+            send(s.ws, ServerMessages.gatherSnapshot(
+              Array.from(gz.nodes.values()).map(gatherNodePublic),
+              Array.from(gz.stations.values())
+            ));
+          }
+        }
 
         broadcastToMap(s.currentMap, ServerMessages.playerJoined(toPublicPlayer(s.player!)), s.connId);
 
@@ -4150,6 +4206,16 @@ function processSessionQueue(s: Session, now: number) {
                 }
 
                 send(s.ws, ServerMessages.worldState(s.currentMap, toPublicSessionPlayer(s, true), nearbyAzura));
+                // Chill-Zone Gather v0 (Step 2): send node + station registry on gate-transfer into Azura.
+                if (gatherSystem) {
+                  const azuraGz = gatherSystem.zones.get('Azura');
+                  if (azuraGz) {
+                    send(s.ws, ServerMessages.gatherSnapshot(
+                      Array.from(azuraGz.nodes.values()).map(gatherNodePublic),
+                      Array.from(azuraGz.stations.values())
+                    ));
+                  }
+                }
                 broadcastToMap('Azura', ServerMessages.playerJoined(toPublicPlayer(s.player!)), s.connId);
 
                 finalX = s.player!.x;
@@ -5365,6 +5431,76 @@ function processSessionQueue(s: Session, now: number) {
       }
 
       // ========================================================================
+      // Chill-Zone Gather v0 (Step 2)
+      // ========================================================================
+
+      case 'gather_intent': {
+        if (!requireAuth(s) || !s.player) break;
+        if (!gatherSystem) {
+          send(s.ws, ServerMessages.gatherResult(false, undefined, undefined, 'unknown_zone'));
+          break;
+        }
+        const res = startGather(
+          gatherSystem,
+          s.player.id,
+          s.currentMap,
+          msg.node_id,
+          s.player.x,
+          s.player.y,
+          Date.now()
+        );
+        if (res.ok) {
+          send(s.ws, ServerMessages.gatherResult(true, res.node_id, res.complete_at_ms));
+          const node = gatherSystem.zones.get(s.currentMap)?.nodes.get(res.node_id);
+          if (node) {
+            broadcastToMap(s.currentMap, ServerMessages.gatherNodeUpdate(gatherNodePublic(node)));
+          }
+        } else {
+          send(
+            s.ws,
+            ServerMessages.gatherResult(false, undefined, undefined, res.reason.toLowerCase() as GatherRejectReason)
+          );
+        }
+        break;
+      }
+
+      case 'deliver_intent': {
+        if (!requireAuth(s) || !s.player) break;
+        if (!gatherSystem) {
+          send(s.ws, ServerMessages.deliverResult(false, undefined, undefined, undefined, 'station_not_found'));
+          break;
+        }
+        const res = deliver(gatherSystem, s.player.id, s.currentMap, msg.station_id, s.player.x, s.player.y);
+        if (res.ok) {
+          // The one durable receipt for the loop (gather state is ephemeral). No reward credited (step 4).
+          audit.write({
+            player_id: s.player.id,
+            action: DELIVERY_RECORDED_ACTION,
+            inputs: {
+              item_type: res.record.item_type,
+              station_id: res.record.station_id,
+              source_node_id: res.record.source_node_id,
+              zone: res.record.zone,
+              x: s.player.x,
+              y: s.player.y,
+              reward: null,
+            },
+            result: 'ok',
+          });
+          send(
+            s.ws,
+            ServerMessages.deliverResult(true, res.record.station_id, res.record.item_type, res.record.source_node_id)
+          );
+        } else {
+          send(
+            s.ws,
+            ServerMessages.deliverResult(false, undefined, undefined, undefined, res.reason.toLowerCase() as GatherRejectReason)
+          );
+        }
+        break;
+      }
+
+      // ========================================================================
       // Property Ownership v0 (House Market)
       // Handlers are fully synchronous: per-session sequential processing +
       // synchronous audit.write make the read→validate→emit sequence atomic on
@@ -5995,6 +6131,33 @@ setInterval(() => {
     // Presence tick (linger + co-presence)
     if (s.inWorld && s.player) {
       onPresenceTick(s.player.id, now, (r) => audit.write(r));
+    }
+  }
+  // Chill-Zone Gather v0 (Step 2): advance gather clocks; push progress + completions.
+  if (gatherSystem) {
+    const gatherEffects = tickGather(gatherSystem, now);
+    const completedByPlayer = new Map<string, { node_id: string; item_type: string }>();
+    for (const c of gatherEffects.completed) {
+      completedByPlayer.set(c.player_id, { node_id: c.node_id, item_type: c.item_type });
+      const node = gatherSystem.zones.get(c.zone)?.nodes.get(c.node_id);
+      if (node) broadcastToMap(c.zone as 'Rookguard' | 'Azura', ServerMessages.gatherNodeUpdate(gatherNodePublic(node)));
+    }
+    for (const r of gatherEffects.respawned) {
+      const node = gatherSystem.zones.get(r.zone)?.nodes.get(r.node_id);
+      if (node) broadcastToMap(r.zone as 'Rookguard' | 'Azura', ServerMessages.gatherNodeUpdate(gatherNodePublic(node)));
+    }
+    for (const gs of sessions.values()) {
+      if (!gs.inWorld || !gs.player) continue;
+      const done = completedByPlayer.get(gs.player.id);
+      if (done) {
+        send(gs.ws, ServerMessages.gatherCompleted(done.node_id, done.item_type));
+        continue;
+      }
+      const g = getPlayerGather(gatherSystem, gs.player.id);
+      if (g.state === 'gathering') {
+        const pct = gatherProgressPct(gatherSystem, gs.player.id, now);
+        if (pct !== null) send(gs.ws, ServerMessages.gatherProgress(g.node_id, pct));
+      }
     }
   }
   // Close→settle due auctions (resale). Settlement truth is the emitted receipt.

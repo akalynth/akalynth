@@ -319,17 +319,18 @@ export function isGatherEnabled(env: Record<string, string | undefined> = proces
 }
 
 /**
- * PLACEHOLDER static placement for the Azura chill zone. Coordinates MUST be validated
- * against the Azura map's walkable tiles before the flag is enabled (step 2 / content-designer).
- * Inert while CHILL_ZONE_GATHER_ENABLED is off.
+ * Static placement for the Azura chill zone, validated against azura.json walkable tiles
+ * around the Azura spawn (32,32). Node tiles are interaction targets — the player stands
+ * adjacent (Manhattan ≤ interactRadius); the curation stand is the delivery point. Inert
+ * while CHILL_ZONE_GATHER_ENABLED is off. Final lore naming owned by map-and-lore-builder.
  */
 export const AZURA_GATHER_NODES: readonly GatherNodeDef[] = [
-  { node_id: 'azura_ley_mote_1', zone: 'Azura', x: 8, y: 8, item_type: 'ley_mote' },
-  { node_id: 'azura_ley_mote_2', zone: 'Azura', x: 10, y: 8, item_type: 'ley_mote' },
-  { node_id: 'azura_ley_mote_3', zone: 'Azura', x: 8, y: 10, item_type: 'ley_mote' },
-  { node_id: 'azura_ley_mote_4', zone: 'Azura', x: 10, y: 10, item_type: 'ley_mote' },
+  { node_id: 'azura_ley_mote_e', zone: 'Azura', x: 34, y: 32, item_type: 'ley_mote' },
+  { node_id: 'azura_ley_mote_s', zone: 'Azura', x: 32, y: 34, item_type: 'ley_mote' },
+  { node_id: 'azura_ley_mote_se', zone: 'Azura', x: 34, y: 34, item_type: 'ley_mote' },
+  { node_id: 'azura_ley_mote_n', zone: 'Azura', x: 32, y: 30, item_type: 'ley_mote' },
 ];
 
 export const AZURA_STATIONS: readonly StationDef[] = [
-  { station_id: 'azura_curation_stand', zone: 'Azura', x: 9, y: 9 },
+  { station_id: 'azura_curation_stand', zone: 'Azura', x: 31, y: 32 },
 ];
