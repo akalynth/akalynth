@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { createHash, randomBytes } from 'node:crypto';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { access } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -18,12 +18,14 @@ const defaults = {
   wsUrl: 'wss://beta-api.akalynth.com',
   reportPath: path.resolve('.tmp', 'beta-account-play-smoke', stamp(), 'receipt.json'),
   browser: true,
+  portalUi: true,
   live: false,
   timeoutMs: 15000,
   realAccount: false,
   emailEnv: 'AKALYNTH_BETA_SMOKE_EMAIL',
   passwordEnv: 'AKALYNTH_BETA_SMOKE_PASSWORD',
   characterName: '',
+  accountHtmlFile: '',
 };
 
 function parseArgs(argv) {
@@ -44,16 +46,18 @@ function parseArgs(argv) {
     else if (arg === '--chrome') args.chrome = readValue();
     else if (arg === '--timeout-ms') args.timeoutMs = Number(readValue());
     else if (arg === '--no-browser') args.browser = false;
+    else if (arg === '--no-portal-ui') args.portalUi = false;
     else if (arg === '--real-account') args.realAccount = true;
     else if (arg === '--email-env') args.emailEnv = readValue();
     else if (arg === '--password-env') args.passwordEnv = readValue();
     else if (arg === '--character-name') args.characterName = readValue();
+    else if (arg === '--account-html-file') args.accountHtmlFile = path.resolve(readValue());
     else if (arg === '--help') {
       console.log([
         'Usage: node scripts/smoke-beta-account-play.mjs --live [options]',
         '',
         'Creates a disposable beta account + character, selects it, verifies token login,',
-        'and by default proves /play/ autoconnects from localStorage with Playwright.',
+        'and by default proves account.html login/select plus /play/ autoconnect with Playwright.',
         '',
         'Options:',
         '  --live              Required acknowledgement: this mutates beta account/character state.',
@@ -63,11 +67,13 @@ function parseArgs(argv) {
         '  --report <file>     JSON receipt path. Default: .tmp/beta-account-play-smoke/<stamp>/receipt.json',
         '  --chrome <file>     Chrome/Chromium executable for Playwright.',
         '  --timeout-ms <n>    Browser/WS timeout. Default: 15000',
-        '  --no-browser        Skip the Playwright localStorage autoconnect proof.',
+        '  --no-browser        Skip Playwright browser proofs.',
+        '  --no-portal-ui      Skip the Playwright account.html login/select proof.',
         '  --real-account      Use an existing verified account instead of creating a disposable one.',
         '  --email-env <name>  Env var for real-account email. Default: AKALYNTH_BETA_SMOKE_EMAIL',
         '  --password-env <name> Env var for real-account password. Default: AKALYNTH_BETA_SMOKE_PASSWORD',
         '  --character-name <name> Select this real-account character name. Default: first listed character.',
+        '  --account-html-file <file> Serve this account.html in the browser proof without publishing beta.',
       ].join('\n'));
       process.exit(0);
     } else {
@@ -98,6 +104,7 @@ function bodySummary(body) {
   const summary = { ok: body.ok ?? null };
   if (typeof body.error === 'string') summary.error = body.error;
   if (typeof body.message === 'string') summary.message = body.message;
+  if (typeof body.retry_after_sec === 'number') summary.retry_after_sec = body.retry_after_sec;
   summary.keys = Object.keys(body).filter((key) => !/token|password|secret|cookie/i.test(key)).sort();
   if (Array.isArray(body.characters)) summary.character_count = body.characters.length;
   if (Array.isArray(body.outfits)) summary.outfit_count = body.outfits.length;
@@ -252,6 +259,167 @@ async function playwrightLocalStorageSmoke(args, identity, expectedName) {
   }
 }
 
+async function playwrightPortalUiSmoke(args, credentials, expectedName) {
+  const { chromium } = await import('playwright-core');
+  const chrome = await findChrome(args.chrome);
+  const browser = await chromium.launch({
+    executablePath: chrome,
+    headless: true,
+    args: ['--no-sandbox'],
+  });
+  const frames = [];
+  const apiResponses = [];
+  const consoleMessages = [];
+  const pageErrors = [];
+  try {
+    const context = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+      ignoreHTTPSErrors: false,
+    });
+    if (args.accountHtmlFile) {
+      const accountHtml = readFileSync(args.accountHtmlFile, 'utf8');
+      await context.route('**/account.html', async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'text/html; charset=utf-8',
+          body: accountHtml,
+        });
+      });
+    }
+    const page = await context.newPage();
+    page.on('console', (msg) => {
+      consoleMessages.push({ type: msg.type(), text: msg.text().slice(0, 240) });
+    });
+    page.on('pageerror', (error) => {
+      pageErrors.push(error.message.slice(0, 240));
+    });
+    page.on('response', async (response) => {
+      const url = response.url();
+      if (!url.includes('/v1/')) return;
+      let parsed = null;
+      try {
+        const text = await response.text();
+        parsed = text ? JSON.parse(text) : null;
+      } catch {}
+      apiResponses.push({
+        method: response.request().method(),
+        path: new URL(url).pathname,
+        status: response.status(),
+        ok: response.ok(),
+        body: bodySummary(parsed),
+      });
+    });
+    page.on('websocket', (ws) => {
+      ws.on('framesent', (event) => {
+        const frame = sanitizeFrame(event.payload, 'sent');
+        if (frame) frames.push(frame);
+      });
+      ws.on('framereceived', (event) => {
+        const frame = sanitizeFrame(event.payload, 'received');
+        if (frame) frames.push(frame);
+      });
+    });
+
+    await page.goto(new URL('/account.html', args.webBase).href, { waitUntil: 'domcontentloaded', timeout: args.timeoutMs });
+    await page.waitForSelector('#view-login.active', { timeout: args.timeoutMs });
+    await page.fill('#email', credentials.email);
+    await page.fill('#password', credentials.password);
+    await page.click('#login-btn');
+    await page.waitForSelector('#view-characters.active', { timeout: args.timeoutMs });
+    await page.waitForSelector('#char-list .play-btn', { timeout: args.timeoutMs });
+
+    const rows = page.locator('.char-row');
+    const characterRows = await rows.count();
+    const selectedRow = rows.filter({ hasText: expectedName }).first();
+    await selectedRow.waitFor({ state: 'visible', timeout: args.timeoutMs });
+    await selectedRow.locator('.play-btn').click();
+
+    let redirectError = null;
+    try {
+      await page.waitForURL('**/play/', { timeout: args.timeoutMs, waitUntil: 'domcontentloaded' });
+    } catch (error) {
+      redirectError = error instanceof Error ? error.message : String(error);
+    }
+    const identityRaw = await page.evaluate((key) => window.localStorage.getItem(key), IDENTITY_KEY);
+    let storedIdentity = null;
+    try {
+      storedIdentity = identityRaw ? JSON.parse(identityRaw) : null;
+    } catch {}
+    const localStorageIdentity = {
+      present: Boolean(storedIdentity),
+      name: typeof storedIdentity?.name === 'string' ? storedIdentity.name : null,
+      player_id_prefix: redactId(storedIdentity?.playerId),
+      token_present: typeof storedIdentity?.token === 'string' && storedIdentity.token.length > 0,
+      expires_at_present: typeof storedIdentity?.expiresAt === 'number',
+    };
+
+    if (redirectError) {
+      const charNotice = await page.locator('#char-notice').textContent({ timeout: 1000 }).catch(() => '');
+      const loginError = await page.locator('#login-error').textContent({ timeout: 1000 }).catch(() => '');
+      return {
+        ok: false,
+        chrome,
+        phase: 'play_redirect',
+        account_url: new URL('/account.html', args.webBase).href,
+        account_html_source: args.accountHtmlFile ? 'routed-local-source' : 'live',
+        account_html_file: args.accountHtmlFile || null,
+        final_url: page.url(),
+        character_rows: characterRows,
+        selected_character_name: expectedName,
+        connection_text: null,
+        hud_name: null,
+        expected_name: expectedName,
+        local_storage_identity: localStorageIdentity,
+        char_notice: charNotice?.trim() || null,
+        login_error: loginError?.trim() || null,
+        api_responses: apiResponses,
+        console_messages: consoleMessages,
+        page_errors: pageErrors,
+        error: redirectError,
+        frame_summary: frames,
+      };
+    }
+
+    await page.waitForSelector('.conn-pill.connected', { timeout: args.timeoutMs });
+    await page.waitForSelector('.map-canvas', { timeout: args.timeoutMs });
+    await waitFor(
+      () => frames.some((frame) => frame.direction === 'sent' && frame.type === 'login' && frame.token_present && !frame.guest_token_present),
+      args.timeoutMs,
+      'portal_ui_token_login_frame',
+    );
+    await waitFor(
+      () => frames.some((frame) => frame.direction === 'received' && frame.type === 'world_state'),
+      args.timeoutMs,
+      'portal_ui_world_state_frame',
+    );
+
+    const hudName = (await page.locator('.hud-card--identity strong').first().textContent({ timeout: args.timeoutMs }))?.trim() ?? '';
+    const connText = (await page.locator('.conn-pill.connected').first().textContent({ timeout: args.timeoutMs }))?.trim() ?? '';
+    const ok = hudName === expectedName;
+    return {
+      ok,
+      chrome,
+      account_url: new URL('/account.html', args.webBase).href,
+      account_html_source: args.accountHtmlFile ? 'routed-local-source' : 'live',
+      account_html_file: args.accountHtmlFile || null,
+      final_url: page.url(),
+      character_rows: characterRows,
+      selected_character_name: expectedName,
+      connection_text: connText,
+      hud_name: hudName,
+      expected_name: expectedName,
+      local_storage_identity: localStorageIdentity,
+      api_responses: apiResponses,
+      console_messages: consoleMessages,
+      page_errors: pageErrors,
+      error: ok ? null : `portal_ui_expected_character_name:${expectedName}:got:${hudName}`,
+      frame_summary: frames,
+    };
+  } finally {
+    await browser.close();
+  }
+}
+
 async function wsSmoke(wsUrl, token, timeoutMs) {
   return await new Promise((resolve, reject) => {
     const seen = [];
@@ -341,12 +509,14 @@ async function main() {
     let character;
     let playToken = '';
     let devTokenPresent = false;
+    let browserCredentials = null;
 
     if (args.realAccount) {
       const email = process.env[args.emailEnv] ?? '';
       const password = process.env[args.passwordEnv] ?? '';
       addCheck('real_account_email_env_present', email.length > 0, { env: args.emailEnv });
       addCheck('real_account_password_env_present', password.length > 0, { env: args.passwordEnv });
+      browserCredentials = { email, password };
 
       const login = await request('POST', `${args.apiBase}/v1/accounts/login`, { email, password }, { name: 'POST accounts/login(real)' });
       csrfToken = login.body?.csrf_token || '';
@@ -384,6 +554,7 @@ async function main() {
       const email = `akalynth-smoke-${suffix}@example.invalid`;
       const password = randomBytes(24).toString('base64url');
       const charName = `Smk${suffix}`.slice(0, 18);
+      browserCredentials = { email, password };
 
       const reg = await request('POST', `${args.apiBase}/v1/accounts/register`, { handle, email, password }, { name: 'POST accounts/register' });
       addCheck('register_201', reg.res.status === 201, { status: reg.res.status });
@@ -447,6 +618,7 @@ async function main() {
     const expiresAt = typeof select.body?.expires_at === 'number' ? select.body.expires_at : Date.now() + DEFAULT_PLAY_TOKEN_TTL_MS;
     const identity = { playerId: character.character_id, name: character.name, token: playToken, expiresAt };
     let browser = { status: 'skipped', reason: '--no-browser' };
+    let portalUi = { status: 'skipped', reason: args.browser ? '--no-portal-ui' : '--no-browser' };
     if (args.browser) {
       browser = await playwrightLocalStorageSmoke(args, identity, character.name);
       endpoints['Playwright localStorage /play/ autoconnect'] = {
@@ -459,6 +631,34 @@ async function main() {
       addCheck('playwright_localstorage_sent_token_login', browser.frame_summary.some((frame) => frame.direction === 'sent' && frame.type === 'login' && frame.token_present && !frame.guest_token_present));
       addCheck('playwright_localstorage_reached_world_state', browser.frame_summary.some((frame) => frame.direction === 'received' && frame.type === 'world_state'));
       addCheck('playwright_hud_shows_character_name', browser.hud_name === character.name, { hud_name: browser.hud_name });
+
+      if (args.portalUi) {
+        portalUi = await playwrightPortalUiSmoke(args, browserCredentials, character.name);
+        endpoints['Playwright account.html login/select/play'] = {
+          ok: portalUi.ok,
+          account_url: portalUi.account_url,
+          account_html_source: portalUi.account_html_source,
+          account_html_file: portalUi.account_html_file,
+          final_url: portalUi.final_url,
+          character_rows: portalUi.character_rows,
+          selected_character_name: portalUi.selected_character_name,
+          connection_text: portalUi.connection_text,
+          hud_name: portalUi.hud_name,
+          local_storage_identity: portalUi.local_storage_identity,
+          api_responses: portalUi.api_responses,
+          console_messages: portalUi.console_messages,
+          page_errors: portalUi.page_errors,
+          phase: portalUi.phase ?? 'play',
+          error: portalUi.error,
+          frame_summary: portalUi.frame_summary,
+        };
+        addCheck('playwright_portal_ui_reached_character_list', portalUi.character_rows > 0, { character_rows: portalUi.character_rows });
+        addCheck('playwright_portal_ui_saved_localstorage_identity', portalUi.local_storage_identity.present && portalUi.local_storage_identity.token_present);
+        addCheck('playwright_portal_ui_redirected_to_play', new URL(portalUi.final_url).pathname === '/play/', { final_url: portalUi.final_url });
+        addCheck('playwright_portal_ui_sent_token_login', portalUi.frame_summary.some((frame) => frame.direction === 'sent' && frame.type === 'login' && frame.token_present && !frame.guest_token_present));
+        addCheck('playwright_portal_ui_reached_world_state', portalUi.frame_summary.some((frame) => frame.direction === 'received' && frame.type === 'world_state'));
+        addCheck('playwright_portal_ui_hud_shows_character_name', portalUi.hud_name === character.name, { hud_name: portalUi.hud_name });
+      }
     }
 
     const logout = await request('POST', `${args.apiBase}/v1/accounts/logout`, undefined, { name: 'POST accounts/logout', headers: { 'x-csrf-token': csrfToken } });
@@ -486,6 +686,7 @@ async function main() {
         outfit_id: character.outfit_id,
       } }),
       browser,
+      portal_ui: portalUi,
       token_custody: {
         password_saved: false,
         session_cookie_saved: false,

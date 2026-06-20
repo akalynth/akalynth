@@ -207,12 +207,13 @@ const API = 'https://beta-api.akalynth.com';
 const IDENTITY_KEY = 'akalynth.identity.v1';
 const PLAY_PATH = '/play/';
 const DEFAULT_PLAY_TOKEN_TTL_MS = 15 * 60 * 1000;
+let sessionCsrfToken = '';
 
 // ── helpers ─────────────────────────────────────────────────────────────────
 
 function getCsrf() {
   const m = document.cookie.match(/(?:^|;\s*)akalynth_csrf=([^;]*)/);
-  return m ? decodeURIComponent(m[1]) : '';
+  return m ? decodeURIComponent(m[1]) : sessionCsrfToken;
 }
 
 async function api(method, path, body) {
@@ -355,6 +356,7 @@ async function createAndPlay() {
 
 async function signOut() {
   await api('POST', '/v1/accounts/logout');
+  sessionCsrfToken = '';
   localStorage.removeItem(IDENTITY_KEY);
   show('view-login');
 }
@@ -430,6 +432,7 @@ document.getElementById('login-btn').addEventListener('click', async () => {
   const { ok, data } = await api('POST', '/v1/accounts/login', { email, password });
   setBtn('login-btn', false, 'Sign in');
   if (!ok) { setError('login-error', data?.error ?? 'Login failed.'); return; }
+  if (typeof data.csrf_token === 'string' && data.csrf_token) sessionCsrfToken = data.csrf_token;
   await boot();
 });
 
