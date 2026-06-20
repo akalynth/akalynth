@@ -57,6 +57,18 @@ cd apps/server
 ALLOW_INSECURE_LOCAL=1 npm run dev
 ```
 
+### Optional: Chill-Zone Gather (Step 2 client loop)
+
+Enable the server gather lane, then enter **Azura** in the debug client. Nodes render on the
+map (green **M** = Ley Mote, blue **C** = Curation Stand); the side panel sends intents only.
+
+```bash
+cd apps/server
+CHILL_ZONE_GATHER_ENABLED=1 ALLOW_INSECURE_LOCAL=1 npm run dev
+```
+
+Server proof for the full loop (no UI): `cd apps/server && CHILL_ZONE_GATHER_ENABLED=1 npm run test:gather-loop`
+
 Expected local endpoint:
 
 ```text
@@ -95,6 +107,13 @@ A successful local showcase should demonstrate:
 - server emits receipts,
 - health endpoint responds,
 - debug client remains connected during basic movement/chat.
+
+With `CHILL_ZONE_GATHER_ENABLED=1` and Azura selected, a successful gather showcase also shows:
+
+- gather nodes and curation stand markers on the map,
+- gather/deliver buttons in the Chill-Zone Gather panel (disabled until in range),
+- server-driven progress bar during an active gather,
+- a `delivery.recorded` receipt after deliver (check chronicle or server logs).
 
 ## Step 6: Evidence To Capture
 

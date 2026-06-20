@@ -24,9 +24,13 @@ echo "[showcase] agent economy simulation proof"
 cd apps/server
 npm run verify:agent-economy-simulation
 
+echo "[showcase] debug client gather wire authority"
+cd "$ROOT_DIR/apps/debug-client"
+npm run verify:gather-client
+
 echo "[showcase] debug client build"
-cd "$ROOT_DIR"
-cd apps/debug-client
+cd "$ROOT_DIR/apps/debug-client"
 npm run build
 
 echo "[showcase] preflight complete"
+echo "[showcase] optional Azura gather loop: CHILL_ZONE_GATHER_ENABLED=1 ALLOW_INSECURE_LOCAL=1 npm run dev (apps/server)"

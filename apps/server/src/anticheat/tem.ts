@@ -27,7 +27,7 @@ export function issueTemChallenge(state: AntiCheatState, now: number): TemOutcom
     outcome: 'issued',
     challenge: {
       challenge_id,
-      message: `Hi! 👋 type ${TEM_CHALLENGE_RESPONSE} in chat within ${TEM_TIMEOUT_SECONDS} seconds`,
+      message: `Type ${TEM_CHALLENGE_RESPONSE} to confirm you are playing by hand. You have ${TEM_TIMEOUT_SECONDS} seconds.`,
       timeout_seconds: TEM_TIMEOUT_SECONDS,
     },
   };

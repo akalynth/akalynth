@@ -1,8 +1,10 @@
 package com.akalynth.client.ui.components
 
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import com.akalynth.client.game.TemContracts
 import com.akalynth.client.ui.theme.AkalynthTheme
 import org.junit.Rule
 import org.junit.Test
@@ -21,7 +23,7 @@ class TemChallengeDialogTest {
         composeTestRule.setContent {
             AkalynthTheme(darkTheme = true) {
                 TemChallengeDialog(
-                    message = "Type the shown word",
+                    message = "Type AKALYNTH to confirm you are playing by hand. You have 15 seconds.",
                     expiresAt = System.currentTimeMillis() + 60_000,
                     onSubmit = {},
                     onDismiss = {}
@@ -30,10 +32,10 @@ class TemChallengeDialogTest {
         }
 
         composeTestRule.onNodeWithTag("TemChallenge_Title")
-            .assertTextEquals("TEM HUMAN CHECK")
-        composeTestRule.onNodeWithTag("TemChallenge_Explanation")
-            .assertTextEquals("Tem keeps High City for human play. Answer the prompt to continue.")
-        composeTestRule.onNodeWithTag("TemChallenge_Message")
-            .assertTextEquals("Type the shown word")
+            .assertTextEquals("Quick human check")
+        composeTestRule.onNodeWithTag("TemChallenge_Explanation").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("TemChallenge_AnswerWord")
+            .assertTextEquals(TemContracts.CHALLENGE_RESPONSE)
+        composeTestRule.onNodeWithTag("TemChallenge_QuickConfirm").assertIsDisplayed()
     }
 }

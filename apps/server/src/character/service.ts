@@ -7,6 +7,7 @@
 import { CharacterStore } from './store.js';
 import { WORLDS, OUTFITS, worldById, outfitById, outfitsForSex, isSex } from './catalog.js';
 import { RECEIPT_ACTIONS } from '../persist/types.js';
+import { buildLibraryDiscovery } from '../library-discovery.js';
 
 export type CharacterCreateResult =
   | { ok: true; player_id: string; name: string; token: string; issued_at: number; expires_at: number }
@@ -160,5 +161,14 @@ export class CharacterService {
         },
       },
     };
+  }
+
+  libraryDiscovery(accountId: string, characterId: string | null): CharacterResult {
+    if (!characterId) return bad('character_id is required');
+    const row = this.d.store.findById(characterId);
+    if (!row || row.account_id !== accountId) {
+      return { status: 404, body: { ok: false, error: 'character_not_found' } };
+    }
+    return { status: 200, body: buildLibraryDiscovery(characterId) };
   }
 }

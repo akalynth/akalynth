@@ -24,9 +24,11 @@ import type {
   PropertyMarketResponse,
   PropertyLedgerResponse,
   SimLifeSnapshotResponse,
+  AndroidClientUpdateResponse,
 } from '../../../../packages/shared/http.js';
 import { normalizeMapName } from '../../../../packages/shared/http.js';
 import type { BuildInfo } from '../build-info.js';
+import { getAndroidClientUpdate } from '../android-client-update.js';
 
 type GuestSessionMintResult = GuestSessionResponse | { error: string; status?: number };
 type SessionMeResult = SessionMeResponse | { error: string; status: number };
@@ -146,6 +148,23 @@ export function handleHttp(
       path === '/v1/property/unlist')
   ) {
     return deps.handleEconomy(req, res);
+  }
+
+  // Android client update manifest (beta/staging lanes)
+  if (method === 'GET' && path === '/v1/client/android-update') {
+    const lane = url.searchParams.get('lane')?.trim() ?? '';
+    const update = getAndroidClientUpdate(lane);
+    if (!update) {
+      json(res, 400, { error: 'invalid_lane' });
+      return true;
+    }
+    if ('error' in update) {
+      json(res, update.status, { error: update.error });
+      return true;
+    }
+    const body: AndroidClientUpdateResponse = update;
+    json(res, 200, body);
+    return true;
   }
 
   // Health

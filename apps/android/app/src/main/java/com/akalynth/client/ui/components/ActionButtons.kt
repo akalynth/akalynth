@@ -18,8 +18,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.akalynth.client.actions.WorldEventSkillIds
 import com.akalynth.client.protocol.SovereignVocation
+import com.akalynth.client.ui.theme.ClassicActionDock
+import com.akalynth.client.ui.theme.ClassicActionRingButton
 import com.akalynth.client.ui.theme.ClassicButton
-import com.akalynth.client.ui.theme.ClassicDock
 import com.akalynth.client.ui.theme.ClassicShellColors
 
 private val ROOKGUARD_VOCATION_ACTIONS = listOf(
@@ -72,31 +73,33 @@ fun ActionButtons(
     onBuyHouse: (String) -> Unit = {},
     onListHouse: (String, Int) -> Unit = { _, _ -> },
     onUnlistHouse: (String) -> Unit = {},
+    showTrainingAttack: Boolean = false,
+    trainingSlimeTargetId: String? = null,
+    onAttack: (String) -> Unit = {},
+    showGather: Boolean = false,
+    gatherNodeId: String? = null,
+    gatherStationId: String? = null,
+    gatherBusy: Boolean = false,
+    gatherProgressPct: Float = 0f,
+    gatherHeldItem: String? = null,
+    onGather: (String) -> Unit = {},
+    onDeliver: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val routeActions = routeActionSkillIds.mapNotNull { skillId ->
         ROUTE_ACTION_LABELS[skillId]?.let { label -> skillId to label }
     }
 
-    ClassicDock(modifier = modifier) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(62.dp)
-                    .clip(CircleShape)
-                    .background(ClassicShellColors.Stone.copy(alpha = 0.92f))
-                    .border(1.dp, ClassicShellColors.IronBright.copy(alpha = 0.75f), CircleShape)
-                    .clickable { onChat() },
-                contentAlignment = Alignment.Center
+    ClassicActionDock(modifier = modifier) {
+            ClassicActionRingButton(
+                onClick = onChat,
+                modifier = Modifier.size(62.dp),
             ) {
                 Icon(
                     imageVector = Icons.Default.Email,
                     contentDescription = "Chat",
                     tint = ClassicShellColors.Text,
-                    modifier = Modifier.size(30.dp)
+                    modifier = Modifier.size(30.dp),
                 )
             }
 
@@ -106,20 +109,16 @@ fun ActionButtons(
                 color = ClassicShellColors.Text
             )
 
-            Box(
+            ClassicActionRingButton(
+                onClick = onChronicle,
                 modifier = Modifier
                     .size(54.dp)
-                    .clip(CircleShape)
-                    .background(ClassicShellColors.Stone.copy(alpha = 0.92f))
-                    .border(1.dp, ClassicShellColors.Rune.copy(alpha = 0.75f), CircleShape)
-                    .clickable { onChronicle() }
                     .testTag("ActionButtons_Chronicle"),
-                contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "C",
                     style = MaterialTheme.typography.titleMedium,
-                    color = ClassicShellColors.Text
+                    color = ClassicShellColors.Text,
                 )
             }
 
@@ -128,6 +127,33 @@ fun ActionButtons(
                 style = MaterialTheme.typography.labelSmall,
                 color = ClassicShellColors.Text
             )
+
+            if (showTrainingAttack && !trainingSlimeTargetId.isNullOrBlank()) {
+                Text(
+                    text = "Training",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = ClassicShellColors.Brass,
+                    modifier = Modifier.testTag("ActionButtons_TrainingAttackLabel")
+                )
+                ClassicActionRingButton(
+                    onClick = { onAttack(trainingSlimeTargetId) },
+                    danger = true,
+                    modifier = Modifier
+                        .size(62.dp)
+                        .testTag("ActionButtons_AttackTrainingSlime"),
+                ) {
+                    Text(
+                        text = "ATK",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = ClassicShellColors.Text,
+                    )
+                }
+                Text(
+                    text = "Slime",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = ClassicShellColors.Text
+                )
+            }
 
             if (showWitnessMothBloom) {
                 Text(
@@ -173,6 +199,49 @@ fun ActionButtons(
                 }
             }
 
+            if (showGather) {
+                Text(
+                    text = "Gather",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = ClassicShellColors.Brass,
+                    modifier = Modifier.testTag("ActionButtons_GatherSection")
+                )
+                if (gatherBusy) {
+                    Text(
+                        text = "Gathering ${gatherProgressPct.toInt()}%",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = ClassicShellColors.MutedText,
+                        modifier = Modifier.testTag("ActionButtons_GatherProgress")
+                    )
+                }
+                gatherHeldItem?.let { held ->
+                    Text(
+                        text = "Held: $held",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = ClassicShellColors.Text,
+                        modifier = Modifier.testTag("ActionButtons_GatherHeld")
+                    )
+                }
+                gatherNodeId?.let { nodeId ->
+                    ClassicButton(
+                        text = "Gthr",
+                        onClick = { onGather(nodeId) },
+                        compact = true,
+                        enabled = !gatherBusy && gatherHeldItem == null,
+                        modifier = Modifier.testTag("ActionButtons_Gather")
+                    )
+                }
+                gatherStationId?.let { stationId ->
+                    ClassicButton(
+                        text = "Deliv",
+                        onClick = { onDeliver(stationId) },
+                        compact = true,
+                        enabled = gatherHeldItem != null,
+                        modifier = Modifier.testTag("ActionButtons_Deliver")
+                    )
+                }
+            }
+
             if (showRookguardActions) {
                 Text(
                     text = "Rookguard",
@@ -199,7 +268,7 @@ fun ActionButtons(
                         color = ClassicShellColors.MutedText,
                         modifier = Modifier.testTag("ActionButtons_RookguardCodexVocations")
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         ROOKGUARD_VOCATION_ACTIONS.forEach { (vocation, label) ->
                             VocationChip(
                                 label = label,
@@ -267,7 +336,6 @@ fun ActionButtons(
                     modifier = Modifier.testTag("ActionButtons_UnlistHouse_H1")
                 )
             }
-        }
     }
 }
 
@@ -277,16 +345,11 @@ private fun VocationChip(
     tag: String,
     onClick: () -> Unit
 ) {
-    Box(
+    ClassicActionRingButton(
+        onClick = onClick,
         modifier = Modifier
-            .width(44.dp)
-            .height(32.dp)
-            .clip(CircleShape)
-            .background(ClassicShellColors.Stone.copy(alpha = 0.92f))
-            .border(1.dp, ClassicShellColors.Brass.copy(alpha = 0.75f), CircleShape)
-            .clickable { onClick() }
+            .size(44.dp)
             .testTag(tag),
-        contentAlignment = Alignment.Center
     ) {
         Text(
             text = label,

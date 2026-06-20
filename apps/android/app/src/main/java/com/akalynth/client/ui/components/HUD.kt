@@ -12,8 +12,10 @@ import com.akalynth.client.network.ConnectionState
 import com.akalynth.client.protocol.PlayerPublic
 import com.akalynth.client.protocol.PlayerStatus
 import com.akalynth.client.ui.theme.ClassicPanel
+import com.akalynth.client.ui.theme.ClassicResourceBar
 import com.akalynth.client.ui.theme.ClassicShellColors
 import com.akalynth.client.ui.theme.ClassicStatusDot
+import com.akalynth.client.ui.theme.rememberUiTextures
 
 @Composable
 fun HUD(
@@ -26,8 +28,10 @@ fun HUD(
     workStatus: String? = null,
     npcStatus: String? = null,
     connectionState: ConnectionState,
+    questProgress: Float? = null,
     modifier: Modifier = Modifier
 ) {
+    val textures = rememberUiTextures()
     ClassicPanel(
         modifier = modifier
             .padding(12.dp)
@@ -71,6 +75,35 @@ fun HUD(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = ClassicShellColors.Text
+            )
+        }
+
+        questProgress?.let { progress ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Codex",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = ClassicShellColors.MutedText,
+                )
+                Text(
+                    text = "${(progress * 100).toInt()}%",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = ClassicShellColors.Brass,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+            ClassicResourceBar(
+                label = "Codex",
+                fraction = progress,
+                fill = textures.mpFill,
+                track = textures.barTrack,
+                slicePx = textures.barSlice,
+                modifier = Modifier.fillMaxWidth(),
+                height = 7.dp,
             )
         }
 

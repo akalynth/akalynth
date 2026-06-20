@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "lane": "beta",
+  "version_code": 8,
+  "version_name": "0.1.6-beta-texture-polish",
+  "apk_url": "https://beta.akalynth.com/download/akalynth-beta.apk",
+  "apk_sha256": "549aeb2f622137ca7bb34eb22b9b45e82cef762e4c98af1aeebdce19a57edb52",
+  "size_bytes": 12782661,
+  "required": false,
+  "published_at": "2026-06-20T17:09:17.000Z"
+}

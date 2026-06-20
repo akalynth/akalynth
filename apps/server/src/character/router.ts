@@ -101,6 +101,11 @@ export function makeCharacterRouter(deps: CharacterRouterDeps) {
       if (!csrfOk(req, cookies)) return (send(res, { status: 403, body: { ok: false, error: 'csrf_failed' } }), true);
       return (send(res, service.updateOutfit(a.accountId, await readJson(req))), true);
     }
+    if (path === '/v1/library/discovery' && method === 'GET') {
+      const a = account();
+      if (!a) return (send(res, { status: 401, body: { ok: false, error: 'not_authenticated' } }), true);
+      return (send(res, service.libraryDiscovery(a.accountId, url.searchParams.get('character_id'))), true);
+    }
 
     send(res, { status: 404, body: { ok: false, error: 'not_found' } });
     return true;

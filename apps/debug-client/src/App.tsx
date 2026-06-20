@@ -22,6 +22,7 @@ import { BackpackSheet } from './components/BackpackSheet';
 import { ProofSheet } from './components/ProofSheet';
 import { loadConfig } from './config';
 import { highCityVisualLandmarksForMap } from './data/highCityVisualLandmarks';
+import { gatherMapOverlays } from './data/gatherMapOverlays';
 import type {
   AccountSessionStatus,
   AccountCharacter,
@@ -435,6 +436,7 @@ function DebugApp() {
     () => highCityVisualLandmarksForMap(state.world.map.name as MapName),
     [state.world.map.name]
   );
+  const gatherOverlays = useMemo(() => gatherMapOverlays(state.gather), [state.gather]);
   const roster = useMemo(() => others.slice().sort((a, b) => a.name.localeCompare(b.name)), [others]);
   const targetName = useMemo(() => {
     if (!state.combat.targetId) return null;
@@ -681,6 +683,7 @@ function DebugApp() {
             groundItems={state.groundItems}
             propertyByPlot={propertyByPlot}
             worldVisualObjects={worldVisualObjects}
+            debugOverlays={gatherOverlays}
           />
           <div className="scene-vignette" />
           {!isDead && healthPct <= 30 && (

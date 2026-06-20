@@ -1188,7 +1188,7 @@ export const ServerMessages = {
   temChallenge: (challenge_id: string, timeout_seconds: number): TemChallengeMessage => ({
     type: 'tem_challenge',
     challenge_id,
-    message: `Hi! Type ${TEM_CHALLENGE_RESPONSE} in chat within ${timeout_seconds} seconds.`,
+    message: `Type ${TEM_CHALLENGE_RESPONSE} to confirm you are playing by hand. You have ${timeout_seconds} seconds.`,
     timeout_seconds,
   }),
 

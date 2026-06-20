@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.akalynth.client.game.GatherHelpers
 import com.akalynth.client.game.GameEvent
 import com.akalynth.client.game.GameState
 import com.akalynth.client.game.MapRepository
@@ -59,6 +60,18 @@ fun WorldScreen(
     )
     val routeActionSkillIds = routeActionSkillIdsFor(state.progression.loop?.onwardRoutes ?: emptyList())
     val showRouteActions = routeActionSkillIds.isNotEmpty()
+    val loop = state.progression.loop
+    val objective = loop?.objective.orEmpty()
+    val trainingSlime = findTrainingSlime(state.world.otherPlayers.values)
+    val showTrainingAttack = state.world.currentMap == MapName.ROOKGUARD &&
+        loop?.rookguardQuest?.steps?.any { it.stepId == "training" && !it.complete } == true
+    val mapMarkers = rookguardObjectiveMarkers(state.world.currentMap, loop)
+    val forgeholdRoute = loop?.onwardRoutes?.firstOrNull { it.routeId == "forgehold_route_slice_v1" }
+    val forgeholdPromoSkill = routeActionSkillIds.firstOrNull { it.startsWith("route:") }
+    val forgeholdPayoutPending = forgeholdRoute?.completedObjectiveIds?.contains("forgehold_component_settlement") == true &&
+        forgeholdRoute.completedObjectiveIds.contains("forgehold_component_payout").not()
+    val gatherNode = GatherHelpers.nearestGatherableNode(state.gather, state.world.me)
+    val gatherStation = GatherHelpers.nearestDeliverableStation(state.gather, state.world.me)
     var showcaseMap by remember { mutableStateOf(false) }
     Box(
         modifier = Modifier
@@ -69,6 +82,7 @@ fun WorldScreen(
             map = if (showcaseMap) MapName.TILE_SHOWCASE else state.world.currentMap,
             me = state.world.me,
             others = state.world.otherPlayers.values.toList(),
+            objectiveMarkers = mapMarkers,
             modifier = Modifier.fillMaxSize()
         )
 
@@ -82,30 +96,96 @@ fun WorldScreen(
             workStatus = workStatusLabel(state.economy.work),
             npcStatus = npcStatusLabel(state.ui.npcDialogue),
             connectionState = state.connection,
+            questProgress = codexQuestProgress(loop),
             modifier = Modifier.align(Alignment.TopStart)
         )
 
-        ClassicPanel(
+        Column(
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(top = 12.dp),
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 7.dp),
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(0.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                text = state.world.currentMap.displayName,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-                color = ClassicShellColors.Brass
-            )
-            Text(
-                text = reconnectLabel
-                    ?: "${endpoint.lane} - ${DiagnosticsFormatter.connectionLabel(state.connection)}",
-                style = MaterialTheme.typography.labelSmall,
-                color = if (reconnectLabel != null) ClassicShellColors.Warning else ClassicShellColors.MutedText,
-                modifier = Modifier.testTag("WorldScreen_ConnectionLine")
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top,
+            ) {
+                Spacer(modifier = Modifier.width(172.dp))
+                ClassicPanel(
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("WorldScreen_MapChip"),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 7.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(0.dp)
+                ) {
+                    Text(
+                        text = state.world.currentMap.displayName,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = ClassicShellColors.Brass
+                    )
+                    Text(
+                        text = reconnectLabel
+                            ?: "${endpoint.lane} - ${DiagnosticsFormatter.connectionLabel(state.connection)}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (reconnectLabel != null) ClassicShellColors.Warning else ClassicShellColors.MutedText,
+                        modifier = Modifier.testTag("WorldScreen_ConnectionLine")
+                    )
+                }
+                Row(
+                    modifier = Modifier.widthIn(min = 172.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    ClassicButton(
+                        text = "Issue",
+                        onClick = {
+                            copyTextToClipboard(
+                                context = context,
+                                label = "Akalynth Issue Report",
+                                text = DiagnosticsFormatter.formatIssueReport(state),
+                                toast = "Issue report copied"
+                            )
+                        },
+                        compact = true,
+                        modifier = Modifier.testTag("WorldScreen_ReportIssue")
+                    )
+                    ClassicButton(
+                        text = "DBG",
+                        onClick = { onEvent(GameEvent.ToggleDebugDrawer) },
+                        compact = true,
+                        modifier = Modifier.testTag("WorldScreen_Debug")
+                    )
+                    ClassicButton(
+                        text = if (showcaseMap) "MAP" else "TILES",
+                        onClick = { showcaseMap = !showcaseMap },
+                        compact = true,
+                        modifier = Modifier.testTag("WorldScreen_TileShowcase")
+                    )
+                }
+            }
+            if (objective.isNotBlank()) {
+                ObjectiveBanner(
+                    objective = objective,
+                    accent = when {
+                        showTrainingAttack && trainingSlime != null ->
+                            "Training slime nearby — tap ATK (${trainingSlime.x},${trainingSlime.y})"
+                        loop?.gateOpen == true && !loop.complete ->
+                            "Gate is open — walk onto the golden tiles"
+                        else -> null
+                    }
+                )
+            }
+            if (loop?.complete == true && forgeholdRoute?.status == "available" && forgeholdPromoSkill != null) {
+                ForgeholdPromoBanner(
+                    nextObjective = forgeholdRoute.nextObjective,
+                    payoutPending = forgeholdPayoutPending,
+                    onRouteAction = { onEvent(GameEvent.RouteAction(forgeholdPromoSkill)) }
+                )
+            }
         }
 
         OnwardRoutesPanel(
@@ -114,39 +194,6 @@ fun WorldScreen(
                 .align(Alignment.CenterEnd)
                 .padding(end = 12.dp)
         )
-
-        Row(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            ClassicButton(
-                text = "Issue",
-                onClick = {
-                    copyTextToClipboard(
-                        context = context,
-                        label = "Akalynth Issue Report",
-                        text = DiagnosticsFormatter.formatIssueReport(state),
-                        toast = "Issue report copied"
-                    )
-                },
-                compact = true,
-                modifier = Modifier.testTag("WorldScreen_ReportIssue")
-            )
-            ClassicButton(
-                text = "DBG",
-                onClick = { onEvent(GameEvent.ToggleDebugDrawer) },
-                compact = true,
-                modifier = Modifier.testTag("WorldScreen_Debug")
-            )
-            ClassicButton(
-                text = if (showcaseMap) "MAP" else "TILES",
-                onClick = { showcaseMap = !showcaseMap },
-                compact = true,
-                modifier = Modifier.testTag("WorldScreen_TileShowcase")
-            )
-        }
 
         if (!state.ui.showDebugDrawer) {
             DPad(
@@ -177,6 +224,17 @@ fun WorldScreen(
                 onBuyHouse = { propertyId -> onEvent(GameEvent.BuyHouse(propertyId)) },
                 onListHouse = { propertyId, price -> onEvent(GameEvent.ListHouse(propertyId, price)) },
                 onUnlistHouse = { propertyId -> onEvent(GameEvent.UnlistHouse(propertyId)) },
+                showTrainingAttack = showTrainingAttack,
+                trainingSlimeTargetId = trainingSlime?.id,
+                onAttack = { targetId -> onEvent(GameEvent.Attack(targetId)) },
+                showGather = state.gather.isEnabled,
+                gatherNodeId = gatherNode?.nodeId,
+                gatherStationId = gatherStation?.stationId,
+                gatherBusy = state.gather.activeNodeId != null,
+                gatherProgressPct = state.gather.progressPct,
+                gatherHeldItem = state.gather.heldItemType,
+                onGather = { nodeId -> onEvent(GameEvent.Gather(nodeId)) },
+                onDeliver = { stationId -> onEvent(GameEvent.Deliver(stationId)) },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(end = 12.dp, bottom = if (state.ui.chatOpen) 304.dp else 12.dp)
@@ -215,6 +273,7 @@ fun WorldScreen(
             TemChallengeDialog(
                 message = challenge.message,
                 expiresAt = challenge.expiresAt,
+                inlineError = challenge.inlineError,
                 onSubmit = { response -> onEvent(GameEvent.AnswerTemChallenge(response)) },
                 onDismiss = { onEvent(GameEvent.DismissTemChallenge) }
             )
@@ -374,6 +433,33 @@ private fun OnwardRoutesPanel(
     }
 }
 
+private fun findTrainingSlime(others: Collection<PlayerPublic>): PlayerPublic? {
+    return others.firstOrNull { player ->
+        player.id.startsWith("mob:training_slime") ||
+            player.name.equals("Training Slime", ignoreCase = true) ||
+            player.mark == "training_mob"
+    }
+}
+
+private fun rookguardObjectiveMarkers(
+    map: MapName,
+    loop: com.akalynth.client.protocol.PlayLoopProgress?
+): List<Pair<Int, Int>> {
+    if (map != MapName.ROOKGUARD || loop == null) return emptyList()
+    val quest = loop.rookguardQuest ?: return emptyList()
+    val markers = mutableListOf<Pair<Int, Int>>()
+    quest.steps.forEach { step ->
+        if (step.complete) return@forEach
+        when (step.stepId) {
+            "move" -> markers.add(3 to 2)
+            "tem" -> markers.add(7 to 2)
+            "training" -> markers.add(14 to 14)
+            "gate" -> if (loop.gateOpen) markers.add(10 to 2)
+        }
+    }
+    return markers
+}
+
 @Composable
 private fun rememberNowMs(): Long {
     var nowMs by remember { mutableStateOf(System.currentTimeMillis()) }
@@ -428,6 +514,12 @@ private fun npcStatusLabel(status: com.akalynth.client.game.NpcDialogueStatus?):
     if (status.error != null) return "$name: ${status.error}"
     val line = status.line ?: return null
     return "$name: $line"
+}
+
+private fun codexQuestProgress(loop: com.akalynth.client.protocol.PlayLoopProgress?): Float? {
+    val steps = loop?.rookguardQuest?.steps ?: return null
+    if (steps.isEmpty()) return null
+    return steps.count { it.complete }.toFloat() / steps.size.toFloat()
 }
 
 private fun copyTextToClipboard(

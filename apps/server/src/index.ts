@@ -2782,6 +2782,11 @@ function send(ws: WebSocket, message: ServerMessage) {
   if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(message));
 }
 
+function sendTemPlayerFeedback(s: Session, message: string): void {
+  if (!s.player) return;
+  send(s.ws, ServerMessages.chatBroadcast('tem-feedback', 'Tem', message));
+}
+
 // Apply the account-portal CORS allowlist (see api/cors.ts). Reflects an
 // explicit allowlisted Origin with credentials enabled, or no CORS headers at
 // all for disallowed origins. Returns true when headers were set so the OPTIONS
@@ -3221,6 +3226,10 @@ function processSessionQueue(s: Session, now: number) {
       inputs: { reason: timeoutOutcome.reason },
       result: 'throttled',
     });
+    sendTemPlayerFeedback(
+      s,
+      'Time expired before the human check was answered. Movement is slowed briefly — watch for the next prompt.'
+    );
   }
 
   // process up to N messages per tick to bound work
@@ -3606,6 +3615,7 @@ function processSessionQueue(s: Session, now: number) {
         const out = handleTemResponse(s.anti.state, msg.response);
         if (out.outcome === 'passed') {
           audit.write({ player_id: s.player!.id, action: 'tem_challenge_passed', inputs: {}, result: 'passed' });
+          sendTemPlayerFeedback(s, 'Thanks — you are clear to move.');
           let rookguardTemCompleted = false;
           if (s.currentMap === 'Rookguard' && !s.tutorial.tem) {
             s.tutorial.tem = true;
@@ -3626,6 +3636,10 @@ function processSessionQueue(s: Session, now: number) {
             inputs: { reason: out.reason },
             result: 'throttled',
           });
+          sendTemPlayerFeedback(
+            s,
+            'That answer did not match. Movement is slowed briefly — use the prompt and type AKALYNTH.'
+          );
         }
         break;
       }
@@ -3662,6 +3676,7 @@ function processSessionQueue(s: Session, now: number) {
               inputs: { via: 'chat' },
               result: 'passed',
             });
+            sendTemPlayerFeedback(s, 'Thanks — you are clear to move.');
             let rookguardTemCompleted = false;
             if (s.currentMap === 'Rookguard' && !s.tutorial.tem) {
               s.tutorial.tem = true;
@@ -3684,6 +3699,10 @@ function processSessionQueue(s: Session, now: number) {
               inputs: { via: 'chat', reason: out.reason },
               result: 'throttled',
             });
+            sendTemPlayerFeedback(
+              s,
+              'That answer did not match. Movement is slowed briefly — use the prompt and type AKALYNTH.'
+            );
             break;
           }
         }
