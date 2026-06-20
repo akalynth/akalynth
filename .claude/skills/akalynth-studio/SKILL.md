@@ -1,5 +1,6 @@
 ---
 name: akalynth-studio
+version: 0.2.0
 description: >
   Private Akalynth game-server studio skills for lightweight MMO design, deploy, and audit work.
   Install from Akalynth code at /opt/goal0/sources/akalynth/plugins/akalynth-studio (via remote goal0-edge-01).

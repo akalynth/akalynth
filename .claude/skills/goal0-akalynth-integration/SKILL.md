@@ -1,5 +1,6 @@
 ---
 name: goal0-akalynth-integration
+version: 0.1.0
 description: >
   Combine high-standards and akalynth-studio skills for Goal0 mesh integration with Akalynth (the MMO game server host akalynth-prod-01, api.akalynth.com).
   Use for auditing Akalynth infra in mesh (using server-cartographer, akalynth-system-audit), portable receipts inside wops-carry/quadlet (adapting receipt-chain-steward, deploy-steward), extending ops-control-console and verifier with Akalynth data/endpoints (game-server-steward, protocol-guardian), safe deploy/mutation patterns for Akalynth components in mesh (follow AGENTS.md posture: evidence, no secrets, re-probe).
