@@ -158,7 +158,7 @@ function initialState(mapName: MapName): GameClientState {
     inventory: [],
     gold: 0,
     properties: new Map(),
-    gather: { nodes: new Map(), stations: new Map(), activeNodeId: null, progressPct: 0, held: null, status: null },
+    gather: { nodes: new Map(), stations: new Map(), activeNodeId: null, progressPct: 0, held: null, tendingTokens: 0, status: null },
   };
 }
 
@@ -1342,7 +1342,17 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
             case 'deliver_result': {
               if (data.ok === true) {
                 const itemType = typeof data.item_type === 'string' ? data.item_type : 'item';
-                return { ...s, conn, gather: { ...s.gather, held: null, status: `Delivered ${itemType}` } };
+                const reward = typeof data.reward === 'string' ? data.reward : null;
+                return {
+                  ...s,
+                  conn,
+                  gather: {
+                    ...s.gather,
+                    held: null,
+                    tendingTokens: s.gather.tendingTokens + (reward ? 1 : 0),
+                    status: reward ? `Delivered ${itemType} → +1 ${reward}` : `Delivered ${itemType}`,
+                  },
+                };
               }
               const reason = typeof data.reason === 'string' ? data.reason : 'rejected';
               return { ...s, conn, gather: { ...s.gather, status: `Deliver rejected: ${reason}` } };

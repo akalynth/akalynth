@@ -28,6 +28,7 @@ export function GatherPanel({ gather, me, onGather, onDeliver }: GatherPanelProp
     <div className="gather-card">
       <div className="gather-title">Chill-Zone Gather</div>
       <div className="gather-held">Held: {gather.held ? gather.held.item_type : '—'}</div>
+      <div className="gather-held">Tending tokens: {gather.tendingTokens}</div>
 
       {busy && (
         <div className="gather-progress" aria-label="gather-progress">

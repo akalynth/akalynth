@@ -441,7 +441,8 @@ async function verifyGatherLoop(): Promise<void> {
       delivered.item_type === 'ley_mote' && delivered.source_node_id === 'azura_ley_mote_e',
       `deliver_result provenance mismatch: ${JSON.stringify(delivered)}`
     );
-    ok('S4 deliver succeeded');
+    assert(delivered.reward === 'tending_token', `deliver_result should credit tending_token (step 4): ${JSON.stringify(delivered)}`);
+    ok('S4 deliver succeeded (reward: tending_token)');
 
     // Receipt chain: exactly the delivery_recorded receipt, no reward credited.
     await sleep(150);
@@ -455,8 +456,8 @@ async function verifyGatherLoop(): Promise<void> {
     const d = deliveries[0];
     assert(d.inputs?.source_node_id === 'azura_ley_mote_e', `receipt source_node_id mismatch: ${JSON.stringify(d.inputs)}`);
     assert(d.inputs?.zone === 'Azura', `receipt zone mismatch: ${JSON.stringify(d.inputs)}`);
-    assert(d.inputs?.reward === null, `receipt should carry reward:null (step 4 not yet wired): ${JSON.stringify(d.inputs)}`);
-    ok('receipt: one delivery_recorded with provenance, reward:null');
+    assert(d.inputs?.reward === 'tending_token', `receipt should credit tending_token (step 4): ${JSON.stringify(d.inputs)}`);
+    ok('receipt: one delivery_recorded with provenance, reward:tending_token');
 
     // S5 (step 3) — a second gather->deliver cycle feeds Tem heat; verify gather_cadence
     // accumulates (the escalation-to-challenge is the shared applyHeatChange path).

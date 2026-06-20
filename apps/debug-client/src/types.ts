@@ -161,6 +161,7 @@ export interface GameClientState {
     activeNodeId: string | null;
     progressPct: number;
     held: { item_type: string } | null;
+    tendingTokens: number;
     status: string | null;
   };
 }

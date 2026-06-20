@@ -1820,6 +1820,11 @@ const gatherSystem: GatherSystem | null = isGatherEnabled()
   ? createGatherSystem(DEFAULT_GATHER_CONFIG, AZURA_GATHER_NODES, AZURA_STATIONS)
   : null;
 
+// Step 4: non-tradeable acknowledgment granted on delivery — recorded in the receipt and
+// deliver_result only. NO gold and NO tradeable inventory, so economy authority is untouched
+// (economy-steward owns any future tradeable/valued reward).
+const TENDING_TOKEN_ID = 'tending_token';
+
 // Load item system state from SQLite (Phase 2) - after worlds is declared
 loadInventories();
 loadWorldItems();
@@ -5472,7 +5477,8 @@ function processSessionQueue(s: Session, now: number) {
         }
         const res = deliver(gatherSystem, s.player.id, s.currentMap, msg.station_id, s.player.x, s.player.y);
         if (res.ok) {
-          // The one durable receipt for the loop (gather state is ephemeral). No reward credited (step 4).
+          // The one durable receipt for the loop (gather state is ephemeral). Step 4 credits a
+          // non-tradeable acknowledgment token, recorded here (no gold / tradeable inventory).
           audit.write({
             player_id: s.player.id,
             action: DELIVERY_RECORDED_ACTION,
@@ -5483,13 +5489,20 @@ function processSessionQueue(s: Session, now: number) {
               zone: res.record.zone,
               x: s.player.x,
               y: s.player.y,
-              reward: null,
+              reward: TENDING_TOKEN_ID,
             },
             result: 'ok',
           });
           send(
             s.ws,
-            ServerMessages.deliverResult(true, res.record.station_id, res.record.item_type, res.record.source_node_id)
+            ServerMessages.deliverResult(
+              true,
+              res.record.station_id,
+              res.record.item_type,
+              res.record.source_node_id,
+              undefined,
+              TENDING_TOKEN_ID
+            )
           );
           // Step 3: feed the gather->deliver cadence into Tem heat. Sustained farming
           // accumulates faster than decay and trips the SHARED escalation path

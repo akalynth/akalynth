@@ -1001,6 +1001,7 @@ export interface DeliverResultMessage extends BaseMessage {
   station_id?: string;
   item_type?: string;
   source_node_id?: string;
+  reward?: string;
   reason?: GatherRejectReason;
 }
 
@@ -1133,13 +1134,15 @@ export const ServerMessages = {
     station_id?: string,
     item_type?: string,
     source_node_id?: string,
-    reason?: GatherRejectReason
+    reason?: GatherRejectReason,
+    reward?: string
   ): DeliverResultMessage => ({
     type: 'deliver_result',
     ok,
     station_id,
     item_type,
     source_node_id,
+    reward,
     reason,
   }),
 
