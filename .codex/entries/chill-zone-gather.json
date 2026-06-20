@@ -1,0 +1,68 @@
+{
+  "schema_version": "codex-entry/v1",
+  "id": "chill-zone-gather",
+  "type": "mechanic",
+  "title": "Chill-Zone Gather",
+  "authority": "Akalynth",
+  "author": "guardian@vaultmesh.org",
+  "created": "2026-06-20T00:00:00Z",
+  "updated": "2026-06-20T00:00:00Z",
+  "status": "draft",
+  "visibility": {
+    "builder": true,
+    "operator": true,
+    "agent": true,
+    "public": false
+  },
+  "summary": "MVP no-combat micro-loop: move, gather a server-placed node, deliver to a station for a non-tradeable acknowledgment, emitting one delivery_recorded receipt per cycle. Smallest honest Recover loop, verifiable with existing movement + receipt tooling before any new system is added.",
+  "lineage": {
+    "origin": "gameplay-loop-designer session — MVP loop proposal (no source drop)",
+    "accepted": false
+  },
+  "world": {
+    "description": "A no-combat chill-zone onboarding loop. The client sends only move/gather/deliver intents; the server owns the gather clock, inventory, and reward grant. One delivery_recorded receipt per completed cycle, with gather provenance folded in. Deliberately excludes combat, party mechanics, and tradeable economy so the Systems Bible pillars stay untouched. Step-1 server core implemented as apps/server/src/world/gather.ts (pure state machine, feature-flagged off).",
+    "design_refs": [
+      ".codex/design/chill-zone-gather.md",
+      ".codex/design/chill-zone-gather-step1-server-spec.md"
+    ],
+    "implementation": {
+      "stage": "spec",
+      "registry": "apps/server/src/world/gather.ts"
+    }
+  },
+  "related": [
+    {
+      "rel": "references",
+      "target": "game-loop-bible",
+      "note": "Pre-Hour-1 instance of the primary Recover → Return beat, stripped to its smallest honest form."
+    },
+    {
+      "rel": "references",
+      "target": "systems-bible",
+      "note": "Non-economic, combat-free — touches none of the six System Pillars' balance surfaces."
+    }
+  ],
+  "packets": [
+    {
+      "kind": "review",
+      "ref": ".codex/design/chill-zone-gather.md",
+      "status": "open"
+    },
+    {
+      "kind": "mechanic",
+      "ref": ".codex/design/chill-zone-gather-step1-server-spec.md",
+      "status": "open",
+      "assignee": "game-server-steward"
+    }
+  ],
+  "public_projection": null,
+  "tags": [
+    "gameplay-loop",
+    "mvp",
+    "onboarding",
+    "no-combat",
+    "server-authority",
+    "receipts",
+    "proposal"
+  ]
+}
