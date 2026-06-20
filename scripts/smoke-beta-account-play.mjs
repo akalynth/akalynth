@@ -218,15 +218,15 @@ async function playwrightLocalStorageSmoke(args, identity, expectedName) {
 
     const hudName = (await page.locator('.hud-card--identity strong').first().textContent({ timeout: args.timeoutMs }))?.trim() ?? '';
     const connText = (await page.locator('.conn-pill.connected').first().textContent({ timeout: args.timeoutMs }))?.trim() ?? '';
-    if (hudName !== expectedName) {
-      throw new Error(`playwright_expected_character_name:${expectedName}:got:${hudName}`);
-    }
+    const ok = hudName === expectedName;
     return {
-      ok: true,
+      ok,
       chrome,
       url: new URL('/play/', args.webBase).href,
       connection_text: connText,
       hud_name: hudName,
+      expected_name: expectedName,
+      error: ok ? null : `playwright_expected_character_name:${expectedName}:got:${hudName}`,
       frame_summary: frames,
     };
   } finally {

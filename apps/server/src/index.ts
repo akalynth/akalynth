@@ -3270,9 +3270,11 @@ function processSessionQueue(s: Session, now: number) {
             break;
           }
 
-          // Look up player name from DB
+          // Account characters are the display-name authority for account-issued
+          // play tokens; legacy character tokens still resolve through players.
+          const accountCharacter = characterStore.findById(tokenResult.payload.player_id);
           const playerRow = persist.getPlayer(tokenResult.payload.player_id);
-          if (!playerRow) {
+          if (!accountCharacter && !playerRow) {
             send(s.ws, ServerMessages.error('not_authenticated', 'Player not found'));
             audit.write({
               player_id: tokenResult.payload.player_id,
@@ -3284,14 +3286,14 @@ function processSessionQueue(s: Session, now: number) {
           }
 
           player_id = tokenResult.payload.player_id;
-          name = playerRow.name;
+          name = accountCharacter?.name ?? playerRow!.name;
           authToken = msg.token;
           tokenExpiresAt = tokenResult.payload.expires_at;
 
           audit.write({
             player_id,
             action: 'login',
-            inputs: { source: 'token', auth_method: 'character' },
+            inputs: { source: 'token', auth_method: 'character', name },
             result: 'ok',
           });
         }
