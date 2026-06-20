@@ -458,6 +458,39 @@ async function verifyGatherLoop(): Promise<void> {
     assert(d.inputs?.reward === null, `receipt should carry reward:null (step 4 not yet wired): ${JSON.stringify(d.inputs)}`);
     ok('receipt: one delivery_recorded with provenance, reward:null');
 
+    // S5 (step 3) — a second gather->deliver cycle feeds Tem heat; verify gather_cadence
+    // accumulates (the escalation-to-challenge is the shared applyHeatChange path).
+    const nodeS = nodes.find((n) => n.node_id === 'azura_ley_mote_s');
+    assert(nodeS, `expected node azura_ley_mote_s in snapshot: ${JSON.stringify(nodes)}`);
+    cur = await moveToward(client, cur, nodeS, 1);
+    client.send({ type: 'gather_intent', node_id: nodeS.node_id });
+    const accept2 = await client.waitFor((msg) => msg.type === 'gather_result', 'gather_result:2');
+    assert(accept2.ok === true, `second gather should accept: ${JSON.stringify(accept2)}`);
+    await client.waitFor((msg) => msg.type === 'gather_completed' && msg.node_id === nodeS.node_id, 'gather_completed:2');
+    cur = await moveToward(client, cur, station, 1);
+    client.send({ type: 'deliver_intent', station_id: station.station_id });
+    const delivered2 = await client.waitFor((msg) => msg.type === 'deliver_result', 'deliver_result:2');
+    assert(delivered2.ok === true, `second deliver should succeed: ${JSON.stringify(delivered2)}`);
+
+    await sleep(150);
+    const receipts2 = fs
+      .readFileSync(chainPaths.receiptsPath, 'utf8')
+      .trim()
+      .split('\n')
+      .map((line) => JSON.parse(line) as { action: string; inputs?: Record<string, unknown> });
+    const heatTicks = receipts2.filter((r) => r.action === 'heat_changed' && r.inputs?.reason === 'gather_cadence');
+    assert(heatTicks.length === 2, `expected two gather_cadence heat_changed receipts, got ${heatTicks.length}`);
+    assert((heatTicks[0].inputs?.delta as number) === 5, `expected gather heat delta 5, got ${JSON.stringify(heatTicks[0].inputs)}`);
+    assert(
+      (heatTicks[1].inputs?.new_score as number) > (heatTicks[0].inputs?.new_score as number),
+      `expected heat to accumulate across cycles: ${heatTicks.map((h) => h.inputs?.new_score).join(' -> ')}`
+    );
+    assert(
+      receipts2.filter((r) => r.action === 'delivery_recorded').length === 2,
+      'expected two delivery_recorded receipts after two cycles'
+    );
+    ok(`S5 Tem heat: gather_cadence x2, score ${heatTicks[0].inputs?.new_score} -> ${heatTicks[1].inputs?.new_score} (feeds shared escalation)`);
+
     ok(`${LANE}: chill-zone gather loop verified over WebSocket`);
   } finally {
     client?.close();

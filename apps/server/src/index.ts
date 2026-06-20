@@ -5491,6 +5491,11 @@ function processSessionQueue(s: Session, now: number) {
             s.ws,
             ServerMessages.deliverResult(true, res.record.station_id, res.record.item_type, res.record.source_node_id)
           );
+          // Step 3: feed the gather->deliver cadence into Tem heat. Sustained farming
+          // accumulates faster than decay and trips the SHARED escalation path
+          // (applyHeatChange -> maybeEscalateHeat -> Tem challenge / penalty); occasional
+          // human gathering stays flat. Delta 5 = low-severity (cf. legend_probe).
+          applyHeatChange(s, msgNow, 5, 'gather_cadence', { window_ms: 30_000 });
         } else {
           send(
             s.ws,
