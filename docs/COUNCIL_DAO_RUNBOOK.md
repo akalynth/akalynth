@@ -14,7 +14,8 @@ All council artifacts live under the `akalynth-ops` workspace (not in `repos/aka
 | `council/proposals/` | Proposal JSON (`council-proposal/v1`) |
 | `council/votes/<proposal-id>/` | Vote receipt JSON per proposal |
 | `council/permits/` | Execution permit JSON after gate run |
-| `council/ledger/` | Reserved for treasury v2 (stub) |
+| `council/members/` | Member reputation registry (v2) |
+| `council/ledger/` | Append-only ops treasury ledger (v2) |
 
 Schemas: `repos/akalynth-codex/schema/council-*.schema.json`
 
@@ -81,6 +82,11 @@ Council v1 never:
 
 Lane `check` is read-only preflight on the operator host. Deploy remains a
 separate explicit operator action per `AGENTS.md`.
+
+## v2 Follow-On
+
+Treasury + reputation: see `docs/COUNCIL_DAO_V2_RUNBOOK.md` and
+`AKALYNTH_COUNCIL_DAO_V2`.
 
 ## Engineering Loop Receipt
 

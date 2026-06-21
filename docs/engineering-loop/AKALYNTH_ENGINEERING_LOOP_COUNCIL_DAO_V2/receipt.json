@@ -1,0 +1,84 @@
+{
+  "object_id": "AKALYNTH_ENGINEERING_LOOP_COUNCIL_DAO_V2",
+  "status": "open",
+  "created_utc": "2026-06-21T20:00:00Z",
+  "closed_utc": null,
+  "authority": {
+    "github": "canonical public/source remote",
+    "gitea": "local agent workbench and PR queue",
+    "codex": "packet authoring and agent execution",
+    "ci_validation": "proof gate before merge",
+    "receipts": "evidence of what changed and why"
+  },
+  "packet": {
+    "object_id": "AKALYNTH_COUNCIL_DAO_V2",
+    "path": "docs/codex-work-packets/council-dao-v2/CouncilDao.v2.md",
+    "codex_authority_path": "repos/akalynth-codex/design/council-dao-v2.md",
+    "proof_target": "council_treasury_reputation_v2",
+    "parent_proof_target": "council_lane_check_permit_v1",
+    "source_inputs": [
+      "repos/akalynth-codex/design/council-dao-v2.md",
+      "repos/akalynth-codex/schema/council-member-reputation.schema.json",
+      "repos/akalynth-codex/schema/council-treasury-ledger-entry.schema.json",
+      "repos/akalynth-codex/samples/council-member-reputation.sample.json",
+      "repos/akalynth-codex/samples/council-treasury-ledger-entry.sample.json",
+      "repos/akalynth-codex/samples/council-proposal-v2-weighted.sample.json",
+      "akalynth-ops/bin/council-execution-gate.sh",
+      "akalynth-ops/scripts/verify-council-dao-v2.sh",
+      "akalynth-ops/council/members/sovereign.json",
+      "docs/COUNCIL_DAO_V2_RUNBOOK.md",
+      "apps/server/tools/verify-council-dao-v2.ts",
+      "scripts/verify-council-dao-v2.sh"
+    ],
+    "claimed_branch": "codex/council-dao-v2",
+    "claimed_by": "Codex agent (ops-laptop execution)",
+    "claimed_utc": "2026-06-21T20:00:00Z",
+    "target_labels": [
+      "codex:ready",
+      "codex:running",
+      "codex:needs-review",
+      "codex:accepted",
+      "codex:blocked",
+      "packet:council-dao"
+    ]
+  },
+  "validation": {
+    "validated_utc": "2026-06-21T20:05:00Z",
+    "worktree": "/home/sovereign/akalynth-ops/repos/akalynth",
+    "green_commit": "5ca6792",
+    "commands": [
+      {
+        "command": "npm -w apps/server run verify:council-dao-v2",
+        "status": "passed"
+      },
+      {
+        "command": "akalynth-ops/scripts/verify-council-dao-v2.sh",
+        "status": "passed",
+        "notes": "v1 regression + weighted quorum + ledger append with --skip-lane-check."
+      }
+    ]
+  },
+  "codex_seed": {
+    "repo": "akalynth-codex",
+    "commit": "186d199",
+    "entry_id": "council-dao"
+  },
+  "execution_deliverables": {
+    "runbook": "docs/COUNCIL_DAO_V2_RUNBOOK.md",
+    "contract_verifier": "apps/server/tools/verify-council-dao-v2.ts",
+    "shell_verifier": "scripts/verify-council-dao-v2.sh",
+    "ops_gate_adapter": "akalynth-ops/bin/council-execution-gate.sh",
+    "ops_verifier": "akalynth-ops/scripts/verify-council-dao-v2.sh",
+    "member_registry_sample": "akalynth-ops/council/members/sovereign.json",
+    "sample_permit": "akalynth-ops/council/permits/sample-beta-check-v2.json"
+  },
+  "non_mutation_boundary": {
+    "runtime_trees": "unchanged",
+    "runtime_state": "unchanged",
+    "key_config_custody": "unchanged",
+    "deployment": "not_performed",
+    "auto_execution": "not_performed",
+    "council_action_classes": "lane:beta:check | lane:staging:check | lane:sim:check only",
+    "treasury_unit": "ops_credit symbolic bookkeeping only"
+  }
+}
