@@ -40,3 +40,13 @@ GitHub canonical source
 - Source: showcase runbook + chill-zone gather/refine verifiers on `main`.
 - Proof target: `chill_zone_gather_refine_deliver_v1`
 - Boundary: reproducible local proof only; no deploy and no default-on runtime flags.
+- Upstream: merged via GitHub PR #333 (seed), PR #334 (execution).
+
+## Third Packet
+
+- Packet: `AKALYNTH_COUNCIL_DAO_V1`
+- Path: `docs/codex-work-packets/council-dao-v1/CouncilDao.v1.md`
+- Loop record: `docs/engineering-loop/AKALYNTH_ENGINEERING_LOOP_COUNCIL_DAO_V1/`
+- Codex seed: `repos/akalynth-codex` @ `a691d76`
+- Proof target: `council_lane_check_permit_v1`
+- Boundary: read-only lane check permits only; ops adapter in `akalynth-ops`.
