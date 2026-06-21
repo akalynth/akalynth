@@ -37,13 +37,24 @@ Artifacts:
 | `evidence/<stamp>-live-lane-presentation-screenshots/` | Register + PNGs |
 | `evidence/live-lane-presentation-screenshot-proof/closure.json` | Packet closure |
 
-## Staging Publish Notes
+## Staging Publish
 
-Staging may require operator-approved publish before `/play/` is playable:
+Operator action from `akalynth-ops`:
 
-1. Mirror `/var/www/akalynth-beta/play` → `/var/www/akalynth-staging/play`
-2. Patch `staging.akalynth.com` Caddy for same-origin `/v1/*` + WebSocket → `:3001`
-3. Temporary `ALLOW_INSECURE_LOCAL=1` on `akalynth-staging` if disposable-account email verify is required; revert after capture
+```bash
+# plan only
+./bin/akalynth-lane-deploy.sh staging publish-account-play --dry-run
+
+# live publish (build + restart staging, publish /play/, sync Caddy)
+./bin/akalynth-lane-deploy.sh staging publish-account-play
+
+# publish + disposable-account screenshot smoke
+AKALYNTH_LIVE_ACK=1 ./bin/akalynth-lane-deploy.sh staging publish-account-play
+```
+
+Staging publishes `/play/` only (no lane-local `account.html` yet). If disposable-account
+screenshot smoke fails on email verify, apply a temporary `ALLOW_INSECURE_LOCAL=1`
+systemd drop-in on `akalynth-staging` during capture, then revert.
 
 Evidence: `evidence/<stamp>-staging-publish-account-play-remote/`
 
