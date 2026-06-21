@@ -72,6 +72,7 @@ fun WorldScreen(
         forgeholdRoute.completedObjectiveIds.contains("forgehold_component_payout").not()
     val gatherNode = GatherHelpers.nearestGatherableNode(state.gather, state.world.me)
     val gatherStation = GatherHelpers.nearestDeliverableStation(state.gather, state.world.me)
+    val gatherRefinery = GatherHelpers.nearestRefineryStation(state.gather, state.world.me)
     var showcaseMap by remember { mutableStateOf(false) }
     Box(
         modifier = Modifier
@@ -233,11 +234,14 @@ fun WorldScreen(
                 showGather = state.gather.isEnabled,
                 gatherNodeId = gatherNode?.nodeId,
                 gatherStationId = gatherStation?.stationId,
-                gatherBusy = state.gather.activeNodeId != null,
+                gatherRefineStationId = gatherRefinery?.stationId,
+                gatherBusy = state.gather.activeNodeId != null || state.gather.activeRefineStationId != null,
+                gatherRefining = state.gather.activeRefineStationId != null,
                 gatherProgressPct = state.gather.progressPct,
                 gatherHeldItem = state.gather.heldItemType,
                 onGather = { nodeId -> onEvent(GameEvent.Gather(nodeId)) },
                 onDeliver = { stationId -> onEvent(GameEvent.Deliver(stationId)) },
+                onRefine = { stationId -> onEvent(GameEvent.Refine(stationId)) },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(end = 12.dp, bottom = if (state.ui.chatOpen) 304.dp else 12.dp)

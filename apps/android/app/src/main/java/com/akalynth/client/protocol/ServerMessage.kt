@@ -594,6 +594,9 @@ data class GatherStationPublic(
     val zone: String,
     val x: Int,
     val y: Int,
+    // Step 3: curation = delivery point; refinery = refine point. Defaults to curation so an
+    // older server that omits the field still decodes (forward-compat).
+    val kind: String = "curation",
 )
 
 @Serializable
@@ -640,7 +643,32 @@ data class DeliverResultMessage(
     @SerialName("item_type") val itemType: String? = null,
     @SerialName("source_node_id") val sourceNodeId: String? = null,
     val reward: String? = null,
+    val refined: Boolean = false,
     val reason: String? = null,
+) : ServerMessage()
+
+// Chill-Zone Refine (Step 3) — mirror the gather result/progress/completed trio.
+@Serializable
+@SerialName("refine_result")
+data class RefineResultMessage(
+    val ok: Boolean,
+    @SerialName("station_id") val stationId: String? = null,
+    @SerialName("complete_at_ms") val completeAtMs: Long? = null,
+    val reason: String? = null,
+) : ServerMessage()
+
+@Serializable
+@SerialName("refine_progress")
+data class RefineProgressMessage(
+    @SerialName("station_id") val stationId: String,
+    @SerialName("progress_pct") val progressPct: Float,
+) : ServerMessage()
+
+@Serializable
+@SerialName("refine_completed")
+data class RefineCompletedMessage(
+    @SerialName("station_id") val stationId: String,
+    @SerialName("item_type") val itemType: String,
 ) : ServerMessage()
 
 // Fallback for unknown / unparseable messages (forward-compat, never crashes decode).

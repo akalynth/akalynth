@@ -351,3 +351,12 @@ data class DeliverIntentMessage(
 ) : ClientMessage() {
     override val type: String = "deliver_intent"
 }
+
+// Chill-Zone Refine (Step 3) — refine the held raw item at a refinery station.
+@Serializable
+@SerialName("refine_intent")
+data class RefineIntentMessage(
+    @SerialName("station_id") val stationId: String
+) : ClientMessage() {
+    override val type: String = "refine_intent"
+}

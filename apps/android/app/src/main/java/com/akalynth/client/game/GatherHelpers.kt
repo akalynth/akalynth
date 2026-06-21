@@ -23,6 +23,20 @@ object GatherHelpers {
         if (gather.heldItemType == null) return null
         return gather.stations.values
             .asSequence()
+            .filter { it.kind == "curation" }
+            .filter { inRange(me, it.x, it.y) }
+            .minByOrNull { manhattan(me!!.x, me.y, it.x, it.y) }
+    }
+
+    /** A refined output is prefixed `refined_`; only raw items can be refined. */
+    private fun isRefinable(itemType: String?): Boolean =
+        itemType != null && !itemType.startsWith("refined_")
+
+    fun nearestRefineryStation(gather: GatherState, me: PlayerPublic?): GatherStationPublic? {
+        if (!isRefinable(gather.heldItemType)) return null
+        return gather.stations.values
+            .asSequence()
+            .filter { it.kind == "refinery" }
             .filter { inRange(me, it.x, it.y) }
             .minByOrNull { manhattan(me!!.x, me.y, it.x, it.y) }
     }

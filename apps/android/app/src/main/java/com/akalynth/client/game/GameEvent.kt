@@ -24,6 +24,8 @@ sealed class GameEvent {
     // Chill-Zone Gather v0
     data class Gather(val nodeId: String) : GameEvent()
     data class Deliver(val stationId: String) : GameEvent()
+    // Chill-Zone Refine (Step 3)
+    data class Refine(val stationId: String) : GameEvent()
 
     // World events
     data class WorldEventContribution(val contributionId: String) : GameEvent()

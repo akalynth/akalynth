@@ -79,11 +79,14 @@ fun ActionButtons(
     showGather: Boolean = false,
     gatherNodeId: String? = null,
     gatherStationId: String? = null,
+    gatherRefineStationId: String? = null,
     gatherBusy: Boolean = false,
+    gatherRefining: Boolean = false,
     gatherProgressPct: Float = 0f,
     gatherHeldItem: String? = null,
     onGather: (String) -> Unit = {},
     onDeliver: (String) -> Unit = {},
+    onRefine: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val routeActions = routeActionSkillIds.mapNotNull { skillId ->
@@ -208,7 +211,7 @@ fun ActionButtons(
                 )
                 if (gatherBusy) {
                     Text(
-                        text = "Gathering ${gatherProgressPct.toInt()}%",
+                        text = "${if (gatherRefining) "Refining" else "Gathering"} ${gatherProgressPct.toInt()}%",
                         style = MaterialTheme.typography.labelSmall,
                         color = ClassicShellColors.MutedText,
                         modifier = Modifier.testTag("ActionButtons_GatherProgress")
@@ -231,12 +234,21 @@ fun ActionButtons(
                         modifier = Modifier.testTag("ActionButtons_Gather")
                     )
                 }
+                gatherRefineStationId?.let { stationId ->
+                    ClassicButton(
+                        text = "Refn",
+                        onClick = { onRefine(stationId) },
+                        compact = true,
+                        enabled = !gatherBusy && gatherHeldItem != null && gatherHeldItem.startsWith("refined_").not(),
+                        modifier = Modifier.testTag("ActionButtons_Refine")
+                    )
+                }
                 gatherStationId?.let { stationId ->
                     ClassicButton(
                         text = "Deliv",
                         onClick = { onDeliver(stationId) },
                         compact = true,
-                        enabled = gatherHeldItem != null,
+                        enabled = !gatherBusy && gatherHeldItem != null,
                         modifier = Modifier.testTag("ActionButtons_Deliver")
                     )
                 }

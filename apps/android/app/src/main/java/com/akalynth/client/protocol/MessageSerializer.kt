@@ -167,6 +167,10 @@ object MessageSerializer {
             is DeliverIntentMessage -> obj("deliver_intent") {
                 put("station_id", msg.stationId)
             }
+
+            is RefineIntentMessage -> obj("refine_intent") {
+                put("station_id", msg.stationId)
+            }
         }
         return json.encodeToString(JsonObject.serializer(), obj)
     }
@@ -227,6 +231,9 @@ object MessageSerializer {
                 "gather_progress" -> json.decodeFromString<GatherProgressMessage>(raw)
                 "gather_completed" -> json.decodeFromString<GatherCompletedMessage>(raw)
                 "deliver_result" -> json.decodeFromString<DeliverResultMessage>(raw)
+                "refine_result" -> json.decodeFromString<RefineResultMessage>(raw)
+                "refine_progress" -> json.decodeFromString<RefineProgressMessage>(raw)
+                "refine_completed" -> json.decodeFromString<RefineCompletedMessage>(raw)
                 else -> UnknownMessage(raw, type)
             }
         } catch (e: Exception) {

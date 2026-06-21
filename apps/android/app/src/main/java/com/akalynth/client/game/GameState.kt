@@ -55,9 +55,13 @@ data class GatherState(
     val nodes: Map<String, GatherNodePublic> = emptyMap(),
     val stations: Map<String, GatherStationPublic> = emptyMap(),
     val activeNodeId: String? = null,
+    // Refine (step 3): station being refined at, or null. Gathering XOR refining, so progressPct
+    // is shared between the two activities.
+    val activeRefineStationId: String? = null,
     val progressPct: Float = 0f,
     val heldItemType: String? = null,
     val tendingTokens: Int = 0,
+    val keystoneTokens: Int = 0,
     val status: String? = null,
 ) {
     val isEnabled: Boolean get() = nodes.isNotEmpty() || stations.isNotEmpty()

@@ -164,6 +164,9 @@ class GameStore(
             is GatherProgressMessage -> "${msg.nodeId} ${msg.progressPct.toInt()}%"
             is GatherCompletedMessage -> "${msg.nodeId} -> ${msg.itemType}"
             is DeliverResultMessage -> if (msg.ok) "deliver ${msg.itemType}" else "deliver reject ${msg.reason}"
+            is RefineResultMessage -> if (msg.ok) "refine ${msg.stationId}" else "refine reject ${msg.reason}"
+            is RefineProgressMessage -> "${msg.stationId} ${msg.progressPct.toInt()}%"
+            is RefineCompletedMessage -> "${msg.stationId} -> ${msg.itemType}"
             is UnknownMessage -> (msg.type?.let { "$it " } ?: "") + msg.raw.take(50)
         }
         val entry = DebugLogEntry(
@@ -234,6 +237,7 @@ class GameStore(
             is GameEvent.Attack -> sendAttack(event.targetId)
             is GameEvent.Gather -> sendGather(event.nodeId)
             is GameEvent.Deliver -> sendDeliver(event.stationId)
+            is GameEvent.Refine -> sendRefine(event.stationId)
             is GameEvent.WorldEventContribution -> sendWorldEventContribution(event.contributionId)
             is GameEvent.RouteAction -> sendRouteAction(event.skillId)
             is GameEvent.TalkToNpc -> talkToNpc(event.npcId)
@@ -420,6 +424,9 @@ class GameStore(
             is GatherProgressMessage -> handleGatherProgress(msg)
             is GatherCompletedMessage -> handleGatherCompleted(msg)
             is DeliverResultMessage -> handleDeliverResult(msg)
+            is RefineResultMessage -> handleRefineResult(msg)
+            is RefineProgressMessage -> handleRefineProgress(msg)
+            is RefineCompletedMessage -> handleRefineCompleted(msg)
             is UnknownMessage -> {} // Ignore unknown
         }
     }
@@ -940,6 +947,12 @@ class GameStore(
         logSent("deliver_intent", stationId)
     }
 
+    private fun sendRefine(stationId: String) {
+        if (stationId.isBlank()) return
+        wsClient.send(RefineIntentMessage(stationId))
+        logSent("refine_intent", stationId)
+    }
+
     private fun handleGatherSnapshot(msg: GatherSnapshotMessage) {
         val nodes = msg.nodes.associateBy { it.nodeId }
         val stations = msg.stations.associateBy { it.stationId }
@@ -949,6 +962,7 @@ class GameStore(
                     nodes = nodes,
                     stations = stations,
                     activeNodeId = null,
+                    activeRefineStationId = null,
                     progressPct = 0f,
                 )
             )
@@ -1004,10 +1018,12 @@ class GameStore(
         _state.update { state ->
             if (msg.ok) {
                 val reward = msg.reward
+                val refined = msg.refined
                 state.copy(
                     gather = state.gather.copy(
                         heldItemType = null,
-                        tendingTokens = state.gather.tendingTokens + if (reward != null) 1 else 0,
+                        tendingTokens = state.gather.tendingTokens + if (reward != null && !refined) 1 else 0,
+                        keystoneTokens = state.gather.keystoneTokens + if (reward != null && refined) 1 else 0,
                         status = if (reward != null) {
                             "Delivered ${msg.itemType} → +1 $reward"
                         } else {
@@ -1022,6 +1038,46 @@ class GameStore(
                     )
                 )
             }
+        }
+    }
+
+    private fun handleRefineResult(msg: RefineResultMessage) {
+        _state.update { state ->
+            if (msg.ok) {
+                state.copy(
+                    gather = state.gather.copy(
+                        activeRefineStationId = msg.stationId,
+                        progressPct = 0f,
+                        status = "Refining…",
+                    )
+                )
+            } else {
+                state.copy(
+                    gather = state.gather.copy(
+                        status = "Refine rejected: ${msg.reason ?: "rejected"}",
+                    )
+                )
+            }
+        }
+    }
+
+    private fun handleRefineProgress(msg: RefineProgressMessage) {
+        if (msg.stationId != _state.value.gather.activeRefineStationId) return
+        _state.update {
+            it.copy(gather = it.gather.copy(progressPct = msg.progressPct))
+        }
+    }
+
+    private fun handleRefineCompleted(msg: RefineCompletedMessage) {
+        _state.update {
+            it.copy(
+                gather = it.gather.copy(
+                    activeRefineStationId = null,
+                    progressPct = 0f,
+                    heldItemType = msg.itemType,
+                    status = "Refined → ${msg.itemType}",
+                )
+            )
         }
     }
 
