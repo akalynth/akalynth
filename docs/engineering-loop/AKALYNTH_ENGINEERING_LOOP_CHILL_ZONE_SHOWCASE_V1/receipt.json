@@ -44,7 +44,7 @@
   "validation": {
     "validated_utc": "2026-06-21T04:36:00Z",
     "worktree": "/home/sovereign/akalynth-ops/repos/akalynth",
-    "green_commit": "3cac264",
+    "green_commit": "85fc307",
     "commands": [
       {
         "command": "git diff --check",
