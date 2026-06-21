@@ -325,6 +325,12 @@ export interface DeliverIntentMessage extends BaseMessage {
   station_id: string;
 }
 
+// Chill-Zone Refine (Step 2): start refining the held raw item at a refinery station.
+export interface RefineIntentMessage extends BaseMessage {
+  type: 'refine_intent';
+  station_id: string;
+}
+
 export type ClientMessage =
   | ConnectMessage
   | LoginMessage
@@ -363,7 +369,8 @@ export type ClientMessage =
   | PlaceHouseBidMessage
   | CancelHouseAuctionMessage
   | GatherIntentMessage
-  | DeliverIntentMessage;
+  | DeliverIntentMessage
+  | RefineIntentMessage;
 
 // ============================================================================
 // Server → Client Messages
@@ -945,11 +952,16 @@ export interface GatherNodePublic {
   respawn_at_ms: number | null;
 }
 
+export type GatherStationKind = 'curation' | 'refinery';
+
 export interface GatherStationPublic {
   station_id: string;
   zone: string;
   x: number;
   y: number;
+  // Step 2: curation = delivery point; refinery = refine point. Lets clients render the
+  // right marker + action. Older clients ignore the field (additive).
+  kind: GatherStationKind;
 }
 
 // Lowercase mirror of the gather state-machine reject codes
@@ -960,6 +972,8 @@ export type GatherRejectReason =
   | 'node_not_available'
   | 'out_of_range'
   | 'already_gathering'
+  | 'already_refining'
+  | 'not_refinable'
   | 'held_slot_full'
   | 'held_slot_empty'
   | 'station_not_found';
@@ -1002,7 +1016,30 @@ export interface DeliverResultMessage extends BaseMessage {
   item_type?: string;
   source_node_id?: string;
   reward?: string;
+  /** Step 2: whether the delivered item had been refined (drives reward + UI copy). */
+  refined?: boolean;
   reason?: GatherRejectReason;
+}
+
+// Chill-Zone Refine (Step 2) — Server → Client. Mirror the gather result/progress/completed trio.
+export interface RefineResultMessage extends BaseMessage {
+  type: 'refine_result';
+  ok: boolean;
+  station_id?: string;
+  complete_at_ms?: number;
+  reason?: GatherRejectReason;
+}
+
+export interface RefineProgressMessage extends BaseMessage {
+  type: 'refine_progress';
+  station_id: string;
+  progress_pct: number;
+}
+
+export interface RefineCompletedMessage extends BaseMessage {
+  type: 'refine_completed';
+  station_id: string;
+  item_type: string;
 }
 
 export type ServerMessage =
@@ -1055,7 +1092,10 @@ export type ServerMessage =
   | GatherResultMessage
   | GatherProgressMessage
   | GatherCompletedMessage
-  | DeliverResultMessage;
+  | DeliverResultMessage
+  | RefineResultMessage
+  | RefineProgressMessage
+  | RefineCompletedMessage;
 
 // ============================================================================
 // Message Factories
@@ -1135,7 +1175,8 @@ export const ServerMessages = {
     item_type?: string,
     source_node_id?: string,
     reason?: GatherRejectReason,
-    reward?: string
+    reward?: string,
+    refined?: boolean
   ): DeliverResultMessage => ({
     type: 'deliver_result',
     ok,
@@ -1143,7 +1184,33 @@ export const ServerMessages = {
     item_type,
     source_node_id,
     reward,
+    refined,
     reason,
+  }),
+
+  refineResult: (
+    ok: boolean,
+    station_id?: string,
+    complete_at_ms?: number,
+    reason?: GatherRejectReason
+  ): RefineResultMessage => ({
+    type: 'refine_result',
+    ok,
+    station_id,
+    complete_at_ms,
+    reason,
+  }),
+
+  refineProgress: (station_id: string, progress_pct: number): RefineProgressMessage => ({
+    type: 'refine_progress',
+    station_id,
+    progress_pct,
+  }),
+
+  refineCompleted: (station_id: string, item_type: string): RefineCompletedMessage => ({
+    type: 'refine_completed',
+    station_id,
+    item_type,
   }),
 
   moveResult: (ok: boolean, x: number, y: number, reason: string | null = null, map?: MapName): MoveResultMessage => ({
@@ -1861,6 +1928,11 @@ export function parseClientMessage(data: unknown): ClientMessage | null {
     case 'deliver_intent': {
       if (typeof msg.station_id !== 'string') return null;
       return { type: 'deliver_intent', station_id: msg.station_id };
+    }
+
+    case 'refine_intent': {
+      if (typeof msg.station_id !== 'string') return null;
+      return { type: 'refine_intent', station_id: msg.station_id };
     }
 
     default:

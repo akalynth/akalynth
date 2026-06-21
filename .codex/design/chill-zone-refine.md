@@ -225,12 +225,15 @@ gather unit tests.
 
 ## Build Order (smallest verifiable step first)
 
-1. **Server core** (`gather.ts`): `StationDef.kind`; `PlayerGather` `refining` variant;
-   `startRefine` / `cancelRefine`; `tickGather` completes refines (in-place upgrade); `deliver`
-   reward graded by `item_type`; place `azura_refinery_stand`. Land Tier-1 R1–R9. *No UI.*
-2. **Protocol + WS** (`protocol.ts`, `index.ts`): `refine_intent`, `refine_result` /
-   `refine_progress` / `refine_completed`, `GatherStationPublic.kind`, `deliver_result.refined`,
-   reject-reason additions. Extend the WS harness (Tier-2). protocol-guardian sign-off.
+1. **Server core** (`gather.ts`) — ✅ **done** (`2171a3e`): `StationDef.kind`; `PlayerGather`
+   `refining` variant; `startRefine` / `cancelRefine`; `tickGather` completes refines (in-place
+   upgrade); `deliver` reward graded by `item_type`; `AZURA_REFINE_STATIONS` @ (33,33). Tier-1
+   R1–R14 green (76 checks). *No UI, no wire change.*
+2. **Protocol + WS** (`protocol.ts`, `index.ts`) — ✅ **done**: `refine_intent` (+ allowlist
+   `parseClientMessage`), `refine_result` / `refine_progress` / `refine_completed`,
+   `GatherStationPublic.kind`, `deliver_result.refined`, `already_refining`/`not_refinable`
+   reject reasons; refinery placed behind `CHILL_ZONE_REFINE_ENABLED`; receipt folds
+   `refined` + `refined_at_station`. WS harness extended with the S6 refine leg (Tier-2).
 3. **Clients:** debug-client `GatherPanel` / `gatherMapOverlays.ts` render the refinery marker +
    a **Refn** action when adjacent holding a raw mote; Android `GatherHelpers` + `ActionButtons`
    mirror it (the **Gthr** pattern). ProtocolParity test updates.

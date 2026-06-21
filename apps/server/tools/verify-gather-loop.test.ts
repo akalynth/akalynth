@@ -1,13 +1,16 @@
 #!/usr/bin/env node
-// Tier-2 end-to-end proof for the Chill-Zone Gather loop over a fresh local WebSocket server.
+// Tier-2 end-to-end proof for the Chill-Zone Gather + Refine loop over a fresh local WebSocket server.
 //
 // Reuses the Rookguard onboarding path to reach Azura (the chill zone), then drives:
-//   S1 node+station registry on arrival
+//   S1 node+station registry on arrival (incl. the refinery station)
 //   S2 gather a node (server-owned timer: progress advances, then completes)
 //   S3 out-of-range gather is rejected
 //   S4 deliver at the curation stand -> delivery_recorded receipt in the chain
+//   S5 second cycle feeds Tem heat (gather_cadence x2)
+//   S6 gather -> refine at the refinery (server-owned timer) -> deliver refined -> keystone receipt
 //
-// Boots the server with CHILL_ZONE_GATHER_ENABLED=1. Mirrors verify-rookguard-codex-path.ts.
+// Boots the server with CHILL_ZONE_GATHER_ENABLED=1 and CHILL_ZONE_REFINE_ENABLED=1.
+// Mirrors verify-rookguard-codex-path.ts.
 
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
@@ -367,6 +370,7 @@ async function verifyGatherLoop(): Promise<void> {
       AKALYNTH_BOOTSTRAP: '1',
       AKALYNTH_LIFECYCLE_VERIFY: '0',
       CHILL_ZONE_GATHER_ENABLED: '1',
+      CHILL_ZONE_REFINE_ENABLED: '1',
       [RECEIPT_CHAIN_PATH_ENV]: chainPaths.receiptsPath,
       [DB_PATH_ENV]: chainPaths.dbPath,
       [REPLAY_MARKER_PATH_ENV]: chainPaths.markerPath,
@@ -396,7 +400,7 @@ async function verifyGatherLoop(): Promise<void> {
     // S1 — node + station registry on arrival.
     const snapshot = await client.waitFor((msg) => msg.type === 'gather_snapshot', 'gather_snapshot');
     const nodes = snapshot.nodes as Array<{ node_id: string; x: number; y: number; state: string }>;
-    const stations = snapshot.stations as Array<{ station_id: string; x: number; y: number }>;
+    const stations = snapshot.stations as Array<{ station_id: string; x: number; y: number; kind?: string }>;
     assert(Array.isArray(nodes) && nodes.length >= 1, `expected gather nodes, got ${JSON.stringify(nodes)}`);
     assert(Array.isArray(stations) && stations.length >= 1, `expected stations, got ${JSON.stringify(stations)}`);
     const node = nodes.find((n) => n.node_id === 'azura_ley_mote_e');
@@ -492,7 +496,66 @@ async function verifyGatherLoop(): Promise<void> {
     );
     ok(`S5 Tem heat: gather_cadence x2, score ${heatTicks[0].inputs?.new_score} -> ${heatTicks[1].inputs?.new_score} (feeds shared escalation)`);
 
-    ok(`${LANE}: chill-zone gather loop verified over WebSocket`);
+    // S6 (refine) — gather a third node, refine the raw mote at the refinery, deliver refined.
+    const refinery = stations.find((st) => st.station_id === 'azura_refinery_stand');
+    assert(refinery, `expected refinery station (CHILL_ZONE_REFINE_ENABLED): ${JSON.stringify(stations)}`);
+    assert(refinery.kind === 'refinery', `refinery should carry kind=refinery: ${JSON.stringify(refinery)}`);
+    const nodeSe = nodes.find((n) => n.node_id === 'azura_ley_mote_se');
+    assert(nodeSe, `expected node azura_ley_mote_se in snapshot: ${JSON.stringify(nodes)}`);
+    cur = await moveToward(client, cur, nodeSe, 1);
+    client.send({ type: 'gather_intent', node_id: nodeSe.node_id });
+    const accept3 = await client.waitFor((msg) => msg.type === 'gather_result', 'gather_result:3');
+    assert(accept3.ok === true, `third gather should accept: ${JSON.stringify(accept3)}`);
+    await client.waitFor((msg) => msg.type === 'gather_completed' && msg.node_id === nodeSe.node_id, 'gather_completed:3');
+
+    // Refine (server-owned timer): accept -> progress advances -> completed (in-place upgrade).
+    cur = await moveToward(client, cur, refinery, 1);
+    assert(manhattan(cur, refinery) <= 1, `expected to stand adjacent to refinery, at ${cur.x},${cur.y}`);
+    client.send({ type: 'refine_intent', station_id: refinery.station_id });
+    const refineAccept = await client.waitFor((msg) => msg.type === 'refine_result', 'refine_result:accept');
+    assert(
+      refineAccept.ok === true && typeof refineAccept.complete_at_ms === 'number',
+      `expected refine accept w/ complete_at_ms, got ${JSON.stringify(refineAccept)}`
+    );
+    const refineProgress = await client.waitFor(
+      (msg) => msg.type === 'refine_progress' && msg.station_id === refinery.station_id && (msg.progress_pct as number) > 0,
+      'refine_progress'
+    );
+    assert((refineProgress.progress_pct as number) < 100, `refine progress should be mid, got ${JSON.stringify(refineProgress)}`);
+    const refineDone = await client.waitFor(
+      (msg) => msg.type === 'refine_completed' && msg.station_id === refinery.station_id,
+      'refine_completed'
+    );
+    assert(refineDone.item_type === 'refined_ley_mote', `expected refined_ley_mote, got ${JSON.stringify(refineDone)}`);
+    ok(`S6 refine completed (progress observed @ ${Math.round(refineProgress.progress_pct as number)}%)`);
+
+    // Deliver the refined mote -> keystone reward + refined receipt provenance.
+    cur = await moveToward(client, cur, station, 1);
+    client.send({ type: 'deliver_intent', station_id: station.station_id });
+    const delivered3 = await client.waitFor((msg) => msg.type === 'deliver_result', 'deliver_result:3');
+    assert(delivered3.ok === true, `refined deliver should succeed: ${JSON.stringify(delivered3)}`);
+    assert(
+      delivered3.item_type === 'refined_ley_mote' && delivered3.refined === true && delivered3.reward === 'keystone_token',
+      `refined deliver_result mismatch: ${JSON.stringify(delivered3)}`
+    );
+    ok('S6 refined deliver succeeded (reward: keystone_token)');
+
+    await sleep(150);
+    const receipts3 = fs
+      .readFileSync(chainPaths.receiptsPath, 'utf8')
+      .trim()
+      .split('\n')
+      .map((line) => JSON.parse(line) as { action: string; inputs?: Record<string, unknown> });
+    const refinedDeliveries = receipts3.filter((r) => r.action === 'delivery_recorded' && r.inputs?.refined === true);
+    assert(refinedDeliveries.length === 1, `expected one refined delivery_recorded, got ${refinedDeliveries.length}`);
+    assert(
+      refinedDeliveries[0].inputs?.reward === 'keystone_token' &&
+        refinedDeliveries[0].inputs?.refined_at_station === 'azura_refinery_stand',
+      `refined receipt mismatch: ${JSON.stringify(refinedDeliveries[0].inputs)}`
+    );
+    ok('receipt: refined delivery_recorded with keystone_token + refinery provenance');
+
+    ok(`${LANE}: chill-zone gather + refine loop verified over WebSocket`);
   } finally {
     client?.close();
     await stopServer(child);

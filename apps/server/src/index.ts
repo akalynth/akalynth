@@ -100,15 +100,19 @@ import { loadSharedMap, createWorldState, toPublicPlayer } from './world/state.j
 import {
   createGatherSystem,
   startGather,
+  startRefine,
   deliver,
   tickGather,
   onPlayerLeave,
   getPlayerGather,
   gatherProgressPct,
+  refineProgressPct,
   isGatherEnabled,
+  isRefineEnabled,
   DEFAULT_GATHER_CONFIG,
   AZURA_GATHER_NODES,
   AZURA_STATIONS,
+  AZURA_REFINE_STATIONS,
   DELIVERY_RECORDED_ACTION,
   type GatherSystem,
   type GatherNode,
@@ -1830,8 +1834,14 @@ registerMapPlaces(worlds.Azura.map, 'Azura');
 
 // Chill-Zone Gather v0 (Step 2): server-authoritative gather system for the Azura
 // chill zone. Null (inert) unless CHILL_ZONE_GATHER_ENABLED is set (default off).
+// The refinery station is placed only when CHILL_ZONE_REFINE_ENABLED is also set, so the
+// refine step rolls out / back independently of the shipped gather loop.
 const gatherSystem: GatherSystem | null = isGatherEnabled()
-  ? createGatherSystem(DEFAULT_GATHER_CONFIG, AZURA_GATHER_NODES, AZURA_STATIONS)
+  ? createGatherSystem(
+      DEFAULT_GATHER_CONFIG,
+      AZURA_GATHER_NODES,
+      isRefineEnabled() ? [...AZURA_STATIONS, ...AZURA_REFINE_STATIONS] : AZURA_STATIONS,
+    )
   : null;
 
 // Delivery acknowledgment is non-tradeable and recorded in the receipt + deliver_result only —
@@ -2866,14 +2876,15 @@ function gatherNodePublic(node: GatherNode): GatherNodePublic {
   };
 }
 
-// Project a StationDef to the wire shape. Deliberately omits `kind` so the gather_snapshot
-// contract stays byte-identical for now; step 2 adds `kind` to GatherStationPublic intentionally.
+// Project a StationDef to the wire shape, including `kind` so clients render the right marker
+// and action (curation = deliver, refinery = refine). Additive vs. step 1; older clients ignore it.
 function gatherStationPublic(station: StationDef): GatherStationPublic {
   return {
     station_id: station.station_id,
     zone: station.zone,
     x: station.x,
     y: station.y,
+    kind: station.kind,
   };
 }
 
@@ -5543,6 +5554,8 @@ function processSessionQueue(s: Session, now: number) {
               zone: res.record.zone,
               x: s.player.x,
               y: s.player.y,
+              refined: res.record.refined,
+              refined_at_station: res.record.refined_at_station_id,
               reward: res.record.reward,
             },
             result: 'ok',
@@ -5555,7 +5568,8 @@ function processSessionQueue(s: Session, now: number) {
               res.record.item_type,
               res.record.source_node_id,
               undefined,
-              res.record.reward
+              res.record.reward,
+              res.record.refined
             )
           );
           // Step 3: feed the gather->deliver cadence into Tem heat. Sustained farming
@@ -5567,6 +5581,34 @@ function processSessionQueue(s: Session, now: number) {
           send(
             s.ws,
             ServerMessages.deliverResult(false, undefined, undefined, undefined, res.reason.toLowerCase() as GatherRejectReason)
+          );
+        }
+        break;
+      }
+
+      case 'refine_intent': {
+        if (!requireAuth(s) || !s.player) break;
+        if (!gatherSystem) {
+          send(s.ws, ServerMessages.refineResult(false, undefined, undefined, 'station_not_found'));
+          break;
+        }
+        // Server owns the refine clock; the in-place upgrade lands later in tickGather. No node
+        // state changes (a refinery is not claimed), so nothing to broadcast on success.
+        const res = startRefine(
+          gatherSystem,
+          s.player.id,
+          s.currentMap,
+          msg.station_id,
+          s.player.x,
+          s.player.y,
+          Date.now()
+        );
+        if (res.ok) {
+          send(s.ws, ServerMessages.refineResult(true, res.station_id, res.complete_at_ms));
+        } else {
+          send(
+            s.ws,
+            ServerMessages.refineResult(false, undefined, undefined, res.reason.toLowerCase() as GatherRejectReason)
           );
         }
         break;
@@ -6235,6 +6277,10 @@ setInterval(() => {
       const node = gatherSystem.zones.get(c.zone)?.nodes.get(c.node_id);
       if (node) broadcastToMap(c.zone as 'Rookguard' | 'Azura', ServerMessages.gatherNodeUpdate(gatherNodePublic(node)));
     }
+    const refinedByPlayer = new Map<string, { station_id: string; item_type: string }>();
+    for (const rf of gatherEffects.refined) {
+      refinedByPlayer.set(rf.player_id, { station_id: rf.station_id, item_type: rf.item_type });
+    }
     for (const r of gatherEffects.respawned) {
       const node = gatherSystem.zones.get(r.zone)?.nodes.get(r.node_id);
       if (node) broadcastToMap(r.zone as 'Rookguard' | 'Azura', ServerMessages.gatherNodeUpdate(gatherNodePublic(node)));
@@ -6246,10 +6292,18 @@ setInterval(() => {
         send(gs.ws, ServerMessages.gatherCompleted(done.node_id, done.item_type));
         continue;
       }
+      const refinedDone = refinedByPlayer.get(gs.player.id);
+      if (refinedDone) {
+        send(gs.ws, ServerMessages.refineCompleted(refinedDone.station_id, refinedDone.item_type));
+        continue;
+      }
       const g = getPlayerGather(gatherSystem, gs.player.id);
       if (g.state === 'gathering') {
         const pct = gatherProgressPct(gatherSystem, gs.player.id, now);
         if (pct !== null) send(gs.ws, ServerMessages.gatherProgress(g.node_id, pct));
+      } else if (g.state === 'refining') {
+        const pct = refineProgressPct(gatherSystem, gs.player.id, now);
+        if (pct !== null) send(gs.ws, ServerMessages.refineProgress(g.station_id, pct));
       }
     }
   }
