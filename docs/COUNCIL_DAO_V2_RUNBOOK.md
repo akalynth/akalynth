@@ -93,6 +93,11 @@ Given `sovereign` with `reputation_score: 2.0` and
 v2 inherits v1 boundaries. Council path still never calls `build`, `restart`,
 or `deploy`. Treasury ledger is ops bookkeeping only.
 
+## Deploy Permit Follow-On
+
+Gated beta/staging deploy with human ack:
+`docs/COUNCIL_DAO_DEPLOY_PERMIT_V1_RUNBOOK.md` (`AKALYNTH_COUNCIL_DAO_DEPLOY_PERMIT_V1`)
+
 ## Engineering Loop Receipt
 
 `docs/engineering-loop/AKALYNTH_ENGINEERING_LOOP_COUNCIL_DAO_V2/receipt.json`
