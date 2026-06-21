@@ -234,11 +234,13 @@ gather unit tests.
    `GatherStationPublic.kind`, `deliver_result.refined`, `already_refining`/`not_refinable`
    reject reasons; refinery placed behind `CHILL_ZONE_REFINE_ENABLED`; receipt folds
    `refined` + `refined_at_station`. WS harness extended with the S6 refine leg (Tier-2).
-3. **Clients:** debug-client `GatherPanel` / `gatherMapOverlays.ts` render the refinery marker +
-   a **Refn** action when adjacent holding a raw mote; Android `GatherHelpers` + `ActionButtons`
-   mirror it (the **Gthr** pattern). ProtocolParity test updates.
-4. **Economy + Tem tuning** ([[economy-steward]], anti-cheat): finalize `keystone_token` value
-   (token-only; gold only if ever justified) and decide whether to emit `refine_cadence` heat.
+3. **Clients** — ✅ **done**: debug-client `GatherPanel` Refn action + amber `R` refinery marker
+   (`gatherMapOverlays.ts`), `sendRefine`, refine handlers, keystone token count;
+   `verify-gather-wire-authority.mjs` extended. Android `GatherHelpers.nearestRefineryStation`,
+   `ActionButtons` Refn button, `GameStore` refine handlers, `ProtocolParityTest` (39 client /
+   53 server). Web tsc + wire-authority verifier green; Android ParityTest runs in CI on push.
+4. **Economy + Tem tuning** ([[economy-steward]], anti-cheat) — *next*: finalize `keystone_token`
+   value (token-only; gold only if ever justified) and decide whether to emit `refine_cadence` heat.
 
 ---
 
