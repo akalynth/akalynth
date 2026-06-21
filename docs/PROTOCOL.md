@@ -32,7 +32,7 @@ Important gates:
 - DEBUG-only messages must not be treated as normal client capabilities
 - moderation report and resolution messages are currently gated by authenticated session plus DEBUG mode; this document does not claim a role-based admin policy unless server code adds one
 - optional fields are compatibility surfaces, not authority transfers to the client
-- chill-zone gather intents (`gather_intent`, `deliver_intent`) and gather broadcasts are inert unless `CHILL_ZONE_GATHER_ENABLED` is set (default off)
+- chill-zone gather intents (`gather_intent`, `deliver_intent`, `refine_intent`) and gather/refine broadcasts are inert unless `CHILL_ZONE_GATHER_ENABLED` is set (default off); refinery stations and `refine_intent` additionally require `CHILL_ZONE_REFINE_ENABLED` (default off)
 
 ## Compatibility Notes
 
@@ -149,6 +149,7 @@ interface BaseMessage {
 | `cancel_house_auction` | Owner cancels a resale auction (only with zero bids). |
 | `gather_intent` | Starts gathering at `node_id`. Gated by `CHILL_ZONE_GATHER_ENABLED` (default off). |
 | `deliver_intent` | Delivers held gather item at `station_id`. Gated by `CHILL_ZONE_GATHER_ENABLED` (default off). |
+| `refine_intent` | Starts refining the held raw item at `station_id`. Gated by `CHILL_ZONE_GATHER_ENABLED` and `CHILL_ZONE_REFINE_ENABLED` (both default off). |
 
 ## Server → Client Messages
 
@@ -203,6 +204,9 @@ interface BaseMessage {
 | `gather_result` | Result of a `gather_intent` with optional `GatherRejectReason`. |
 | `gather_progress` | In-progress gather progress for a `node_id`. |
 | `gather_completed` | Gather finished; held-slot `item_type` for the `node_id`. |
+| `refine_result` | Result of a `refine_intent` with optional `GatherRejectReason`. |
+| `refine_progress` | In-progress refine progress for a `station_id`. |
+| `refine_completed` | Refine finished; held-slot upgraded to refined `item_type`. |
 | `deliver_result` | Result of a `deliver_intent`; success may emit a `delivery_recorded` receipt. |
 
 ## Client → Server Details
@@ -421,7 +425,11 @@ Starts gathering at `node_id`. The server validates zone membership, node availa
 
 #### `deliver_intent`
 
-Delivers the held gather item at `station_id`. The server validates range, held-slot contents, and the `CHILL_ZONE_GATHER_ENABLED` runtime gate (default off). Success emits a `delivery_recorded` receipt and returns `deliver_result`; step 4 may grant a non-tradeable `tending_token` reward string without gold or economy credit.
+Delivers the held gather item at `station_id`. The server validates range, held-slot contents, and the `CHILL_ZONE_GATHER_ENABLED` runtime gate (default off). Success emits a `delivery_recorded` receipt and returns `deliver_result`; raw items grant a non-tradeable `tending_token` acknowledgment; refined items grant `keystone_token` (no gold or economy credit).
+
+#### `refine_intent`
+
+Starts refining the held raw item at `station_id`. The server validates range, held-slot contents, refinery station kind, and both `CHILL_ZONE_GATHER_ENABLED` and `CHILL_ZONE_REFINE_ENABLED` runtime gates (default off). Responses use `refine_result`, `refine_progress`, and `refine_completed`. The server upgrades the held item in place on its own clock.
 
 ## Server → Client Details
 
@@ -631,9 +639,21 @@ In-progress gather tick for `node_id` with authoritative `progress_pct`.
 
 Gather finished for `node_id`; `item_type` names the held-slot item the server now owns.
 
+#### `refine_result`
+
+Result of a `refine_intent` with `ok`, optional `station_id`, `complete_at_ms`, and optional `reason` from `GatherRejectReason` (includes `already_refining`, `not_refinable`).
+
+#### `refine_progress`
+
+In-progress refine tick for `station_id` with authoritative `progress_pct`.
+
+#### `refine_completed`
+
+Refine finished for `station_id`; `item_type` names the upgraded held-slot item (`refined_ley_mote`).
+
 #### `deliver_result`
 
-Result of a `deliver_intent` with `ok`, optional `station_id`, `item_type`, `source_node_id`, `reward`, and optional `reason` from `GatherRejectReason`.
+Result of a `deliver_intent` with `ok`, optional `station_id`, `item_type`, `source_node_id`, `reward`, optional `refined`, and optional `reason` from `GatherRejectReason`.
 
 ## Contract Type Literals
 
