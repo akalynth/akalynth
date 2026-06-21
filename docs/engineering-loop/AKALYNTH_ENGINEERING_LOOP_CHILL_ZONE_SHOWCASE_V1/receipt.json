@@ -1,0 +1,99 @@
+{
+  "object_id": "AKALYNTH_ENGINEERING_LOOP_CHILL_ZONE_SHOWCASE_V1",
+  "status": "created",
+  "created_utc": "2026-06-21T12:00:00Z",
+  "authority": {
+    "github": "canonical public/source remote",
+    "gitea": "local agent workbench and PR queue",
+    "codex": "packet authoring and agent execution",
+    "ci_validation": "proof gate before merge",
+    "receipts": "evidence of what changed and why"
+  },
+  "packet": {
+    "object_id": "AKALYNTH_CHILL_ZONE_SHOWCASE_CLOSURE_V1",
+    "path": "docs/codex-work-packets/chill-zone-showcase-closure-v1/ChillZone.showcase_closure.md",
+    "proof_target": "chill_zone_gather_refine_deliver_v1",
+    "source_inputs": [
+      "docs/SHOWCASE_RUNBOOK.md",
+      "docs/KNOWN_GAPS.md",
+      "docs/PROTOCOL.md",
+      "apps/server/tools/verify-gather-loop.test.ts",
+      "apps/server/tools/verify-gather.test.ts",
+      "apps/debug-client/scripts/verify-gather-wire-authority.mjs",
+      "scripts/showcase_local.sh"
+    ],
+    "gitea_repo": "https://gitea.akalynth.com/sovereign/akalynth",
+    "gitea_issue": null,
+    "gitea_pr": null,
+    "github_pr": null,
+    "claimed_branch": "codex/chill-zone-showcase-closure-v1",
+    "claimed_by": null,
+    "target_labels": [
+      "codex:ready",
+      "codex:running",
+      "codex:needs-review",
+      "codex:accepted",
+      "codex:blocked",
+      "packet:chill-zone"
+    ]
+  },
+  "validation": {
+    "validated_utc": null,
+    "worktree": null,
+    "commands": [
+      {
+        "command": "git diff --check",
+        "status": "pending"
+      },
+      {
+        "command": "npm -w apps/server run verify:quick",
+        "status": "pending"
+      },
+      {
+        "command": "npm -w apps/server run test:gather",
+        "status": "pending"
+      },
+      {
+        "command": "CHILL_ZONE_GATHER_ENABLED=1 CHILL_ZONE_REFINE_ENABLED=1 npm -w apps/server run test:gather-loop",
+        "status": "pending",
+        "notes": "WS E2E lane AKALYNTH_CHILL_ZONE_GATHER_WS_E2E_V1; boots disposable server with both flags on."
+      },
+      {
+        "command": "npm -w apps/debug-client run verify:gather-client",
+        "status": "pending"
+      },
+      {
+        "command": "npm run verify:showcase",
+        "status": "pending",
+        "notes": "After runbook and showcase script updates land on branch."
+      }
+    ],
+    "known_warnings": []
+  },
+  "codex_status_update": {
+    "status": "codex:ready",
+    "meaning": "packet and receipt seeded; awaiting Gitea issue claim and agent execution",
+    "gitea_issue": null,
+    "gitea_pr": null,
+    "github_pr": null
+  },
+  "github_ci_status": {
+    "status": "not_started",
+    "checked_utc": null,
+    "pr": null,
+    "merge_status": "not merged"
+  },
+  "non_mutation_boundary": {
+    "runtime_trees": "unchanged",
+    "runtime_state": "unchanged",
+    "key_config_custody": "unchanged",
+    "deployment": "not performed",
+    "gather_refine_default_on": "not performed",
+    "gameplay_promotion": "not performed"
+  },
+  "optional_display_only_substep": {
+    "world_showcase_mode": "?mode=world",
+    "sprite_root": "data/assets-src/sprites/",
+    "claim": "display-only visual catalog and map overlays; no mechanic promotion"
+  }
+}

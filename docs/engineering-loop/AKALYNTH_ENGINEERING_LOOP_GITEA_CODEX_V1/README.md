@@ -30,3 +30,13 @@ GitHub canonical source
 - Path: `docs/codex-work-packets/forgehold-next-packet-v1/Forgehold.next_packet.md`
 - Source: Forgehold route source intake and release gates.
 - Boundary: no gameplay promotion and no runtime mutation.
+- Upstream: merged via GitHub PR #312 and PR #313.
+
+## Second Packet
+
+- Packet: `AKALYNTH_CHILL_ZONE_SHOWCASE_CLOSURE_V1`
+- Path: `docs/codex-work-packets/chill-zone-showcase-closure-v1/ChillZone.showcase_closure.md`
+- Loop record: `docs/engineering-loop/AKALYNTH_ENGINEERING_LOOP_CHILL_ZONE_SHOWCASE_V1/`
+- Source: showcase runbook + chill-zone gather/refine verifiers on `main`.
+- Proof target: `chill_zone_gather_refine_deliver_v1`
+- Boundary: reproducible local proof only; no deploy and no default-on runtime flags.
