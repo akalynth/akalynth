@@ -121,6 +121,7 @@ async function main(): Promise<void> {
 
   // me
   check('me with session -> 200', svc.me(authCtx).status === 200);
+  check('me echoes csrf token for static portal', (svc.me(authCtx).body as { csrf_token?: string }).csrf_token === csrf);
   check('me without session -> 401', svc.me({ cookies: {} }).status === 401);
 
   // logout requires CSRF

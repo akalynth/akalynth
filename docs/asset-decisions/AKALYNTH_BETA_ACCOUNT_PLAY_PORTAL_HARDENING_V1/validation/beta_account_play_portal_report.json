@@ -1,7 +1,7 @@
 {
   "id": "AKALYNTH_BETA_ACCOUNT_PLAY_PORTAL_HARDENING_V1",
   "status": "pass",
-  "generated_at": "2026-06-20T21:58:47.363Z",
+  "generated_at": "2026-06-21T06:47:33.256Z",
   "scope": "beta static account portal, account-character play token handoff, debug-client /play/ identity bootstrap, Android beta portal URL",
   "checks": [
     {
@@ -74,6 +74,38 @@
       "evidence": {
         "file": "accountHtml",
         "literal": "api('POST', '/v1/accounts/login'"
+      }
+    },
+    {
+      "id": "account_page_keeps_login_csrf_token_for_subsequent_posts",
+      "status": "pass",
+      "evidence": {
+        "file": "accountHtml",
+        "literal": "if (typeof data.csrf_token === 'string' && data.csrf_token) sessionCsrfToken = data.csrf_token;"
+      }
+    },
+    {
+      "id": "account_page_keeps_me_csrf_token_for_subsequent_posts",
+      "status": "pass",
+      "evidence": {
+        "file": "accountHtml",
+        "literal": "if (typeof data.csrf_token === 'string' && data.csrf_token) sessionCsrfToken = data.csrf_token;"
+      }
+    },
+    {
+      "id": "account_page_outfit_catalog_uses_name_field",
+      "status": "pass",
+      "evidence": {
+        "file": "accountHtml",
+        "literal": "found.name ?? String(outfitId).replace(/_/g, ' ')"
+      }
+    },
+    {
+      "id": "account_page_uses_login_csrf_token_when_cookie_unavailable",
+      "status": "pass",
+      "evidence": {
+        "file": "accountHtml",
+        "literal": "return m ? decodeURIComponent(m[1]) : sessionCsrfToken;"
       }
     },
     {
@@ -333,10 +365,25 @@
       }
     },
     {
-      "id": "live_https_checks",
-      "status": "skipped",
+      "id": "live_account.html_returns_200",
+      "status": "pass",
       "evidence": {
-        "reason": "--skip-live"
+        "url": "https://beta.akalynth.com/account.html",
+        "statusCode": 200,
+        "contentType": "text/html; charset=utf-8",
+        "lastModified": "Sun, 21 Jun 2026 06:19:43 GMT",
+        "server": "Caddy"
+      }
+    },
+    {
+      "id": "live_play__returns_200",
+      "status": "pass",
+      "evidence": {
+        "url": "https://beta.akalynth.com/play/",
+        "statusCode": 200,
+        "contentType": "text/html; charset=utf-8",
+        "lastModified": "Sun, 21 Jun 2026 06:19:34 GMT",
+        "server": "Caddy"
       }
     }
   ],
@@ -345,5 +392,5 @@
     "Does not mutate runtime trees, runtime state, key/config custody, Caddy, or services.",
     "Live checks are limited to public HTTPS HEAD status for beta.akalynth.com/account.html and beta.akalynth.com/play/."
   ],
-  "completed_at": "2026-06-20T21:58:47.364Z"
+  "completed_at": "2026-06-21T06:47:33.946Z"
 }

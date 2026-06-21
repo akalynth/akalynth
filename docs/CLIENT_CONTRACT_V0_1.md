@@ -334,7 +334,7 @@ See `docs/IDENTITY_VERIFICATION.md` for verification protocol.
 
 ### Recommended Migration
 1. Sign in or create an account and keep the account session cookie.
-2. Preserve the readable CSRF token returned by account login.
+2. Preserve the readable CSRF token returned by account login or `GET /v1/accounts/me` on session boot.
 3. Load `GET /v1/worlds` and `GET /v1/outfits`, then create with
    `POST /v1/characters` using `name`, `world_id`, `sex`, and `outfit_id`.
 4. Store the returned play token persistently.

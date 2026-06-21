@@ -278,17 +278,18 @@ async function refreshOutfitSelect() {
   const sex = document.getElementById('char-sex').value;
   const outfits = await loadOutfits(sex);
   const sel = document.getElementById('char-outfit');
-  sel.innerHTML = outfits.map(o => `<option value="${o.outfit_id}">${o.label}</option>`).join('');
+  sel.innerHTML = outfits.map(o => `<option value="${o.outfit_id}">${escHtml(o.name ?? o.outfit_id)}</option>`).join('');
 }
 
 // ── character list ───────────────────────────────────────────────────────────
 
 function outfitLabel(outfitId) {
+  if (!outfitId) return 'Unknown outfit';
   for (const list of Object.values(outfitsBySex)) {
     const found = list.find(o => o.outfit_id === outfitId);
-    if (found) return found.label;
+    if (found) return found.name ?? String(outfitId).replace(/_/g, ' ');
   }
-  return outfitId.replace(/_/g, ' ');
+  return String(outfitId).replace(/_/g, ' ');
 }
 
 async function renderCharacters() {
@@ -410,6 +411,8 @@ async function boot() {
     return;
   }
   if (!data.account.email_verified) { show('view-unverified'); return; }
+
+  if (typeof data.csrf_token === 'string' && data.csrf_token) sessionCsrfToken = data.csrf_token;
 
   show('view-characters');
   await renderCharacters();

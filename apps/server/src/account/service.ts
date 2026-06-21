@@ -354,9 +354,14 @@ export class AccountService {
     if (!session) return { status: 401, body: { ok: false, error: 'not_authenticated' } };
     const acct = this.d.store.findById(session.account_id);
     if (!acct) return { status: 401, body: { ok: false, error: 'not_authenticated' } };
+    const csrf = ctx.cookies[CSRF_COOKIE];
     return {
       status: 200,
-      body: { ok: true, account: { account_id: acct.account_id, handle: acct.handle, has_email: !!acct.email_lower, email_verified: acct.email_verified === 1, status: acct.status, roles: parseAccountRoles(acct.roles), created_at: acct.created_at } },
+      body: {
+        ok: true,
+        account: { account_id: acct.account_id, handle: acct.handle, has_email: !!acct.email_lower, email_verified: acct.email_verified === 1, status: acct.status, roles: parseAccountRoles(acct.roles), created_at: acct.created_at },
+        ...(typeof csrf === 'string' && csrf ? { csrf_token: csrf } : {}),
+      },
     };
   }
 

@@ -132,6 +132,8 @@ async function main() {
   requireLiteral('account_page_redirects_reset_query_to_forgot_page', 'accountHtml', "window.location.replace(`/forgot.html?reset=${encodeURIComponent(reset)}`);");
   requireLiteral('login_uses_account_api', 'accountHtml', "api('POST', '/v1/accounts/login'");
   requireLiteral('account_page_keeps_login_csrf_token_for_subsequent_posts', 'accountHtml', "if (typeof data.csrf_token === 'string' && data.csrf_token) sessionCsrfToken = data.csrf_token;");
+  requireLiteral('account_page_keeps_me_csrf_token_for_subsequent_posts', 'accountHtml', 'if (typeof data.csrf_token === \'string\' && data.csrf_token) sessionCsrfToken = data.csrf_token;');
+  requireLiteral('account_page_outfit_catalog_uses_name_field', 'accountHtml', 'found.name ?? String(outfitId).replace(/_/g, \' \')');
   requireLiteral('account_page_uses_login_csrf_token_when_cookie_unavailable', 'accountHtml', 'return m ? decodeURIComponent(m[1]) : sessionCsrfToken;');
   requireLiteral('session_check_uses_me_api', 'accountHtml', "api('GET', '/v1/accounts/me'");
   requireLiteral('account_page_me_uses_account_object_contract', 'accountHtml', 'if (!ok || !data.account) {');
