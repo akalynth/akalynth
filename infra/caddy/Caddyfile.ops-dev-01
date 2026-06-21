@@ -29,11 +29,32 @@ beta-api.akalynth.com {
 	}
 }
 
-# --- Staging site: APK download page only ---
+# --- Staging site: APK download + mirrored /play client (screenshot proof lane) ---
 staging.akalynth.com {
 	encode zstd gzip
 	root * /var/www/akalynth-staging
-	file_server
+
+	@api path /v1/*
+	@ws {
+		header Connection *Upgrade*
+		header Upgrade websocket
+	}
+	handle @api {
+		reverse_proxy 127.0.0.1:3001
+	}
+	handle @ws {
+		reverse_proxy 127.0.0.1:3001
+	}
+
+	handle /play/* {
+		try_files {path} /play/index.html
+		file_server
+	}
+
+	handle {
+		file_server
+	}
+
 	log {
 		output file /var/log/caddy/akalynth-staging.log
 		format json

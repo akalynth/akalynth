@@ -1,0 +1,79 @@
+{
+  "schema_version": "live-lane-screenshot-register/v1",
+  "packet_authority": "AKALYNTH_LIVE_BETA_STAGING_SCREENSHOT_PROOF_V1",
+  "proof_target": "live_lane_presentation_screenshot_v1",
+  "captured_utc": "2026-06-21T05:09:00.000Z",
+  "ops_host": "ops-laptop",
+  "lanes": [
+    {
+      "lane": "beta",
+      "webBase": "https://beta.akalynth.com",
+      "apiBase": "https://beta-api.akalynth.com",
+      "wsUrl": "wss://beta-api.akalynth.com",
+      "probe": {
+        "play": { "status": 200, "ok": true },
+        "account": { "status": 200, "ok": true },
+        "worlds": { "status": 200, "ok": true }
+      },
+      "playable": true,
+      "screenshots": [
+        {
+          "file": "beta_rookguard_desktop_1440x900.png",
+          "lane": "beta",
+          "viewport": "desktop_1440x900",
+          "bytes": 580159,
+          "sha256_prefix": "9b1bb98ad18158fe",
+          "map_hint": "Connected Rookguard desktop presentation"
+        },
+        {
+          "file": "beta_rookguard_mobile_landscape_932x430.png",
+          "lane": "beta",
+          "viewport": "mobile_landscape_932x430",
+          "bytes": 425006,
+          "sha256_prefix": "d2d86f267e1c2731",
+          "map_hint": "Connected Rookguard mobile landscape presentation"
+        }
+      ],
+      "smoke": {
+        "character_name": "RG05041316bada",
+        "mode": "disposable-account"
+      },
+      "status": "passed"
+    },
+    {
+      "lane": "staging",
+      "webBase": "https://staging.akalynth.com",
+      "apiBase": "https://staging-api.akalynth.com",
+      "wsUrl": "wss://staging-api.akalynth.com",
+      "probe": {
+        "play": { "status": 200, "ok": true },
+        "account": { "status": 404, "ok": false },
+        "worlds": { "status": 200, "ok": true }
+      },
+      "playable": true,
+      "screenshots": [
+        {
+          "file": "staging_rookguard_desktop_1440x900.png",
+          "lane": "staging",
+          "viewport": "desktop_1440x900",
+          "bytes": 422767,
+          "sha256_prefix": "fe3f5e04e1c01cf4",
+          "map_hint": "Connected Rookguard desktop presentation"
+        },
+        {
+          "file": "staging_rookguard_mobile_landscape_932x430.png",
+          "lane": "staging",
+          "viewport": "mobile_landscape_932x430",
+          "bytes": 413920,
+          "sha256_prefix": "a2999f424b09088a",
+          "map_hint": "Connected Rookguard mobile landscape presentation"
+        }
+      ],
+      "smoke": {
+        "character_name": "RG0508147be9fd",
+        "mode": "disposable-account"
+      },
+      "status": "passed"
+    }
+  ]
+}
