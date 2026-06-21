@@ -12,7 +12,7 @@ Read this before implementing. For skill routing see `AGENTS.md` and `.codex/COD
 |------|--------|
 | Repo | `https://github.com/akalynth/akalynth` |
 | Branch | `main` |
-| Head | TBD — fix(scripts): stabilize azura_gather gate walk + statusBarsPadding for map chip |
+| Head | `508a7f3` — fix(scripts,android): stabilize azura_gather gate walk; statusBarsPadding map chip |
 | Last merged | web client P0-P3 feature gap (12 commits since `8ee2d90`) |
 | Local source | `/home/sovereign/akalynth-ops/repos/akalynth` |
 
