@@ -1,6 +1,6 @@
 # Akalynth continuation state
 
-Last updated: **2026-06-21** (azura_gather gate+arrival fix; WorldScreen top bar statusBarsPadding; web client beta deployed).
+Last updated: **2026-06-21** (chill-zone refine steps 1-2: gather → refine → deliver server core + wire, behind CHILL_ZONE_REFINE_ENABLED).
 
 Read this before implementing. For skill routing see `AGENTS.md` and `.codex/CODEX_MAP.md`.
 
@@ -12,7 +12,7 @@ Read this before implementing. For skill routing see `AGENTS.md` and `.codex/COD
 |------|--------|
 | Repo | `https://github.com/akalynth/akalynth` |
 | Branch | `main` |
-| Head | `508a7f3` — fix(scripts,android): stabilize azura_gather gate walk; statusBarsPadding map chip |
+| Head | `4f67a61` — feat(server,protocol): chill-zone refine wire — refine_intent + refinery (step 2) |
 | Last merged | web client P0-P3 feature gap (12 commits since `8ee2d90`) |
 | Local source | `/home/sovereign/akalynth-ops/repos/akalynth` |
 
@@ -73,6 +73,13 @@ Read this before implementing. For skill routing see `AGENTS.md` and `.codex/COD
 **Debug client:** `gatherMapOverlays.ts`, markers M/C on map canvas.
 
 **Verifier:** `apps/debug-client/scripts/verify-gather-wire-authority.mjs`; server `verify-gather-loop.test.ts`.
+
+**Refine extension (`gather → refine → deliver`)** — design `.codex/design/chill-zone-refine.md`; flag `CHILL_ZONE_REFINE_ENABLED` (default off, independent of gather flag):
+
+- **Step 1 done** (`2171a3e`): `gather.ts` core — `StationDef.kind`, `PlayerGather` `refining` variant, `startRefine`/`cancelRefine`, `tickGather` in-place upgrade `ley_mote → refined_ley_mote`, graded reward (`tending_token`/`keystone_token`), `AZURA_REFINE_STATIONS` @ (33,33). Tier-1 R1–R14 in `verify-gather.test.ts` (76 checks green).
+- **Step 2 done** (`4f67a61`): wire — `refine_intent` (+ `parseClientMessage` allowlist), `refine_result`/`refine_progress`/`refine_completed`, `GatherStationPublic.kind`, `deliver_result.refined`, `already_refining`/`not_refinable`; refinery placed behind flag; receipt folds `refined`+`refined_at_station`; WS harness S6 leg.
+- **Step 3 next:** clients — debug-client refinery marker + **Refn** action; Android `GatherHelpers`/`ActionButtons` mirror; ProtocolParity updates. Then step 4: economy/Tem tuning (`keystone_token` value, optional `refine_cadence` heat).
+- **Note:** Tier-2 `verify-gather-loop.test.ts` needs node matching the prebuilt `better-sqlite3` (Node 22); it won't boot under a Node 24 shell (ABI mismatch). Runs in CI / on beta.
 
 ---
 
@@ -195,7 +202,8 @@ AKALYNTH_UI_SCENARIOS=azura_gather ./scripts/goal0-android-ui-inspect.sh
 1. ~~**Stabilize `azura_gather`**~~ — **done** (gate greedy+forced tap, arrival accepts any spawn pos, scenario extended waits)
 2. ~~**Top bar**~~ — **done** (`statusBarsPadding()` on HUD and MapChip Column in `WorldScreen.kt`)
 3. ~~**Deploy web client to beta**~~ — **done** (beta runtime verified at `2ec22a2`, `/play/` returns 200)
-4. **Prod** — this handoff covers **beta** lane; prod deploy is separate (`/opt/akalynth`, `deploy_beta.sh`)
+4. **Chill-zone refine step 3** — clients (debug-client Refn + Android mirror) + ProtocolParity; then step 4 economy/Tem tuning. See § Chill-zone gather → Refine extension.
+5. **Prod** — this handoff covers **beta** lane; prod deploy is separate (`/opt/akalynth`, `deploy_beta.sh`)
 
 ---
 
