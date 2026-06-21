@@ -3,6 +3,7 @@ import type { PlayerPublic } from '@shared/types';
 interface NearbyListProps {
   me: PlayerPublic | null;
   players: PlayerPublic[];
+  onInspect: (playerId: string) => void;
 }
 
 function contactLabel(me: PlayerPublic | null, player: PlayerPublic): string {
@@ -13,7 +14,7 @@ function contactLabel(me: PlayerPublic | null, player: PlayerPublic): string {
   return `${distance} tile${distance === 1 ? '' : 's'}`;
 }
 
-export function NearbyList({ me, players }: NearbyListProps) {
+export function NearbyList({ me, players, onInspect }: NearbyListProps) {
   if (players.length === 0) return null;
   return (
     <div className="nearby-card">
@@ -24,6 +25,14 @@ export function NearbyList({ me, players }: NearbyListProps) {
             <span className={`hostility-dot ${p.status === 'dead' ? 'dead' : 'neutral'}`} />
             <span className="nearby-name">{p.name}</span>
             <span className="nearby-status">{contactLabel(me, p)}</span>
+            <button
+              type="button"
+              className="nearby-inspect-btn"
+              onClick={() => onInspect(p.id)}
+              aria-label={`Inspect ${p.name}`}
+            >
+              Inspect
+            </button>
           </div>
         ))}
       </div>

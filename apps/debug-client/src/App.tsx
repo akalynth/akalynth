@@ -20,6 +20,10 @@ import { VisualSmokeReview } from './components/VisualSmokeReview';
 import { CharacterBar } from './components/CharacterBar';
 import { BackpackSheet } from './components/BackpackSheet';
 import { ProofSheet } from './components/ProofSheet';
+import { TemChallengeModal } from './components/TemChallengeModal';
+import { TemWitnessDialog } from './components/TemWitnessDialog';
+import { PropertyLedgerModal } from './components/PropertyLedgerModal';
+import { AdventurerSealSheet } from './components/AdventurerSealSheet';
 import { loadConfig } from './config';
 import { highCityVisualLandmarksForMap } from './data/highCityVisualLandmarks';
 import { gatherMapOverlays } from './data/gatherMapOverlays';
@@ -351,6 +355,7 @@ function DebugApp() {
   const [chatOpen, setChatOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [proofSheetOpen, setProofSheetOpen] = useState(false);
+  const [sealOpen, setSealOpen] = useState(false);
   const [proof, setProof] = useState<StudioProofState | null>(null);
   const [proofRunning, setProofRunning] = useState(false);
   const [proofError, setProofError] = useState<string | null>(null);
@@ -747,6 +752,26 @@ function DebugApp() {
                 <strong>{respectRank} ({respectValue})</strong>
               </div>
               <div>
+                <span>Gold</span>
+                <strong>{state.gold}g</strong>
+                {state.gold > 0 && (
+                  <button
+                    type="button"
+                    className="tithe-btn"
+                    onClick={() => {
+                      const raw = window.prompt('Pay tithe — amount of gold?', '1');
+                      if (!raw) return;
+                      const n = Number(raw);
+                      if (!Number.isFinite(n) || n <= 0) return;
+                      api.payTithe(n);
+                    }}
+                    aria-label="Pay tithe"
+                  >
+                    Tithe
+                  </button>
+                )}
+              </div>
+              <div>
                 <span>Link</span>
                 <strong>{state.conn.phase}</strong>
               </div>
@@ -791,15 +816,20 @@ function DebugApp() {
               <strong>{smokeLabel}</strong>
             </div>
           </div>
-          {state.ui.stage >= 3 && <NearbyList me={state.world.me} players={roster} />}
+          {state.ui.stage >= 3 && <NearbyList me={state.world.me} players={roster} onInspect={api.inspectPlayer} />}
           {state.ui.stage >= 3 && propertyList.length > 0 && (
             <PropertyLedger
               properties={propertyList}
               myName={state.session.name}
               gold={state.gold}
+              auctionStates={state.auctionStates}
               onBuy={api.buyHouse}
               onList={api.listHouse}
               onUnlist={api.unlistHouse}
+              onOpenAuction={api.openHouseAuction}
+              onBid={api.placeHouseBid}
+              onCancelAuction={api.cancelHouseAuction}
+              onViewLedger={api.getPropertyLedger}
             />
           )}
           {state.ui.stage >= 3 && (
@@ -912,6 +942,19 @@ function DebugApp() {
             >
               {proofRunning ? 'Running' : 'Proof'}
             </button>
+            <button
+              className="seal-toggle"
+              aria-label="Adventurer Seal"
+              onClick={() => {
+                setChatOpen(false);
+                setInventoryOpen(false);
+                setProofSheetOpen(false);
+                api.closeChronicle();
+                setSealOpen(true);
+              }}
+            >
+              Seal
+            </button>
           </div>
           <div className="status-pills">
             <span className="pill">World synced</span>
@@ -934,7 +977,48 @@ function DebugApp() {
         inventory={state.inventory}
         onClose={() => setInventoryOpen(false)}
         onUseItem={(itemId) => api.useSkill('item:use:' + itemId)}
+        onDrop={api.dropItem}
+        onProtect={api.setProtectedSlot}
       />
+      {state.temChallenge && (
+        <TemChallengeModal
+          challenge={state.temChallenge}
+          onRespond={api.respondTemChallenge}
+          onDismiss={api.dismissTemChallenge}
+        />
+      )}
+      {state.temWitnessRequest && (
+        <TemWitnessDialog
+          request={state.temWitnessRequest}
+          onRespond={api.respondTemWitness}
+          onDismiss={api.dismissTemWitness}
+        />
+      )}
+      {state.propertyLedger && (
+        <PropertyLedgerModal
+          ledger={state.propertyLedger}
+          onClose={api.dismissPropertyLedger}
+        />
+      )}
+      {state.inspectedPlayer && (
+        <div className="inspect-overlay" role="dialog" aria-modal="true" aria-label="Player inspect">
+          <div className="inspect-card">
+            <div className="inspect-card__header">
+              <strong>{state.inspectedPlayer.name}</strong>
+              <button type="button" onClick={api.dismissInspect} aria-label="Close">x</button>
+            </div>
+            <div className="inspect-card__body">
+              <div><span>Vocation</span><span>{state.inspectedPlayer.display_vocation ?? state.inspectedPlayer.vocation ?? '—'}</span></div>
+              {state.inspectedPlayer.mark && (
+                <div><span>Mark</span><span>{state.inspectedPlayer.mark}</span></div>
+              )}
+              {state.inspectedPlayer.badges.length > 0 && (
+                <div><span>Badges</span><span>{state.inspectedPlayer.badges.join(', ')}</span></div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       <ProofSheet
         open={proofSheetOpen}
         objectiveLabel={objectiveLabel}
@@ -947,6 +1031,11 @@ function DebugApp() {
         studioProofEnabled={studioProofEnabled}
         onClose={() => setProofSheetOpen(false)}
         onRunProof={() => void runProofSmoke()}
+      />
+      <AdventurerSealSheet
+        open={sealOpen}
+        httpBase={config.httpBase}
+        onClose={() => setSealOpen(false)}
       />
     </div>
   );

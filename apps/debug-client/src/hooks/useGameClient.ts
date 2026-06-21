@@ -19,6 +19,18 @@ import type {
   DeliverIntentMessage,
   GatherNodePublic,
   GatherStationPublic,
+  TemResponseMessage,
+  TemWitnessResponseMessage,
+  WitnessResponse,
+  DropItemMessage,
+  SetProtectedSlotMessage,
+  InspectPlayerMessage,
+  InspectWalletMessage,
+  PayTitheMessage,
+  GetPropertyLedgerMessage,
+  OpenHouseAuctionMessage,
+  PlaceHouseBidMessage,
+  CancelHouseAuctionMessage,
 } from '@shared/protocol';
 import type { AccountCharacterCreateRequest, AccountCharacterPlayResponse, MapName } from '@shared/http';
 import { normalizeMapName } from '@shared/http';
@@ -159,6 +171,11 @@ function initialState(mapName: MapName): GameClientState {
     gold: 0,
     properties: new Map(),
     gather: { nodes: new Map(), stations: new Map(), activeNodeId: null, progressPct: 0, held: null, tendingTokens: 0, status: null },
+    propertyLedger: null,
+    auctionStates: new Map(),
+    temChallenge: null,
+    temWitnessRequest: null,
+    inspectedPlayer: null,
   };
 }
 
@@ -737,6 +754,81 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     send(payload);
   }, [send]);
 
+  const respondTemChallenge = useCallback((challengeId: string, response: string) => {
+    const payload: TemResponseMessage = { type: 'tem_response', response };
+    send(payload);
+    setState((s) => ({ ...s, temChallenge: null }));
+    console.log(`[debug-client] tem_response sent challenge_id=${challengeId}`);
+  }, [send]);
+
+  const dismissTemChallenge = useCallback(() => {
+    setState((s) => ({ ...s, temChallenge: null }));
+  }, []);
+
+  const respondTemWitness = useCallback((requestId: string, response: WitnessResponse) => {
+    const payload: TemWitnessResponseMessage = { type: 'tem_witness_response', request_id: requestId, response };
+    send(payload);
+    setState((s) => ({ ...s, temWitnessRequest: null }));
+    console.log(`[debug-client] tem_witness_response sent request_id=${requestId} response=${response}`);
+  }, [send]);
+
+  const dismissTemWitness = useCallback(() => {
+    setState((s) => ({ ...s, temWitnessRequest: null }));
+  }, []);
+
+  const dropItem = useCallback((itemId: string) => {
+    const payload: DropItemMessage = { type: 'drop_item', item_id: itemId };
+    send(payload);
+  }, [send]);
+
+  const setProtectedSlot = useCallback((itemId: string) => {
+    const payload: SetProtectedSlotMessage = { type: 'set_protected_slot', item_id: itemId };
+    send(payload);
+  }, [send]);
+
+  const inspectPlayer = useCallback((playerId: string) => {
+    const payload: InspectPlayerMessage = { type: 'inspect_player', target_player_id: playerId };
+    send(payload);
+  }, [send]);
+
+  const dismissInspect = useCallback(() => {
+    setState((s) => ({ ...s, inspectedPlayer: null }));
+  }, []);
+
+  const inspectWallet = useCallback(() => {
+    const payload: InspectWalletMessage = { type: 'inspect_wallet' };
+    send(payload);
+  }, [send]);
+
+  const payTithe = useCallback((amount: number) => {
+    const payload: PayTitheMessage = { type: 'pay_tithe', amount };
+    send(payload);
+  }, [send]);
+
+  const getPropertyLedger = useCallback((propertyId: string) => {
+    const payload: GetPropertyLedgerMessage = { type: 'get_property_ledger', property_id: propertyId };
+    send(payload);
+  }, [send]);
+
+  const openHouseAuction = useCallback((propertyId: string, minBid: number, minIncrement: number, durationSeconds: number) => {
+    const payload: OpenHouseAuctionMessage = { type: 'open_house_auction', property_id: propertyId, min_bid: minBid, min_increment_gold: minIncrement, duration_s: durationSeconds };
+    send(payload);
+  }, [send]);
+
+  const placeHouseBid = useCallback((propertyId: string, amount: number) => {
+    const payload: PlaceHouseBidMessage = { type: 'place_house_bid', property_id: propertyId, amount };
+    send(payload);
+  }, [send]);
+
+  const cancelHouseAuction = useCallback((propertyId: string) => {
+    const payload: CancelHouseAuctionMessage = { type: 'cancel_house_auction', property_id: propertyId };
+    send(payload);
+  }, [send]);
+
+  const dismissPropertyLedger = useCallback(() => {
+    setState((s) => ({ ...s, propertyLedger: null }));
+  }, []);
+
   const startWork = useCallback(() => {
     const payload: StartWorkContractMessage = { type: 'start_work_contract', contract_type: 'temple_sweep' };
     send(payload);
@@ -893,6 +985,10 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
             typeof data.expires_at === 'number' ? data.expires_at : loadIdentity()?.expiresAt ?? Date.now();
           saveIdentity({ playerId: data.player_id, name: data.name, token: data.token, expiresAt });
         }
+        // Auto-request wallet on every world_state so gold is always current.
+        if (data.type === 'world_state') {
+          ws.send(JSON.stringify({ type: 'inspect_wallet' }));
+        }
         setState((s) => {
           const now = Date.now();
           const conn: ConnectionState = { ...s.conn, lastServerAt: now, phase: 'connected' };
@@ -1017,11 +1113,50 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
               return { ...s, conn, chat: nextChat };
             }
             case 'tem_challenge': {
-              const line = typeof data.message === 'string'
-                ? data.message
-                : 'Tem challenge: respond in chat.';
-              const next = addChatLine(s, 'tem', line);
-              return { ...next, conn };
+              const message = typeof data.message === 'string' ? data.message : 'Tem challenge';
+              const challenge_id = typeof data.challenge_id === 'string' ? data.challenge_id : '';
+              const timeoutSeconds = typeof data.timeout_seconds === 'number' ? data.timeout_seconds : 12;
+              const next = addChatLine(s, 'tem', `Tem challenge: ${message}`);
+              return { ...next, conn, temChallenge: { challenge_id, message, timeoutSeconds, receivedAt: now } };
+            }
+
+            case 'tem_witness_request': {
+              const request_id = typeof data.request_id === 'string' ? data.request_id : '';
+              const prompt = typeof data.prompt === 'string' ? data.prompt : 'Witness request';
+              const target_actor = typeof data.target_actor === 'string' ? data.target_actor : '';
+              const kind = typeof data.kind === 'string' ? data.kind : 'heat_penalty';
+              return { ...s, conn, temWitnessRequest: { request_id, prompt, target_actor, kind } };
+            }
+
+            case 'player_inspect': {
+              const player_id = typeof data.player_id === 'string' ? data.player_id : '';
+              const name = typeof data.name === 'string' ? data.name : '';
+              const vocation = typeof data.vocation === 'string' ? data.vocation : null;
+              const display_vocation = typeof data.display_vocation === 'string' ? data.display_vocation : null;
+              const badges = Array.isArray(data.badges) ? (data.badges as string[]) : [];
+              const mark = typeof data.mark === 'string' ? data.mark : null;
+              return { ...s, conn, inspectedPlayer: { player_id, name, vocation, display_vocation, badges, mark } };
+            }
+
+            case 'tithe_result': {
+              if (data.success === true && typeof data.new_balance === 'number') {
+                const next = pushToast(s, 'system', `Tithe paid — balance: ${data.new_balance}g`, 'Tithe');
+                return { ...next, conn, gold: data.new_balance };
+              }
+              const titheErr = data.error === 'insufficient_gold' ? 'Not enough gold.' : 'Tithe failed.';
+              return { ...pushToast(s, 'system', titheErr, 'Tithe'), conn };
+            }
+
+            case 'drop_item_result': {
+              if (data.ok !== true) {
+                const dropReason = typeof data.reason === 'string' ? data.reason : 'unknown';
+                return { ...pushToast(s, 'system', `Drop failed: ${dropReason}`, 'Item'), conn };
+              }
+              return { ...s, conn };
+            }
+
+            case 'protected_slot_set': {
+              return { ...pushToast(s, 'system', 'Item protected.', 'Item'), conn };
             }
             case 'error': {
               const code = typeof data.code === 'string' ? data.code : 'error';
@@ -1242,6 +1377,41 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
               if (data.success === true) return { ...s, conn };
               const reason = typeof data.reason === 'string' ? data.reason : 'denied';
               return pushToast({ ...s, conn }, 'system', `House action failed: ${reason}`, 'DENIED');
+            }
+
+            case 'property_ledger': {
+              const property_id = typeof data.property_id === 'string' ? data.property_id : '';
+              const owner_history = Array.isArray(data.owner_history) ? data.owner_history : [];
+              const sale_count = typeof data.sale_count === 'number' ? data.sale_count : 0;
+              return { ...s, conn, propertyLedger: { property_id, owner_history, sale_count } };
+            }
+
+            case 'property_auction_state': {
+              const property_id = typeof data.property_id === 'string' ? data.property_id : '';
+              const kind = typeof data.kind === 'string' ? data.kind : 'primary';
+              const current_high = typeof data.current_high === 'number' ? data.current_high : null;
+              const high_bidder_name = typeof data.high_bidder_name === 'string' ? data.high_bidder_name : null;
+              const min_next = typeof data.min_next === 'number' ? data.min_next : 1;
+              const scheduled_close = typeof data.scheduled_close === 'number' ? data.scheduled_close : null;
+              const auctionStates = new Map(s.auctionStates);
+              auctionStates.set(property_id, { property_id, kind, current_high, high_bidder_name, min_next, scheduled_close });
+              return { ...s, conn, auctionStates };
+            }
+
+            case 'house_auction_settled': {
+              const property_id = typeof data.property_id === 'string' ? data.property_id : '';
+              const winner = data.winner_name ?? null;
+              const sellerName = data.seller_name ?? null;
+              const settlePrice = typeof data.price === 'number' ? data.price : 0;
+              const auctionStates = new Map(s.auctionStates);
+              auctionStates.delete(property_id);
+              const label = winner
+                ? `Auction settled: ${data.plot_id ?? property_id} → ${winner} for ${settlePrice}g`
+                : `Auction closed (${data.plot_id ?? property_id}) — no bids`;
+              const next = winner && sellerName
+                ? addChatLine(s, 'system', label)
+                : s;
+              return { ...pushToast(next, 'system', label, 'AUCTION'), conn, auctionStates };
             }
 
             case 'pickup_item_result': {
@@ -1836,6 +2006,21 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     unlistHouse,
     sendGather,
     sendDeliver,
+    respondTemChallenge,
+    dismissTemChallenge,
+    respondTemWitness,
+    dismissTemWitness,
+    dropItem,
+    setProtectedSlot,
+    inspectPlayer,
+    dismissInspect,
+    inspectWallet,
+    payTithe,
+    getPropertyLedger,
+    openHouseAuction,
+    placeHouseBid,
+    cancelHouseAuction,
+    dismissPropertyLedger,
   };
 
   return [state, api];

@@ -1,6 +1,6 @@
 # Akalynth continuation state
 
-Last updated: **2026-06-20** (post PR #331 merge + beta v9 publish).
+Last updated: **2026-06-21** (account portal merged; v10 committed; beta publish helper fixed; CI reviewed).
 
 Read this before implementing. For skill routing see `AGENTS.md` and `.codex/CODEX_MAP.md`.
 
@@ -12,32 +12,37 @@ Read this before implementing. For skill routing see `AGENTS.md` and `.codex/COD
 |------|--------|
 | Repo | `https://github.com/akalynth/akalynth` |
 | Branch | `main` |
-| Head (approx) | `8ee2d90` — manifest pin after `e23f32d` squash merge |
-| Merged PR | [#331](https://github.com/akalynth/akalynth/pull/331) — chill-zone gather step 2 + Android beta v9 |
+| Head | `48e5b17` — fix(beta): preserve portal csrf token for play |
+| Last merged | account portal CSRF fix + account-play smoke (11 commits since `8ee2d90`) |
 | Local source | `/home/sovereign/akalynth-ops/repos/akalynth` |
 
-**Included in main (2026-06-20):**
+**Included in main since `8ee2d90` (2026-06-20 → 2026-06-21):**
 
-- Debug-client gather map overlays + wire-authority verifier
-- Android **v9** (`versionCode` 9, `0.1.7-beta-shell-polish`)
-- Gather client protocol + **Gthr** / **Deliv** UI
-- Classic 32 UI textures (nine-slice panels, D-pad scrim, action rings)
-- Client auto-update overlay + `GET /v1/client/android-update?lane=beta`
-- `scripts/build-publish-beta-apk.sh`, Goal0 `goal0-android-ui-inspect*.sh`
-- Beta systemd drop-ins: trust-proxy, `CHILL_ZONE_GATHER_ENABLED=1`
-- Asset verifier accepts `data/assets-src/sprites/ui/ui_gameplay_v1.json` pack
+- Account portal with character list + Play button (`8bd911d`)
+- Account play hardening verifier + reusable smoke (`9bc78ae`, `e0676df`)
+- Account character name preserved on token login (`c45afe9`)
+- Portal CSRF token preserved for Play flow (`48e5b17`)
+- Android **v10** committed (`versionCode` 10, `0.1.8-beta-character-sprites`) — character sprites from assets-src wired into APK (`26514af`, `32f3b22`)
+- `fix(deps)`: ws audit finding patched (`7dd7490`)
+- `fix(debug-client)`: prefer shared ts sources in vite (`2118b4d`)
+
+**Beta publish pipeline (ops):**
+- `bin/beta-publish-helper.sh` (or equivalent) fixed: empty `remote_bundle` now uses `-` sentinel so `$4` stays `remote_evidence`. `bash -n` passes.
+- Last confirmed rerun: `merge_method=already-current`, publish=pass, smoke=pass (28 checks), portal source=live.
 
 ---
 
-## Android beta v9 (live)
+## Android beta (live vs committed)
 
-| Field | Value |
-|-------|--------|
-| versionCode | 9 |
-| versionName | `0.1.7-beta-shell-polish` |
-| APK | https://beta.akalynth.com/download/akalynth-beta.apk |
-| SHA-256 | `07e5f959f3e0fafffd5c3a560217bb1d6caa8ec211e8bfba86b25f046a6c61d6` |
-| Size | 12815433 bytes |
+| Field | Live on beta | Committed on main |
+|-------|-------------|-------------------|
+| versionCode | **9** | **10** |
+| versionName | `0.1.7-beta-shell-polish` | `0.1.8-beta-character-sprites` |
+| APK SHA-256 | `07e5f959f3e0fafffd5c3a560217bb1d6caa8ec211e8bfba86b25f046a6c61d6` | not yet built |
+
+**`infra/android/beta-client-update.json` still pins v9.** v10 APK has not been built or published yet — this is the next publish milestone.
+
+**Key Android paths:**
 
 **Key Android paths:**
 
@@ -185,10 +190,11 @@ AKALYNTH_UI_SCENARIOS=azura_gather ./scripts/goal0-android-ui-inspect.sh
 
 ## Open / next work (as of handoff)
 
-1. **Stabilize `azura_gather`** — codex reaches gate; Azura transfer + Gthr at (34,32) still flaky (~90% codex)
-2. **Top bar** — map chip may clip in screenshots; may need wider gutters in `WorldScreen.kt`
-3. **Commit manifest** — `infra/android/beta-client-update.json` pinned to v9 on main
-4. **Prod** — this handoff covers **beta** lane; prod deploy is separate (`/opt/akalynth`, `deploy_beta.sh`)
+1. **Publish Android v10 APK** — `versionCode=10` / `0.1.8-beta-character-sprites` committed on main; `beta-client-update.json` still pins v9. Run full publish loop on ops-dev-01, update `infra/android/beta-client-update.json`, push to main.
+2. **Stabilize `azura_gather`** — codex reaches gate; Azura transfer + Gthr at (34,32) still flaky (~90% codex)
+3. **Top bar** — map chip may clip in screenshots; may need wider gutters in `WorldScreen.kt`
+4. **Account portal** — merged and deployed; smoke tests green. Watch for auth edge cases (CSRF token, character name preservation both fixed in `48e5b17`/`c45afe9`).
+5. **Prod** — this handoff covers **beta** lane; prod deploy is separate (`/opt/akalynth`, `deploy_beta.sh`)
 
 ---
 

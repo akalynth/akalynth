@@ -9,6 +9,8 @@ interface BackpackSheetProps {
   inventory: InventoryItemRef[];
   onClose: () => void;
   onUseItem: (itemId: string) => void;
+  onDrop: (itemId: string) => void;
+  onProtect: (itemId: string) => void;
 }
 
 interface InventoryGroup {
@@ -58,7 +60,7 @@ function groupedInventory(items: InventoryItemRef[]): InventoryGroup[] {
   return Array.from(groups.values()).sort((a, b) => itemLabel(a.itemType).localeCompare(itemLabel(b.itemType)));
 }
 
-export function BackpackSheet({ open, inventory, onClose, onUseItem }: BackpackSheetProps) {
+export function BackpackSheet({ open, inventory, onClose, onUseItem, onDrop, onProtect }: BackpackSheetProps) {
   if (!open) return null;
   const groups = groupedInventory(inventory);
   const loadout = equippedLoadout(inventory);
@@ -113,24 +115,42 @@ export function BackpackSheet({ open, inventory, onClose, onUseItem }: BackpackS
                     x{group.count}{group.slot ? ` · ${group.slot}` : ''}
                   </span>
                 </div>
-                {usable ? (
+                <div className="backpack-row__actions">
+                  {usable && (
+                    <button
+                      type="button"
+                      className="backpack-use-btn"
+                      onClick={() => onUseItem(group.firstItemId)}
+                      aria-label={`Use ${label}`}
+                    >
+                      Use
+                    </button>
+                  )}
+                  {group.slot !== 'protected' && (
+                    <button
+                      type="button"
+                      className="backpack-protect-btn"
+                      onClick={() => onProtect(group.firstItemId)}
+                      aria-label={`Protect ${label}`}
+                    >
+                      Prot
+                    </button>
+                  )}
                   <button
                     type="button"
-                    className="backpack-use-btn"
-                    onClick={() => onUseItem(group.firstItemId)}
-                    aria-label={`Use ${label}`}
+                    className="backpack-drop-btn"
+                    onClick={() => onDrop(group.firstItemId)}
+                    aria-label={`Drop ${label}`}
                   >
-                    Use
+                    Drop
                   </button>
-                ) : (
-                  <span className="backpack-held-label">Held</span>
-                )}
+                </div>
               </div>
             );
           })}
         </div>
         <div className="backpack-sheet__note">
-          Display only. Uses existing item intents where available.
+          Drop removes item from inventory. Prot marks item as protected (last survivor on death).
         </div>
       </div>
     </div>

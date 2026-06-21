@@ -7,7 +7,7 @@ import type {
   AccountCharacterWorldOption,
   MapName,
 } from '@shared/http';
-import type { ChronicleEvent, PropertyPublic, GatherNodePublic, GatherStationPublic } from '@shared/protocol';
+import type { ChronicleEvent, PropertyPublic, PropertyOwnerHistoryEntry, GatherNodePublic, GatherStationPublic } from '@shared/protocol';
 
 export type InputDirection =
   | Direction
@@ -164,6 +164,16 @@ export interface GameClientState {
     tendingTokens: number;
     status: string | null;
   };
+  // Property ownership ledger (last requested)
+  propertyLedger: { property_id: string; owner_history: PropertyOwnerHistoryEntry[]; sale_count: number } | null;
+  // Live auction states keyed by property_id
+  auctionStates: Map<string, { property_id: string; kind: string; current_high: number | null; high_bidder_name: string | null; min_next: number; scheduled_close: number | null }>;
+  // Anti-bot: tem challenge pending response
+  temChallenge: { challenge_id: string; message: string; timeoutSeconds: number; receivedAt: number } | null;
+  // Anti-bot: tem witness request pending response
+  temWitnessRequest: { request_id: string; prompt: string; target_actor: string; kind: string } | null;
+  // Player inspect result
+  inspectedPlayer: { player_id: string; name: string; vocation: string | null; display_vocation: string | null; badges: string[]; mark: string | null } | null;
 }
 
 export interface GameClientApi {
@@ -215,4 +225,25 @@ export interface GameClientApi {
   // Chill-Zone Gather v0 (Step 2)
   sendGather: (nodeId: string) => void;
   sendDeliver: (stationId: string) => void;
+  // Property auction and ledger
+  getPropertyLedger: (propertyId: string) => void;
+  openHouseAuction: (propertyId: string, minBid: number, minIncrement: number, durationSeconds: number) => void;
+  placeHouseBid: (propertyId: string, amount: number) => void;
+  cancelHouseAuction: (propertyId: string) => void;
+  dismissPropertyLedger: () => void;
+  // Anti-bot: tem challenge response
+  respondTemChallenge: (challengeId: string, response: string) => void;
+  dismissTemChallenge: () => void;
+  // Anti-bot: tem witness response
+  respondTemWitness: (requestId: string, response: 'confirm' | 'deny' | 'uncertain') => void;
+  dismissTemWitness: () => void;
+  // Items: drop and protect
+  dropItem: (itemId: string) => void;
+  setProtectedSlot: (itemId: string) => void;
+  // Player inspect
+  inspectPlayer: (playerId: string) => void;
+  dismissInspect: () => void;
+  // Treasury
+  inspectWallet: () => void;
+  payTithe: (amount: number) => void;
 }
