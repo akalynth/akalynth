@@ -85,10 +85,10 @@
   },
   "codex_status_update": {
     "status": "codex:accepted",
-    "meaning": "closure executed locally with full validation green; queued for GitHub upstream merge",
+    "meaning": "closure executed and merged to GitHub main",
     "gitea_issue": "local_ops_claim:packet_execution_20260621",
     "gitea_pr": null,
-    "github_pr": null
+    "github_pr": "https://github.com/akalynth/akalynth/pull/334"
   },
   "packet_seed_merge": {
     "github_pr": "https://github.com/akalynth/akalynth/pull/333",
@@ -102,11 +102,17 @@
     "world_showcase_mode": "?mode=world",
     "world_showcase_branch_merged": "feat/world-showcase-web"
   },
+  "execution_merge": {
+    "github_pr": "https://github.com/akalynth/akalynth/pull/334",
+    "merge_commit": "fb5f279",
+    "merged_utc": "2026-06-21"
+  },
   "github_ci_status": {
-    "status": "pending_upstream_pr",
-    "checked_utc": null,
-    "pr": null,
-    "merge_status": "not merged"
+    "status": "merged_upstream",
+    "checked_utc": "2026-06-21T04:45:00Z",
+    "pr": "https://github.com/akalynth/akalynth/pull/334",
+    "merge_status": "merged",
+    "merge_commit": "fb5f279"
   },
   "non_mutation_boundary": {
     "runtime_trees": "unchanged",
@@ -120,6 +126,6 @@
     "world_showcase_mode": "?mode=world",
     "sprite_root": "data/assets-src/sprites/",
     "claim": "display-only visual catalog and map overlays; no mechanic promotion",
-    "status": "merged_on_execution_branch"
+    "status": "merged_on_main"
   }
 }
