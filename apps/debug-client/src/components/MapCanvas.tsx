@@ -3,7 +3,8 @@ import { characterSpriteById, characterSpriteForPlayer, isCharacterSpriteId, DIR
 import { useCharacterSprites } from '../hooks/useCharacterSprites';
 import { useTileSprites } from '../hooks/useTileSprites';
 import { useWorldVisualAssets } from '../hooks/useWorldVisualAssets';
-import { WORLD_VISUAL_ASSETS, type WorldVisualObjectPlacement, type WorldVisualAssetDef } from '../data/worldVisualAssets';
+import type { WorldVisualAssetDef } from '../data/worldVisualAssets';
+import { REGISTRY_WORLD_VISUAL_ASSETS, type RegistryWorldVisualPlacement } from '../data/worldVisualRegistry';
 import type { MapData, PlayerPublic } from '@shared/types';
 import { TileCode } from '@shared/types';
 import type { FloatingText } from '../types';
@@ -49,7 +50,7 @@ interface MapCanvasProps {
   propertyByPlot?: Map<string, { status: string; owner_name: string | null; listed_price_gold: number | null }>;
   characterFrameOverrides?: Map<string, CharacterFrameOverride>;
   characterSpriteOverrides?: Map<string, CharacterSpriteId>;
-  worldVisualObjects?: WorldVisualObjectPlacement[];
+  worldVisualObjects?: RegistryWorldVisualPlacement[];
   debugOverlays?: MapDebugOverlay[];
 }
 
@@ -64,7 +65,7 @@ const WALK_ACTIVE_MS = 240;
 const OVERLAY_ALPHA = { visible: 1, faded: 0.35, hidden: 0 } as const;
 // Stable empty defaults so omitting these props doesn't allocate a new array
 // (and re-trigger the draw effect) on every render.
-const EMPTY_WORLD_OBJECTS: WorldVisualObjectPlacement[] = [];
+const EMPTY_WORLD_OBJECTS: RegistryWorldVisualPlacement[] = [];
 const EMPTY_DEBUG_OVERLAYS: MapDebugOverlay[] = [];
 const ROOKGUARD_TRAINING_SLIME_SPRITE_ID = 'akalynth_creature_rookguard_training_slime_001';
 
@@ -316,7 +317,7 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
       }
     }
 
-    const worldVisualAnchor = (placement: WorldVisualObjectPlacement, def: WorldVisualAssetDef) => {
+    const worldVisualAnchor = (placement: RegistryWorldVisualPlacement, def: WorldVisualAssetDef) => {
       const tileLeft = placement.x * TILE_SIZE;
       const tileTop = placement.y * TILE_SIZE;
       if (def.rendering.anchor.type === 'tile_top_left') return { x: tileLeft, y: tileTop };
@@ -325,7 +326,7 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
       return { x: tileLeft + TILE_SIZE / 2, y: tileTop + TILE_SIZE };
     };
 
-    const drawWorldVisualObject = (placement: WorldVisualObjectPlacement, def: WorldVisualAssetDef) => {
+    const drawWorldVisualObject = (placement: RegistryWorldVisualPlacement, def: WorldVisualAssetDef) => {
       if (placement.visibility === 'hidden') return;
       const image = worldVisualImages.get(def.id);
       if (!image) return;
@@ -354,8 +355,8 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
     // Resolve each placement's def once, dropping any unknown assetId so a bad id
     // skips that object instead of throwing and aborting the whole canvas render.
     const resolvedWorldObjects = worldVisualObjects
-      .map((placement) => ({ placement, def: WORLD_VISUAL_ASSETS[placement.assetId] as WorldVisualAssetDef | undefined }))
-      .filter((entry): entry is { placement: WorldVisualObjectPlacement; def: WorldVisualAssetDef } => Boolean(entry.def));
+      .map((placement) => ({ placement, def: REGISTRY_WORLD_VISUAL_ASSETS[placement.assetId] }))
+      .filter((entry): entry is { placement: RegistryWorldVisualPlacement; def: WorldVisualAssetDef } => Boolean(entry.def));
 
     for (const { placement, def } of resolvedWorldObjects) {
       if (def.rendering.layer === 'terrain') drawWorldVisualObject(placement, def);
