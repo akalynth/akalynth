@@ -2,7 +2,7 @@
   "object_id": "AKALYNTH_ENGINEERING_LOOP_LIVE_LANE_PRESENTATION_SCREENSHOT_PROOF_V1",
   "status": "closed",
   "created_utc": "2026-06-21T05:10:00Z",
-  "closed_utc": "2026-06-21T05:30:00Z",
+  "closed_utc": "2026-06-21T05:35:00Z",
   "authority": {
     "github": "canonical public/source remote",
     "gitea": "local agent workbench and PR queue",
@@ -48,7 +48,7 @@
   "validation": {
     "validated_utc": "2026-06-21T05:25:00Z",
     "worktree": "/home/sovereign/akalynth-ops/repos/akalynth",
-    "green_commit": "bd1c587",
+    "green_commit": "25cd609",
     "commands": [
       {
         "command": "npm -w apps/server run verify:quick",
@@ -66,8 +66,23 @@
   },
   "codex_seed": {
     "repo": "akalynth-codex",
-    "commit": "5b99c61",
+    "commit": "da17636",
     "entry_id": "live-lane-presentation-screenshot-proof"
+  },
+  "codex_status_update": {
+    "status": "codex:accepted",
+    "meaning": "closure executed and merged to GitHub main",
+    "github_pr": "https://github.com/akalynth/akalynth-codex/pull/1",
+    "merge_commit": "da17636"
+  },
+  "execution_merge": {
+    "github_pr": "https://github.com/akalynth/akalynth/pull/338",
+    "merge_commit": "25cd609",
+    "merged_utc": "2026-06-21"
+  },
+  "github_ci_status": {
+    "status": "merged_upstream",
+    "notes": "enforce-structure passed; verify job remained queued at merge time; post-merge local verifier passed on main"
   },
   "execution_deliverables": {
     "runbook": "docs/LIVE_LANE_PRESENTATION_SCREENSHOT_RUNBOOK.md",
