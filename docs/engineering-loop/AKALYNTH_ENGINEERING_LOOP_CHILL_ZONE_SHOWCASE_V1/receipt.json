@@ -25,7 +25,8 @@
     "gitea_repo": "https://gitea.akalynth.com/sovereign/akalynth",
     "gitea_issue": null,
     "gitea_pr": null,
-    "github_pr": null,
+    "github_pr": "https://github.com/akalynth/akalynth/pull/333",
+    "github_merge_commit": "3b5a353",
     "claimed_branch": "codex/chill-zone-showcase-closure-v1",
     "claimed_by": null,
     "target_labels": [
@@ -72,10 +73,15 @@
   },
   "codex_status_update": {
     "status": "codex:ready",
-    "meaning": "packet and receipt seeded; awaiting Gitea issue claim and agent execution",
+    "meaning": "packet seeded on main via PR #333; awaiting Gitea issue claim and closure execution",
     "gitea_issue": null,
     "gitea_pr": null,
-    "github_pr": null
+    "github_pr": "https://github.com/akalynth/akalynth/pull/333"
+  },
+  "packet_seed_merge": {
+    "github_pr": "https://github.com/akalynth/akalynth/pull/333",
+    "merge_commit": "3b5a353",
+    "merged_utc": "2026-06-21"
   },
   "github_ci_status": {
     "status": "not_started",
