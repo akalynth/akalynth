@@ -1,0 +1,75 @@
+{
+  "object_id": "AKALYNTH_ENGINEERING_LOOP_COUNCIL_DAO_DEPLOY_PERMIT_V1",
+  "status": "open",
+  "created_utc": "2026-06-21T22:00:00Z",
+  "closed_utc": null,
+  "authority": {
+    "github": "canonical public/source remote",
+    "gitea": "local agent workbench and PR queue",
+    "codex": "packet authoring and agent execution",
+    "ci_validation": "proof gate before merge",
+    "receipts": "evidence of what changed and why"
+  },
+  "packet": {
+    "object_id": "AKALYNTH_COUNCIL_DAO_DEPLOY_PERMIT_V1",
+    "path": "docs/codex-work-packets/council-dao-deploy-permit-v1/CouncilDaoDeployPermit.v1.md",
+    "codex_authority_path": "repos/akalynth-codex/design/council-dao-deploy-permit-v1.md",
+    "proof_target": "council_lane_deploy_permit_v1",
+    "parent_proof_target": "council_treasury_reputation_v2",
+    "source_inputs": [
+      "repos/akalynth-codex/design/council-dao-deploy-permit-v1.md",
+      "repos/akalynth-codex/schema/council-human-ack.schema.json",
+      "repos/akalynth-codex/samples/council-proposal-deploy-beta.sample.json",
+      "repos/akalynth-codex/samples/council-proposal-deploy-staging.sample.json",
+      "akalynth-ops/bin/council-execution-gate.sh",
+      "akalynth-ops/scripts/verify-council-dao-deploy-permit-v1.sh",
+      "docs/COUNCIL_DAO_DEPLOY_PERMIT_V1_RUNBOOK.md",
+      "apps/server/tools/verify-council-dao-deploy-permit-v1.ts",
+      "scripts/verify-council-dao-deploy-permit-v1.sh"
+    ],
+    "claimed_branch": "codex/council-dao-deploy-permit-v1",
+    "claimed_by": "Codex agent (ops-laptop execution)",
+    "claimed_utc": "2026-06-21T22:00:00Z",
+    "target_labels": [
+      "codex:ready",
+      "codex:running",
+      "codex:needs-review",
+      "codex:accepted",
+      "codex:blocked",
+      "packet:council-dao"
+    ]
+  },
+  "validation": {
+    "validated_utc": "2026-06-21T22:05:00Z",
+    "worktree": "/home/sovereign/akalynth-ops/repos/akalynth",
+    "green_commit": null,
+    "commands": [
+      {
+        "command": "npm -w apps/server run verify:council-dao-deploy-permit-v1",
+        "status": "passed"
+      },
+      {
+        "command": "akalynth-ops/scripts/verify-council-dao-deploy-permit-v1.sh",
+        "status": "passed",
+        "notes": "ack_required without ack; deploy_skipped with --human-ack --skip-deploy."
+      }
+    ]
+  },
+  "codex_seed": {
+    "repo": "akalynth-codex",
+    "commit": null,
+    "entry_id": "council-dao"
+  },
+  "execution_deliverables": {
+    "runbook": "docs/COUNCIL_DAO_DEPLOY_PERMIT_V1_RUNBOOK.md",
+    "contract_verifier": "apps/server/tools/verify-council-dao-deploy-permit-v1.ts",
+    "shell_verifier": "scripts/verify-council-dao-deploy-permit-v1.sh",
+    "ops_gate_adapter": "akalynth-ops/bin/council-execution-gate.sh",
+    "ops_verifier": "akalynth-ops/scripts/verify-council-dao-deploy-permit-v1.sh"
+  },
+  "non_mutation_boundary": {
+    "verifier_hosts": "deploy skipped or ack_required only",
+    "auto_execution": "not_performed",
+    "human_ack_required_for_deploy": true
+  }
+}
