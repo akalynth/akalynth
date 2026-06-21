@@ -1,0 +1,100 @@
+{
+  "object_id": "AKALYNTH_ENGINEERING_LOOP_COUNCIL_PUBLISH_PLAY_PERMIT_V1",
+  "status": "closed",
+  "created_utc": "2026-06-21T23:30:00Z",
+  "closed_utc": "2026-06-21T23:45:00Z",
+  "authority": {
+    "github": "canonical public/source remote",
+    "gitea": "local agent workbench and PR queue",
+    "codex": "packet authoring and agent execution",
+    "ci_validation": "proof gate before merge",
+    "receipts": "evidence of what changed and why"
+  },
+  "packet": {
+    "object_id": "AKALYNTH_COUNCIL_PUBLISH_PLAY_PERMIT_V1",
+    "path": "repos/akalynth-codex/design/council-publish-play-permit-v1.md",
+    "codex_authority_path": "repos/akalynth-codex/design/council-publish-play-permit-v1.md",
+    "proof_target": "council_lane_publish_play_permit_v1",
+    "parent_proof_target": "council_lane_deploy_permit_v1",
+    "source_inputs": [
+      "repos/akalynth-codex/design/council-publish-play-permit-v1.md",
+      "repos/akalynth-codex/samples/council-proposal-publish-staging-play.sample.json",
+      "akalynth-ops/bin/council-execution-gate.sh",
+      "akalynth-ops/scripts/verify-council-publish-play-permit-v1.sh",
+      "apps/server/tools/verify-council-publish-play-permit-v1.ts",
+      "scripts/verify-council-publish-play-permit-v1.sh"
+    ],
+    "claimed_branch": "codex/council-publish-play-permit-v1",
+    "claimed_by": "Codex agent (ops-laptop execution)",
+    "claimed_utc": "2026-06-21T23:30:00Z",
+    "target_labels": [
+      "codex:ready",
+      "codex:running",
+      "codex:needs-review",
+      "codex:accepted",
+      "codex:blocked",
+      "packet:council-dao"
+    ]
+  },
+  "validation": {
+    "validated_utc": "2026-06-21T23:45:00Z",
+    "worktree": "/home/sovereign/akalynth-ops/repos/akalynth",
+    "green_commit": "1c50c2c",
+    "commands": [
+      {
+        "command": "npm -w apps/server run verify:council-publish-play-permit-v1",
+        "status": "passed"
+      },
+      {
+        "command": "akalynth-ops/scripts/verify-council-publish-play-permit-v1.sh",
+        "status": "passed",
+        "notes": "ack_required without ack; publish_skipped with --human-ack --skip-publish."
+      },
+      {
+        "command": "./scripts/verify-council-publish-play-permit-v1.sh",
+        "status": "passed",
+        "notes": "Post-merge main verification."
+      }
+    ]
+  },
+  "codex_status_update": {
+    "status": "codex:accepted",
+    "meaning": "closure executed and merged to GitHub main",
+    "github_pr_codex": "https://github.com/akalynth/akalynth-codex/pull/5",
+    "github_pr_akalynth": "https://github.com/akalynth/akalynth/pull/341"
+  },
+  "codex_seed": {
+    "repo": "akalynth-codex",
+    "commit": "fe0f5e5",
+    "entry_id": "council-dao"
+  },
+  "execution_deliverables": {
+    "contract_verifier": "apps/server/tools/verify-council-publish-play-permit-v1.ts",
+    "shell_verifier": "scripts/verify-council-publish-play-permit-v1.sh",
+    "ops_gate_adapter": "akalynth-ops/bin/council-execution-gate.sh",
+    "ops_verifier": "akalynth-ops/scripts/verify-council-publish-play-permit-v1.sh",
+    "sample_permit_ack_missing": "akalynth-ops/council/permits/sample-staging-publish-ack-missing.json",
+    "sample_permit_ack_provided": "akalynth-ops/council/permits/sample-staging-publish-ack-provided.json",
+    "ops_closure": "akalynth-ops/evidence/council/council-publish-play-permit-v1/closure.json"
+  },
+  "execution_merge": {
+    "github_pr_codex": "https://github.com/akalynth/akalynth-codex/pull/5",
+    "codex_merge_commit": "fe0f5e5",
+    "github_pr_akalynth": "https://github.com/akalynth/akalynth/pull/341",
+    "akalynth_merge_commit": "1c50c2c",
+    "merged_utc": "2026-06-21"
+  },
+  "github_ci_status": {
+    "status": "merged_upstream",
+    "checked_utc": "2026-06-21T23:45:00Z",
+    "pr_codex": "https://github.com/akalynth/akalynth-codex/pull/5",
+    "pr_akalynth": "https://github.com/akalynth/akalynth/pull/341",
+    "merge_status": "merged"
+  },
+  "non_mutation_boundary": {
+    "verifier_hosts": "publish skipped or ack_required only",
+    "auto_execution": "not_performed",
+    "human_ack_required_for_publish": true,
+    "live_publish_in_closure": "not_performed"
+  }
+}
