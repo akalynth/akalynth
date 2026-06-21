@@ -1,6 +1,6 @@
 # Witness Council DAO v2 — Treasury + Reputation
 
-Status: `codex:candidate`
+Status: `codex:accepted`
 
 Authority object: `AKALYNTH_COUNCIL_DAO_V2`
 
