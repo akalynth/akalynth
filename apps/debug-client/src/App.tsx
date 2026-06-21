@@ -6,6 +6,7 @@ import type { MapData, PlayerPublic } from '@shared/types';
 import { respectRankForReputation } from '@shared/types';
 import { useGameClient } from './hooks/useGameClient';
 import { useExistenceMode } from './hooks/useExistenceMode';
+import { usePresentationMode } from './hooks/usePresentationMode';
 import { MapCanvas } from './components/MapCanvas';
 import { DPad } from './components/DPad';
 import { ActionsPanel } from './components/ActionsPanel';
@@ -350,9 +351,20 @@ export default function App() {
   return <DebugApp />;
 }
 
+function displayPlayerName(
+  name: string | null,
+  mapDisplayName: string,
+  authenticated: boolean,
+): string {
+  if (!name) return authenticated ? mapDisplayName : 'Guest';
+  if (/^RG[0-9a-f]+$/i.test(name)) return mapDisplayName;
+  return name;
+}
+
 function DebugApp() {
   const config = useMemo(() => loadConfig(), []);
   const initialMap: MapName = config.defaultMap;
+  const presentationMode = usePresentationMode();
   const studioProofEnabled = import.meta.env.VITE_ENABLE_STUDIO_PROOF === '1';
   const phoneLandscape = useMediaQuery('(max-width: 950px) and (orientation: landscape)');
   const viewport = useViewportSize();
@@ -388,11 +400,25 @@ function DebugApp() {
   const respectValue = state.world.me?.reputation ?? 0;
   const respectRank = respectRankForReputation(respectValue);
   const playerPositionLabel = state.world.me ? `${state.world.me.x},${state.world.me.y}` : '--';
-  const showMobilePlayEntry = phoneLandscape && (state.ui.stage < 1 || !state.world.me);
+  const showMobilePlayEntry =
+    phoneLandscape &&
+    !presentationMode &&
+    (state.ui.stage < 1 || !state.world.me);
+  const playerDisplayName = displayPlayerName(
+    state.session.name,
+    currentMapDisplayName,
+    state.session.authenticated,
+  );
   // Latch a blocking death popup; only the player dismisses it by signing back in.
   useEffect(() => {
     if (isDead) setDeathModalOpen(true);
   }, [isDead]);
+  useEffect(() => {
+    if (!presentationMode) return;
+    if (!state.world.me || !state.session.authenticated) return;
+    if (state.ui.stage >= 1) return;
+    api.setStage(1);
+  }, [presentationMode, state.world.me, state.session.authenticated, state.ui.stage, api]);
   const smokeState = proof?.lastSmoke?.ok ? 'pass' : proof?.lastSmoke ? 'fail' : proofError ? 'offline' : 'idle';
   const smokeLabel =
     smokeState === 'pass' ? 'passed' :
@@ -548,7 +574,7 @@ function DebugApp() {
   }
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell${presentationMode ? ' app-shell--presentation' : ''}`}>
       <MobileLandscapeGate />
       <TopBar
         stage={state.ui.stage}
@@ -556,6 +582,7 @@ function DebugApp() {
         map={state.world.map.name as MapName}
         onMapChange={() => {}}
         conn={state.conn}
+        presentationMode={presentationMode}
       />
       {toast && (
         <button
@@ -720,23 +747,26 @@ function DebugApp() {
               </div>
             </div>
           )}
-          <div className="hud hud-primary" aria-label="play status">
-            <div className="hud-card hud-card--identity">
-              <span className="hud-kicker">Akalynth</span>
-              <strong>{state.session.name ?? 'Phone guest'}</strong>
-              <span>{currentMapDisplayName}</span>
-              <CharacterBar
-                session={state.session}
-                catalog={api.characterCatalog}
-                accountCharacters={api.accountCharacters}
-                accountSession={api.accountSession}
-                onCreate={api.createCharacter}
-                onSelect={api.selectCharacter}
-                onRefreshAccountSession={api.refreshAccountSession}
-                onLoadAccountCharacters={api.loadAccountCharacters}
-                onSignOut={api.signOut}
-              />
-            </div>
+          {(!presentationMode || !phoneLandscape) && (
+            <div className="hud hud-primary" aria-label="play status">
+              <div className="hud-card hud-card--identity">
+                <span className="hud-kicker">Akalynth</span>
+                <strong>{playerDisplayName}</strong>
+                <span>{currentMapDisplayName}</span>
+                {!(presentationMode && state.session.authenticated) && (
+                  <CharacterBar
+                    session={state.session}
+                    catalog={api.characterCatalog}
+                    accountCharacters={api.accountCharacters}
+                    accountSession={api.accountSession}
+                    onCreate={api.createCharacter}
+                    onSelect={api.selectCharacter}
+                    onRefreshAccountSession={api.refreshAccountSession}
+                    onLoadAccountCharacters={api.loadAccountCharacters}
+                    onSignOut={api.signOut}
+                  />
+                )}
+              </div>
             <div className="hud-card hud-card--stats">
               <div>
                 <span>Position</span>
@@ -781,7 +811,8 @@ function DebugApp() {
                 <strong>{state.conn.phase}</strong>
               </div>
             </div>
-          </div>
+            </div>
+          )}
           {showMobilePlayEntry && (
             <MobilePlayEntry
               session={state.session}
@@ -801,28 +832,30 @@ function DebugApp() {
           )}
           {phoneLandscape && (
             <MobileStatusRail
-              name={state.session.name}
+              name={playerDisplayName}
               position={playerPositionLabel}
               health={healthLabel}
               conn={state.conn}
             />
           )}
-          <div className="hud hud-proof" aria-label="studio proof">
-            <div className={`proof-chip objective-chip ${state.loop?.complete ? 'proof-chip--pass' : ''}`}>
-              <span>Objective</span>
-              <strong>{objectiveLabel}</strong>
+          {!presentationMode && (
+            <div className="hud hud-proof" aria-label="studio proof">
+              <div className={`proof-chip objective-chip ${state.loop?.complete ? 'proof-chip--pass' : ''}`}>
+                <span>Objective</span>
+                <strong>{objectiveLabel}</strong>
+              </div>
+              <div className="proof-chip">
+                <span>Playtest</span>
+                <strong>{activePlaytestLabel}</strong>
+              </div>
+              <div className={`proof-chip proof-chip--${smokeState}`}>
+                <span>Smoke</span>
+                <strong>{smokeLabel}</strong>
+              </div>
             </div>
-            <div className="proof-chip">
-              <span>Playtest</span>
-              <strong>{activePlaytestLabel}</strong>
-            </div>
-            <div className={`proof-chip proof-chip--${smokeState}`}>
-              <span>Smoke</span>
-              <strong>{smokeLabel}</strong>
-            </div>
-          </div>
-          {state.ui.stage >= 3 && <NearbyList me={state.world.me} players={roster} onInspect={api.inspectPlayer} />}
-          {state.ui.stage >= 3 && propertyList.length > 0 && (
+          )}
+          {!presentationMode && state.ui.stage >= 3 && <NearbyList me={state.world.me} players={roster} onInspect={api.inspectPlayer} />}
+          {!presentationMode && state.ui.stage >= 3 && propertyList.length > 0 && (
             <PropertyLedger
               properties={propertyList}
               myName={state.session.name}
@@ -837,7 +870,7 @@ function DebugApp() {
               onViewLedger={api.getPropertyLedger}
             />
           )}
-          {state.ui.stage >= 3 && (
+          {!presentationMode && state.ui.stage >= 3 && (
             <GatherPanel
               gather={state.gather}
               me={state.world.me}
@@ -863,6 +896,7 @@ function DebugApp() {
             <ActionsPanel
               stage={state.ui.stage}
               compact={phoneLandscape}
+              presentationMode={presentationMode}
               onAttack={api.sendAttack}
               onRitual={api.castRunestone}
               onTalk={api.talkToNpc}
@@ -931,40 +965,44 @@ function DebugApp() {
             >
               Pack
             </button>
-            <button
-              className="proof-toggle"
-              aria-label={phoneLandscape ? 'Open proof status' : proofRunning ? 'Running proof' : 'Run proof'}
-              onClick={() => {
-                if (phoneLandscape) {
+            {!presentationMode && (
+              <button
+                className="proof-toggle"
+                aria-label={phoneLandscape ? 'Open proof status' : proofRunning ? 'Running proof' : 'Run proof'}
+                onClick={() => {
+                  if (phoneLandscape) {
+                    setChatOpen(false);
+                    setInventoryOpen(false);
+                    api.closeChronicle();
+                    setProofSheetOpen(true);
+                    return;
+                  }
+                  void runProofSmoke();
+                }}
+                disabled={!phoneLandscape && (proofRunning || !studioProofEnabled)}
+              >
+                {proofRunning ? 'Running' : 'Proof'}
+              </button>
+            )}
+            {!presentationMode && (
+              <button
+                className="seal-toggle"
+                aria-label="Adventurer Seal"
+                onClick={() => {
                   setChatOpen(false);
                   setInventoryOpen(false);
+                  setProofSheetOpen(false);
                   api.closeChronicle();
-                  setProofSheetOpen(true);
-                  return;
-                }
-                void runProofSmoke();
-              }}
-              disabled={!phoneLandscape && (proofRunning || !studioProofEnabled)}
-            >
-              {proofRunning ? 'Running' : 'Proof'}
-            </button>
-            <button
-              className="seal-toggle"
-              aria-label="Adventurer Seal"
-              onClick={() => {
-                setChatOpen(false);
-                setInventoryOpen(false);
-                setProofSheetOpen(false);
-                api.closeChronicle();
-                setSealOpen(true);
-              }}
-            >
-              Seal
-            </button>
+                  setSealOpen(true);
+                }}
+              >
+                Seal
+              </button>
+            )}
           </div>
           <div className="status-pills">
             <span className="pill">World synced</span>
-            {proof?.lastSmoke?.worldSpawn && (
+            {!presentationMode && proof?.lastSmoke?.worldSpawn && (
               <span className="pill proof-pill">Proof {proof.lastSmoke.worldSpawn.x},{proof.lastSmoke.worldSpawn.y}</span>
             )}
             {state.world.me?.status === 'dead' && <span className="pill warning">Dead</span>}

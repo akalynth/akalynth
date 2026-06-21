@@ -95,6 +95,7 @@ const VOCATION_ACTIONS: Array<{ vocation: SovereignVocation; label: string; shor
 interface ActionsPanelProps {
   stage: 0 | 1 | 2 | 3;
   compact?: boolean;
+  presentationMode?: boolean;
   onAttack: () => void;
   onRitual: () => void;
   onTalk: (npcId: string) => void;
@@ -124,6 +125,7 @@ interface ActionsPanelProps {
 export function ActionsPanel({
   stage,
   compact = false,
+  presentationMode = false,
   onAttack,
   onRitual,
   onTalk,
@@ -171,7 +173,7 @@ export function ActionsPanel({
   if (compact) {
     return (
       <div className="actions-panel actions-panel--compact" aria-label="Quick actions">
-        {stage < 1 && (
+        {!presentationMode && stage < 1 && (
           <div className="action-locked action-locked--compact">
             <strong>Locked</strong>
             <span>Tap Enter play</span>
@@ -299,74 +301,78 @@ export function ActionsPanel({
       <div className="mission-card">
         <span>Objective</span>
         <strong>{objectiveLabel}</strong>
-        <div className="mission-flags" aria-label="objective progress">
-          <i className={loop?.move ? 'done' : ''}>Move</i>
-          <i className={loop?.chat ? 'done' : ''}>Signal</i>
-          <i className={loop?.tem ? 'done' : ''}>Tem</i>
-          <i className={loop?.gate ? 'done' : ''}>Gate</i>
-        </div>
-        {rookguardQuest && (
-          <div className="quest-flags" aria-label={`${rookguardQuest.title} progress`}>
-            {rookguardQuest.steps.map((step) => (
-              <i key={step.step_id} className={step.complete ? 'done' : ''}>
-                {step.label}
-              </i>
-            ))}
-          </div>
-        )}
-        {codexProfession && (
-          <div className="codex-profession" aria-label="Codex profession">
-            <span>Codex</span>
-            <strong>{codexProfession.title}</strong>
-            <p>{codexProfession.oath}</p>
-            <small>{codexProfession.codex_anchor.object_id} · {codexProfession.codex_anchor.status}</small>
-            <ul>
-              {codexProfession.starter_actions.map((action) => (
-                <li key={action}>{action}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-        {rookguardQuest?.codexShelves && (
-          <div className="codex-shelves" aria-label="Codex shelves">
-            {rookguardQuest.codexShelves.map((shelf) => (
-              <i key={shelf.object_id} className={shelf.role === 'active_profession_lore' ? 'active' : ''} title={shelf.gameplay_hint}>
-                {shelf.title}
-              </i>
-            ))}
-          </div>
-        )}
-        {onwardRoutes.length > 0 && (
-          <div className="codex-shelves onward-routes" aria-label="Onward routes">
-            {onwardRoutes.map((route) => {
-              const completed = new Set(route.completed_objective_ids);
-              const routeOpen = route.status === 'available';
-              const nextObjectiveId = routeOpen ? route.objectives.find((objective) => !completed.has(objective.id))?.id ?? null : null;
-              const routeStepObjectives = route.objectives.filter((objective) => objective.system !== 'ui' && objective.system !== 'android');
-              const routeStepCompleted = routeStepObjectives.filter((objective) => completed.has(objective.id)).length;
-              return (
-                <article
-                  key={route.route_id}
-                  className={`onward-route-card ${routeOpen ? 'active' : ''}`}
-                  title={`Source: ${route.source_drop}`}
-                >
-                  <strong>
-                    {routeOpen ? 'Open' : 'Locked'}: {route.title} ({routeStepCompleted}/{routeStepObjectives.length})
-                  </strong>
-                  <span>{route.next_objective}</span>
-                  <ul>
-                    {route.objectives.map((objective) => (
-                      <li key={objective.id} className={completed.has(objective.id) ? 'done' : ''}>
-                        <b>{completed.has(objective.id) ? 'Done' : !routeOpen ? 'Locked' : objective.id === nextObjectiveId ? 'Next' : 'Later'}</b>
-                        {objective.label}
-                        <small>{objective.system}</small>
-                      </li>
-                    ))}
-                  </ul>
-                </article>
-              );
-            })}
-          </div>
+        {!presentationMode && (
+          <>
+            <div className="mission-flags" aria-label="objective progress">
+              <i className={loop?.move ? 'done' : ''}>Move</i>
+              <i className={loop?.chat ? 'done' : ''}>Signal</i>
+              <i className={loop?.tem ? 'done' : ''}>Tem</i>
+              <i className={loop?.gate ? 'done' : ''}>Gate</i>
+            </div>
+            {rookguardQuest && (
+              <div className="quest-flags" aria-label={`${rookguardQuest.title} progress`}>
+                {rookguardQuest.steps.map((step) => (
+                  <i key={step.step_id} className={step.complete ? 'done' : ''}>
+                    {step.label}
+                  </i>
+                ))}
+              </div>
+            )}
+            {codexProfession && (
+              <div className="codex-profession" aria-label="Codex profession">
+                <span>Codex</span>
+                <strong>{codexProfession.title}</strong>
+                <p>{codexProfession.oath}</p>
+                <small>{codexProfession.codex_anchor.object_id} · {codexProfession.codex_anchor.status}</small>
+                <ul>
+                  {codexProfession.starter_actions.map((action) => (
+                    <li key={action}>{action}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {rookguardQuest?.codexShelves && (
+              <div className="codex-shelves" aria-label="Codex shelves">
+                {rookguardQuest.codexShelves.map((shelf) => (
+                  <i key={shelf.object_id} className={shelf.role === 'active_profession_lore' ? 'active' : ''} title={shelf.gameplay_hint}>
+                    {shelf.title}
+                  </i>
+                ))}
+              </div>
+            )}
+            {onwardRoutes.length > 0 && (
+              <div className="codex-shelves onward-routes" aria-label="Onward routes">
+                {onwardRoutes.map((route) => {
+                  const completed = new Set(route.completed_objective_ids);
+                  const routeOpen = route.status === 'available';
+                  const nextObjectiveId = routeOpen ? route.objectives.find((objective) => !completed.has(objective.id))?.id ?? null : null;
+                  const routeStepObjectives = route.objectives.filter((objective) => objective.system !== 'ui' && objective.system !== 'android');
+                  const routeStepCompleted = routeStepObjectives.filter((objective) => completed.has(objective.id)).length;
+                  return (
+                    <article
+                      key={route.route_id}
+                      className={`onward-route-card ${routeOpen ? 'active' : ''}`}
+                      title={`Source: ${route.source_drop}`}
+                    >
+                      <strong>
+                        {routeOpen ? 'Open' : 'Locked'}: {route.title} ({routeStepCompleted}/{routeStepObjectives.length})
+                      </strong>
+                      <span>{route.next_objective}</span>
+                      <ul>
+                        {route.objectives.map((objective) => (
+                          <li key={objective.id} className={completed.has(objective.id) ? 'done' : ''}>
+                            <b>{completed.has(objective.id) ? 'Done' : !routeOpen ? 'Locked' : objective.id === nextObjectiveId ? 'Next' : 'Later'}</b>
+                            {objective.label}
+                            <small>{objective.system}</small>
+                          </li>
+                        ))}
+                      </ul>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </>
         )}
         {routeActionsOpen && (
           <div className="shop-actions" aria-label="Route actions">
@@ -383,15 +389,15 @@ export function ActionsPanel({
         )}
       </div>
       {gold > 0 && <div className="gold-display">Gold: {gold}</div>}
-      <div className="gold-display">Respect: {respectRank} ({reputation})</div>
+      {!presentationMode && <div className="gold-display">Respect: {respectRank} ({reputation})</div>}
       {nearLegendStone && (
         <div className="legend-stone-hint">A legend stone pulses nearby. It refuses approach.</div>
       )}
-      {stage < 1 && <div className="action-locked">Stage 1 unlocks actions</div>}
+      {!presentationMode && stage < 1 && <div className="action-locked">Stage 1 unlocks actions</div>}
       {stage >= 1 && (
         <>
-          <div className="target-line">Target: {targetName ?? 'none'}</div>
-          {!targetName && <div className="action-hint">Tap a player to target</div>}
+          {!presentationMode && <div className="target-line">Target: {targetName ?? 'none'}</div>}
+          {!presentationMode && !targetName && <div className="action-hint">Tap a player to target</div>}
           {targetName && (
             <button
               className="action-btn ritual-btn"

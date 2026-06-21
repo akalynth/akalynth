@@ -25,6 +25,18 @@ function translateRemoteDevHost(host: string, toPort: number): string | null {
   return null;
 }
 
+// Site hosts serve static /play/; game API lives on sibling *-api hosts (CLIENT_CONTRACT v0.1).
+const LANE_API_HOSTS: Record<string, string> = {
+  'beta.akalynth.com': 'beta-api.akalynth.com',
+  'staging.akalynth.com': 'staging-api.akalynth.com',
+};
+
+function laneApiOrigin(siteHostname: string, siteProtocol: string): string | null {
+  const apiHost = LANE_API_HOSTS[siteHostname];
+  if (!apiHost) return null;
+  return `${siteProtocol}//${apiHost}`;
+}
+
 const DEFAULT_HTTP = (() => {
   const url = new URL(window.location.href);
 
@@ -32,6 +44,9 @@ const DEFAULT_HTTP = (() => {
   if (isLocalHost(url.hostname)) {
     return `${url.protocol}//${url.hostname}:${SERVER_PORT}`;
   }
+
+  const laneApi = laneApiOrigin(url.hostname, url.protocol);
+  if (laneApi) return laneApi;
 
   // Codespaces/Gitpod: rewrite host suffix to server port
   const remoteHost = translateRemoteDevHost(url.hostname, SERVER_PORT);
@@ -49,6 +64,9 @@ const DEFAULT_WS = (() => {
   if (isLocalHost(url.hostname)) {
     return `${wsProto}//${url.hostname}:${SERVER_PORT}`;
   }
+
+  const laneApi = laneApiOrigin(url.hostname, wsProto);
+  if (laneApi) return laneApi;
 
   // Codespaces/Gitpod: rewrite host suffix to server port
   const remoteHost = translateRemoteDevHost(url.hostname, SERVER_PORT);

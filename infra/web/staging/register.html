@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Akalynth — Create Account</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%231f1a13'/%3E%3Cpath d='M16 5l7 11-7 11-7-11z' fill='%23d9b25a'/%3E%3C/svg%3E" />
+  <style>
+    :root {
+      --bg: #0c0a07; --panel: #16120c; --ink: #efe6d2; --ink-soft: #b7a988;
+      --ink-dim: #7a7060; --gold: #d9b25a; --gold-dim: #a8883e;
+      --line: #2a2318; --green: #6fbf73; --red: #d97060; --radius: 12px; --radius-sm: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh; background: radial-gradient(120% 120% at 50% 0%, #17120b 0%, var(--bg) 60%);
+      color: var(--ink); font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+      display: flex; flex-direction: column; align-items: center; padding: 40px 16px 80px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; }
+    .brand-mark { color: var(--gold); font-size: 24px; line-height: 1; }
+    .brand-name { font-size: 20px; font-weight: 700; letter-spacing: .4px; }
+    .lane-tag {
+      font-size: 11px; letter-spacing: 1px; text-transform: uppercase; font-weight: 700;
+      background: var(--gold); color: #1a1408; padding: 2px 9px; border-radius: 999px; margin-left: 6px;
+    }
+    .card {
+      width: 100%; max-width: 480px; background: var(--panel); border: 1px solid var(--line);
+      border-radius: var(--radius); padding: 28px; box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    }
+    .card-title { font-size: 17px; font-weight: 700; margin-bottom: 20px; }
+    .field { margin-bottom: 14px; }
+    label { display: block; font-size: 13px; color: var(--ink-soft); margin-bottom: 5px; }
+    input {
+      width: 100%; padding: 11px 13px; background: #0f0d09; border: 1px solid var(--line);
+      border-radius: var(--radius-sm); color: var(--ink); font-size: 15px; outline: none; transition: border-color .15s;
+    }
+    input:focus { border-color: var(--gold-dim); }
+    .btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+      padding: 13px 18px; border-radius: var(--radius-sm); font-weight: 700; font-size: 15px;
+      border: none; cursor: pointer; transition: filter .12s, transform .05s; text-decoration: none;
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn-primary { background: var(--gold); color: #1a1408; }
+    .btn-primary:hover { filter: brightness(1.08); }
+    .btn-primary:disabled { opacity: .45; cursor: default; filter: none; }
+    .btn-ghost {
+      background: transparent; border: 1px solid var(--line); color: var(--ink-soft);
+      font-size: 13px; padding: 8px 14px; width: auto;
+    }
+    .btn-ghost:hover { border-color: var(--ink-dim); color: var(--ink); }
+    .notice {
+      padding: 12px 14px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 16px;
+      border: 1px solid;
+    }
+    .notice-error { background: rgba(217,112,96,.12); border-color: rgba(217,112,96,.3); color: #f0a090; }
+    .notice-info  { background: rgba(217,178,90,.08); border-color: rgba(217,178,90,.2); color: var(--ink-soft); }
+    .notice-ok    { background: rgba(111,191,115,.1); border-color: rgba(111,191,115,.3); color: #9ae09e; }
+    .divider { border: none; border-top: 1px solid var(--line); margin: 20px 0; }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    footer { margin-top: 28px; font-size: 12px; color: var(--ink-dim); text-align: center; }
+    footer a { color: var(--ink-soft); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      width: 14px; height: 14px; border: 2px solid rgba(26,20,8,.25);
+      border-top-color: #1a1408; border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">◆</span>
+    <span class="brand-name">Akalynth</span>
+    <span class="lane-tag">Staging</span>
+  </div>
+
+  <div class="card">
+    <p class="card-title">Create account</p>
+    <div id="notice" class="notice" style="display:none"></div>
+
+    <div class="field">
+      <label for="handle">Nickname</label>
+      <input id="handle" type="text" autocomplete="username" maxlength="32" placeholder="AkalynthName" />
+    </div>
+    <div class="field">
+      <label for="email">Email</label>
+      <input id="email" type="email" autocomplete="email" placeholder="you@example.com" />
+    </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="new-password" placeholder="At least 8 characters" />
+    </div>
+    <div class="field">
+      <label for="confirm">Confirm password</label>
+      <input id="confirm" type="password" autocomplete="new-password" placeholder="Repeat password" />
+    </div>
+
+    <button id="create-btn" class="btn btn-primary">Create account</button>
+    <hr class="divider" />
+    <div class="row">
+      <a class="btn btn-ghost" href="/account.html">Sign in</a>
+      <a class="btn btn-ghost" href="/forgot.html">Forgot password</a>
+    </div>
+  </div>
+
+  <footer>
+    <a href="/">staging.akalynth.com</a> &nbsp;·&nbsp; <a href="https://staging-api.akalynth.com/v1/health">server status</a>
+  </footer>
+
+<script>
+const API = 'https://staging-api.akalynth.com';
+
+function setNotice(kind, msg) {
+  const el = document.getElementById('notice');
+  el.className = `notice notice-${kind}`;
+  el.textContent = msg;
+  el.style.display = msg ? '' : 'none';
+}
+
+function setButton(loading) {
+  const btn = document.getElementById('create-btn');
+  btn.disabled = loading;
+  btn.innerHTML = loading ? '<span class="spinner"></span>' : 'Create account';
+}
+
+async function post(path, body) {
+  const res = await fetch(API + path, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  return { ok: res.ok, status: res.status, data };
+}
+
+async function verifyNow(token) {
+  const { ok, data } = await post('/v1/accounts/verify-email', { token });
+  if (ok) {
+    setNotice('ok', 'Email verified. Sign in to choose a character.');
+  } else {
+    setNotice('error', data?.error ?? 'Verification link is invalid or expired.');
+  }
+}
+
+async function createAccount() {
+  const handle = document.getElementById('handle').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const confirm = document.getElementById('confirm').value;
+
+  if (!handle || !email || !password) { setNotice('error', 'Nickname, email, and password are required.'); return; }
+  if (password !== confirm) { setNotice('error', 'Passwords do not match.'); return; }
+
+  setButton(true);
+  const { ok, data } = await post('/v1/accounts/register', { handle, email, password });
+  setButton(false);
+  if (!ok) { setNotice('error', data?.message ?? data?.error ?? 'Could not create account.'); return; }
+
+  if (typeof data.dev_verification_token === 'string' && data.dev_verification_token) {
+    await verifyNow(data.dev_verification_token);
+    return;
+  }
+  setNotice('ok', data?.message ?? 'Account created. Check your email to verify it before playing.');
+}
+
+document.getElementById('create-btn').addEventListener('click', createAccount);
+for (const id of ['handle', 'email', 'password', 'confirm']) {
+  document.getElementById(id).addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') document.getElementById('create-btn').click();
+  });
+}
+</script>
+</body>
+</html>

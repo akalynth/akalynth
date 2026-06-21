@@ -5101,3 +5101,26 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================================================
+   Live-lane presentation mode (beta/staging /play/)
+   ============================================================================ */
+
+.app-shell--presentation .hud-proof {
+  display: none;
+}
+
+@media (max-width: 950px) and (orientation: landscape) {
+  .app-shell--presentation .hud-primary {
+    display: none;
+  }
+
+  .app-shell--presentation .mobile-play-entry {
+    display: none;
+  }
+
+  .app-shell--presentation .mobile-status-rail span:first-child {
+    font-weight: 700;
+    color: #f0c83c;
+  }
+}
