@@ -1,6 +1,6 @@
 # Akalynth continuation state
 
-Last updated: **2026-06-21** (account portal merged; v10 committed; beta publish helper fixed; CI reviewed).
+Last updated: **2026-06-21** (P0–P3 web client feature gap vs Android v10 implemented and pushed).
 
 Read this before implementing. For skill routing see `AGENTS.md` and `.codex/CODEX_MAP.md`.
 
@@ -12,8 +12,8 @@ Read this before implementing. For skill routing see `AGENTS.md` and `.codex/COD
 |------|--------|
 | Repo | `https://github.com/akalynth/akalynth` |
 | Branch | `main` |
-| Head | `48e5b17` — fix(beta): preserve portal csrf token for play |
-| Last merged | account portal CSRF fix + account-play smoke (11 commits since `8ee2d90`) |
+| Head | `72da70b` — feat(debug-client): implement P0-P3 web client feature gap vs Android v10 |
+| Last merged | web client P0-P3 feature gap (12 commits since `8ee2d90`) |
 | Local source | `/home/sovereign/akalynth-ops/repos/akalynth` |
 
 **Included in main since `8ee2d90` (2026-06-20 → 2026-06-21):**
@@ -190,11 +190,10 @@ AKALYNTH_UI_SCENARIOS=azura_gather ./scripts/goal0-android-ui-inspect.sh
 
 ## Open / next work (as of handoff)
 
-1. **Publish Android v10 APK** — `versionCode=10` / `0.1.8-beta-character-sprites` committed on main; `beta-client-update.json` still pins v9. Run full publish loop on ops-dev-01, update `infra/android/beta-client-update.json`, push to main.
-2. **Stabilize `azura_gather`** — codex reaches gate; Azura transfer + Gthr at (34,32) still flaky (~90% codex)
-3. **Top bar** — map chip may clip in screenshots; may need wider gutters in `WorldScreen.kt`
-4. **Account portal** — merged and deployed; smoke tests green. Watch for auth edge cases (CSRF token, character name preservation both fixed in `48e5b17`/`c45afe9`).
-5. **Prod** — this handoff covers **beta** lane; prod deploy is separate (`/opt/akalynth`, `deploy_beta.sh`)
+1. **Stabilize `azura_gather`** — codex reaches gate; Azura transfer + Gthr at (34,32) still flaky (~90% codex)
+2. **Top bar** — map chip may clip in screenshots; may need wider gutters in `WorldScreen.kt`
+3. **Deploy web client to beta** — `72da70b` is on main; beta server needs `git reset --hard origin/main` + rsync + npm build + service restart to serve updated `/play/` bundle
+4. **Prod** — this handoff covers **beta** lane; prod deploy is separate (`/opt/akalynth`, `deploy_beta.sh`)
 
 ---
 
