@@ -84,6 +84,26 @@ Read this before implementing. For skill routing see `AGENTS.md` and `.codex/COD
 
 ---
 
+## Beta entry point — web-first (2026-06-21)
+
+Focus shifted from the Android APK to the browser client at **https://beta.akalynth.com/play/**
+("use webclient first"). `/play/` is live (HTTP 200, serves the debug-client build).
+
+- **Site source is a SEPARATE repo:** `github.com/akalynth/akalynth-site` (cloned at
+  `repos/akalynth-site` here and on ops-dev-01). The game monorepo's `infra/web/beta/` is **not**
+  what's deployed. Site is published with `bin/akalynth-site-publish.sh beta <commit>` (clones the
+  pinned commit, backs up, rsyncs to `/var/www/akalynth-beta`, validates + reloads Caddy).
+- **`main` is branch-protected** (PR + `site-checks` status check; no direct push).
+- **PR [#74](https://github.com/akalynth/akalynth-site/pull/74)** — `feat: lead with the web
+  client`: `index.html` + `beta.html` lead with **Play in browser ▶** → `/play/`, F-Droid/APK
+  demoted to "Or get the Android client". `site-checks` green; CLEAN/MERGEABLE. **Merge + deploy
+  is operator-gated** (auto-mode denied self-merge to the public default branch).
+- **To go live:** merge PR #74, then `sudo bin/akalynth-site-publish.sh beta <merged-sha>`
+  (`--dry-run` first); verify `curl https://beta.akalynth.com/` + `/beta.html` show the browser CTA.
+- **Follow-up:** `akalynth-site/js/app.js` account-portal CTAs still say "Download the Android beta
+  to play" — left untouched (that file has unrelated in-progress library-discovery edits in the
+  working tree; separate cleanly before editing).
+
 ## Hosts and lanes
 
 | Host | IP / access | Role |
