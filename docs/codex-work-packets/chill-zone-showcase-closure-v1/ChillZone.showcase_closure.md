@@ -1,6 +1,6 @@
 # Chill-Zone Showcase Closure v1
 
-Status: `codex:ready`
+Status: `codex:accepted`
 
 Authority object: `AKALYNTH_CHILL_ZONE_SHOWCASE_CLOSURE_V1`
 
