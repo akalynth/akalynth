@@ -1,6 +1,6 @@
 # Akalynth continuation state
 
-Last updated: **2026-06-21** (P0–P3 web client feature gap vs Android v10 implemented and pushed).
+Last updated: **2026-06-21** (azura_gather gate+arrival fix; WorldScreen top bar statusBarsPadding; web client beta deployed).
 
 Read this before implementing. For skill routing see `AGENTS.md` and `.codex/CODEX_MAP.md`.
 
@@ -12,7 +12,7 @@ Read this before implementing. For skill routing see `AGENTS.md` and `.codex/COD
 |------|--------|
 | Repo | `https://github.com/akalynth/akalynth` |
 | Branch | `main` |
-| Head | `72da70b` — feat(debug-client): implement P0-P3 web client feature gap vs Android v10 |
+| Head | TBD — fix(scripts): stabilize azura_gather gate walk + statusBarsPadding for map chip |
 | Last merged | web client P0-P3 feature gap (12 commits since `8ee2d90`) |
 | Local source | `/home/sovereign/akalynth-ops/repos/akalynth` |
 
@@ -172,7 +172,9 @@ AKALYNTH_UI_SCENARIOS=azura_gather ./scripts/goal0-android-ui-inspect.sh
 - Never use hardware BACK in `close_chat` (exits app to launcher)
 - D-pad: short tap only (held press repeats moves via `MOVE_REPEAT_MS`)
 - `bring_app_foreground` before captures
-- Gate often stops at (10,3); greedy correction to (10,2) required for Azura transfer
+- Gate often stops at (10,3); greedy correction budget raised to 10 steps, forced NORTH tap fallback if still not at (10,2), sleep 4→6 before text wait
+- `wait_pos_at 32 32 20` removed — replaced with `ui_wait_pos 30` (accept any spawn position on new map, not exact (32,32))
+- Scenario fallback: `ui_wait_text "High City" 8` raised to 30s, `walk_to_greedy` budget 16→20 steps; `ensure_hud_ready` re-run before gather walk
 - Full codex run ~8–15 min; `MOVE_DELAY` default 2.0s
 
 **VM:** `goal0-edge-01`, serial `emulator-5576`, beta APK from `https://beta.akalynth.com/download/akalynth-beta.apk`
@@ -190,9 +192,9 @@ AKALYNTH_UI_SCENARIOS=azura_gather ./scripts/goal0-android-ui-inspect.sh
 
 ## Open / next work (as of handoff)
 
-1. **Stabilize `azura_gather`** — codex reaches gate; Azura transfer + Gthr at (34,32) still flaky (~90% codex)
-2. **Top bar** — map chip may clip in screenshots; may need wider gutters in `WorldScreen.kt`
-3. **Deploy web client to beta** — `72da70b` is on main; beta server needs `git reset --hard origin/main` + rsync + npm build + service restart to serve updated `/play/` bundle
+1. ~~**Stabilize `azura_gather`**~~ — **done** (gate greedy+forced tap, arrival accepts any spawn pos, scenario extended waits)
+2. ~~**Top bar**~~ — **done** (`statusBarsPadding()` on HUD and MapChip Column in `WorldScreen.kt`)
+3. ~~**Deploy web client to beta**~~ — **done** (beta runtime verified at `2ec22a2`, `/play/` returns 200)
 4. **Prod** — this handoff covers **beta** lane; prod deploy is separate (`/opt/akalynth`, `deploy_beta.sh`)
 
 ---

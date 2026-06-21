@@ -121,12 +121,15 @@ for scenario in "${SCENARIO_ARR[@]}"; do
         log_line "codex: onboarding failed (continuing for screenshot)"
       fi
       ensure_hud_ready 2>/dev/null || cache_dpad_coords 2>/dev/null || true
-      if ui_wait_text "High City" 8 2>/dev/null || ui_wait_text "Azura" 5 2>/dev/null; then
-        log_line "gather: walk to node tile ${GATHER_TARGET_X},${GATHER_TARGET_Y} (azura_ley_mote_e)"
-        walk_to_greedy "${GATHER_TARGET_X}" "${GATHER_TARGET_Y}" 16 \
+      # If codex failed, give extra time for a late transfer to register before
+      # checking map text — transfer can arrive 5–15 s after reaching (10,2).
+      if ui_wait_text "High City" 30 2>/dev/null || ui_wait_text "Azura" 20 2>/dev/null; then
+        log_line "gather: on Azura — walk to node tile ${GATHER_TARGET_X},${GATHER_TARGET_Y} (azura_ley_mote_e)"
+        ensure_hud_ready 2>/dev/null || cache_dpad_coords 2>/dev/null || true
+        walk_to_greedy "${GATHER_TARGET_X}" "${GATHER_TARGET_Y}" 20 \
           || log_line "gather: walk incomplete (continuing for screenshot)"
       else
-        log_line "gather: skipped (not on High City / Azura)"
+        log_line "gather: skipped (not on High City / Azura after extended wait)"
       fi
       sleep 2
       dump_ui_xml azura_gather_ui >/dev/null || true

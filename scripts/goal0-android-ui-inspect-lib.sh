@@ -373,14 +373,21 @@ run_codex_to_azura() {
 
   log_line "codex: gate to Azura (10,2)"
   walk_path_dirs "gate" "${CODEX_PATH_GATE}" || return 1
-  walk_to_greedy 10 2 6 || true
-  ui_read_pos 2>/dev/null && log_line "codex: gate tile ${POS_X},${POS_Y}"
-  sleep 4
-  ui_wait_text "High City" 90 || ui_wait_text "Azura" 30 || return 1
-  if wait_pos_at 32 32 20; then
-    log_line "codex: azura arrival pos 32,32"
-    return 0
+  # Greedy correction: gate often ends at (10,3); bump budget and retry with
+  # a direct NORTH tap if greedy times out so transfer actually triggers.
+  walk_to_greedy 10 2 10 || true
+  ui_read_pos 2>/dev/null && log_line "codex: after greedy pos ${POS_X},${POS_Y}"
+  if [[ "${POS_X:-0}" -ne 10 || "${POS_Y:-0}" -ne 2 ]]; then
+    log_line "codex: not at gate tile, forcing NORTH tap"
+    dpad_move_verified "NORTH" 2>/dev/null || true
+    ui_read_pos 2>/dev/null && log_line "codex: gate tile after forced tap ${POS_X},${POS_Y}"
   fi
+  # Give server 6s to register the gate tile and initiate transfer.
+  sleep 6
+  # Wait for High City / Azura map label — up to 90+30 s.
+  ui_wait_text "High City" 90 || ui_wait_text "Azura" 30 || return 1
+  # Accept any spawn position on the new map; (32,32) is typical but not fixed.
+  ui_wait_pos 30 && log_line "codex: azura arrival pos ${POS_X},${POS_Y}" && return 0
   ui_read_pos 2>/dev/null && log_line "codex: azura arrival pos ${POS_X},${POS_Y}"
   return 1
 }

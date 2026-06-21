@@ -97,13 +97,16 @@ fun WorldScreen(
             npcStatus = npcStatusLabel(state.ui.npcDialogue),
             connectionState = state.connection,
             questProgress = codexQuestProgress(loop),
-            modifier = Modifier.align(Alignment.TopStart)
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .statusBarsPadding()
         )
 
         Column(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
+                .statusBarsPadding()
                 .padding(horizontal = 12.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp)
