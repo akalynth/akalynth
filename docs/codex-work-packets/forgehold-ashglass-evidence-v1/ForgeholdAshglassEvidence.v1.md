@@ -1,6 +1,6 @@
 # Forgehold Act II Ashglass Evidence v1
 
-Status: `codex:ready`
+Status: `codex:accepted`
 
 Authority object: `AKALYNTH_FORGEHOLD_ASHGLASS_EVIDENCE_V1`
 

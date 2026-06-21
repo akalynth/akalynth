@@ -1,8 +1,8 @@
 {
   "object_id": "AKALYNTH_ENGINEERING_LOOP_FORGEHOLD_ASHGLASS_EVIDENCE_V1",
-  "status": "open",
+  "status": "closed",
   "created_utc": "2026-06-21T18:00:00Z",
-  "closed_utc": null,
+  "closed_utc": "2026-06-21T18:30:00Z",
   "authority": {
     "github": "canonical public/source remote",
     "gitea": "local agent workbench and PR queue",
@@ -14,7 +14,7 @@
     "object_id": "AKALYNTH_FORGEHOLD_ASHGLASS_EVIDENCE_V1",
     "path": "docs/codex-work-packets/forgehold-ashglass-evidence-v1/ForgeholdAshglassEvidence.v1.md",
     "codex_authority_path": "repos/akalynth-codex/design/forgehold-ashglass-evidence-v1.md",
-    "codex_seed_commit": null,
+    "codex_seed_commit": "1dc7eae",
     "proof_target": "forgehold_ashglass_evidence_v1",
     "source_inputs": [
       "repos/akalynth-codex/design/forgehold-ashglass-evidence-v1.md",
@@ -43,22 +43,61 @@
     ]
   },
   "validation": {
-    "validated_utc": null,
+    "validated_utc": "2026-06-21T18:25:00Z",
     "worktree": "/home/sovereign/akalynth-ops/repos/akalynth",
-    "green_commit": null,
-    "commands": []
+    "green_commit": "0890f36",
+    "commands": [
+      {
+        "command": "git diff --check",
+        "status": "passed"
+      },
+      {
+        "command": "npm -w apps/server run verify:quick",
+        "status": "passed"
+      },
+      {
+        "command": "npm -w apps/server run verify:forgehold-ashglass-evidence",
+        "status": "passed"
+      },
+      {
+        "command": "npm -w apps/server run verify:route-surveys",
+        "status": "passed"
+      }
+    ]
   },
   "codex_status_update": {
-    "status": "codex:ready",
-    "meaning": "packet seeded; implementation in progress",
+    "status": "codex:accepted",
+    "meaning": "closure executed and merged to GitHub main",
     "gitea_issue": null,
     "gitea_pr": null,
-    "github_pr": null
+    "github_pr": "https://github.com/akalynth/akalynth/pull/336"
   },
   "codex_seed": {
     "repo": "akalynth-codex",
-    "commit": null,
+    "commit": "1dc7eae",
     "entry_id": "forgehold-ashglass-evidence"
+  },
+  "execution_deliverables": {
+    "runbook": "docs/FORGEHOLD_ASHGLASS_RUNBOOK.md",
+    "focused_verifier": "apps/server/tools/verify-forgehold-ashglass-evidence.ts",
+    "shell_verifier": "scripts/verify-forgehold-ashglass-evidence.sh",
+    "act_ii_skills": [
+      "route:evidence:milepost",
+      "route:evidence:caravan",
+      "route:evidence:ravine"
+    ]
+  },
+  "execution_merge": {
+    "github_pr": "https://github.com/akalynth/akalynth/pull/336",
+    "merge_commit": "0890f36",
+    "merged_utc": "2026-06-21"
+  },
+  "github_ci_status": {
+    "status": "merged_upstream",
+    "checked_utc": "2026-06-21T18:30:00Z",
+    "pr": "https://github.com/akalynth/akalynth/pull/336",
+    "merge_status": "merged",
+    "merge_commit": "0890f36"
   },
   "non_mutation_boundary": {
     "runtime_trees": "unchanged",
