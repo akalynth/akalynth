@@ -1,0 +1,70 @@
+{
+  "object_id": "AKALYNTH_ENGINEERING_LOOP_FORGEHOLD_ASHGLASS_EVIDENCE_V1",
+  "status": "open",
+  "created_utc": "2026-06-21T18:00:00Z",
+  "closed_utc": null,
+  "authority": {
+    "github": "canonical public/source remote",
+    "gitea": "local agent workbench and PR queue",
+    "codex": "packet authoring and agent execution",
+    "ci_validation": "proof gate before merge",
+    "receipts": "evidence of what changed and why"
+  },
+  "packet": {
+    "object_id": "AKALYNTH_FORGEHOLD_ASHGLASS_EVIDENCE_V1",
+    "path": "docs/codex-work-packets/forgehold-ashglass-evidence-v1/ForgeholdAshglassEvidence.v1.md",
+    "codex_authority_path": "repos/akalynth-codex/design/forgehold-ashglass-evidence-v1.md",
+    "codex_seed_commit": null,
+    "proof_target": "forgehold_ashglass_evidence_v1",
+    "source_inputs": [
+      "repos/akalynth-codex/design/forgehold-ashglass-evidence-v1.md",
+      "repos/akalynth-codex/schema/forgehold-evidence-object.schema.json",
+      "repos/akalynth-codex/samples/forgehold-act-ii-evidence-chain.sample.json",
+      "repos/akalynth-codex/entries/forgehold-ashglass-evidence.json",
+      "packages/shared/skills.ts",
+      "apps/server/src/skills/handlers.ts",
+      "apps/server/tools/verify-forgehold-ashglass-evidence.ts",
+      "scripts/verify-forgehold-ashglass-evidence.sh",
+      "docs/FORGEHOLD_ASHGLASS_RUNBOOK.md"
+    ],
+    "gitea_repo": "https://gitea.akalynth.com/sovereign/akalynth",
+    "gitea_issue": null,
+    "gitea_pr": null,
+    "claimed_branch": "codex/forgehold-ashglass-evidence-v1",
+    "claimed_by": "Codex agent (ops-laptop execution)",
+    "claimed_utc": "2026-06-21T18:00:00Z",
+    "target_labels": [
+      "codex:ready",
+      "codex:running",
+      "codex:needs-review",
+      "codex:accepted",
+      "codex:blocked",
+      "packet:forgehold-ashglass-evidence"
+    ]
+  },
+  "validation": {
+    "validated_utc": null,
+    "worktree": "/home/sovereign/akalynth-ops/repos/akalynth",
+    "green_commit": null,
+    "commands": []
+  },
+  "codex_status_update": {
+    "status": "codex:ready",
+    "meaning": "packet seeded; implementation in progress",
+    "gitea_issue": null,
+    "gitea_pr": null,
+    "github_pr": null
+  },
+  "codex_seed": {
+    "repo": "akalynth-codex",
+    "commit": null,
+    "entry_id": "forgehold-ashglass-evidence"
+  },
+  "non_mutation_boundary": {
+    "runtime_trees": "unchanged",
+    "runtime_state": "unchanged",
+    "key_config_custody": "unchanged",
+    "deployment": "not performed",
+    "auto_execution": "not performed"
+  }
+}

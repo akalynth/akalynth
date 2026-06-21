@@ -36,6 +36,9 @@ import {
   handleDreamGateSealPreparation,
   handleDreamGateTraversalAuthorization,
   handleDreamGateArrivalRecord,
+  handleForgeholdMilepostEvidence,
+  handleForgeholdCaravanEvidence,
+  handleForgeholdAshglassRavineEvidence,
   handleForgeholdShipmentInvestigation,
   handleRookguardCanalFishing,
 } from './handlers.js';
@@ -276,6 +279,15 @@ async function executeSkill(
 
     case 'route:dream:fragment':
       return handleDreamFragmentAnchor(ctx);
+
+    case 'route:evidence:milepost':
+      return handleForgeholdMilepostEvidence(ctx);
+
+    case 'route:evidence:caravan':
+      return handleForgeholdCaravanEvidence(ctx);
+
+    case 'route:evidence:ravine':
+      return handleForgeholdAshglassRavineEvidence(ctx);
 
     case 'route:quest:shipment':
       return handleForgeholdShipmentInvestigation(ctx);
