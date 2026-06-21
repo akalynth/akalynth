@@ -64,10 +64,10 @@
   },
   "codex_status_update": {
     "status": "codex:accepted",
-    "meaning": "closure executed locally; queued for GitHub upstream merge",
+    "meaning": "closure executed and merged to GitHub main",
     "gitea_issue": "local_ops_claim:packet_execution_council_dao_20260621",
     "gitea_pr": null,
-    "github_pr": null
+    "github_pr": "https://github.com/akalynth/akalynth/pull/335"
   },
   "codex_seed": {
     "repo": "akalynth-codex",
@@ -83,11 +83,17 @@
     "permit_schema": "repos/akalynth-codex/schema/council-execution-permit.schema.json",
     "sample_permit": "akalynth-ops/council/permits/sample-beta-check-live.json"
   },
+  "execution_merge": {
+    "github_pr": "https://github.com/akalynth/akalynth/pull/335",
+    "merge_commit": "bcae5f5",
+    "merged_utc": "2026-06-21"
+  },
   "github_ci_status": {
-    "status": "pending_upstream_pr",
-    "checked_utc": null,
-    "pr": null,
-    "merge_status": "not merged"
+    "status": "merged_upstream",
+    "checked_utc": "2026-06-21T06:05:00Z",
+    "pr": "https://github.com/akalynth/akalynth/pull/335",
+    "merge_status": "merged",
+    "merge_commit": "bcae5f5"
   },
   "non_mutation_boundary": {
     "runtime_trees": "unchanged",
