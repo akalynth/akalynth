@@ -1,0 +1,100 @@
+{
+  "object_id": "AKALYNTH_ENGINEERING_LOOP_COUNCIL_DAO_V1",
+  "status": "closed",
+  "created_utc": "2026-06-21T12:00:00Z",
+  "closed_utc": "2026-06-21T06:00:00Z",
+  "authority": {
+    "github": "canonical public/source remote",
+    "gitea": "local agent workbench and PR queue",
+    "codex": "packet authoring and agent execution",
+    "ci_validation": "proof gate before merge",
+    "receipts": "evidence of what changed and why"
+  },
+  "packet": {
+    "object_id": "AKALYNTH_COUNCIL_DAO_V1",
+    "path": "docs/codex-work-packets/council-dao-v1/CouncilDao.v1.md",
+    "codex_authority_path": "repos/akalynth-codex/design/council-dao-v1.md",
+    "codex_seed_commit": "a691d76",
+    "proof_target": "council_lane_check_permit_v1",
+    "source_inputs": [
+      "repos/akalynth-codex/schema/council-proposal.schema.json",
+      "repos/akalynth-codex/schema/council-vote-receipt.schema.json",
+      "repos/akalynth-codex/schema/council-execution-permit.schema.json",
+      "repos/akalynth-codex/entries/council-dao.json",
+      "akalynth-ops/bin/council-execution-gate.sh",
+      "akalynth-ops/scripts/verify-council-dao-v1.sh",
+      "akalynth-ops/bin/akalynth-lane-deploy.sh",
+      "docs/COUNCIL_DAO_RUNBOOK.md"
+    ],
+    "gitea_repo": "https://gitea.akalynth.com/sovereign/akalynth",
+    "gitea_issue": "local_ops_claim:packet_execution_council_dao_20260621",
+    "gitea_pr": null,
+    "claimed_branch": "codex/council-dao-v1",
+    "claimed_by": "Codex agent (ops-laptop execution)",
+    "claimed_utc": "2026-06-21T05:50:00Z",
+    "target_labels": [
+      "codex:ready",
+      "codex:running",
+      "codex:needs-review",
+      "codex:accepted",
+      "codex:blocked",
+      "packet:council-dao"
+    ]
+  },
+  "validation": {
+    "validated_utc": "2026-06-21T05:55:00Z",
+    "worktree": "/home/sovereign/akalynth-ops/repos/akalynth",
+    "green_commit": "pending_execution_merge",
+    "commands": [
+      {
+        "command": "git diff --check",
+        "status": "passed"
+      },
+      {
+        "command": "akalynth-ops/scripts/verify-council-dao-v1.sh",
+        "status": "passed",
+        "notes": "Schema custody, gate shell, permit emission with --skip-lane-check."
+      },
+      {
+        "command": "akalynth-ops/bin/council-execution-gate.sh (live beta check)",
+        "status": "passed_with_expected_failure",
+        "notes": "Permit issued with execution_status check_failed exit=1: /opt/akalynth-beta absent on ops-laptop host. Gate contract honored; no deploy invoked."
+      }
+    ]
+  },
+  "codex_status_update": {
+    "status": "codex:accepted",
+    "meaning": "closure executed locally; queued for GitHub upstream merge",
+    "gitea_issue": "local_ops_claim:packet_execution_council_dao_20260621",
+    "gitea_pr": null,
+    "github_pr": null
+  },
+  "codex_seed": {
+    "repo": "akalynth-codex",
+    "commit": "a691d76",
+    "entry_id": "council-dao"
+  },
+  "execution_deliverables": {
+    "runbook": "docs/COUNCIL_DAO_RUNBOOK.md",
+    "ops_gate_adapter": "akalynth-ops/bin/council-execution-gate.sh",
+    "ops_verifier": "akalynth-ops/scripts/verify-council-dao-v1.sh",
+    "proposal_schema": "repos/akalynth-codex/schema/council-proposal.schema.json",
+    "vote_schema": "repos/akalynth-codex/schema/council-vote-receipt.schema.json",
+    "permit_schema": "repos/akalynth-codex/schema/council-execution-permit.schema.json",
+    "sample_permit": "akalynth-ops/council/permits/sample-beta-check-live.json"
+  },
+  "github_ci_status": {
+    "status": "pending_upstream_pr",
+    "checked_utc": null,
+    "pr": null,
+    "merge_status": "not merged"
+  },
+  "non_mutation_boundary": {
+    "runtime_trees": "unchanged",
+    "runtime_state": "unchanged",
+    "key_config_custody": "unchanged",
+    "deployment": "not performed",
+    "auto_execution": "not performed",
+    "council_action_classes_v1": "lane:beta:check | lane:staging:check | lane:sim:check only"
+  }
+}
