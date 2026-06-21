@@ -6295,6 +6295,8 @@ setInterval(() => {
       const refinedDone = refinedByPlayer.get(gs.player.id);
       if (refinedDone) {
         send(gs.ws, ServerMessages.refineCompleted(refinedDone.station_id, refinedDone.item_type));
+        // Step 4: optional per-refine Tem cadence (lower delta than deliver's gather_cadence).
+        applyHeatChange(gs, now, 3, 'refine_cadence', { window_ms: 30_000 });
         continue;
       }
       const g = getPlayerGather(gatherSystem, gs.player.id);
