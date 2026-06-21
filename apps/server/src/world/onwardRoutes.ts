@@ -6,9 +6,12 @@ import {
   DREAM_GATE_INTERPRETED_ACTION,
   DREAM_GATE_SEAL_PREPARED_ACTION,
   DREAM_GATE_TRAVERSAL_AUTHORIZED_ACTION,
+  FORGEHOLD_ASHGLASS_RAVINE_EVIDENCE_RECOVERED_ACTION,
+  FORGEHOLD_CARAVAN_EVIDENCE_RECOVERED_ACTION,
   FORGEHOLD_COMPONENT_PAYOUT_CREDITED_ACTION,
   FORGEHOLD_COMPONENT_SETTLED_ACTION,
   FORGEHOLD_ECONOMY_QUOTED_ACTION,
+  FORGEHOLD_MILEPOST_EVIDENCE_RECOVERED_ACTION,
   FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION,
   HEARTFORGE_GATE_PREPARED_ACTION,
   ROUTE_ABUSE_NOTES_REVIEWED_ACTION,
@@ -20,6 +23,9 @@ import {
 
 export interface OnwardRouteReceiptProgress {
   forgeholdSurveyed: boolean;
+  forgeholdMilepostEvidenceRecovered: boolean;
+  forgeholdCaravanEvidenceRecovered: boolean;
+  forgeholdAshglassRavineEvidenceRecovered: boolean;
   forgeholdShipmentInvestigated: boolean;
   forgeholdEconomyQuoted: boolean;
   soulsteelStabilized: boolean;
@@ -42,6 +48,9 @@ export interface OnwardRouteReceiptProgress {
 function defaultProgress(): OnwardRouteReceiptProgress {
   return {
     forgeholdSurveyed: false,
+    forgeholdMilepostEvidenceRecovered: false,
+    forgeholdCaravanEvidenceRecovered: false,
+    forgeholdAshglassRavineEvidenceRecovered: false,
     forgeholdShipmentInvestigated: false,
     forgeholdEconomyQuoted: false,
     soulsteelStabilized: false,
@@ -93,6 +102,12 @@ export function applyReceiptToOnwardRoutes(receipt: AuditReceipt): void {
     } else if (receipt.inputs?.route_id === 'moonspire_dream_gate_slice_v1') {
       next = { ...current, moonspireSurveyed: true };
     }
+  } else if (receipt.action === FORGEHOLD_MILEPOST_EVIDENCE_RECOVERED_ACTION) {
+    next = { ...current, forgeholdMilepostEvidenceRecovered: true };
+  } else if (receipt.action === FORGEHOLD_CARAVAN_EVIDENCE_RECOVERED_ACTION) {
+    next = { ...current, forgeholdCaravanEvidenceRecovered: true };
+  } else if (receipt.action === FORGEHOLD_ASHGLASS_RAVINE_EVIDENCE_RECOVERED_ACTION) {
+    next = { ...current, forgeholdAshglassRavineEvidenceRecovered: true };
   } else if (receipt.action === FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION) {
     next = { ...current, forgeholdShipmentInvestigated: true };
   } else if (receipt.action === FORGEHOLD_ECONOMY_QUOTED_ACTION) {

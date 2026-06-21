@@ -6,7 +6,7 @@
 
 import type { WebSocket } from 'ws';
 import type { AntiCheatState, Player } from '../../../packages/shared/types.js';
-import { ASHGLASS_EVIDENCE_RECOVERED_ACTION, DREAM_FRAGMENT_ANCHORED_ACTION, DREAM_GATE_ARRIVAL_RECORDED_ACTION, DREAM_GATE_INTERPRETED_ACTION, DREAM_GATE_SEAL_PREPARED_ACTION, DREAM_GATE_TRAVERSAL_AUTHORIZED_ACTION, FORGEHOLD_COMPONENT_PAYOUT_CREDITED_ACTION, FORGEHOLD_COMPONENT_SETTLED_ACTION, FORGEHOLD_ECONOMY_QUOTED_ACTION, FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION, HEARTFORGE_GATE_PREPARED_ACTION, ROUTE_ABUSE_NOTES_REVIEWED_ACTION, ROUTE_SURVEYED_ACTION, SKILL_RESOLVED_ACTION, SKILL_USE_INTENT_ACTION, SOULSTEEL_COMPONENT_MINTED_ACTION, SOULSTEEL_REFINEMENT_AUTHORIZED_ACTION, SOULSTEEL_STABILIZED_ACTION } from '../../../packages/shared/skills.js';
+import { ASHGLASS_EVIDENCE_RECOVERED_ACTION, DREAM_FRAGMENT_ANCHORED_ACTION, DREAM_GATE_ARRIVAL_RECORDED_ACTION, DREAM_GATE_INTERPRETED_ACTION, DREAM_GATE_SEAL_PREPARED_ACTION, DREAM_GATE_TRAVERSAL_AUTHORIZED_ACTION, FORGEHOLD_ASHGLASS_RAVINE_EVIDENCE_RECOVERED_ACTION, FORGEHOLD_CARAVAN_EVIDENCE_RECOVERED_ACTION, FORGEHOLD_COMPONENT_PAYOUT_CREDITED_ACTION, FORGEHOLD_COMPONENT_SETTLED_ACTION, FORGEHOLD_ECONOMY_QUOTED_ACTION, FORGEHOLD_MILEPOST_EVIDENCE_RECOVERED_ACTION, FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION, HEARTFORGE_GATE_PREPARED_ACTION, ROUTE_ABUSE_NOTES_REVIEWED_ACTION, ROUTE_SURVEYED_ACTION, SKILL_RESOLVED_ACTION, SKILL_USE_INTENT_ACTION, SOULSTEEL_COMPONENT_MINTED_ACTION, SOULSTEEL_REFINEMENT_AUTHORIZED_ACTION, SOULSTEEL_STABILIZED_ACTION } from '../../../packages/shared/skills.js';
 import { handleUseSkill, type SkillContext } from '../src/skills/index.js';
 import { buildOnwardRouteProgress, type RookguardQuestInput } from '../src/world/rookguardQuest.js';
 import { applyReceiptToOnwardRoutes, clearOnwardRouteProjection, getOnwardRouteReceiptProgress } from '../src/world/onwardRoutes.js';
@@ -98,6 +98,12 @@ function skillResultFor<T extends Record<string, unknown> = Record<string, unkno
   ) as { success?: boolean; reason?: string; payload?: T } | undefined;
 }
 
+async function completeForgeholdActII(ctx: SkillContext): Promise<void> {
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:evidence:milepost' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:evidence:caravan' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:evidence:ravine' });
+}
+
 const completedRookguard: RookguardQuestInput = {
   tutorial: { move: true, chat: true, tem: true, gate: true, complete: true },
   trainingComplete: true,
@@ -124,6 +130,9 @@ test('route actions reject before Rookguard completion without route side effect
 test('route objective skills reject out of order without side effects', async () => {
   const { ctx, receipts, sent, resolvedSkills } = context();
 
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:evidence:milepost' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:evidence:caravan' });
+  await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:evidence:ravine' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
@@ -145,9 +154,12 @@ test('route objective skills reject out of order without side effects', async ()
     success?: boolean;
     reason?: string;
   }>;
-  assert(failedResults.length === 16, 'out-of-order route skills should each return a skill_result');
+  assert(failedResults.length === 19, 'out-of-order route skills should each return a skill_result');
   assert(failedResults.every((result) => result.success === false), 'out-of-order route skills should fail');
   assert(failedResults.every((result) => result.reason === 'invalid_target'), 'out-of-order route skills should use invalid_target');
+  assert(!receipts.some((r) => r.action === FORGEHOLD_MILEPOST_EVIDENCE_RECOVERED_ACTION), 'out-of-order milepost evidence must not emit receipt');
+  assert(!receipts.some((r) => r.action === FORGEHOLD_CARAVAN_EVIDENCE_RECOVERED_ACTION), 'out-of-order caravan evidence must not emit receipt');
+  assert(!receipts.some((r) => r.action === FORGEHOLD_ASHGLASS_RAVINE_EVIDENCE_RECOVERED_ACTION), 'out-of-order ravine evidence must not emit receipt');
   assert(!receipts.some((r) => r.action === FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION), 'out-of-order shipment must not emit quest receipt');
   assert(!receipts.some((r) => r.action === FORGEHOLD_ECONOMY_QUOTED_ACTION), 'out-of-order economy quote must not emit economy receipt');
   assert(!receipts.some((r) => r.action === SOULSTEEL_STABILIZED_ACTION), 'out-of-order Soulsteel must not emit crafting receipt');
@@ -251,6 +263,7 @@ test('Moonspire survey is idempotent after receipt-derived survey', async () => 
 test('Soulsteel stabilization emits crafting receipt without wallet or item authority', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await completeForgeholdActII(ctx);
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
@@ -276,6 +289,7 @@ test('Soulsteel stabilization emits crafting receipt without wallet or item auth
 test('Soulsteel stabilization is idempotent after receipt-derived stabilization', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await completeForgeholdActII(ctx);
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
@@ -300,6 +314,7 @@ test('Soulsteel stabilization is idempotent after receipt-derived stabilization'
 test('Forgehold economy quote records no-debit no-mint guard', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await completeForgeholdActII(ctx);
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
 
@@ -327,6 +342,7 @@ test('Forgehold economy quote records no-debit no-mint guard', async () => {
 test('Forgehold economy quote is idempotent after receipt-derived quote', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await completeForgeholdActII(ctx);
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
   ctx.skillCooldowns.set('route:economy:forgehold', 0);
@@ -440,6 +456,7 @@ test('Dream fragment anchor is idempotent after receipt-derived fragment', async
 test('route safety reviews explain boundaries without heat or penalties', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await completeForgeholdActII(ctx);
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
@@ -469,6 +486,7 @@ test('route safety reviews explain boundaries without heat or penalties', async 
 test('Forgehold safety review is idempotent after receipt-derived boundary review', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await completeForgeholdActII(ctx);
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
@@ -524,6 +542,7 @@ test('Dream Gate safety review is idempotent after receipt-derived boundary revi
 test('Heartforge gate preparation records server gate without travel or economy authority', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await completeForgeholdActII(ctx);
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
@@ -550,6 +569,7 @@ test('Heartforge gate preparation records server gate without travel or economy 
 test('Heartforge gate preparation is idempotent after receipt-derived gate', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await completeForgeholdActII(ctx);
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
@@ -576,6 +596,7 @@ test('Heartforge gate preparation is idempotent after receipt-derived gate', asy
 test('Ashglass evidence recovery records crafting evidence without item or economy authority', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await completeForgeholdActII(ctx);
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
@@ -606,6 +627,7 @@ test('Ashglass evidence recovery records crafting evidence without item or econo
 test('Ashglass evidence recovery is idempotent after receipt-derived evidence', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await completeForgeholdActII(ctx);
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
@@ -633,6 +655,7 @@ test('Ashglass evidence recovery is idempotent after receipt-derived evidence', 
 test('Soulsteel refinement authorization records no item mint or economy authority', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await completeForgeholdActII(ctx);
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
@@ -664,6 +687,7 @@ test('Soulsteel refinement authorization records no item mint or economy authori
 test('Soulsteel component mint records item and inventory receipts without wallet or travel authority', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await completeForgeholdActII(ctx);
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
@@ -702,6 +726,7 @@ test('Soulsteel component mint records item and inventory receipts without walle
 test('Soulsteel refinement authorization is idempotent after receipt-derived authorization', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await completeForgeholdActII(ctx);
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
@@ -730,6 +755,7 @@ test('Soulsteel refinement authorization is idempotent after receipt-derived aut
 test('Soulsteel component mint is idempotent after receipt-derived item mint', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await completeForgeholdActII(ctx);
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
@@ -763,6 +789,7 @@ test('Soulsteel component mint is idempotent after receipt-derived item mint', a
 test('Forgehold component settlement records valuation without wallet, item transfer, travel, heat, or penalty authority', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await completeForgeholdActII(ctx);
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
@@ -806,6 +833,7 @@ test('Forgehold component settlement records valuation without wallet, item tran
 test('Forgehold component settlement is idempotent after receipt-derived valuation', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await completeForgeholdActII(ctx);
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
@@ -836,6 +864,7 @@ test('Forgehold component settlement is idempotent after receipt-derived valuati
 test('Forgehold component payout credits wallet by receipt after settlement', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await completeForgeholdActII(ctx);
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
@@ -882,6 +911,7 @@ test('Forgehold component payout credits wallet by receipt after settlement', as
 test('Forgehold component payout is idempotent after receipt-derived credit', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await completeForgeholdActII(ctx);
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
@@ -1015,26 +1045,35 @@ test('Dream Gate arrival records threshold phase without client map, economy, he
 test('Forgehold shipment investigation records quest progress without travel or economy authority', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await completeForgeholdActII(ctx);
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
 
   const investigation = receipts.find((r) => r.action === FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION);
   assert(investigation, 'missing forgehold_shipment_investigated receipt');
   assert(investigation.inputs.route_id === 'forgehold_route_slice_v1', 'Forgehold investigation route mismatch');
+  assert(investigation.inputs.act_id === 'act_03_burned_caravan_investigation', 'Forgehold investigation act_id should be act_03');
   assert(investigation.inputs.route_state === 'investigating', 'Forgehold route state should be investigating');
   assert(investigation.inputs.travel_unlocked === false, 'Forgehold investigation must not unlock travel');
   assert(investigation.inputs.economy_impact === 'none', 'Forgehold investigation should not change economy');
+  const evidenceObjects = investigation.inputs.evidence_objects as string[] | undefined;
+  assert(evidenceObjects?.includes('broken_route_seal'), 'Forgehold investigation should reference broken_route_seal');
+  assert(evidenceObjects?.includes('charred_shipment_plate'), 'Forgehold investigation should reference charred_shipment_plate');
+  assert(evidenceObjects?.includes('ashglass_shard'), 'Forgehold investigation should reference ashglass_shard');
   const guard = investigation.inputs.authority_guard as { heat_changed?: boolean; penalty_applied?: boolean } | undefined;
   assert(guard?.heat_changed === false, 'Forgehold investigation must not change anti-cheat heat');
   assert(guard.penalty_applied === false, 'Forgehold investigation must not apply penalties');
   assert(!receipts.some((r) => r.action === 'wallet_debit'), 'Forgehold investigation should not debit gold');
   assert(!receipts.some((r) => r.action === 'item_minted'), 'Forgehold investigation should not mint an item');
 
-  const result = skillResultFor<{ quest_id?: string; route_state?: string; travel_unlocked?: boolean; evidence_objects?: string[]; contradiction?: string; authority_guard?: { heat_changed?: boolean; penalty_applied?: boolean } }>(sent, 'route:quest:shipment');
+  const result = skillResultFor<{ quest_id?: string; act_id?: string; route_state?: string; travel_unlocked?: boolean; evidence_objects?: string[]; contradiction?: string; authority_guard?: { heat_changed?: boolean; penalty_applied?: boolean } }>(sent, 'route:quest:shipment');
   assert(result?.success === true, 'Forgehold investigation skill_result should succeed');
   assert(result.payload?.quest_id === 'forgehold_missing_shipment_v1', 'Forgehold investigation quest id mismatch');
+  assert(result.payload?.act_id === 'act_03_burned_caravan_investigation', 'Forgehold investigation payload act_id mismatch');
   assert(result.payload?.route_state === 'investigating', 'Forgehold investigation payload state mismatch');
   assert(result.payload?.travel_unlocked === false, 'Forgehold investigation payload must not unlock travel');
+  assert(result.payload?.evidence_objects?.includes('broken_route_seal'), 'Forgehold investigation payload should name Broken Route Seal');
   assert(result.payload?.evidence_objects?.includes('charred_shipment_plate'), 'Forgehold investigation payload should name Charred Shipment Plate');
+  assert(result.payload?.evidence_objects?.includes('ashglass_shard'), 'Forgehold investigation payload should name Ashglass Shard');
   assert(result.payload?.contradiction === 'departed / undeparted', 'Forgehold investigation payload should name contradiction');
   assert(result.payload?.authority_guard?.heat_changed === false, 'Forgehold investigation payload must not change heat');
   assert(result.payload.authority_guard.penalty_applied === false, 'Forgehold investigation payload must not apply penalties');
@@ -1043,6 +1082,7 @@ test('Forgehold shipment investigation records quest progress without travel or 
 test('Forgehold shipment investigation is idempotent after receipt-derived investigation', async () => {
   const { ctx, receipts, sent } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await completeForgeholdActII(ctx);
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
   ctx.skillCooldowns.set('route:quest:shipment', 0);
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
@@ -1078,6 +1118,7 @@ test('newly unlocked onward routes name the first client-visible survey action',
 test('onward route projection is derived from route receipts', async () => {
   const { ctx } = context();
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:survey:forgehold' });
+  await completeForgeholdActII(ctx);
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:quest:shipment' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:economy:forgehold' });
   await handleUseSkill(ctx, { type: 'use_skill', skill_id: 'route:craft:soulsteel' });
@@ -1104,6 +1145,9 @@ test('onward route projection is derived from route receipts', async () => {
   assert(forgehold, 'Forgehold route projection missing');
   assert(moonspire, 'Moonspire route projection missing');
   assert(forgehold.completed_objective_ids.includes('forgehold_route_survey'), 'Forgehold survey should project complete');
+  assert(forgehold.completed_objective_ids.includes('forgehold_milepost_evidence'), 'Forgehold milepost evidence should project complete');
+  assert(forgehold.completed_objective_ids.includes('forgehold_caravan_evidence'), 'Forgehold caravan evidence should project complete');
+  assert(forgehold.completed_objective_ids.includes('forgehold_ashglass_ravine_evidence'), 'Forgehold ravine evidence should project complete');
   assert(forgehold.completed_objective_ids.includes('forgehold_missing_shipment'), 'Forgehold shipment should project complete');
   assert(forgehold.completed_objective_ids.includes('forgehold_economy_receipts'), 'Forgehold economy quote should project complete');
   assert(forgehold.completed_objective_ids.includes('soulsteel_stabilization'), 'Soulsteel should project complete');
@@ -1142,6 +1186,13 @@ test('onward route objective order matches server-owned action sequence', async 
 
   const forgeholdOrder = forgehold.objectives.map((objective) => objective.id);
   const moonspireOrder = moonspire.objectives.map((objective) => objective.id);
+  assert(
+    forgeholdOrder.indexOf('forgehold_route_survey') < forgeholdOrder.indexOf('forgehold_milepost_evidence') &&
+      forgeholdOrder.indexOf('forgehold_milepost_evidence') < forgeholdOrder.indexOf('forgehold_caravan_evidence') &&
+      forgeholdOrder.indexOf('forgehold_caravan_evidence') < forgeholdOrder.indexOf('forgehold_ashglass_ravine_evidence') &&
+      forgeholdOrder.indexOf('forgehold_ashglass_ravine_evidence') < forgeholdOrder.indexOf('forgehold_missing_shipment'),
+    'Forgehold Act II evidence objectives should render between survey and shipment investigation'
+  );
   assert(
     forgeholdOrder.indexOf('soulsteel_stabilization') < forgeholdOrder.indexOf('forgehold_abuse_notes') &&
       forgeholdOrder.indexOf('forgehold_abuse_notes') < forgeholdOrder.indexOf('heartforge_trial_server_gate'),

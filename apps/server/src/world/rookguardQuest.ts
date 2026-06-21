@@ -284,6 +284,9 @@ export function buildOnwardRouteProgress(
   input: RookguardQuestInput,
   receiptProgress: OnwardRouteReceiptProgress = {
     forgeholdSurveyed: false,
+    forgeholdMilepostEvidenceRecovered: false,
+    forgeholdCaravanEvidenceRecovered: false,
+    forgeholdAshglassRavineEvidenceRecovered: false,
     forgeholdShipmentInvestigated: false,
     forgeholdEconomyQuoted: false,
     soulsteelStabilized: false,
@@ -309,6 +312,9 @@ export function buildOnwardRouteProgress(
   const forgeholdCompleted = [
     ...(available ? ['forgehold_client_projection', 'forgehold_android_projection'] : []),
     ...(receiptProgress.forgeholdSurveyed ? ['forgehold_route_survey'] : []),
+    ...(receiptProgress.forgeholdMilepostEvidenceRecovered ? ['forgehold_milepost_evidence'] : []),
+    ...(receiptProgress.forgeholdCaravanEvidenceRecovered ? ['forgehold_caravan_evidence'] : []),
+    ...(receiptProgress.forgeholdAshglassRavineEvidenceRecovered ? ['forgehold_ashglass_ravine_evidence'] : []),
     ...(receiptProgress.forgeholdShipmentInvestigated ? ['forgehold_missing_shipment'] : []),
     ...(receiptProgress.forgeholdEconomyQuoted ? ['forgehold_economy_receipts'] : []),
     ...(receiptProgress.soulsteelStabilized ? ['soulsteel_stabilization'] : []),
@@ -358,10 +364,21 @@ export function buildOnwardRouteProgress(
             ? 'Stabilize cracked Soulsteel under the quoted no-mint, no-debit economy guard.'
           : receiptProgress.forgeholdShipmentInvestigated
             ? 'Quote Forgehold economy impact before stabilizing cracked Soulsteel.'
-            : 'Survey the Forgehold route board before investigating the missing Ember Road shipment.'
+            : receiptProgress.forgeholdAshglassRavineEvidenceRecovered
+              ? 'Investigate the missing shipment contradiction using recovered Act II evidence.'
+              : receiptProgress.forgeholdCaravanEvidenceRecovered
+                ? 'Recover the Ashglass Shard at Ashglass Ravine.'
+                : receiptProgress.forgeholdMilepostEvidenceRecovered
+                  ? 'Recover the Charred Shipment Plate at the Burned Caravan Site.'
+                  : receiptProgress.forgeholdSurveyed
+                    ? 'Recover the Broken Route Seal at the Ember Road Milepost.'
+                    : 'Survey the Forgehold route board before Act II evidence recovery.'
         : 'Finish the Rookguard Codex Path to reveal the Forgehold shipment board.',
       objectives: [
         { id: 'forgehold_route_survey', label: 'Forgehold route survey', system: 'quest' },
+        { id: 'forgehold_milepost_evidence', label: 'Milepost route seal evidence', system: 'quest' },
+        { id: 'forgehold_caravan_evidence', label: 'Caravan shipment plate evidence', system: 'quest' },
+        { id: 'forgehold_ashglass_ravine_evidence', label: 'Ashglass ravine shard evidence', system: 'quest' },
         { id: 'forgehold_missing_shipment', label: 'Missing shipment investigation', system: 'quest' },
         { id: 'forgehold_economy_receipts', label: 'Receipt-backed Forgehold economy proof', system: 'economy' },
         { id: 'soulsteel_stabilization', label: 'Soulsteel stabilization crafting', system: 'crafting' },
@@ -377,7 +394,7 @@ export function buildOnwardRouteProgress(
       ],
       completed_objective_ids: forgeholdCompleted,
       source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
-      receipt_actions: ['route_surveyed', 'forgehold_shipment_investigated', 'forgehold_economy_quoted', 'soulsteel_stabilized', 'route_abuse_notes_reviewed', 'heartforge_gate_prepared', 'ashglass_evidence_recovered', 'soulsteel_refinement_authorized', 'soulsteel_component_minted', 'forgehold_component_settled', 'forgehold_component_payout_credited', 'wallet_credit', 'item_minted', 'item_added_to_inventory'],
+      receipt_actions: ['route_surveyed', 'forgehold_milepost_evidence_recovered', 'forgehold_caravan_evidence_recovered', 'forgehold_ashglass_ravine_evidence_recovered', 'forgehold_shipment_investigated', 'forgehold_economy_quoted', 'soulsteel_stabilized', 'route_abuse_notes_reviewed', 'heartforge_gate_prepared', 'ashglass_evidence_recovered', 'soulsteel_refinement_authorized', 'soulsteel_component_minted', 'forgehold_component_settled', 'forgehold_component_payout_credited', 'wallet_credit', 'item_minted', 'item_added_to_inventory'],
     },
     {
       route_id: 'moonspire_dream_gate_slice_v1',

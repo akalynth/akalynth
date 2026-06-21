@@ -19,6 +19,9 @@ import {
   SOULSTEEL_REFINEMENT_AUTHORIZED_ACTION,
   SOULSTEEL_STABILIZED_ACTION,
   DREAM_GATE_INTERPRETED_ACTION,
+  FORGEHOLD_ASHGLASS_RAVINE_EVIDENCE_RECOVERED_ACTION,
+  FORGEHOLD_CARAVAN_EVIDENCE_RECOVERED_ACTION,
+  FORGEHOLD_MILEPOST_EVIDENCE_RECOVERED_ACTION,
   FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION,
   ROOKGUARD_CANAL_FISHED_ACTION,
 } from '../../../../packages/shared/skills.js';
@@ -1025,31 +1028,169 @@ export function handleDreamGateArrivalRecord(ctx: SkillContext): SkillResult {
   };
 }
 
+function actIIEvidenceGuard() {
+  return {
+    travel_unlocked: false,
+    economy_impact: 'none' as const,
+    heat_changed: false,
+    penalty_applied: false,
+    item_mint: false,
+  };
+}
+
+export function handleForgeholdMilepostEvidence(ctx: SkillContext): SkillResult {
+  if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
+  const routeProgress = ctx.getOnwardRouteProgress?.();
+  if (!routeProgress?.forgeholdSurveyed) return { success: false, reason: 'invalid_target' };
+  if (routeProgress.forgeholdMilepostEvidenceRecovered) return { success: false, reason: 'invalid_target' };
+
+  const recoveredAt = new Date().toISOString();
+  const authorityGuard = actIIEvidenceGuard();
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: FORGEHOLD_MILEPOST_EVIDENCE_RECOVERED_ACTION,
+    inputs: {
+      route_id: 'forgehold_route_slice_v1',
+      act_id: 'act_02_ember_road_recovery',
+      location_id: 'ember_road_milepost',
+      evidence_object_id: 'broken_route_seal',
+      source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
+      recovered_at: recoveredAt,
+      authority_guard: authorityGuard,
+    },
+    result: 'ok',
+  });
+
+  return {
+    success: true,
+    payload: {
+      route_id: 'forgehold_route_slice_v1',
+      act_id: 'act_02_ember_road_recovery',
+      location_id: 'ember_road_milepost',
+      evidence_object_id: 'broken_route_seal',
+      status: 'recovered',
+      next_objective: 'Recover the Charred Shipment Plate at the Burned Caravan Site.',
+      receipt_action: FORGEHOLD_MILEPOST_EVIDENCE_RECOVERED_ACTION,
+      authority_guard: authorityGuard,
+    },
+  };
+}
+
+export function handleForgeholdCaravanEvidence(ctx: SkillContext): SkillResult {
+  if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
+  const routeProgress = ctx.getOnwardRouteProgress?.();
+  if (!routeProgress?.forgeholdMilepostEvidenceRecovered) return { success: false, reason: 'invalid_target' };
+  if (routeProgress.forgeholdCaravanEvidenceRecovered) return { success: false, reason: 'invalid_target' };
+
+  const recoveredAt = new Date().toISOString();
+  const authorityGuard = actIIEvidenceGuard();
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: FORGEHOLD_CARAVAN_EVIDENCE_RECOVERED_ACTION,
+    inputs: {
+      route_id: 'forgehold_route_slice_v1',
+      act_id: 'act_02_ember_road_recovery',
+      location_id: 'burned_caravan_site',
+      evidence_object_id: 'charred_shipment_plate',
+      required_evidence: FORGEHOLD_MILEPOST_EVIDENCE_RECOVERED_ACTION,
+      source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
+      recovered_at: recoveredAt,
+      authority_guard: authorityGuard,
+    },
+    result: 'ok',
+  });
+
+  return {
+    success: true,
+    payload: {
+      route_id: 'forgehold_route_slice_v1',
+      act_id: 'act_02_ember_road_recovery',
+      location_id: 'burned_caravan_site',
+      evidence_object_id: 'charred_shipment_plate',
+      status: 'recovered',
+      next_objective: 'Recover the Ashglass Shard at Ashglass Ravine.',
+      receipt_action: FORGEHOLD_CARAVAN_EVIDENCE_RECOVERED_ACTION,
+      authority_guard: authorityGuard,
+    },
+  };
+}
+
+export function handleForgeholdAshglassRavineEvidence(ctx: SkillContext): SkillResult {
+  if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
+  const routeProgress = ctx.getOnwardRouteProgress?.();
+  if (!routeProgress?.forgeholdCaravanEvidenceRecovered) return { success: false, reason: 'invalid_target' };
+  if (routeProgress.forgeholdAshglassRavineEvidenceRecovered) return { success: false, reason: 'invalid_target' };
+
+  const recoveredAt = new Date().toISOString();
+  const authorityGuard = actIIEvidenceGuard();
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: FORGEHOLD_ASHGLASS_RAVINE_EVIDENCE_RECOVERED_ACTION,
+    inputs: {
+      route_id: 'forgehold_route_slice_v1',
+      act_id: 'act_02_ember_road_recovery',
+      location_id: 'ashglass_ravine',
+      evidence_object_id: 'ashglass_shard',
+      evidence_id: 'forgehold_ashglass_evidence_v1',
+      required_evidence: FORGEHOLD_CARAVAN_EVIDENCE_RECOVERED_ACTION,
+      source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
+      recovered_at: recoveredAt,
+      authority_guard: authorityGuard,
+    },
+    result: 'ok',
+  });
+
+  return {
+    success: true,
+    payload: {
+      route_id: 'forgehold_route_slice_v1',
+      act_id: 'act_02_ember_road_recovery',
+      location_id: 'ashglass_ravine',
+      evidence_object_id: 'ashglass_shard',
+      evidence_id: 'forgehold_ashglass_evidence_v1',
+      status: 'recovered',
+      next_objective: 'Investigate the missing shipment contradiction using recovered Act II evidence.',
+      receipt_action: FORGEHOLD_ASHGLASS_RAVINE_EVIDENCE_RECOVERED_ACTION,
+      authority_guard: authorityGuard,
+    },
+  };
+}
+
 export function handleForgeholdShipmentInvestigation(ctx: SkillContext): SkillResult {
   if (!ctx.onwardRoutesAvailable) return { success: false, reason: 'invalid_target' };
   const routeProgress = ctx.getOnwardRouteProgress?.();
   if (!routeProgress?.forgeholdSurveyed) return { success: false, reason: 'invalid_target' };
+  if (
+    !routeProgress.forgeholdMilepostEvidenceRecovered ||
+    !routeProgress.forgeholdCaravanEvidenceRecovered ||
+    !routeProgress.forgeholdAshglassRavineEvidenceRecovered
+  ) {
+    return { success: false, reason: 'invalid_target' };
+  }
   if (routeProgress.forgeholdShipmentInvestigated) return { success: false, reason: 'invalid_target' };
 
   const investigatedAt = new Date().toISOString();
-  const evidenceObjects = ['broken_route_seal', 'charred_shipment_plate'];
+  const evidenceObjects = ['broken_route_seal', 'charred_shipment_plate', 'ashglass_shard'];
   const contradiction = 'departed / undeparted';
   const routeState = 'investigating';
-  const authorityGuard = {
-    travel_unlocked: false,
-    economy_impact: 'none',
-    heat_changed: false,
-    penalty_applied: false,
-  };
+  const authorityGuard = actIIEvidenceGuard();
 
   ctx.audit({
     player_id: ctx.playerId,
     action: FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION,
     inputs: {
       route_id: 'forgehold_route_slice_v1',
-      act_id: 'act_01_missing_shipment',
+      act_id: 'act_03_burned_caravan_investigation',
       route_state: routeState,
       evidence_objects: evidenceObjects,
+      required_act_ii_evidence: [
+        FORGEHOLD_MILEPOST_EVIDENCE_RECOVERED_ACTION,
+        FORGEHOLD_CARAVAN_EVIDENCE_RECOVERED_ACTION,
+        FORGEHOLD_ASHGLASS_RAVINE_EVIDENCE_RECOVERED_ACTION,
+      ],
       contradiction,
       source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
       investigated_at: investigatedAt,
@@ -1065,12 +1206,12 @@ export function handleForgeholdShipmentInvestigation(ctx: SkillContext): SkillRe
     payload: {
       route_id: 'forgehold_route_slice_v1',
       quest_id: 'forgehold_missing_shipment_v1',
-      act_id: 'act_01_missing_shipment',
+      act_id: 'act_03_burned_caravan_investigation',
       route_state: routeState,
       status: 'investigating',
       evidence_objects: evidenceObjects,
       contradiction,
-      next_objective: 'Recover Ashglass Shard evidence before any route reopening or Soulsteel refinement can be server-authorized.',
+      next_objective: 'Quote Forgehold economy impact before stabilizing cracked Soulsteel.',
       source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
       receipt_action: FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION,
       travel_unlocked: false,

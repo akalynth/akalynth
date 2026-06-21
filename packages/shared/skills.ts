@@ -28,6 +28,9 @@ export type SkillId =
   | 'route:dream:arrive'
   | 'route:dream:interpret'
   | 'route:dream:fragment'
+  | 'route:evidence:milepost'
+  | 'route:evidence:caravan'
+  | 'route:evidence:ravine'
   | 'route:quest:shipment'
   | 'activity:fishing:rookguard';
 
@@ -223,6 +226,30 @@ export const SKILL_REGISTRY: Record<SkillId, SkillDefinition> = {
     gold_cost: 0,
     debug_only: false,
   },
+  'route:evidence:milepost': {
+    id: 'route:evidence:milepost',
+    name: 'Recover Milepost Route Seal',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
+  'route:evidence:caravan': {
+    id: 'route:evidence:caravan',
+    name: 'Recover Caravan Shipment Plate',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
+  'route:evidence:ravine': {
+    id: 'route:evidence:ravine',
+    name: 'Recover Ashglass Ravine Shard',
+    cooldown_ms: 45_000,
+    target: 'none',
+    gold_cost: 0,
+    debug_only: false,
+  },
   'route:quest:shipment': {
     id: 'route:quest:shipment',
     name: 'Investigate Missing Shipment',
@@ -278,6 +305,9 @@ export const DREAM_GATE_TRAVERSAL_AUTHORIZED_ACTION = 'dream_gate_traversal_auth
 export const DREAM_GATE_ARRIVAL_RECORDED_ACTION = 'dream_gate_arrival_recorded';
 export const DREAM_GATE_INTERPRETED_ACTION = 'dream_gate_interpreted';
 export const DREAM_FRAGMENT_ANCHORED_ACTION = 'dream_fragment_anchored';
+export const FORGEHOLD_MILEPOST_EVIDENCE_RECOVERED_ACTION = 'forgehold_milepost_evidence_recovered';
+export const FORGEHOLD_CARAVAN_EVIDENCE_RECOVERED_ACTION = 'forgehold_caravan_evidence_recovered';
+export const FORGEHOLD_ASHGLASS_RAVINE_EVIDENCE_RECOVERED_ACTION = 'forgehold_ashglass_ravine_evidence_recovered';
 export const FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION = 'forgehold_shipment_investigated';
 export const ROOKGUARD_CANAL_FISHED_ACTION = 'rookguard_canal_fished';
 
