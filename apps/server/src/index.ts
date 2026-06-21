@@ -7,7 +7,7 @@ import type { Duplex } from 'node:stream';
 import { WebSocketServer, WebSocket } from 'ws';
 import { createHash, randomUUID } from 'node:crypto';
 
-import type { ClientMessage, LostItemSummary, ServerMessage, PropertyPublic, PropertyOwnerHistoryEntry, GatherRejectReason, GatherNodePublic } from '../../../packages/shared/protocol.js';
+import type { ClientMessage, LostItemSummary, ServerMessage, PropertyPublic, PropertyOwnerHistoryEntry, GatherRejectReason, GatherNodePublic, GatherStationPublic } from '../../../packages/shared/protocol.js';
 import { PROTOCOL_VERSION, ServerMessages, parseClientMessage } from '../../../packages/shared/protocol.js';
 import type { Player, TutorialProgress } from '../../../packages/shared/types.js';
 import { loadBuildInfo } from './build-info.js';
@@ -112,6 +112,7 @@ import {
   DELIVERY_RECORDED_ACTION,
   type GatherSystem,
   type GatherNode,
+  type StationDef,
 } from './world/gather.js';
 import { indexFor, tryMove } from './world/movement.js';
 import {
@@ -1833,10 +1834,10 @@ const gatherSystem: GatherSystem | null = isGatherEnabled()
   ? createGatherSystem(DEFAULT_GATHER_CONFIG, AZURA_GATHER_NODES, AZURA_STATIONS)
   : null;
 
-// Step 4: non-tradeable acknowledgment granted on delivery — recorded in the receipt and
-// deliver_result only. NO gold and NO tradeable inventory, so economy authority is untouched
-// (economy-steward owns any future tradeable/valued reward).
-const TENDING_TOKEN_ID = 'tending_token';
+// Delivery acknowledgment is non-tradeable and recorded in the receipt + deliver_result only —
+// NO gold, NO tradeable inventory, so economy authority is untouched. The reward id is a pure
+// function of the delivered item type (gather.ts rewardForItemType): tending_token for raw,
+// keystone_token for refined. Sourced from the deliver record (res.record.reward).
 
 // Load item system state from SQLite (Phase 2) - after worlds is declared
 loadInventories();
@@ -2865,6 +2866,17 @@ function gatherNodePublic(node: GatherNode): GatherNodePublic {
   };
 }
 
+// Project a StationDef to the wire shape. Deliberately omits `kind` so the gather_snapshot
+// contract stays byte-identical for now; step 2 adds `kind` to GatherStationPublic intentionally.
+function gatherStationPublic(station: StationDef): GatherStationPublic {
+  return {
+    station_id: station.station_id,
+    zone: station.zone,
+    x: station.x,
+    y: station.y,
+  };
+}
+
 function applyRespawnNow(s: Session, now: number) {
   if (!s.player) return;
   const w = worldFor(s);
@@ -3570,7 +3582,7 @@ function processSessionQueue(s: Session, now: number) {
           if (gz) {
             send(s.ws, ServerMessages.gatherSnapshot(
               Array.from(gz.nodes.values()).map(gatherNodePublic),
-              Array.from(gz.stations.values())
+              Array.from(gz.stations.values()).map(gatherStationPublic)
             ));
           }
         }
@@ -4259,7 +4271,7 @@ function processSessionQueue(s: Session, now: number) {
                   if (azuraGz) {
                     send(s.ws, ServerMessages.gatherSnapshot(
                       Array.from(azuraGz.nodes.values()).map(gatherNodePublic),
-                      Array.from(azuraGz.stations.values())
+                      Array.from(azuraGz.stations.values()).map(gatherStationPublic)
                     ));
                   }
                 }
@@ -5531,7 +5543,7 @@ function processSessionQueue(s: Session, now: number) {
               zone: res.record.zone,
               x: s.player.x,
               y: s.player.y,
-              reward: TENDING_TOKEN_ID,
+              reward: res.record.reward,
             },
             result: 'ok',
           });
@@ -5543,7 +5555,7 @@ function processSessionQueue(s: Session, now: number) {
               res.record.item_type,
               res.record.source_node_id,
               undefined,
-              TENDING_TOKEN_ID
+              res.record.reward
             )
           );
           // Step 3: feed the gather->deliver cadence into Tem heat. Sustained farming

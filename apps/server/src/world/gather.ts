@@ -21,11 +21,42 @@
 /** Receipt action emitted on a successful delivery (snake_case per server convention). */
 export const DELIVERY_RECORDED_ACTION = 'delivery_recorded';
 
+/**
+ * Delivery reward acknowledgments. Non-tradeable, recorded-only — NO gold, no balance write.
+ * Raw motes pay the tending token (shipped); refined motes pay the keystone token.
+ */
+export const TENDING_TOKEN_ID = 'tending_token';
+export const KEYSTONE_TOKEN_ID = 'keystone_token';
+
+/**
+ * Raw gather item types → the refined type each becomes at a refinery station. Refining is an
+ * in-place upgrade of the single held slot (capacity stays 1; no second item, no dupe surface).
+ * Final lore naming owned by map-and-lore-builder.
+ */
+export const REFINABLE: Readonly<Record<string, string>> = { ley_mote: 'refined_ley_mote' };
+
+/** The refined type for a raw item type, or null if it is not a refinable raw type (or already refined). */
+export function refinedTypeOf(itemType: string): string | null {
+  return REFINABLE[itemType] ?? null;
+}
+
+/** Whether an item type is a refined output (a value in {@link REFINABLE}). */
+export function isRefinedType(itemType: string): boolean {
+  return Object.values(REFINABLE).includes(itemType);
+}
+
+/** Delivery reward as a pure function of the delivered item type (invariant I10). */
+export function rewardForItemType(itemType: string): string {
+  return isRefinedType(itemType) ? KEYSTONE_TOKEN_ID : TENDING_TOKEN_ID;
+}
+
 export type NodeState = 'available' | 'depleting' | 'depleted';
 
 export interface GatherConfig {
   /** Server-owned gather duration. */
   gatherDurationMs: number;
+  /** Server-owned refine duration at a refinery station. */
+  refineDurationMs: number;
   /** Delay from depletion to becoming AVAILABLE again. */
   respawnCooldownMs: number;
   /** Max Manhattan tile distance to interact with a node/station. */
@@ -34,6 +65,7 @@ export interface GatherConfig {
 
 export const DEFAULT_GATHER_CONFIG: GatherConfig = {
   gatherDurationMs: 3_000,
+  refineDurationMs: 5_000,
   respawnCooldownMs: 30_000,
   interactRadius: 1,
 };
@@ -53,11 +85,15 @@ export interface GatherNode extends GatherNodeDef {
   respawn_at_ms: number | null;
 }
 
+export type StationKind = 'curation' | 'refinery';
+
 export interface StationDef {
   station_id: string;
   zone: string;
   x: number;
   y: number;
+  /** `curation` = delivery point (deliver); `refinery` = refine point (startRefine). */
+  kind: StationKind;
 }
 
 export type PlayerGather =
@@ -68,9 +104,20 @@ export type PlayerGather =
       zone: string;
       started_at_ms: number;
       complete_at_ms: number;
+    }
+  | {
+      state: 'refining';
+      station_id: string;
+      zone: string;
+      started_at_ms: number;
+      complete_at_ms: number;
     };
 
-export type HeldItem = null | { item_type: string; source_node_id: string; zone: string };
+// A held item carries its gather provenance and, once refined, the refinery it passed through
+// (null while still raw). Refining mutates item_type in place — capacity stays 1.
+export type HeldItem =
+  | null
+  | { item_type: string; source_node_id: string; zone: string; refined_at_station_id: string | null };
 
 export type RejectCode =
   | 'UNKNOWN_ZONE'
@@ -78,6 +125,8 @@ export type RejectCode =
   | 'NODE_NOT_AVAILABLE'
   | 'OUT_OF_RANGE'
   | 'ALREADY_GATHERING'
+  | 'ALREADY_REFINING'
+  | 'NOT_REFINABLE'
   | 'HELD_SLOT_FULL'
   | 'HELD_SLOT_EMPTY'
   | 'STATION_NOT_FOUND';
@@ -166,9 +215,9 @@ export function startGather(
   if (manhattan(px, py, node.x, node.y) > sys.config.interactRadius) {
     return { ok: false, reason: 'OUT_OF_RANGE' };
   }
-  if (getPlayerGather(sys, playerId).state !== 'idle') {
-    return { ok: false, reason: 'ALREADY_GATHERING' };
-  }
+  const activity = getPlayerGather(sys, playerId);
+  if (activity.state === 'gathering') return { ok: false, reason: 'ALREADY_GATHERING' };
+  if (activity.state === 'refining') return { ok: false, reason: 'ALREADY_REFINING' };
   if (getHeld(sys, playerId) !== null) return { ok: false, reason: 'HELD_SLOT_FULL' };
 
   const completeAt = nowMs + sys.config.gatherDurationMs;
@@ -183,6 +232,52 @@ export function startGather(
     complete_at_ms: completeAt,
   });
   return { ok: true, node_id: nodeId, complete_at_ms: completeAt };
+}
+
+export type RefineStartResult =
+  | { ok: true; station_id: string; complete_at_ms: number }
+  | { ok: false; reason: RejectCode };
+
+/**
+ * Start refining the held item at a refinery station. Server-authoritative: every guard uses
+ * server-side position/state. On success the player is REFINING; the in-place item upgrade
+ * (ley_mote → refined_ley_mote) happens later in {@link tickGather} at the server-owned clock.
+ * Held-slot capacity is unchanged (no second item — invariant I9).
+ */
+export function startRefine(
+  sys: GatherSystem,
+  playerId: string,
+  zone: string,
+  stationId: string,
+  px: number,
+  py: number,
+  nowMs: number,
+): RefineStartResult {
+  const gz = sys.zones.get(zone);
+  if (!gz) return { ok: false, reason: 'UNKNOWN_ZONE' };
+  const station = gz.stations.get(stationId);
+  if (!station || station.kind !== 'refinery') return { ok: false, reason: 'STATION_NOT_FOUND' };
+  if (manhattan(px, py, station.x, station.y) > sys.config.interactRadius) {
+    return { ok: false, reason: 'OUT_OF_RANGE' };
+  }
+  // Busy-before-slot precedence (mirrors startGather): a player mid-activity gets ALREADY_*,
+  // not a slot complaint. (A gathering player holds nothing, so this must precede the held check.)
+  const activity = getPlayerGather(sys, playerId);
+  if (activity.state === 'gathering') return { ok: false, reason: 'ALREADY_GATHERING' };
+  if (activity.state === 'refining') return { ok: false, reason: 'ALREADY_REFINING' };
+  const held = getHeld(sys, playerId);
+  if (held === null) return { ok: false, reason: 'HELD_SLOT_EMPTY' };
+  if (refinedTypeOf(held.item_type) === null) return { ok: false, reason: 'NOT_REFINABLE' };
+
+  const completeAt = nowMs + sys.config.refineDurationMs;
+  sys.gatherByPlayer.set(playerId, {
+    state: 'refining',
+    station_id: stationId,
+    zone,
+    started_at_ms: nowMs,
+    complete_at_ms: completeAt,
+  });
+  return { ok: true, station_id: stationId, complete_at_ms: completeAt };
 }
 
 function releaseClaim(
@@ -206,9 +301,19 @@ export function cancelGather(sys: GatherSystem, playerId: string): void {
   sys.gatherByPlayer.set(playerId, IDLE);
 }
 
+/**
+ * Abort an in-progress refine (cancel / out-of-range / disconnect). Player → IDLE; the held item
+ * stays exactly as it was (still raw — no upgrade). Nothing to release: a refinery is not claimed.
+ */
+export function cancelRefine(sys: GatherSystem, playerId: string): void {
+  if (getPlayerGather(sys, playerId).state !== 'refining') return;
+  sys.gatherByPlayer.set(playerId, IDLE);
+}
+
 /** Full cleanup when a player leaves: release any claim and drop their gather + held state. */
 export function onPlayerLeave(sys: GatherSystem, playerId: string): void {
   cancelGather(sys, playerId);
+  cancelRefine(sys, playerId);
   sys.gatherByPlayer.delete(playerId);
   sys.heldByPlayer.delete(playerId);
 }
@@ -219,13 +324,20 @@ export interface DeliveryRecord {
   station_id: string;
   source_node_id: string;
   zone: string;
+  /** Whether the delivered item had been refined (derived from its provenance). */
+  refined: boolean;
+  /** Refinery the item passed through, or null if delivered raw. */
+  refined_at_station_id: string | null;
+  /** Acknowledgment credited (pure function of item_type): tending_token (raw) / keystone_token (refined). */
+  reward: string;
 }
 
 export type DeliverResult = { ok: true; record: DeliveryRecord } | { ok: false; reason: RejectCode };
 
 /**
- * Deliver the held item at a station. Consumes the slot atomically and returns the
- * provenance for a single `delivery_recorded` receipt. No reward is credited (step 4).
+ * Deliver the held item at a curation station. Consumes the slot atomically and returns the
+ * provenance + graded reward for a single `delivery_recorded` receipt. Refined items pay the
+ * keystone token; raw items pay the tending token (invariant I10/I11). No gold is credited.
  */
 export function deliver(
   sys: GatherSystem,
@@ -238,7 +350,8 @@ export function deliver(
   const gz = sys.zones.get(zone);
   if (!gz) return { ok: false, reason: 'UNKNOWN_ZONE' };
   const station = gz.stations.get(stationId);
-  if (!station) return { ok: false, reason: 'STATION_NOT_FOUND' };
+  // Delivery happens at curation stands only; a refinery id here is "no curation station by that id".
+  if (!station || station.kind !== 'curation') return { ok: false, reason: 'STATION_NOT_FOUND' };
   if (manhattan(px, py, station.x, station.y) > sys.config.interactRadius) {
     return { ok: false, reason: 'OUT_OF_RANGE' };
   }
@@ -254,38 +367,54 @@ export function deliver(
       station_id: stationId,
       source_node_id: held.source_node_id,
       zone,
+      refined: held.refined_at_station_id !== null,
+      refined_at_station_id: held.refined_at_station_id,
+      reward: rewardForItemType(held.item_type),
     },
   };
 }
 
 export interface GatherTickEffects {
   completed: Array<{ player_id: string; node_id: string; zone: string; item_type: string }>;
+  refined: Array<{ player_id: string; station_id: string; zone: string; item_type: string }>;
   respawned: Array<{ node_id: string; zone: string }>;
 }
 
 /**
- * Advance the server clock: complete due gathers (yield → held slot, node → DEPLETED) and
- * respawn nodes whose cooldown elapsed. Deterministic; called once per server tick.
+ * Advance the server clock: complete due gathers (yield → held slot, node → DEPLETED), complete
+ * due refines (upgrade held slot in place), and respawn nodes whose cooldown elapsed.
+ * Deterministic; called once per server tick.
  */
 export function tickGather(sys: GatherSystem, nowMs: number): GatherTickEffects {
-  const effects: GatherTickEffects = { completed: [], respawned: [] };
+  const effects: GatherTickEffects = { completed: [], refined: [], respawned: [] };
 
-  // 1. Complete due gathers.
+  // 1. Complete due timed activities (gather → yield; refine → in-place upgrade).
   for (const [playerId, g] of sys.gatherByPlayer) {
-    if (g.state !== 'gathering' || nowMs < g.complete_at_ms) continue;
-    const node = sys.zones.get(g.zone)?.nodes.get(g.node_id);
-    sys.gatherByPlayer.set(playerId, IDLE);
-    if (!node) continue;
-    node.state = 'depleted';
-    node.claimant_id = null;
-    node.complete_at_ms = null;
-    node.respawn_at_ms = nowMs + sys.config.respawnCooldownMs;
-    sys.heldByPlayer.set(playerId, {
-      item_type: node.item_type,
-      source_node_id: node.node_id,
-      zone: g.zone,
-    });
-    effects.completed.push({ player_id: playerId, node_id: node.node_id, zone: g.zone, item_type: node.item_type });
+    if (g.state === 'gathering' && nowMs >= g.complete_at_ms) {
+      const node = sys.zones.get(g.zone)?.nodes.get(g.node_id);
+      sys.gatherByPlayer.set(playerId, IDLE);
+      if (!node) continue;
+      node.state = 'depleted';
+      node.claimant_id = null;
+      node.complete_at_ms = null;
+      node.respawn_at_ms = nowMs + sys.config.respawnCooldownMs;
+      sys.heldByPlayer.set(playerId, {
+        item_type: node.item_type,
+        source_node_id: node.node_id,
+        zone: g.zone,
+        refined_at_station_id: null,
+      });
+      effects.completed.push({ player_id: playerId, node_id: node.node_id, zone: g.zone, item_type: node.item_type });
+    } else if (g.state === 'refining' && nowMs >= g.complete_at_ms) {
+      sys.gatherByPlayer.set(playerId, IDLE);
+      const held = getHeld(sys, playerId);
+      if (!held) continue;
+      const refinedType = refinedTypeOf(held.item_type);
+      // Guard against a slot that changed since refine started (raced delivery / already refined).
+      if (refinedType === null) continue;
+      sys.heldByPlayer.set(playerId, { ...held, item_type: refinedType, refined_at_station_id: g.station_id });
+      effects.refined.push({ player_id: playerId, station_id: g.station_id, zone: g.zone, item_type: refinedType });
+    }
   }
 
   // 2. Respawn due nodes.
@@ -312,9 +441,29 @@ export function gatherProgressPct(sys: GatherSystem, playerId: string, nowMs: nu
   return Math.max(0, Math.min(100, pct));
 }
 
+/** Server-computed refine progress in [0,100], or null if the player is not refining. (For step-2 snapshot.) */
+export function refineProgressPct(sys: GatherSystem, playerId: string, nowMs: number): number | null {
+  const g = getPlayerGather(sys, playerId);
+  if (g.state !== 'refining') return null;
+  const span = g.complete_at_ms - g.started_at_ms;
+  if (span <= 0) return 100;
+  const pct = ((nowMs - g.started_at_ms) / span) * 100;
+  return Math.max(0, Math.min(100, pct));
+}
+
 /** Feature flag (default OFF), matching the server's parseBoolEnv convention. */
 export function isGatherEnabled(env: Record<string, string | undefined> = process.env): boolean {
   const v = (env.CHILL_ZONE_GATHER_ENABLED ?? '').trim().toLowerCase();
+  return v === '1' || v === 'true' || v === 'yes';
+}
+
+/**
+ * Refine sub-feature flag (default OFF), independent of CHILL_ZONE_GATHER_ENABLED so the refine
+ * step can roll out / roll back separately. Step 2 gates the live refinery placement + refine_intent
+ * wire on this; the gather loop is unaffected when it is off.
+ */
+export function isRefineEnabled(env: Record<string, string | undefined> = process.env): boolean {
+  const v = (env.CHILL_ZONE_REFINE_ENABLED ?? '').trim().toLowerCase();
   return v === '1' || v === 'true' || v === 'yes';
 }
 
@@ -332,5 +481,16 @@ export const AZURA_GATHER_NODES: readonly GatherNodeDef[] = [
 ];
 
 export const AZURA_STATIONS: readonly StationDef[] = [
-  { station_id: 'azura_curation_stand', zone: 'Azura', x: 31, y: 32 },
+  { station_id: 'azura_curation_stand', zone: 'Azura', x: 31, y: 32, kind: 'curation' },
+];
+
+/**
+ * Refinery placement for the Azura chill zone. Tile (33,33) is walkable in azura.json (tile=0),
+ * sits Manhattan ≥2 from every gather node (so it never overlaps a node's interaction tile) and
+ * 3 tiles from the curation stand (forcing a real delivery step). Kept SEPARATE from
+ * {@link AZURA_STATIONS}: index.ts merges it into the live zone only when {@link isRefineEnabled}
+ * (step 2 wiring). Final lore naming owned by map-and-lore-builder.
+ */
+export const AZURA_REFINE_STATIONS: readonly StationDef[] = [
+  { station_id: 'azura_refinery_stand', zone: 'Azura', x: 33, y: 33, kind: 'refinery' },
 ];
