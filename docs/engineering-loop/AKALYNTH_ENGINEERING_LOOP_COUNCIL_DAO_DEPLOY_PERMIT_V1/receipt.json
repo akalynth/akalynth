@@ -1,8 +1,8 @@
 {
   "object_id": "AKALYNTH_ENGINEERING_LOOP_COUNCIL_DAO_DEPLOY_PERMIT_V1",
-  "status": "open",
+  "status": "closed",
   "created_utc": "2026-06-21T22:00:00Z",
-  "closed_utc": null,
+  "closed_utc": "2026-06-21T23:00:00Z",
   "authority": {
     "github": "canonical public/source remote",
     "gitea": "local agent workbench and PR queue",
@@ -40,9 +40,9 @@
     ]
   },
   "validation": {
-    "validated_utc": "2026-06-21T22:05:00Z",
+    "validated_utc": "2026-06-21T23:00:00Z",
     "worktree": "/home/sovereign/akalynth-ops/repos/akalynth",
-    "green_commit": null,
+    "green_commit": "df2fc34",
     "commands": [
       {
         "command": "npm -w apps/server run verify:council-dao-deploy-permit-v1",
@@ -52,12 +52,23 @@
         "command": "akalynth-ops/scripts/verify-council-dao-deploy-permit-v1.sh",
         "status": "passed",
         "notes": "ack_required without ack; deploy_skipped with --human-ack --skip-deploy."
+      },
+      {
+        "command": "./scripts/verify-council-dao-deploy-permit-v1.sh",
+        "status": "passed",
+        "notes": "Post-merge main verification."
       }
     ]
   },
+  "codex_status_update": {
+    "status": "codex:accepted",
+    "meaning": "closure executed and merged to GitHub main",
+    "github_pr_codex": "https://github.com/akalynth/akalynth-codex/pull/4",
+    "github_pr_akalynth": "https://github.com/akalynth/akalynth/pull/340"
+  },
   "codex_seed": {
     "repo": "akalynth-codex",
-    "commit": null,
+    "commit": "2eeb5c8",
     "entry_id": "council-dao"
   },
   "execution_deliverables": {
@@ -65,11 +76,29 @@
     "contract_verifier": "apps/server/tools/verify-council-dao-deploy-permit-v1.ts",
     "shell_verifier": "scripts/verify-council-dao-deploy-permit-v1.sh",
     "ops_gate_adapter": "akalynth-ops/bin/council-execution-gate.sh",
-    "ops_verifier": "akalynth-ops/scripts/verify-council-dao-deploy-permit-v1.sh"
+    "ops_verifier": "akalynth-ops/scripts/verify-council-dao-deploy-permit-v1.sh",
+    "sample_permit_ack_missing": "akalynth-ops/council/permits/sample-beta-deploy-ack-missing.json",
+    "sample_permit_ack_provided": "akalynth-ops/council/permits/sample-beta-deploy-ack-provided.json",
+    "ops_closure": "akalynth-ops/evidence/council/council-dao-deploy-permit-v1/closure.json"
+  },
+  "execution_merge": {
+    "github_pr_codex": "https://github.com/akalynth/akalynth-codex/pull/4",
+    "codex_merge_commit": "2eeb5c8",
+    "github_pr_akalynth": "https://github.com/akalynth/akalynth/pull/340",
+    "akalynth_merge_commit": "df2fc34",
+    "merged_utc": "2026-06-21"
+  },
+  "github_ci_status": {
+    "status": "merged_upstream",
+    "checked_utc": "2026-06-21T23:00:00Z",
+    "pr_codex": "https://github.com/akalynth/akalynth-codex/pull/4",
+    "pr_akalynth": "https://github.com/akalynth/akalynth/pull/340",
+    "merge_status": "merged"
   },
   "non_mutation_boundary": {
     "verifier_hosts": "deploy skipped or ack_required only",
     "auto_execution": "not_performed",
-    "human_ack_required_for_deploy": true
+    "human_ack_required_for_deploy": true,
+    "live_deploy_in_closure": "not_performed"
   }
 }

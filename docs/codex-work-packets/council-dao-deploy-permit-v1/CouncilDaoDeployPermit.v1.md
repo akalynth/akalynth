@@ -1,6 +1,6 @@
 # Witness Council DAO — Deploy Permit v1
 
-Status: `codex:candidate`
+Status: `codex:accepted`
 
 Authority object: `AKALYNTH_COUNCIL_DAO_DEPLOY_PERMIT_V1`
 
