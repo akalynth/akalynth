@@ -94,12 +94,14 @@ Focus shifted from the Android APK to the browser client at **https://beta.akaly
   what's deployed. Site is published with `bin/akalynth-site-publish.sh beta <commit>` (clones the
   pinned commit, backs up, rsyncs to `/var/www/akalynth-beta`, validates + reloads Caddy).
 - **`main` is branch-protected** (PR + `site-checks` status check; no direct push).
-- **PR [#74](https://github.com/akalynth/akalynth-site/pull/74)** — `feat: lead with the web
-  client`: `index.html` + `beta.html` lead with **Play in browser ▶** → `/play/`, F-Droid/APK
-  demoted to "Or get the Android client". `site-checks` green; CLEAN/MERGEABLE. **Merge + deploy
-  is operator-gated** (auto-mode denied self-merge to the public default branch).
-- **To go live:** merge PR #74, then `sudo bin/akalynth-site-publish.sh beta <merged-sha>`
-  (`--dry-run` first); verify `curl https://beta.akalynth.com/` + `/beta.html` show the browser CTA.
+- **DONE — PR [#74](https://github.com/akalynth/akalynth-site/pull/74) merged + deployed**
+  (`e19798b`): `index.html` + `beta.html` lead with **Play in browser ▶** → `/play/`; F-Droid/APK
+  demoted to "Or get the Android client". Published to beta 2026-06-21
+  (`site-beta-publication-20260621T032444Z`); verified live — landing + beta page show the browser
+  CTA, `/play/` 200, APK still reachable (demoted). Rollback tar in
+  `/var/backups/akalynth-beta-site/`.
+- **Re-publish pattern:** `gh pr merge <n> --squash` then
+  `sudo bin/akalynth-site-publish.sh beta <merged-sha>` (`--dry-run` first).
 - **Follow-up:** `akalynth-site/js/app.js` account-portal CTAs still say "Download the Android beta
   to play" — left untouched (that file has unrelated in-progress library-discovery edits in the
   working tree; separate cleanly before editing).
