@@ -17,6 +17,7 @@ import { GatherPanel } from './components/GatherPanel';
 import { ExistenceShell } from './components/ExistenceShell';
 import { SimLifeRookguardTimelapse } from './components/SimLifeRookguardTimelapse';
 import { VisualSmokeReview } from './components/VisualSmokeReview';
+import { WorldShowcase } from './components/WorldShowcase';
 import { CharacterBar } from './components/CharacterBar';
 import { BackpackSheet } from './components/BackpackSheet';
 import { ProofSheet } from './components/ProofSheet';
@@ -328,6 +329,10 @@ export default function App() {
   const existenceMode = useExistenceMode();
 
   const params = new URLSearchParams(window.location.search);
+  if (params.get('mode') === 'world' || params.has('world-showcase')) {
+    return <WorldShowcase />;
+  }
+
   if (params.has('visual-smoke')) {
     return <VisualSmokeReview />;
   }

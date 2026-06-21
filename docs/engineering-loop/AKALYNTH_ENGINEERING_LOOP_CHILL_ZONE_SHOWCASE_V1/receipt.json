@@ -1,7 +1,8 @@
 {
   "object_id": "AKALYNTH_ENGINEERING_LOOP_CHILL_ZONE_SHOWCASE_V1",
-  "status": "created",
+  "status": "closed",
   "created_utc": "2026-06-21T12:00:00Z",
+  "closed_utc": "2026-06-21T04:40:00Z",
   "authority": {
     "github": "canonical public/source remote",
     "gitea": "local agent workbench and PR queue",
@@ -20,15 +21,17 @@
       "apps/server/tools/verify-gather-loop.test.ts",
       "apps/server/tools/verify-gather.test.ts",
       "apps/debug-client/scripts/verify-gather-wire-authority.mjs",
-      "scripts/showcase_local.sh"
+      "scripts/showcase_local.sh",
+      "scripts/verify-chill-zone-showcase.sh"
     ],
     "gitea_repo": "https://gitea.akalynth.com/sovereign/akalynth",
-    "gitea_issue": null,
+    "gitea_issue": "local_ops_claim:packet_execution_20260621",
     "gitea_pr": null,
     "github_pr": "https://github.com/akalynth/akalynth/pull/333",
     "github_merge_commit": "3b5a353",
-    "claimed_branch": "codex/chill-zone-showcase-closure-v1",
-    "claimed_by": null,
+    "claimed_branch": "codex/chill-zone-showcase-execution-v1",
+    "claimed_by": "Codex agent (ops-laptop execution)",
+    "claimed_utc": "2026-06-21T04:30:00Z",
     "target_labels": [
       "codex:ready",
       "codex:running",
@@ -39,52 +42,68 @@
     ]
   },
   "validation": {
-    "validated_utc": null,
-    "worktree": null,
+    "validated_utc": "2026-06-21T04:36:00Z",
+    "worktree": "/home/sovereign/akalynth-ops/repos/akalynth",
+    "green_commit": "85fc307",
     "commands": [
       {
         "command": "git diff --check",
-        "status": "pending"
+        "status": "passed"
       },
       {
         "command": "npm -w apps/server run verify:quick",
-        "status": "pending"
+        "status": "passed"
       },
       {
         "command": "npm -w apps/server run test:gather",
-        "status": "pending"
+        "status": "passed",
+        "notes": "Unit gather/refine gate tests including default-off flags and keystone reward path."
       },
       {
         "command": "CHILL_ZONE_GATHER_ENABLED=1 CHILL_ZONE_REFINE_ENABLED=1 npm -w apps/server run test:gather-loop",
-        "status": "pending",
-        "notes": "WS E2E lane AKALYNTH_CHILL_ZONE_GATHER_WS_E2E_V1; boots disposable server with both flags on."
+        "status": "passed",
+        "notes": "AKALYNTH_CHILL_ZONE_GATHER_WS_E2E_V1: gather→refine→deliver with delivery_recorded and keystone_token."
       },
       {
         "command": "npm -w apps/debug-client run verify:gather-client",
-        "status": "pending"
+        "status": "passed"
+      },
+      {
+        "command": "bash scripts/verify-chill-zone-showcase.sh",
+        "status": "passed"
       },
       {
         "command": "npm run verify:showcase",
-        "status": "pending",
-        "notes": "After runbook and showcase script updates land on branch."
+        "status": "passed",
+        "notes": "Includes protocol sync, MVP verify, agent economy sim, chill-zone closure, debug-client build."
       }
     ],
-    "known_warnings": []
+    "known_warnings": [
+      "verify:showcase MVP path logged perfect_cadence timing variance warning (non-fatal).",
+      "debug-client vite build reports >500kB chunk warning (existing)."
+    ]
   },
   "codex_status_update": {
-    "status": "codex:ready",
-    "meaning": "packet seeded on main via PR #333; awaiting Gitea issue claim and closure execution",
-    "gitea_issue": null,
+    "status": "codex:accepted",
+    "meaning": "closure executed locally with full validation green; queued for GitHub upstream merge",
+    "gitea_issue": "local_ops_claim:packet_execution_20260621",
     "gitea_pr": null,
-    "github_pr": "https://github.com/akalynth/akalynth/pull/333"
+    "github_pr": null
   },
   "packet_seed_merge": {
     "github_pr": "https://github.com/akalynth/akalynth/pull/333",
     "merge_commit": "3b5a353",
     "merged_utc": "2026-06-21"
   },
+  "execution_deliverables": {
+    "runbook": "docs/SHOWCASE_RUNBOOK.md",
+    "closure_script": "scripts/verify-chill-zone-showcase.sh",
+    "showcase_preflight": "scripts/showcase_local.sh",
+    "world_showcase_mode": "?mode=world",
+    "world_showcase_branch_merged": "feat/world-showcase-web"
+  },
   "github_ci_status": {
-    "status": "not_started",
+    "status": "pending_upstream_pr",
     "checked_utc": null,
     "pr": null,
     "merge_status": "not merged"
@@ -100,6 +119,7 @@
   "optional_display_only_substep": {
     "world_showcase_mode": "?mode=world",
     "sprite_root": "data/assets-src/sprites/",
-    "claim": "display-only visual catalog and map overlays; no mechanic promotion"
+    "claim": "display-only visual catalog and map overlays; no mechanic promotion",
+    "status": "merged_on_execution_branch"
   }
 }

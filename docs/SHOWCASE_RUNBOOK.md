@@ -57,17 +57,43 @@ cd apps/server
 ALLOW_INSECURE_LOCAL=1 npm run dev
 ```
 
-### Optional: Chill-Zone Gather (Step 2 client loop)
+### Chill-Zone Full Loop (gather → refine → deliver)
 
-Enable the server gather lane, then enter **Azura** in the debug client. Nodes render on the
-map (green **M** = Ley Mote, blue **C** = Curation Stand); the side panel sends intents only.
+Both runtime gates default **off** in production-shaped configs. For local showcase proof,
+enable **both** flags, select **Azura** (High City), and use the Chill-Zone Gather panel.
 
 ```bash
 cd apps/server
-CHILL_ZONE_GATHER_ENABLED=1 ALLOW_INSECURE_LOCAL=1 npm run dev
+CHILL_ZONE_GATHER_ENABLED=1 CHILL_ZONE_REFINE_ENABLED=1 ALLOW_INSECURE_LOCAL=1 npm run dev
 ```
 
-Server proof for the full loop (no UI): `cd apps/server && CHILL_ZONE_GATHER_ENABLED=1 npm run test:gather-loop`
+Automated closure proof (no manual UI required):
+
+```bash
+bash scripts/verify-chill-zone-showcase.sh
+```
+
+This runs unit gather gates, the WebSocket E2E lane
+`AKALYNTH_CHILL_ZONE_GATHER_WS_E2E_V1` (gather → refine → deliver with
+`delivery_recorded`), and debug-client gather wire authority.
+
+Human-observed demo (Terminal B: `cd apps/debug-client && npm run dev`):
+
+1. Log in and enter Azura.
+2. Walk to a Ley Mote (green **M**), tap **Gather** → progress bar → held raw item.
+3. Walk to the refinery (marker on map), tap **Refine** → progress bar → held refined item.
+4. Walk to the Curation Stand (blue **C**), tap **Deliver** → `delivery_recorded` receipt.
+
+### Optional: World visual showcase (display-only)
+
+No server flags required. Sprites load from `data/assets-src/sprites/`; visuals do not
+change walkability, spawns, or economy authority.
+
+```text
+http://127.0.0.1:5173/play/?mode=world&zone=high-city
+http://127.0.0.1:5173/play/?mode=world&zone=rookguard
+http://127.0.0.1:5173/play/?mode=world&zone=atlas
+```
 
 Expected local endpoint:
 
@@ -108,12 +134,12 @@ A successful local showcase should demonstrate:
 - health endpoint responds,
 - debug client remains connected during basic movement/chat.
 
-With `CHILL_ZONE_GATHER_ENABLED=1` and Azura selected, a successful gather showcase also shows:
+With both chill-zone flags on and Azura selected, a successful full-loop showcase also shows:
 
-- gather nodes and curation stand markers on the map,
-- gather/deliver buttons in the Chill-Zone Gather panel (disabled until in range),
-- server-driven progress bar during an active gather,
-- a `delivery.recorded` receipt after deliver (check chronicle or server logs).
+- gather nodes, refinery marker, and curation stand markers on the map,
+- gather / refine / deliver buttons in the Chill-Zone Gather panel (disabled until in range),
+- server-driven progress bars during gather and refine,
+- a `delivery_recorded` receipt after delivering a refined item (check chronicle or server logs).
 
 ## Step 6: Evidence To Capture
 
@@ -127,7 +153,7 @@ Capture these artifacts before claiming a successful showcase:
 - debug-client build result,
 - any failed command output.
 
-## Step 7: Optional Preflight Script
+## Step 7: Preflight Script
 
 The repository includes a non-launching preflight helper:
 
@@ -135,7 +161,17 @@ The repository includes a non-launching preflight helper:
 npm run verify:showcase
 ```
 
-This checks the documented build/verification path. It does not start the server or client, and it does not replace a human-observed demo.
+This checks the documented build/verification path, runs chill-zone showcase closure
+(`scripts/verify-chill-zone-showcase.sh`), and builds the debug client. It does not start
+a long-lived server or client for human demo, and it does not replace optional
+human-observed gather→refine→deliver confirmation.
+
+Focused chill-zone closure only:
+
+```bash
+bash scripts/verify-chill-zone-showcase.sh
+```
+
 It also runs the agent economy simulator verifier documented in
 `docs/AKALYNTH_AGENT_ECONOMY_SIM_PROOF_V1.md`.
 

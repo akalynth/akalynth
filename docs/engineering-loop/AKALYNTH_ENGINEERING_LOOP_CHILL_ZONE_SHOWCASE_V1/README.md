@@ -1,6 +1,6 @@
 # Akalynth Engineering Loop: Chill-Zone Showcase Closure v1
 
-Status: `packet_seeded`
+Status: `closed`
 
 Second repeatable engineering-loop packet after Forgehold Act I.
 
@@ -51,7 +51,7 @@ chill-zone gather → refine → deliver loop already implemented on `main`.
 ## Receipt
 
 - Path: `docs/engineering-loop/AKALYNTH_ENGINEERING_LOOP_CHILL_ZONE_SHOWCASE_V1/receipt.json`
-- Status: `created` until an agent records validation evidence.
+- Status: `closed` — validation recorded 2026-06-21; see `receipt.json`.
 
 ## Prior Loop
 
