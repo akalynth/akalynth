@@ -117,7 +117,7 @@ test('initial quest starts at the move objective', () => {
   const quest = buildRookguardQuestProgress(state);
   const routes = buildOnwardRouteProgress(state);
   assert(quest.phase === 'tutorial', `expected tutorial phase, got ${quest.phase}`);
-  assert(rookguardQuestObjective(state) === 'Step onto the move rune', 'initial objective mismatch');
+  assert(rookguardQuestObjective(state) === 'Step onto the glowing move rune (east plaza, tile 3,2)', 'initial objective mismatch');
   assert(!rookguardGateOpen(state), 'gate must not open before tutorial/training/profession');
   assert(routes.every((route) => route.status === 'locked'), 'onward routes must start locked');
   assert(
@@ -134,7 +134,7 @@ test('move chat and Tem lead to training, not the gate', () => {
   const state = input({ tutorial: tutorial({ move: true, chat: true, tem: true }) });
   const quest = buildRookguardQuestProgress(state);
   assert(quest.phase === 'training', `expected training phase, got ${quest.phase}`);
-  assert(rookguardQuestObjective(state) === 'Practice against a training slime', 'training objective mismatch');
+  assert(rookguardQuestObjective(state) === 'Walk southeast to the training slime (tile 14,14) and tap Attack', 'training objective mismatch');
   assert(!rookguardGateOpen(state), 'gate must wait for training and vocation');
 });
 
@@ -146,7 +146,7 @@ test('training slime completion points to Codex vocation choice', () => {
   const quest = buildRookguardQuestProgress(state);
   assert(quest.phase === 'profession', `expected profession phase, got ${quest.phase}`);
   assert(
-    rookguardQuestObjective(state) === 'Choose a vocation at the Rookguard guild hall',
+    rookguardQuestObjective(state) === 'Enter the guild hall and choose a Codex vocation',
     'profession objective mismatch'
   );
   assert(!rookguardGateOpen(state), 'gate must wait for vocation');
@@ -196,9 +196,14 @@ test('gate step completes the Rookguard Codex path', () => {
   assert(byStep.profession.receipt_actions.includes('vocation_declared'), 'profession step must cite vocation proof');
   assert(byStep.gate.receipt_actions.includes('tutorial_completed'), 'gate step must cite tutorial completion proof');
   assert(routes.every((route) => route.status === 'available'), 'completed Rookguard path should make onward routes available');
+  const forgehold = routes.find((route) => route.route_id === 'forgehold_route_slice_v1');
+  const moonspire = routes.find((route) => route.route_id === 'moonspire_dream_gate_slice_v1');
+  assert(forgehold?.receipt_actions.includes('route_surveyed'), 'Forgehold route should cite route survey receipts');
+  assert(forgehold?.receipt_actions.includes('forgehold_milepost_evidence_recovered'), 'Forgehold route should cite Act II evidence receipts');
+  assert(moonspire?.receipt_actions.includes('route_surveyed'), 'Moonspire route should cite route survey receipts');
   assert(
-    routes.every((route) => route.receipt_actions.includes('tutorial_completed') && route.receipt_actions.includes('gate_unlock')),
-    'onward routes should cite existing Rookguard completion receipts'
+    routes.every((route) => route.unlock_requirement.includes('Rookguard')),
+    'onward routes should name Rookguard completion as unlock requirement'
   );
 });
 

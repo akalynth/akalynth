@@ -1,0 +1,61 @@
+{
+  "object_id": "AKALYNTH_ENGINEERING_LOOP_ROOKGUARD_FIRST30_PRESENTATION_V1",
+  "status": "open",
+  "created_utc": "2026-06-21T19:00:00Z",
+  "closed_utc": null,
+  "authority": {
+    "github": "canonical public/source remote",
+    "gitea": "local agent workbench and PR queue",
+    "codex": "packet authoring and agent execution",
+    "ci_validation": "proof gate before merge",
+    "receipts": "evidence of what changed and why"
+  },
+  "packet": {
+    "object_id": "AKALYNTH_ROOKGUARD_FIRST30_PRESENTATION_V1",
+    "path": "docs/codex-work-packets/rookguard-first30-presentation-v1/RookguardFirst30Presentation.v1.md",
+    "codex_authority_path": "repos/akalynth-codex/design/rookguard-first30-presentation-v1.md",
+    "codex_seed_commit": null,
+    "proof_target": "rookguard_first30_presentation_v1",
+    "source_inputs": [
+      "repos/akalynth-codex/design/rookguard-first30-presentation-v1.md",
+      "repos/akalynth-codex/schema/rookguard-presentation-transcript.schema.json",
+      "repos/akalynth-codex/samples/rookguard-first30-presentation-transcript.sample.json",
+      "docs/ROOKGUARD_FIRST_30_MINUTES_V1.md",
+      "apps/server/tools/verify-rookguard-first30-presentation.ts",
+      "scripts/verify-rookguard-first30-presentation.sh",
+      "docs/ROOKGUARD_FIRST30_PRESENTATION_RUNBOOK.md"
+    ],
+    "claimed_branch": "codex/rookguard-first30-presentation-v1",
+    "claimed_by": "Codex agent (ops-laptop execution)",
+    "claimed_utc": "2026-06-21T19:00:00Z",
+    "target_labels": [
+      "codex:ready",
+      "codex:running",
+      "codex:needs-review",
+      "codex:accepted",
+      "codex:blocked",
+      "packet:rookguard-first30"
+    ]
+  },
+  "validation": {
+    "validated_utc": null,
+    "worktree": "/home/sovereign/akalynth-ops/repos/akalynth",
+    "green_commit": null,
+    "commands": []
+  },
+  "codex_status_update": {
+    "status": "codex:ready",
+    "meaning": "packet seeded; implementation in progress",
+    "github_pr": null
+  },
+  "codex_seed": {
+    "repo": "akalynth-codex",
+    "commit": null,
+    "entry_id": "rookguard-first30-presentation"
+  },
+  "non_mutation_boundary": {
+    "runtime_trees": "unchanged",
+    "runtime_state": "unchanged",
+    "deployment": "not performed"
+  }
+}

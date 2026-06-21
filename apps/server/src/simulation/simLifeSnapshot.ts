@@ -131,6 +131,7 @@ export function buildSimLifeSnapshot(
       'tem_challenge_passed',
       'gate_unlock',
       'tutorial_completed',
+      'mob_kill',
       VOCATION_DECLARED_ACTION,
       'runestone_cast',
       'legend_sighted',

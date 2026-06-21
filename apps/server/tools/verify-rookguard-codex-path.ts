@@ -351,13 +351,12 @@ async function verifyRookguardCodexPath(): Promise<void> {
   const keyPath = path.join(tmp, 'chronicle.key');
   const output: string[] = [];
   const tsxBin = path.join(REPO_ROOT, 'node_modules/.bin/tsx');
-  fs.writeFileSync(chainPaths.keyPath, randomBytes(32), { mode: 0o600 });
+  fs.writeFileSync(keyPath, randomBytes(32), { mode: 0o600 });
 
   const child = spawn(tsxBin, ['src/index.ts'], {
     cwd: SERVER_DIR,
     env: {
       ...process.env,
-      ...pathEnv,
       PORT: String(port),
       HOST: '127.0.0.1',
       DEBUG: '1',
