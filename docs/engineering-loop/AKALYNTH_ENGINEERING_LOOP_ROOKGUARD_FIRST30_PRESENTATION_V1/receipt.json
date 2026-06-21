@@ -1,8 +1,8 @@
 {
   "object_id": "AKALYNTH_ENGINEERING_LOOP_ROOKGUARD_FIRST30_PRESENTATION_V1",
-  "status": "open",
+  "status": "closed",
   "created_utc": "2026-06-21T19:00:00Z",
-  "closed_utc": null,
+  "closed_utc": "2026-06-21T19:45:00Z",
   "authority": {
     "github": "canonical public/source remote",
     "gitea": "local agent workbench and PR queue",
@@ -14,7 +14,7 @@
     "object_id": "AKALYNTH_ROOKGUARD_FIRST30_PRESENTATION_V1",
     "path": "docs/codex-work-packets/rookguard-first30-presentation-v1/RookguardFirst30Presentation.v1.md",
     "codex_authority_path": "repos/akalynth-codex/design/rookguard-first30-presentation-v1.md",
-    "codex_seed_commit": null,
+    "codex_seed_commit": "9a77a30",
     "proof_target": "rookguard_first30_presentation_v1",
     "source_inputs": [
       "repos/akalynth-codex/design/rookguard-first30-presentation-v1.md",
@@ -22,6 +22,7 @@
       "repos/akalynth-codex/samples/rookguard-first30-presentation-transcript.sample.json",
       "docs/ROOKGUARD_FIRST_30_MINUTES_V1.md",
       "apps/server/tools/verify-rookguard-first30-presentation.ts",
+      "apps/server/tools/verify-rookguard-codex-path.ts",
       "scripts/verify-rookguard-first30-presentation.sh",
       "docs/ROOKGUARD_FIRST30_PRESENTATION_RUNBOOK.md"
     ],
@@ -38,20 +39,57 @@
     ]
   },
   "validation": {
-    "validated_utc": null,
+    "validated_utc": "2026-06-21T19:40:00Z",
     "worktree": "/home/sovereign/akalynth-ops/repos/akalynth",
-    "green_commit": null,
-    "commands": []
+    "green_commit": "54a5cab",
+    "commands": [
+      {
+        "command": "npm -w apps/server run verify:quick",
+        "status": "passed"
+      },
+      {
+        "command": "npm -w apps/server run verify:rookguard-first30-presentation",
+        "status": "passed"
+      },
+      {
+        "command": "npm -w apps/server run verify:rookguard-quest",
+        "status": "passed",
+        "notes": "Updated stale objective copy assertions and Forgehold Act II receipt_actions expectations."
+      },
+      {
+        "command": "npm -w apps/server run verify:rookguard-codex-path",
+        "status": "passed",
+        "notes": "Repaired harness keyPath and removed undefined pathEnv spread."
+      }
+    ]
   },
   "codex_status_update": {
-    "status": "codex:ready",
-    "meaning": "packet seeded; implementation in progress",
-    "github_pr": null
+    "status": "codex:accepted",
+    "meaning": "closure executed and merged to GitHub main",
+    "github_pr": "https://github.com/akalynth/akalynth/pull/337"
   },
   "codex_seed": {
     "repo": "akalynth-codex",
-    "commit": null,
+    "commit": "9a77a30",
     "entry_id": "rookguard-first30-presentation"
+  },
+  "execution_deliverables": {
+    "runbook": "docs/ROOKGUARD_FIRST30_PRESENTATION_RUNBOOK.md",
+    "focused_verifier": "apps/server/tools/verify-rookguard-first30-presentation.ts",
+    "shell_verifier": "scripts/verify-rookguard-first30-presentation.sh",
+    "live_ws_proof": "apps/server/tools/verify-rookguard-codex-path.ts"
+  },
+  "execution_merge": {
+    "github_pr": "https://github.com/akalynth/akalynth/pull/337",
+    "merge_commit": "54a5cab",
+    "merged_utc": "2026-06-21"
+  },
+  "github_ci_status": {
+    "status": "merged_upstream",
+    "checked_utc": "2026-06-21T19:45:00Z",
+    "pr": "https://github.com/akalynth/akalynth/pull/337",
+    "merge_status": "merged",
+    "merge_commit": "54a5cab"
   },
   "non_mutation_boundary": {
     "runtime_trees": "unchanged",

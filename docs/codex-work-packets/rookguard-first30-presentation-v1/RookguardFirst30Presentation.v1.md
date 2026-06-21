@@ -1,6 +1,6 @@
 # Rookguard First30 Presentation v1
 
-Status: `codex:ready`
+Status: `codex:accepted`
 
 Authority object: `AKALYNTH_ROOKGUARD_FIRST30_PRESENTATION_V1`
 

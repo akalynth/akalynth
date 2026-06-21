@@ -1,6 +1,6 @@
 # Akalynth Engineering Loop: Rookguard First30 Presentation v1
 
-Status: `open`
+Status: `closed`
 
 Fifth repeatable engineering-loop packet. Closes Rookguard 0–30 minute presentation
 transcript proof on canonical `main`.
