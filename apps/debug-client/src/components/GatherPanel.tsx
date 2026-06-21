@@ -6,29 +6,35 @@ interface GatherPanelProps {
   me: PlayerPublic | null;
   onGather: (nodeId: string) => void;
   onDeliver: (stationId: string) => void;
+  onRefine: (stationId: string) => void;
 }
 
 function manhattan(ax: number, ay: number, bx: number, by: number): number {
   return Math.abs(ax - bx) + Math.abs(ay - by);
 }
 
-// Chill-Zone Gather v0 (Step 2). Client renders the server-authoritative node/station
-// registry and sends gather/deliver INTENTS only — every outcome (claim, timer, yield,
-// reward) is decided server-side. Adjacency here just disables out-of-range buttons for UX;
-// the server re-validates and can still reject.
-export function GatherPanel({ gather, me, onGather, onDeliver }: GatherPanelProps) {
+/** A held item is refinable while it is still raw (refined types are prefixed `refined_`). */
+function isRefinable(itemType: string): boolean {
+  return !itemType.startsWith('refined_');
+}
+
+// Chill-Zone Gather v0 (Step 2) + Refine (Step 3). Client renders the server-authoritative
+// node/station registry and sends gather/refine/deliver INTENTS only — every outcome (claim,
+// timer, yield, upgrade, reward) is decided server-side. Adjacency here just disables
+// out-of-range buttons for UX; the server re-validates and can still reject.
+export function GatherPanel({ gather, me, onGather, onDeliver, onRefine }: GatherPanelProps) {
   const nodes = Array.from(gather.nodes.values());
   const stations = Array.from(gather.stations.values());
   if (nodes.length === 0 && stations.length === 0) return null;
 
   const inRange = (x: number, y: number) => me != null && manhattan(me.x, me.y, x, y) <= 1;
-  const busy = gather.activeNodeId != null;
+  const busy = gather.activeNodeId != null || gather.activeRefineStationId != null;
 
   return (
     <div className="gather-card">
       <div className="gather-title">Chill-Zone Gather</div>
       <div className="gather-held">Held: {gather.held ? gather.held.item_type : '—'}</div>
-      <div className="gather-held">Tending tokens: {gather.tendingTokens}</div>
+      <div className="gather-held">Tending: {gather.tendingTokens} · Keystone: {gather.keystoneTokens}</div>
 
       {busy && (
         <div className="gather-progress" aria-label="gather-progress">
@@ -55,7 +61,20 @@ export function GatherPanel({ gather, me, onGather, onDeliver }: GatherPanelProp
 
       <div className="gather-list">
         {stations.map((st) => {
-          const canDeliver = inRange(st.x, st.y) && gather.held != null;
+          const here = inRange(st.x, st.y);
+          if (st.kind === 'refinery') {
+            const canRefine = here && !busy && gather.held != null && isRefinable(gather.held.item_type);
+            return (
+              <div key={st.station_id} className="gather-row" aria-label={`station-${st.station_id}`}>
+                <span className="gather-dot refinery" />
+                <span className="gather-name">{st.station_id}</span>
+                <button type="button" className="gather-btn" disabled={!canRefine} onClick={() => onRefine(st.station_id)}>
+                  Refn
+                </button>
+              </div>
+            );
+          }
+          const canDeliver = here && !busy && gather.held != null;
           return (
             <div key={st.station_id} className="gather-row" aria-label={`station-${st.station_id}`}>
               <span className="gather-dot station" />

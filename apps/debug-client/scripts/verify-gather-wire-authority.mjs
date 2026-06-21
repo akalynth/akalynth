@@ -45,16 +45,29 @@ assertIntentOnlyAction('sendDeliver', [
   "const payload: DeliverIntentMessage = { type: 'deliver_intent', station_id: stationId };",
   'send(payload);',
 ]);
+assertIntentOnlyAction('sendRefine', [
+  "const payload: RefineIntentMessage = { type: 'refine_intent', station_id: stationId };",
+  'send(payload);',
+]);
 
 requireLiteral('gather snapshot replaces server registry', "case 'gather_snapshot':");
 requireLiteral('gather progress uses server pct', 'typeof data.progress_pct === \'number\' ? data.progress_pct');
 requireLiteral('gather completed uses server item_type', "typeof data.item_type === 'string' ? data.item_type");
 requireLiteral('deliver result clears held from server ack', 'held: null');
+// Refine is server-authoritative too: the client only tracks the server's refine acks.
+requireLiteral('refine result handler present', "case 'refine_result':");
+requireLiteral('refine completed clears active refine + takes server item_type', 'activeRefineStationId: null');
 
-if (panelSource.includes('WebSocket') || panelSource.includes('gather_intent') || panelSource.includes('deliver_intent')) {
+if (
+  panelSource.includes('WebSocket') ||
+  panelSource.includes('gather_intent') ||
+  panelSource.includes('deliver_intent') ||
+  panelSource.includes('refine_intent')
+) {
   fail('GatherPanel must not send wire messages directly');
 }
 requireLiteral('GatherPanel uses intent callbacks only', 'onGather(n.node_id)', panelSource);
 requireLiteral('GatherPanel uses deliver callbacks only', 'onDeliver(st.station_id)', panelSource);
+requireLiteral('GatherPanel uses refine callbacks only', 'onRefine(st.station_id)', panelSource);
 
 console.log('debug-client gather wire authority verifier passed');

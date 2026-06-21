@@ -838,6 +838,7 @@ function DebugApp() {
               me={state.world.me}
               onGather={api.sendGather}
               onDeliver={api.sendDeliver}
+              onRefine={api.sendRefine}
             />
           )}
           <div

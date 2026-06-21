@@ -159,9 +159,13 @@ export interface GameClientState {
     nodes: Map<string, GatherNodePublic>;
     stations: Map<string, GatherStationPublic>;
     activeNodeId: string | null;
+    // Refine (step 3): station currently being refined at, or null. A player is gathering XOR
+    // refining, so progressPct is shared between the two activities.
+    activeRefineStationId: string | null;
     progressPct: number;
     held: { item_type: string } | null;
     tendingTokens: number;
+    keystoneTokens: number;
     status: string | null;
   };
   // Property ownership ledger (last requested)
@@ -225,6 +229,8 @@ export interface GameClientApi {
   // Chill-Zone Gather v0 (Step 2)
   sendGather: (nodeId: string) => void;
   sendDeliver: (stationId: string) => void;
+  // Chill-Zone Refine (Step 3): refine the held raw item at a refinery station.
+  sendRefine: (stationId: string) => void;
   // Property auction and ledger
   getPropertyLedger: (propertyId: string) => void;
   openHouseAuction: (propertyId: string, minBid: number, minIncrement: number, durationSeconds: number) => void;

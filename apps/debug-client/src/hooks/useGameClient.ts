@@ -17,6 +17,7 @@ import type {
   PropertyPublic,
   GatherIntentMessage,
   DeliverIntentMessage,
+  RefineIntentMessage,
   GatherNodePublic,
   GatherStationPublic,
   TemResponseMessage,
@@ -170,7 +171,7 @@ function initialState(mapName: MapName): GameClientState {
     inventory: [],
     gold: 0,
     properties: new Map(),
-    gather: { nodes: new Map(), stations: new Map(), activeNodeId: null, progressPct: 0, held: null, tendingTokens: 0, status: null },
+    gather: { nodes: new Map(), stations: new Map(), activeNodeId: null, activeRefineStationId: null, progressPct: 0, held: null, tendingTokens: 0, keystoneTokens: 0, status: null },
     propertyLedger: null,
     auctionStates: new Map(),
     temChallenge: null,
@@ -496,7 +497,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
         inventory: [],
         gold: 0,
         properties: new Map(),
-        gather: { ...s.gather, nodes: new Map(), stations: new Map(), activeNodeId: null, progressPct: 0 },
+        gather: { ...s.gather, nodes: new Map(), stations: new Map(), activeNodeId: null, activeRefineStationId: null, progressPct: 0 },
       };
     },
     [clearMoveTimer]
@@ -751,6 +752,11 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
 
   const sendDeliver = useCallback((stationId: string) => {
     const payload: DeliverIntentMessage = { type: 'deliver_intent', station_id: stationId };
+    send(payload);
+  }, [send]);
+
+  const sendRefine = useCallback((stationId: string) => {
+    const payload: RefineIntentMessage = { type: 'refine_intent', station_id: stationId };
     send(payload);
   }, [send]);
 
@@ -1526,19 +1532,46 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
               if (data.ok === true) {
                 const itemType = typeof data.item_type === 'string' ? data.item_type : 'item';
                 const reward = typeof data.reward === 'string' ? data.reward : null;
+                const refined = data.refined === true;
                 return {
                   ...s,
                   conn,
                   gather: {
                     ...s.gather,
                     held: null,
-                    tendingTokens: s.gather.tendingTokens + (reward ? 1 : 0),
+                    tendingTokens: s.gather.tendingTokens + (reward && !refined ? 1 : 0),
+                    keystoneTokens: s.gather.keystoneTokens + (reward && refined ? 1 : 0),
                     status: reward ? `Delivered ${itemType} → +1 ${reward}` : `Delivered ${itemType}`,
                   },
                 };
               }
               const reason = typeof data.reason === 'string' ? data.reason : 'rejected';
               return { ...s, conn, gather: { ...s.gather, status: `Deliver rejected: ${reason}` } };
+            }
+
+            // Chill-Zone Refine (Step 3): mirror the gather result/progress/completed trio.
+            case 'refine_result': {
+              if (data.ok === true) {
+                const stationId = typeof data.station_id === 'string' ? data.station_id : null;
+                return { ...s, conn, gather: { ...s.gather, activeRefineStationId: stationId, progressPct: 0, status: 'Refining…' } };
+              }
+              const reason = typeof data.reason === 'string' ? data.reason : 'rejected';
+              return { ...s, conn, gather: { ...s.gather, status: `Refine rejected: ${reason}` } };
+            }
+
+            case 'refine_progress': {
+              if (data.station_id !== s.gather.activeRefineStationId) return { ...s, conn };
+              const pct = typeof data.progress_pct === 'number' ? data.progress_pct : s.gather.progressPct;
+              return { ...s, conn, gather: { ...s.gather, progressPct: pct } };
+            }
+
+            case 'refine_completed': {
+              const itemType = typeof data.item_type === 'string' ? data.item_type : 'item';
+              return {
+                ...s,
+                conn,
+                gather: { ...s.gather, activeRefineStationId: null, progressPct: 0, held: { item_type: itemType }, status: `Refined → ${itemType}` },
+              };
             }
 
             default:
@@ -2006,6 +2039,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     unlistHouse,
     sendGather,
     sendDeliver,
+    sendRefine,
     respondTemChallenge,
     dismissTemChallenge,
     respondTemWitness,

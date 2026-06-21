@@ -30,9 +30,15 @@ export function gatherMapOverlays(gather: GameClientState['gather']): MapDebugOv
       id: `gather-station-${station.station_id}`,
       x: station.x,
       y: station.y,
-      fill: 'rgba(96, 165, 250, 0.35)',
-      stroke: '#60a5fa',
-      label: 'C',
+      // Refinery (R, amber) vs curation stand (C, blue).
+      fill: station.kind === 'refinery' ? 'rgba(251, 191, 36, 0.35)' : 'rgba(96, 165, 250, 0.35)',
+      stroke:
+        station.kind === 'refinery' && gather.activeRefineStationId === station.station_id
+          ? '#f8fafc'
+          : station.kind === 'refinery'
+            ? '#fbbf24'
+            : '#60a5fa',
+      label: station.kind === 'refinery' ? 'R' : 'C',
     });
   }
 
