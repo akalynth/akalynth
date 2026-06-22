@@ -421,6 +421,24 @@ function DebugApp() {
   const respectRank = respectRankForReputation(respectValue);
   const playerPositionLabel = state.world.me ? `${state.world.me.x},${state.world.me.y}` : '--';
   const hasWorldPlayer = Boolean(state.world.me);
+
+  // Houses v1: surface Enter/Leave House when standing on a house plot / inside a house.
+  // Server is authoritative on ownership; the client only gates the button to plot tiles.
+  const meBadges = (state.world.me as { badges?: string[] } | null | undefined)?.badges ?? [];
+  const insideHouse = meBadges.includes('inside_house');
+  const housePlots =
+    (state.world.map.landmarks as
+      | { house_plots?: Array<{ id: string; x: number; y: number; width: number; height: number }> }
+      | undefined)?.house_plots ?? [];
+  const onHousePlot =
+    !!state.world.me &&
+    housePlots.some(
+      (p) =>
+        state.world.me!.x >= p.x &&
+        state.world.me!.x < p.x + p.width &&
+        state.world.me!.y >= p.y &&
+        state.world.me!.y < p.y + p.height,
+    );
   const accountPanelMode = !presentationMode && !state.session.authenticated;
   const presentationEntryMode = presentationMode && !hasWorldPlayer;
   const showPlayEntry =
@@ -938,6 +956,8 @@ function DebugApp() {
                 onTickWork={api.tickWork}
                 onBuy={api.useSkill}
                 onWorldEventAction={api.useSkill}
+                onHousePlot={onHousePlot}
+                insideHouse={insideHouse}
                 onGiftGold={() => state.combat.targetId && api.useSkill('social:gift:gold', state.combat.targetId)}
                 onUseItem={(itemId) => api.useSkill('item:use:' + itemId)}
                 attackReady={attackReady}

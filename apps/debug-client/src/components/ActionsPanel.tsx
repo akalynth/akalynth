@@ -105,6 +105,8 @@ interface ActionsPanelProps {
   onTickWork: () => void;
   onBuy: (skillId: string) => void;
   onWorldEventAction: (skillId: string) => void;
+  onHousePlot?: boolean;
+  insideHouse?: boolean;
   onGiftGold: () => void;
   onUseItem: (itemId: string) => void;
   attackReady: boolean;
@@ -135,6 +137,8 @@ export function ActionsPanel({
   onTickWork,
   onBuy,
   onWorldEventAction,
+  onHousePlot = false,
+  insideHouse = false,
   onGiftGold,
   onUseItem,
   attackReady,
@@ -274,6 +278,24 @@ export function ActionsPanel({
                 aria-label="Join the guild"
               >
                 Guild
+              </button>
+            )}
+            {onHousePlot && !insideHouse && (
+              <button
+                className="action-btn mobile-hotbar-btn pickup-btn"
+                onClick={() => onWorldEventAction('house:enter')}
+                aria-label="Enter your house"
+              >
+                Enter
+              </button>
+            )}
+            {insideHouse && (
+              <button
+                className="action-btn mobile-hotbar-btn pickup-btn"
+                onClick={() => onWorldEventAction('house:exit')}
+                aria-label="Leave your house"
+              >
+                Leave
               </button>
             )}
             {inRookguardProfessionHall && VOCATION_ACTIONS.map((action) => (
@@ -505,6 +527,21 @@ export function ActionsPanel({
               >
                 Join the Guild
               </button>
+            </div>
+          )}
+          {(onHousePlot || insideHouse) && (
+            <div className="shop-section">
+              <div className="shop-header">House</div>
+              {onHousePlot && !insideHouse && (
+                <button className="action-btn pickup-btn" onClick={() => onWorldEventAction('house:enter')}>
+                  Enter House
+                </button>
+              )}
+              {insideHouse && (
+                <button className="action-btn pickup-btn" onClick={() => onWorldEventAction('house:exit')}>
+                  Leave House
+                </button>
+              )}
             </div>
           )}
           {inGuildHall && (
