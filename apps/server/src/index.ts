@@ -387,9 +387,13 @@ const CAPS_DEBUG_GRANT_SOVEREIGN = parseBoolEnv(process.env.CAPS_DEBUG_GRANT_SOV
 const GUILD_ENABLED = parseBoolEnv(process.env.GUILD_ENABLED, DEBUG_MODE);
 const GUILD_JOINED_ACTION = 'guild_joined';
 const GUILD_MEMBER_BADGE = 'guild_member';
+// Guild contribution: a repeatable receipted activity for members (no gold; proof-native).
+const GUILD_CONTRIBUTION_ACTION = 'guild_contribution';
 // Set of player ids that have joined the guild this process (durable truth is the
 // guild_joined receipt; this restores the member badge across reconnects within a run).
 const guildMembers = new Set<string>();
+// player_id -> contribution count this process (durable truth is the guild_contribution receipts).
+const guildContributions = new Map<string, number>();
 
 // Houses v1: first runtime Door/House authority gate (owner-gated entry). Additive,
 // routed through use_skill ('house:enter' / 'house:exit'), receipted, behind HOUSES_ENABLED.
@@ -6008,6 +6012,32 @@ function processSessionQueue(s: Session, now: number) {
           s.player.badges = [...(s.player.badges ?? []), GUILD_MEMBER_BADGE];
           send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { guild_member: true } }));
           sendLoopUpdate(s, 'guild_joined');
+          break;
+        }
+
+        // Guild v1: contribute to the guild (members only, at a guild hall). Repeatable,
+        // receipted, no gold — gives members a proof-native activity + visible progress.
+        if (GUILD_ENABLED && msg.skill_id === 'guild:contribute') {
+          const isMember = guildMembers.has(s.player.id) || (s.player.badges ?? []).includes(GUILD_MEMBER_BADGE);
+          if (!isMember) {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_skill', payload: { error: 'not_member' } }));
+            break;
+          }
+          const place = getCurrentPlace(s.player.id);
+          if (place !== 'rookguard:guild_hall' && place !== 'azura:guild_hall') {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_target' }));
+            break;
+          }
+          const next = (guildContributions.get(s.player.id) ?? 0) + 1;
+          guildContributions.set(s.player.id, next);
+          audit.write({
+            player_id: s.player.id,
+            action: GUILD_CONTRIBUTION_ACTION,
+            inputs: { place_id: place, contribution_count: next },
+            result: 'ok',
+          });
+          send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { contribution_count: next } }));
+          sendLoopUpdate(s, 'guild_contribution');
           break;
         }
 

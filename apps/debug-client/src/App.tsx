@@ -426,6 +426,7 @@ function DebugApp() {
   // Server is authoritative on ownership; the client only gates the button to plot tiles.
   const meBadges = (state.world.me as { badges?: string[] } | null | undefined)?.badges ?? [];
   const insideHouse = meBadges.includes('inside_house');
+  const isGuildMember = meBadges.includes('guild_member');
   const housePlots =
     (state.world.map.landmarks as
       | { house_plots?: Array<{ id: string; x: number; y: number; width: number; height: number }> }
@@ -958,6 +959,7 @@ function DebugApp() {
                 onWorldEventAction={api.useSkill}
                 onHousePlot={onHousePlot}
                 insideHouse={insideHouse}
+                isGuildMember={isGuildMember}
                 onGiftGold={() => state.combat.targetId && api.useSkill('social:gift:gold', state.combat.targetId)}
                 onUseItem={(itemId) => api.useSkill('item:use:' + itemId)}
                 attackReady={attackReady}
