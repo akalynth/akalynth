@@ -1,6 +1,6 @@
-// Builder palette thumbnails — reuse public site + codex plates (A1).
-import rookguardThumb from '../../../../../akalynth-site/assets/akalynth/visuals/thumbs/02-rookguard-gate.thumb-480x720.webp';
-import gameLoopPoster from '../../../../../akalynth-codex/assets/out/akalynth-game-loop-bible-poster-v1.png';
+// Builder palette thumbnails — vendored for lane builds (A1).
+import rookguardThumb from '../assets/builder/rookguard-gate.thumb.webp';
+import gameLoopPoster from '../assets/builder/game-loop-poster-v1.png';
 
 export const BUILDER_PALETTE_ASSETS = {
   sign: rookguardThumb,

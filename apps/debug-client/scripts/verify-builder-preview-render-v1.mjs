@@ -37,8 +37,7 @@ requirePattern('server fork in world snapshot', /builderPreview/, gameClient, 's
 requirePattern('world_state builder_preview parse', /builder_preview/, gameClient, 'src/hooks/useGameClient.ts');
 requirePattern('merged server overlays', /serverBuilderOverlays/, app, 'src/App.tsx');
 requirePattern('world builderPreview source', /state\.world\.builderPreview/, app, 'src/App.tsx');
-requirePattern('rookguard thumb import', /akalynth-site/, paletteAssets, 'src/data/builderPaletteAssets.ts');
-requirePattern('codex poster import', /akalynth-codex/, paletteAssets, 'src/data/builderPaletteAssets.ts');
+
 
 const manifest = JSON.parse(palette);
 if (!manifest.icons.every((icon) => icon.icon_asset)) {
@@ -46,13 +45,14 @@ if (!manifest.icons.every((icon) => icon.icon_asset)) {
   process.exit(1);
 }
 
-const thumbPath = resolve(opsReposRoot, 'akalynth-site/assets/akalynth/visuals/thumbs/02-rookguard-gate.thumb-480x720.webp');
-const posterPath = resolve(opsReposRoot, 'akalynth-codex/assets/out/akalynth-game-loop-bible-poster-v1.png');
+const thumbPath = resolve(root, 'src/assets/builder/rookguard-gate.thumb.webp');
+const posterPath = resolve(root, 'src/assets/builder/game-loop-poster-v1.png');
 for (const assetPath of [thumbPath, posterPath]) {
   if (!existsSync(assetPath)) {
-    console.error(`builder-preview-render-v1: missing asset ${assetPath}`);
+    console.error(`builder-preview-render-v1: missing vendored asset ${assetPath}`);
     process.exit(1);
   }
 }
+requirePattern('vendored thumb import', /src\/assets\/builder/, paletteAssets, 'src/data/builderPaletteAssets.ts');
 
 console.log('OK — Builder preview world_state fork overlays + palette assets (G1/A1/G2)');
