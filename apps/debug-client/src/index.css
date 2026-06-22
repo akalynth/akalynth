@@ -5108,6 +5108,119 @@ body {
 }
 
 /* ============================================================================
+   Character create sprite preview (PR-025)
+   ============================================================================ */
+
+.character-sprite-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0.45rem 0.35rem 0.25rem;
+  border: 1px solid rgba(226, 183, 20, 0.18);
+  border-radius: 6px;
+  background: rgba(8, 12, 20, 0.55);
+}
+
+.character-sprite-preview__canvas {
+  display: block;
+  image-rendering: pixelated;
+  border-radius: 4px;
+  background: #12121f;
+}
+
+.character-sprite-preview__label {
+  color: var(--classic-muted, var(--muted));
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ============================================================================
+   Chronicle glyphs + death chrome (PR-026)
+   ============================================================================ */
+
+.chronicle-glyph,
+.chronicle-glyph-fallback {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chronicle-glyph {
+  image-rendering: pixelated;
+}
+
+.chronicle-glyph-fallback {
+  border-radius: 4px;
+  background: rgba(15, 23, 42, 0.85);
+  color: var(--muted);
+  font-family: ui-monospace, monospace;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.chronicle-icon.chronicle-glyph,
+.chronicle-icon.chronicle-glyph-fallback {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.recap-glyph,
+.death-modal__glyph {
+  flex-shrink: 0;
+}
+
+.recap-header {
+  gap: 0.5rem;
+}
+
+.recap-header .recap-title {
+  flex: 1;
+  text-align: center;
+}
+
+/* ============================================================================
+   HUD PNG chrome polish (PR-027)
+   ============================================================================ */
+
+.toast__button {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.toast__glyph {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.toast-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.hud-card.nine-slice-panel,
+.recap-sheet.nine-slice-panel,
+.death-modal.nine-slice-panel,
+.toast.nine-slice-panel {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* ============================================================================
    Account character form
    ============================================================================ */
 

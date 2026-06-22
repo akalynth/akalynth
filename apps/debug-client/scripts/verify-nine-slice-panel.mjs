@@ -51,8 +51,15 @@ requirePattern('registry fetch', /registry\.json/, registryHook, 'src/hooks/useA
 
 const config = read('src/config.ts');
 requirePattern('USE_NINE_SLICE_WEB flag', /VITE_USE_NINE_SLICE_WEB/, config, 'src/config.ts');
+requirePattern('nine-slice default on (PR-026)', /VITE_USE_NINE_SLICE_WEB !== 'false'/, config, 'src/config.ts');
+
+const hudChrome = read('src/components/HudChromePanel.tsx');
+requirePattern('HudChromePanel export (PR-027)', /export function HudChromePanel/, hudChrome, 'src/components/HudChromePanel.tsx');
+
+const app = read('src/App.tsx');
+requirePattern('HudChromePanel wired', /HudChromePanel/, app, 'src/App.tsx');
 
 const pkg = read('package.json');
 requirePattern('verify script wired', /verify-nine-slice-panel/, pkg, 'package.json');
 
-console.log('\nOK — NineSlicePanel chrome scaffolding (PR-024)');
+console.log('\nOK — NineSlicePanel chrome scaffolding (PR-024/027)');

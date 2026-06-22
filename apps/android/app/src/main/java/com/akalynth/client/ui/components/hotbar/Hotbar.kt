@@ -9,6 +9,7 @@ import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -33,6 +34,8 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.akalynth.client.ui.theme.NineSliceBox
+import com.akalynth.client.ui.theme.rememberUiTextures
 
 /**
  * Hotbar component for quick item access.
@@ -58,20 +61,48 @@ fun Hotbar(
         "Hotbar requires exactly $HOTBAR_SLOT_COUNT slots, got ${slots.size}"
     }
 
-    Row(
-        modifier = modifier
-            .testTag("Hotbar"),
-        horizontalArrangement = Arrangement.spacedBy(HOTBAR_SLOT_GAP),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        slots.forEachIndexed { index, item ->
-            HotbarSlot(
-                index = index,
-                item = item,
-                onTap = { onSlotTap(index) },
-                onLongPress = { onSlotLongPress(index) },
-                modifier = Modifier.testTag("Hotbar_Slot_$index")
-            )
+    val textures = rememberUiTextures()
+    val slotRow: @Composable () -> Unit = {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(HOTBAR_SLOT_GAP),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            slots.forEachIndexed { index, item ->
+                HotbarSlot(
+                    index = index,
+                    item = item,
+                    onTap = { onSlotTap(index) },
+                    onLongPress = { onSlotLongPress(index) },
+                    modifier = Modifier.testTag("Hotbar_Slot_$index"),
+                )
+            }
+        }
+    }
+
+    if (textures.dockFrame != null) {
+        NineSliceBox(
+            frame = textures.dockFrame,
+            slicePx = textures.dockSlice,
+            modifier = modifier.testTag("Hotbar"),
+            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
+        ) {
+            slotRow()
+        }
+    } else {
+        Row(
+            modifier = modifier.testTag("Hotbar"),
+            horizontalArrangement = Arrangement.spacedBy(HOTBAR_SLOT_GAP),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            slots.forEachIndexed { index, item ->
+                HotbarSlot(
+                    index = index,
+                    item = item,
+                    onTap = { onSlotTap(index) },
+                    onLongPress = { onSlotLongPress(index) },
+                    modifier = Modifier.testTag("Hotbar_Slot_$index"),
+                )
+            }
         }
     }
 }
