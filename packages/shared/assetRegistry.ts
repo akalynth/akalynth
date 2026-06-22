@@ -48,7 +48,7 @@ export interface WorldVisualAnchor {
 export interface WorldVisualRendering {
   filtering: 'nearest';
   display_only: true;
-  draw_scale?: number;
+  draw_scale: number;
   anchor: WorldVisualAnchor;
   layer: WorldVisualLayer;
   z_policy?: WorldVisualZPolicy;
@@ -77,7 +77,9 @@ export interface AssetManifest {
 
 /** Resolve canonical world asset_id from a short placement id (e.g. grass_01). */
 export function canonicalWorldAssetId(shortId: string): string {
-  return `${WORLD_ASSET_ID_PREFIX}${shortId}`;
+  return shortId.startsWith(WORLD_ASSET_ID_PREFIX)
+    ? shortId
+    : `${WORLD_ASSET_ID_PREFIX}${shortId}`;
 }
 
 /** Strip akalynth_world_ prefix when present; returns input unchanged for non-world ids. */

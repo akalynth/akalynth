@@ -79,7 +79,7 @@ World sidecars have **no factory `status`**; inclusion requires PNG + A-10 rules
 |----------------------|------------------------|
 | `filtering` | `filtering` | Always `"nearest"` |
 | `display_only` | `display_only` | Always `true` |
-| `draw_scale` | `draw_scale` | Optional positive number |
+| `draw_scale` | `draw_scale` | Required positive number (A-10); compiler fails if absent |
 | `anchor.type` | `anchor.type` | `tile_top_left`, `bottom_center`, `bottom_left`, `center` |
 | `anchor.source_pixels` | `anchor.source_pixels` | `[x, y]` tuple |
 | `layer` | `layer` | `terrain`, `object_overlay`, `floor_overlay` |
@@ -88,6 +88,8 @@ World sidecars have **no factory `status`**; inclusion requires PNG + A-10 rules
 ### Item manifest (`sprites/item__<name>.json`)
 
 Item manifests use the **factory sidecar** schema with `asset_type: "item"`. Normalization follows the factory table; `item_type` is required (PR-002) and becomes the primary lookup key for `AssetRegistry.itemIcon(itemType)` at runtime.
+
+**Registry inclusion (items only):** unlike other factory assets (any verified `status`), item entries enter the registry only when `status === "promoted"` **and** `item_type` is present. Non-promoted items may still pass `verify:assets` once PR-002 lands, but `compile-registry.mjs` skips them until promoted. Atlas packing for items follows the same `promoted` gate.
 
 ## Example entries (one per source type)
 

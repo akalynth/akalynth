@@ -58,7 +58,7 @@
     "worldVisualRendering": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["filtering", "display_only", "anchor", "layer"],
+      "required": ["filtering", "display_only", "draw_scale", "anchor", "layer"],
       "properties": {
         "filtering": { "type": "string", "const": "nearest" },
         "display_only": { "type": "boolean", "const": true },
@@ -98,7 +98,10 @@
         "asset_type": { "type": "string", "minLength": 1 },
         "file": { "type": "string", "minLength": 1 },
         "frame": { "$ref": "#/$defs/assetFrame" },
-        "style_contract": { "type": "string", "minLength": 1 },
+        "style_contract": {
+          "type": "string",
+          "const": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1"
+        },
         "mechanics": { "type": "null" },
         "atlas": { "$ref": "#/$defs/atlasRect" },
         "slice_px": { "type": "integer", "minimum": 0 },
@@ -112,12 +115,47 @@
       },
       "allOf": [
         {
+          "if": { "properties": { "source": { "const": "factory" } } },
+          "then": {
+            "properties": {
+              "kind": false,
+              "slice_px": false,
+              "rendering": false
+            }
+          }
+        },
+        {
           "if": { "properties": { "source": { "const": "ui_pack" } } },
-          "then": { "required": ["kind", "slice_px"] }
+          "then": {
+            "required": ["kind", "slice_px"],
+            "properties": {
+              "asset_type": { "const": "ui" },
+              "rendering": false,
+              "item_type": false,
+              "chronicle_kind": false
+            }
+          }
         },
         {
           "if": { "properties": { "source": { "const": "world_sidecar" } } },
-          "then": { "required": ["rendering"] }
+          "then": {
+            "required": ["rendering"],
+            "properties": {
+              "asset_type": {
+                "enum": [
+                  "terrain_tile",
+                  "wall_overlay",
+                  "door_overlay",
+                  "world_object",
+                  "floor_overlay"
+                ]
+              },
+              "kind": false,
+              "slice_px": false,
+              "item_type": false,
+              "chronicle_kind": false
+            }
+          }
         },
         {
           "if": {
