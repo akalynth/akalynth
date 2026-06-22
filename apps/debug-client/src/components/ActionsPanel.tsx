@@ -107,6 +107,7 @@ interface ActionsPanelProps {
   onWorldEventAction: (skillId: string) => void;
   onHousePlot?: boolean;
   insideHouse?: boolean;
+  isGuildMember?: boolean;
   onGiftGold: () => void;
   onUseItem: (itemId: string) => void;
   attackReady: boolean;
@@ -139,6 +140,7 @@ export function ActionsPanel({
   onWorldEventAction,
   onHousePlot = false,
   insideHouse = false,
+  isGuildMember = false,
   onGiftGold,
   onUseItem,
   attackReady,
@@ -274,10 +276,10 @@ export function ActionsPanel({
             {(inRookguardProfessionHall || inGuildHall) && (
               <button
                 className="action-btn mobile-hotbar-btn shop-btn"
-                onClick={() => onWorldEventAction('guild:join')}
-                aria-label="Join the guild"
+                onClick={() => onWorldEventAction(isGuildMember ? 'guild:contribute' : 'guild:join')}
+                aria-label={isGuildMember ? 'Tend the guild' : 'Join the guild'}
               >
-                Guild
+                {isGuildMember ? 'Tend' : 'Guild'}
               </button>
             )}
             {onHousePlot && !insideHouse && (
@@ -521,12 +523,21 @@ export function ActionsPanel({
           {(inGuildHall || inRookguardProfessionHall) && (
             <div className="shop-section">
               <div className="shop-header">Guild</div>
-              <button
-                className="action-btn shop-btn"
-                onClick={() => onWorldEventAction('guild:join')}
-              >
-                Join the Guild
-              </button>
+              {isGuildMember ? (
+                <button
+                  className="action-btn shop-btn"
+                  onClick={() => onWorldEventAction('guild:contribute')}
+                >
+                  Tend the Guild
+                </button>
+              ) : (
+                <button
+                  className="action-btn shop-btn"
+                  onClick={() => onWorldEventAction('guild:join')}
+                >
+                  Join the Guild
+                </button>
+              )}
             </div>
           )}
           {(onHousePlot || insideHouse) && (
