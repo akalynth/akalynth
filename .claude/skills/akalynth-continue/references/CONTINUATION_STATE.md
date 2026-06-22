@@ -43,10 +43,16 @@ Read this before implementing. For skill routing see `AGENTS.md` and `.codex/COD
    WIP patch. **Note:** this file was reverted during cleanup; this update restores
    accurate state.
 
-**Beta runtime drift (ops):** `/opt/akalynth-beta` carries the Origin Act server hotfix
-**and** the UI `/play/` CSS hotfix on top of git `bceaf10`. Both are now on `origin/main`
-(#345 + #348-pending), so a clean full deploy from `origin/main` reconciles the drift.
-Rollback `.bak`/tar paths are in each evidence dir.
+**Beta runtime — RECONCILED (clean deploy done 2026-06-22).** The two `/opt/akalynth-beta`
+hotfix drifts (Origin Act server fix + UI `/play/` CSS) were folded into a full clean deploy
+from `origin/main`: `/opt/akalynth-beta` hard-reset `bceaf10 → c537ce0` (via bundle, since the
+host has no GitHub remote and the squash-merge was non-fast-forward), then
+`bin/akalynth-lane-deploy.sh beta publish-account-play` rebuilt + restarted + republished
+`/play/` + ran the live smoke. **Verified:** beta-api/web/`/play/` all 200, DB still
+`schema_version=22` (606 players, no spurious migration), `smoke:beta-account-play` pass
+(28 checks). Now running build `c537ce05 (main)`. Evidence:
+`evidence/20260622T121804Z-beta-publish-account-play/`. **`/opt` is clean at `origin/main`** —
+no more drift.
 
 ---
 
@@ -56,8 +62,8 @@ Rollback `.bak`/tar paths are in each evidence dir.
 |------|--------|
 | Repo | `https://github.com/akalynth/akalynth` |
 | Branch | `main` |
-| Head | `d088eb8` — Reconcile deployed beta state (226dd25): Rookguard assets + Rust bridge cleanup (#346) |
-| Last merged | #345 Origin Act fix (`4e36524`) → #346 226dd25 reconcile + chronicle CI fix (`d088eb8`); #348 web /play/ UI polish pending |
+| Head | `c537ce0` — docs(continuation): update handoff for 2026-06-22 session (#349) |
+| Last merged | #345 Origin Act fix → #346 226dd25 reconcile + chronicle CI fix (`d088eb8`) → #348 web /play/ UI polish (`0504381`) → #349 handoff (`c537ce0`). Beta deployed clean from `origin/main`. |
 | Local source | `/home/sovereign/akalynth-ops/repos/akalynth` |
 
 **Included in main since `8ee2d90` (2026-06-20 → 2026-06-21):**
@@ -266,11 +272,11 @@ AKALYNTH_UI_SCENARIOS=azura_gather ./scripts/goal0-android-ui-inspect.sh
 
 ## Open / next work (as of 2026-06-22 handoff)
 
-1. **Merge PR #348** (web `/play/` UI polish → main) once CI is green — completes the
-   2026-06-22 set. Then `origin/main` fully matches what's live on beta.
-2. **Full clean deploy of beta from `origin/main`** to reconcile the two `/opt/akalynth-beta`
-   hotfix drifts (Origin Act server fix + UI CSS). Use the supported publish flow
-   (`bin/akalynth-lane-deploy.sh beta publish-account-play`) — needs explicit auth.
+1. ~~**Merge PR #348** (web `/play/` UI polish)~~ — **done** (merged `0504381`; #346 reconcile
+   `d088eb8` and #349 handoff `c537ce0` also merged). `origin/main` == what's live on beta.
+2. ~~**Full clean deploy of beta from `origin/main`**~~ — **done 2026-06-22** (`/opt` reconciled
+   `bceaf10 → c537ce0`, rebuilt + restarted + `/play/` republished + live smoke 28/28). See the
+   "Beta runtime — RECONCILED" note above. No drift remains.
 3. **Chronicle-rust now on main (`crates/chronicle/`).** It was previously *parked* as
    premature; reconciled via #346. The CI fixture generator runs via tsx; the Rust parity
    gate still needs a `cargo` toolchain on the runners before it can run (per chronicle
