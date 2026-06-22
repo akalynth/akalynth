@@ -81,7 +81,9 @@ assets point to a tracked test map that references the asset. See
 
 This gate runs in **CI**: the `assets` verifier is registered in the verification
 spine and included in the `quick` profile that CI executes, so the manifest/lineage
-rules are enforced before merge — not only locally.
+rules are enforced before merge — not only locally. Mirror drift across
+`data/assets-built/` and client bundles is enforced by `npm run verify:asset-sync`;
+see `docs/ASSET_SYNC_POLICY.md`.
 
 ## Current state
 

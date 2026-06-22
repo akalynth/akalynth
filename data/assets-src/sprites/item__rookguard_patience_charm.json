@@ -1,0 +1,30 @@
+{
+  "game": "Akalynth",
+  "asset_type": "item",
+  "biome": null,
+  "status": "promoted",
+  "dimensions_px": [
+    32,
+    32
+  ],
+  "dimensions_target_px": [
+    32,
+    32
+  ],
+  "camera": "top_down_slight_isometric",
+  "background": "transparent",
+  "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+  "prompt_file": null,
+  "raw_file": null,
+  "tilemap_test": "data/assets-src/test-maps/p1-item-icons-v1.json",
+  "license_status": "hand_authored",
+  "review_status": "approved",
+  "tile_code": null,
+  "mechanics": null,
+  "copyright_boundary": "original hand-authored placeholder asset; no copied third-party sprite, UI, logo, or map layout",
+  "asset_id": "akalynth_item_rookguard_patience_charm_001",
+  "item_type": "rookguard_patience_charm",
+  "cleaned_file": "data/assets-src/sprites/item__rookguard_patience_charm.png",
+  "sha256": "9bd6941f2fdbcb357f86106103a7d154baf3d8773d71c39d22630e4cb43ec98a",
+  "notes": "P1 placeholder: amber patience charm square; replace with readable trinket icon before final art pass."
+}

@@ -149,11 +149,9 @@ fun HotbarSlot(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxSize().padding(4.dp)
             ) {
-                // Icon placeholder
-                Text(
-                    text = getItemIcon(item),
-                    fontSize = 20.sp,
-                    modifier = Modifier.testTag("Hotbar_Slot_${index}_Icon")
+                ItemIcon(
+                    item = item,
+                    testTag = "Hotbar_Slot_${index}_Icon",
                 )
 
                 // Stack count (if stackable)
@@ -177,23 +175,6 @@ fun HotbarSlot(
                 modifier = Modifier.testTag("Hotbar_Slot_${index}_Empty")
             )
         }
-    }
-}
-
-/**
- * Get placeholder icon for item.
- * In production, this would load actual sprite assets.
- */
-private fun getItemIcon(item: Item): String {
-    return when {
-        item.name.contains("sword", ignoreCase = true) -> "⚔"
-        item.name.contains("potion", ignoreCase = true) -> "🧪"
-        item.name.contains("shield", ignoreCase = true) -> "🛡"
-        item.name.contains("bow", ignoreCase = true) -> "🏹"
-        item.name.contains("staff", ignoreCase = true) -> "🪄"
-        item.name.contains("ring", ignoreCase = true) -> "💍"
-        item.name.contains("gem", ignoreCase = true) -> "💎"
-        else -> "📦"
     }
 }
 

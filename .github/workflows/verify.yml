@@ -63,6 +63,10 @@ jobs:
             --format json \
             --out verify-out
 
+      - name: Verify asset mirror sync
+        if: github.event_name != 'pull_request'
+        run: npm run verify:asset-sync
+
       - name: Verify account-character parity
         if: github.event_name != 'pull_request' && github.server_url == 'https://github.com'
         run: npm run verify:account-character

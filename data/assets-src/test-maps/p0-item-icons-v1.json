@@ -1,0 +1,71 @@
+{
+  "id": "p0_item_icons_v1",
+  "kind": "asset_tilemap_test",
+  "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+  "tile_size_px": 32,
+  "canvas_tiles": [
+    5,
+    1
+  ],
+  "scope": "Source-side visual placement proof for P0 inventory item icons (torch, ration, mark_token, training_slime_goo, ley_mote). Display only; no mechanics.",
+  "runtime_authority": "Display only. Inventory keys, drops, gather rewards, and receipt behavior remain server-authoritative.",
+  "assets": [
+    "akalynth_item_torch_001",
+    "akalynth_item_ration_001",
+    "akalynth_item_mark_token_001",
+    "akalynth_item_training_slime_goo_001",
+    "akalynth_item_ley_mote_001"
+  ],
+  "placements": [
+    {
+      "asset_id": "akalynth_item_torch_001",
+      "cleaned_file": "data/assets-src/sprites/item__torch.png",
+      "x": 0,
+      "y": 0,
+      "role": "torch inventory icon placeholder",
+      "tile_code": null,
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_item_ration_001",
+      "cleaned_file": "data/assets-src/sprites/item__ration.png",
+      "x": 1,
+      "y": 0,
+      "role": "ration inventory icon placeholder",
+      "tile_code": null,
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_item_mark_token_001",
+      "cleaned_file": "data/assets-src/sprites/item__mark_token.png",
+      "x": 2,
+      "y": 0,
+      "role": "mark_token inventory icon placeholder",
+      "tile_code": null,
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_item_training_slime_goo_001",
+      "cleaned_file": "data/assets-src/sprites/item__training_slime_goo.png",
+      "x": 3,
+      "y": 0,
+      "role": "training_slime_goo inventory icon placeholder",
+      "tile_code": null,
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_item_ley_mote_001",
+      "cleaned_file": "data/assets-src/sprites/item__ley_mote.png",
+      "x": 4,
+      "y": 0,
+      "role": "ley_mote inventory icon placeholder",
+      "tile_code": null,
+      "mechanics": null
+    }
+  ],
+  "checks": [
+    "all placements reference tracked cleaned PNGs and sidecars",
+    "all mechanics fields are null",
+    "item_type fields match server protocol inventory keys"
+  ]
+}

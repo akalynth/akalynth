@@ -26,38 +26,6 @@ enum class EventSource {
 }
 
 /**
- * Chronicle event kinds matching server receipt types.
- * Closed enum - no stringly-typed kinds allowed.
- */
-enum class ChronicleEventKind {
-    DEATH,
-    ZONE_ENTER,
-    ITEM_PICKUP,
-    ITEM_DROP,
-    COMBAT_KILL,
-    TUTORIAL_COMPLETE,
-    CHARACTER_CREATED,
-    WORLD_EVENT,
-    UNKNOWN;
-
-    /** Icon for display in chronicle feed */
-    val icon: String get() = when (this) {
-        DEATH -> "☠"
-        ZONE_ENTER -> "🏛"
-        ITEM_PICKUP -> "📦"
-        ITEM_DROP -> "📤"
-        COMBAT_KILL -> "⚔"
-        TUTORIAL_COMPLETE -> "🎓"
-        CHARACTER_CREATED -> "✨"
-        WORLD_EVENT -> "✦"
-        UNKNOWN -> "❓"
-    }
-
-    /** Whether this event kind is tappable (opens detail view) */
-    val isTappable: Boolean get() = this == DEATH
-}
-
-/**
  * Canonical chronicle event model.
  *
  * Key principles:

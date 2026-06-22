@@ -25,6 +25,8 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.akalynth.client.assets.AssetRegistry
+import com.akalynth.client.assets.rememberAssetRegistry
 
 /** Loaded Classic 32 gameplay UI chrome (nine-slice frames + circular action buttons). */
 data class UiTextures(
@@ -51,31 +53,56 @@ data class UiTextures(
 @Composable
 fun rememberUiTextures(): UiTextures {
     val context = LocalContext.current
-    return remember(context) { loadUiTextures(context) }
+    val registry = rememberAssetRegistry()
+    return remember(context, registry) { loadUiTextures(context, registry) }
 }
 
-private fun loadUiTextures(context: Context): UiTextures = UiTextures(
-    panelFrame = loadBitmap(context, "ui/ui_panel_frame.png"),
-    panelSlice = 8,
-    buttonFrame = loadBitmap(context, "ui/ui_button_frame.png"),
-    buttonPressedFrame = loadBitmap(context, "ui/ui_button_pressed_frame.png"),
-    buttonSlice = 6,
-    dockFrame = loadBitmap(context, "ui/ui_dock_frame.png"),
-    dockSlice = 8,
-    dpadFrame = loadBitmap(context, "ui/ui_dpad_frame.png"),
-    dpadSlice = 10,
-    actionRing = loadBitmap(context, "ui/ui_action_ring.png"),
-    actionRingPressed = loadBitmap(context, "ui/ui_action_ring_pressed.png"),
-    actionRingDanger = loadBitmap(context, "ui/ui_action_ring_danger.png"),
-    dpadButton = loadBitmap(context, "ui/ui_dpad_button.png"),
-    dpadButtonPressed = loadBitmap(context, "ui/ui_dpad_button_pressed.png"),
-    hpFill = loadBitmap(context, "ui/ui_hp_fill.png"),
-    mpFill = loadBitmap(context, "ui/ui_mp_fill.png"),
-    barTrack = loadBitmap(context, "ui/ui_bar_track.png"),
-    barSlice = 2,
-)
+private fun loadUiTextures(context: Context, registry: AssetRegistry?): UiTextures {
+    fun resolved(stem: String, legacyPath: String, fallbackSlice: Int): Pair<ImageBitmap?, Int> {
+        val entry = registry?.uiEntry(stem)
+        val bitmap = entry?.let { registry.loadBitmapForEntry(it) }
+            ?: loadLegacyBitmap(context, legacyPath)
+        val slice = entry?.slicePx ?: fallbackSlice
+        return bitmap to slice
+    }
 
-private fun loadBitmap(context: Context, assetPath: String): ImageBitmap? = try {
+    val panel = resolved("ui_panel_frame", "ui/ui_panel_frame.png", 8)
+    val button = resolved("ui_button_frame", "ui/ui_button_frame.png", 6)
+    val buttonPressed = resolved("ui_button_pressed_frame", "ui/ui_button_pressed_frame.png", 6)
+    val dock = resolved("ui_dock_frame", "ui/ui_dock_frame.png", 8)
+    val dpad = resolved("ui_dpad_frame", "ui/ui_dpad_frame.png", 10)
+    val actionRing = resolved("ui_action_ring", "ui/ui_action_ring.png", 0)
+    val actionRingPressed = resolved("ui_action_ring_pressed", "ui/ui_action_ring_pressed.png", 0)
+    val actionRingDanger = resolved("ui_action_ring_danger", "ui/ui_action_ring_danger.png", 0)
+    val dpadButton = resolved("ui_dpad_button", "ui/ui_dpad_button.png", 0)
+    val dpadButtonPressed = resolved("ui_dpad_button_pressed", "ui/ui_dpad_button_pressed.png", 0)
+    val hpFill = resolved("ui_hp_fill", "ui/ui_hp_fill.png", 2)
+    val mpFill = resolved("ui_mp_fill", "ui/ui_mp_fill.png", 2)
+    val barTrack = resolved("ui_bar_track", "ui/ui_bar_track.png", 2)
+
+    return UiTextures(
+        panelFrame = panel.first,
+        panelSlice = panel.second,
+        buttonFrame = button.first,
+        buttonPressedFrame = buttonPressed.first,
+        buttonSlice = button.second,
+        dockFrame = dock.first,
+        dockSlice = dock.second,
+        dpadFrame = dpad.first,
+        dpadSlice = dpad.second,
+        actionRing = actionRing.first,
+        actionRingPressed = actionRingPressed.first,
+        actionRingDanger = actionRingDanger.first,
+        dpadButton = dpadButton.first,
+        dpadButtonPressed = dpadButtonPressed.first,
+        hpFill = hpFill.first,
+        mpFill = mpFill.first,
+        barTrack = barTrack.first,
+        barSlice = barTrack.second,
+    )
+}
+
+private fun loadLegacyBitmap(context: Context, assetPath: String): ImageBitmap? = try {
     val opts = BitmapFactory.Options().apply { inScaled = false }
     context.assets.open(assetPath).use { BitmapFactory.decodeStream(it, null, opts)?.asImageBitmap() }
 } catch (_: Exception) {

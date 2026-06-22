@@ -1,5 +1,6 @@
 package com.akalynth.client.proof
 
+import com.akalynth.client.chronicle.ChronicleGlyphResolver
 import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
@@ -228,7 +229,7 @@ object ProofBundleExporter {
 
         // Event section
         sb.appendLine("─── EVENT ───────────────────────────────────────────────────────")
-        sb.appendLine("Kind:         ${bundle.event.kind.icon} ${bundle.event.kind.name}")
+        sb.appendLine("Kind:         ${ChronicleGlyphResolver.exportLabel(bundle.event.kind)} ${bundle.event.kind.name}")
         sb.appendLine("Status:       ${bundle.event.status.name}")
         sb.appendLine("Timestamp:    ${iso8601Format.format(Date(bundle.event.timestampMs))}")
         if (bundle.event.zone != null) {
@@ -326,7 +327,7 @@ object ProofBundleExporter {
         // Event section
         sb.appendLine("## Event")
         sb.appendLine()
-        sb.appendLine("- **Kind:** ${bundle.event.kind.icon} ${bundle.event.kind.name}")
+        sb.appendLine("- **Kind:** ${ChronicleGlyphResolver.exportLabel(bundle.event.kind)} ${bundle.event.kind.name}")
         sb.appendLine("- **Status:** ${bundle.event.status.name}")
         sb.appendLine("- **Timestamp:** ${iso8601Format.format(Date(bundle.event.timestampMs))}")
         if (bundle.event.zone != null) {

@@ -13,7 +13,23 @@ enum class HighCityVisualKind {
     NOTICE_BOARD,
     BANNER_BLUE,
     BANNER_RED,
-    BENCH
+    BENCH;
+
+    /** Canonical registry asset_id for PNG overlay lookup via [com.akalynth.client.ui.render.AssetRegistry]. */
+    val registryAssetId: String
+        get() = when (this) {
+            COBBLE_FLOOR -> "akalynth_world_floor_cobble_01"
+            STONE_FLOOR -> "akalynth_world_floor_stone_01"
+            WOOD_FLOOR -> "akalynth_world_floor_wood_01"
+            STONE_WALL -> "akalynth_world_wall_stone_south"
+            STONE_COLUMN -> "akalynth_world_stone_column"
+            CLOSED_DOOR -> "akalynth_world_door_wood_closed_south"
+            FOUNTAIN -> "akalynth_world_fountain"
+            NOTICE_BOARD -> "akalynth_world_notice_board"
+            BANNER_BLUE -> "akalynth_world_banner_blue"
+            BANNER_RED -> "akalynth_world_banner_red"
+            BENCH -> "akalynth_world_bench"
+        }
 }
 
 data class HighCityVisualLandmark(

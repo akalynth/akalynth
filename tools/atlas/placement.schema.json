@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://akalynth.dev/schemas/world-placement/v1",
+  "title": "AkalynthWorldPlacementManifest",
+  "description": "Map overlay placements using short world visual asset ids (PR-006). Written to data/assets-built/placements/*.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["map", "schema_version", "mechanics", "placements"],
+  "properties": {
+    "map": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Target map key (e.g. rookguard, high-city). Tile coords match debug-client placements."
+    },
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "mechanics": {
+      "type": "null",
+      "description": "Lockstep: placements are display-only and never gate movement."
+    },
+    "placements": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/worldPlacementEntry" }
+    }
+  },
+  "$defs": {
+    "worldVisualAssetId": {
+      "type": "string",
+      "enum": [
+        "prison_bars",
+        "stone_column",
+        "throne",
+        "weapon_rack",
+        "banner_blue",
+        "banner_red",
+        "bench",
+        "fountain",
+        "notice_board",
+        "rookguard_amber_lantern",
+        "rookguard_bait_crate",
+        "rookguard_canal_reeds",
+        "rookguard_fishing_post",
+        "rookguard_supply_sack",
+        "rookguard_waymarker",
+        "door_wood_closed_east",
+        "door_wood_closed_south",
+        "door_wood_open_east",
+        "door_wood_open_south",
+        "bed_single",
+        "bookshelf",
+        "chair_wood",
+        "chest_small",
+        "fireplace",
+        "table_small",
+        "market_cloth_stall",
+        "market_food_stall",
+        "market_awning_overlay",
+        "roof_castle_overlay",
+        "roof_red_large_overlay",
+        "roof_red_small_overlay",
+        "sewer_grate",
+        "sewer_pipe",
+        "slime_pool",
+        "floor_cobble_01",
+        "floor_stone_01",
+        "floor_wood_01",
+        "grass_01",
+        "wall_stone_corner_ne",
+        "wall_stone_corner_nw",
+        "wall_stone_north",
+        "wall_stone_south",
+        "prop_tree",
+        "swamp_bog_slime",
+        "swamp_bog_water",
+        "swamp_dead_tree",
+        "swamp_frog",
+        "swamp_log",
+        "swamp_mud",
+        "swamp_mushroom",
+        "swamp_reeds"
+      ]
+    },
+    "worldVisualVisibility": {
+      "type": "string",
+      "enum": ["visible", "hidden", "faded"]
+    },
+    "worldPlacementEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "asset_id", "x", "y"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Unique instance id (debug-client prefix + tile coords)."
+        },
+        "asset_id": { "$ref": "#/$defs/worldVisualAssetId" },
+        "x": {
+          "type": "integer",
+          "description": "Tile X (top-left), same convention as debug-client WorldVisualObjectPlacement."
+        },
+        "y": {
+          "type": "integer",
+          "description": "Tile Y (top-left), same convention as debug-client WorldVisualObjectPlacement."
+        },
+        "visibility": { "$ref": "#/$defs/worldVisualVisibility" }
+      }
+    }
+  }
+}

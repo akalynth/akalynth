@@ -125,6 +125,7 @@ Showcase / driver packet:
 Design / production notes:
 
 - [Classic 32 Art And Mobile UI Direction](./CLASSIC_32_ART_AND_MOBILE_UI_DIRECTION.md) - old-school 32x32 art direction, OpenAI asset pipeline, and mobile HUD rules
+- [Asset Sync Policy](./ASSET_SYNC_POLICY.md) - git policy for `data/assets-built/` vs Android/debug-client mirrors; contributor sync workflow
 - [Asset Decision Packets](./asset-decisions/README.md) - receipt-backed asset/map/mobile decision-packet index and cleanup boundary
 
 Core docs:

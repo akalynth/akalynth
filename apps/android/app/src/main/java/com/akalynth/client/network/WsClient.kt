@@ -107,6 +107,11 @@ class WsClient(
         webSocket?.send(json)
     }
 
+    /** Send a pre-serialized JSON payload (e.g. ActionBus intents). */
+    fun sendRaw(json: String) {
+        webSocket?.send(json)
+    }
+
     fun disconnect() {
         autoReconnect = false
         reconnectJob?.cancel()

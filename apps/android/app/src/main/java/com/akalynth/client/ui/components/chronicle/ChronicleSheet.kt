@@ -32,6 +32,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.akalynth.client.chronicle.ChronicleGlyphIcon
+import com.akalynth.client.chronicle.ChronicleGlyphResolver
 import com.akalynth.client.ui.components.displayOptionalZoneName
 import com.akalynth.client.ui.components.displayZoneName
 import com.akalynth.client.ui.state.ChronicleEvent
@@ -51,7 +53,7 @@ import java.time.format.DateTimeParseException
  * - C1: Events grouped by day (TODAY, YESTERDAY, or formatted date)
  * - C2: Death rows are tappable (opens recap); others are not
  * - C3: Load more button fires pagination once per tap
- * - C4: Event icons match event kind (☠📦🏛⚔🎓✨)
+ * - C4: Event glyphs match event kind via ChronicleGlyphResolver
  *
  * @param events List of chronicle events to display
  * @param hasMore Whether more events are available for loading
@@ -162,7 +164,7 @@ fun ChronicleSheet(
                     ) { event ->
                         EventRow(
                             event = event,
-                            onClick = if (event.kind.isTappable) {
+                            onClick = if (ChronicleGlyphResolver.isTappable(event.kind)) {
                                 {
                                     haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                     onEventClick(event)
@@ -248,10 +250,10 @@ private fun EventRow(
             .testTag("ChronicleSheet_Event_${event.id}"),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Event icon
-        Text(
-            text = event.kind.icon,
-            fontSize = 20.sp,
+        // Event glyph (bundled sprite or ASCII fallback)
+        ChronicleGlyphIcon(
+            kind = event.kind,
+            size = 20.dp,
             modifier = Modifier.testTag("ChronicleSheet_EventIcon_${event.kind.name}")
         )
 
@@ -276,7 +278,7 @@ private fun EventRow(
         }
 
         // Tap indicator for death events
-        if (event.kind.isTappable) {
+        if (ChronicleGlyphResolver.isTappable(event.kind)) {
             Text(
                 text = "›",
                 color = Color(0xFF6E6E8A),
