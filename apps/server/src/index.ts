@@ -6030,13 +6030,19 @@ function processSessionQueue(s: Session, now: number) {
           }
           const next = (guildContributions.get(s.player.id) ?? 0) + 1;
           guildContributions.set(s.player.id, next);
+          // Guild rank: progression from accumulated contributions (pure projection, no balance).
+          const guildRank = next >= 10 ? 'devoted' : next >= 5 ? 'steady' : 'initiate';
+          s.player.badges = [
+            ...(s.player.badges ?? []).filter((b) => !b.startsWith('guild_rank_')),
+            `guild_rank_${guildRank}`,
+          ];
           audit.write({
             player_id: s.player.id,
             action: GUILD_CONTRIBUTION_ACTION,
-            inputs: { place_id: place, contribution_count: next },
+            inputs: { place_id: place, contribution_count: next, rank: guildRank },
             result: 'ok',
           });
-          send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { contribution_count: next } }));
+          send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { contribution_count: next, rank: guildRank } }));
           sendLoopUpdate(s, 'guild_contribution');
           break;
         }
