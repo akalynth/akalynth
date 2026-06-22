@@ -1905,6 +1905,9 @@ function loadInventories(): void {
     houseStorage.get(row.property_id)!.add(row.item_id);
   }
   console.log(`[items] Loaded ${storageRows.length} house-stored items into ${houseStorage.size} houses`);
+  // Guild v1.1: hydrate the durable treasury total so the collective goal survives restarts.
+  guildTreasuryTotal = persist.getGuildTreasury();
+  console.log(`[guild] Hydrated treasury total=${guildTreasuryTotal}`);
 }
 
 // Houses v1.2: push the player's inventory + the storage of the house they're in, so the
