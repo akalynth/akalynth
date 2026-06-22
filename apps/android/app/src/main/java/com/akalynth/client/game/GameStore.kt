@@ -11,6 +11,8 @@ import com.akalynth.client.network.HealthApi
 import com.akalynth.client.network.IdentityStore
 import com.akalynth.client.network.WsClient
 import com.akalynth.client.network.WsEvent
+import com.akalynth.client.progression.UnlockRepository
+import com.akalynth.client.progression.unlockDataStore
 import com.akalynth.client.protocol.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,12 +55,15 @@ class GameStore(
     private val scope: CoroutineScope,
     private val context: Context,
     actionBus: ActionBus? = null,
+    unlockRepository: UnlockRepository? = null,
 ) {
     private val _state = MutableStateFlow(GameState.INITIAL)
     val state: StateFlow<GameState> = _state.asStateFlow()
 
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     private val identityStore = IdentityStore(context)
+    private val unlockRepository: UnlockRepository =
+        unlockRepository ?: UnlockRepository(context.unlockDataStore)
     private val actionBus: ActionBus = actionBus ?: ActionBus(
         chronicle = ChronicleStore(),
         transport = WsClientActionTransport(wsClient),
@@ -82,7 +87,16 @@ class GameStore(
         observeWsEvents()
         observeConnectionState()
         observeWsDiagnostics()
+        observeUnlockState()
         checkHealth()
+    }
+
+    private fun observeUnlockState() {
+        scope.launch {
+            unlockRepository.unlockState.collect { unlock ->
+                _state.update { it.copy(unlock = unlock) }
+            }
+        }
     }
 
     private fun observeWsEvents() {
@@ -538,15 +552,32 @@ class GameStore(
     }
 
     private fun handleInventorySnapshot(msg: InventorySnapshotMessage) {
-        _state.update {
-            it.copy(inventory = InventoryProjection.fromSnapshot(msg.items, it.inventory))
-        }
+        val previous = _state.value.inventory
+        val next = InventoryProjection.fromSnapshot(msg.items, previous)
+        maybeRecordFirstItemPickup(previous, next)
+        _state.update { it.copy(inventory = next) }
     }
 
     private fun handlePickupItemResult(msg: PickupItemResultMessage) {
         if (!msg.ok) return
-        _state.update {
-            it.copy(inventory = InventoryProjection.onPickupSuccess(msg.itemId, it.inventory))
+        val previous = _state.value.inventory
+        val next = InventoryProjection.onPickupSuccess(msg.itemId, previous)
+        maybeRecordFirstItemPickup(previous, next)
+        _state.update { it.copy(inventory = next) }
+    }
+
+    /**
+     * Stage 2 trigger (U3): first server-authoritative inventory item unlocks hotbar UI.
+     * Persists via [UnlockRepository.recordItemPickup] before acknowledging in [GameState.unlock].
+     */
+    private fun maybeRecordFirstItemPickup(previous: InventoryState, next: InventoryState) {
+        if (previous.items.isNotEmpty() || next.items.isEmpty()) return
+        if (_state.value.unlock.hasPickedUpItem) return
+        scope.launch {
+            unlockRepository.recordItemPickup()
+            _state.update { state ->
+                state.copy(unlock = state.unlock.withItemPickedUp())
+            }
         }
     }
 

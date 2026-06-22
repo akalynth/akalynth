@@ -7,6 +7,7 @@ import com.akalynth.client.protocol.GatherStationPublic
 import com.akalynth.client.protocol.MapName
 import com.akalynth.client.protocol.PlayLoopProgress
 import com.akalynth.client.protocol.PlayerPublic
+import com.akalynth.client.progression.UnlockState
 import com.akalynth.client.protocol.PropertyPublic
 import com.akalynth.client.ui.state.ChronicleEvent
 
@@ -16,6 +17,7 @@ data class GameState(
     val world: WorldState = WorldState(),
     val inventory: InventoryState = InventoryState(),
     val progression: ProgressionState = ProgressionState(),
+    val unlock: UnlockState = UnlockState.DEFAULT,
     val economy: EconomyState = EconomyState(),
     val gather: GatherState = GatherState(),
     val ui: UiState = UiState()
