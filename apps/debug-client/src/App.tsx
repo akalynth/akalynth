@@ -862,7 +862,15 @@ function DebugApp() {
               {state.guildTreasury !== null && (
                 <div>
                   <span>Guild treasury</span>
-                  <strong>{state.guildTreasury} tended</strong>
+                  <strong>
+                    {state.guildTreasury} tended
+                    {(() => {
+                      // Honor tier from the durable treasury milestones (collective achievement).
+                      const t = state.guildTreasury;
+                      const tier = t >= 500 ? 'Eternal' : t >= 100 ? 'Hallowed' : t >= 50 ? 'Tended' : t >= 10 ? 'Kindled' : null;
+                      return tier ? ` · ${tier}` : '';
+                    })()}
+                  </strong>
                 </div>
               )}
               <div>
