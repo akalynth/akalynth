@@ -1,5 +1,6 @@
 package com.akalynth.client.ui.components.character
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -29,6 +30,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -38,6 +41,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.akalynth.client.ui.render.rememberWorldSprites
 
 /**
  * Character creation screen for new players.
@@ -417,6 +421,8 @@ private fun SpritePreview(
     modifier: Modifier = Modifier
 ) {
     val outfit = selectedOutfit(outfitId)
+    val sprites = rememberWorldSprites()
+    val sprite = sprites.characters[outfit.spriteId]
     Box(
         modifier = modifier
             .size(128.dp)
@@ -426,19 +432,25 @@ private fun SpritePreview(
             },
         contentAlignment = Alignment.Center
     ) {
-        // Placeholder sprite indicator
-        // In production, this would load actual sprite assets
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = when (sex) {
-                    CharacterSex.MALE -> "\uD83D\uDC68"  // Man emoji as placeholder
-                    CharacterSex.FEMALE -> "\uD83D\uDC69"  // Woman emoji as placeholder
-                },
-                fontSize = 48.sp,
-                modifier = Modifier.testTag("CharacterCreateScreen_SpriteIcon")
-            )
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            if (sprite != null) {
+                Image(
+                    bitmap = sprite.image,
+                    contentDescription = outfit.spriteId,
+                    modifier = Modifier
+                        .size(96.dp)
+                        .testTag("CharacterCreateScreen_SpriteIcon"),
+                    contentScale = ContentScale.Fit,
+                    filterQuality = FilterQuality.None,
+                )
+            } else {
+                Text(
+                    text = "?",
+                    color = Color.Gray,
+                    fontSize = 32.sp,
+                    modifier = Modifier.testTag("CharacterCreateScreen_SpriteIcon"),
+                )
+            }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = outfit.spriteId,

@@ -1,4 +1,8 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import {
+  bundledSpriteForPreview,
+  resolveOutfitPreview,
+} from '../data/characterCreatePreview';
 import type {
   AccountSessionStatus,
   AccountCharacter,
@@ -7,6 +11,7 @@ import type {
   CharacterSex,
   SessionInfo,
 } from '../types';
+import { CharacterSpritePreview } from './CharacterSpritePreview';
 
 function accountSessionGuardMessage(accountSession: AccountSessionStatus): string | null {
   if (!accountSession.authenticated) {
@@ -56,6 +61,10 @@ export function CharacterBar({
   const outfitOptions = useMemo(
     () => catalog.outfits.filter((entry) => entry.sex === sex),
     [catalog.outfits, sex]
+  );
+  const outfitPreview = useMemo(
+    () => resolveOutfitPreview(outfitId || outfitOptions[0]?.outfit_id || 'male_wanderer', sex),
+    [outfitId, outfitOptions, sex]
   );
 
   useEffect(() => {
@@ -252,6 +261,10 @@ export function CharacterBar({
           </button>
         </>
       )}
+      <CharacterSpritePreview
+        spriteId={bundledSpriteForPreview(outfitPreview.outfitId, sex)}
+        spriteLabel={outfitPreview.spriteLabel}
+      />
       <input
         className="character-bar-input"
         type="text"

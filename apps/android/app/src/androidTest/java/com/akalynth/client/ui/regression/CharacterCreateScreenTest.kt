@@ -398,7 +398,7 @@ class CharacterCreateScreenTest {
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithTag("CharacterCreateScreen_SpriteId")
-            .assertTextEquals("sprite_male_default")
+            .assertTextEquals("base_human_male_01")
     }
 
     @Test
@@ -411,7 +411,7 @@ class CharacterCreateScreenTest {
 
         // Initially male
         composeTestRule.onNodeWithTag("CharacterCreateScreen_SpriteId")
-            .assertTextEquals("sprite_male_default")
+            .assertTextEquals("base_human_male_01")
 
         // Select female
         composeTestRule.onNodeWithTag("CharacterCreateScreen_Sex_FEMALE").performClick()
