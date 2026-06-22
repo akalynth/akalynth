@@ -267,6 +267,15 @@ export function ActionsPanel({
                 Work
               </button>
             )}
+            {(inRookguardProfessionHall || inGuildHall) && (
+              <button
+                className="action-btn mobile-hotbar-btn shop-btn"
+                onClick={() => onWorldEventAction('guild:join')}
+                aria-label="Join the guild"
+              >
+                Guild
+              </button>
+            )}
             {inRookguardProfessionHall && VOCATION_ACTIONS.map((action) => (
               <button
                 key={action.vocation}
@@ -486,6 +495,17 @@ export function ActionsPanel({
                 Start Sweep
               </button>
             </>
+          )}
+          {(inGuildHall || inRookguardProfessionHall) && (
+            <div className="shop-section">
+              <div className="shop-header">Guild</div>
+              <button
+                className="action-btn shop-btn"
+                onClick={() => onWorldEventAction('guild:join')}
+              >
+                Join the Guild
+              </button>
+            </div>
           )}
           {inGuildHall && (
             <div className="shop-section">

@@ -383,6 +383,14 @@ const CAPS_ENABLED = parseBoolEnv(process.env.CAPS_ENABLED, false);
 const RNG_V2_ENABLED = parseBoolEnv(process.env.AKALYNTH_RNG_V2, false);
 const CAPS_DEBUG_GRANT_SOVEREIGN = parseBoolEnv(process.env.CAPS_DEBUG_GRANT_SOVEREIGN, false) && DEBUG_MODE;
 
+// Guild v1: receipted guild membership (additive; routed through use_skill, no new WS type).
+const GUILD_ENABLED = parseBoolEnv(process.env.GUILD_ENABLED, DEBUG_MODE);
+const GUILD_JOINED_ACTION = 'guild_joined';
+const GUILD_MEMBER_BADGE = 'guild_member';
+// Set of player ids that have joined the guild this process (durable truth is the
+// guild_joined receipt; this restores the member badge across reconnects within a run).
+const guildMembers = new Set<string>();
+
 // Plan B: Per-IP Rate Limiting (Anti-Bot Hardening)
 const IP_RATE_LIMIT_ENABLED = parseBoolEnv(process.env.IP_RATE_LIMIT_ENABLED, true);
 const IP_CONNECTION_LIMIT = parseEnvInt(process.env.IP_CONNECTION_LIMIT, 5, 1);
@@ -5965,6 +5973,31 @@ function processSessionQueue(s: Session, now: number) {
       case 'use_skill': {
         if (!requireAuth(s)) break;
         if (!s.player) break;
+
+        // Guild v1: join the guild at a guild hall. Receipted, idempotent, server-authoritative.
+        // Routed through use_skill (skill_id 'guild:join') so no new WS message type / no parity bump.
+        if (GUILD_ENABLED && msg.skill_id === 'guild:join') {
+          const playerPlace = getCurrentPlace(s.player.id);
+          if (playerPlace !== 'rookguard:guild_hall' && playerPlace !== 'azura:guild_hall') {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_target' }));
+            break;
+          }
+          if (guildMembers.has(s.player.id) || (s.player.badges ?? []).includes(GUILD_MEMBER_BADGE)) {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_skill', payload: { error: 'already_member' } }));
+            break;
+          }
+          audit.write({
+            player_id: s.player.id,
+            action: GUILD_JOINED_ACTION,
+            inputs: { place_id: playerPlace },
+            result: 'ok',
+          });
+          guildMembers.add(s.player.id);
+          s.player.badges = [...(s.player.badges ?? []), GUILD_MEMBER_BADGE];
+          send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { guild_member: true } }));
+          sendLoopUpdate(s, 'guild_joined');
+          break;
+        }
 
         // Shop purchase intercept
         if (msg.skill_id.startsWith('shop:')) {
