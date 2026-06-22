@@ -1,8 +1,52 @@
 # Akalynth continuation state
 
-Last updated: **2026-06-21** (chill-zone refine steps 1-3: server core + wire + both clients, behind CHILL_ZONE_REFINE_ENABLED; step 4 = economy/Tem tuning).
+Last updated: **2026-06-22** (Origin Act crash fix + beta patch, 226dd25 reconcile onto main, chronicle CI fix, web /play/ UI polish + beta patch, full repo cleanup/archive).
 
 Read this before implementing. For skill routing see `AGENTS.md` and `.codex/CODEX_MAP.md`.
+
+---
+
+## 2026-06-22 session — what landed
+
+> `origin/main` advanced `f536a3b → 4e36524 → d088eb8`. Two hotfixes were applied
+> directly to the beta runtime `/opt/akalynth-beta` (drift), each reconciling on the
+> next full deploy now that their PRs are on main.
+
+1. **Origin Act crash fix — PR #345 MERGED (`4e36524`).** A divergent-history merge
+   (the `beta-runtime/main` lineage) had silently dropped the Origin Act schema migration
+   + materializer while keeping the reads → live `SqliteError: no such column:
+   origin_receipt_id` on origin-worthy actions. Fix: additive `migrateToV22` (adds
+   `players.origin_receipt_id/origin_action/origin_sealed_at`, `SCHEMA_VERSION 21→22`) +
+   restored `handleOriginActSealed` (reads `receipt.actor_id`). **Beta patched live**:
+   DB migrated 21→22, 592 player rows preserved, health 200. Evidence:
+   `evidence/20260622T101500Z-beta-origin-fix-patch/`. CI follow-up bumped
+   `verify-account-handle.test.ts` schema assertion to 22. See [[project-origin-act-lost-migration]].
+2. **Deployed-state reconcile — PR #346 MERGED (squash `d088eb8`).** `226dd25` ("ship
+   Rookguard assets + Rust bridge cleanup", 111 files incl. play surface, `hashUtf8Hex`
+   item-id cleanup, **and the `crates/chronicle/` Rust napi bridge** — the previously
+   *parked* chronicle-rust now un-parked on main) existed only on local `main`/deployed
+   beta; now reconciled onto `origin/main`. Conflicts resolved with the deployed `bceaf10`
+   versions.
+3. **Chronicle CI fix (in #346).** `generate-chronicle-log.js` imported the never-built
+   `packages/shared/chronicleChain.js`; CI step now runs it via `npx tsx` (resolves
+   `.js→.ts`). This had blocked #346/#347.
+4. **Web `/play/` UI polish — PR #348 (against main, polish-only +196 `index.css`).**
+   Aesthetic pass on `apps/debug-client`: tactile button system (hover-lift/press,
+   category glows, focus rings), larger/well-placed mobile skill·magic·combat buttons,
+   scrollable action hotbar, single-row bottom dock, gold-accent cards. **Beta `/play/`
+   patched live** (bundle `index-CTOIVXJe.css`, HTTP 200). Evidence:
+   `evidence/20260622T120000Z-beta-play-ui-polish/`. (Supersedes auto-closed #347.)
+5. **Full repo + git cleanup/archive.** All `repos/` git repos clean; stale `/tmp`
+   worktrees removed; uncommitted/parked work archived to
+   `evidence/20260622T094357Z-repo-cleanup-archive/` (MANIFEST.md) — incl. the parked
+   `witness-kernel-rust` skill, the forgehold Act IV packet, and the reconciled-handoff
+   WIP patch. **Note:** this file was reverted during cleanup; this update restores
+   accurate state.
+
+**Beta runtime drift (ops):** `/opt/akalynth-beta` carries the Origin Act server hotfix
+**and** the UI `/play/` CSS hotfix on top of git `bceaf10`. Both are now on `origin/main`
+(#345 + #348-pending), so a clean full deploy from `origin/main` reconciles the drift.
+Rollback `.bak`/tar paths are in each evidence dir.
 
 ---
 
@@ -12,8 +56,8 @@ Read this before implementing. For skill routing see `AGENTS.md` and `.codex/COD
 |------|--------|
 | Repo | `https://github.com/akalynth/akalynth` |
 | Branch | `main` |
-| Head | `69558e4` — feat(android): chill-zone refine UI + protocol parity (step 3b) |
-| Last merged | web client P0-P3 feature gap (12 commits since `8ee2d90`) |
+| Head | `d088eb8` — Reconcile deployed beta state (226dd25): Rookguard assets + Rust bridge cleanup (#346) |
+| Last merged | #345 Origin Act fix (`4e36524`) → #346 226dd25 reconcile + chronicle CI fix (`d088eb8`); #348 web /play/ UI polish pending |
 | Local source | `/home/sovereign/akalynth-ops/repos/akalynth` |
 
 **Included in main since `8ee2d90` (2026-06-20 → 2026-06-21):**
@@ -220,13 +264,21 @@ AKALYNTH_UI_SCENARIOS=azura_gather ./scripts/goal0-android-ui-inspect.sh
 
 ---
 
-## Open / next work (as of handoff)
+## Open / next work (as of 2026-06-22 handoff)
 
-1. ~~**Stabilize `azura_gather`**~~ — **done** (gate greedy+forced tap, arrival accepts any spawn pos, scenario extended waits)
-2. ~~**Top bar**~~ — **done** (`statusBarsPadding()` on HUD and MapChip Column in `WorldScreen.kt`)
-3. ~~**Deploy web client to beta**~~ — **done** (beta runtime verified at `2ec22a2`, `/play/` returns 200)
-4. **Chill-zone refine step 4** — economy/Tem tuning (`keystone_token` value; optional `refine_cadence` heat) + enable `CHILL_ZONE_REFINE_ENABLED=1` on beta. Steps 1-3 done. See § Chill-zone gather → Refine extension.
-5. **Prod** — this handoff covers **beta** lane; prod deploy is separate (`/opt/akalynth`, `deploy_beta.sh`)
+1. **Merge PR #348** (web `/play/` UI polish → main) once CI is green — completes the
+   2026-06-22 set. Then `origin/main` fully matches what's live on beta.
+2. **Full clean deploy of beta from `origin/main`** to reconcile the two `/opt/akalynth-beta`
+   hotfix drifts (Origin Act server fix + UI CSS). Use the supported publish flow
+   (`bin/akalynth-lane-deploy.sh beta publish-account-play`) — needs explicit auth.
+3. **Chronicle-rust now on main (`crates/chronicle/`).** It was previously *parked* as
+   premature; reconciled via #346. The CI fixture generator runs via tsx; the Rust parity
+   gate still needs a `cargo` toolchain on the runners before it can run (per chronicle
+   `CI_WIRING.md`). Decide whether to wire it or leave the crate inert.
+4. **Chill-zone refine step 4** — economy/Tem tuning + enable `CHILL_ZONE_REFINE_ENABLED=1`
+   on beta. (Beta already has the gather+refine flags on per `systemctl show`.) Steps 1-3 done.
+5. **Prod** — every 2026-06-22 change is **beta-only**; prod (`/opt/akalynth`, `api.akalynth.com`)
+   is a separate host and has NOT received any of it.
 
 ---
 
