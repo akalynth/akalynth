@@ -55,3 +55,5 @@ Run manifest ID tests: `npx tsx packages/shared/test/worldVisual.test.ts`
 - `apps/debug-client/public/atlas/` — web atlas mirror (nearest-neighbor; CLASSIC_32)
 
 `compile-registry.mjs` writes `data/assets-built/registry.json`; `sync-to-clients.mjs` mirrors loose PNGs and the registry (compiled or inline) to client bundles.
+
+**Git policy:** see [`docs/ASSET_SYNC_POLICY.md`](../../docs/ASSET_SYNC_POLICY.md) for what to commit in `data/assets-built/` vs client mirrors and the contributor sync workflow.

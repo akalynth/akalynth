@@ -144,6 +144,24 @@ jobs:
                   docs_only=false
                   assets_changed=true
                   ;;
+                data/assets-built/*|data/assets-built/**/*)
+                  codex_plugin_only=false
+                  full_ci_required=true
+                  docs_only=false
+                  assets_changed=true
+                  ;;
+                apps/android/app/src/main/assets/*|apps/android/app/src/main/assets/**/*)
+                  codex_plugin_only=false
+                  full_ci_required=true
+                  docs_only=false
+                  assets_changed=true
+                  ;;
+                apps/debug-client/public/atlas/*|apps/debug-client/public/atlas/**/*)
+                  codex_plugin_only=false
+                  full_ci_required=true
+                  docs_only=false
+                  assets_changed=true
+                  ;;
                 packages/*|packages/**/*)
                   codex_plugin_only=false
                   full_ci_required=true
@@ -314,6 +332,10 @@ jobs:
       - name: Verify asset manifests and lineage
         if: needs.changes.outputs.assets_changed == 'true'
         run: npm run verify:assets
+
+      - name: Verify asset mirror sync
+        if: needs.changes.outputs.assets_changed == 'true'
+        run: npm run verify:asset-sync
 
       - name: Validate CI workflow invariants
         if: needs.changes.outputs.ci_changed == 'true'
