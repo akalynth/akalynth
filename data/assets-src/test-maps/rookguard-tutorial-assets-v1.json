@@ -1,0 +1,72 @@
+{
+  "id": "rookguard_tutorial_assets_v1",
+  "kind": "asset_tilemap_test",
+  "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+  "tile_size_px": 32,
+  "canvas_tiles": [
+    7,
+    5
+  ],
+  "scope": "Source-side visual placement proof for Rookguard tutorial rune tiles and the training slime. This is not a runtime map and grants no mechanics.",
+  "runtime_authority": "Display only. Movement, tutorial completion, gate transition, creature stats, drops, rewards, respawn, and receipt behavior remain server-authoritative.",
+  "assets": [
+    "akalynth_tile_tutorial_move_001",
+    "akalynth_tile_tutorial_chat_001",
+    "akalynth_tile_tutorial_tem_001",
+    "akalynth_tile_gate_to_azura_001",
+    "akalynth_creature_rookguard_training_slime_001"
+  ],
+  "placements": [
+    {
+      "asset_id": "akalynth_tile_tutorial_move_001",
+      "cleaned_file": "data/assets-src/sprites/tile__tutorial_move.png",
+      "x": 1,
+      "y": 1,
+      "role": "movement tutorial rune",
+      "tile_code": 5,
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_tile_tutorial_chat_001",
+      "cleaned_file": "data/assets-src/sprites/tile__tutorial_chat.png",
+      "x": 2,
+      "y": 1,
+      "role": "chat tutorial rune",
+      "tile_code": 6,
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_tile_tutorial_tem_001",
+      "cleaned_file": "data/assets-src/sprites/tile__tutorial_tem.png",
+      "x": 3,
+      "y": 1,
+      "role": "Tem tutorial rune",
+      "tile_code": 7,
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_tile_gate_to_azura_001",
+      "cleaned_file": "data/assets-src/sprites/tile__gate_to_azura.png",
+      "x": 4,
+      "y": 1,
+      "role": "Azura gate threshold rune",
+      "tile_code": 8,
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_creature_rookguard_training_slime_001",
+      "cleaned_file": "data/assets-src/sprites/creature__rookguard_training_slime.png",
+      "x": 3,
+      "y": 3,
+      "role": "training yard creature sprite",
+      "tile_code": null,
+      "mechanics": null
+    }
+  ],
+  "checks": [
+    "all placements reference tracked cleaned PNGs and sidecars",
+    "all mechanics fields are null",
+    "tile rune assets use existing TileCode values only as display links",
+    "asset family remains pending human visual review before promotion"
+  ]
+}

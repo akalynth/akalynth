@@ -19,6 +19,7 @@
     "build:packages": "npm -w @akalynth/coordination-kernel run build && npm -w @akalynth/learning-spine run build && npm -w @akalynth/verification-spine run build",
     "studio-smoke": "node scripts/studio-smoke.mjs",
     "build:game": "(cd apps/phone-server && npm run build) && (cd apps/studio && npm run build) && (cd apps/debug-client && npm run build) && npm run studio-smoke",
+    "build:assets:rookguard": "node tools/asset-gen/build-rookguard-tutorial-tiles.mjs && node tools/asset-gen/build-rookguard-canal-visuals.mjs",
     "verify": "npm run build:packages && node packages/verification-spine/bin/akalynth-verify.js",
     "verify:quick": "npm run build:packages && node packages/verification-spine/bin/akalynth-verify.js --profile quick --skip-build",
     "verify:full": "npm run build:packages && node packages/verification-spine/bin/akalynth-verify.js --profile full",
@@ -29,6 +30,7 @@
     "smoke:beta-account-play": "node scripts/smoke-beta-account-play.mjs --live",
     "smoke:beta-account-play:api": "node scripts/smoke-beta-account-play.mjs --live --no-browser",
     "smoke:beta-account-play:real": "node scripts/smoke-beta-account-play.mjs --live --real-account",
+    "smoke:web-play-shell": "node scripts/smoke-web-play-shell.mjs",
     "verify:showcase": "bash scripts/showcase_local.sh",
     "verify:docker-runtime": "bash scripts/verify-docker-runtime.sh",
     "smoke:docker-runtime": "bash scripts/smoke-docker-runtime.sh",
@@ -39,7 +41,9 @@
     "verify:receipt-hygiene": "npm -w apps/server run verify:receipt-hygiene",
     "verify:outcome": "tsx tools/verify-outcome/src/index.ts",
     "verify:outcome:test": "tsx tools/verify-outcome/test.ts",
-    "verify:assets": "tsx tools/asset-gen/verify-assets.ts"
+    "verify:assets": "tsx tools/asset-gen/verify-assets.ts",
+    "verify:web-visual-assets": "node scripts/verify-web-visual-assets.mjs",
+    "verify:web-rust-cleanup": "node scripts/verify-web-rust-cleanup.mjs"
   },
   "devDependencies": {
     "playwright-core": "^1.56.1"

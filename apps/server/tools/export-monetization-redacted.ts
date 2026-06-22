@@ -14,8 +14,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import stableStringify from 'fast-json-stable-stringify';
 
+import { canonicalJson } from '../../../packages/shared/hashPrimitive.js';
 import { resolveChainPaths } from '../../../packages/shared/paths.js';
 import {
   SUPPORT_CREDIT_GRANTED_ACTION,
@@ -171,6 +171,10 @@ function summarize(redacted: RedactedReceipt[]) {
   };
 }
 
+function canonicalPrettyJson(value: unknown): string {
+  return JSON.stringify(JSON.parse(canonicalJson(value)), null, 2);
+}
+
 function runVerifier(): void {
   const result = spawnSync('npm', ['run', 'verify:monetization'], {
     cwd: process.cwd(),
@@ -208,7 +212,6 @@ const output = {
 };
 
 fs.mkdirSync(path.dirname(OUTPUT_PATH), { recursive: true });
-fs.writeFileSync(OUTPUT_PATH, stableStringify(output, { space: 2 }) + '\n', 'utf8');
+fs.writeFileSync(OUTPUT_PATH, canonicalPrettyJson(output) + '\n', 'utf8');
 
 ok(`exported ${redacted.length} receipts to ${OUTPUT_PATH}`);
-

@@ -1,0 +1,7 @@
+Create a single original Akalynth world visual asset. Classic early-2000s top-down 2D MMORPG constraints: small, chunky, hand-pixelled, flat and highly readable. Original Akalynth canal-side fishing marker, not copied from any existing game.
+
+RENDERING STYLE: authored at the Classic 32 base as a 32x64 transparent sprite, readable when integer-scaled. Bold 1px dark outline, upper-left light, limited warm wood, rope, teal-water accent, red-white bobber palette. No soft gradients, no text, no logo, no UI.
+
+PERSPECTIVE: top-down slight oblique object sprite, bottom-center anchored for a square grid.
+
+Object: Rookguard fishing post, a weathered wooden post with a short crossbeam, hanging fishing line, and tiny bobber near the bottom. It is a display-only marker for the existing canal-fishing activity and must not imply inventory, reward, collision, or interaction authority.

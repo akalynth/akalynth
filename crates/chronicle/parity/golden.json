@@ -1,0 +1,46 @@
+{
+  "array-of-objects": {
+    "canonical_json": "{\"caps\":[{\"scope\":\"move\",\"v\":1},{\"scope\":\"gather\",\"v\":2}]}",
+    "blake3_hex": "e7daa099063356be7dff3c3b26d3a56d9737f195e5fe60b963053cde483e8334"
+  },
+  "array-order-preserved": {
+    "canonical_json": "{\"ids\":[3,1,2],\"path\":[\"EAST\",\"EAST\",\"SOUTH\"]}",
+    "blake3_hex": "c7809b404ba4769ba83c92f562feca51038227443fac017d08eedb5a810accb1"
+  },
+  "empty-containers": {
+    "canonical_json": "{\"arr\":[],\"obj\":{}}",
+    "blake3_hex": "f02492f567ac63ac78bbe99cae41060c25d4c7ec5edfa9a84f9eb649bbc1f625"
+  },
+  "event-payload": {
+    "canonical_json": "{\"actor\":\"player:bench-7\",\"event_type\":\"move\",\"payload\":{\"x\":7,\"y\":49,\"zone\":\"azura\"},\"tick\":42,\"v\":1,\"world_id\":\"akalynth-mainnet\"}",
+    "blake3_hex": "a091a24d69a6432048ddadab24798d5e5105263a9b66ad6330662ff77984d7cf"
+  },
+  "float": {
+    "canonical_json": "{\"ratio\":1.5,\"tiny\":0.1}",
+    "blake3_hex": "e0286c4d40834b66e354cca697a8da97c91187550b5887b99d1abb310be5dede"
+  },
+  "integers": {
+    "canonical_json": "{\"tick\":9007199254740991,\"x\":0,\"y\":-34}",
+    "blake3_hex": "07299887835058f04e20ca091eecdc586d9a4f2e71cb74fe1d58737982afd34b"
+  },
+  "key-order": {
+    "canonical_json": "{\"actor\":\"player:abc\",\"event_type\":\"move\",\"tick\":2}",
+    "blake3_hex": "c126997dfa580bbd3477eb6a7051fd0bc15cd88198580fa756222fa13783c9e2"
+  },
+  "nested-unordered": {
+    "canonical_json": "{\"a\":{\"x\":0,\"y\":0},\"z\":{\"a\":1,\"b\":2}}",
+    "blake3_hex": "771b1f5dab7e36cf57180abdc9e997c804f5c9aba72c09781eb232c168aa5f26"
+  },
+  "scalars": {
+    "canonical_json": "{\"deep\":{\"flag\":false},\"missing\":null,\"n\":0,\"ok\":true}",
+    "blake3_hex": "e1d707c403729a4284e6517fc8cfae8bbf1ed1b397c35a5381317991b57b64b1"
+  },
+  "simple": {
+    "canonical_json": "{\"actor\":\"player:abc\",\"event_type\":\"spawn\",\"tick\":1}",
+    "blake3_hex": "3fabbe555c1a19a2085d4bf10dfa86e7ebbe22ec2e23fd2a96f96c154023ddb9"
+  },
+  "unicode": {
+    "canonical_json": "{\"glyph\":\"🜂\",\"name\":\"Azura ▶ Ley-Møte ✦\"}",
+    "blake3_hex": "ca78e22c7de579c2bfd3501bdd1167c6a92bd9d93a0e49660596f04d25e358f5"
+  }
+}

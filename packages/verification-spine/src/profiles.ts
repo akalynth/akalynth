@@ -38,6 +38,9 @@ export const PROFILES: Record<ProfileName, Profile> = {
       'receipts-chain',
       'mapgen',
       'assets',
+      'web-rust-cleanup',
+      'coordination-kernel-hash',
+      'web-visual-assets',
     ],
   },
 

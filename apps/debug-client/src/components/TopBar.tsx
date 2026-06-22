@@ -13,7 +13,14 @@ interface TopBarProps {
 
 const stages: UiStage['stage'][] = [0, 1, 2, 3];
 
+function connectionLabel(conn: ConnectionState): string {
+  if (conn.phase === 'error') return 'Offline';
+  if (conn.phase === 'awaiting_world_state') return 'Syncing';
+  return conn.phase.charAt(0).toUpperCase() + conn.phase.slice(1).replace(/_/g, ' ');
+}
+
 export function TopBar({ stage, onStageChange, map, onMapChange, conn, presentationMode = false }: TopBarProps) {
+  const label = connectionLabel(conn);
   return (
     <header className="top-bar">
       <div className="brand">{presentationMode ? 'Akalynth' : 'Akalynth v0'}</div>
@@ -30,14 +37,16 @@ export function TopBar({ stage, onStageChange, map, onMapChange, conn, presentat
           ))}
         </div>
       )}
-      <div className="map-switcher">
-        <select value={map} onChange={(e) => onMapChange(e.target.value as MapName)} disabled>
-          <option value="Rookguard">Rookguard</option>
-          <option value="Azura">{displayMapName('Azura')}</option>
-        </select>
-      </div>
+      {!presentationMode && (
+        <div className="map-switcher">
+          <select value={map} onChange={(e) => onMapChange(e.target.value as MapName)} disabled>
+            <option value="Rookguard">Rookguard</option>
+            <option value="Azura">{displayMapName('Azura')}</option>
+          </select>
+        </div>
+      )}
       <div className={`conn-pill ${conn.phase}`}>
-        {conn.phase}
+        {label}
       </div>
     </header>
   );

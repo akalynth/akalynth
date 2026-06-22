@@ -1,0 +1,29 @@
+{
+  "asset_id": "akalynth_tile_tutorial_tem_001",
+  "game": "Akalynth",
+  "asset_type": "tile",
+  "biome": "rookguard",
+  "status": "tilemap_tested",
+  "dimensions_px": [
+    32,
+    32
+  ],
+  "dimensions_target_px": [
+    32,
+    32
+  ],
+  "camera": "top_down_slight_isometric",
+  "background": "opaque",
+  "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+  "prompt_file": "data/assets-src/prompts/tiles/akalynth_tile_tutorial_tem_001.txt",
+  "raw_file": null,
+  "cleaned_file": "data/assets-src/sprites/tile__tutorial_tem.png",
+  "sha256": "d5658434c6cf288b92a821ae1ce64c3e04887f235be2fcf10037633da68cb644",
+  "tilemap_test": "data/assets-src/test-maps/rookguard-tutorial-assets-v1.json",
+  "license_status": "hand_authored",
+  "review_status": "needs_human_review",
+  "tile_code": 7,
+  "mechanics": null,
+  "copyright_boundary": "original hand-authored script-rendered asset; no copied third-party sprite, UI, logo, or map layout",
+  "notes": "Tem tutorial rune: wine-stone base with an original eye-and-answer sigil. Display-only; server TileCode 7 remains the sole movement/tutorial authority."
+}

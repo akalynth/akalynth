@@ -1,0 +1,7 @@
+Create a single original 32x32 game tile asset for Akalynth.
+
+Subject: Rookguard Tem tutorial rune tile. A deep wine-stone floor tile with an original eye-and-answer sigil: a small diamond eye, two gold witness marks, and violet glow in the carved lines.
+
+Camera: flat top-down square-grid RPG tile.
+Style: Classic 32 hand-pixelled tile; crisp 1px dark pixel edging; limited wine stone, amber gold, violet glow, and charcoal shadow palette; hard-edged pixel shading only; readable at 1x and when nearest-neighbor scaled.
+Constraints: opaque full tile fill; no characters, no UI, no logo, no letters, no copied third-party art, no challenge behavior implied beyond the existing server tile code.

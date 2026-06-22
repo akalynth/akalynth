@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { characterSpriteById, characterSpriteForPlayer, isCharacterSpriteId, DIRECTION_ROW, FEET_ANCHOR, FRAME_SIZE, type Direction, type CharacterSpriteId } from '../data/characterSprites';
 import { useCharacterSprites } from '../hooks/useCharacterSprites';
+import { useImagePreloader } from '../hooks/useImagePreloader';
 import { useTileSprites } from '../hooks/useTileSprites';
 import { useWorldVisualAssets } from '../hooks/useWorldVisualAssets';
 import type { WorldVisualAssetDef } from '../data/worldVisualAssets';
@@ -16,6 +17,7 @@ import {
   spawnLore,
   type LoreEntry,
 } from '../data/lore';
+import rookguardTrainingSlimeSprite from '../../../../data/assets-src/sprites/creature__rookguard_training_slime.png?url';
 
 interface GroundItem { item_id: string; item_type: string; x: number; y: number }
 
@@ -68,6 +70,9 @@ const OVERLAY_ALPHA = { visible: 1, faded: 0.35, hidden: 0 } as const;
 const EMPTY_WORLD_OBJECTS: RegistryWorldVisualPlacement[] = [];
 const EMPTY_DEBUG_OVERLAYS: MapDebugOverlay[] = [];
 const ROOKGUARD_TRAINING_SLIME_SPRITE_ID = 'akalynth_creature_rookguard_training_slime_001';
+const CREATURE_SPRITE_ENTRIES = [
+  { key: ROOKGUARD_TRAINING_SLIME_SPRITE_ID, src: rookguardTrainingSlimeSprite },
+] as const;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -168,6 +173,7 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
   const cameraRef = useRef({ x: 0, y: 0 });
   const { images: tileSprites, ready: spritesReady } = useTileSprites();
   const { images: characterSprites, ready: charactersReady } = useCharacterSprites();
+  const { images: creatureSprites, ready: creaturesReady } = useImagePreloader<string>(CREATURE_SPRITE_ENTRIES);
   const { images: worldVisualImages, ready: worldVisualsReady } = useWorldVisualAssets();
   const characterMotionRef = useRef<Map<string, CharacterMotion>>(new Map());
   const [tooltip, setTooltip] = useState<{ lore: LoreEntry; x: number; y: number } | null>(null);
@@ -225,15 +231,16 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
         const idx = y * map.width + x;
         const code = map.tiles[idx];
         const sprite = tileSprites.get(code);
+        const hasSprite = Boolean(sprite);
         if (sprite) {
           ctx.drawImage(sprite, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
         } else {
-          // No committed art for this code (e.g. tutorial/gate tiles): flat color.
+          // No committed art for this code yet: flat color keeps maps readable.
           ctx.fillStyle = TILE_COLOR[code] || '#121820';
           ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
         }
         const glyph = TILE_GLYPH[code];
-        if (glyph) {
+        if (glyph && !hasSprite) {
           ctx.fillStyle = '#f7e9a7';
           ctx.font = `bold ${tileGlyphFontPx}px "Space Grotesk", sans-serif`;
           ctx.fillText(glyph, x * TILE_SIZE + 3, y * TILE_SIZE + 9);
@@ -257,13 +264,21 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
       ctx.textBaseline = 'alphabetic';
     };
 
+    const hasAuthoredLoreTileAtCenter = (box: LandmarkBox): boolean => {
+      const tx = Math.floor(box.x + box.width / 2);
+      const ty = Math.floor(box.y + box.height / 2);
+      if (tx < 0 || ty < 0 || tx >= map.width || ty >= map.height) return false;
+      const code = map.tiles[ty * map.width + tx] as TileCode;
+      return Boolean(TILE_LORE[code] && tileSprites.get(code));
+    };
+
     for (const [key, value] of Object.entries(map.landmarks as Record<string, unknown>)) {
       const marker = LANDMARK_MARKERS[key];
       if (!marker) continue;
       const items = Array.isArray(value) ? value : [value];
       for (const item of items) {
         const box = landmarkBox(item);
-        if (box) drawMarker(box, marker.glyph, marker.color);
+        if (box && !hasAuthoredLoreTileAtCenter(box)) drawMarker(box, marker.glyph, marker.color);
       }
     }
 
@@ -374,40 +389,24 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
       ctx.restore();
     };
 
-    const drawRookguardTrainingSlime = (p: PlayerPublic) => {
-      const dead = p.status === 'dead';
-      const px = p.x * TILE_SIZE;
-      const py = p.y * TILE_SIZE;
-      const cx = px + TILE_SIZE / 2;
-      const cy = py + TILE_SIZE * 0.6;
-
-      ctx.save();
-      if (dead) ctx.globalAlpha = 0.42;
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
-      ctx.fillRect(px + 7, py + 24, 18, 4);
-      ctx.fillStyle = dead ? '#7f8790' : '#1f7a5b';
-      ctx.strokeStyle = '#0b2019';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.ellipse(cx, cy, 12, 9, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = dead ? '#a6adb7' : '#55c89b';
-      ctx.fillRect(px + 10, py + 11, 9, 4);
-      ctx.fillStyle = dead ? '#d2d6dc' : '#f1d36a';
-      ctx.fillRect(px + 14, py + 17, 4, 4);
-      ctx.fillStyle = '#07130f';
-      ctx.fillRect(px + 11, py + 18, 3, 3);
-      ctx.fillRect(px + 20, py + 18, 3, 3);
-      ctx.fillStyle = dead ? '#8a93a5' : '#0b0c10';
-      ctx.font = `${nameFontPx}px "DM Sans", sans-serif`;
-      ctx.fillText(p.name, px + 2, py - 2);
-      ctx.restore();
-    };
-
     const drawCharacter = (p: PlayerPublic, color: string, isSelf: boolean) => {
       if (p.sprite_id === ROOKGUARD_TRAINING_SLIME_SPRITE_ID) {
-        drawRookguardTrainingSlime(p);
+        const sprite = creatureSprites.get(ROOKGUARD_TRAINING_SLIME_SPRITE_ID);
+        if (!sprite) {
+          drawPlayerFallback(p, color);
+          return;
+        }
+        const dead = p.status === 'dead';
+        const px = p.x * TILE_SIZE;
+        const py = p.y * TILE_SIZE;
+        ctx.save();
+        if (dead) ctx.globalAlpha = 0.42;
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(sprite, px, py, TILE_SIZE, TILE_SIZE);
+        ctx.fillStyle = dead ? '#8a93a5' : '#0b0c10';
+        ctx.font = `${nameFontPx}px "DM Sans", sans-serif`;
+        ctx.fillText(p.name, px + 2, py - 2);
+        ctx.restore();
         return;
       }
       const spriteOverride = characterSpriteOverrides?.get(p.id) ?? null;
@@ -524,7 +523,7 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
       ctx.restore();
     }
     ctx.restore();
-  }, [map, me, others, viewMode, viewportPixels?.height, viewportPixels?.width, nowMs, targetId, fx, othersById, groundItems, propertyByPlot, characterFrameOverrides, characterSpriteOverrides, worldVisualObjects, debugOverlays, tileSprites, spritesReady, characterSprites, charactersReady, worldVisualImages, worldVisualsReady]);
+  }, [map, me, others, viewMode, viewportPixels?.height, viewportPixels?.width, nowMs, targetId, fx, othersById, groundItems, propertyByPlot, characterFrameOverrides, characterSpriteOverrides, worldVisualObjects, debugOverlays, tileSprites, spritesReady, characterSprites, charactersReady, creatureSprites, creaturesReady, worldVisualImages, worldVisualsReady]);
 
   return (
     <>

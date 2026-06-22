@@ -1,0 +1,29 @@
+{
+  "asset_id": "akalynth_tile_gate_to_azura_001",
+  "game": "Akalynth",
+  "asset_type": "tile",
+  "biome": "rookguard",
+  "status": "tilemap_tested",
+  "dimensions_px": [
+    32,
+    32
+  ],
+  "dimensions_target_px": [
+    32,
+    32
+  ],
+  "camera": "top_down_slight_isometric",
+  "background": "opaque",
+  "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+  "prompt_file": "data/assets-src/prompts/tiles/akalynth_tile_gate_to_azura_001.txt",
+  "raw_file": null,
+  "cleaned_file": "data/assets-src/sprites/tile__gate_to_azura.png",
+  "sha256": "ff3d456e9e3bb904a2fb1b4fb9f5828f3923636952bb9abc92fe14deb13030f2",
+  "tilemap_test": "data/assets-src/test-maps/rookguard-tutorial-assets-v1.json",
+  "license_status": "hand_authored",
+  "review_status": "needs_human_review",
+  "tile_code": 8,
+  "mechanics": null,
+  "copyright_boundary": "original hand-authored script-rendered asset; no copied third-party sprite, UI, logo, or map layout",
+  "notes": "High City gate rune: dark threshold stone with aged-gold chevron and blue anchors. Display-only; server TileCode 8 remains the sole movement/tutorial authority."
+}

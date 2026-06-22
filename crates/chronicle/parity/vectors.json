@@ -1,0 +1,66 @@
+{
+  "_comment": "Step 1 determinism parity vectors for witness-kernel-rust. Language-neutral INPUTS only. Both the Rust test (crates/chronicle/tests/parity.rs) and the TS oracle (gen-golden.mjs) read these, compute canonical_json + blake3 hex, and must agree byte-for-byte. Add tricky cases here; do not hand-edit golden.json. See parity/README.md.",
+  "vectors": [
+    {
+      "name": "simple",
+      "note": "baseline object",
+      "input": { "actor": "player:abc", "event_type": "spawn", "tick": 1 }
+    },
+    {
+      "name": "key-order",
+      "note": "keys supplied out of order — canonical form must sort them",
+      "input": { "tick": 2, "event_type": "move", "actor": "player:abc" }
+    },
+    {
+      "name": "nested-unordered",
+      "note": "nested object keys also sorted recursively",
+      "input": { "z": { "b": 2, "a": 1 }, "a": { "y": 0, "x": 0 } }
+    },
+    {
+      "name": "array-order-preserved",
+      "note": "array element order is significant and preserved (not sorted)",
+      "input": { "path": ["EAST", "EAST", "SOUTH"], "ids": [3, 1, 2] }
+    },
+    {
+      "name": "array-of-objects",
+      "note": "objects inside arrays get key-sorted, array order kept",
+      "input": { "caps": [{ "scope": "move", "v": 1 }, { "v": 2, "scope": "gather" }] }
+    },
+    {
+      "name": "unicode",
+      "note": "non-ASCII + emoji — probes UTF-8 byte encoding and string escaping parity",
+      "input": { "name": "Azura ▶ Ley-Møte ✦", "glyph": "🜂" }
+    },
+    {
+      "name": "scalars",
+      "note": "bool / null / nested mix",
+      "input": { "ok": true, "missing": null, "n": 0, "deep": { "flag": false } }
+    },
+    {
+      "name": "integers",
+      "note": "integer formatting (within IEEE-754 safe range)",
+      "input": { "tick": 9007199254740991, "x": 0, "y": -34 }
+    },
+    {
+      "name": "float",
+      "note": "INTENTIONAL cross-language risk probe — number formatting may diverge (serde_json vs JS). A failure here is a real finding, not a flake.",
+      "input": { "ratio": 1.5, "tiny": 0.1 }
+    },
+    {
+      "name": "empty-containers",
+      "input": { "obj": {}, "arr": [] }
+    },
+    {
+      "name": "event-payload",
+      "note": "representative witness event matching the index.ts append shape",
+      "input": {
+        "v": 1,
+        "world_id": "akalynth-mainnet",
+        "tick": 42,
+        "event_type": "move",
+        "actor": "player:bench-7",
+        "payload": { "zone": "azura", "x": 7, "y": 49 }
+      }
+    }
+  ]
+}

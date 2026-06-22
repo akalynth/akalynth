@@ -1,0 +1,23 @@
+{
+  "name": "@akalynth/chronicle",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Append-only witness kernel (Rust) + napi addon, with bench (Step 0) and TS↔Rust determinism parity (Step 1) harnesses. Canonical home: github.com/akalynth/akalynth-chronicle. Vendored into the akalynth monorepo at crates/chronicle.",
+  "type": "commonjs",
+  "main": "napi/loader.cjs",
+  "scripts": {
+    "bench": "node bench/witness-append-bench.mjs",
+    "parity:golden": "node parity/gen-golden.mjs",
+    "parity:check": "node parity/gen-golden.mjs --check",
+    "step0": "sh bench/run-step0.sh",
+    "step1": "sh parity/run-step1.sh",
+    "step2": "sh napi/run-step2.sh"
+  },
+  "dependencies": {
+    "@noble/hashes": "^1.8.0",
+    "fast-json-stable-stringify": "^2.1.0"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^2.18.0"
+  }
+}

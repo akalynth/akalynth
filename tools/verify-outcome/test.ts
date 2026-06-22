@@ -14,13 +14,12 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { blake3 } from '@noble/hashes/blake3';
-import stableStringify from 'fast-json-stable-stringify';
 import {
   verifyOutcomeFromReceipt,
   type FinalStatus,
   type OutcomeVerificationContext,
 } from '../../packages/shared/verifyOutcome.js';
+import { blake3Prefixed, canonicalJson } from '../../packages/shared/hashPrimitive.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES = path.resolve(__dirname, '../../packages/shared/test/fixtures');
@@ -432,9 +431,7 @@ for (const c of cases) {
 // ---------------------------------------------------------------------------
 function computeReceiptHashLocal(receipt: object): string {
   const { event_hash: _e, signature: _s, ...content } = receipt as Record<string, unknown>;
-  const canonical = stableStringify(content);
-  const hashBytes = blake3(new TextEncoder().encode(canonical));
-  return `blake3:${Buffer.from(hashBytes).toString('hex')}`;
+  return blake3Prefixed(canonicalJson(content));
 }
 
 try {

@@ -1,0 +1,7 @@
+Create a single original 32x32 game tile asset for Akalynth.
+
+Subject: Rookguard movement tutorial rune tile. A mossy dark-green stone floor tile with a small eastward step-arrow carved into the center, blue-gold crystal flecks in the grooves, and a readable lit edge that suggests "step here" without using letters or UI text.
+
+Camera: flat top-down square-grid RPG tile.
+Style: Classic 32 hand-pixelled tile; crisp 1px dark pixel edging on the rune grooves; limited moss, stone, blue crystal, and muted gold palette; hard-edged pixel shading only; readable at 1x and when nearest-neighbor scaled.
+Constraints: opaque full tile fill; seamless enough to sit beside grass/stone; no characters, no UI, no logo, no text, no copied third-party art, no implied walkability beyond the existing server tile code.

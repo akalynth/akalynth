@@ -18,12 +18,11 @@
 // or an unsigned/forgeable slice — only on the signature-authenticated slice +
 // the published signing key.
 
-import { blake3 } from '@noble/hashes/blake3';
 import * as nodeCrypto from 'node:crypto';
-import stableStringify from 'fast-json-stable-stringify';
 import { rngCommit, rngCommitV1, rngDrawU32Legacy, rngDeriveSeedV2, computeInventoryCommit } from './rng.js';
 import { computeDeathDrops, type ItemForDrop } from './dropPolicy.js';
 import type { MapName } from './http.js';
+import { blake3Prefixed, canonicalJson } from './hashPrimitive.js';
 import {
   verifyGlobalChainSlice,
   verifySignedChainSlice,
@@ -110,9 +109,8 @@ export type OutcomeVerificationContext = {
 
 // ---------------------------------------------------------------------------
 // Canonical hashing — MUST stay byte-identical to apps/server/src/persist/hash.ts.
-// We use the exact same library (fast-json-stable-stringify) + blake3 + the same
-// event_hash/signature exclusion, rather than reimplementing canonicalization,
-// so seed-binding cannot diverge from the server's drop_seed_hash.
+// Use the shared hash primitive plus the same event_hash/signature exclusion so
+// seed-binding cannot diverge from the server's drop_seed_hash.
 // ---------------------------------------------------------------------------
 
 function computeReceiptHash(receipt: object): string {
@@ -120,10 +118,7 @@ function computeReceiptHash(receipt: object): string {
     string,
     unknown
   >;
-  const canonical = stableStringify(contentFields);
-  const hashBytes = blake3(new TextEncoder().encode(canonical));
-  const hex = Buffer.from(hashBytes).toString('hex');
-  return `blake3:${hex}`;
+  return blake3Prefixed(canonicalJson(contentFields));
 }
 
 // ---------------------------------------------------------------------------

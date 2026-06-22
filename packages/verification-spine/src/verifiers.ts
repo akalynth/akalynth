@@ -6,6 +6,7 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { VerifierSpec, VerifyContext, VerifyResult } from './types.js';
 import { runLegacyVerifier } from './adapters/common.js';
 import { VerifierRegistry } from './registry.js';
@@ -547,6 +548,160 @@ export function createDefaultRegistry(): VerifierRegistry {
     },
   };
 
+  // Web client + Rust bridge cleanup guard (pure; no DB/runtime). Proves the old
+  // direct server spawn bridge, inline server hash helpers, and inline slime
+  // canvas renderer stay removed while the new Rust loader/source-sprite paths
+  // remain present.
+  const webRustCleanupVerifier: VerifierSpec = {
+    id: 'web-rust-cleanup',
+    title: 'Web/Rust Cleanup Guard',
+    description:
+      'Guards old-code removal: no direct server spawn bridge, no inline server hash helpers, Rookguard slime uses source sprite, Rust loader/hash primitive path present',
+    phase: 1,
+    dependsOn: ['build', 'assets'],
+    auditSafe: true,
+    async run(ctx) {
+      return runLegacyVerifier('scripts/verify-web-rust-cleanup.mjs', 'web-rust-cleanup', ctx);
+    },
+  };
+
+  // Coordination-kernel hash regression (builds emitted ESM and runs Jest).
+  // Proves the canonical receipt hash primitive, absence hash parity, and event
+  // hash fixtures execute in the package test path used by CI/developers.
+  const coordinationKernelHashVerifier: VerifierSpec = {
+    id: 'coordination-kernel-hash',
+    title: 'Coordination Kernel Hash Regression',
+    description:
+      'Runs @akalynth/coordination-kernel hash fixture tests so receipt/absence canonical BLAKE3 parity stays executable, not only statically guarded',
+    phase: 1,
+    dependsOn: ['build', 'web-rust-cleanup'],
+    auditSafe: false,
+    async run(ctx) {
+      const startedAt = new Date().toISOString();
+      ctx.log('[adapter] Running: npm -w packages/coordination-kernel run test');
+      const result = spawnSync('npm', ['-w', 'packages/coordination-kernel', 'run', 'test'], {
+        cwd: ctx.repoRoot,
+        encoding: 'utf-8',
+        stdio: ctx.verbose ? 'inherit' : 'pipe',
+        env: ctx.env,
+      });
+      const finishedAt = new Date().toISOString();
+      if (result.status === 0) {
+        return { ok: true, verifierId: 'coordination-kernel-hash', startedAt, finishedAt, findings: [] };
+      }
+      const output = result.stderr || result.stdout || 'Unknown error';
+      return {
+        ok: false,
+        verifierId: 'coordination-kernel-hash',
+        startedAt,
+        finishedAt,
+        findings: [
+          {
+            code: 'COORDINATION_KERNEL_HASH_TEST_FAILED',
+            severity: 'error',
+            message: `Coordination-kernel hash regression failed with exit code ${result.status}`,
+            hint: 'Run manually: npm -w packages/coordination-kernel run test',
+            data: {
+              exitCode: result.status,
+              output: output.slice(0, 500),
+            },
+          },
+        ],
+      };
+    },
+  };
+
+  // Web visual asset wiring guard (pure; no DB/runtime). Proves the client
+  // imports source sprites with sidecars, keeps tutorial rune tiles mapped to
+  // dedicated art, and keeps Rookguard display overlays from covering those
+  // server-authoritative tutorial/gate tiles.
+  const webVisualAssetsVerifier: VerifierSpec = {
+    id: 'web-visual-assets',
+    title: 'Web Visual Asset Wiring',
+    description:
+      'Guards web client source sprite wiring, display-only sidecars, tutorial tile art mappings, and Rookguard overlay visibility around tutorial/gate runes',
+    phase: 1,
+    dependsOn: ['build', 'assets'],
+    auditSafe: true,
+    async run(ctx) {
+      return runLegacyVerifier('scripts/verify-web-visual-assets.mjs', 'web-visual-assets', ctx);
+    },
+  };
+
+  // Browser-backed web play shell smoke. Starts a local debug-client source
+  // preview and runs the mobile/desktop /play/ smoke against real pixels and
+  // controls. It is intentionally Phase 3 and not audit-safe: it launches Vite
+  // and a browser, but does not touch API/runtime state.
+  const webPlayShellVerifier: VerifierSpec = {
+    id: 'web-play-shell',
+    title: 'Web Play Shell Smoke',
+    description:
+      'Starts local debug-client Vite, runs real-browser /play/ smoke, and writes screenshots/report evidence for mobile gate, desktop account panel, controls, and asset visibility',
+    phase: 3,
+    dependsOn: ['web-visual-assets'],
+    auditSafe: false,
+    async run(ctx) {
+      const startedAt = new Date().toISOString();
+      const outDir = path.join(ctx.outDir, 'web-play-shell-smoke');
+      const reportPath = path.join(outDir, 'web_play_shell_smoke.json');
+
+      ctx.log(`[adapter] Running: npm run smoke:web-play-shell -- --out ${outDir}`);
+      const result = spawnSync('npm', ['run', 'smoke:web-play-shell', '--', '--out', outDir], {
+        cwd: ctx.repoRoot,
+        encoding: 'utf-8',
+        stdio: ctx.verbose ? 'inherit' : 'pipe',
+        env: ctx.env,
+      });
+      const finishedAt = new Date().toISOString();
+
+      if (result.status === 0 && fs.existsSync(reportPath)) {
+        let checksTotal = 0;
+        try {
+          const report = JSON.parse(fs.readFileSync(reportPath, 'utf8')) as {
+            checks_total?: unknown;
+          };
+          if (typeof report.checks_total === 'number') checksTotal = report.checks_total;
+        } catch {
+          checksTotal = 0;
+        }
+        return {
+          ok: true,
+          verifierId: 'web-play-shell',
+          startedAt,
+          finishedAt,
+          findings: [],
+          artifacts: [{ kind: 'file', name: 'web_play_shell_smoke', path: reportPath }],
+          metrics: checksTotal > 0 ? { checksTotal } : undefined,
+        };
+      }
+
+      const output = [result.stderr, result.stdout].filter(Boolean).join('\n') || 'Unknown error';
+      return {
+        ok: false,
+        verifierId: 'web-play-shell',
+        startedAt,
+        finishedAt,
+        findings: [
+          {
+            code: 'WEB_PLAY_SHELL_SMOKE_FAILED',
+            severity: 'error',
+            message: `Web play shell smoke failed with exit code ${result.status ?? result.signal ?? 'unknown'}`,
+            hint: 'Run manually: npm run smoke:web-play-shell',
+            data: {
+              exitCode: result.status,
+              signal: result.signal,
+              reportPath,
+              output: output.slice(0, 500),
+            },
+          },
+        ],
+        artifacts: fs.existsSync(reportPath)
+          ? [{ kind: 'file', name: 'web_play_shell_smoke', path: reportPath }]
+          : undefined,
+      };
+    },
+  };
+
   // ============================================================================
   // Register all verifiers
   // ============================================================================
@@ -564,6 +719,9 @@ export function createDefaultRegistry(): VerifierRegistry {
   registry.register(receiptsChainVerifier);
   registry.register(mapgenVerifier);
   registry.register(assetsVerifier);
+  registry.register(webRustCleanupVerifier);
+  registry.register(coordinationKernelHashVerifier);
+  registry.register(webVisualAssetsVerifier);
 
   // Phase 2
   registry.register(chronicleVerifier);
@@ -587,6 +745,7 @@ export function createDefaultRegistry(): VerifierRegistry {
 
   // Phase 3
   registry.register(opsVerifier);
+  registry.register(webPlayShellVerifier);
 
   return registry;
 }

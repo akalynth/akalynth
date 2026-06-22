@@ -1,12 +1,11 @@
 // Akalynth Receipt Materializers
 // Phase 1 + 2: Transform receipts into SQLite rows (idempotent, transactional)
 
-import { blake3 } from '@noble/hashes/blake3';
 import type Database from 'better-sqlite3';
 import type { AuditReceipt } from '../../../../packages/shared/types.js';
 import { THROTTLE_DURATION_MS } from '../../../../packages/shared/types.js';
 import { ACTION_ALIASES, RECEIPT_ACTIONS } from './types.js';
-import { computeReceiptHash } from './hash.js';
+import { computeReceiptHash, hashUtf8Hex } from './hash.js';
 
 // ============================================================================
 // Item ID Derivation
@@ -23,8 +22,7 @@ export function generateItemId(receiptHash: string): string {
   // Strip "blake3:" prefix
   const hashHex = receiptHash.replace(/^blake3:/, '');
   const input = `item:${hashHex}`;
-  const hash = blake3(new TextEncoder().encode(input));
-  return Buffer.from(hash).toString('hex').slice(0, 32);
+  return hashUtf8Hex(input).slice(0, 32);
 }
 
 // ============================================================================

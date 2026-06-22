@@ -2,8 +2,7 @@
 // Ed25519 signed stateless tokens for authentication
 
 import crypto from 'node:crypto';
-import { blake3 } from '@noble/hashes/blake3';
-import { canonicalize } from '../receipt/hasher.js';
+import { blake3HexBytes, canonicalize } from '../receipt/hasher.js';
 
 const TOKEN_ID_DOMAIN = 'akalynth/token_id/v0';
 
@@ -65,8 +64,7 @@ export function computeTokenId(playerId: string, issuedAt: number, nonce: string
   combined.set(issuedAtBytes, offset); offset += issuedAtBytes.length;
   combined.set(nonceBytes, offset);
 
-  const hashBytes = blake3(combined);
-  return `blake3:${Buffer.from(hashBytes).toString('hex')}`;
+  return blake3HexBytes(combined);
 }
 
 /**

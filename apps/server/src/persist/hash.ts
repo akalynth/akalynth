@@ -1,8 +1,66 @@
 // Akalynth Receipt Hashing
 // Canonical JSON + BLAKE3 for deterministic, replay-safe hashing
 
-import { blake3 } from '@noble/hashes/blake3';
-import stableStringify from 'fast-json-stable-stringify';
+import { existsSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { resolve } from 'node:path';
+import { blake3HexUtf8, canonicalJson } from '../../../../packages/shared/hashPrimitive.js';
+
+const require = createRequire(import.meta.url);
+
+type NativeHashPrimitive = {
+  mode: 'native';
+  canonicalJson: (value: unknown) => string;
+  blake3HexUtf8: (value: string) => string;
+};
+
+let nativeHashPrimitive: NativeHashPrimitive | null | undefined;
+
+function uniquePaths(paths: Array<string | undefined>): string[] {
+  return [...new Set(paths.filter((p): p is string => Boolean(p)))];
+}
+
+function repoRootCandidates(): string[] {
+  return uniquePaths([
+    process.env.AKALYNTH_SOURCE_REPO,
+    resolve(process.cwd(), '../..'),
+    process.cwd(),
+    // apps/server/src/persist -> repo root in source; dist/server/apps/server/src/persist -> dist/server.
+    resolve(import.meta.dirname, '../../../..'),
+  ]);
+}
+
+function findRepoFile(relativePath: string): string {
+  const candidates = repoRootCandidates().map((root) => resolve(root, relativePath));
+  for (const p of candidates) {
+    if (existsSync(p)) return p;
+  }
+  return candidates[0];
+}
+
+function shouldPreferNativeHash(): boolean {
+  return process.env.CHRONICLE_NATIVE !== '0';
+}
+
+function getNativeHashPrimitive(): NativeHashPrimitive | null {
+  if (!shouldPreferNativeHash()) return null;
+  if (nativeHashPrimitive !== undefined) return nativeHashPrimitive;
+
+  try {
+    const { openHashPrimitive } = require(findRepoFile('crates/chronicle/napi/loader.cjs')) as {
+      openHashPrimitive: (opts?: { preferNative?: boolean }) => NativeHashPrimitive | null;
+    };
+    nativeHashPrimitive = openHashPrimitive({ preferNative: true });
+  } catch {
+    nativeHashPrimitive = null;
+  }
+
+  return nativeHashPrimitive;
+}
+
+export function receiptHashBackendMode(): 'native' | 'ts' {
+  return getNativeHashPrimitive()?.mode ?? 'ts';
+}
 
 // ============================================================================
 // Canonical JSON
@@ -13,7 +71,7 @@ import stableStringify from 'fast-json-stable-stringify';
  * Deterministic across Node versions and runtimes.
  */
 export function canonicalize(obj: object): string {
-  return stableStringify(obj);
+  return getNativeHashPrimitive()?.canonicalJson(obj) ?? canonicalJson(obj);
 }
 
 // ============================================================================
@@ -32,10 +90,19 @@ export function canonicalize(obj: object): string {
 export function computeReceiptHash(receipt: object): string {
   // Strip event_hash/signature before canonicalizing (derived metadata)
   const { event_hash: _, signature: __, ...contentFields } = receipt as Record<string, unknown>;
-  const canonical = canonicalize(contentFields);
-  const hashBytes = blake3(new TextEncoder().encode(canonical));
-  const hex = Buffer.from(hashBytes).toString('hex');
-  return `blake3:${hex}`;
+  const native = getNativeHashPrimitive();
+  const canonical = native?.canonicalJson(contentFields) ?? canonicalJson(contentFields);
+  const hash = native?.blake3HexUtf8(canonical) ?? blake3HexUtf8(canonical);
+  return `blake3:${hash}`;
+}
+
+/**
+ * Compute raw BLAKE3 hex for server-internal derived IDs.
+ * Uses the same native-preferred backend as receipt hashing, without adding the
+ * receipt-facing "blake3:" prefix.
+ */
+export function hashUtf8Hex(value: string): string {
+  return getNativeHashPrimitive()?.blake3HexUtf8(value) ?? blake3HexUtf8(value);
 }
 
 /**

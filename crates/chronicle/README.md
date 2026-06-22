@@ -2,6 +2,13 @@
 
 Cryptographic witnessing of game events for Akalynth.
 
+> **Source of truth: [github.com/akalynth/akalynth-chronicle](https://github.com/akalynth/akalynth-chronicle).**
+> This crate is vendored into the `akalynth` monorepo at `crates/chronicle/`. Land kernel changes
+> upstream and sync them in (submodule / vendored copy); do not fork the crate in-tree. There is no
+> root Cargo workspace — build crate-local (`cd crates/chronicle && cargo build --release`). The bench
+> (Step 0), parity (Step 1), and napi addon (Step 2) harnesses live under `bench/`, `parity/`, `napi/`
+> and travel with the crate. See `extract-to-standalone.sh` to split this dir into the standalone repo.
+
 ## Purpose
 
 Chronicle provides an **append-only log** with cryptographic guarantees:
@@ -116,7 +123,11 @@ cargo test
 
 ## Integration with Akalynth Server
 
-The TypeScript server calls `chronicle_append` via `child_process.spawn`:
+The TypeScript server calls the Rust witness kernel through
+`apps/server/src/witness/chronicleAdapter.ts`. The adapter opens a long-lived
+backend handle once, prefers the in-process N-API addon by default, and fails
+closed when the native backend is unavailable. The server runtime no longer
+exposes the old `chronicle_append` process fallback:
 
 ```typescript
 const receipt = await chronicleAppend({
@@ -127,7 +138,11 @@ const receipt = await chronicleAppend({
 });
 ```
 
-This is mediated by the `chronicleAdapter.ts` module (PR 3).
+`chronicle_append --verify` and CLI append remain available for offline auditor,
+rollback, and parity tooling that opens `crates/chronicle/napi/loader.cjs`
+directly with `allowCliFallback: true`. The server adapter always calls the
+loader with `allowCliFallback: false` and ignores `CHRONICLE_ALLOW_CLI_FALLBACK`
+so runtime writes cannot silently return to the spawn-per-event bridge.
 
 ## Future: Merkle Trees
 

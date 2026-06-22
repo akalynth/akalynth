@@ -24,7 +24,7 @@ each asset lineage (prompt + raw + cleaned + hash), a lifecycle gate, and a hard
 | `raw_file` | string \| null | Raw generator output under `data/assets-src/_raw/…` (gitignored), or `null`. |
 | `cleaned_file` | string \| null | Tracked cleaned PNG path (repo-relative), or `null` until cleaned. |
 | `sha256` | string \| null | Hex sha256 of the **cleaned PNG**; `null` until `status` reaches `cleaned_png`. Validator recomputes and compares. |
-| `tilemap_test` | string \| null | Path to the test-map placement that proved it in-world; `null` until `tilemap_tested`. |
+| `tilemap_test` | string \| null | Path to the tracked source test-map placement that proved it in-world; required for `tilemap_tested`, `human_reviewed`, and `promoted`, and `null` before then. |
 | `license_status` | enum | `hand_authored` \| `original_generated_asset`. |
 | `review_status` | enum | `needs_human_review` \| `approved` \| `legacy`. |
 | `tile_code` | int \| null | Optional display-only link to a `TileCode` (0–8, packages/shared/types.ts) for ground/structure tiles. **Never authority.** |
@@ -65,3 +65,7 @@ each asset lineage (prompt + raw + cleaned + hash), a lifecycle gate, and a hard
 `mechanics` is always `null`. A tile that *looks* solid is not solid until the
 server says so (`WALKABLE_TILES` / map metadata in `packages/shared`). Any real
 effect is routed through server + verification work, never the art manifest.
+
+The asset verifier checks `tilemap_test` for promoted lifecycle statuses, but a
+test-map receipt is still display proof only. It does not grant walkability,
+collision, spawn, transition, reward, or receipt authority.

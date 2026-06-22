@@ -10,9 +10,8 @@
 // Outputs MUST remain byte-identical to the server's chronicle writer. Do NOT
 // change the canonicalization, domain separators, or preimage field order.
 
-import { blake3 } from '@noble/hashes/blake3';
 import * as nodeCrypto from 'node:crypto';
-import stringify from 'fast-json-stable-stringify';
+import { blake3HexUtf8, blake3Prefixed, canonicalJson } from './hashPrimitive.js';
 
 export const DOMAIN_EVENT = 'akalynth:chronicle:event:v1\0';
 export const DOMAIN_GLOBAL = 'akalynth:chronicle:global:v1\0';
@@ -42,17 +41,10 @@ export type ChronicleEntry = {
   canonical_json?: string; // the EXACT JSON string that was hashed for line_event_hash
 };
 
-function blake3HexBytes(bytes: Uint8Array): string {
-  return Buffer.from(blake3(bytes)).toString('hex');
-}
-
-function blake3HexUtf8(s: string): string {
-  return blake3HexBytes(Buffer.from(s, 'utf8'));
-}
-
-function stableJson(value: unknown): string {
-  return stringify(value);
-}
+export type ChronicleHashFields = Pick<
+  ChronicleEntry,
+  'v' | 'world_id' | 'rulebook_root' | 'event_type' | 'actor' | 'tick' | 'caps_hash'
+>;
 
 export function stripPayloadHashFields(
   payload: Record<string, unknown>
@@ -71,11 +63,15 @@ export function stripPayloadHashFields(
 
 export function computePayloadHash(payload: Record<string, unknown>): string {
   const stripped = stripPayloadHashFields(payload);
-  return `blake3:${blake3HexUtf8(stableJson(stripped))}`;
+  return blake3Prefixed(canonicalJson(stripped));
+}
+
+export function computeCapsHash(caps: string[]): string {
+  return blake3Prefixed(canonicalJson(caps ?? []));
 }
 
 export function computeEventHash(
-  entry: ChronicleEntry,
+  entry: ChronicleHashFields,
   prevEventHash: string,
   payloadHash: string
 ): string {
@@ -90,7 +86,7 @@ export function computeEventHash(
     payload_hash: payloadHash,
     prev_event_hash: prevEventHash,
   };
-  return `blake3:${blake3HexUtf8(DOMAIN_EVENT + stableJson(preimage))}`;
+  return blake3Prefixed(DOMAIN_EVENT + canonicalJson(preimage));
 }
 
 /**
@@ -98,7 +94,7 @@ export function computeEventHash(
  * The global chain commits to the per-actor event_hash, linking both chains.
  */
 export function computeGlobalEventHash(
-  entry: ChronicleEntry,
+  entry: ChronicleHashFields,
   payloadHash: string,
   eventHash: string,
   prevGlobalHash: string
@@ -115,7 +111,7 @@ export function computeGlobalEventHash(
     event_hash: eventHash, // Commits global chain to per-actor chain
     prev_global_hash: prevGlobalHash,
   };
-  return `blake3:${blake3HexUtf8(DOMAIN_GLOBAL + stableJson(preimage))}`;
+  return blake3Prefixed(DOMAIN_GLOBAL + canonicalJson(preimage));
 }
 
 function getEmbeddedString(payload: Record<string, unknown>, key: string): string | null {
@@ -262,7 +258,7 @@ const SPKI_ED25519_PREFIX = Buffer.from('302a300506032b6570032100', 'hex');
 /** Raw blake3 hex (no `blake3:` prefix) of a UTF-8 string — matches the Rust
  * chronicle writer's `blake3_hex` (.to_hex()) used for line_event_hash/line_prev_hash. */
 function lineBlake3Hex(s: string): string {
-  return Buffer.from(blake3(Buffer.from(s, 'utf8'))).toString('hex');
+  return blake3HexUtf8(s);
 }
 
 /** Ed25519 verify over `${prevHash}|${eventHash}` with a raw 32-byte pubkey hex.

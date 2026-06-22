@@ -30,14 +30,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
-import stringify from "fast-json-stable-stringify";
 import * as ed from "@noble/ed25519";
-import { sha512 } from "@noble/hashes/sha2";
-import { blake3 } from "@noble/hashes/blake3";
+import { blake3Bytes, blake3HexBytes, canonicalJson } from "../../../packages/shared/hashPrimitive.js";
 
-// Configure @noble/ed25519 to use SHA-512 from @noble/hashes
-// This is required before calling getPublicKey/sign
-ed.hashes.sha512 = (m: Uint8Array) => sha512(m);
+// Configure @noble/ed25519 with Node's built-in SHA-512 before getPublicKey/sign.
+ed.hashes.sha512 = (m: Uint8Array) => crypto.createHash("sha512").update(m).digest();
 
 type ManifestEntry = { path: string; hash: string };
 
@@ -106,9 +103,7 @@ function listFilesRecursively(baseDir: string): string[] {
 
 // Hash raw bytes of file with BLAKE3, return hex string (no prefix).
 function blake3FileHex(absPath: string): string {
-  const bytes = fs.readFileSync(absPath);
-  const digest = blake3(bytes);
-  return Buffer.from(digest).toString("hex");
+  return blake3HexBytes(fs.readFileSync(absPath));
 }
 
 // Merkle leaf: BLAKE3("leaf\0" + path + "\0" + file_hash_bytes)
@@ -118,21 +113,20 @@ function merkleLeaf(pathUtf8: string, fileHashHex: string): Uint8Array {
   const mid = Buffer.from(pathUtf8, "utf8");
   const sep = Buffer.from("\0", "utf8");
   const msg = Buffer.concat([prefix, mid, sep, fileHashBytes]);
-  return blake3(msg);
+  return blake3Bytes(msg);
 }
 
 // Merkle node: BLAKE3("node\0" + left + right)
 function merkleNode(left: Uint8Array, right: Uint8Array): Uint8Array {
   const prefix = Buffer.from("node\0", "utf8");
   const msg = Buffer.concat([prefix, Buffer.from(left), Buffer.from(right)]);
-  return blake3(msg);
+  return blake3Bytes(msg);
 }
 
 function merkleRootFromEntries(entries: ManifestEntry[]): string {
   if (entries.length === 0) {
     // Define empty root deterministically
-    const empty = blake3(Buffer.from("node\0", "utf8"));
-    return Buffer.from(empty).toString("hex");
+    return blake3HexBytes(Buffer.from("node\0", "utf8"));
   }
 
   // Build initial leaves
@@ -154,14 +148,11 @@ function merkleRootFromEntries(entries: ManifestEntry[]): string {
 }
 
 function canonicalJsonBytes(obj: unknown): Buffer {
-  // fast-json-stable-stringify => sorted keys, no whitespace
-  return Buffer.from(stringify(obj), "utf8");
+  return Buffer.from(canonicalJson(obj), "utf8");
 }
 
 function manifestHashHex(manifest: RulebookManifest): string {
-  const bytes = canonicalJsonBytes(manifest);
-  const digest = blake3(bytes);
-  return Buffer.from(digest).toString("hex");
+  return blake3HexBytes(canonicalJsonBytes(manifest));
 }
 
 function getDeterministicGenesisTime(): string {
@@ -244,7 +235,7 @@ async function main() {
   const root = `blake3:${rootHex}`;
 
   // 5) Write manifest + root
-  fs.writeFileSync(manifestPath, stringify(manifest) + "\n", "utf8");
+  fs.writeFileSync(manifestPath, canonicalJson(manifest) + "\n", "utf8");
   fs.writeFileSync(rootPath, root + "\n", "utf8");
 
   // 6) Create GENESIS.json

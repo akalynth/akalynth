@@ -10,7 +10,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { blake3 } from '@noble/hashes/blake3';
+import { blake3Bytes, blake3HexBytes } from '../../../../packages/shared/hashPrimitive.js';
 
 function findRepoRoot(startDir: string): string | null {
   let cur = path.resolve(startDir);
@@ -57,9 +57,7 @@ function listFilesRecursively(baseDir: string): string[] {
 }
 
 function blake3FileHex(absPath: string): string {
-  const bytes = fs.readFileSync(absPath);
-  const digest = blake3(bytes);
-  return Buffer.from(digest).toString('hex');
+  return blake3HexBytes(fs.readFileSync(absPath));
 }
 
 // Merkle leaf: BLAKE3("leaf\0" + path + "\0" + file_hash_bytes)
@@ -69,14 +67,14 @@ function merkleLeaf(pathUtf8: string, fileHashHex: string): Uint8Array {
   const mid = Buffer.from(pathUtf8, 'utf8');
   const sep = Buffer.from('\0', 'utf8');
   const msg = Buffer.concat([prefix, mid, sep, fileHashBytes]);
-  return blake3(msg);
+  return blake3Bytes(msg);
 }
 
 // Merkle node: BLAKE3("node\0" + left + right)
 function merkleNode(left: Uint8Array, right: Uint8Array): Uint8Array {
   const prefix = Buffer.from('node\0', 'utf8');
   const msg = Buffer.concat([prefix, Buffer.from(left), Buffer.from(right)]);
-  return blake3(msg);
+  return blake3Bytes(msg);
 }
 
 type ManifestEntry = { path: string; hash: string };
@@ -105,8 +103,7 @@ function computeRulebookRoot(): { root: string; fileCount: number } {
 
   if (entries.length === 0) {
     // Empty rulebook: deterministic empty root
-    const empty = blake3(Buffer.from('node\0', 'utf8'));
-    return { root: `blake3:${Buffer.from(empty).toString('hex')}`, fileCount: 0 };
+    return { root: `blake3:${blake3HexBytes(Buffer.from('node\0', 'utf8'))}`, fileCount: 0 };
   }
 
   // Build initial leaves

@@ -8,7 +8,8 @@
  *   ENABLE_CHRONICLE=1      Enable witnessing (default: disabled)
  *   CHRONICLE_LOG_PATH      Path to chronicle log file (default: chronicle.log)
  *   CHRONICLE_KEY_PATH      Path to Ed25519 signing key (default: chronicle.key)
- *   CHRONICLE_BIN           Path to chronicle_append binary
+ *   CHRONICLE_NATIVE=0      Disable in-process N-API preference (default: prefer native)
+ *   CHRONICLE_NATIVE_PATH   Optional explicit path to chronicle-native.node
  *
  * Usage:
  *   import { chronicleAppend, isChronicleEnabled } from './witness/chronicleAdapter.js';
@@ -18,14 +19,12 @@
  *   }
  */
 
-import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
-import stringify from 'fast-json-stable-stringify';
 
-/**
- * Receipt returned by chronicle_append after successful append
- */
+const require = createRequire(import.meta.url);
+
 export interface ChronicleReceipt {
   /** Hash of the previous entry (or "genesis") */
   prev_hash: string;
@@ -47,33 +46,43 @@ export interface ChronicleAppendOptions {
   logPath?: string;
   /** Path to Ed25519 signing key (overrides CHRONICLE_KEY_PATH) */
   keyPath?: string;
-  /** Path to chronicle_append binary (overrides CHRONICLE_BIN) */
-  binPath?: string;
   /** If true, throw on failure even when chronicle is disabled */
   strict?: boolean;
 }
 
-/**
- * Get the default path to chronicle_append binary
- * Checks both workspace build and local crate build locations
- */
-function defaultBinPath(): string {
-  // apps/server/src/witness -> repo root
-  const repoRoot = resolve(import.meta.dirname, '../../../..');
+type NativeChronicle = {
+  mode: 'native';
+  append: (event: object) => ChronicleReceipt;
+  verify: () => unknown;
+};
 
-  const candidates = [
-    // Built from repo root: cargo build --release -p chronicle --bin chronicle_append
-    resolve(repoRoot, 'target/release/chronicle_append'),
+export type ChronicleBackendMode = NativeChronicle['mode'] | 'disabled' | 'unavailable';
 
-    // Built inside crate: cd crates/chronicle && cargo build --release
-    resolve(repoRoot, 'crates/chronicle/target/release/chronicle_append'),
-  ];
+let chronicleHandle: { key: string; handle: NativeChronicle } | null = null;
+const chronicleFailedKeys = new Set<string>();
+
+function uniquePaths(paths: Array<string | undefined>): string[] {
+  return [...new Set(paths.filter((p): p is string => Boolean(p)))];
+}
+
+function repoRootCandidates(): string[] {
+  return uniquePaths([
+    process.env.AKALYNTH_SOURCE_REPO,
+    resolve(process.cwd(), '../..'),
+    process.cwd(),
+    // apps/server/src/witness -> repo root in source; dist/server/apps/server/src/witness -> dist/server.
+    resolve(import.meta.dirname, '../../../..'),
+  ]);
+}
+
+function findRepoFile(relativePath: string): string {
+  const candidates = repoRootCandidates().map((root) => resolve(root, relativePath));
 
   for (const p of candidates) {
     if (existsSync(p)) return p;
   }
 
-  // Fall back to the first (so error message is predictable)
+  // Fall back to the first candidate so error messages and smoke tests stay deterministic.
   return candidates[0];
 }
 
@@ -98,12 +107,64 @@ export function isChronicleEnabled(): boolean {
   return process.env.ENABLE_CHRONICLE === '1';
 }
 
+function shouldPreferNativeChronicle(): boolean {
+  return process.env.CHRONICLE_NATIVE !== '0';
+}
+
+function getChronicleHandle(logPath: string, keyPath: string): NativeChronicle | null {
+  const preferNative = shouldPreferNativeChronicle();
+  const cacheKey = `${logPath}\0${keyPath}\0${preferNative ? 'native' : 'disabled-native'}`;
+  if (chronicleHandle?.key === cacheKey) return chronicleHandle.handle;
+  if (chronicleFailedKeys.has(cacheKey)) return null;
+
+  try {
+    const { openChronicle } = require(findRepoFile('crates/chronicle/napi/loader.cjs')) as {
+      openChronicle: (opts: {
+        logPath: string;
+        keyPath: string;
+        preferNative?: boolean;
+        allowCliFallback?: boolean;
+      }) => NativeChronicle;
+    };
+    const handle = openChronicle({ logPath, keyPath, preferNative, allowCliFallback: false });
+    chronicleHandle = { key: cacheKey, handle };
+    return handle;
+  } catch (err) {
+    chronicleFailedKeys.add(cacheKey);
+    console.warn(`chronicle: Rust loader unavailable (${(err as Error).message})`);
+    return null;
+  }
+}
+
+function resolvedOptions(opts: Pick<ChronicleAppendOptions, 'logPath' | 'keyPath'>) {
+  return {
+    logPath: opts.logPath ?? defaultLogPath(),
+    keyPath: opts.keyPath ?? defaultKeyPath(),
+  };
+}
+
+/**
+ * Eagerly open the Chronicle backend once during server boot.
+ *
+ * This is intentionally mode-only: it proves which backend is active without
+ * appending an event or mutating the log. Key creation follows the same behavior
+ * as the first append, only earlier in process lifetime.
+ */
+export function initChronicleBackend(
+  opts: Pick<ChronicleAppendOptions, 'logPath' | 'keyPath'> = {}
+): ChronicleBackendMode {
+  if (!isChronicleEnabled()) return 'disabled';
+  const { logPath, keyPath } = resolvedOptions(opts);
+  return getChronicleHandle(logPath, keyPath)?.mode ?? 'unavailable';
+}
+
 /**
  * Append an event to the chronicle log
  *
  * When ENABLE_CHRONICLE is not set to "1", returns null (no-op).
- * When enabled, serializes the event to canonical JSON and pipes
- * it to the chronicle_append CLI.
+ * When enabled, appends through the long-lived Rust loader handle. The loader
+ * prefers the in-process N-API addon and fails closed when it is unavailable.
+ * The old CLI auditor path is intentionally not reachable from server runtime.
  *
  * @param event - Any JSON-serializable event object
  * @param opts - Optional configuration overrides
@@ -120,48 +181,12 @@ export function chronicleAppend(
     return null;
   }
 
-  const bin = opts.binPath ?? process.env.CHRONICLE_BIN ?? defaultBinPath();
-  const logPath = opts.logPath ?? defaultLogPath();
-  const keyPath = opts.keyPath ?? defaultKeyPath();
+  const { logPath, keyPath } = resolvedOptions(opts);
 
-  // Check binary exists
-  if (!existsSync(bin)) {
-    const msg =
-      `chronicle_append not found at ${bin}\n` +
-      `Build it:\n  cd crates/chronicle && cargo build --release`;
+  const handle = getChronicleHandle(logPath, keyPath);
+  if (handle) return handle.append(event);
 
-    if (opts.strict) {
-      throw new Error(msg);
-    }
-    if (!enabled) {
-      return null;
-    }
-    throw new Error(msg);
-  }
-
-  // Serialize to canonical JSON (sorted keys, no whitespace)
-  const canonical = stringify(event);
-
-  // Call chronicle_append via stdin
-  const proc = spawnSync(bin, ['--log', logPath, '--key', keyPath], {
-    input: canonical,
-    encoding: 'utf8',
-  });
-
-  if (proc.status !== 0) {
-    const err = proc.stderr?.trim() || '(no stderr)';
-    const msg = `chronicle_append failed: ${err}`;
-
-    if (opts.strict) {
-      throw new Error(msg);
-    }
-    if (!enabled) {
-      return null;
-    }
-    throw new Error(msg);
-  }
-
-  return JSON.parse(proc.stdout.trim()) as ChronicleReceipt;
+  throw new Error('chronicle native backend unavailable');
 }
 
 /**
@@ -177,21 +202,10 @@ export function chronicleVerify(
     return null;
   }
 
-  const bin = opts.binPath ?? process.env.CHRONICLE_BIN ?? defaultBinPath();
-  const logPath = opts.logPath ?? defaultLogPath();
-  const keyPath = opts.keyPath ?? defaultKeyPath();
+  const { logPath, keyPath } = resolvedOptions(opts);
 
-  if (!existsSync(bin)) {
-    throw new Error(`chronicle_append not found at ${bin}`);
-  }
+  const handle = getChronicleHandle(logPath, keyPath);
+  if (handle) return JSON.stringify(handle.verify());
 
-  const proc = spawnSync(bin, ['--verify', '--log', logPath, '--key', keyPath], {
-    encoding: 'utf8',
-  });
-
-  if (proc.status !== 0) {
-    throw new Error(`chronicle verify failed: ${proc.stderr?.trim() || '(no stderr)'}`);
-  }
-
-  return proc.stdout.trim();
+  throw new Error('chronicle native backend unavailable');
 }

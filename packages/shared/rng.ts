@@ -6,16 +6,14 @@
 //
 // Outputs MUST remain byte-identical to the server. Do NOT change semantics.
 
-import { blake3 } from '@noble/hashes/blake3';
-import stableStringify from 'fast-json-stable-stringify';
+import { blake3Bytes, blake3Prefixed, canonicalJson } from './hashPrimitive.js';
 
 // Domain separators
 export const RNG_COMMIT_DOMAIN_V0 = 'akalynth:rng:commit:v1\0';
 export const RNG_COMMIT_DOMAIN_V1 = 'akalynth:rng:commit:v1\0';
 
 export function stableJson(value: unknown): string {
-  // Inline stable stringify for commitment preimage
-  return JSON.stringify(value, Object.keys(value as object).sort());
+  return canonicalJson(value);
 }
 
 /**
@@ -23,8 +21,7 @@ export function stableJson(value: unknown): string {
  * Used for death_drop:v0 (immediate reveal)
  */
 export function rngCommit(seed: string): string {
-  const hashBytes = blake3(new TextEncoder().encode(RNG_COMMIT_DOMAIN_V0 + seed));
-  return `blake3:${Buffer.from(hashBytes).toString('hex')}`;
+  return blake3Prefixed(RNG_COMMIT_DOMAIN_V0 + seed);
 }
 
 /**
@@ -34,14 +31,13 @@ export function rngCommit(seed: string): string {
  */
 export function rngCommitV1(domain: string, actor: string, revealHex: string): string {
   const preimage = { v: 1, domain, actor, reveal: revealHex };
-  const hashBytes = blake3(new TextEncoder().encode(RNG_COMMIT_DOMAIN_V1 + stableJson(preimage)));
-  return `blake3:${Buffer.from(hashBytes).toString('hex')}`;
+  return blake3Prefixed(RNG_COMMIT_DOMAIN_V1 + stableJson(preimage));
 }
 
 // Legacy drop RNG (v0): blake3(seed + ":" + index) -> u32
 export function rngDrawU32Legacy(seed: string, index: number): number {
   const input = `${seed}:${index}`;
-  const h = blake3(new TextEncoder().encode(input));
+  const h = blake3Bytes(Buffer.from(input, 'utf8'));
 
   return ((h[0] << 24) | (h[1] << 16) | (h[2] << 8) | h[3]) >>> 0;
 }
@@ -85,7 +81,7 @@ export const RNG_DERIVE_DOMAIN_V2 = 'akalynth:rng:v2:derive\0';
 //
 // Domain separator: "akalynth:rng:inv:v1" (no NUL — matches the convention of
 // a plain string prefix, same as rngCommit's domain separator).
-// Preimage:  domain || salt || stableStringify(items)
+// Preimage:  domain || salt || canonicalJson(items)
 // Output:    "blake3:<hex>"
 export const RNG_INV_COMMIT_DOMAIN = 'akalynth:rng:inv:v1';
 
@@ -97,13 +93,12 @@ export const RNG_INV_COMMIT_DOMAIN = 'akalynth:rng:inv:v1';
  * @param items Full ItemForDrop snapshot as passed to computeDeathDrops.
  *              Using `object[]` to avoid a circular import (dropPolicy → rng → dropPolicy).
  *              In practice callers pass `ItemForDrop[]`; the commitment is over
- *              stableStringify(items), so any JSON-serializable array works.
+ *              canonicalJson(items), so any JSON-serializable array works.
  * @returns     `"blake3:<hex>"` — the commitment stored in the receipt.
  */
 export function computeInventoryCommit(salt: string, items: object[]): string {
-  const preimage = RNG_INV_COMMIT_DOMAIN + salt + stableStringify(items);
-  const hashBytes = blake3(new TextEncoder().encode(preimage));
-  return `blake3:${Buffer.from(hashBytes).toString('hex')}`;
+  const preimage = RNG_INV_COMMIT_DOMAIN + salt + canonicalJson(items);
+  return blake3Prefixed(preimage);
 }
 
 export function rngDeriveSeedV2(
@@ -113,6 +108,5 @@ export function rngDeriveSeedV2(
   eventPreimageHash: string
 ): string {
   const preimage = RNG_DERIVE_DOMAIN_V2 + reveal + worldId + eventDomain + eventPreimageHash;
-  const hashBytes = blake3(new TextEncoder().encode(preimage));
-  return `blake3:${Buffer.from(hashBytes).toString('hex')}`;
+  return blake3Prefixed(preimage);
 }

@@ -1,0 +1,29 @@
+{
+  "asset_id": "akalynth_tile_tutorial_move_001",
+  "game": "Akalynth",
+  "asset_type": "tile",
+  "biome": "rookguard",
+  "status": "tilemap_tested",
+  "dimensions_px": [
+    32,
+    32
+  ],
+  "dimensions_target_px": [
+    32,
+    32
+  ],
+  "camera": "top_down_slight_isometric",
+  "background": "opaque",
+  "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+  "prompt_file": "data/assets-src/prompts/tiles/akalynth_tile_tutorial_move_001.txt",
+  "raw_file": null,
+  "cleaned_file": "data/assets-src/sprites/tile__tutorial_move.png",
+  "sha256": "bd412bc9bb46b37c4a8c72cd9345c17e9577c47f604671ff07d83c51da341264",
+  "tilemap_test": "data/assets-src/test-maps/rookguard-tutorial-assets-v1.json",
+  "license_status": "hand_authored",
+  "review_status": "needs_human_review",
+  "tile_code": 5,
+  "mechanics": null,
+  "copyright_boundary": "original hand-authored script-rendered asset; no copied third-party sprite, UI, logo, or map layout",
+  "notes": "Movement tutorial rune: mossy stone base with an eastward step-arrow motif. Display-only; server TileCode 5 remains the sole movement/tutorial authority."
+}

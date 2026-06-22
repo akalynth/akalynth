@@ -138,18 +138,26 @@ export const LANDMARK_MARKERS: Record<string, { glyph: string; color: string }> 
 export const TILE_LORE: Partial<Record<TileCode, LoreEntry>> = {
   [TileCode.TutorialMove]: {
     title: 'Tutorial · Move',
-    body: 'Step here to complete the movement lesson.',
+    body:
+      'A moss-bright step rune. The tile is only a marker; the server records ' +
+      'the movement lesson when your character actually crosses it.',
   },
   [TileCode.TutorialChat]: {
     title: 'Tutorial · Chat',
-    body: 'Stand nearby, then send any chat message.',
+    body:
+      'A blue speech rune for the first public signal. Stand nearby, then send ' +
+      'any chat message so the server can mark the lesson.',
   },
   [TileCode.TutorialTem]: {
     title: 'Tutorial · Tem',
-    body: 'A friendly Tem challenge. Pass it to continue.',
+    body:
+      'A witness-eye rune for the friendly Tem check. Pass it to continue; the ' +
+      'image itself grants nothing.',
   },
   [TileCode.GateToAzura]: {
     title: 'Gate to High City',
-    body: 'Opens once the tutorial checklist is complete. Step through to enter High City.',
+    body:
+      'A sealed threshold mark. It opens only after the server sees movement, ' +
+      'chat, Tem, training, and vocation receipts.',
   },
 };
