@@ -60,6 +60,11 @@
       {
         "command": "akalynth-ops/scripts/verify-play-build-govern-surface-v1.sh",
         "status": "passed"
+      },
+      {
+        "command": "npm -w apps/server run verify:builder-draft-namespace-v1",
+        "status": "passed",
+        "notes": "PR-6 in-memory preview namespace scaffold."
       }
     ]
   },
@@ -79,7 +84,11 @@
     "shell_verifier": "scripts/verify-play-build-govern-surface-v1.sh",
     "ops_gate_adapter": "akalynth-ops/bin/builder-promotion-gate.sh",
     "ops_verifier": "akalynth-ops/scripts/verify-play-build-govern-surface-v1.sh",
-    "ops_closure": "akalynth-ops/evidence/play-build-govern-surface-v1/closure.json"
+    "ops_closure": "akalynth-ops/evidence/play-build-govern-surface-v1/closure.json",
+    "builder_draft_shared": "packages/shared/builderDraft.ts",
+    "builder_draft_namespace_store": "apps/server/src/builder/draftNamespace.ts",
+    "builder_preview_session": "apps/server/src/builder/previewSession.ts",
+    "builder_namespace_verifier": "apps/server/tools/verify-builder-draft-namespace-v1.ts"
   },
   "non_mutation_boundary": {
     "runtime_trees": "unchanged",

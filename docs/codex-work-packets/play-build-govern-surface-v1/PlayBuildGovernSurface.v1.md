@@ -55,7 +55,15 @@ akalynth-ops/scripts/verify-play-build-govern-surface-v1.sh
 - No `/opt` or runtime state mutation
 - No public site publish of builder/operator internals
 
+## PR-6 Runtime Scaffold
+
+- `packages/shared/builderDraft.ts` — shared manifest + checksum contracts
+- `apps/server/src/builder/draftNamespace.ts` — in-memory preview namespace store
+- `apps/server/src/builder/previewSession.ts` — preview_only receipt scaffold
+- `apps/server/tools/verify-builder-draft-namespace-v1.ts` — proof target `builder_draft_namespace_v1`
+
 ## Follow-On
 
-- Runtime builder draft namespace + preview server (PR-6+)
+- HTTP preview API + debug-client builder surface (PR-7+)
+- Lane publish with promotion permit attached (operator invoke)
 - Public positioning review when operator approves `public_projection`

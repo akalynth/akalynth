@@ -17,6 +17,8 @@ fi
 [[ -n "$NODE" && -x "$NODE" ]] || { echo "verify-play-build-govern-surface-v1: node not found" >&2; exit 127; }
 
 "$NODE" ./node_modules/tsx/dist/cli.mjs apps/server/tools/verify-play-build-govern-surface-v1.ts
+"$NODE" ./node_modules/tsx/dist/cli.mjs apps/server/tools/verify-builder-draft-namespace-v1.ts
+"$NODE" ./node_modules/tsx/dist/cli.mjs packages/shared/test/builderDraft.test.ts
 "$OPS/scripts/verify-play-build-govern-surface-v1.sh"
 
 echo "verify-play-build-govern-surface-v1: repo + ops chain passed"

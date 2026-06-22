@@ -42,12 +42,22 @@ bin/builder-promotion-gate.sh \
   --skip-publish
 ```
 
+## Runtime Scaffold (PR-6)
+
+In-memory preview namespace only — not wired to HTTP or live world registries.
+
+```bash
+npm -w apps/server run verify:builder-draft-namespace-v1
+npx tsx packages/shared/test/builderDraft.test.ts
+```
+
 ## Validation Commands
 
 From `repos/akalynth`:
 
 ```bash
 npm -w apps/server run verify:play-build-govern-surface-v1
+npm -w apps/server run verify:builder-draft-namespace-v1
 ./scripts/verify-play-build-govern-surface-v1.sh
 ```
 

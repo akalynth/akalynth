@@ -3,10 +3,11 @@
 // Proof target: play_build_govern_surface_v1
 // Authority: AKALYNTH_PLAY_BUILD_GOVERN_SURFACE_V1
 
-import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import type { BuilderDraftManifest } from '../../../packages/shared/builderDraft.js';
+import { computeManifestChecksum } from '../../../packages/shared/builderDraft.js';
 
 const PACKET_AUTHORITY = 'AKALYNTH_PLAY_BUILD_GOVERN_SURFACE_V1';
 const PROOF_TARGET = 'play_build_govern_surface_v1';
@@ -27,16 +28,6 @@ const PATHS = {
   previewSample: path.join(CODEX_ROOT, 'samples/rookguard-local-preview-session.sample.json'),
   reviewSample: path.join(CODEX_ROOT, 'samples/rookguard-promotion-review-packet.sample.json'),
 };
-
-interface DraftManifest {
-  schema_version: string;
-  object_id: string;
-  source_object: string;
-  packet_ref: string;
-  preview_namespace: string;
-  changed_files: Array<{ path: string; sha256: string }>;
-  abuse_review: { grants_live_rewards: boolean; grants_live_access: boolean };
-}
 
 interface PreviewSession {
   schema_version: string;
@@ -76,29 +67,6 @@ function readJson<T>(filePath: string): T {
   return JSON.parse(readFileSync(filePath, 'utf8')) as T;
 }
 
-function stableStringify(value: unknown): string {
-  if (value === null) return 'null';
-  const kind = typeof value;
-  if (kind === 'boolean' || kind === 'number') return JSON.stringify(value);
-  if (kind === 'string') return JSON.stringify(value);
-  if (Array.isArray(value)) {
-    return `[${value.map((entry) => stableStringify(entry)).join(', ')}]`;
-  }
-  const obj = value as Record<string, unknown>;
-  const keys = Object.keys(obj).sort();
-  return `{${keys.map((key) => `${JSON.stringify(key)}: ${stableStringify(obj[key])}`).join(', ')}}`;
-}
-
-function manifestChecksum(manifest: DraftManifest): string {
-  const clone = JSON.parse(JSON.stringify(manifest)) as DraftManifest;
-  for (const item of clone.changed_files) {
-    if (item.path.endsWith('rookguard-builder-draft-manifest.sample.json')) {
-      item.sha256 = '0'.repeat(64);
-    }
-  }
-  return createHash('sha256').update(stableStringify(clone)).digest('hex');
-}
-
 test('codex custody files exist', () => {
   for (const filePath of Object.values(PATHS)) {
     assert(existsSync(filePath), `missing ${filePath}`);
@@ -119,7 +87,7 @@ test('codex entry accepted and private', () => {
   assert(entry.lineage.accepted === true, 'lineage accepted');
   assert(entry.visibility.public === false, 'visibility public');
   assert(entry.public_projection.published === false, 'public projection');
-  assert(entry.world.implementation.stage === 'spec', 'implementation stage');
+  assert(['spec', 'prototype'].includes(entry.world.implementation.stage), 'implementation stage');
   assert(entry.world.implementation.slice === PACKET_AUTHORITY, 'implementation slice');
 });
 
@@ -137,7 +105,7 @@ test('design page anchors present', () => {
 });
 
 test('rookguard draft manifest contract', () => {
-  const manifest = readJson<DraftManifest>(PATHS.manifestSample);
+  const manifest = readJson<BuilderDraftManifest>(PATHS.manifestSample);
   assert(manifest.schema_version === 'builder-draft-manifest/v1', 'manifest schema');
   assert(manifest.source_object === 'rookguard', 'source object');
   assert(manifest.preview_namespace.startsWith('preview:'), 'preview namespace');
@@ -147,18 +115,18 @@ test('rookguard draft manifest contract', () => {
 });
 
 test('preview session references manifest checksum', () => {
-  const manifest = readJson<DraftManifest>(PATHS.manifestSample);
+  const manifest = readJson<BuilderDraftManifest>(PATHS.manifestSample);
   const preview = readJson<PreviewSession>(PATHS.previewSample);
   assert(preview.schema_version === 'local-preview-session/v1', 'preview schema');
   assert(preview.preview_only === true, 'preview only');
   assert(preview.draft_manifest_ref.endsWith('rookguard-builder-draft-manifest.sample.json'), 'manifest ref');
-  assert(preview.artifacts.manifest_checksum === manifestChecksum(manifest), 'checksum');
+  assert(preview.artifacts.manifest_checksum === computeManifestChecksum(manifest), 'checksum');
 });
 
 test('review packet accepts beta lane only with pass abuse review', () => {
-  const manifest = readJson<DraftManifest>(PATHS.manifestSample);
+  const manifest = readJson<BuilderDraftManifest>(PATHS.manifestSample);
   const review = readJson<ReviewPacket>(PATHS.reviewSample);
-  const checksum = manifestChecksum(manifest);
+  const checksum = computeManifestChecksum(manifest);
   assert(review.schema_version === 'promotion-review-packet/v1', 'review schema');
   assert(review.source_object === 'rookguard', 'review source');
   assert(review.abuse_review === 'pass', 'abuse pass');
