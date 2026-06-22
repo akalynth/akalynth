@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.akalynth.client.game.MapRepository
+import com.akalynth.client.game.RegistryPlacement
+import com.akalynth.client.game.WorldPlacementRepository
 import com.akalynth.client.protocol.MapData
 import com.akalynth.client.protocol.MapName
 import com.akalynth.client.protocol.PlayerPublic
@@ -106,6 +108,10 @@ fun GameCanvas(
     val sprites = rememberWorldSprites()
     // World PNG overlays from compiled registry.json; absent keys fall back to procedural landmarks.
     val assetRegistry = rememberAssetRegistry()
+    // Registry-driven placements (e.g. Rookguard overlays from placements/rookguard-overlays.json).
+    val registryPlacements = remember(map) {
+        WorldPlacementRepository.registryPlacementsFor(context, map)
+    }
 
     // A stable signature of the authoritative positions: changes only when a real position does,
     // so we feed new glide targets (and prune absent entities) exactly on snapshot changes rather
@@ -176,8 +182,30 @@ fun GameCanvas(
             }
         }
 
+        drawRegistryPlacements(
+            placements = registryPlacements.filter { placement ->
+                isFloorRegistryPlacement(placement, assetRegistry)
+            },
+            cameraX = camX,
+            cameraY = camY,
+            tileSize = tileSize,
+            centerX = centerX,
+            centerY = centerY,
+            assetRegistry = assetRegistry,
+        )
         drawHighCityVisualLandmarks(
             landmarks = visualLandmarks.filter { it.isFloor },
+            cameraX = camX,
+            cameraY = camY,
+            tileSize = tileSize,
+            centerX = centerX,
+            centerY = centerY,
+            assetRegistry = assetRegistry,
+        )
+        drawRegistryPlacements(
+            placements = registryPlacements.filter { placement ->
+                !isFloorRegistryPlacement(placement, assetRegistry)
+            },
             cameraX = camX,
             cameraY = camY,
             tileSize = tileSize,
@@ -277,6 +305,28 @@ private fun DrawScope.drawCreatureSprite(sprite: WorldSprite, cx: Float, cy: Flo
         dstSize = IntSize(wPx.roundToInt(), hPx.roundToInt()),
         filterQuality = FilterQuality.None
     )
+}
+
+private fun isFloorRegistryPlacement(placement: RegistryPlacement, assetRegistry: AssetRegistry): Boolean {
+    val layer = assetRegistry.spriteForShortId(placement.assetId)?.layer ?: return false
+    return layer == "terrain" || layer == "floor_overlay"
+}
+
+private fun DrawScope.drawRegistryPlacements(
+    placements: List<RegistryPlacement>,
+    cameraX: Float,
+    cameraY: Float,
+    tileSize: Float,
+    centerX: Float,
+    centerY: Float,
+    assetRegistry: AssetRegistry,
+) {
+    placements.forEach { placement ->
+        if (placement.visibility == "hidden") return@forEach
+        val sprite = assetRegistry.spriteForShortId(placement.assetId) ?: return@forEach
+        val topLeft = tileTopLeft(placement.x, placement.y, cameraX, cameraY, tileSize, centerX, centerY)
+        drawRegistryWorldOverlay(sprite, topLeft, tileSize)
+    }
 }
 
 private fun DrawScope.drawHighCityVisualLandmarks(

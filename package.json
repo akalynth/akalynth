@@ -46,6 +46,8 @@
     "build:assets:loose": "node tools/atlas/sync-to-clients.mjs",
     "sync:assets": "node tools/atlas/sync-to-clients.mjs",
     "verify:asset-sync": "node tools/atlas/verify-sync.mjs",
+    "validate:placement": "node tools/atlas/validate-placement.mjs",
+    "port:rookguard-placements": "node tools/atlas/port-rookguard-placements.mjs",
     "verify:web-visual-assets": "node scripts/verify-web-visual-assets.mjs",
     "verify:web-rust-cleanup": "node scripts/verify-web-rust-cleanup.mjs"
   },
