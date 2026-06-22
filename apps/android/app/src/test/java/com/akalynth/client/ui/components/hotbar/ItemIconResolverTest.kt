@@ -23,7 +23,7 @@ class ItemIconResolverTest {
                     else -> null
                 }
             },
-            lookupByItemType = { "torch" to torchEntry }.let { map -> { type -> map[type] } },
+            lookupByItemType = mapOf("torch" to torchEntry).let { map -> { type -> map[type] } },
         )
 
         assertEquals(overrideEntry, resolved)

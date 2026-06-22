@@ -15,7 +15,7 @@ data class RegistryPlacement(
 )
 
 /**
- * Loads map overlay placements from bundled `assets/placements/*.json`.
+ * Loads map overlay placements from bundled assets/placements JSON files.
  * Placements are display-only; mechanics must be null in the manifest.
  */
 object WorldPlacementRepository {
