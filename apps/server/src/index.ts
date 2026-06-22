@@ -403,9 +403,15 @@ const HOUSES_ENABLED = parseBoolEnv(process.env.HOUSES_ENABLED, DEBUG_MODE);
 const HOUSE_ENTERED_ACTION = 'house_entered';
 const HOUSE_LEFT_ACTION = 'house_left';
 const INSIDE_HOUSE_BADGE = 'inside_house';
+// Houses v1.1: access lists (the Door/House design's reserved "who may pass" question).
+const HOUSE_ACCESS_GRANTED_ACTION = 'house_access_granted';
+const HOUSE_ACCESS_REVOKED_ACTION = 'house_access_revoked';
 // player_id -> property_id of the house they are currently inside (in-session; the
 // house_entered/house_left receipts are the durable truth).
 const playersInsideHouse = new Map<string, string>();
+// property_id -> set of guest player ids the owner has authorized to enter (in-session;
+// house_access_granted/revoked receipts are the durable truth).
+const houseAccess = new Map<string, Set<string>>();
 
 // Plan B: Per-IP Rate Limiting (Anti-Bot Hardening)
 const IP_RATE_LIMIT_ENABLED = parseBoolEnv(process.env.IP_RATE_LIMIT_ENABLED, true);
@@ -6061,8 +6067,10 @@ function processSessionQueue(s: Session, now: number) {
             break;
           }
           const propertyId = makePropertyId('Azura', plot.id);
-          if (getProperty(propertyId)?.owner_player_id !== s.player.id) {
-            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_skill', payload: { error: 'not_owner' } }));
+          const isOwner = getProperty(propertyId)?.owner_player_id === s.player.id;
+          const isGuest = houseAccess.get(propertyId)?.has(s.player.id) ?? false;
+          if (!isOwner && !isGuest) {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_skill', payload: { error: 'no_access' } }));
             break;
           }
           if (playersInsideHouse.has(s.player.id)) {
@@ -6099,6 +6107,40 @@ function processSessionQueue(s: Session, now: number) {
           s.player.badges = (s.player.badges ?? []).filter((b) => b !== INSIDE_HOUSE_BADGE);
           send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { inside_house: null } }));
           sendLoopUpdate(s, 'house_left');
+          break;
+        }
+
+        // Houses v1.1: owner grants/revokes a guest's entry to the house they own + stand on.
+        if (HOUSES_ENABLED && (msg.skill_id === 'house:grant' || msg.skill_id === 'house:revoke')) {
+          const targetId = msg.target_id;
+          if (!targetId || s.currentMap !== 'Azura') {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_target' }));
+            break;
+          }
+          const plots = worlds.Azura.map.landmarks.house_plots ?? [];
+          const plot = plots.find((p) => landmarkContains({ x: s.player!.x, y: s.player!.y }, p));
+          if (!plot) {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_target' }));
+            break;
+          }
+          const propertyId = makePropertyId('Azura', plot.id);
+          if (getProperty(propertyId)?.owner_player_id !== s.player.id) {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_skill', payload: { error: 'not_owner' } }));
+            break;
+          }
+          const granting = msg.skill_id === 'house:grant';
+          const set = houseAccess.get(propertyId) ?? new Set<string>();
+          if (granting) set.add(targetId);
+          else set.delete(targetId);
+          houseAccess.set(propertyId, set);
+          audit.write({
+            player_id: s.player.id,
+            action: granting ? HOUSE_ACCESS_GRANTED_ACTION : HOUSE_ACCESS_REVOKED_ACTION,
+            inputs: { property_id: propertyId, guest_id: targetId },
+            result: 'ok',
+          });
+          send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { property_id: propertyId, guest_id: targetId, granted: granting } }));
+          sendLoopUpdate(s, granting ? 'house_access_granted' : 'house_access_revoked');
           break;
         }
 

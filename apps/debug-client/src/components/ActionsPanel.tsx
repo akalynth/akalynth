@@ -108,6 +108,8 @@ interface ActionsPanelProps {
   onHousePlot?: boolean;
   insideHouse?: boolean;
   isGuildMember?: boolean;
+  hasTarget?: boolean;
+  onGrantHouse?: () => void;
   onGiftGold: () => void;
   onUseItem: (itemId: string) => void;
   attackReady: boolean;
@@ -141,6 +143,8 @@ export function ActionsPanel({
   onHousePlot = false,
   insideHouse = false,
   isGuildMember = false,
+  hasTarget = false,
+  onGrantHouse,
   onGiftGold,
   onUseItem,
   attackReady,
@@ -551,6 +555,11 @@ export function ActionsPanel({
               {insideHouse && (
                 <button className="action-btn pickup-btn" onClick={() => onWorldEventAction('house:exit')}>
                   Leave House
+                </button>
+              )}
+              {onHousePlot && hasTarget && onGrantHouse && (
+                <button className="action-btn talk-btn" onClick={onGrantHouse}>
+                  Grant Access
                 </button>
               )}
             </div>

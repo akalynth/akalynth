@@ -960,6 +960,8 @@ function DebugApp() {
                 onHousePlot={onHousePlot}
                 insideHouse={insideHouse}
                 isGuildMember={isGuildMember}
+                hasTarget={Boolean(state.combat.targetId)}
+                onGrantHouse={() => state.combat.targetId && api.useSkill('house:grant', state.combat.targetId)}
                 onGiftGold={() => state.combat.targetId && api.useSkill('social:gift:gold', state.combat.targetId)}
                 onUseItem={(itemId) => api.useSkill('item:use:' + itemId)}
                 attackReady={attackReady}
