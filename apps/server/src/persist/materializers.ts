@@ -70,6 +70,8 @@ const HANDLERS: Record<string, Handler> = {
   // Identity v0.1
   [RECEIPT_ACTIONS.CHARACTER_CREATE]: handleCharacterCreate,
   [RECEIPT_ACTIONS.AUTH_TOKEN_ISSUE]: handleAuthTokenIssue,
+  // Origin Act: seal player's first meaningful action into players.origin_*
+  [RECEIPT_ACTIONS.ORIGIN_ACT_SEALED]: handleOriginActSealed,
   // Dialogue Contract v1
   [RECEIPT_ACTIONS.NPC_TALKED]: handleNpcTalked,
   // World Events v0
@@ -169,6 +171,55 @@ function handlePlayerRenamed(
     UPDATE players SET name = ? WHERE player_id = ?
   `);
   stmt.run(newName, playerId);
+}
+
+// ============================================================================
+// Origin Act Handler
+// ============================================================================
+
+/**
+ * Handle origin_act_sealed: seal the player's origin act (first meaningful action).
+ *
+ * CRITICAL: timestamp-ordered, earliest-timestamp wins, so replay is order-independent
+ * and deterministic. Only updates when no origin exists yet, or this one is earlier.
+ *
+ * The emitting receipt (world/origin.ts) carries inputs.trigger_action (the consequence
+ * action, e.g. 'combat_resolved') and is written with the player as actor_id.
+ */
+function handleOriginActSealed(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const playerId = receipt.actor_id;
+  const inputs = receipt.inputs ?? {};
+  const triggerAction = inputs.trigger_action as string;
+  const timestamp = receipt.timestamp;
+
+  if (!triggerAction) return;
+
+  // Earliest-timestamp wins (deterministic regardless of replay order).
+  db.prepare(`
+    UPDATE players
+    SET origin_receipt_id = ?, origin_action = ?, origin_sealed_at = ?
+    WHERE player_id = ?
+      AND (origin_receipt_id IS NULL OR origin_sealed_at > ?)
+  `).run(receiptHash, triggerAction, timestamp, playerId, timestamp);
+
+  // Chronicle event for forensic record (idempotent via dedup index).
+  insertChronicleEvent(
+    db,
+    playerId,
+    'origin_sealed',
+    timestamp,
+    'origin_act_sealed',
+    receiptHash,
+    null,
+    null,
+    null,
+    null,
+    { trigger_action: triggerAction }
+  );
 }
 
 // ============================================================================
