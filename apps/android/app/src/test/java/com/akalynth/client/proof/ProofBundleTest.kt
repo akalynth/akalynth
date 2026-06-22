@@ -416,7 +416,7 @@ class ProofBundleTest {
     }
 
     @Test
-    fun `toText includes event icon`() {
+    fun `toText includes event glyph export label`() {
         val bundle = ProofBundleBuilder.build(
             event = createTestEvent(kind = ChronicleEventKind.DEATH),
             explanation = createTestExplanation(),
@@ -425,7 +425,7 @@ class ProofBundleTest {
 
         val text = bundle.toText()
 
-        assertTrue(text.contains("☠"))
+        assertTrue(text.contains("[death]"))
     }
 
     @Test

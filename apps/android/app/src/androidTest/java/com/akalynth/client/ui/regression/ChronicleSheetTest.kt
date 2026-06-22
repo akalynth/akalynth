@@ -221,7 +221,7 @@ class ChronicleSheetTest {
         composeTestRule.onNodeWithTag("ChronicleSheet_Event_evt_zone").assertIsDisplayed()
 
         // Death row has arrow indicator (›) for tappable indication
-        // Tested implicitly via icon check below
+        // Tested implicitly via glyph tag checks below
     }
 
     // =========================================================================
@@ -303,7 +303,7 @@ class ChronicleSheetTest {
     // =========================================================================
 
     @Test
-    fun test_c4_death_icon_is_skull() {
+    fun test_c4_death_glyph_is_displayed() {
         val events = listOf(
             createMockEvent(todayAt(14, 0), ChronicleEventKind.DEATH, "evt1")
         )
@@ -320,11 +320,11 @@ class ChronicleSheetTest {
 
         composeTestRule.waitForIdle()
 
-        composeTestRule.onNodeWithText("☠").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("ChronicleSheet_EventIcon_DEATH").assertIsDisplayed()
     }
 
     @Test
-    fun test_c4_item_pickup_icon_is_package() {
+    fun test_c4_item_pickup_glyph_is_displayed() {
         val events = listOf(
             createMockEvent(todayAt(14, 0), ChronicleEventKind.ITEM_PICKUP, "evt1")
         )
@@ -341,11 +341,11 @@ class ChronicleSheetTest {
 
         composeTestRule.waitForIdle()
 
-        composeTestRule.onNodeWithText("📦").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("ChronicleSheet_EventIcon_ITEM_PICKUP").assertIsDisplayed()
     }
 
     @Test
-    fun test_c4_zone_enter_icon_is_building() {
+    fun test_c4_zone_enter_glyph_is_displayed() {
         val events = listOf(
             createMockEvent(todayAt(14, 0), ChronicleEventKind.ZONE_ENTER, "evt1")
         )
@@ -362,11 +362,11 @@ class ChronicleSheetTest {
 
         composeTestRule.waitForIdle()
 
-        composeTestRule.onNodeWithText("🏛").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("ChronicleSheet_EventIcon_ZONE_ENTER").assertIsDisplayed()
     }
 
     @Test
-    fun test_c4_combat_kill_icon_is_sword() {
+    fun test_c4_combat_kill_glyph_is_displayed() {
         val events = listOf(
             createMockEvent(todayAt(14, 0), ChronicleEventKind.COMBAT_KILL, "evt1")
         )
@@ -383,11 +383,11 @@ class ChronicleSheetTest {
 
         composeTestRule.waitForIdle()
 
-        composeTestRule.onNodeWithText("⚔").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("ChronicleSheet_EventIcon_COMBAT_KILL").assertIsDisplayed()
     }
 
     @Test
-    fun test_c4_tutorial_complete_icon_is_graduation() {
+    fun test_c4_tutorial_complete_glyph_is_displayed() {
         val events = listOf(
             createMockEvent(todayAt(14, 0), ChronicleEventKind.TUTORIAL_COMPLETE, "evt1")
         )
@@ -404,11 +404,11 @@ class ChronicleSheetTest {
 
         composeTestRule.waitForIdle()
 
-        composeTestRule.onNodeWithText("🎓").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("ChronicleSheet_EventIcon_TUTORIAL_COMPLETE").assertIsDisplayed()
     }
 
     @Test
-    fun test_c4_character_created_icon_is_sparkle() {
+    fun test_c4_character_created_glyph_is_displayed() {
         val events = listOf(
             createMockEvent(todayAt(14, 0), ChronicleEventKind.CHARACTER_CREATED, "evt1")
         )
@@ -425,7 +425,7 @@ class ChronicleSheetTest {
 
         composeTestRule.waitForIdle()
 
-        composeTestRule.onNodeWithText("✨").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("ChronicleSheet_EventIcon_CHARACTER_CREATED").assertIsDisplayed()
     }
 
     // =========================================================================

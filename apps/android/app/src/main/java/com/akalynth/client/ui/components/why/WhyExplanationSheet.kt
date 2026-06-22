@@ -29,6 +29,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.akalynth.client.chronicle.ChronicleGlyphIcon
+import com.akalynth.client.chronicle.ChronicleGlyphResolver
 import com.akalynth.client.ui.components.displayOptionalZoneName
 import com.akalynth.client.ui.components.displayZoneName
 import com.akalynth.client.ui.state.ChronicleEvent
@@ -242,10 +244,11 @@ private fun EventExplanationRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Event icon
-        Text(
-            text = event.kind.icon,
-            fontSize = 24.sp,
+        // Event glyph
+        ChronicleGlyphIcon(
+            kind = event.kind,
+            size = 24.dp,
+            testTag = "WhyExplanation_EventIcon_${event.kind.name}",
             modifier = Modifier.size(32.dp)
         )
 
@@ -267,7 +270,7 @@ private fun EventExplanationRow(
         }
 
         // Arrow indicator if tappable
-        if (event.kind.isTappable) {
+        if (ChronicleGlyphResolver.isTappable(event.kind)) {
             Text(
                 text = "\u203A",  // Right arrow
                 fontSize = 20.sp,

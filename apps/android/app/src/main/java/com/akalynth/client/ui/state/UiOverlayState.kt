@@ -106,41 +106,8 @@ data class ChronicleEvent(
     val actionId: String? = null
 )
 
-/**
- * Chronicle event kinds matching server receipt types.
- */
-@Serializable
-enum class ChronicleEventKind {
-    @SerialName("death") DEATH,
-    @SerialName("zone_enter") ZONE_ENTER,
-    @SerialName("item_pickup") ITEM_PICKUP,
-    @SerialName("item_drop") ITEM_DROP,
-    @SerialName("combat_kill") COMBAT_KILL,
-    @SerialName("tutorial_complete") TUTORIAL_COMPLETE,
-    @SerialName("character_created") CHARACTER_CREATED,
-    @SerialName("world_event") WORLD_EVENT,
-    @SerialName("unknown") UNKNOWN;
-
-    /**
-     * Icon for display in chronicle feed.
-     */
-    val icon: String get() = when (this) {
-        DEATH -> "☠"
-        ZONE_ENTER -> "🏛"
-        ITEM_PICKUP -> "📦"
-        ITEM_DROP -> "📤"
-        COMBAT_KILL -> "⚔"
-        TUTORIAL_COMPLETE -> "🎓"
-        CHARACTER_CREATED -> "✨"
-        WORLD_EVENT -> "✦"
-        UNKNOWN -> "❓"
-    }
-
-    /**
-     * Whether this event kind is tappable (opens detail view).
-     */
-    val isTappable: Boolean get() = this == DEATH
-}
+/** Re-export canonical chronicle kind enum for UI-layer consumers (PR-022). */
+typealias ChronicleEventKind = com.akalynth.client.chronicle.ChronicleEventKind
 
 /**
  * Kind-specific details for chronicle events.
