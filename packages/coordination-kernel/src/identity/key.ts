@@ -2,8 +2,7 @@
 // Derives auth signing key from chronicle key with domain separation
 
 import crypto from 'node:crypto';
-import { blake3 } from '@noble/hashes/blake3';
-import { createPrivateKeyFromSeed, createPublicKeyFromSeed } from '../receipt/hasher.js';
+import { blake3Bytes, createPrivateKeyFromSeed, createPublicKeyFromSeed } from '../receipt/hasher.js';
 import { loadKeySeed, resolveKeyPath } from '../receipt/key.js';
 
 // Domain separator for auth key derivation
@@ -29,7 +28,7 @@ export function deriveAuthSeed(chronicleSeed: Uint8Array): Uint8Array {
   input.set(domainBytes, 0);
   input.set(chronicleSeed, domainBytes.length);
 
-  return blake3(input);
+  return blake3Bytes(input);
 }
 
 /**

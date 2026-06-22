@@ -28,6 +28,7 @@ const STYLE_CONTRACT = 'nostalgic_top_down_mmo_readability_original_akalynth_ass
 const ASSET_TYPES = new Set(['ground', 'border', 'structure', 'prop', 'creature', 'character', 'npc', 'building', 'effect', 'ui', 'tile', 'item']);
 const LIFECYCLE = ['prompt_written', 'raw_generated', 'cleaned_png', 'manifest_recorded', 'tilemap_tested', 'human_reviewed', 'promoted', 'legacy'];
 const HAS_PNG_STATUS = new Set(['cleaned_png', 'manifest_recorded', 'tilemap_tested', 'human_reviewed', 'promoted', 'legacy']);
+const REQUIRES_TILEMAP_TEST = new Set(['tilemap_tested', 'human_reviewed', 'promoted']);
 const SMOKE_CHARACTER_ROWS = ['south', 'north', 'east', 'west'];
 const WORLD_VISUAL_TYPES = new Set(['terrain_tile', 'wall_overlay', 'door_overlay', 'world_object', 'floor_overlay']);
 const WORLD_VISUAL_ANCHORS = new Set(['tile_top_left', 'bottom_center', 'bottom_left', 'center']);
@@ -45,6 +46,35 @@ function pngDims(buf: Buffer): [number, number] | null {
 const isMult32 = (n: unknown): n is number => typeof n === 'number' && Number.isInteger(n) && n > 0 && n % 32 === 0;
 const repoRel = (abs: string) => path.relative(REPO_ROOT, abs);
 const arrayEq = (a: unknown, b: readonly unknown[]) => Array.isArray(a) && a.length === b.length && a.every((v, i) => v === b[i]);
+
+function validateTilemapTestRef(owner: string, testRel: unknown, assetId: string) {
+  if (typeof testRel !== 'string' || testRel.length === 0) {
+    fail(owner, `${assetId}: tilemap_test required for tilemap_tested/human_reviewed/promoted assets`);
+    return;
+  }
+  const testPath = path.join(REPO_ROOT, testRel);
+  if (!existsSync(testPath)) {
+    fail(owner, `${assetId}: tilemap_test missing: ${testRel}`);
+    return;
+  }
+  let test: Record<string, unknown>;
+  try {
+    test = JSON.parse(readFileSync(testPath, 'utf8'));
+  } catch (e) {
+    fail(owner, `${assetId}: tilemap_test invalid JSON (${e})`);
+    return;
+  }
+  const assets = test.assets;
+  const placements = test.placements;
+  const assetListed = Array.isArray(assets) && assets.includes(assetId);
+  const placement = Array.isArray(placements)
+    ? (placements.find(
+        (p) => typeof p === 'object' && p !== null && (p as Record<string, unknown>).asset_id === assetId
+      ) as Record<string, unknown> | undefined)
+    : undefined;
+  if (!assetListed && !placement) fail(owner, `${assetId}: tilemap_test does not reference asset`);
+  if (placement && placement.mechanics !== null) fail(owner, `${assetId}: tilemap_test placement mechanics must be null`);
+}
 
 function walkFiles(dir: string, seen = new Set<string>()): string[] {
   const out: string[] = [];
@@ -121,6 +151,9 @@ function validateFactorySidecar(jsonPath: string, pngPath: string) {
   // A-7 lineage
   if (m.prompt_file != null) {
     if (!existsSync(path.join(REPO_ROOT, m.prompt_file as string))) fail(f, `prompt_file missing: ${m.prompt_file}`);
+  }
+  if (REQUIRES_TILEMAP_TEST.has(m.status as string)) {
+    validateTilemapTestRef(f, m.tilemap_test, m.asset_id as string);
   }
 }
 
@@ -302,6 +335,7 @@ function run() {
       const td = a.target_dims;
       if (!Array.isArray(td) || !isMult32(td[0]) || !isMult32(td[1])) fail(f, `${id}: target_dims must be [w,h] multiples of 32`);
       if (typeof a.prompt_file !== 'string' || !existsSync(path.join(REPO_ROOT, a.prompt_file))) fail(f, `${id}: prompt_file missing: ${a.prompt_file}`);
+      if (REQUIRES_TILEMAP_TEST.has(a.status as string)) validateTilemapTestRef(f, a.tilemap_test, a.id as string);
     }
   }
 

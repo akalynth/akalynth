@@ -1,0 +1,7 @@
+Create a single original 32x32 game tile asset for Akalynth.
+
+Subject: Rookguard chat tutorial rune tile. A cool blue-grey stone floor tile with a small speech-sigil carved from two rounded bands and a tiny tail notch, faint cyan glow inside the carving, and worn moss in the corners.
+
+Camera: flat top-down square-grid RPG tile.
+Style: Classic 32 hand-pixelled tile; crisp 1px dark pixel edging on the carved sigil; limited stone, cyan, muted moss, and shadow palette; hard-edged pixel shading only; readable at 1x and when nearest-neighbor scaled.
+Constraints: opaque full tile fill; no characters, no UI, no logo, no letters, no copied third-party art, no chat behavior implied beyond the existing server tile code.

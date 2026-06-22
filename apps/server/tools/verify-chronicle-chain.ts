@@ -17,11 +17,10 @@
 /* eslint-disable no-console */
 import fs from 'node:fs';
 import path from 'node:path';
-import stringify from 'fast-json-stable-stringify';
-import { blake3 } from '@noble/hashes/blake3';
 import { rngCommit, rngDrawU32Legacy, rngCommitV1 } from '../src/world/rng.js';
 import {
   type ChronicleEntry as SharedChronicleEntry,
+  computeCapsHash as computeCapsHashShared,
   computePayloadHash as computePayloadHashShared,
   computeEventHash as computeEventHashShared,
   computeGlobalEventHash as computeGlobalEventHashShared,
@@ -32,18 +31,6 @@ type ChronicleEntry = SharedChronicleEntry & { rng: unknown | null };
 const RED = '\x1b[31m';
 const YELLOW = '\x1b[33m';
 const RESET = '\x1b[0m';
-
-function blake3HexBytes(bytes: Uint8Array): string {
-  return Buffer.from(blake3(bytes)).toString('hex');
-}
-
-function blake3HexUtf8(s: string): string {
-  return blake3HexBytes(Buffer.from(s, 'utf8'));
-}
-
-function stableJson(value: unknown): string {
-  return stringify(value);
-}
 
 function asStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
@@ -58,10 +45,7 @@ function asStringArray(value: unknown): string[] {
 const computePayloadHash = computePayloadHashShared;
 const computeEventHash = computeEventHashShared;
 const computeGlobalEventHash = computeGlobalEventHashShared;
-
-function computeCapsHash(caps: string[]): string {
-  return `blake3:${blake3HexUtf8(stableJson(caps ?? []))}`;
-}
+const computeCapsHash = computeCapsHashShared;
 
 function getEmbeddedString(payload: Record<string, unknown>, key: string): string | null {
   const v = payload[key];

@@ -1,0 +1,33 @@
+{
+  "id": "rookguard_fishing_post",
+  "asset_type": "world_object",
+  "source_kind": "sprite",
+  "image": "rookguard_fishing_post.png",
+  "frame": {
+    "width": 32,
+    "height": 64
+  },
+  "rendering": {
+    "filtering": "nearest",
+    "display_only": true,
+    "draw_scale": 1,
+    "anchor": {
+      "type": "bottom_center",
+      "source_pixels": [
+        16,
+        58
+      ]
+    },
+    "z_policy": "sort_by_anchor_y",
+    "layer": "object_overlay"
+  },
+  "mechanics": null,
+  "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+  "prompt_file": "data/assets-src/prompts/world/rookguard_fishing_post_001.txt",
+  "sha256": "6365bf857d87482cd87a0a4bcc05885462df61c79de8f91ba5455f2bc2a876b8",
+  "copyright_boundary": "original hand-authored script-rendered asset; no copied third-party sprite, UI, logo, or map layout",
+  "visual_notes": [
+    "Rookguard canal fishing post visual only.",
+    "Does not encode fishing success, inventory, rewards, collision, or interaction."
+  ]
+}

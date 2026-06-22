@@ -1,0 +1,29 @@
+{
+  "asset_id": "akalynth_creature_rookguard_training_slime_001",
+  "game": "Akalynth",
+  "asset_type": "creature",
+  "biome": "rookguard",
+  "status": "tilemap_tested",
+  "dimensions_px": [
+    32,
+    32
+  ],
+  "dimensions_target_px": [
+    32,
+    32
+  ],
+  "camera": "top_down_slight_isometric",
+  "background": "transparent",
+  "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+  "prompt_file": "data/assets-src/prompts/creatures/akalynth_creature_rookguard_training_slime_001.txt",
+  "raw_file": null,
+  "cleaned_file": "data/assets-src/sprites/creature__rookguard_training_slime.png",
+  "sha256": "30f17644c04ea8ea6fbeefa95c84f8dd76af3f25c7d2848eac94340e7b8eb586",
+  "tilemap_test": "data/assets-src/test-maps/rookguard-tutorial-assets-v1.json",
+  "license_status": "hand_authored",
+  "review_status": "needs_human_review",
+  "tile_code": null,
+  "mechanics": null,
+  "copyright_boundary": "original hand-authored script-rendered asset; no copied third-party sprite, UI, logo, or map layout",
+  "notes": "Rookguard training slime: compact tutorial-yard creature with a pale-gold practice mark. Display-only; server mob definition remains the sole authority for HP, attacks, loot, respawn, and quest progress."
+}

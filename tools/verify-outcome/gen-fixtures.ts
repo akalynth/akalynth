@@ -13,19 +13,16 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { blake3 } from '@noble/hashes/blake3';
-import stableStringify from 'fast-json-stable-stringify';
 import { rngCommit } from '../../packages/shared/rng.js';
 import { computeDeathDrops, type ItemForDrop } from '../../packages/shared/dropPolicy.js';
+import { blake3Prefixed, canonicalJson } from '../../packages/shared/hashPrimitive.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES = path.resolve(__dirname, '../../packages/shared/test/fixtures');
 
 function computeReceiptHash(receipt: object): string {
   const { event_hash: _e, signature: _s, ...content } = receipt as Record<string, unknown>;
-  const canonical = stableStringify(content);
-  const hashBytes = blake3(new TextEncoder().encode(canonical));
-  return `blake3:${Buffer.from(hashBytes).toString('hex')}`;
+  return blake3Prefixed(canonicalJson(content));
 }
 
 // Mirror combat.ts: a Azura kill with a mixed inventory incl. a legendary.

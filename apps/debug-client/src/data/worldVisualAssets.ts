@@ -7,6 +7,12 @@ import bannerRedImage from '../../../../data/assets-src/sprites/world/city_objec
 import benchImage from '../../../../data/assets-src/sprites/world/city_objects/bench.png?url';
 import fountainImage from '../../../../data/assets-src/sprites/world/city_objects/fountain.png?url';
 import noticeBoardImage from '../../../../data/assets-src/sprites/world/city_objects/notice_board.png?url';
+import rookguardAmberLanternImage from '../../../../data/assets-src/sprites/world/city_objects/rookguard_amber_lantern.png?url';
+import rookguardBaitCrateImage from '../../../../data/assets-src/sprites/world/city_objects/rookguard_bait_crate.png?url';
+import rookguardCanalReedsImage from '../../../../data/assets-src/sprites/world/city_objects/rookguard_canal_reeds.png?url';
+import rookguardFishingPostImage from '../../../../data/assets-src/sprites/world/city_objects/rookguard_fishing_post.png?url';
+import rookguardSupplySackImage from '../../../../data/assets-src/sprites/world/city_objects/rookguard_supply_sack.png?url';
+import rookguardWaymarkerImage from '../../../../data/assets-src/sprites/world/city_objects/rookguard_waymarker.png?url';
 import doorWoodClosedEastImage from '../../../../data/assets-src/sprites/world/doors/door_wood_closed_east.png?url';
 import doorWoodClosedSouthImage from '../../../../data/assets-src/sprites/world/doors/door_wood_closed_south.png?url';
 import doorWoodOpenEastImage from '../../../../data/assets-src/sprites/world/doors/door_wood_open_east.png?url';
@@ -57,6 +63,12 @@ export type WorldVisualAssetId =
   | 'bench'
   | 'fountain'
   | 'notice_board'
+  | 'rookguard_amber_lantern'
+  | 'rookguard_bait_crate'
+  | 'rookguard_canal_reeds'
+  | 'rookguard_fishing_post'
+  | 'rookguard_supply_sack'
+  | 'rookguard_waymarker'
   | 'door_wood_closed_east'
   | 'door_wood_closed_south'
   | 'door_wood_open_east'
@@ -120,6 +132,12 @@ export const WORLD_VISUAL_ASSET_IDS: WorldVisualAssetId[] = [
   'bench',
   'fountain',
   'notice_board',
+  'rookguard_amber_lantern',
+  'rookguard_bait_crate',
+  'rookguard_canal_reeds',
+  'rookguard_fishing_post',
+  'rookguard_supply_sack',
+  'rookguard_waymarker',
   'door_wood_closed_east',
   'door_wood_closed_south',
   'door_wood_open_east',
@@ -280,6 +298,96 @@ export const WORLD_VISUAL_ASSETS: Record<WorldVisualAssetId, WorldVisualAssetDef
       displayOnly: true,
       drawScale: 0.8,
       anchor: { type: 'bottom_center', sourcePixels: [64, 90] },
+      layer: 'object_overlay',
+      zPolicy: 'sort_by_anchor_y',
+    },
+    mechanics: null,
+  },
+  rookguard_amber_lantern: {
+    id: 'rookguard_amber_lantern',
+    assetType: 'world_object',
+    src: rookguardAmberLanternImage,
+    frame: { width: 32, height: 64 },
+    rendering: {
+      filtering: 'nearest',
+      displayOnly: true,
+      drawScale: 1,
+      anchor: { type: 'bottom_center', sourcePixels: [16, 58] },
+      layer: 'object_overlay',
+      zPolicy: 'sort_by_anchor_y',
+    },
+    mechanics: null,
+  },
+  rookguard_bait_crate: {
+    id: 'rookguard_bait_crate',
+    assetType: 'world_object',
+    src: rookguardBaitCrateImage,
+    frame: { width: 32, height: 32 },
+    rendering: {
+      filtering: 'nearest',
+      displayOnly: true,
+      drawScale: 1,
+      anchor: { type: 'bottom_center', sourcePixels: [16, 28] },
+      layer: 'object_overlay',
+      zPolicy: 'sort_by_anchor_y',
+    },
+    mechanics: null,
+  },
+  rookguard_canal_reeds: {
+    id: 'rookguard_canal_reeds',
+    assetType: 'world_object',
+    src: rookguardCanalReedsImage,
+    frame: { width: 32, height: 64 },
+    rendering: {
+      filtering: 'nearest',
+      displayOnly: true,
+      drawScale: 1,
+      anchor: { type: 'bottom_center', sourcePixels: [16, 58] },
+      layer: 'object_overlay',
+      zPolicy: 'sort_by_anchor_y',
+    },
+    mechanics: null,
+  },
+  rookguard_fishing_post: {
+    id: 'rookguard_fishing_post',
+    assetType: 'world_object',
+    src: rookguardFishingPostImage,
+    frame: { width: 32, height: 64 },
+    rendering: {
+      filtering: 'nearest',
+      displayOnly: true,
+      drawScale: 1,
+      anchor: { type: 'bottom_center', sourcePixels: [16, 58] },
+      layer: 'object_overlay',
+      zPolicy: 'sort_by_anchor_y',
+    },
+    mechanics: null,
+  },
+  rookguard_supply_sack: {
+    id: 'rookguard_supply_sack',
+    assetType: 'world_object',
+    src: rookguardSupplySackImage,
+    frame: { width: 32, height: 32 },
+    rendering: {
+      filtering: 'nearest',
+      displayOnly: true,
+      drawScale: 1,
+      anchor: { type: 'bottom_center', sourcePixels: [16, 28] },
+      layer: 'object_overlay',
+      zPolicy: 'sort_by_anchor_y',
+    },
+    mechanics: null,
+  },
+  rookguard_waymarker: {
+    id: 'rookguard_waymarker',
+    assetType: 'world_object',
+    src: rookguardWaymarkerImage,
+    frame: { width: 32, height: 64 },
+    rendering: {
+      filtering: 'nearest',
+      displayOnly: true,
+      drawScale: 1,
+      anchor: { type: 'bottom_center', sourcePixels: [16, 58] },
       layer: 'object_overlay',
       zPolicy: 'sort_by_anchor_y',
     },

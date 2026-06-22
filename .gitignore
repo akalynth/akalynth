@@ -37,6 +37,9 @@ drop/
 # Rust build artifacts
 **/target/
 
+# napi addon build artifact (produced by crates/chronicle/napi/run-step2.sh; not committed)
+crates/chronicle/napi/*.node
+
 # Chronicle local files (dev only)
 chronicle.log
 chronicle.key

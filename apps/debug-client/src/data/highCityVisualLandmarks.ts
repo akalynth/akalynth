@@ -26,17 +26,28 @@ function floorPatch(assetId: WorldVisualAssetId, x1: number, y1: number, x2: num
 }
 
 const ROOKGUARD_VISUAL_LANDMARKS: WorldVisualObjectPlacement[] = [
-  // Plaza and tutorial corridor. Display only; tutorial tile codes remain the
-  // server authority for movement/chat/Tem/gate behavior.
-  ...floorPatch('floor_cobble_01', 1, 1, 10, 6, 'rookguard'),
-  obj('notice_board', 9, 4, 0, 'rookguard'),
+  // Plaza and tutorial corridor. Display only; leave tutorial-code tiles
+  // uncovered so their Classic-32 rune sprites remain visible.
+  ...floorPatch('floor_cobble_01', 1, 1, 10, 1, 'rookguard'),
+  ...row('floor_cobble_01', 1, 2, 2, 'rookguard'),
+  obj('floor_cobble_01', 4, 2, 0, 'rookguard'),
+  obj('floor_cobble_01', 6, 2, 0, 'rookguard'),
+  ...row('floor_cobble_01', 8, 9, 2, 'rookguard'),
+  ...floorPatch('floor_cobble_01', 1, 3, 10, 6, 'rookguard'),
+  obj('notice_board', 9, 5, 0, 'rookguard'),
   obj('bench', 3, 5, 0, 'rookguard'),
-  obj('banner_blue', 2, 1, 0, 'rookguard'),
+  obj('banner_blue', 1, 5, 0, 'rookguard'),
+  obj('rookguard_amber_lantern', 5, 6, 0, 'rookguard'),
+  obj('rookguard_supply_sack', 6, 6, 0, 'rookguard'),
+  obj('rookguard_waymarker', 7, 6, 0, 'rookguard'),
+  obj('rookguard_fishing_post', 10, 6, 0, 'rookguard'),
+  obj('rookguard_bait_crate', 9, 6, 0, 'rookguard'),
+  obj('rookguard_canal_reeds', 11, 7, 0, 'rookguard'),
 
   // Guild/profession hall. The shared `guild_hall` landmark is the place
   // boundary; these sprites do not create doors, interiors, or access rules.
   ...floorPatch('floor_stone_01', 11, 1, 18, 6, 'rookguard'),
-  ...row('wall_stone_north', 11, 18, 1, 'rookguard'),
+  ...row('wall_stone_north', 12, 18, 1, 'rookguard'),
   obj('door_wood_closed_south', 14, 5, 0, 'rookguard'),
   obj('weapon_rack', 13, 4, 0, 'rookguard'),
   obj('bookshelf', 17, 3, 0, 'rookguard'),

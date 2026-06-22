@@ -79,6 +79,8 @@ const ACCOUNT_REQUIRED_MESSAGE = 'Sign in to an account before creating a charac
 const ACCOUNT_EXPIRED_MESSAGE = 'Account session expired. Sign in again before creating a character.';
 const ACCOUNT_CSRF_REQUIRED_MESSAGE = 'Account session needs a CSRF token. Sign in again before creating or selecting a character.';
 const ACCOUNT_UNVERIFIED_MESSAGE = 'Verify email before creating a character. Existing characters can still be selected.';
+const ACCOUNT_SERVICE_UNAVAILABLE_MESSAGE = 'Account service unavailable. Try again soon.';
+const CHARACTER_OPTIONS_UNAVAILABLE_MESSAGE = 'Character setup offline. Try again soon.';
 const ACCOUNT_CHARACTER_WORLD_IDS = new Set(['rookguard', 'high_city']);
 const ACCOUNT_CHARACTER_OUTFIT_IDS = new Set([
   'male_wanderer',
@@ -150,6 +152,21 @@ function accountCharacterErrorMessage(status: number, body: unknown, fallback: s
   }
   if (typeof message === 'string' && message) return message;
   return fallback;
+}
+
+function isBrowserNetworkError(error: unknown): boolean {
+  if (error instanceof TypeError) return true;
+  const message = error instanceof Error ? error.message : String(error);
+  return /failed to fetch|load failed|networkerror|network request failed/i.test(message);
+}
+
+function accountServiceErrorMessage(error: unknown, fallback: string): string {
+  return isBrowserNetworkError(error) ? ACCOUNT_SERVICE_UNAVAILABLE_MESSAGE : fallback;
+}
+
+function characterOptionsErrorMessage(error: unknown): string {
+  if (isBrowserNetworkError(error)) return CHARACTER_OPTIONS_UNAVAILABLE_MESSAGE;
+  return (error as Error).message || 'Could not load character options';
 }
 
 function initialState(mapName: MapName): GameClientState {
@@ -1667,7 +1684,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
         outfits: [],
         loading: false,
         loaded: false,
-        error: (err as Error).message || 'Could not load character options',
+        error: characterOptionsErrorMessage(err),
       };
       setCharacterCatalog(next);
       return next;
@@ -1715,7 +1732,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
         authenticated: false,
         csrfReady: false,
         emailVerified: false,
-        message: (err as Error).message || 'Could not confirm account session',
+        message: accountServiceErrorMessage(err, 'Could not confirm account session'),
       };
       setAccountSession(next);
       setAccountCharacters([]);
@@ -1893,7 +1910,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
         await boot(mapName);
         return { ok: true };
       } catch (err) {
-        return { ok: false, error: (err as Error).message };
+        return { ok: false, error: accountServiceErrorMessage(err, 'Could not create character') };
       }
     },
     [boot, characterCatalog, loadAccountCharacters, loadCharacterCatalog, mapName, requireAccountSession]
@@ -1940,7 +1957,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
         await boot(mapName);
         return { ok: true };
       } catch (err) {
-        return { ok: false, error: (err as Error).message };
+        return { ok: false, error: accountServiceErrorMessage(err, 'Could not select character') };
       }
     },
     [boot, config.httpBase, mapName, requireAccountSession]

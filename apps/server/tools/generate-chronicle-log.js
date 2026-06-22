@@ -13,69 +13,12 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import stringify from 'fast-json-stable-stringify';
-import { blake3 } from '@noble/hashes/blake3';
-
-const DOMAIN_EVENT = 'akalynth:chronicle:event:v1\0';
-const DOMAIN_GLOBAL = 'akalynth:chronicle:global:v1\0';
-
-function blake3HexUtf8(s) {
-  return Buffer.from(blake3(Buffer.from(s, 'utf8'))).toString('hex');
-}
-
-function stableJson(value) {
-  return stringify(value);
-}
-
-function stripPayloadHashFields(payload) {
-  const copy = { ...payload };
-  delete copy.payload_hash;
-  delete copy.prev_event_hash;
-  delete copy.event_hash;
-  delete copy.prev_global_hash;
-  delete copy.global_event_hash;
-  return copy;
-}
-
-function computePayloadHash(payload) {
-  const stripped = stripPayloadHashFields(payload);
-  return `blake3:${blake3HexUtf8(stableJson(stripped))}`;
-}
-
-function computeCapsHash(caps) {
-  return `blake3:${blake3HexUtf8(stableJson(caps ?? []))}`;
-}
-
-function computeEventHash(entry, prevEventHash, payloadHash) {
-  const preimage = {
-    v: entry.v,
-    world_id: entry.world_id,
-    rulebook_root: entry.rulebook_root,
-    event_type: entry.event_type,
-    actor: entry.actor,
-    tick: entry.tick,
-    caps_hash: entry.caps_hash,
-    payload_hash: payloadHash,
-    prev_event_hash: prevEventHash,
-  };
-  return `blake3:${blake3HexUtf8(DOMAIN_EVENT + stableJson(preimage))}`;
-}
-
-function computeGlobalEventHash(entry, payloadHash, eventHash, prevGlobalHash) {
-  const preimage = {
-    v: entry.v,
-    world_id: entry.world_id,
-    rulebook_root: entry.rulebook_root,
-    event_type: entry.event_type,
-    actor: entry.actor,
-    tick: entry.tick,
-    caps_hash: entry.caps_hash,
-    payload_hash: payloadHash,
-    event_hash: eventHash,
-    prev_global_hash: prevGlobalHash,
-  };
-  return `blake3:${blake3HexUtf8(DOMAIN_GLOBAL + stableJson(preimage))}`;
-}
+import {
+  computeCapsHash,
+  computePayloadHash,
+  computeEventHash,
+  computeGlobalEventHash,
+} from '../../../packages/shared/chronicleChain.js';
 
 function buildEntry(base, prevEventHash, prevGlobalHash) {
   const caps = base.caps ?? [];

@@ -17,7 +17,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "jest",
+    "test": "npm run build && NODE_OPTIONS=--experimental-vm-modules jest",
     "dev": "tsc --watch"
   },
   "keywords": [

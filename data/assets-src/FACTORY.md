@@ -46,6 +46,12 @@ Do **not** call an asset "game-ready" before `tilemap_tested` + `human_reviewed`
 9. Accept / reject / revise (human review).
 10. Only then promote it into the asset library.
 
+Deterministic hand-authored builders may skip the network/raw stage when the
+source pixels are produced directly by reviewed code. For example,
+`npm run build:assets:rookguard` emits the Rookguard tutorial source sprites,
+canal-fishing station visuals, sidecars, pack spec, and test-map receipt in one
+repeatable pass.
+
 ## Folder shape (factory → repo mapping)
 
 The factory's canonical dirs map onto the repo's existing `data/*-src` convention
@@ -69,7 +75,9 @@ separate `manifests/` tree — simpler lineage and what `verify:assets` checks.
 cleaned PNG has a schema-valid sidecar; lifecycle `status` is valid; dimensions are
 32-multiples; naming is `<class>__<name>`; `mechanics` is `null` (lockstep);
 `sha256` matches the cleaned PNG once `status` is past `cleaned_png`; referenced
-prompt files exist. See `MANIFEST_SCHEMA.md`.
+prompt files exist; and `tilemap_tested` / `human_reviewed` / `promoted` factory
+assets point to a tracked test map that references the asset. See
+`MANIFEST_SCHEMA.md`.
 
 This gate runs in **CI**: the `assets` verifier is registered in the verification
 spine and included in the `quick` profile that CI executes, so the manifest/lineage

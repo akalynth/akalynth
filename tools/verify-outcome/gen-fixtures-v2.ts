@@ -18,10 +18,14 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { blake3 } from '@noble/hashes/blake3';
-import stableStringify from 'fast-json-stable-stringify';
 import { rngCommitV1, rngDeriveSeedV2 } from '../../packages/shared/rng.js';
 import { computeDeathDrops, type ItemForDrop } from '../../packages/shared/dropPolicy.js';
+import {
+  blake3Bytes,
+  blake3HexUtf8,
+  blake3Prefixed,
+  canonicalJson,
+} from '../../packages/shared/hashPrimitive.js';
 import {
   type ChronicleEntry,
   computePayloadHash,
@@ -36,13 +40,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES =
   process.env.GEN_FIXTURES_OUT ?? path.resolve(__dirname, '../../packages/shared/test/fixtures');
 
-// ---- canonical hashing (byte-identical to apps/server/src/persist/hash.ts) ----
-function blake3Hex(data: string): string {
-  return `blake3:${Buffer.from(blake3(new TextEncoder().encode(data))).toString('hex')}`;
-}
 function computeReceiptHash(receipt: object): string {
   const { event_hash: _e, signature: _s, ...content } = receipt as Record<string, unknown>;
-  return blake3Hex(stableStringify(content));
+  return blake3Prefixed(canonicalJson(content));
 }
 
 // ---- Ed25519 keypair (raw 32-byte seed/pub, like coordination-kernel) ----
@@ -50,7 +50,9 @@ function computeReceiptHash(receipt: object): string {
 // byte-identically (the test asserts the committed signature against the
 // committed pubkey). Do NOT switch back to crypto.randomBytes.
 const PKCS8_PREFIX = Buffer.from('302e020100300506032b657004220420', 'hex');
-const seed = blake3(new TextEncoder().encode('akalynth:fixture:rng-v2:ed25519-seed:v1')).slice(0, 32);
+const seed = Buffer.from(
+  blake3Bytes(Buffer.from('akalynth:fixture:rng-v2:ed25519-seed:v1', 'utf8'))
+).subarray(0, 32);
 const privateKey = crypto.createPrivateKey({
   key: Buffer.concat([PKCS8_PREFIX, seed]),
   format: 'der',
@@ -176,8 +178,8 @@ function buildReceipt(opts: {
     rng_proof: opts.proof,
   };
   const result = 'ok';
-  const inputs_hash = blake3Hex(stableStringify(inputs));
-  const outputs_hash = blake3Hex(stableStringify(result));
+  const inputs_hash = blake3Prefixed(canonicalJson(inputs));
+  const outputs_hash = blake3Prefixed(canonicalJson(result));
   const body = {
     sequence: opts.seq,
     timestamp,
@@ -189,7 +191,7 @@ function buildReceipt(opts: {
     inputs_hash,
     outputs_hash,
   };
-  const event_hash = blake3Hex(stableStringify(body));
+  const event_hash = blake3Prefixed(canonicalJson(body));
   const receipt: Record<string, unknown> = { ...body, event_hash };
   if (opts.sign) {
     receipt.signature = signEvent(prev_hash, event_hash);
@@ -219,7 +221,7 @@ const WORLD_ID = map;
 const RULEBOOK_ROOT = 'blake3:rulebook-root-fixture';
 
 function computeCapsHash(caps: string[]): string {
-  return blake3Hex(stableStringify(caps ?? []));
+  return blake3Prefixed(canonicalJson(caps ?? []));
 }
 
 type ChainState = {
@@ -232,7 +234,7 @@ type ChainState = {
 // Raw blake3 hex (no `blake3:` prefix) — matches the Rust chronicle writer's
 // blake3_hex used for line_event_hash / line_prev_hash.
 function lineBlake3Hex(s: string): string {
-  return Buffer.from(blake3(Buffer.from(s, 'utf8'))).toString('hex');
+  return blake3HexUtf8(s);
 }
 
 function makeEntry(
@@ -276,7 +278,7 @@ function makeEntry(
   // `${line_prev_hash}|${line_event_hash}` with the SAME raw-seed key that signs
   // receipts. We use the FULL entry (with embedded chain fields) as the canonical
   // JSON payload — what the writer serializes per line.
-  const canonical_json = stableStringify(entry);
+  const canonical_json = canonicalJson(entry);
   const line_event_hash = lineBlake3Hex(canonical_json);
   const line_prev_hash =
     state.prevLine === null ? 'genesis' : lineBlake3Hex(state.prevLine);

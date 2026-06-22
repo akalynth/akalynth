@@ -16,9 +16,22 @@ function toHex(bytes: Uint8Array): string {
   return Buffer.from(bytes).toString('hex');
 }
 
+/**
+ * Compute raw BLAKE3 bytes.
+ */
+export function blake3Bytes(data: Uint8Array): Uint8Array {
+  return blake3(data);
+}
+
+/**
+ * Compute prefixed BLAKE3 hex for raw bytes.
+ */
+export function blake3HexBytes(data: Uint8Array): string {
+  return `blake3:${toHex(blake3Bytes(data))}`;
+}
+
 function blake3Hex(data: string): string {
-  const hashBytes = blake3(new TextEncoder().encode(data));
-  return `blake3:${toHex(hashBytes)}`;
+  return blake3HexBytes(new TextEncoder().encode(data));
 }
 
 /**
@@ -29,17 +42,27 @@ export function canonicalize(value: unknown): string {
 }
 
 /**
+ * Compute BLAKE3 over canonical JSON.
+ *
+ * This is the receipt-system primitive used by subsystems that need the same
+ * `blake3:<hex>` convention without re-implementing hashing locally.
+ */
+export function hashCanonicalJson(value: unknown): string {
+  return blake3Hex(canonicalize(value));
+}
+
+/**
  * Compute inputs hash for a receipt.
  */
 export function computeInputsHash(inputs: Record<string, unknown>): string {
-  return blake3Hex(canonicalize(inputs));
+  return hashCanonicalJson(inputs);
 }
 
 /**
  * Compute outputs hash for a receipt (result string).
  */
 export function computeOutputsHash(result: string): string {
-  return blake3Hex(canonicalize(result));
+  return hashCanonicalJson(result);
 }
 
 /**
@@ -51,7 +74,7 @@ export function computeEventHash(
   const body = {
     ...receipt,
   };
-  return blake3Hex(canonicalize(body));
+  return hashCanonicalJson(body);
 }
 
 /**

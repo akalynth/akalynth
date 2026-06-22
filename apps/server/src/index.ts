@@ -1,7 +1,5 @@
 import fs from 'node:fs';
 import http from 'node:http';
-import { blake3 } from '@noble/hashes/blake3';
-import stringify from 'fast-json-stable-stringify';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Duplex } from 'node:stream';
 import { WebSocketServer, WebSocket } from 'ws';
@@ -9,6 +7,14 @@ import { createHash, randomUUID } from 'node:crypto';
 
 import type { ClientMessage, LostItemSummary, ServerMessage, PropertyPublic, PropertyOwnerHistoryEntry, GatherRejectReason, GatherNodePublic, GatherStationPublic } from '../../../packages/shared/protocol.js';
 import { PROTOCOL_VERSION, ServerMessages, parseClientMessage } from '../../../packages/shared/protocol.js';
+import {
+  computeCapsHash,
+  computeEventHash,
+  computeGlobalEventHash,
+  computePayloadHash,
+  stripPayloadHashFields,
+} from '../../../packages/shared/chronicleChain.js';
+import { canonicalJson } from '../../../packages/shared/hashPrimitive.js';
 import type { Player, TutorialProgress } from '../../../packages/shared/types.js';
 import { loadBuildInfo } from './build-info.js';
 import {
@@ -250,7 +256,7 @@ import {
 } from './world/rookguardQuest.js';
 import { getOnwardRouteReceiptProgress } from './world/onwardRoutes.js';
 import { buildSimLifeSnapshot } from './simulation/simLifeSnapshot.js';
-import { chronicleAppend } from './witness/chronicleAdapter.js';
+import { chronicleAppend, initChronicleBackend } from './witness/chronicleAdapter.js';
 import { verifyRulebookOrExit } from './rulebook/verifyRulebook.js';
 import {
   VOCATION_DECLARED_ACTION,
@@ -1033,31 +1039,7 @@ function rebuildChronicleHeadsFromLog(logPath: string): void {
 if (process.env.ENABLE_CHRONICLE === '1') {
   const chronicleLogPath = process.env.CHRONICLE_LOG_PATH ?? 'chronicle.log';
   rebuildChronicleHeadsFromLog(chronicleLogPath);
-}
-
-function blake3HexBytes(bytes: Uint8Array): string {
-  return Buffer.from(blake3(bytes)).toString('hex');
-}
-
-function blake3HexUtf8(s: string): string {
-  return blake3HexBytes(Buffer.from(s, 'utf8'));
-}
-
-function stableJson(obj: unknown): string {
-  // Deterministic for nested objects + arrays (via fast-json-stable-stringify)
-  return stringify(obj);
-}
-
-function stripPayloadHashFields(p: Record<string, unknown>): Record<string, unknown> {
-  const copy = { ...p };
-  // Per-actor chain fields
-  delete (copy as Record<string, unknown>).payload_hash;
-  delete (copy as Record<string, unknown>).prev_event_hash;
-  delete (copy as Record<string, unknown>).event_hash;
-  // Global chain fields (Seal 2.3)
-  delete (copy as Record<string, unknown>).prev_global_hash;
-  delete (copy as Record<string, unknown>).global_event_hash;
-  return copy;
+  console.log(`[chronicle] Backend: ${initChronicleBackend({ logPath: chronicleLogPath })}`);
 }
 
 function chronicleEvent(
@@ -1067,12 +1049,12 @@ function chronicleEvent(
   payload: Record<string, unknown>,
   rng: object | null = null
 ) {
-  const caps_hash = `blake3:${blake3HexUtf8(stableJson(caps ?? []))}`;
+  const caps_hash = computeCapsHash(caps ?? []);
 
   // Strip hash fields, then canonicalize (also drops undefined via JSON round-trip)
   const semanticPayload = stripPayloadHashFields(payload);
-  const payloadCanonical = JSON.parse(stableJson(semanticPayload)) as Record<string, unknown>;
-  const payload_hash = `blake3:${blake3HexUtf8(stableJson(payloadCanonical))}`;
+  const payloadCanonical = JSON.parse(canonicalJson(semanticPayload)) as Record<string, unknown>;
+  const payload_hash = computePayloadHash(semanticPayload);
 
   const prev_event_hash = lastEventHashByActor.get(actorDid) ?? 'genesis';
   const tick = Date.now();
@@ -1090,8 +1072,7 @@ function chronicleEvent(
     prev_event_hash,
   };
 
-  const DOMAIN_EVENT = 'akalynth:chronicle:event:v1\0';
-  const event_hash = `blake3:${blake3HexUtf8(DOMAIN_EVENT + stableJson(event_hash_preimage))}`;
+  const event_hash = computeEventHash(event_hash_preimage, prev_event_hash, payload_hash);
 
   lastEventHashByActor.set(actorDid, event_hash);
 
@@ -1111,8 +1092,7 @@ function chronicleEvent(
     prev_global_hash,
   };
 
-  const DOMAIN_GLOBAL = 'akalynth:chronicle:global:v1\0';
-  const global_event_hash = `blake3:${blake3HexUtf8(DOMAIN_GLOBAL + stableJson(global_preimage))}`;
+  const global_event_hash = computeGlobalEventHash(global_preimage, payload_hash, event_hash, prev_global_hash);
 
   lastGlobalHash = global_event_hash;
 

@@ -4,7 +4,7 @@
  *
  * Demonstrates the Rust witness kernel integration:
  * 1. Emit canonical JSON (sorted keys, no whitespace)
- * 2. Pipe to chronicle_append via stdin
+ * 2. Append through the long-lived Rust loader handle
  * 3. Print JSON receipt
  * 4. Verify chain integrity
  *
@@ -13,13 +13,17 @@
  *   npm run chronicle:demo
  *
  * Prerequisites:
- *   cargo build --release -p chronicle
+ *   The N-API addon is preferred. The CLI auditor fallback is opt-in:
+ *     CHRONICLE_ALLOW_CLI_FALLBACK=1 cd crates/chronicle && cargo build --release
  */
 
-import { spawnSync } from 'node:child_process';
-import { existsSync, unlinkSync } from 'node:fs';
-import { resolve } from 'node:path';
-import stringify from 'fast-json-stable-stringify';
+import { existsSync, mkdirSync, mkdtempSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { canonicalJson } from '../../../packages/shared/hashPrimitive.js';
+
+const require = createRequire(import.meta.url);
 
 interface Receipt {
   prev_hash: string;
@@ -36,65 +40,69 @@ interface VerifyResult {
   pubkey: string;
 }
 
+interface ChronicleHandle {
+  mode?: 'native' | 'cli-fallback';
+  append(event: object): Receipt;
+  verify(): VerifyResult;
+}
+
 function repoRoot(): string {
   // apps/server/tools -> repo root
   return resolve(import.meta.dirname, '../../..');
 }
 
-function chronicleBin(): string {
-  return resolve(repoRoot(), 'crates/chronicle/target/release/chronicle_append');
+function chronicleBin(): string | undefined {
+  const bin = resolve(repoRoot(), 'crates/chronicle/target/release/chronicle_append');
+  return existsSync(bin) ? bin : undefined;
 }
 
-function chronicleKey(): string {
-  return resolve(repoRoot(), 'crates/chronicle/target/release/chronicle_demo.key');
+function demoDir(): string {
+  const configured = process.env.AKALYNTH_CHRONICLE_DEMO_DIR;
+  if (configured) {
+    const dir = resolve(configured);
+    mkdirSync(dir, { recursive: true });
+    return dir;
+  }
+  return mkdtempSync(join(tmpdir(), 'akalynth-chronicle-demo-'));
 }
 
-function runAppend(event: object, logPath: string, keyPath: string): Receipt {
-  const bin = chronicleBin();
-  if (!existsSync(bin)) {
+function openDemoChronicle(logPath: string, keyPath: string): ChronicleHandle {
+  const loaderPath = resolve(repoRoot(), 'crates/chronicle/napi/loader.cjs');
+  const { openChronicle } = require(loaderPath) as {
+    openChronicle: (opts: {
+      logPath: string;
+      keyPath: string;
+      binPath?: string;
+      preferNative?: boolean;
+      allowCliFallback?: boolean;
+    }) => ChronicleHandle;
+  };
+
+  try {
+    return openChronicle({
+      logPath,
+      keyPath,
+      binPath: chronicleBin(),
+      allowCliFallback: process.env.CHRONICLE_ALLOW_CLI_FALLBACK === '1',
+    });
+  } catch (err) {
     throw new Error(
-      `chronicle_append not found at ${bin}\n` +
-        `Build it first:\n  cd crates/chronicle && cargo build --release`
+      `chronicle backend unavailable: ${(err as Error).message}\n` +
+        `Build the native addon before running this demo, or explicitly allow the CLI auditor fallback:\n` +
+        `  CHRONICLE_ALLOW_CLI_FALLBACK=1 cd crates/chronicle && cargo build --release`
     );
   }
-
-  const canonical = stringify(event); // stable key ordering, no whitespace
-  const p = spawnSync(bin, ['--log', logPath, '--key', keyPath], {
-    input: canonical,
-    encoding: 'utf8',
-  });
-
-  if (p.status !== 0) {
-    throw new Error(`chronicle_append failed:\n${p.stderr || '(no stderr)'}`);
-  }
-
-  return JSON.parse(p.stdout.trim()) as Receipt;
-}
-
-function runVerify(logPath: string, keyPath: string): VerifyResult {
-  const bin = chronicleBin();
-  const p = spawnSync(bin, ['--verify', '--log', logPath, '--key', keyPath], {
-    encoding: 'utf8',
-  });
-
-  if (p.status !== 0) {
-    throw new Error(`chronicle verify failed:\n${p.stderr || '(no stderr)'}`);
-  }
-
-  return JSON.parse(p.stdout.trim()) as VerifyResult;
 }
 
 function main() {
-  const logPath = resolve(process.cwd(), 'demo_chronicle.log');
-  const keyPath = chronicleKey();
-
-  // Clean up any previous demo run
-  if (existsSync(logPath)) {
-    unlinkSync(logPath);
-    console.log(`[demo] Removed previous ${logPath}`);
-  }
+  const dir = demoDir();
+  const logPath = resolve(dir, 'demo_chronicle.log');
+  const keyPath = resolve(dir, 'chronicle_demo.key');
+  const chronicle = openDemoChronicle(logPath, keyPath);
 
   console.log('\n=== Chronicle End-to-End Demo ===\n');
+  console.log(`[demo] backend = ${chronicle.mode ?? 'unknown'}`);
+  console.log(`[demo] directory = ${dir}`);
 
   // Event 1: Spawn
   const spawnEvent = {
@@ -110,8 +118,8 @@ function main() {
   };
 
   console.log('[1] Appending spawn event...');
-  console.log('    Input (canonical):', stringify(spawnEvent));
-  const receipt1 = runAppend(spawnEvent, logPath, keyPath);
+  console.log('    Input (canonical):', canonicalJson(spawnEvent));
+  const receipt1 = chronicle.append(spawnEvent);
   console.log('    Receipt:', JSON.stringify(receipt1, null, 2));
   console.log(`    ✓ prev_hash = "${receipt1.prev_hash}" (genesis)`);
   console.log(`    ✓ sequence = ${receipt1.sequence}`);
@@ -130,7 +138,8 @@ function main() {
   };
 
   console.log('\n[2] Appending move event...');
-  const receipt2 = runAppend(moveEvent, logPath, keyPath);
+  console.log('    Input (canonical):', canonicalJson(moveEvent));
+  const receipt2 = chronicle.append(moveEvent);
   console.log('    Receipt:', JSON.stringify(receipt2, null, 2));
   console.log(`    ✓ prev_hash = "${receipt2.prev_hash.slice(0, 16)}..." (chains from event 1)`);
   console.log(`    ✓ sequence = ${receipt2.sequence}`);
@@ -143,7 +152,7 @@ function main() {
 
   // Verify integrity
   console.log('\n[3] Verifying chronicle integrity...');
-  const verifyResult = runVerify(logPath, keyPath);
+  const verifyResult = chronicle.verify();
   console.log('    Result:', JSON.stringify(verifyResult, null, 2));
 
   if (!verifyResult.valid) {

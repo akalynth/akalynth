@@ -1,5 +1,5 @@
 import { createHash, createPublicKey, createVerify } from 'node:crypto';
-import stringify from 'fast-json-stable-stringify';
+import { canonicalJson as sharedCanonicalJson } from '../../../../packages/shared/hashPrimitive.js';
 
 export const PRINCIPAL_CHALLENGE_TYPE = 'akalynth.challenge.v1';
 export const PRINCIPAL_PROTOCOL_VERSION = '1';
@@ -25,7 +25,7 @@ export interface PrincipalChallengePayload {
 }
 
 export function canonicalJson(value: unknown): string {
-  const out = stringify(value);
+  const out = sharedCanonicalJson(value);
   if (!out) throw new Error('canonical_json_failed');
   return out;
 }

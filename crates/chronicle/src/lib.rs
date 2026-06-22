@@ -32,6 +32,11 @@ use thiserror::Error;
 /// Genesis marker for the first entry in a chronicle
 pub const GENESIS_MARKER: &str = "genesis";
 
+// napi-rs in-process binding (migration Step 2). Compiled only with `--features napi`;
+// the default rlib/bin build (Step 0 bench, Step 1 parity) never sees this module.
+#[cfg(feature = "napi")]
+mod napi_binding;
+
 /// Chronicle error types
 #[derive(Error, Debug)]
 pub enum ChronicleError {
@@ -311,8 +316,13 @@ pub struct VerifyResult {
 
 /// Compute BLAKE3 hash of data, returned as hex string
 pub fn blake3_hex(data: &str) -> String {
+    blake3_hex_bytes(data.as_bytes())
+}
+
+/// Compute BLAKE3 hash of raw bytes, returned as hex string.
+pub fn blake3_hex_bytes(data: &[u8]) -> String {
     let mut hasher = Hasher::new();
-    hasher.update(data.as_bytes());
+    hasher.update(data);
     hasher.finalize().to_hex().to_string()
 }
 

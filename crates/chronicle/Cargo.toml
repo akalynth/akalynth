@@ -4,7 +4,13 @@ version = "0.1.0"
 edition = "2021"
 description = "Append-only witness kernel for Akalynth game events"
 license = "MIT"
-repository = "https://github.com/VaultSovereign/akalynth"
+repository = "https://github.com/akalynth/akalynth-chronicle"
+
+# rlib: the bin, tests (parity gate), and other crates link the library.
+# cdylib: required for the napi addon. It carries NO napi symbols unless `--features napi`
+# is set, so the default build just emits an extra (unused) dynamic lib — the API is unchanged.
+[lib]
+crate-type = ["rlib", "cdylib"]
 
 [[bin]]
 name = "chronicle_append"
@@ -17,6 +23,18 @@ rand = "0.8"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "1.0"
+# napi-rs binding surface (migration Step 2) — optional, compiled only with `--features napi`.
+napi = { version = "2", default-features = false, features = ["napi6"], optional = true }
+napi-derive = { version = "2", optional = true }
+
+[build-dependencies]
+# Only pulled in (and only run) when the `napi` feature is enabled; see build.rs.
+napi-build = { version = "2", optional = true }
+
+[features]
+# Default = OFF. Enables the in-process napi addon. The Step 0 bench and Step 1 parity gate
+# run WITHOUT this feature, so their builds are identical to before this change.
+napi = ["dep:napi", "dep:napi-derive", "dep:napi-build"]
 
 [dev-dependencies]
 tempfile = "3.10"

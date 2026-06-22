@@ -253,6 +253,11 @@ interface MobilePlayEntryProps {
   onEnterPlay: () => void;
 }
 
+function displayConnectionLabel(conn: ConnectionState): string {
+  if (conn.phase === 'error') return 'offline';
+  return conn.phase.replace(/_/g, ' ');
+}
+
 function MobilePlayEntry({
   session,
   stage,
@@ -272,13 +277,14 @@ function MobilePlayEntry({
     !hasWorldPlayer ? 'Waiting for world' :
     stage < 1 ? 'Ready to enter' :
     'Ready';
+  const connLabel = displayConnectionLabel(conn);
 
   return (
     <div className="mobile-play-entry" role="region" aria-label="Mobile play entry">
       <div className="mobile-play-entry__header">
         <span>Akalynth</span>
         <strong>{entryState}</strong>
-        <i>{conn.phase}</i>
+        <i className={`mobile-play-entry__conn mobile-play-entry__conn--${conn.phase}`}>{connLabel}</i>
       </div>
       <CharacterBar
         session={session}
@@ -314,12 +320,13 @@ interface MobileStatusRailProps {
 }
 
 function MobileStatusRail({ name, position, health, conn }: MobileStatusRailProps) {
+  const connLabel = displayConnectionLabel(conn);
   return (
     <div className="mobile-status-rail" aria-label="Mobile player status">
       <span>{name ?? 'Guest'}</span>
       <strong>{health}</strong>
       <span>{position}</span>
-      <i>{conn.phase}</i>
+      <i>{connLabel}</i>
     </div>
   );
 }
@@ -413,10 +420,18 @@ function DebugApp() {
   const respectValue = state.world.me?.reputation ?? 0;
   const respectRank = respectRankForReputation(respectValue);
   const playerPositionLabel = state.world.me ? `${state.world.me.x},${state.world.me.y}` : '--';
-  const showMobilePlayEntry =
-    phoneLandscape &&
-    !presentationMode &&
-    (state.ui.stage < 1 || !state.world.me);
+  const hasWorldPlayer = Boolean(state.world.me);
+  const accountPanelMode = !presentationMode && !state.session.authenticated;
+  const presentationEntryMode = presentationMode && !hasWorldPlayer;
+  const showPlayEntry =
+    presentationEntryMode ||
+    (
+      phoneLandscape &&
+      !presentationMode &&
+      (state.ui.stage < 1 || !hasWorldPlayer)
+    );
+  const entryMode = presentationEntryMode || (!presentationMode && (state.ui.stage < 1 || !hasWorldPlayer));
+  const showPlayShell = hasWorldPlayer && (presentationMode || state.ui.stage >= 1);
   const playerDisplayName = displayPlayerName(
     state.session.name,
     currentMapDisplayName,
@@ -587,7 +602,7 @@ function DebugApp() {
   }
 
   return (
-    <div className={`app-shell${presentationMode ? ' app-shell--presentation' : ''}`}>
+    <div className={`app-shell${presentationMode ? ' app-shell--presentation' : ''}${entryMode ? ' app-shell--entry' : ''}${accountPanelMode ? ' app-shell--account-panel' : ''}`}>
       <MobileLandscapeGate />
       <TopBar
         stage={state.ui.stage}
@@ -760,7 +775,7 @@ function DebugApp() {
               </div>
             </div>
           )}
-          {(!presentationMode || !phoneLandscape) && (
+          {!presentationEntryMode && !phoneLandscape && (
             <div className="hud hud-primary" aria-label="play status">
               <div className="hud-card hud-card--identity">
                 <span className="hud-kicker">Akalynth</span>
@@ -821,17 +836,17 @@ function DebugApp() {
               </div>
               <div>
                 <span>Link</span>
-                <strong>{state.conn.phase}</strong>
+                <strong>{displayConnectionLabel(state.conn)}</strong>
               </div>
             </div>
             </div>
           )}
-          {showMobilePlayEntry && (
+          {showPlayEntry && (
             <MobilePlayEntry
               session={state.session}
               stage={state.ui.stage}
               conn={state.conn}
-              hasWorldPlayer={Boolean(state.world.me)}
+              hasWorldPlayer={hasWorldPlayer}
               characterCatalog={api.characterCatalog}
               accountSession={api.accountSession}
               accountCharacters={api.accountCharacters}
@@ -843,7 +858,7 @@ function DebugApp() {
               onEnterPlay={() => api.setStage(1)}
             />
           )}
-          {phoneLandscape && (
+          {phoneLandscape && showPlayShell && (
             <MobileStatusRail
               name={playerDisplayName}
               position={playerPositionLabel}
@@ -851,7 +866,7 @@ function DebugApp() {
               conn={state.conn}
             />
           )}
-          {presentationMode && phoneLandscape && (
+          {presentationMode && phoneLandscape && showPlayShell && (
             <MotionObjectiveRail objectiveLabel={objectiveLabel} />
           )}
           {!presentationMode && (
@@ -904,126 +919,130 @@ function DebugApp() {
           />
         </section>
 
-        <section className="stage stage-controls" aria-label="touch controls">
-          <div className="thumb-zone left">
-            <DPad onMove={api.sendMove} onRelease={api.releaseMove} onStopAll={api.stopMoves} />
-          </div>
-          <div className="thumb-zone right">
-            <ActionsPanel
-              stage={state.ui.stage}
-              compact={phoneLandscape}
-              presentationMode={presentationMode}
-              onAttack={api.sendAttack}
-              onRitual={api.castRunestone}
-              onTalk={api.talkToNpc}
-              onDeclareVocation={api.declareVocation}
-              onPickup={api.pickupItem}
-              onStartWork={api.startWork}
-              onTickWork={api.tickWork}
-              onBuy={api.useSkill}
-              onWorldEventAction={api.useSkill}
-              onGiftGold={() => state.combat.targetId && api.useSkill('social:gift:gold', state.combat.targetId)}
-              onUseItem={(itemId) => api.useSkill('item:use:' + itemId)}
-              attackReady={attackReady}
-              ritualReady={ritualReady}
-              ritualHint={ritualHint}
-              nearLegendStone={nearLegendStone}
-              nearbyNpc={nearbyNpc}
-              groundItemHere={groundItemHere}
-              workContract={state.workContract}
-              targetName={targetName}
-              loop={state.loop}
-              objectiveLabel={objectiveLabel}
-              inventory={state.inventory}
-              gold={state.gold}
-              reputation={respectValue}
-            />
-          </div>
-        </section>
+        {showPlayShell && (
+          <section className="stage stage-controls" aria-label="touch controls">
+            <div className="thumb-zone left">
+              <DPad onMove={api.sendMove} onRelease={api.releaseMove} onStopAll={api.stopMoves} />
+            </div>
+            <div className="thumb-zone right">
+              <ActionsPanel
+                stage={state.ui.stage}
+                compact={phoneLandscape}
+                presentationMode={presentationMode}
+                onAttack={api.sendAttack}
+                onRitual={api.castRunestone}
+                onTalk={api.talkToNpc}
+                onDeclareVocation={api.declareVocation}
+                onPickup={api.pickupItem}
+                onStartWork={api.startWork}
+                onTickWork={api.tickWork}
+                onBuy={api.useSkill}
+                onWorldEventAction={api.useSkill}
+                onGiftGold={() => state.combat.targetId && api.useSkill('social:gift:gold', state.combat.targetId)}
+                onUseItem={(itemId) => api.useSkill('item:use:' + itemId)}
+                attackReady={attackReady}
+                ritualReady={ritualReady}
+                ritualHint={ritualHint}
+                nearLegendStone={nearLegendStone}
+                nearbyNpc={nearbyNpc}
+                groundItemHere={groundItemHere}
+                workContract={state.workContract}
+                targetName={targetName}
+                loop={state.loop}
+                objectiveLabel={objectiveLabel}
+                inventory={state.inventory}
+                gold={state.gold}
+                reputation={respectValue}
+              />
+            </div>
+          </section>
+        )}
 
-        <section
-          className={`stage stage-bottom command-dock proof-${smokeState}`}
-        >
-          <div className="bottom-actions">
-            <button
-              className="chat-toggle"
-              aria-label="Open chat"
-              onClick={() => {
-                setInventoryOpen(false);
-                setProofSheetOpen(false);
-                api.closeChronicle();
-                setChatOpen(true);
-              }}
-            >
-              Chat
-            </button>
-            <button
-              className="chronicle-toggle"
-              aria-label="Open log"
-              onClick={() => {
-                setChatOpen(false);
-                setInventoryOpen(false);
-                setProofSheetOpen(false);
-                api.openChronicle();
-              }}
-            >
-              Log
-            </button>
-            <button
-              className="inventory-toggle"
-              aria-label="Open backpack"
-              onClick={() => {
-                setChatOpen(false);
-                setProofSheetOpen(false);
-                api.closeChronicle();
-                setInventoryOpen(true);
-              }}
-            >
-              Pack
-            </button>
-            {!presentationMode && (
+        {showPlayShell && (
+          <section
+            className={`stage stage-bottom command-dock proof-${smokeState}`}
+          >
+            <div className="bottom-actions">
               <button
-                className="proof-toggle"
-                aria-label={phoneLandscape ? 'Open proof status' : proofRunning ? 'Running proof' : 'Run proof'}
+                className="chat-toggle"
+                aria-label="Open chat"
                 onClick={() => {
-                  if (phoneLandscape) {
-                    setChatOpen(false);
-                    setInventoryOpen(false);
-                    api.closeChronicle();
-                    setProofSheetOpen(true);
-                    return;
-                  }
-                  void runProofSmoke();
+                  setInventoryOpen(false);
+                  setProofSheetOpen(false);
+                  api.closeChronicle();
+                  setChatOpen(true);
                 }}
-                disabled={!phoneLandscape && (proofRunning || !studioProofEnabled)}
               >
-                {proofRunning ? 'Running' : 'Proof'}
+                Chat
               </button>
-            )}
-            {!presentationMode && (
               <button
-                className="seal-toggle"
-                aria-label="Adventurer Seal"
+                className="chronicle-toggle"
+                aria-label="Open log"
                 onClick={() => {
                   setChatOpen(false);
                   setInventoryOpen(false);
                   setProofSheetOpen(false);
-                  api.closeChronicle();
-                  setSealOpen(true);
+                  api.openChronicle();
                 }}
               >
-                Seal
+                Log
               </button>
-            )}
-          </div>
-          <div className="status-pills">
-            <span className="pill">World synced</span>
-            {!presentationMode && proof?.lastSmoke?.worldSpawn && (
-              <span className="pill proof-pill">Proof {proof.lastSmoke.worldSpawn.x},{proof.lastSmoke.worldSpawn.y}</span>
-            )}
-            {state.world.me?.status === 'dead' && <span className="pill warning">Dead</span>}
-          </div>
-        </section>
+              <button
+                className="inventory-toggle"
+                aria-label="Open backpack"
+                onClick={() => {
+                  setChatOpen(false);
+                  setProofSheetOpen(false);
+                  api.closeChronicle();
+                  setInventoryOpen(true);
+                }}
+              >
+                Pack
+              </button>
+              {!presentationMode && (
+                <button
+                  className="proof-toggle"
+                  aria-label={phoneLandscape ? 'Open proof status' : proofRunning ? 'Running proof' : 'Run proof'}
+                  onClick={() => {
+                    if (phoneLandscape) {
+                      setChatOpen(false);
+                      setInventoryOpen(false);
+                      api.closeChronicle();
+                      setProofSheetOpen(true);
+                      return;
+                    }
+                    void runProofSmoke();
+                  }}
+                  disabled={!phoneLandscape && (proofRunning || !studioProofEnabled)}
+                >
+                  {proofRunning ? 'Running' : 'Proof'}
+                </button>
+              )}
+              {!presentationMode && (
+                <button
+                  className="seal-toggle"
+                  aria-label="Adventurer Seal"
+                  onClick={() => {
+                    setChatOpen(false);
+                    setInventoryOpen(false);
+                    setProofSheetOpen(false);
+                    api.closeChronicle();
+                    setSealOpen(true);
+                  }}
+                >
+                  Seal
+                </button>
+              )}
+            </div>
+            <div className="status-pills">
+              <span className="pill">World synced</span>
+              {!presentationMode && proof?.lastSmoke?.worldSpawn && (
+                <span className="pill proof-pill">Proof {proof.lastSmoke.worldSpawn.x},{proof.lastSmoke.worldSpawn.y}</span>
+              )}
+              {state.world.me?.status === 'dead' && <span className="pill warning">Dead</span>}
+            </div>
+          </section>
+        )}
       </main>
 
       <ChatSheet

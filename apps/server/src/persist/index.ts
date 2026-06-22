@@ -6,7 +6,7 @@
 //   1. Receipts are canon: if SQLite diverges, receipts win
 //   2. Replay is idempotent: running replay twice yields identical state
 //   3. Durable write ordering: fsync receipts BEFORE materializing to SQLite
-//   4. Canonical hash: BLAKE3(stableStringify(receipt)) with no newline
+//   4. Canonical hash: BLAKE3(canonicalJson(receipt)) with no newline
 //   5. No silent deletions: soft delete only (status/deleted_at fields)
 
 import Database from 'better-sqlite3';

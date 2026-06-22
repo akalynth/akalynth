@@ -4,15 +4,19 @@ Generation + validation for Akalynth game assets. Style is governed by the
 **Visual Contract v1** (`docs/CLASSIC_32_ART_AND_MOBILE_UI_DIRECTION.md`) and the
 lifecycle/rules in `data/assets-src/FACTORY.md`.
 
-> Status: `generate.ts` is a runnable scaffold (needs an API key to produce art);
-> `verify-assets.ts` is fully runnable. No generated PNGs are committed by these
-> tools — assets enter the tree only after hand cleanup + manifest + human review.
+> Status: `generate.ts` is a runnable scaffold (needs an API key to produce raw
+> model art); `verify-assets.ts` is fully runnable. The Rookguard tutorial family
+> also has a deterministic hand-authored source builder that commits normalized
+> PNGs, sidecars, pack metadata, and a test-map receipt without a network call.
 
 ## Commands
 
 ```
 # Validate all asset manifests + pack specs (read-only):
 npm run verify:assets
+
+# Rebuild the deterministic Rookguard tutorial and canal-station source asset family:
+npm run build:assets:rookguard
 
 # Preview the request for one asset (no network, no key needed):
 tsx tools/asset-gen/generate.ts --prompt data/assets-src/prompts/props/akalynth_prop_wooden_chest_001.txt \
@@ -47,3 +51,19 @@ message. With a key it writes one raw PNG to `data/assets-src/_raw/` (gitignored
   `mechanics: null`. Collision/walkability/zone/etc. live server-side.
 - Config: `OPENAI_API_KEY` (+ optional `OPENAI_IMAGE_MODEL`) via `.env` — never
   committed. See `.env.example`.
+
+## Deterministic Rookguard Source Build
+
+`npm run build:assets:rookguard` runs
+`tools/asset-gen/build-rookguard-tutorial-tiles.mjs` and
+`tools/asset-gen/build-rookguard-canal-visuals.mjs`. They create the four
+Rookguard tutorial/gate rune tiles, the training slime, and three canal-fishing
+station world visuals as original script-rendered Classic 32 source sprites. The
+tutorial builder also rewrites
+`data/assets-src/packs/rookguard-starter-v1.json` and
+`data/assets-src/test-maps/rookguard-tutorial-assets-v1.json`.
+
+These assets are `tilemap_tested` source material, not atlas-packed or
+human-reviewed production art. The sidecars keep `mechanics: null`; server tile
+codes, creature stats, fishing rewards, receipts, and transition authority stay
+outside the art layer.
