@@ -1,8 +1,28 @@
 {
   "schema_version": 1,
-  "mode": "loose_png",
-  "generated_at": "2026-06-22T21:34:00.118Z",
+  "mode": "loose_png+atlas",
+  "generated_at": "2026-06-22T21:53:15.904Z",
   "files": [
+    {
+      "path": "atlas/chronicle.png",
+      "sha256": "a86fd7beb7f3a015d55de612c202570cd51a916b7008e31bd81b63bf43f9f1de"
+    },
+    {
+      "path": "atlas/items.png",
+      "sha256": "a28116854d2bff108bffd547d709d633b595c8fbb6116eb3f27250b043082cd5"
+    },
+    {
+      "path": "atlas/manifest.json",
+      "sha256": "a09de490691b3b2f60fed7fcedc4a5c93838d33826a689e9f5fa250245d11ee1"
+    },
+    {
+      "path": "atlas/ui.png",
+      "sha256": "2ef6678e4f8c58d45ba677ea81ae66dd8634fd9f84751913cad89660c1194580"
+    },
+    {
+      "path": "atlas/world.png",
+      "sha256": "8e99fed3a4bd6fa6c5e073e4c8907a59fd2091845da9f9836fd4e6b6672617dd"
+    },
     {
       "path": "sprites/characters/base_human_male_01.png",
       "sha256": "f6c294b2108eedb5fe7fa27613059bb9f49ba5902a9074c3fd29777d713540ce"
@@ -487,5 +507,6 @@
       "path": "world/walls/wall_stone_south.png",
       "sha256": "38a1a46cb41267f20a4543655be006522bb11f6df4ab18cbbbc8ccab699a514e"
     }
-  ]
+  ],
+  "atlas_generated_at": "2026-06-22T21:53:16.134Z"
 }

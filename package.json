@@ -42,7 +42,9 @@
     "verify:outcome": "tsx tools/verify-outcome/src/index.ts",
     "verify:outcome:test": "tsx tools/verify-outcome/test.ts",
     "verify:assets": "tsx tools/asset-gen/verify-assets.ts",
-    "build:assets": "node tools/atlas/compile-registry.mjs && node tools/atlas/sync-to-clients.mjs --use-compiled-registry",
+    "build:atlas": "node tools/atlas/build-atlas.mjs",
+    "bench:atlas-decode": "node tools/atlas/bench-decode.mjs",
+    "build:assets": "node tools/atlas/compile-registry.mjs && node tools/atlas/sync-to-clients.mjs --use-compiled-registry && node tools/atlas/build-atlas.mjs",
     "build:assets:loose": "node tools/atlas/sync-to-clients.mjs",
     "sync:assets": "node tools/atlas/sync-to-clients.mjs",
     "verify:asset-sync": "node tools/atlas/verify-sync.mjs",
@@ -52,7 +54,8 @@
     "verify:web-rust-cleanup": "node scripts/verify-web-rust-cleanup.mjs"
   },
   "devDependencies": {
-    "playwright-core": "^1.56.1"
+    "playwright-core": "^1.56.1",
+    "sharp": "^0.33.5"
   },
   "keywords": [
     "mmo",

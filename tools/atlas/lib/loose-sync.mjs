@@ -21,6 +21,7 @@ import {
   ASSET_REGISTRY_SCHEMA_VERSION,
   ASSETS_BUILT,
   ASSETS_SRC,
+  ATLAS_REL,
   CLIENT_MIRRORS,
   MANIFEST_PATH,
   REGISTRY_PATH,
@@ -35,6 +36,7 @@ export {
   AKALYNTH_STYLE_CONTRACT,
   ASSETS_BUILT,
   ASSETS_SRC,
+  ATLAS_REL,
   CLIENT_MIRRORS,
   HAS_PNG_STATUS,
   MANIFEST_PATH,
@@ -149,4 +151,66 @@ export function listBuiltSyncArtifacts() {
   const paths = pngFiles.map((f) => f.builtRel);
   paths.push(REGISTRY_PATH, MANIFEST_PATH);
   return [...new Set(paths)].sort();
+}
+
+function walkAtlasFiles(dir, prefix = ATLAS_REL) {
+  const out = [];
+  if (!existsSync(dir)) return out;
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const rel = `${prefix}/${entry.name}`;
+    const abs = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      out.push(...walkAtlasFiles(abs, rel));
+    } else if (entry.isFile()) {
+      out.push({ rel, abs });
+    }
+  }
+  return out;
+}
+
+/** Copy atlas/ sheets + manifest and refreshed registry.json to client mirrors. */
+export function mirrorAtlasArtifacts() {
+  const atlasBuilt = join(ASSETS_BUILT, ATLAS_REL);
+  if (!existsSync(atlasBuilt)) {
+    return { atlasFiles: 0 };
+  }
+
+  const atlasFiles = walkAtlasFiles(atlasBuilt);
+  for (const { rel, abs } of atlasFiles) {
+    copyTo(join(ASSETS_BUILT, rel), abs);
+    for (const { root } of CLIENT_MIRRORS) {
+      copyTo(join(root, rel), abs);
+    }
+  }
+
+  const registryAbs = join(ASSETS_BUILT, REGISTRY_PATH);
+  if (existsSync(registryAbs)) {
+    for (const { root } of CLIENT_MIRRORS) {
+      copyTo(join(root, REGISTRY_PATH), registryAbs);
+    }
+  }
+
+  const manifestAbs = join(ASSETS_BUILT, MANIFEST_PATH);
+  if (existsSync(manifestAbs)) {
+    const manifest = JSON.parse(readFileSync(manifestAbs, 'utf8'));
+    const files = Array.isArray(manifest.files) ? [...manifest.files] : [];
+    const known = new Set(files.map((f) => f.path));
+
+    for (const { rel, abs } of atlasFiles) {
+      if (known.has(rel)) continue;
+      files.push({ path: rel, sha256: sha256File(abs) });
+      known.add(rel);
+    }
+
+    manifest.mode = manifest.mode === 'loose_png' ? 'loose_png+atlas' : manifest.mode;
+    manifest.atlas_generated_at = new Date().toISOString();
+    manifest.files = files.sort((a, b) => a.path.localeCompare(b.path));
+    const manifestJson = `${JSON.stringify(manifest, null, 2)}\n`;
+    writeFileSync(manifestAbs, manifestJson, 'utf8');
+    for (const { root } of CLIENT_MIRRORS) {
+      writeFileSync(join(root, MANIFEST_PATH), manifestJson, 'utf8');
+    }
+  }
+
+  return { atlasFiles: atlasFiles.length };
 }

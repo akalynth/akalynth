@@ -8,6 +8,7 @@ export const SPRITES_SRC = join(ASSETS_SRC, 'sprites');
 export const ASSETS_BUILT = join(REPO_ROOT, 'data/assets-built');
 export const REGISTRY_PATH = 'registry.json';
 export const MANIFEST_PATH = 'sync-manifest.json';
+export const ATLAS_REL = 'atlas';
 export const UI_PACK_REL = 'data/assets-src/sprites/ui/ui_gameplay_v1.json';
 
 export const AKALYNTH_STYLE_CONTRACT =

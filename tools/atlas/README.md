@@ -2,9 +2,9 @@
 
 Builds sprite atlases for runtime use.
 
-> **Status:** Scaffold. This directory currently holds only this README; the
-> atlas builder is not implemented yet. The sections below describe the intended
-> contract once the tool lands. Do not assume a runnable command exists.
+> **Status:** PR-003 atlas builder implemented (`build-atlas.mjs`). Produces
+> category sheets under `data/assets-built/atlas/` and patches `registry.json`
+> with UV rects. Loose PNG sync remains the fallback when atlas is skipped.
 
 ## Intended inputs/outputs
 
@@ -57,3 +57,16 @@ Run manifest ID tests: `npx tsx packages/shared/test/worldVisual.test.ts`
 `compile-registry.mjs` writes `data/assets-built/registry.json`; `sync-to-clients.mjs` mirrors loose PNGs and the registry (compiled or inline) to client bundles.
 
 **Git policy:** see [`docs/ASSET_SYNC_POLICY.md`](../../docs/ASSET_SYNC_POLICY.md) for what to commit in `data/assets-built/` vs client mirrors and the contributor sync workflow.
+
+## Atlas packer (PR-003)
+
+| Script | Purpose |
+|--------|---------|
+| `npm run build:atlas` | Pack UI/items/chronicle/world sheets (2048² max, 2px padding, nearest-neighbor) |
+| `npm run bench:atlas-decode` | Decode-time harness per sheet (append `--out=receipt.json` for CI receipts) |
+
+**Outputs:** `data/assets-built/atlas/{ui,items,chronicle,world}.png`, `atlas/manifest.json`, registry `atlas` UV rects.
+
+**MVP sheet scope:** 13 UI + 20 items + 9 chronicle glyphs + 38 Rookguard world overlays.
+
+**Dependency:** `sharp@^0.33` (root devDependency). Fallback: continue with `build:assets:loose` if `sharp` unavailable on a target arch.
