@@ -5,6 +5,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 env:
   ANDROID_HOME: /usr/lib/android-sdk
@@ -23,6 +24,15 @@ jobs:
       codex_plugin_only: ${{ steps.classify.outputs.codex_plugin_only }}
       full_ci_required: ${{ steps.classify.outputs.full_ci_required }}
       android_changed: ${{ steps.classify.outputs.android_changed }}
+      ci_changed: ${{ steps.classify.outputs.ci_changed }}
+      debug_client_changed: ${{ steps.classify.outputs.debug_client_changed }}
+      docker_changed: ${{ steps.classify.outputs.docker_changed }}
+      docs_only: ${{ steps.classify.outputs.docs_only }}
+      packages_changed: ${{ steps.classify.outputs.packages_changed }}
+      protocol_changed: ${{ steps.classify.outputs.protocol_changed }}
+      server_changed: ${{ steps.classify.outputs.server_changed }}
+      shared_changed: ${{ steps.classify.outputs.shared_changed }}
+      skills_changed: ${{ steps.classify.outputs.skills_changed }}
 
     steps:
       - uses: actions/checkout@v4
@@ -40,6 +50,15 @@ jobs:
 
           codex_plugin_only=false
           full_ci_required=true
+          ci_changed=false
+          debug_client_changed=false
+          docker_changed=false
+          docs_only=false
+          packages_changed=false
+          protocol_changed=false
+          server_changed=false
+          shared_changed=false
+          skills_changed=false
           # android_changed gates the slow Android emulator job: only run it on PRs that
           # touch apps/android/** (push to main still runs it via the job's own condition).
           android_changed=false
@@ -48,33 +67,94 @@ jobs:
             changed_files="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
             full_ci_required=false
             codex_plugin_only=true
+            docs_only=true
 
             if [ -z "$changed_files" ]; then
               codex_plugin_only=false
               full_ci_required=false
+              docs_only=false
             fi
 
             while IFS= read -r file; do
               [ -z "$file" ] && continue
 
               case "$file" in
-                .codex/*|.agents/*|plugins/akalynth-studio/*|tools/validate-codex-plugin.mjs|.github/ISSUE_TEMPLATE/*)
+                .codex/*|.agents/*|plugins/akalynth-studio/*|tools/validate-codex-plugin.mjs|.github/ISSUE_TEMPLATE/*|.claude/skills/*|scripts/verify_skills.sh)
+                  skills_changed=true
+                  docs_only=false
+                  ;;
+                .github/workflows/*|scripts/ci_invariant_guard.sh)
+                  codex_plugin_only=false
+                  ci_changed=true
+                  docs_only=false
+                  ;;
+                docs/*|docs/**/*|*.md|.github/PULL_REQUEST_TEMPLATE.md)
+                  codex_plugin_only=false
+                  ;;
+                packages/shared/protocol.ts|packages/shared/protocol.js|packages/shared/protocol.golden.json)
+                  codex_plugin_only=false
+                  full_ci_required=true
+                  docs_only=false
+                  packages_changed=true
+                  protocol_changed=true
+                  shared_changed=true
+                  ;;
+                packages/shared/*|packages/shared/**/*)
+                  codex_plugin_only=false
+                  full_ci_required=true
+                  docs_only=false
+                  packages_changed=true
+                  shared_changed=true
+                  ;;
+                apps/server/*|apps/server/**/*)
+                  codex_plugin_only=false
+                  full_ci_required=true
+                  docs_only=false
+                  server_changed=true
+                  ;;
+                apps/debug-client/*|apps/debug-client/**/*)
+                  codex_plugin_only=false
+                  full_ci_required=true
+                  docs_only=false
+                  debug_client_changed=true
                   ;;
                 apps/android/*)
                   codex_plugin_only=false
                   full_ci_required=true
+                  docs_only=false
                   android_changed=true
+                  ;;
+                packages/*|packages/**/*)
+                  codex_plugin_only=false
+                  full_ci_required=true
+                  docs_only=false
+                  packages_changed=true
+                  ;;
+                infra/docker/*|infra/docker/**/*|.dockerignore)
+                  codex_plugin_only=false
+                  full_ci_required=true
+                  docs_only=false
+                  docker_changed=true
                   ;;
                 package.json)
                   package_diff="$(git diff --unified=0 "$BASE_SHA" "$HEAD_SHA" -- package.json)"
                   if printf '%s\n' "$package_diff" | grep -E '^[+-][^+-]' | grep -v 'validate:codex-plugin' >/dev/null; then
                     codex_plugin_only=false
                     full_ci_required=true
+                    docs_only=false
+                    packages_changed=true
                   fi
+                  ;;
+                package-lock.json|apps/*/package.json|apps/*/package-lock.json|tools/*/package.json|tools/*/package-lock.json)
+                  codex_plugin_only=false
+                  full_ci_required=true
+                  docs_only=false
+                  packages_changed=true
                   ;;
                 *)
                   codex_plugin_only=false
                   full_ci_required=true
+                  docs_only=false
                   ;;
               esac
             done <<< "$changed_files"
@@ -84,6 +164,15 @@ jobs:
             echo "codex_plugin_only=$codex_plugin_only"
             echo "full_ci_required=$full_ci_required"
             echo "android_changed=$android_changed"
+            echo "ci_changed=$ci_changed"
+            echo "debug_client_changed=$debug_client_changed"
+            echo "docker_changed=$docker_changed"
+            echo "docs_only=$docs_only"
+            echo "packages_changed=$packages_changed"
+            echo "protocol_changed=$protocol_changed"
+            echo "server_changed=$server_changed"
+            echo "shared_changed=$shared_changed"
+            echo "skills_changed=$skills_changed"
           } >> "$GITHUB_OUTPUT"
 
           {
@@ -92,6 +181,14 @@ jobs:
             echo "- Event: $EVENT_NAME"
             echo "- Repo metadata fastpath eligible: $codex_plugin_only"
             echo "- Full CI required: $full_ci_required"
+            echo "- Docs only: $docs_only"
+            echo "- Server changed: $server_changed"
+            echo "- Shared/protocol changed: $shared_changed / $protocol_changed"
+            echo "- Packages changed: $packages_changed"
+            echo "- Debug client changed: $debug_client_changed"
+            echo "- Android changed: $android_changed"
+            echo "- Skills/plugin changed: $skills_changed"
+            echo "- CI changed: $ci_changed"
             echo ""
             echo "### Changed files"
             echo '```'
@@ -103,32 +200,49 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-  repo-metadata:
+  merge-gate:
+    name: PR merge gate (fast)
     runs-on: [self-hosted, ubuntu-24.04]
-    timeout-minutes: 10
+    timeout-minutes: 8
     permissions:
       contents: read
     needs: changes
-    if: github.event_name == 'pull_request' && needs.changes.outputs.codex_plugin_only == 'true'
+    if: github.event_name == 'pull_request'
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Make scripts executable
+        run: chmod +x scripts/*.sh
+
+      - name: API-first invariant guard
+        run: ./scripts/ci_invariant_guard.sh
 
       - name: Setup Node.js
+        if: needs.changes.outputs.codex_plugin_only == 'true' || needs.changes.outputs.skills_changed == 'true' || needs.changes.outputs.packages_changed == 'true' || needs.changes.outputs.shared_changed == 'true' || needs.changes.outputs.server_changed == 'true' || needs.changes.outputs.debug_client_changed == 'true'
         uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            apps/server/package-lock.json
+            apps/debug-client/package-lock.json
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install root dependencies
+        if: needs.changes.outputs.packages_changed == 'true' || needs.changes.outputs.shared_changed == 'true' || needs.changes.outputs.server_changed == 'true' || needs.changes.outputs.debug_client_changed == 'true'
+        run: npm ci --prefer-offline --no-audit --fund=false
 
-      - name: Validate Codex/plugin scaffold
-        run: npm run validate:codex-plugin
-
-      - name: Validate skills and symlink invariant
-        run: bash scripts/verify_skills.sh
+      - name: Validate repo metadata and skills
+        if: needs.changes.outputs.codex_plugin_only == 'true' || needs.changes.outputs.skills_changed == 'true'
+        run: |
+          node tools/validate-codex-plugin.mjs
+          bash scripts/verify_skills.sh
 
       - name: Validate delegation issue templates
+        if: needs.changes.outputs.codex_plugin_only == 'true' || needs.changes.outputs.skills_changed == 'true'
         run: |
           node --input-type=module - <<'NODE'
           import fs from 'node:fs';
@@ -171,11 +285,74 @@ jobs:
           console.log('delegation issue templates validated');
           NODE
 
+      - name: Verify Docker runtime artifacts
+        if: needs.changes.outputs.docker_changed == 'true'
+        run: bash scripts/verify-docker-runtime.sh
+
+      - name: Validate CI workflow invariants
+        if: needs.changes.outputs.ci_changed == 'true'
+        run: |
+          test -s .github/workflows/ci.yml
+          test -s .github/workflows/verify.yml
+          test -s .github/workflows/spine-lock.yml
+          grep -Fq 'concurrency:' .github/workflows/ci.yml
+          grep -Fq 'group: ci-' .github/workflows/ci.yml
+          grep -Fq 'github.ref' .github/workflows/ci.yml
+          grep -Fq 'cancel-in-progress: true' .github/workflows/ci.yml
+          grep -Fq 'PR merge gate (fast)' .github/workflows/ci.yml
+          bash -n scripts/ci_invariant_guard.sh
+
+      - name: Verify protocol docs are in sync
+        if: needs.changes.outputs.protocol_changed == 'true'
+        run: ./scripts/verify_protocol_sync.sh
+
       - name: Build packages
+        if: needs.changes.outputs.packages_changed == 'true' || needs.changes.outputs.shared_changed == 'true' || needs.changes.outputs.server_changed == 'true'
         run: npm run build:packages
 
       - name: Build server
+        if: needs.changes.outputs.server_changed == 'true' || needs.changes.outputs.shared_changed == 'true' || needs.changes.outputs.packages_changed == 'true'
         run: npm -w apps/server run build
+
+      - name: Run fast server verifier
+        if: needs.changes.outputs.server_changed == 'true' || needs.changes.outputs.shared_changed == 'true' || needs.changes.outputs.protocol_changed == 'true'
+        run: npm -w apps/server run verify:quick
+
+      - name: Build debug client
+        if: needs.changes.outputs.debug_client_changed == 'true' || needs.changes.outputs.shared_changed == 'true' || needs.changes.outputs.protocol_changed == 'true'
+        run: npm -w apps/debug-client run build
+
+      - name: Merge-gate summary
+        if: always()
+        run: |
+          {
+            echo "## Fast PR merge gate"
+            echo ""
+            echo "- Docs only: ${{ needs.changes.outputs.docs_only }}"
+            echo "- Repo metadata/skills: ${{ needs.changes.outputs.codex_plugin_only }} / ${{ needs.changes.outputs.skills_changed }}"
+            echo "- Server/shared/protocol: ${{ needs.changes.outputs.server_changed }} / ${{ needs.changes.outputs.shared_changed }} / ${{ needs.changes.outputs.protocol_changed }}"
+            echo "- Packages/debug/Android: ${{ needs.changes.outputs.packages_changed }} / ${{ needs.changes.outputs.debug_client_changed }} / ${{ needs.changes.outputs.android_changed }}"
+            echo "- Docker/CI: ${{ needs.changes.outputs.docker_changed }} / ${{ needs.changes.outputs.ci_changed }}"
+            echo ""
+            echo "Deep proof jobs run on push to main or manual workflow dispatch."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  repo-metadata:
+    runs-on: [self-hosted, ubuntu-24.04]
+    timeout-minutes: 2
+    permissions:
+      contents: read
+    needs: [changes, merge-gate]
+    if: github.event_name == 'pull_request' && always()
+
+    steps:
+      - name: Covered by fast merge gate
+        run: |
+          if [ "${{ needs.merge-gate.result }}" != "success" ]; then
+            echo "PR merge gate result: ${{ needs.merge-gate.result }}"
+            exit 1
+          fi
+          echo "repo-metadata is a compatibility check; PR validation is covered by PR merge gate (fast)."
 
   verify:
     runs-on: [self-hosted, ubuntu-24.04]
@@ -183,7 +360,7 @@ jobs:
     permissions:
       contents: read
     needs: changes
-    if: github.server_url != 'https://github.com' || github.event_name == 'push' || needs.changes.outputs.full_ci_required == 'true'
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
 
     steps:
       - uses: actions/checkout@v4
@@ -200,6 +377,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: apps/server/package-lock.json
 
       - name: Prepare Gitea job tools
         if: github.server_url != 'https://github.com'
@@ -220,7 +399,7 @@ jobs:
         run: ./scripts/verify_skills.sh
 
       - name: Install dependencies
-        run: cd apps/server && npm ci
+        run: cd apps/server && npm ci --prefer-offline --no-audit --fund=false
 
       - name: TypeScript build
         run: cd apps/server && npm run build
@@ -357,7 +536,7 @@ jobs:
     permissions:
       contents: read
     needs: [changes, verify]
-    if: github.server_url != 'https://github.com' || github.event_name == 'push' || needs.changes.outputs.full_ci_required == 'true'
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
 
     steps:
       - uses: actions/checkout@v4
@@ -366,15 +545,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            tools/loadtest/package-lock.json
 
       - name: Install server dependencies
-        run: npm ci
+        run: npm ci --prefer-offline --no-audit --fund=false
 
       - name: Build server
         run: npm run build:packages && npm -w apps/server run build
 
       - name: Install loadtest dependencies
-        run: cd tools/loadtest && npm ci
+        run: cd tools/loadtest && npm ci --prefer-offline --no-audit --fund=false
 
       - name: Start server in background
         run: |
