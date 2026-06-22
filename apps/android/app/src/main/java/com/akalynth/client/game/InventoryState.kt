@@ -4,6 +4,7 @@ import com.akalynth.client.protocol.ItemInfo
 import com.akalynth.client.ui.components.hotbar.HOTBAR_SLOT_COUNT
 import com.akalynth.client.ui.components.hotbar.InventoryToHotbarMapper
 import com.akalynth.client.ui.components.hotbar.Item
+import com.akalynth.client.ui.components.hotbar.ItemRarity
 
 /**
  * Server-authoritative inventory projection with client-side hotbar slot assignment.

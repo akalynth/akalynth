@@ -40,6 +40,40 @@ class InventoryProjectionTest {
     }
 
     @Test
+    fun `pickup success adds item and auto-assigns first empty hotbar slot`() {
+        val previous = InventoryState(
+            items = mapOf("a" to serverItem("a", "torch")),
+            hotbarSlots = listOf(hotbarItem("a", "torch"), null, null, null),
+        )
+
+        val next = InventoryProjection.onPickupSuccess(
+            itemId = "b",
+            previous = previous,
+            itemType = "ration",
+        )
+
+        assertEquals(2, next.items.size)
+        assertEquals("ration", next.items["b"]?.itemType)
+        assertEquals("Ration", next.items["b"]?.displayName)
+        assertEquals(ItemRarity.COMMON, next.items["b"]?.rarity)
+        assertEquals("a", next.hotbarSlots[0]?.id)
+        assertEquals("b", next.hotbarSlots[1]?.id)
+        assertEquals("ration", next.hotbarSlots[1]?.itemType)
+    }
+
+    @Test
+    fun `pickup success is idempotent when item already exists`() {
+        val previous = InventoryState(
+            items = mapOf("a" to serverItem("a", "torch")),
+            hotbarSlots = listOf(hotbarItem("a", "torch"), null, null, null),
+        )
+
+        val next = InventoryProjection.onPickupSuccess("a", previous, itemType = "torch")
+
+        assertEquals(previous, next)
+    }
+
+    @Test
     fun `drop success removes item and clears hotbar slot`() {
         val previous = InventoryState(
             items = mapOf("a" to serverItem("a", "torch")),
