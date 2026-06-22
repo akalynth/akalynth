@@ -88,6 +88,7 @@ import { hashPassword, verifyPassword } from './account/password.js';
 import { CharacterStore } from './character/store.js';
 import { CharacterService } from './character/service.js';
 import { makeCharacterRouter } from './character/router.js';
+import { makeBuilderPreviewRouter } from './builder/previewRoutes.js';
 import { accountCharacterLoginProjection } from './character/loginProjection.js';
 import { makeWebEconomyRouter, type ShopItemConfig } from './economy/router.js';
 import { publicActorForReceipt, toPublicReceipt } from './audit/public_receipts.js';
@@ -1365,6 +1366,8 @@ const characterService = new CharacterService({
   now: () => Date.now(),
   maxCharactersPerAccount: 5,
 });
+const handleBuilderPreview = makeBuilderPreviewRouter();
+
 const handleCharacter = makeCharacterRouter({
   service: characterService,
   resolveAccount: (cookies) => accountService.sessionAccount(cookies),
@@ -2522,6 +2525,7 @@ const httpServer = http.createServer((req, res) => {
     handleCharacter,
     handlePrincipal,
     handleEconomy,
+    handleBuilderPreview,
     listMaps: () =>
       (Object.keys(worlds) as MapName[]).map((name) => ({
         name,

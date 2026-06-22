@@ -44,11 +44,25 @@ bin/builder-promotion-gate.sh \
 
 ## Runtime Scaffold (PR-6)
 
-In-memory preview namespace only — not wired to HTTP or live world registries.
+In-memory preview namespace store and preview_only receipt scaffold.
 
 ```bash
 npm -w apps/server run verify:builder-draft-namespace-v1
 npx tsx packages/shared/test/builderDraft.test.ts
+```
+
+## HTTP Preview API (PR-7)
+
+Builder preview routes (no chronicle writes):
+
+| Method | Path |
+|---|---|
+| POST | `/v1/builder/preview/start` |
+| POST | `/v1/builder/preview/end` |
+| GET | `/v1/builder/preview/namespace?ns=preview:...` |
+
+```bash
+npm -w apps/server run verify:builder-preview-api-v1
 ```
 
 ## Validation Commands

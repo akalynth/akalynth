@@ -18,6 +18,7 @@ fi
 
 "$NODE" ./node_modules/tsx/dist/cli.mjs apps/server/tools/verify-play-build-govern-surface-v1.ts
 "$NODE" ./node_modules/tsx/dist/cli.mjs apps/server/tools/verify-builder-draft-namespace-v1.ts
+"$NODE" ./node_modules/tsx/dist/cli.mjs apps/server/tools/verify-builder-preview-api-v1.ts
 "$NODE" ./node_modules/tsx/dist/cli.mjs packages/shared/test/builderDraft.test.ts
 "$OPS/scripts/verify-play-build-govern-surface-v1.sh"
 

@@ -65,6 +65,8 @@ export interface ApiDeps {
   handlePrincipal?: (req: IncomingMessage, res: ServerResponse) => boolean | Promise<boolean>;
   // Web economy portal: shop/wallet/property command endpoints.
   handleEconomy?: (req: IncomingMessage, res: ServerResponse) => boolean | Promise<boolean>;
+  // Builder preview namespace (PR-7): preview_only draft sessions.
+  handleBuilderPreview?: (req: IncomingMessage, res: ServerResponse) => boolean | Promise<boolean>;
 }
 
 function json(res: ServerResponse, status: number, body: unknown) {
@@ -148,6 +150,15 @@ export function handleHttp(
       path === '/v1/property/unlist')
   ) {
     return deps.handleEconomy(req, res);
+  }
+
+  if (
+    deps.handleBuilderPreview &&
+    (path === '/v1/builder/preview/start' ||
+      path === '/v1/builder/preview/end' ||
+      path === '/v1/builder/preview/namespace')
+  ) {
+    return deps.handleBuilderPreview(req, res);
   }
 
   // Android client update manifest (beta/staging lanes)
