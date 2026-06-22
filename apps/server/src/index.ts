@@ -6066,22 +6066,31 @@ function processSessionQueue(s: Session, now: number) {
           }
           const next = (guildContributions.get(s.player.id) ?? 0) + 1;
           guildContributions.set(s.player.id, next);
+          // Vocation guild boons (no economy — both levers are pure tallies). Martial vocations
+          // (warden/reaver) are steadfast: they rank up faster. Mystic vocations (cantor/hexer)
+          // are resonant: their deeds carry double weight in the shared treasury.
+          const vocation = s.rookguardQuest?.vocation ?? null;
+          const isMartial = vocation === 'warden' || vocation === 'reaver';
+          const isMystic = vocation === 'cantor' || vocation === 'hexer';
+          const steadyAt = isMartial ? 4 : 5;
+          const devotedAt = isMartial ? 8 : 10;
+          const treasuryGain = isMystic ? 2 : 1;
           // Guild rank: progression from accumulated contributions (pure projection, no balance).
-          const guildRank = next >= 10 ? 'devoted' : next >= 5 ? 'steady' : 'initiate';
+          const guildRank = next >= devotedAt ? 'devoted' : next >= steadyAt ? 'steady' : 'initiate';
           s.player.badges = [
             ...(s.player.badges ?? []).filter((b) => !b.startsWith('guild_rank_')),
             `guild_rank_${guildRank}`,
           ];
-          // Guild treasury: every contribution also adds to the shared guild-wide total.
+          // Guild treasury: every contribution adds to the shared guild-wide total (mystic x2).
           const prevTreasury = guildTreasuryTotal;
-          guildTreasuryTotal += 1;
-          const milestoneReached = GUILD_TREASURY_MILESTONES.includes(guildTreasuryTotal)
-            ? guildTreasuryTotal
-            : null;
+          guildTreasuryTotal += treasuryGain;
+          const milestoneReached = GUILD_TREASURY_MILESTONES.find(
+            (m) => prevTreasury < m && guildTreasuryTotal >= m,
+          ) ?? null;
           audit.write({
             player_id: s.player.id,
             action: GUILD_CONTRIBUTION_ACTION,
-            inputs: { place_id: place, contribution_count: next, rank: guildRank, guild_treasury_total: guildTreasuryTotal },
+            inputs: { place_id: place, contribution_count: next, rank: guildRank, vocation, treasury_gain: treasuryGain, guild_treasury_total: guildTreasuryTotal },
             result: 'ok',
           });
           if (milestoneReached !== null && prevTreasury < milestoneReached) {
