@@ -427,13 +427,17 @@ function DebugApp() {
   const meBadges = (state.world.me as { badges?: string[] } | null | undefined)?.badges ?? [];
   const insideHouse = meBadges.includes('inside_house');
   const isGuildMember = meBadges.includes('guild_member');
-  // Standing: surface the guild loop progression (membership → rank) in the HUD.
+  // Standing: surface the player's identity — vocation + guild progression — in the HUD.
+  const vocation = meBadges.find((b) => b.startsWith('vocation_'))?.replace('vocation_', '');
   const guildRank = meBadges.find((b) => b.startsWith('guild_rank_'))?.replace('guild_rank_', '');
-  const guildStanding = guildRank
+  const guildPart = guildRank
     ? `Guild · ${guildRank}`
     : isGuildMember
       ? 'Guild member'
-      : '—';
+      : '';
+  const guildStanding = [vocation ? vocation[0].toUpperCase() + vocation.slice(1) : '', guildPart]
+    .filter(Boolean)
+    .join(' · ') || '—';
   const housePlots =
     (state.world.map.landmarks as
       | { house_plots?: Array<{ id: string; x: number; y: number; width: number; height: number }> }
