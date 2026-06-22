@@ -324,6 +324,19 @@ function MobileStatusRail({ name, position, health, conn }: MobileStatusRailProp
   );
 }
 
+interface MotionObjectiveRailProps {
+  objectiveLabel: string;
+}
+
+function MotionObjectiveRail({ objectiveLabel }: MotionObjectiveRailProps) {
+  return (
+    <div className="motion-objective-rail" aria-label="Current motion objective">
+      <span>Objective</span>
+      <strong>{objectiveLabel}</strong>
+    </div>
+  );
+}
+
 export default function App() {
   // Hooks must run unconditionally and in a stable order, so call them before any
   // early return (rules of hooks).
@@ -415,10 +428,10 @@ function DebugApp() {
   }, [isDead]);
   useEffect(() => {
     if (!presentationMode) return;
-    if (!state.world.me || !state.session.authenticated) return;
+    if (!state.world.me) return;
     if (state.ui.stage >= 1) return;
     api.setStage(1);
-  }, [presentationMode, state.world.me, state.session.authenticated, state.ui.stage, api]);
+  }, [presentationMode, state.world.me, state.ui.stage, api]);
   const smokeState = proof?.lastSmoke?.ok ? 'pass' : proof?.lastSmoke ? 'fail' : proofError ? 'offline' : 'idle';
   const smokeLabel =
     smokeState === 'pass' ? 'passed' :
@@ -753,7 +766,7 @@ function DebugApp() {
                 <span className="hud-kicker">Akalynth</span>
                 <strong>{playerDisplayName}</strong>
                 <span>{currentMapDisplayName}</span>
-                {!(presentationMode && state.session.authenticated) && (
+                {!presentationMode && (
                   <CharacterBar
                     session={state.session}
                     catalog={api.characterCatalog}
@@ -837,6 +850,9 @@ function DebugApp() {
               health={healthLabel}
               conn={state.conn}
             />
+          )}
+          {presentationMode && phoneLandscape && (
+            <MotionObjectiveRail objectiveLabel={objectiveLabel} />
           )}
           {!presentationMode && (
             <div className="hud hud-proof" aria-label="studio proof">

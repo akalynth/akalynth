@@ -163,6 +163,7 @@ export function ActionsPanel({
     return action ? [action] : [];
   });
   const routeActionsOpen = routeActions.length > 0;
+  const primaryRouteAction = routeActions[0] ?? null;
   const witnessMothOpen =
     stage >= 3 &&
     !!loop?.lastEvent?.startsWith('witness_moth_bloom_') &&
@@ -173,6 +174,11 @@ export function ActionsPanel({
   if (compact) {
     return (
       <div className="actions-panel actions-panel--compact" aria-label="Quick actions">
+        <div className="compact-objective-card" aria-label="Current objective">
+          <span>Objective</span>
+          <strong>{objectiveLabel}</strong>
+          {primaryRouteAction && <em>Action: {primaryRouteAction.short}</em>}
+        </div>
         {!presentationMode && stage < 1 && (
           <div className="action-locked action-locked--compact">
             <strong>Locked</strong>
@@ -181,22 +187,36 @@ export function ActionsPanel({
         )}
         {stage >= 1 && (
           <div className="mobile-hotbar" role="group" aria-label="Primary actions">
-            <button
-              className={`action-btn mobile-hotbar-btn attack-btn ${attackReady ? '' : 'cooling'}`}
-              onClick={() => attackReady && onAttack()}
-              disabled={!attackReady}
-              aria-label={targetName ? `Attack ${targetName}` : 'Attack nearest available target'}
-            >
-              Atk
-            </button>
-            <button
-              className={`action-btn mobile-hotbar-btn ritual-btn ${ritualReady ? '' : 'cooling'}`}
-              onClick={() => ritualReady && onRitual()}
-              disabled={!ritualReady}
-              aria-label={ritualHint}
-            >
-              Rune
-            </button>
+            {routeActionsOpen && routeActions.map((action) => (
+              <button
+                key={action.skill_id}
+                className="action-btn mobile-hotbar-btn ritual-btn route-action-btn"
+                onClick={() => onWorldEventAction(action.skill_id)}
+                aria-label={action.label}
+              >
+                {action.short}
+              </button>
+            ))}
+            {(!presentationMode || attackReady) && (
+              <button
+                className={`action-btn mobile-hotbar-btn attack-btn ${attackReady ? '' : 'cooling'}`}
+                onClick={() => attackReady && onAttack()}
+                disabled={!attackReady}
+                aria-label={targetName ? `Attack ${targetName}` : 'Attack nearest available target'}
+              >
+                Atk
+              </button>
+            )}
+            {(!presentationMode || ritualReady) && (
+              <button
+                className={`action-btn mobile-hotbar-btn ritual-btn ${ritualReady ? '' : 'cooling'}`}
+                onClick={() => ritualReady && onRitual()}
+                disabled={!ritualReady}
+                aria-label={ritualHint}
+              >
+                Rune
+              </button>
+            )}
             {nearbyNpc && (
               <button
                 className="action-btn mobile-hotbar-btn talk-btn"
@@ -243,16 +263,6 @@ export function ActionsPanel({
               </button>
             ))}
             {witnessMothOpen && WITNESS_MOTH_ACTIONS.map((action) => (
-              <button
-                key={action.skill_id}
-                className="action-btn mobile-hotbar-btn ritual-btn"
-                onClick={() => onWorldEventAction(action.skill_id)}
-                aria-label={action.label}
-              >
-                {action.short}
-              </button>
-            ))}
-            {routeActionsOpen && routeActions.map((action) => (
               <button
                 key={action.skill_id}
                 className="action-btn mobile-hotbar-btn ritual-btn"

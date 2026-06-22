@@ -5110,6 +5110,126 @@ body {
   display: none;
 }
 
+.app-shell--presentation .hud-primary,
+.app-shell--presentation .stage-controls,
+.app-shell--presentation .stage-bottom,
+.app-shell--presentation .top-bar,
+.app-shell--presentation .mobile-status-rail,
+.app-shell--presentation .motion-objective-rail {
+  contain: layout paint;
+}
+
+.compact-objective-card {
+  display: grid;
+  gap: 0.16rem;
+  min-width: 0;
+  padding: 0.38rem 0.46rem;
+  border: 1px solid #111;
+  border-top-color: #69665e;
+  border-left-color: #69665e;
+  border-radius: 3px;
+  background:
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.022) 0 1px, transparent 1px 8px),
+    linear-gradient(180deg, rgba(62, 61, 56, 0.96), rgba(18, 18, 17, 0.98));
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.08), 0 2px 0 #050505;
+}
+
+.compact-objective-card span,
+.compact-objective-card em {
+  color: var(--classic-muted);
+  font-size: 0.58rem;
+  font-style: normal;
+  line-height: 1.05;
+  text-transform: uppercase;
+  text-shadow: 0 1px #050505;
+}
+
+.compact-objective-card strong {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--classic-gold);
+  font-size: 0.66rem;
+  line-height: 1.08;
+  text-shadow: 0 1px #050505;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.compact-objective-card em {
+  color: var(--classic-green);
+  font-weight: 800;
+}
+
+.motion-objective-rail {
+  position: fixed;
+  z-index: 33;
+  left: 50%;
+  top: max(2.95rem, calc(env(safe-area-inset-top) + 2.95rem));
+  display: grid;
+  width: min(19rem, 42vw);
+  height: 3.05rem;
+  gap: 0.16rem;
+  box-sizing: border-box;
+  align-content: center;
+  padding: 0.46rem 0.6rem;
+  border: 1px solid #111;
+  border-top-color: #76736a;
+  border-left-color: #76736a;
+  border-radius: 4px;
+  background:
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 8px),
+    linear-gradient(180deg, rgba(69, 68, 62, 0.97), rgba(20, 20, 18, 0.98)),
+    var(--classic-panel);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.09),
+    inset 0 -1px rgba(0, 0, 0, 0.75),
+    0 2px 0 #050505,
+    0 16px 34px rgba(0, 0, 0, 0.46);
+  color: var(--classic-muted);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.motion-objective-rail span {
+  font-size: 0.58rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.motion-objective-rail strong {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--classic-gold);
+  font-size: 0.7rem;
+  line-height: 1.12;
+  text-shadow: 0 1px #050505;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+@media (min-width: 951px) {
+  .app-shell--presentation .hud-primary {
+    position: fixed;
+    top: max(0.75rem, env(safe-area-inset-top));
+    right: max(0.75rem, env(safe-area-inset-right));
+    left: auto;
+    bottom: auto;
+    z-index: 28;
+    align-items: stretch;
+    transform: none;
+  }
+
+  .app-shell--presentation .hud-card--identity {
+    display: none;
+  }
+
+  .app-shell--presentation .hud-card--stats {
+    width: min(37rem, 52vw);
+    min-width: 0;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 950px) and (orientation: landscape) {
   .app-shell--presentation .hud-primary {
     display: none;
@@ -5122,5 +5242,40 @@ body {
   .app-shell--presentation .mobile-status-rail span:first-child {
     font-weight: 700;
     color: #f0c83c;
+  }
+
+  .app-shell--presentation .thumb-zone.right {
+    display: block;
+    width: min(12.5rem, 30vw);
+    max-height: calc(100dvh - 1.1rem);
+    overflow: hidden;
+  }
+
+  .app-shell--presentation .actions-panel--compact {
+    display: grid;
+    gap: 0.34rem;
+    overflow: hidden;
+  }
+
+  .app-shell--presentation .mobile-hotbar {
+    grid-template-columns: repeat(2, minmax(42px, 1fr));
+  }
+
+  .app-shell--presentation .route-action-btn {
+    color: var(--classic-gold);
+  }
+}
+
+@media (max-width: 950px) and (orientation: landscape) and (max-height: 430px) {
+  .motion-objective-rail {
+    top: max(2.55rem, calc(env(safe-area-inset-top) + 2.55rem));
+    width: min(16.5rem, 40vw);
+    height: 2.92rem;
+    padding: 0.34rem 0.48rem;
+  }
+
+  .motion-objective-rail strong,
+  .compact-objective-card strong {
+    font-size: 0.62rem;
   }
 }
