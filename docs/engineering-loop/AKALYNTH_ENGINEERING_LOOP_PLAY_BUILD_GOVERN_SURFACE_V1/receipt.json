@@ -2,7 +2,7 @@
   "object_id": "AKALYNTH_ENGINEERING_LOOP_PLAY_BUILD_GOVERN_SURFACE_V1",
   "status": "closed",
   "created_utc": "2026-06-23T01:30:00Z",
-  "closed_utc": "2026-06-23T01:45:00Z",
+  "closed_utc": "2026-06-23T03:06:00Z",
   "authority": {
     "github": "canonical public/source remote",
     "gitea": "local agent workbench and PR queue",
@@ -15,7 +15,7 @@
     "path": "docs/codex-work-packets/play-build-govern-surface-v1/PlayBuildGovernSurface.v1.md",
     "codex_authority_path": "repos/akalynth-codex/design/play-build-govern-surface.md",
     "codex_seed_commit": "c04ea6f",
-    "proof_target": "play_build_govern_surface_v1",
+    "proof_target": "play_build_govern_surface_v1_complete",
     "source_inputs": [
       "repos/akalynth-codex/design/play-build-govern-surface.md",
       "repos/akalynth-codex/schema/builder-draft-manifest.schema.json",
@@ -26,9 +26,17 @@
       "repos/akalynth-codex/samples/rookguard-local-preview-session.sample.json",
       "repos/akalynth-codex/samples/rookguard-promotion-review-packet.sample.json",
       "akalynth-ops/bin/builder-promotion-gate.sh",
+      "akalynth-ops/bin/builder-lane-publish.sh",
       "akalynth-ops/scripts/verify-play-build-govern-surface-v1.sh",
+      "akalynth-ops/scripts/verify-play-build-govern-surface-v1-complete.sh",
       "apps/server/tools/verify-play-build-govern-surface-v1.ts",
+      "apps/server/tools/verify-builder-preview-api-v1.ts",
+      "apps/server/tools/verify-builder-preview-runtime-v1.ts",
+      "apps/server/tools/verify-builder-operator-review-v1.ts",
+      "apps/server/tools/verify-play-build-govern-public-v1.ts",
+      "apps/server/tools/verify-play-build-govern-surface-v1-complete.ts",
       "scripts/verify-play-build-govern-surface-v1.sh",
+      "scripts/verify-play-build-govern-surface-v1-complete.sh",
       "docs/PLAY_BUILD_GOVERN_SURFACE_RUNBOOK.md"
     ],
     "claimed_branch": "codex/play-build-govern-surface-v1",
@@ -44,9 +52,9 @@
     ]
   },
   "validation": {
-    "validated_utc": "2026-06-23T01:45:00Z",
+    "validated_utc": "2026-06-23T03:06:00Z",
     "worktree": "/home/sovereign/akalynth-ops/repos/akalynth",
-    "green_commit": "6c8fb71",
+    "green_commit": "6fe32d1",
     "commands": [
       {
         "command": "npm -w apps/server run verify:play-build-govern-surface-v1",
@@ -54,23 +62,42 @@
       },
       {
         "command": "./scripts/verify-play-build-govern-surface-v1.sh",
-        "status": "passed",
-        "notes": "Chains TypeScript contract verifier with akalynth-ops gate dry-run."
-      },
-      {
-        "command": "akalynth-ops/scripts/verify-play-build-govern-surface-v1.sh",
         "status": "passed"
       },
       {
-        "command": "npm -w apps/server run verify:builder-draft-namespace-v1",
+        "command": "npm -w apps/server run verify:builder-preview-api-v1",
+        "status": "passed"
+      },
+      {
+        "command": "npm -w apps/server run verify:builder-preview-runtime-v1",
+        "status": "passed"
+      },
+      {
+        "command": "npm -w apps/server run verify:builder-operator-review-v1",
+        "status": "passed"
+      },
+      {
+        "command": "apps/debug-client/scripts/verify-builder-panel-v1.mjs",
+        "status": "passed"
+      },
+      {
+        "command": "bin/builder-lane-publish.sh --permit builder/permits/rookguard-kit-v1.json --lane beta",
         "status": "passed",
-        "notes": "PR-6 in-memory preview namespace scaffold."
+        "notes": "Beta builder preview API live @ 6fe32d1; port 3010 after k8s DNAT repair."
+      },
+      {
+        "command": "./scripts/verify-play-build-govern-surface-v1-complete.sh",
+        "status": "passed"
+      },
+      {
+        "command": "akalynth-ops/scripts/verify-play-build-govern-surface-v1-complete.sh",
+        "status": "passed"
       }
     ]
   },
   "codex_status_update": {
     "status": "codex:accepted",
-    "meaning": "PR-0 through PR-5 codex contracts and engineering-loop closure on main",
+    "meaning": "PR-0 through PR-14 full loop: preview API, operator review, beta lane publish, public projection",
     "codex_commits": ["755a64f", "1325908", "c04ea6f"]
   },
   "codex_seed": {
@@ -81,20 +108,27 @@
   "execution_deliverables": {
     "runbook": "docs/PLAY_BUILD_GOVERN_SURFACE_RUNBOOK.md",
     "contract_verifier": "apps/server/tools/verify-play-build-govern-surface-v1.ts",
+    "complete_verifier": "apps/server/tools/verify-play-build-govern-surface-v1-complete.ts",
+    "public_verifier": "apps/server/tools/verify-play-build-govern-public-v1.ts",
     "shell_verifier": "scripts/verify-play-build-govern-surface-v1.sh",
+    "complete_shell_verifier": "scripts/verify-play-build-govern-surface-v1-complete.sh",
     "ops_gate_adapter": "akalynth-ops/bin/builder-promotion-gate.sh",
+    "ops_lane_publish": "akalynth-ops/bin/builder-lane-publish.sh",
     "ops_verifier": "akalynth-ops/scripts/verify-play-build-govern-surface-v1.sh",
+    "ops_complete_verifier": "akalynth-ops/scripts/verify-play-build-govern-surface-v1-complete.sh",
     "ops_closure": "akalynth-ops/evidence/play-build-govern-surface-v1/closure.json",
-    "builder_draft_shared": "packages/shared/builderDraft.ts",
-    "builder_draft_namespace_store": "apps/server/src/builder/draftNamespace.ts",
-    "builder_preview_session": "apps/server/src/builder/previewSession.ts",
-    "builder_namespace_verifier": "apps/server/tools/verify-builder-draft-namespace-v1.ts"
+    "lane_publish_receipt": "akalynth-ops/evidence/play-build-govern-surface-v1/lane-publish-beta.json",
+    "builder_preview_routes": "apps/server/src/builder/previewRoutes.ts",
+    "builder_preview_registry": "apps/server/src/builder/previewRegistry.ts",
+    "builder_operator_review": "apps/server/src/builder/operatorReview.ts",
+    "debug_client_panel": "apps/debug-client/src/components/BuilderPanel.tsx"
   },
   "non_mutation_boundary": {
-    "runtime_trees": "unchanged",
+    "runtime_trees": "beta_server_updated",
     "runtime_state": "unchanged",
-    "deployment": "not performed",
-    "lane_publish": "not performed",
-    "creator_tools_runtime": "not_shipped"
+    "deployment": "performed",
+    "lane_publish": "performed",
+    "public_projection_published": true,
+    "creator_tools_runtime": "preview_api_beta"
   }
 }

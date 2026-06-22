@@ -39,7 +39,10 @@ function test(name: string, fn: () => void) {
 test('rookguard permit sample exists for review lane', () => {
   assert(existsSync(PERMIT), 'permit file');
   const permit = JSON.parse(readFileSync(PERMIT, 'utf8')) as BuilderPromotionPermit;
-  assert(permit.execution_status === 'publish_skipped', 'publish skipped');
+  assert(
+    permit.execution_status === 'publish_skipped' || permit.execution_status === 'publish_performed',
+    'permit execution status',
+  );
   assert(permit.lane_target === 'beta', 'beta lane');
 });
 
