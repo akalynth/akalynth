@@ -24,10 +24,13 @@ import com.akalynth.client.protocol.PlayerPublic
 import com.akalynth.client.protocol.PlayerStatus
 import com.akalynth.client.protocol.TileCode
 import com.akalynth.client.ui.render.ApplyRequestedFrameRate
+import com.akalynth.client.ui.render.AssetRegistry
 import com.akalynth.client.ui.render.EntityInterpolator
 import com.akalynth.client.ui.render.RenderClock
 import com.akalynth.client.ui.render.TilePos
 import com.akalynth.client.ui.render.WorldSprite
+import com.akalynth.client.ui.render.drawRegistryWorldOverlay
+import com.akalynth.client.ui.render.rememberAssetRegistry
 import com.akalynth.client.ui.render.rememberThermalTargetFps
 import com.akalynth.client.ui.render.rememberWorldSprites
 import kotlin.math.floor
@@ -101,6 +104,8 @@ fun GameCanvas(
     val clock = remember { RenderClock(targetFps = { targetFps.value }) }
     // Display-only pixel art bundled in assets; absent keys fall back to procedural shapes below.
     val sprites = rememberWorldSprites()
+    // World PNG overlays from compiled registry.json; absent keys fall back to procedural landmarks.
+    val assetRegistry = rememberAssetRegistry()
 
     // A stable signature of the authoritative positions: changes only when a real position does,
     // so we feed new glide targets (and prune absent entities) exactly on snapshot changes rather
@@ -177,7 +182,8 @@ fun GameCanvas(
             cameraY = camY,
             tileSize = tileSize,
             centerX = centerX,
-            centerY = centerY
+            centerY = centerY,
+            assetRegistry = assetRegistry,
         )
         drawHighCityVisualLandmarks(
             landmarks = visualLandmarks.filterNot { it.isFloor },
@@ -185,7 +191,8 @@ fun GameCanvas(
             cameraY = camY,
             tileSize = tileSize,
             centerX = centerX,
-            centerY = centerY
+            centerY = centerY,
+            assetRegistry = assetRegistry,
         )
 
         objectiveMarkers.forEach { (tileX, tileY) ->
@@ -278,11 +285,12 @@ private fun DrawScope.drawHighCityVisualLandmarks(
     cameraY: Float,
     tileSize: Float,
     centerX: Float,
-    centerY: Float
+    centerY: Float,
+    assetRegistry: AssetRegistry,
 ) {
     landmarks.forEach { landmark ->
         val topLeft = tileTopLeft(landmark.x, landmark.y, cameraX, cameraY, tileSize, centerX, centerY)
-        drawHighCityVisualLandmark(landmark, topLeft, tileSize)
+        drawHighCityVisualLandmark(landmark, topLeft, tileSize, assetRegistry)
     }
 }
 
@@ -306,8 +314,15 @@ private fun tileTopLeft(
 private fun DrawScope.drawHighCityVisualLandmark(
     landmark: HighCityVisualLandmark,
     topLeft: Offset,
-    tileSize: Float
+    tileSize: Float,
+    assetRegistry: AssetRegistry,
 ) {
+    val registrySprite = assetRegistry.sprite(landmark.kind.registryAssetId)
+    if (registrySprite != null) {
+        drawRegistryWorldOverlay(registrySprite, topLeft, tileSize)
+        return
+    }
+
     when (landmark.kind) {
         HighCityVisualKind.COBBLE_FLOOR -> drawFloor(topLeft, tileSize, OVERLAY_COBBLE)
         HighCityVisualKind.STONE_FLOOR -> drawFloor(topLeft, tileSize, OVERLAY_STONE)
