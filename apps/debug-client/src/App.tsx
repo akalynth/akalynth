@@ -848,6 +848,12 @@ function DebugApp() {
                 <span>Standing</span>
                 <strong>{guildStanding}{insideHouse ? ' · home' : ''}</strong>
               </div>
+              {state.guildTreasury !== null && (
+                <div>
+                  <span>Guild treasury</span>
+                  <strong>{state.guildTreasury} tended</strong>
+                </div>
+              )}
               <div>
                 <span>Gold</span>
                 <strong>{state.gold}g</strong>
