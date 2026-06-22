@@ -415,6 +415,13 @@ const playersInsideHouse = new Map<string, string>();
 // property_id -> set of guest player ids the owner has authorized to enter (in-session;
 // house_access_granted/revoked receipts are the durable truth).
 const houseAccess = new Map<string, Set<string>>();
+// Houses v1.2: house storage. Items move authoritatively between inventory and the house
+// (mirrors drop/pickup — same item_id, removed from one store before added to the other, so
+// no duplication). Durable via house_item_stored/retrieved receipts + the house_storage table.
+const HOUSE_ITEM_STORED_ACTION = 'house_item_stored';
+const HOUSE_ITEM_RETRIEVED_ACTION = 'house_item_retrieved';
+// property_id -> set of item_ids currently stored in that house (hydrated at boot).
+const houseStorage = new Map<string, Set<string>>();
 
 // Plan B: Per-IP Rate Limiting (Anti-Bot Hardening)
 const IP_RATE_LIMIT_ENABLED = parseBoolEnv(process.env.IP_RATE_LIMIT_ENABLED, true);
@@ -1891,6 +1898,23 @@ function loadInventories(): void {
     inventory.get(row.owner_player_id)!.add(row.item_id);
   }
   console.log(`[items] Loaded ${rows.length} inventory items for ${inventory.size} players`);
+  // Houses v1.2: hydrate house storage so stored items survive restarts (durable).
+  const storageRows = persist.getHouseStorage();
+  for (const row of storageRows) {
+    if (!houseStorage.has(row.property_id)) houseStorage.set(row.property_id, new Set());
+    houseStorage.get(row.property_id)!.add(row.item_id);
+  }
+  console.log(`[items] Loaded ${storageRows.length} house-stored items into ${houseStorage.size} houses`);
+}
+
+// Houses v1.2: push the player's inventory + the storage of the house they're in, so the
+// client can render deposit/withdraw. Sent on house enter and after each store/retrieve.
+function sendHouseInventory(s: Session, propertyId: string): void {
+  if (!s.player) return;
+  const toInfo = (id: string) => ({ item_id: id, item_type: persist.getItem(id)?.item_type ?? 'unknown' });
+  const inv = Array.from(inventory.get(s.player.id) ?? []).map(toInfo);
+  const stored = Array.from(houseStorage.get(propertyId) ?? []).map(toInfo);
+  send(s.ws, ServerMessages.inventorySnapshot(inv, stored));
 }
 
 // Load world items from SQLite on startup
@@ -6098,6 +6122,7 @@ function processSessionQueue(s: Session, now: number) {
           playersInsideHouse.set(s.player.id, propertyId);
           s.player.badges = [...(s.player.badges ?? []), INSIDE_HOUSE_BADGE];
           send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { inside_house: propertyId } }));
+          sendHouseInventory(s, propertyId);
           sendLoopUpdate(s, 'house_entered');
           break;
         }
@@ -6153,6 +6178,67 @@ function processSessionQueue(s: Session, now: number) {
           });
           send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { property_id: propertyId, guest_id: targetId, granted: granting } }));
           sendLoopUpdate(s, granting ? 'house_access_granted' : 'house_access_revoked');
+          break;
+        }
+
+        // Houses v1.2: store an inventory item in your house (must be inside a house you OWN).
+        // Authoritative move (no duplication): remove from inventory THEN add to house storage.
+        if (HOUSES_ENABLED && msg.skill_id.startsWith('house:store:')) {
+          const itemId = msg.skill_id.slice('house:store:'.length);
+          const propertyId = playersInsideHouse.get(s.player.id);
+          if (!itemId || !propertyId) {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_target' }));
+            break;
+          }
+          if (getProperty(propertyId)?.owner_player_id !== s.player.id) {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_skill', payload: { error: 'not_owner' } }));
+            break;
+          }
+          if (!inventory.get(s.player.id)?.has(itemId)) {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_skill', payload: { error: 'no_item' } }));
+            break;
+          }
+          // Receipts first (order: remove from inventory, then store).
+          audit.write({ player_id: s.player.id, action: 'item_removed_from_inventory', inputs: { item_id: itemId, reason: 'house_store' }, result: 'ok' });
+          audit.write({ player_id: s.player.id, action: HOUSE_ITEM_STORED_ACTION, inputs: { item_id: itemId, property_id: propertyId }, result: 'ok' });
+          inventory.get(s.player.id)?.delete(itemId);
+          if (protectedByPlayerId.get(s.player.id) === itemId) protectedByPlayerId.delete(s.player.id);
+          const stored = houseStorage.get(propertyId) ?? new Set<string>();
+          stored.add(itemId);
+          houseStorage.set(propertyId, stored);
+          send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { item_id: itemId, property_id: propertyId, stored: true } }));
+          sendHouseInventory(s, propertyId);
+          sendLoopUpdate(s, 'house_item_stored');
+          break;
+        }
+
+        // Houses v1.2: retrieve a stored item back to your inventory.
+        if (HOUSES_ENABLED && msg.skill_id.startsWith('house:retrieve:')) {
+          const itemId = msg.skill_id.slice('house:retrieve:'.length);
+          const propertyId = playersInsideHouse.get(s.player.id);
+          if (!itemId || !propertyId) {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_target' }));
+            break;
+          }
+          if (getProperty(propertyId)?.owner_player_id !== s.player.id) {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_skill', payload: { error: 'not_owner' } }));
+            break;
+          }
+          const stored = houseStorage.get(propertyId);
+          if (!stored?.has(itemId)) {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_skill', payload: { error: 'not_stored' } }));
+            break;
+          }
+          const itemType = persist.getItem(itemId)?.item_type ?? 'unknown';
+          // Receipts first (order: retrieve from house, then add to inventory).
+          audit.write({ player_id: s.player.id, action: HOUSE_ITEM_RETRIEVED_ACTION, inputs: { item_id: itemId, property_id: propertyId }, result: 'ok' });
+          audit.write({ player_id: s.player.id, action: 'item_added_to_inventory', inputs: { item_id: itemId, item_type: itemType, slot: null, source: 'house_retrieve' }, result: 'ok' });
+          stored.delete(itemId);
+          if (!inventory.has(s.player.id)) inventory.set(s.player.id, new Set());
+          inventory.get(s.player.id)!.add(itemId);
+          send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { item_id: itemId, property_id: propertyId, stored: false } }));
+          sendHouseInventory(s, propertyId);
+          sendLoopUpdate(s, 'house_item_retrieved');
           break;
         }
 

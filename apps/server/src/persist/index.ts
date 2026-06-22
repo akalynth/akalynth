@@ -136,6 +136,9 @@ export function createPersistenceLayer(
     getInventoryItems(): InventoryItemRow[] {
       return queries.getInventoryItems(db);
     },
+    getHouseStorage(): Array<{ item_id: string; property_id: string }> {
+      return queries.getHouseStorage(db);
+    },
 
     getPlayerInventory(playerId: string): InventoryItemRow[] {
       return queries.getPlayerInventory(db, playerId);

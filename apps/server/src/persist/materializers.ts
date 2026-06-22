@@ -35,7 +35,13 @@ type Handler = (db: Database.Database, receipt: AuditReceipt, receiptHash: strin
 const MODERATION_PLAYER_REPORTED = 'player_reported';
 const MODERATION_RESOLVED = 'moderation_resolved';
 
+// Houses v1.2: house storage (item moves inventory <-> house; row is the durable location).
+const HOUSE_ITEM_STORED = 'house_item_stored';
+const HOUSE_ITEM_RETRIEVED = 'house_item_retrieved';
+
 const HANDLERS: Record<string, Handler> = {
+  [HOUSE_ITEM_STORED]: handleHouseItemStored,
+  [HOUSE_ITEM_RETRIEVED]: handleHouseItemRetrieved,
   // Phase 1: Core
   [RECEIPT_ACTIONS.PLAYER_CREATED]: handlePlayerCreated,
   [RECEIPT_ACTIONS.PLAYER_RENAMED]: handlePlayerRenamed,
@@ -169,6 +175,35 @@ function handlePlayerRenamed(
     UPDATE players SET name = ? WHERE player_id = ?
   `);
   stmt.run(newName, playerId);
+}
+
+// Houses v1.2: an item stored in a house. The paired item_removed_from_inventory receipt
+// already cleared inventory_items, so the item now lives only here (no duplication).
+function handleHouseItemStored(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const itemId = receipt.inputs?.item_id as string | undefined;
+  const propertyId = receipt.inputs?.property_id as string | undefined;
+  if (!itemId || !propertyId) return;
+  db.prepare(`
+    INSERT INTO house_storage (item_id, property_id, stored_at, last_receipt)
+    VALUES (?, ?, ?, ?)
+    ON CONFLICT(item_id) DO UPDATE SET property_id = excluded.property_id, last_receipt = excluded.last_receipt
+  `).run(itemId, propertyId, receipt.timestamp, receiptHash);
+}
+
+// Houses v1.2: an item retrieved from a house. The paired item_added_to_inventory receipt
+// re-inserts it into inventory_items; remove it here so it lives in exactly one place.
+function handleHouseItemRetrieved(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  _receiptHash: string
+): void {
+  const itemId = receipt.inputs?.item_id as string | undefined;
+  if (!itemId) return;
+  db.prepare(`DELETE FROM house_storage WHERE item_id = ?`).run(itemId);
 }
 
 // ============================================================================

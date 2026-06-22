@@ -7,7 +7,7 @@ import type Database from 'better-sqlite3';
 // Schema Version
 // ============================================================================
 
-export const SCHEMA_VERSION = 22;
+export const SCHEMA_VERSION = 23;
 
 // ============================================================================
 // DDL Statements
@@ -630,6 +630,9 @@ function runMigration(db: Database.Database, version: number): void {
     case 22:
       migrateToV22(db);
       break;
+    case 23:
+      migrateToV23(db);
+      break;
     default:
       throw new Error(`Unknown schema version: ${version}`);
   }
@@ -989,6 +992,25 @@ function migrateToV22(db: Database.Database): void {
     'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
   );
   insertMeta.run('schema_version', '22');
+}
+
+function migrateToV23(db: Database.Database): void {
+  // Houses v1.2: durable house storage. Each row is an item currently held in a house
+  // (item_id is unique — an item is in exactly one place: inventory, world, or a house).
+  // Maintained by the house_item_stored/retrieved materializer; hydrated into memory at boot.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS house_storage (
+      item_id      TEXT PRIMARY KEY,
+      property_id  TEXT NOT NULL,
+      stored_at    TEXT NOT NULL DEFAULT (datetime('now')),
+      last_receipt TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_house_storage_property ON house_storage(property_id);
+  `);
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', '23');
 }
 
 function ensureWorldEventEvidenceColumns(db: Database.Database): void {

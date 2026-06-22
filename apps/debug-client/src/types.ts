@@ -151,6 +151,8 @@ export interface GameClientState {
     remaining_ms: number;
   } | null;
   inventory: { item_id: string; item_type: string; slot?: string | null }[];
+  // Houses v1.2: items stored in the house the player is currently inside.
+  houseStorage: { item_id: string; item_type: string }[];
   gold: number;
   // Property Ownership v0: house registry, keyed by property_id (server-authoritative).
   properties: Map<string, PropertyPublic>;
