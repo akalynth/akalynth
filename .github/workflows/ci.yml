@@ -24,6 +24,7 @@ jobs:
       codex_plugin_only: ${{ steps.classify.outputs.codex_plugin_only }}
       full_ci_required: ${{ steps.classify.outputs.full_ci_required }}
       android_changed: ${{ steps.classify.outputs.android_changed }}
+      assets_changed: ${{ steps.classify.outputs.assets_changed }}
       ci_changed: ${{ steps.classify.outputs.ci_changed }}
       debug_client_changed: ${{ steps.classify.outputs.debug_client_changed }}
       docker_changed: ${{ steps.classify.outputs.docker_changed }}
@@ -50,6 +51,7 @@ jobs:
 
           codex_plugin_only=false
           full_ci_required=true
+          assets_changed=false
           ci_changed=false
           debug_client_changed=false
           docker_changed=false
@@ -124,6 +126,24 @@ jobs:
                   docs_only=false
                   android_changed=true
                   ;;
+                data/assets-src/*|data/assets-src/**/*)
+                  codex_plugin_only=false
+                  full_ci_required=true
+                  docs_only=false
+                  assets_changed=true
+                  ;;
+                tools/asset-gen/*|tools/asset-gen/**/*)
+                  codex_plugin_only=false
+                  full_ci_required=true
+                  docs_only=false
+                  assets_changed=true
+                  ;;
+                tools/atlas/*|tools/atlas/**/*)
+                  codex_plugin_only=false
+                  full_ci_required=true
+                  docs_only=false
+                  assets_changed=true
+                  ;;
                 packages/*|packages/**/*)
                   codex_plugin_only=false
                   full_ci_required=true
@@ -164,6 +184,7 @@ jobs:
             echo "codex_plugin_only=$codex_plugin_only"
             echo "full_ci_required=$full_ci_required"
             echo "android_changed=$android_changed"
+            echo "assets_changed=$assets_changed"
             echo "ci_changed=$ci_changed"
             echo "debug_client_changed=$debug_client_changed"
             echo "docker_changed=$docker_changed"
@@ -187,6 +208,7 @@ jobs:
             echo "- Packages changed: $packages_changed"
             echo "- Debug client changed: $debug_client_changed"
             echo "- Android changed: $android_changed"
+            echo "- Assets changed: $assets_changed"
             echo "- Skills/plugin changed: $skills_changed"
             echo "- CI changed: $ci_changed"
             echo ""
@@ -221,7 +243,7 @@ jobs:
         run: ./scripts/ci_invariant_guard.sh
 
       - name: Setup Node.js
-        if: needs.changes.outputs.codex_plugin_only == 'true' || needs.changes.outputs.skills_changed == 'true' || needs.changes.outputs.packages_changed == 'true' || needs.changes.outputs.shared_changed == 'true' || needs.changes.outputs.server_changed == 'true' || needs.changes.outputs.debug_client_changed == 'true'
+        if: needs.changes.outputs.codex_plugin_only == 'true' || needs.changes.outputs.skills_changed == 'true' || needs.changes.outputs.packages_changed == 'true' || needs.changes.outputs.shared_changed == 'true' || needs.changes.outputs.server_changed == 'true' || needs.changes.outputs.debug_client_changed == 'true' || needs.changes.outputs.assets_changed == 'true'
         uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
@@ -232,7 +254,7 @@ jobs:
             apps/debug-client/package-lock.json
 
       - name: Install root dependencies
-        if: needs.changes.outputs.packages_changed == 'true' || needs.changes.outputs.shared_changed == 'true' || needs.changes.outputs.server_changed == 'true' || needs.changes.outputs.debug_client_changed == 'true'
+        if: needs.changes.outputs.packages_changed == 'true' || needs.changes.outputs.shared_changed == 'true' || needs.changes.outputs.server_changed == 'true' || needs.changes.outputs.debug_client_changed == 'true' || needs.changes.outputs.assets_changed == 'true'
         run: npm ci --prefer-offline --no-audit --fund=false
 
       - name: Validate repo metadata and skills
@@ -289,6 +311,10 @@ jobs:
         if: needs.changes.outputs.docker_changed == 'true'
         run: bash scripts/verify-docker-runtime.sh
 
+      - name: Verify asset manifests and lineage
+        if: needs.changes.outputs.assets_changed == 'true'
+        run: npm run verify:assets
+
       - name: Validate CI workflow invariants
         if: needs.changes.outputs.ci_changed == 'true'
         run: |
@@ -332,7 +358,7 @@ jobs:
             echo "- Repo metadata/skills: ${{ needs.changes.outputs.codex_plugin_only }} / ${{ needs.changes.outputs.skills_changed }}"
             echo "- Server/shared/protocol: ${{ needs.changes.outputs.server_changed }} / ${{ needs.changes.outputs.shared_changed }} / ${{ needs.changes.outputs.protocol_changed }}"
             echo "- Packages/debug/Android: ${{ needs.changes.outputs.packages_changed }} / ${{ needs.changes.outputs.debug_client_changed }} / ${{ needs.changes.outputs.android_changed }}"
-            echo "- Docker/CI: ${{ needs.changes.outputs.docker_changed }} / ${{ needs.changes.outputs.ci_changed }}"
+            echo "- Assets/Docker/CI: ${{ needs.changes.outputs.assets_changed }} / ${{ needs.changes.outputs.docker_changed }} / ${{ needs.changes.outputs.ci_changed }}"
             echo ""
             echo "Deep proof jobs run on push to main or manual workflow dispatch."
           } >> "$GITHUB_STEP_SUMMARY"
