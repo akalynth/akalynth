@@ -1,0 +1,30 @@
+{
+  "asset_id": "akalynth_effect_chronicle_unknown_001",
+  "game": "Akalynth",
+  "asset_type": "effect",
+  "biome": null,
+  "status": "manifest_recorded",
+  "dimensions_px": [
+    32,
+    32
+  ],
+  "dimensions_target_px": [
+    32,
+    32
+  ],
+  "camera": "top_down_slight_isometric",
+  "background": "transparent",
+  "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+  "prompt_file": null,
+  "raw_file": null,
+  "cleaned_file": "data/assets-src/sprites/effect__chronicle_unknown.png",
+  "sha256": "834919eb94838420ff6e465c489e4f5e2c84a0804e4b5ad1cdcd76e4fdcbf185",
+  "tilemap_test": null,
+  "license_status": "hand_authored",
+  "review_status": "needs_human_review",
+  "tile_code": null,
+  "chronicle_kind": "unknown",
+  "mechanics": null,
+  "copyright_boundary": "original hand-authored script-rendered asset; no copied third-party sprite, UI, logo, or map layout",
+  "notes": "Unknown chronicle glyph placeholder; question-mark motif. Display-only fallback."
+}
