@@ -27,6 +27,18 @@ Canonical compiled metadata for all runtime sprite lookups.
 
 Run ID helper tests: `npx tsx packages/shared/test/assetRegistry.test.ts`
 
+## World placements (PR-006)
+
+Map overlay coordinates are authored separately from registry metadata.
+
+| Artifact | Purpose |
+|----------|---------|
+| [`docs/ASSET_MANIFEST.md`](../../docs/ASSET_MANIFEST.md) | Authoritative 38 MVP + 13 deferred short ID lists |
+| [`placement.schema.json`](./placement.schema.json) | JSON Schema for `data/assets-built/placements/*.json` |
+| [`packages/shared/worldVisual.ts`](../../packages/shared/worldVisual.ts) | Shared placement types + ID constants |
+
+Run manifest ID tests: `npx tsx packages/shared/test/worldVisual.test.ts`
+
 ## Registry compile + client sync (PR-005)
 
 | Script | Purpose |
