@@ -27,13 +27,13 @@ Canonical compiled metadata for all runtime sprite lookups.
 
 Run ID helper tests: `npx tsx packages/shared/test/assetRegistry.test.ts`
 
-## Loose-PNG client sync (PR-004)
-
-MVP path before atlas packing (PR-003) or full `compile-registry` (PR-005).
+## Registry compile + client sync (PR-005)
 
 | Script | Purpose |
 |--------|---------|
-| `npm run sync:assets` | Runs `verify:assets`, copies verified loose PNGs + registry stub to `data/assets-built/` and client mirrors |
+| `npm run build:assets` | `compile-registry.mjs` then `sync-to-clients.mjs --use-compiled-registry` |
+| `npm run build:assets:loose` | Loose PNG sync only (inline registry compile; no atlas) |
+| `npm run sync:assets` | Alias for `build:assets:loose` |
 | `npm run verify:asset-sync` | SHA256 drift check: `data/assets-built/` vs Android `assets/` and debug-client `public/atlas/` |
 
 **Mirrors:**
@@ -42,4 +42,4 @@ MVP path before atlas packing (PR-003) or full `compile-registry` (PR-005).
 - `apps/android/app/src/main/assets/` — Android bundle
 - `apps/debug-client/public/atlas/` — web atlas mirror (nearest-neighbor; CLASSIC_32)
 
-Registry stub is emitted inline by `sync-to-clients.mjs` using `NORMALIZATION.md` rules until PR-005 `compile-registry.mjs` lands.
+`compile-registry.mjs` writes `data/assets-built/registry.json`; `sync-to-clients.mjs` mirrors loose PNGs and the registry (compiled or inline) to client bundles.
