@@ -1,0 +1,91 @@
+{
+  "object_id": "AKALYNTH_ENGINEERING_LOOP_PLAY_BUILD_GOVERN_SURFACE_V1",
+  "status": "closed",
+  "created_utc": "2026-06-23T01:30:00Z",
+  "closed_utc": "2026-06-23T01:45:00Z",
+  "authority": {
+    "github": "canonical public/source remote",
+    "gitea": "local agent workbench and PR queue",
+    "codex": "packet authoring and agent execution",
+    "ci_validation": "proof gate before merge",
+    "receipts": "evidence of what changed and why"
+  },
+  "packet": {
+    "object_id": "AKALYNTH_PLAY_BUILD_GOVERN_SURFACE_V1",
+    "path": "docs/codex-work-packets/play-build-govern-surface-v1/PlayBuildGovernSurface.v1.md",
+    "codex_authority_path": "repos/akalynth-codex/design/play-build-govern-surface.md",
+    "codex_seed_commit": "c04ea6f",
+    "proof_target": "play_build_govern_surface_v1",
+    "source_inputs": [
+      "repos/akalynth-codex/design/play-build-govern-surface.md",
+      "repos/akalynth-codex/schema/builder-draft-manifest.schema.json",
+      "repos/akalynth-codex/schema/local-preview-session.schema.json",
+      "repos/akalynth-codex/schema/promotion-review-packet.schema.json",
+      "repos/akalynth-codex/schema/builder-promotion-permit.schema.json",
+      "repos/akalynth-codex/samples/rookguard-builder-draft-manifest.sample.json",
+      "repos/akalynth-codex/samples/rookguard-local-preview-session.sample.json",
+      "repos/akalynth-codex/samples/rookguard-promotion-review-packet.sample.json",
+      "akalynth-ops/bin/builder-promotion-gate.sh",
+      "akalynth-ops/scripts/verify-play-build-govern-surface-v1.sh",
+      "apps/server/tools/verify-play-build-govern-surface-v1.ts",
+      "scripts/verify-play-build-govern-surface-v1.sh",
+      "docs/PLAY_BUILD_GOVERN_SURFACE_RUNBOOK.md"
+    ],
+    "claimed_branch": "codex/play-build-govern-surface-v1",
+    "claimed_by": "Codex agent (ops-laptop execution)",
+    "claimed_utc": "2026-06-23T01:30:00Z",
+    "target_labels": [
+      "codex:ready",
+      "codex:running",
+      "codex:needs-review",
+      "codex:accepted",
+      "codex:blocked",
+      "packet:play-build-govern-surface"
+    ]
+  },
+  "validation": {
+    "validated_utc": "2026-06-23T01:45:00Z",
+    "worktree": "/home/sovereign/akalynth-ops/repos/akalynth",
+    "green_commit": "6c8fb71",
+    "commands": [
+      {
+        "command": "npm -w apps/server run verify:play-build-govern-surface-v1",
+        "status": "passed"
+      },
+      {
+        "command": "./scripts/verify-play-build-govern-surface-v1.sh",
+        "status": "passed",
+        "notes": "Chains TypeScript contract verifier with akalynth-ops gate dry-run."
+      },
+      {
+        "command": "akalynth-ops/scripts/verify-play-build-govern-surface-v1.sh",
+        "status": "passed"
+      }
+    ]
+  },
+  "codex_status_update": {
+    "status": "codex:accepted",
+    "meaning": "PR-0 through PR-5 codex contracts and engineering-loop closure on main",
+    "codex_commits": ["755a64f", "1325908", "c04ea6f"]
+  },
+  "codex_seed": {
+    "repo": "akalynth-codex",
+    "commit": "c04ea6f",
+    "entry_id": "play-build-govern-surface"
+  },
+  "execution_deliverables": {
+    "runbook": "docs/PLAY_BUILD_GOVERN_SURFACE_RUNBOOK.md",
+    "contract_verifier": "apps/server/tools/verify-play-build-govern-surface-v1.ts",
+    "shell_verifier": "scripts/verify-play-build-govern-surface-v1.sh",
+    "ops_gate_adapter": "akalynth-ops/bin/builder-promotion-gate.sh",
+    "ops_verifier": "akalynth-ops/scripts/verify-play-build-govern-surface-v1.sh",
+    "ops_closure": "akalynth-ops/evidence/play-build-govern-surface-v1/closure.json"
+  },
+  "non_mutation_boundary": {
+    "runtime_trees": "unchanged",
+    "runtime_state": "unchanged",
+    "deployment": "not performed",
+    "lane_publish": "not performed",
+    "creator_tools_runtime": "not_shipped"
+  }
+}

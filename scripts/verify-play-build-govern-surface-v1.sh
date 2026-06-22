@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# AKALYNTH_PLAY_BUILD_GOVERN_SURFACE_V1 — repo + ops verifier chain.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+OPS="${AKALYNTH_OPS_ROOT:-$(cd "$ROOT/../.." && pwd)}"
+cd "$ROOT"
+
+NODE="${NODE:-}"
+if [[ -z "$NODE" ]]; then
+  if command -v node >/dev/null 2>&1; then
+    NODE="$(command -v node)"
+  else
+    NODE="$(ls -t "$HOME"/.vscode-server/cli/servers/*/server/node 2>/dev/null | head -1 || true)"
+  fi
+fi
+[[ -n "$NODE" && -x "$NODE" ]] || { echo "verify-play-build-govern-surface-v1: node not found" >&2; exit 127; }
+
+"$NODE" ./node_modules/tsx/dist/cli.mjs apps/server/tools/verify-play-build-govern-surface-v1.ts
+"$OPS/scripts/verify-play-build-govern-surface-v1.sh"
+
+echo "verify-play-build-govern-surface-v1: repo + ops chain passed"
