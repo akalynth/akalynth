@@ -75,7 +75,7 @@ class HotbarTest {
     @Test
     fun test_filled_slot_shows_item_icon() {
         val slots = listOf(
-            createTestItem("Sword"),
+            createTestItem("Torch", itemType = "torch"),
             null,
             null,
             null
@@ -98,7 +98,7 @@ class HotbarTest {
     @Test
     fun test_stackable_item_shows_count() {
         val slots = listOf(
-            createTestItem("Potion", stackCount = 5),
+            createTestItem("Ration", itemType = "ration", stackCount = 5),
             null,
             null,
             null
@@ -370,11 +370,12 @@ class HotbarTest {
 
     private fun createTestItem(
         name: String,
+        itemType: String? = null,
         rarity: ItemRarity = ItemRarity.COMMON,
         stackCount: Int = 1
     ): Item = Item(
         id = "item_${name.lowercase().replace(" ", "_")}",
-        itemType = name.lowercase().replace(" ", "_"),
+        itemType = itemType ?: name.lowercase().replace(" ", "_"),
         name = name,
         rarity = rarity,
         stackCount = stackCount
