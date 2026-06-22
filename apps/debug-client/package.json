@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/verify-account-character-guard.mjs && node scripts/verify-gather-wire-authority.mjs",
+    "prebuild": "node scripts/verify-account-character-guard.mjs && node scripts/verify-gather-wire-authority.mjs && node scripts/verify-nine-slice-panel.mjs",
     "build": "tsc -p tsconfig.json && vite build",
     "verify:account-character": "node scripts/verify-account-character-guard.mjs && node scripts/verify-debug-gameplay-wire-authority.mjs && node scripts/verify-gather-wire-authority.mjs",
     "verify:gather-client": "node scripts/verify-gather-wire-authority.mjs",
+    "verify:nine-slice-panel": "node scripts/verify-nine-slice-panel.mjs",
     "preview": "vite preview",
     "lint": "tsc -p tsconfig.json",
     "smoke:mobile": "node scripts/mobile-playable-smoke.mjs"

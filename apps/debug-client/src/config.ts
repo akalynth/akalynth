@@ -80,11 +80,19 @@ export interface ClientConfig {
   httpBase: string;
   wsBase: string;
   defaultMap: MapName;
+  /** Post-MVP PNG nine-slice chrome (PR-024); default false until PR-026 rollout. */
+  useNineSliceWeb: boolean;
+}
+
+/** Feature flag: compiled UI chrome via NineSlicePanel (PR-024/026). */
+export function useNineSliceWeb(): boolean {
+  return import.meta.env.VITE_USE_NINE_SLICE_WEB === 'true';
 }
 
 export function loadConfig(): ClientConfig {
   const httpBase = import.meta.env.VITE_HTTP_BASE || DEFAULT_HTTP;
   const wsBase = import.meta.env.VITE_WS_BASE || DEFAULT_WS;
   const defaultMap: MapName = (import.meta.env.VITE_DEFAULT_MAP as MapName) || 'Rookguard';
-  return { httpBase, wsBase, defaultMap };
+  const useNineSliceWeb = import.meta.env.VITE_USE_NINE_SLICE_WEB === 'true';
+  return { httpBase, wsBase, defaultMap, useNineSliceWeb };
 }

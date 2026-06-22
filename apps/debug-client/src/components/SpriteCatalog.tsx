@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { UiChromePreview } from './UiChromePreview';
 
 type SpriteCatalogEntry = {
   path: string;
@@ -46,6 +47,7 @@ export function SpriteCatalog() {
           collision and gameplay remain server-authoritative.
         </p>
       </header>
+      <UiChromePreview />
       {categories.map((category) => {
         const categoryEntries = entries.filter((entry) => entry.category === category);
         return (
