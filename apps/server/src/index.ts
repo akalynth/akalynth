@@ -394,6 +394,9 @@ const GUILD_CONTRIBUTION_ACTION = 'guild_contribution';
 const guildMembers = new Set<string>();
 // player_id -> contribution count this process (durable truth is the guild_contribution receipts).
 const guildContributions = new Map<string, number>();
+// Guild treasury: shared collective total across all members (a "together" goal).
+let guildTreasuryTotal = 0;
+const GUILD_TREASURY_MILESTONES = [10, 50, 100, 500];
 
 // Houses v1: first runtime Door/House authority gate (owner-gated entry). Additive,
 // routed through use_skill ('house:enter' / 'house:exit'), receipted, behind HOUSES_ENABLED.
@@ -6042,13 +6045,22 @@ function processSessionQueue(s: Session, now: number) {
             ...(s.player.badges ?? []).filter((b) => !b.startsWith('guild_rank_')),
             `guild_rank_${guildRank}`,
           ];
+          // Guild treasury: every contribution also adds to the shared guild-wide total.
+          const prevTreasury = guildTreasuryTotal;
+          guildTreasuryTotal += 1;
+          const milestoneReached = GUILD_TREASURY_MILESTONES.includes(guildTreasuryTotal)
+            ? guildTreasuryTotal
+            : null;
           audit.write({
             player_id: s.player.id,
             action: GUILD_CONTRIBUTION_ACTION,
-            inputs: { place_id: place, contribution_count: next, rank: guildRank },
+            inputs: { place_id: place, contribution_count: next, rank: guildRank, guild_treasury_total: guildTreasuryTotal },
             result: 'ok',
           });
-          send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { contribution_count: next, rank: guildRank } }));
+          if (milestoneReached !== null && prevTreasury < milestoneReached) {
+            broadcastToMap(s.currentMap, ServerMessages.chatBroadcast('system', 'Guild', `The guild reaches ${milestoneReached} tended deeds together.`));
+          }
+          send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { contribution_count: next, rank: guildRank, guild_treasury_total: guildTreasuryTotal } }));
           sendLoopUpdate(s, 'guild_contribution');
           break;
         }
