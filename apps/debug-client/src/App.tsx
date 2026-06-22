@@ -429,13 +429,24 @@ function DebugApp() {
   const isGuildMember = meBadges.includes('guild_member');
   // Standing: surface the player's identity — vocation + guild progression — in the HUD.
   const vocation = meBadges.find((b) => b.startsWith('vocation_'))?.replace('vocation_', '');
+  // Vocation guild boon (server feature #12): martial vocations rank up faster (Steadfast),
+  // mystic vocations double treasury weight (Resonant). Surface it so players see why.
+  const vocationBoon =
+    vocation === 'warden' || vocation === 'reaver'
+      ? 'Steadfast'
+      : vocation === 'cantor' || vocation === 'hexer'
+        ? 'Resonant'
+        : '';
+  const vocationLabel = vocation
+    ? `${vocation[0].toUpperCase() + vocation.slice(1)}${vocationBoon ? ` · ${vocationBoon}` : ''}`
+    : '';
   const guildRank = meBadges.find((b) => b.startsWith('guild_rank_'))?.replace('guild_rank_', '');
   const guildPart = guildRank
     ? `Guild · ${guildRank}`
     : isGuildMember
       ? 'Guild member'
       : '';
-  const guildStanding = [vocation ? vocation[0].toUpperCase() + vocation.slice(1) : '', guildPart]
+  const guildStanding = [vocationLabel, guildPart]
     .filter(Boolean)
     .join(' · ') || '—';
   const housePlots =
