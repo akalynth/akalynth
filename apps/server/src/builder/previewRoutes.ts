@@ -7,6 +7,13 @@ import type { BuilderDraftManifest } from '../../../../packages/shared/builderDr
 import { BuilderDraftNamespaceStore } from './draftNamespace.js';
 import { buildPreviewOverlay } from './previewRegistry.js';
 import {
+  builderPreviewBindings,
+  builderPreviewSessions,
+  builderPreviewStore,
+} from './previewRuntime.js';
+import { buildPreviewWorldFork } from './previewWorldFork.js';
+import type { PreviewSessionBindingStore } from './previewSessionBinding.js';
+import {
   assertPreviewReceiptsNonAuthoritative,
   endPreviewSession,
   startPreviewSession,
@@ -18,6 +25,7 @@ const MAX_BODY = 65536;
 export interface BuilderPreviewRouterDeps {
   store?: BuilderDraftNamespaceStore;
   sessions?: Map<string, ActivePreviewSession>;
+  bindings?: PreviewSessionBindingStore;
 }
 
 function json(res: ServerResponse, status: number, body: unknown): void {
@@ -59,8 +67,9 @@ function asManifest(body: Record<string, unknown>): BuilderDraftManifest | null 
 }
 
 export function makeBuilderPreviewRouter(deps: BuilderPreviewRouterDeps = {}) {
-  const store = deps.store ?? new BuilderDraftNamespaceStore();
-  const sessions = deps.sessions ?? new Map<string, ActivePreviewSession>();
+  const store = deps.store ?? builderPreviewStore;
+  const sessions = deps.sessions ?? builderPreviewSessions;
+  const bindings = deps.bindings ?? builderPreviewBindings;
 
   return async function handleBuilderPreview(
     req: IncomingMessage,
@@ -76,19 +85,34 @@ export function makeBuilderPreviewRouter(deps: BuilderPreviewRouterDeps = {}) {
       const sessionId = typeof body.session_id === 'string' ? body.session_id : '';
       const draftManifestRef =
         typeof body.draft_manifest_ref === 'string' ? body.draft_manifest_ref : '';
+      const guestToken = typeof body.guest_token === 'string' ? body.guest_token : '';
       if (!manifest || !sessionId || !draftManifestRef) {
         json(res, 400, { ok: false, error: 'invalid_preview_start_body' });
         return true;
       }
       try {
         const active = startPreviewSession(store, manifest, sessionId, draftManifestRef);
+        const fork = buildPreviewWorldFork(manifest);
+        if (!fork.placement_validation.ok) {
+          json(res, 400, {
+            ok: false,
+            error: 'invalid_draft_placements',
+            placement_validation: fork.placement_validation,
+          });
+          return true;
+        }
         sessions.set(sessionId, active);
+        if (guestToken) {
+          bindings.bind(guestToken, sessionId, fork);
+        }
         assertPreviewReceiptsNonAuthoritative(active.receipts);
         json(res, 200, {
           ok: true,
           preview_only: true,
           session: active.session,
           receipts: active.receipts,
+          builder_preview: fork,
+          guest_bound: Boolean(guestToken),
         });
       } catch (err) {
         json(res, 400, { ok: false, error: String(err) });
@@ -105,6 +129,7 @@ export function makeBuilderPreviewRouter(deps: BuilderPreviewRouterDeps = {}) {
         return true;
       }
       const receipts = endPreviewSession(active);
+      bindings.unbindBySession(sessionId);
       assertPreviewReceiptsNonAuthoritative(receipts);
       json(res, 200, {
         ok: true,
@@ -142,6 +167,42 @@ export function makeBuilderPreviewRouter(deps: BuilderPreviewRouterDeps = {}) {
             npc_lines: overlay.npc_lines.length,
           },
           registry: overlay,
+        });
+      } catch (err) {
+        json(res, 400, { ok: false, error: String(err) });
+      }
+      return true;
+    }
+
+    if (path === '/v1/builder/preview/world-state' && method === 'GET') {
+      const namespace = url.searchParams.get('ns') ?? '';
+      const guestToken = url.searchParams.get('guest_token') ?? '';
+      if (!namespace && !guestToken) {
+        json(res, 400, { ok: false, error: 'missing_namespace_or_guest_token' });
+        return true;
+      }
+      try {
+        let fork = guestToken ? bindings.getByGuestToken(guestToken) : undefined;
+        if (!fork && namespace) {
+          const loaded = store.get(namespace);
+          if (!loaded) {
+            json(res, 404, { ok: false, error: 'namespace_not_loaded' });
+            return true;
+          }
+          fork = buildPreviewWorldFork(loaded.manifest);
+        }
+        if (!fork) {
+          json(res, 404, { ok: false, error: 'preview_world_fork_not_found' });
+          return true;
+        }
+        if (namespace && fork.namespace !== namespace) {
+          json(res, 404, { ok: false, error: 'namespace_binding_mismatch' });
+          return true;
+        }
+        json(res, 200, {
+          ok: true,
+          preview_only: true,
+          builder_preview: fork,
         });
       } catch (err) {
         json(res, 400, { ok: false, error: String(err) });

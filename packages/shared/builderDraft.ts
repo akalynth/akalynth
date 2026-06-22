@@ -69,6 +69,48 @@ export interface PreviewReceiptRecord {
   session_id: string;
 }
 
+/** Non-authoritative world_state fork projected from a loaded preview manifest. */
+export interface BuilderPreviewWorldForkObject {
+  id: string;
+  kind: string;
+  text?: string;
+  placement: [number, number];
+}
+
+export interface BuilderPreviewWorldForkRoom {
+  room_id: string;
+  cells: Array<[number, number]>;
+  note?: string;
+}
+
+export interface BuilderPreviewWorldForkNpcLine {
+  npc_id: string;
+  line_id: string;
+  text: string;
+}
+
+export interface BuilderPreviewPlacementViolation {
+  ref: string;
+  x: number;
+  y: number;
+  reason: 'out_of_bounds' | 'not_walkable' | 'unknown_source_map';
+}
+
+export interface BuilderPreviewWorldFork {
+  preview_only: true;
+  namespace: string;
+  source_object: string;
+  object_id: string;
+  map_name: string;
+  rooms: BuilderPreviewWorldForkRoom[];
+  objects: BuilderPreviewWorldForkObject[];
+  npc_lines: BuilderPreviewWorldForkNpcLine[];
+  placement_validation: {
+    ok: boolean;
+    violations: BuilderPreviewPlacementViolation[];
+  };
+}
+
 function stableStringify(value: unknown): string {
   if (value === null) return 'null';
   const kind = typeof value;

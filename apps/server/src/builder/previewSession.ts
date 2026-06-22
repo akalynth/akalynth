@@ -12,6 +12,7 @@ import {
 } from '../../../../packages/shared/builderDraft.js';
 import type { BuilderDraftNamespaceStore } from './draftNamespace.js';
 import { appendPreviewReplayEvent, previewReplayRelPath, rookguardPreviewScreenshotRefs } from './previewReplay.js';
+import { assertDraftPlacementsValid } from './validateDraftPlacements.js';
 
 export interface ActivePreviewSession {
   session: LocalPreviewSession;
@@ -24,6 +25,7 @@ export function startPreviewSession(
   sessionId: string,
   draftManifestRef: string,
 ): ActivePreviewSession {
+  assertDraftPlacementsValid(manifest);
   store.load(manifest);
   const startedUtc = new Date().toISOString();
   const replayRef = previewReplayRelPath(manifest.preview_namespace);

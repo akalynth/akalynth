@@ -1,6 +1,7 @@
 // Akalynth Protocol Messages
 // All messages sent over WebSocket
 
+import type { BuilderPreviewWorldFork } from './builderDraft.js';
 import type { Direction, Element, PlayerPublic, PlayLoopProgress, PropertyAuctionKind, PropertyAuctionDenialReason, PropertyDenialReason, PropertyStatus, RunestoneDenialReason, SovereignVocation } from './types.js';
 import { ELEMENTS, SOVEREIGN_VOCATIONS, TEM_CHALLENGE_RESPONSE } from './types.js';
 import type { MapName } from './http.js';
@@ -397,6 +398,7 @@ export interface WorldStateMessage extends BaseMessage {
   map: MapName;
   player: PlayerPublic;
   nearby_players: PlayerPublic[];
+  builder_preview?: BuilderPreviewWorldFork;
 }
 
 export interface MoveResultMessage extends BaseMessage {
@@ -1127,11 +1129,17 @@ export const ServerMessages = {
     ...(options?.expires_at && { expires_at: options.expires_at }),
   }),
 
-  worldState: (map: MapName, player: PlayerPublic, nearby_players: PlayerPublic[]): WorldStateMessage => ({
+  worldState: (
+    map: MapName,
+    player: PlayerPublic,
+    nearby_players: PlayerPublic[],
+    builder_preview?: BuilderPreviewWorldFork,
+  ): WorldStateMessage => ({
     type: 'world_state',
     map,
     player,
     nearby_players,
+    ...(builder_preview ? { builder_preview } : {}),
   }),
 
   // Chill-Zone Gather v0 (Step 2)

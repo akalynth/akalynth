@@ -7,8 +7,10 @@ import { fileURLToPath } from 'node:url';
 import type { BuilderDraftManifest } from '../../../packages/shared/builderDraft.js';
 import { BuilderDraftNamespaceStore } from '../src/builder/draftNamespace.js';
 import { buildPreviewOverlay } from '../src/builder/previewRegistry.js';
+import { buildPreviewWorldFork } from '../src/builder/previewWorldFork.js';
 import { appendPreviewReplayEvent, previewReplayRelPath } from '../src/builder/previewReplay.js';
 import { endPreviewSession, startPreviewSession } from '../src/builder/previewSession.js';
+import { validateDraftPlacements } from '../src/builder/validateDraftPlacements.js';
 
 const PACKET_AUTHORITY = 'AKALYNTH_PLAY_BUILD_GOVERN_SURFACE_V1';
 const PROOF_TARGET = 'builder_preview_runtime_v1';
@@ -64,6 +66,22 @@ test('preview session wires replay ref and rookguard screenshots', () => {
   assert(active.session.artifacts.replay_log_ref.endsWith('replay.jsonl'), 'replay ref');
   assert(active.session.artifacts.screenshots.length === 3, 'screenshots');
   endPreviewSession(active);
+});
+
+test('rookguard draft placements validate against live map', () => {
+  const result = validateDraftPlacements(manifest);
+  assert(result.ok, `placements: ${JSON.stringify(result.violations)}`);
+  assert(result.violations.length === 0, 'no violations');
+});
+
+test('preview world fork projects manifest objects and npc lines', () => {
+  const fork = buildPreviewWorldFork(manifest);
+  assert(fork.preview_only === true, 'preview_only');
+  assert(fork.map_name === 'Rookguard', 'map_name');
+  assert(fork.rooms.length === 2, 'rooms');
+  assert(fork.objects.length === 6, 'objects');
+  assert(fork.npc_lines.length === 2, 'npc lines');
+  assert(fork.placement_validation.ok, 'placement_validation');
 });
 
 console.log(`builder-preview-runtime-v1 OK (${PACKET_AUTHORITY} / ${PROOF_TARGET})`);

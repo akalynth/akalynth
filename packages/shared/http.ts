@@ -1,6 +1,7 @@
 // packages/shared/http.ts
 // HTTP Control Plane contract (API-first). Keep stable.
 
+import type { BuilderPreviewWorldFork } from './builderDraft.js';
 import type {
   LearningFeatureRow,
   PlayerPublic,
@@ -351,6 +352,7 @@ export interface WorldStateResponse {
     dead_until_ms?: number | null;
     dead_ttl_ms?: number | null;
   };
+  builder_preview?: BuilderPreviewWorldFork;
 }
 
 export type WorldStateResult = WorldStateResponse | { error: string; status: number };

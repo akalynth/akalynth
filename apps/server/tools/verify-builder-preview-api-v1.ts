@@ -9,6 +9,7 @@ import { EventEmitter } from 'node:events';
 import type { BuilderDraftManifest } from '../../../packages/shared/builderDraft.js';
 import { BuilderDraftNamespaceStore } from '../src/builder/draftNamespace.js';
 import { makeBuilderPreviewRouter } from '../src/builder/previewRoutes.js';
+import { PreviewSessionBindingStore } from '../src/builder/previewSessionBinding.js';
 
 const PACKET_AUTHORITY = 'AKALYNTH_PLAY_BUILD_GOVERN_SURFACE_V1';
 const PROOF_TARGET = 'builder_preview_api_v1';
@@ -69,7 +70,8 @@ async function main() {
   const manifest = JSON.parse(readFileSync(SAMPLE, 'utf8')) as BuilderDraftManifest;
   const store = new BuilderDraftNamespaceStore();
   const sessions = new Map();
-  const handler = makeBuilderPreviewRouter({ store, sessions });
+  const bindings = new PreviewSessionBindingStore();
+  const handler = makeBuilderPreviewRouter({ store, sessions, bindings });
 
   const tests: Array<{ name: string; fn: () => Promise<void> }> = [
     {
@@ -118,6 +120,62 @@ async function main() {
       fn: async () => {
         const r = await invoke(handler, 'GET', '/v1/builder/preview/namespace?ns=rookguard');
         assert(r.status === 400, 'status');
+      },
+    },
+    {
+      name: 'POST /v1/builder/preview/start binds guest_token and returns builder_preview fork',
+      fn: async () => {
+        const r = await invoke(handler, 'POST', '/v1/builder/preview/start', {
+          manifest,
+          session_id: 'AKALYNTH_PREVIEW_API_BIND_V1',
+          draft_manifest_ref: 'codex/samples/rookguard-builder-draft-manifest.sample.json',
+          guest_token: 'gt_preview_bind_test',
+        });
+        assert(r.status === 200, 'status');
+        assert(r.json.guest_bound === true, 'guest_bound');
+        const fork = r.json.builder_preview as { map_name: string; objects: unknown[] } | undefined;
+        assert(fork && fork.map_name === 'Rookguard' && fork.objects.length === 6, 'fork');
+      },
+    },
+    {
+      name: 'GET /v1/builder/preview/world-state returns bound fork by guest_token',
+      fn: async () => {
+        const r = await invoke(
+          handler,
+          'GET',
+          `/v1/builder/preview/world-state?guest_token=${encodeURIComponent('gt_preview_bind_test')}`,
+        );
+        assert(r.status === 200, 'status');
+        const fork = r.json.builder_preview as { namespace: string } | undefined;
+        assert(fork && fork.namespace === manifest.preview_namespace, 'namespace');
+      },
+    },
+    {
+      name: 'GET /v1/builder/preview/world-state returns fork by loaded namespace',
+      fn: async () => {
+        const r = await invoke(
+          handler,
+          'GET',
+          `/v1/builder/preview/world-state?ns=${encodeURIComponent(manifest.preview_namespace)}`,
+        );
+        assert(r.status === 200, 'status');
+        const fork = r.json.builder_preview as { npc_lines: unknown[] } | undefined;
+        assert(fork && fork.npc_lines.length === 2, 'npc lines');
+      },
+    },
+    {
+      name: 'POST /v1/builder/preview/end unbinds guest_token fork',
+      fn: async () => {
+        const end = await invoke(handler, 'POST', '/v1/builder/preview/end', {
+          session_id: 'AKALYNTH_PREVIEW_API_BIND_V1',
+        });
+        assert(end.status === 200, 'end status');
+        const r = await invoke(
+          handler,
+          'GET',
+          `/v1/builder/preview/world-state?guest_token=${encodeURIComponent('gt_preview_bind_test')}`,
+        );
+        assert(r.status === 404, 'unbound status');
       },
     },
   ];

@@ -89,6 +89,8 @@ import { CharacterStore } from './character/store.js';
 import { CharacterService } from './character/service.js';
 import { makeCharacterRouter } from './character/router.js';
 import { makeBuilderPreviewRouter } from './builder/previewRoutes.js';
+import { builderPreviewForMap } from './builder/previewSessionBinding.js';
+import { builderPreviewBindings } from './builder/previewRuntime.js';
 import { accountCharacterLoginProjection } from './character/loginProjection.js';
 import { makeWebEconomyRouter, type ShopItemConfig } from './economy/router.js';
 import { publicActorForReceipt, toPublicReceipt } from './audit/public_receipts.js';
@@ -2700,6 +2702,10 @@ const httpServer = http.createServer((req, res) => {
         player_count: w.players.size,
       };
 
+      const builder_preview = guest_token
+        ? builderPreviewForMap(guest_token, map, builderPreviewBindings)
+        : undefined;
+
       if (me && me.ok) {
         return {
           ...base,
@@ -2709,9 +2715,13 @@ const httpServer = http.createServer((req, res) => {
             dead_until_ms: me_dead_until_ms,
             dead_ttl_ms: me_dead_ttl_ms,
           },
+          ...(builder_preview ? { builder_preview } : {}),
         };
       }
-      return base;
+      return {
+        ...base,
+        ...(builder_preview ? { builder_preview } : {}),
+      };
     },
     // Property Ownership v0 (public, anonymized)
     getPropertyMarket: () => {
@@ -2974,8 +2984,20 @@ function applyRespawnNow(s: Session, now: number) {
     nearby.push(mobToPublicPlayer(mob));
   }
 
-  send(s.ws, ServerMessages.worldState(s.currentMap, toPublicSessionPlayer(s, true), nearby));
+  send(
+    s.ws,
+    ServerMessages.worldState(
+      s.currentMap,
+      toPublicSessionPlayer(s, true),
+      nearby,
+      builderPreviewForSession(s),
+    ),
+  );
   s.respawnTimer = null;
+}
+
+function builderPreviewForSession(s: Session) {
+  return builderPreviewForMap(s.guestToken, s.currentMap, builderPreviewBindings);
 }
 
 // Re-send the authoritative world snapshot to one player (used after HP changes).
@@ -2989,7 +3011,15 @@ function sendWorldStateRefresh(s: Session): void {
   const echo = getEchoForMap(s.currentMap);
   if (echo) nearby.push(echoToPublicPlayer(echo));
   for (const mob of getMobsForMap(s.currentMap)) nearby.push(mobToPublicPlayer(mob));
-  send(s.ws, ServerMessages.worldState(s.currentMap, toPublicSessionPlayer(s, true), nearby));
+  send(
+    s.ws,
+    ServerMessages.worldState(
+      s.currentMap,
+      toPublicSessionPlayer(s, true),
+      nearby,
+      builderPreviewForSession(s),
+    ),
+  );
 }
 
 // Apply death to a player slain by a mob (HP hit 0). Mirrors the kill_self path.
@@ -3617,7 +3647,15 @@ function processSessionQueue(s: Session, now: number) {
 
         audit.write({ player_id: s.player!.id, action: 'enter_world', inputs: {}, result: 'ok' });
 
-        send(s.ws, ServerMessages.worldState(s.currentMap, toPublicSessionPlayer(s, true), nearby));
+        send(
+          s.ws,
+          ServerMessages.worldState(
+            s.currentMap,
+            toPublicSessionPlayer(s, true),
+            nearby,
+            builderPreviewForSession(s),
+          ),
+        );
 
         // Send inventory snapshot (Phase 2)
         const playerItems = getPlayerInventoryIds(s.player!.id);
@@ -4319,7 +4357,15 @@ function processSessionQueue(s: Session, now: number) {
                   nearbyAzura.push(mobToPublicPlayer(mob));
                 }
 
-                send(s.ws, ServerMessages.worldState(s.currentMap, toPublicSessionPlayer(s, true), nearbyAzura));
+                send(
+                  s.ws,
+                  ServerMessages.worldState(
+                    s.currentMap,
+                    toPublicSessionPlayer(s, true),
+                    nearbyAzura,
+                    builderPreviewForSession(s),
+                  ),
+                );
                 // Chill-Zone Gather v0 (Step 2): send node + station registry on gate-transfer into Azura.
                 if (gatherSystem) {
                   const azuraGz = gatherSystem.zones.get('Azura');
