@@ -537,6 +537,8 @@ export interface PickupItemResultMessage extends BaseMessage {
 export interface InventorySnapshotMessage extends BaseMessage {
   type: 'inventory_snapshot';
   items: ItemInfo[];
+  // Houses v1.2: items the player has stored in a house they own (additive; optional).
+  houseStorage?: ItemInfo[];
 }
 
 export interface WorldItemAddedMessage extends BaseMessage {
@@ -1331,9 +1333,10 @@ export const ServerMessages = {
     reason,
   }),
 
-  inventorySnapshot: (items: ItemInfo[]): InventorySnapshotMessage => ({
+  inventorySnapshot: (items: ItemInfo[], houseStorage?: ItemInfo[]): InventorySnapshotMessage => ({
     type: 'inventory_snapshot',
     items,
+    ...(houseStorage ? { houseStorage } : {}),
   }),
 
   worldItemAdded: (item_id: string, item_type: string, x: number, y: number): WorldItemAddedMessage => ({

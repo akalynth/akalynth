@@ -1907,6 +1907,16 @@ function loadInventories(): void {
   console.log(`[items] Loaded ${storageRows.length} house-stored items into ${houseStorage.size} houses`);
 }
 
+// Houses v1.2: push the player's inventory + the storage of the house they're in, so the
+// client can render deposit/withdraw. Sent on house enter and after each store/retrieve.
+function sendHouseInventory(s: Session, propertyId: string): void {
+  if (!s.player) return;
+  const toInfo = (id: string) => ({ item_id: id, item_type: persist.getItem(id)?.item_type ?? 'unknown' });
+  const inv = Array.from(inventory.get(s.player.id) ?? []).map(toInfo);
+  const stored = Array.from(houseStorage.get(propertyId) ?? []).map(toInfo);
+  send(s.ws, ServerMessages.inventorySnapshot(inv, stored));
+}
+
 // Load world items from SQLite on startup
 function loadWorldItems(): void {
   for (const zone of Object.keys(worlds)) {
@@ -6112,6 +6122,7 @@ function processSessionQueue(s: Session, now: number) {
           playersInsideHouse.set(s.player.id, propertyId);
           s.player.badges = [...(s.player.badges ?? []), INSIDE_HOUSE_BADGE];
           send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { inside_house: propertyId } }));
+          sendHouseInventory(s, propertyId);
           sendLoopUpdate(s, 'house_entered');
           break;
         }
@@ -6196,6 +6207,7 @@ function processSessionQueue(s: Session, now: number) {
           stored.add(itemId);
           houseStorage.set(propertyId, stored);
           send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { item_id: itemId, property_id: propertyId, stored: true } }));
+          sendHouseInventory(s, propertyId);
           sendLoopUpdate(s, 'house_item_stored');
           break;
         }
@@ -6225,6 +6237,7 @@ function processSessionQueue(s: Session, now: number) {
           if (!inventory.has(s.player.id)) inventory.set(s.player.id, new Set());
           inventory.get(s.player.id)!.add(itemId);
           send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { item_id: itemId, property_id: propertyId, stored: false } }));
+          sendHouseInventory(s, propertyId);
           sendLoopUpdate(s, 'house_item_retrieved');
           break;
         }

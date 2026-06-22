@@ -11,6 +11,11 @@ interface BackpackSheetProps {
   onUseItem: (itemId: string) => void;
   onDrop: (itemId: string) => void;
   onProtect: (itemId: string) => void;
+  // Houses v1.2: deposit/withdraw shown only when inside a house you own.
+  insideOwnHouse?: boolean;
+  houseStorage?: { item_id: string; item_type: string }[];
+  onStore?: (itemId: string) => void;
+  onRetrieve?: (itemId: string) => void;
 }
 
 interface InventoryGroup {
@@ -60,7 +65,7 @@ function groupedInventory(items: InventoryItemRef[]): InventoryGroup[] {
   return Array.from(groups.values()).sort((a, b) => itemLabel(a.itemType).localeCompare(itemLabel(b.itemType)));
 }
 
-export function BackpackSheet({ open, inventory, onClose, onUseItem, onDrop, onProtect }: BackpackSheetProps) {
+export function BackpackSheet({ open, inventory, onClose, onUseItem, onDrop, onProtect, insideOwnHouse = false, houseStorage = [], onStore, onRetrieve }: BackpackSheetProps) {
   if (!open) return null;
   const groups = groupedInventory(inventory);
   const loadout = equippedLoadout(inventory);
@@ -82,6 +87,34 @@ export function BackpackSheet({ open, inventory, onClose, onUseItem, onDrop, onP
           <button type="button" onClick={onClose} aria-label="Close backpack">x</button>
         </div>
         <div className="backpack-sheet__body">
+          {insideOwnHouse && (
+            <div className="shop-section" aria-label="House storage">
+              <div className="shop-header">House Storage</div>
+              {houseStorage.length === 0 && (
+                <div className="backpack-empty">Nothing stored. Deposit an item below.</div>
+              )}
+              {houseStorage.map((item) => (
+                <button
+                  key={`stored-${item.item_id}`}
+                  className="action-btn shop-btn"
+                  onClick={() => onRetrieve?.(item.item_id)}
+                >
+                  Retrieve {itemLabel(item.item_type)}
+                </button>
+              ))}
+              <div className="shop-header" style={{ marginTop: '0.4rem' }}>Deposit (carried)</div>
+              {inventory.length === 0 && <div className="backpack-empty">No items to deposit.</div>}
+              {inventory.map((item) => (
+                <button
+                  key={`deposit-${item.item_id}`}
+                  className="action-btn pickup-btn"
+                  onClick={() => onStore?.(item.item_id)}
+                >
+                  Store {itemLabel(item.item_type)}
+                </button>
+              ))}
+            </div>
+          )}
           {groups.length === 0 && (
             <div className="backpack-empty">No items carried.</div>
           )}

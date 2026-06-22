@@ -189,6 +189,7 @@ function initialState(mapName: MapName): GameClientState {
     groundItems: new Map(),
     workContract: null,
     inventory: [],
+    houseStorage: [],
     gold: 0,
     properties: new Map(),
     gather: { nodes: new Map(), stations: new Map(), activeNodeId: null, activeRefineStationId: null, progressPct: 0, held: null, tendingTokens: 0, keystoneTokens: 0, status: null },
@@ -515,6 +516,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
         groundItems: new Map(),
         workContract: null,
         inventory: [],
+        houseStorage: [],
         gold: 0,
         properties: new Map(),
         gather: { ...s.gather, nodes: new Map(), stations: new Map(), activeNodeId: null, activeRefineStationId: null, progressPct: 0 },
@@ -1368,7 +1370,12 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
                 ? (data.items as { item_id: string; item_type: string; slot?: string | null }[])
                     .filter(i => typeof i.item_id === 'string' && typeof i.item_type === 'string')
                 : [];
-              return { ...s, conn, inventory: items };
+              // Houses v1.2: server includes house storage when inside a house; keep prior list otherwise.
+              const houseStorage = Array.isArray(data.houseStorage)
+                ? (data.houseStorage as { item_id: string; item_type: string }[])
+                    .filter(i => typeof i.item_id === 'string' && typeof i.item_type === 'string')
+                : s.houseStorage;
+              return { ...s, conn, inventory: items, houseStorage };
             }
 
             case 'wallet_snapshot': {

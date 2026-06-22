@@ -1097,6 +1097,10 @@ function DebugApp() {
         onUseItem={(itemId) => api.useSkill('item:use:' + itemId)}
         onDrop={api.dropItem}
         onProtect={api.setProtectedSlot}
+        insideOwnHouse={insideHouse}
+        houseStorage={state.houseStorage}
+        onStore={(itemId) => api.useSkill('house:store:' + itemId)}
+        onRetrieve={(itemId) => api.useSkill('house:retrieve:' + itemId)}
       />
       {state.temChallenge && (
         <TemChallengeModal
