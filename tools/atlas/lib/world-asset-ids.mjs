@@ -63,6 +63,7 @@ export const DEFERRED_WORLD_ASSET_IDS = [
 ];
 
 const MVP_SET = new Set(MVP_ROOKGUARD_WORLD_ASSET_IDS);
+const DEFERRED_SET = new Set(DEFERRED_WORLD_ASSET_IDS);
 
 /** @param {string} assetId canonical akalynth_world_<short> or short id */
 export function worldShortIdFromAssetId(assetId) {
@@ -72,4 +73,12 @@ export function worldShortIdFromAssetId(assetId) {
 
 export function isMvpRookguardWorldAsset(assetId) {
   return MVP_SET.has(worldShortIdFromAssetId(assetId));
+}
+
+export function isDeferredWorldAsset(assetId) {
+  return DEFERRED_SET.has(worldShortIdFromAssetId(assetId));
+}
+
+export function isAtlasWorldAsset(assetId) {
+  return isMvpRookguardWorldAsset(assetId) || isDeferredWorldAsset(assetId);
 }

@@ -37,9 +37,27 @@ class WorldPlacementRepositoryTest {
     }
 
     @Test
-    fun highCityMapsHaveNoRegistryPlacementsYet() {
-        assertTrue(WorldPlacementRepository.registryPlacementsFor(context, MapName.AZURA).isEmpty())
-        assertTrue(WorldPlacementRepository.registryPlacementsFor(context, MapName.HIGH_CITY).isEmpty())
+    fun azuraLoadsDeferredRegistryPlacementsFromBundledJson() {
+        val azura = WorldPlacementRepository.registryPlacementsFor(context, MapName.AZURA)
+        val highCity = WorldPlacementRepository.registryPlacementsFor(context, MapName.HIGH_CITY)
+
+        assertEquals(65, azura.size)
+        assertEquals(azura.size, highCity.size)
+        assertTrue(
+            azura.any {
+                it.assetId == "throne" && it.x == 60 && it.y == 7
+            },
+        )
+        assertTrue(
+            azura.any {
+                it.assetId == "swamp_mud" && it.x == 2 && it.y == 58
+            },
+        )
+        assertTrue(
+            azura.any {
+                it.id == "high-city-grove:prop_tree:3:44:0"
+            },
+        )
     }
 
     @Test

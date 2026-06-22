@@ -6,7 +6,7 @@ import { existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import sharp from 'sharp';
 import { ASSETS_BUILT } from './paths.mjs';
-import { isMvpRookguardWorldAsset, worldShortIdFromAssetId } from './world-asset-ids.mjs';
+import { isAtlasWorldAsset, worldShortIdFromAssetId } from './world-asset-ids.mjs';
 
 export const ATLAS_DIR = 'atlas';
 export const MAX_SHEET_SIZE = 2048;
@@ -42,7 +42,7 @@ export function categorizeForAtlas(entries) {
       sheets.chronicle.push(entry);
       continue;
     }
-    if (entry.source === 'world_sidecar' && isMvpRookguardWorldAsset(entry.asset_id)) {
+    if (entry.source === 'world_sidecar' && isAtlasWorldAsset(entry.asset_id)) {
       sheets.world.push(entry);
     }
   }

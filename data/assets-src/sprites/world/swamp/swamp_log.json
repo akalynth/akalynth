@@ -1,0 +1,17 @@
+{
+  "id": "swamp_log",
+  "asset_type": "world_object",
+  "source_kind": "sprite",
+  "image": "swamp_log.png",
+  "frame": { "width": 32, "height": 32 },
+  "rendering": {
+    "filtering": "nearest",
+    "display_only": true,
+    "draw_scale": 1,
+    "anchor": { "type": "bottom_center", "source_pixels": [16, 28] },
+    "z_policy": "sort_by_anchor_y",
+    "layer": "object_overlay"
+  },
+  "mechanics": null,
+  "visual_notes": ["Swamp log visual only.", "Does not encode blocking or collision."]
+}

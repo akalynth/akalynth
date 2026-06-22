@@ -1,0 +1,17 @@
+{
+  "id": "swamp_dead_tree",
+  "asset_type": "world_object",
+  "source_kind": "sprite",
+  "image": "swamp_dead_tree.png",
+  "frame": { "width": 32, "height": 64 },
+  "rendering": {
+    "filtering": "nearest",
+    "display_only": true,
+    "draw_scale": 1,
+    "anchor": { "type": "bottom_center", "source_pixels": [16, 58] },
+    "z_policy": "sort_by_anchor_y",
+    "layer": "object_overlay"
+  },
+  "mechanics": null,
+  "visual_notes": ["Swamp dead tree visual only.", "Does not encode blocking or collision."]
+}

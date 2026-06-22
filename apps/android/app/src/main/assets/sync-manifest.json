@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "mode": "loose_png+atlas",
-  "generated_at": "2026-06-22T21:53:15.904Z",
+  "generated_at": "2026-06-22T21:56:34.066Z",
   "files": [
     {
       "path": "atlas/chronicle.png",
@@ -13,7 +13,7 @@
     },
     {
       "path": "atlas/manifest.json",
-      "sha256": "a09de490691b3b2f60fed7fcedc4a5c93838d33826a689e9f5fa250245d11ee1"
+      "sha256": "1e1b5b4d5db67004a53b046dbd22aad0b9ad9648ef3d2b4b1633b62a49ce8c1c"
     },
     {
       "path": "atlas/ui.png",
@@ -21,7 +21,7 @@
     },
     {
       "path": "atlas/world.png",
-      "sha256": "8e99fed3a4bd6fa6c5e073e4c8907a59fd2091845da9f9836fd4e6b6672617dd"
+      "sha256": "1d26eb399caeb0a81a5e4d87453739f52a795bbae330969009add50688503c2d"
     },
     {
       "path": "sprites/characters/base_human_male_01.png",
@@ -448,6 +448,10 @@
       "sha256": "c419dad47e5233be4318365091fb326873fac3657748dfe0def4810f9c136435"
     },
     {
+      "path": "world/props/prop_tree.png",
+      "sha256": "bcdec8107b5bd7be490c8bf831d0889a82ac0ce94fe4713169ee2d24d6e058cf"
+    },
+    {
       "path": "world/roofs/market_awning_overlay.png",
       "sha256": "372feda41b86f0b3715e65974dce23a67d5c809009efcce92ba065499183b0eb"
     },
@@ -474,6 +478,38 @@
     {
       "path": "world/sewer/slime_pool.png",
       "sha256": "0ef7315d4a537cd1a5bc7c1bea5e213013212c0c2402fcdc8e0cba83ce0c019f"
+    },
+    {
+      "path": "world/swamp/swamp_bog_slime.png",
+      "sha256": "868052b9bfe12fc0870c21d1fb85f3755d99c29299194bbf7f2581ad84c73ab1"
+    },
+    {
+      "path": "world/swamp/swamp_bog_water.png",
+      "sha256": "b0775cba09eadf2fde241b35daa28cdcd03af6d23e99e0decd32b42f13f6d220"
+    },
+    {
+      "path": "world/swamp/swamp_dead_tree.png",
+      "sha256": "6051f7ebad68421f1e74469afe32a630b4142c40937e093c21ff1a5abfdde56c"
+    },
+    {
+      "path": "world/swamp/swamp_frog.png",
+      "sha256": "c867ef71e424a8afbf322741a6c3983a571a727db35e894c57aa0384e288d266"
+    },
+    {
+      "path": "world/swamp/swamp_log.png",
+      "sha256": "662e3c0dc166d54eca67772c5ac02266ed36c06d3c3dd930b7a4e38babbd85da"
+    },
+    {
+      "path": "world/swamp/swamp_mud.png",
+      "sha256": "3440b409df3dd0854f834e8afe2b6d7cfc46e17b19c454829dcf40c86658cfbd"
+    },
+    {
+      "path": "world/swamp/swamp_mushroom.png",
+      "sha256": "5e5b765afd4e10564813923ca53e47d2221def2eb4db27dae68a1efc92150578"
+    },
+    {
+      "path": "world/swamp/swamp_reeds.png",
+      "sha256": "97d93d40301c55ea180e5ecce6b86e01681644a1744fadd45488b6dd954e011d"
     },
     {
       "path": "world/terrain/floor_cobble_01.png",
@@ -508,5 +544,5 @@
       "sha256": "38a1a46cb41267f20a4543655be006522bb11f6df4ab18cbbbc8ccab699a514e"
     }
   ],
-  "atlas_generated_at": "2026-06-22T21:53:16.134Z"
+  "atlas_generated_at": "2026-06-22T21:56:34.314Z"
 }

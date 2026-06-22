@@ -50,6 +50,7 @@
     "verify:asset-sync": "node tools/atlas/verify-sync.mjs",
     "validate:placement": "node tools/atlas/validate-placement.mjs",
     "port:rookguard-placements": "node tools/atlas/port-rookguard-placements.mjs",
+    "port:deferred-placements": "node tools/atlas/port-deferred-placements.mjs",
     "verify:web-visual-assets": "node scripts/verify-web-visual-assets.mjs",
     "verify:web-rust-cleanup": "node scripts/verify-web-rust-cleanup.mjs"
   },

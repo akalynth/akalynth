@@ -16,6 +16,7 @@ import {
   REPO_ROOT,
   collectLooseSyncPlan,
   mirrorPng,
+  mirrorPlacementArtifacts,
   writeSyncArtifacts,
 } from './lib/loose-sync.mjs';
 import { readCompiledRegistry } from './lib/registry-compile.mjs';
@@ -63,6 +64,11 @@ function main() {
   );
   for (const { name, root } of CLIENT_MIRRORS) {
     console.log(`  mirrored → ${root.replace(`${REPO_ROOT}/`, '')} (${name})`);
+  }
+
+  const { placementFiles } = mirrorPlacementArtifacts();
+  if (placementFiles > 0) {
+    console.log(`  mirrored placements — ${placementFiles} file(s) → client assets/placements/`);
   }
 }
 

@@ -214,3 +214,25 @@ export function mirrorAtlasArtifacts() {
 
   return { atlasFiles: atlasFiles.length };
 }
+
+const PLACEMENTS_REL = 'placements';
+
+/** Copy data/assets-built/placements/*.json to Android assets/placements/. */
+export function mirrorPlacementArtifacts() {
+  const placementsBuilt = join(ASSETS_BUILT, PLACEMENTS_REL);
+  if (!existsSync(placementsBuilt)) {
+    return { placementFiles: 0 };
+  }
+
+  const placementFiles = readdirSync(placementsBuilt).filter((name) => name.endsWith('.json'));
+  for (const name of placementFiles) {
+    const abs = join(placementsBuilt, name);
+    const rel = `${PLACEMENTS_REL}/${name}`;
+    copyTo(join(ASSETS_BUILT, rel), abs);
+    for (const { root } of CLIENT_MIRRORS) {
+      copyTo(join(root, rel), abs);
+    }
+  }
+
+  return { placementFiles: placementFiles.length };
+}

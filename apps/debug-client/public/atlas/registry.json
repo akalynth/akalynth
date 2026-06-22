@@ -1187,7 +1187,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 264,
+        "x": 330,
         "y": 324,
         "w": 64,
         "h": 64
@@ -1220,8 +1220,8 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 1720,
-        "y": 324,
+        "x": 70,
+        "y": 422,
         "w": 96,
         "h": 48
       }
@@ -1253,7 +1253,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 330,
+        "x": 396,
         "y": 324,
         "w": 64,
         "h": 64
@@ -1286,7 +1286,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 396,
+        "x": 462,
         "y": 324,
         "w": 64,
         "h": 64
@@ -1319,7 +1319,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 462,
+        "x": 528,
         "y": 324,
         "w": 64,
         "h": 64
@@ -1352,7 +1352,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 528,
+        "x": 594,
         "y": 324,
         "w": 64,
         "h": 64
@@ -1385,7 +1385,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 594,
+        "x": 660,
         "y": 324,
         "w": 64,
         "h": 64
@@ -1418,7 +1418,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 660,
+        "x": 726,
         "y": 324,
         "w": 64,
         "h": 64
@@ -1451,7 +1451,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 726,
+        "x": 792,
         "y": 324,
         "w": 64,
         "h": 64
@@ -1484,7 +1484,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 792,
+        "x": 858,
         "y": 324,
         "w": 64,
         "h": 64
@@ -1517,7 +1517,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 858,
+        "x": 924,
         "y": 324,
         "w": 64,
         "h": 64
@@ -1550,7 +1550,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 924,
+        "x": 990,
         "y": 324,
         "w": 64,
         "h": 64
@@ -1583,7 +1583,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 990,
+        "x": 1056,
         "y": 324,
         "w": 64,
         "h": 64
@@ -1649,8 +1649,8 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 1818,
-        "y": 324,
+        "x": 168,
+        "y": 422,
         "w": 32,
         "h": 32
       }
@@ -1816,6 +1816,46 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1122,
+        "y": 324,
+        "w": 64,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_prop_tree",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/props/prop_tree.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1848,
+        "y": 324,
+        "w": 32,
+        "h": 64
       }
     },
     {
@@ -1959,7 +1999,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 1584,
+        "x": 1882,
         "y": 324,
         "w": 32,
         "h": 64
@@ -1992,8 +2032,8 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 1852,
-        "y": 324,
+        "x": 202,
+        "y": 422,
         "w": 32,
         "h": 32
       }
@@ -2025,7 +2065,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 1618,
+        "x": 1916,
         "y": 324,
         "w": 32,
         "h": 64
@@ -2058,7 +2098,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 1652,
+        "x": 1950,
         "y": 324,
         "w": 32,
         "h": 64
@@ -2091,8 +2131,8 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 1886,
-        "y": 324,
+        "x": 236,
+        "y": 422,
         "w": 32,
         "h": 32
       }
@@ -2124,7 +2164,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 1686,
+        "x": 1984,
         "y": 324,
         "w": 32,
         "h": 64
@@ -2157,7 +2197,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 1056,
+        "x": 1188,
         "y": 324,
         "w": 64,
         "h": 64
@@ -2190,7 +2230,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 1122,
+        "x": 1254,
         "y": 324,
         "w": 64,
         "h": 64
@@ -2223,7 +2263,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 1188,
+        "x": 1320,
         "y": 324,
         "w": 64,
         "h": 64
@@ -2253,6 +2293,277 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1386,
+        "y": 324,
+        "w": 64,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_swamp_bog_slime",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/swamp/swamp_bog_slime.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            28
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 270,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_swamp_bog_water",
+      "source": "world_sidecar",
+      "asset_type": "terrain_tile",
+      "file": "world/swamp/swamp_bog_water.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "tile_top_left",
+          "source_pixels": [
+            0,
+            0
+          ]
+        },
+        "z_policy": "fixed_layer",
+        "layer": "terrain"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 304,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_swamp_dead_tree",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/swamp/swamp_dead_tree.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 2,
+        "y": 422,
+        "w": 32,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_swamp_frog",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/swamp/swamp_frog.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            28
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 338,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_swamp_log",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/swamp/swamp_log.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            28
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 372,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_swamp_mud",
+      "source": "world_sidecar",
+      "asset_type": "terrain_tile",
+      "file": "world/swamp/swamp_mud.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "tile_top_left",
+          "source_pixels": [
+            0,
+            0
+          ]
+        },
+        "z_policy": "fixed_layer",
+        "layer": "terrain"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 406,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_swamp_mushroom",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/swamp/swamp_mushroom.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            28
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 440,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_swamp_reeds",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/swamp/swamp_reeds.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 36,
+        "y": 422,
+        "w": 32,
+        "h": 64
       }
     },
     {
@@ -2282,7 +2593,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 1254,
+        "x": 1452,
         "y": 324,
         "w": 64,
         "h": 64
@@ -2312,6 +2623,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 264,
+        "y": 324,
+        "w": 64,
+        "h": 96
       }
     },
     {
@@ -2341,7 +2659,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 1320,
+        "x": 1518,
         "y": 324,
         "w": 64,
         "h": 64
@@ -2374,7 +2692,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 1386,
+        "x": 1584,
         "y": 324,
         "w": 64,
         "h": 64
@@ -2407,7 +2725,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 1452,
+        "x": 1650,
         "y": 324,
         "w": 64,
         "h": 64
@@ -2440,7 +2758,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 1518,
+        "x": 1716,
         "y": 324,
         "w": 64,
         "h": 64
@@ -2470,6 +2788,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1782,
+        "y": 324,
+        "w": 64,
+        "h": 64
       }
     }
   ]

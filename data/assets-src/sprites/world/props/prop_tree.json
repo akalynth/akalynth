@@ -1,0 +1,20 @@
+{
+  "id": "prop_tree",
+  "asset_type": "world_object",
+  "source_kind": "sprite",
+  "image": "prop_tree.png",
+  "frame": { "width": 32, "height": 64 },
+  "rendering": {
+    "filtering": "nearest",
+    "display_only": true,
+    "draw_scale": 1,
+    "anchor": { "type": "bottom_center", "source_pixels": [16, 58] },
+    "z_policy": "sort_by_anchor_y",
+    "layer": "object_overlay"
+  },
+  "mechanics": null,
+  "visual_notes": [
+    "Factory prop tree promoted to world overlay id prop_tree.",
+    "Does not encode blocking, gather, or collision."
+  ]
+}

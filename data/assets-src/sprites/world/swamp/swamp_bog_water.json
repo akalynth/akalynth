@@ -1,0 +1,17 @@
+{
+  "id": "swamp_bog_water",
+  "asset_type": "terrain_tile",
+  "source_kind": "tile",
+  "image": "swamp_bog_water.png",
+  "frame": { "width": 32, "height": 32 },
+  "rendering": {
+    "filtering": "nearest",
+    "display_only": true,
+    "draw_scale": 1,
+    "anchor": { "type": "tile_top_left", "source_pixels": [0, 0] },
+    "z_policy": "fixed_layer",
+    "layer": "terrain"
+  },
+  "mechanics": null,
+  "visual_notes": ["Swamp bog water terrain visual only.", "Does not encode walkability or collision."]
+}
