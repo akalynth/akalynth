@@ -41,4 +41,7 @@ for (const rel of [
   }
 }
 
-console.log('OK — BuilderPanel scaffolding (PR-8)');
+requirePattern('map overlay hook', /onMapOverlayChange/, panel, 'src/components/BuilderPanel.tsx');
+requirePattern('palette asset resolver', /resolvePaletteIcon/, panel, 'src/components/BuilderPanel.tsx');
+
+console.log('OK — BuilderPanel scaffolding (PR-8 + G1/A1)');

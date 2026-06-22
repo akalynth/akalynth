@@ -10,6 +10,15 @@ export interface PreviewStartResponse {
   error?: string;
 }
 
+export interface PreviewRegistryOverlay {
+  namespace: string;
+  source_object: string;
+  object_id: string;
+  rooms: Array<{ room_id: string; cell_count: number; note?: string }>;
+  objects: Array<{ id: string; kind: string; text?: string; placement?: [number, number] }>;
+  npc_lines: Array<{ npc_id: string; line_id: string; text: string }>;
+}
+
 export interface PreviewNamespaceResponse {
   ok: boolean;
   preview_only?: boolean;
@@ -21,6 +30,7 @@ export interface PreviewNamespaceResponse {
     objects: number;
     npc_lines: number;
   };
+  registry?: PreviewRegistryOverlay;
   error?: string;
 }
 

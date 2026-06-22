@@ -7,7 +7,7 @@ import { respectRankForReputation } from '@shared/types';
 import { useGameClient } from './hooks/useGameClient';
 import { useExistenceMode } from './hooks/useExistenceMode';
 import { usePresentationMode } from './hooks/usePresentationMode';
-import { MapCanvas } from './components/MapCanvas';
+import { MapCanvas, type MapDebugOverlay } from './components/MapCanvas';
 import { DPad } from './components/DPad';
 import { ActionsPanel } from './components/ActionsPanel';
 import { PropertyLedger } from './components/PropertyLedger';
@@ -395,6 +395,7 @@ function DebugApp() {
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [proofSheetOpen, setProofSheetOpen] = useState(false);
   const [builderSheetOpen, setBuilderSheetOpen] = useState(false);
+  const [builderMapOverlays, setBuilderMapOverlays] = useState<MapDebugOverlay[] | null>(null);
   const [sealOpen, setSealOpen] = useState(false);
   const [proof, setProof] = useState<StudioProofState | null>(null);
   const [proofRunning, setProofRunning] = useState(false);
@@ -557,6 +558,11 @@ function DebugApp() {
     [state.world.map.name]
   );
   const gatherOverlays = useMemo(() => gatherMapOverlays(state.gather), [state.gather]);
+  const mapDebugOverlays = useMemo(() => {
+    const merged = [...gatherOverlays];
+    if (builderMapOverlays?.length) merged.push(...builderMapOverlays);
+    return merged;
+  }, [gatherOverlays, builderMapOverlays]);
   const roster = useMemo(() => others.slice().sort((a, b) => a.name.localeCompare(b.name)), [others]);
   const targetName = useMemo(() => {
     if (!state.combat.targetId) return null;
@@ -812,7 +818,7 @@ function DebugApp() {
             groundItems={state.groundItems}
             propertyByPlot={propertyByPlot}
             worldVisualObjects={worldVisualObjects}
-            debugOverlays={gatherOverlays}
+            debugOverlays={mapDebugOverlays}
           />
           <div className="scene-vignette" />
           {!isDead && healthPct <= 30 && (
@@ -1209,7 +1215,11 @@ function DebugApp() {
       <BuilderPanel
         open={builderSheetOpen}
         httpBase={config.httpBase}
-        onClose={() => setBuilderSheetOpen(false)}
+        onClose={() => {
+          setBuilderSheetOpen(false);
+          setBuilderMapOverlays(null);
+        }}
+        onMapOverlayChange={setBuilderMapOverlays}
       />
       <ProofSheet
         open={proofSheetOpen}
