@@ -149,6 +149,7 @@ async function snapshot(page, label) {
         mobileStatusRail: readBox('.mobile-status-rail'),
         motionObjectiveRail: readBox('.motion-objective-rail'),
         compactObjectiveCard: readBox('.compact-objective-card'),
+        compactActionCard: readBox('.compact-action-card'),
         rightThumbZone: readBox('.thumb-zone.right'),
       },
       buttonBoxes,
@@ -319,15 +320,18 @@ async function main() {
 
   const mobileMotionRail = mobile.moved.boxes.motionObjectiveRail;
   const mobileCompactCard = mobile.moved.boxes.compactObjectiveCard;
+  const mobileActionCard = mobile.moved.boxes.compactActionCard;
   const mobileFish = findVisibleButton(mobile.moved, 'Fish', mobile.viewport);
   addCheck(report, 'mobile_landscape_objective_and_action_readable_while_moving', (
     visibleBox(mobileMotionRail, mobile.viewport) &&
-    visibleBox(mobileCompactCard, mobile.viewport) &&
-    Boolean(mobileCompactCard?.text) &&
+    !visibleBox(mobileCompactCard, mobile.viewport) &&
+    visibleBox(mobileActionCard, mobile.viewport) &&
+    Boolean(mobileActionCard?.text) &&
     Boolean(mobileFish)
   ), {
     motionObjectiveRail: mobileMotionRail,
     compactObjectiveCard: mobileCompactCard,
+    compactActionCard: mobileActionCard,
     fishButton: mobileFish,
     text: mobile.moved.bodyText.slice(0, 700),
   });

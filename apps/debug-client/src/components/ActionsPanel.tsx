@@ -170,15 +170,30 @@ export function ActionsPanel({
     loop.lastEvent !== 'witness_moth_bloom_resolved';
   const sweepRemainSec = workContract ? Math.ceil(workContract.remaining_ms / 1000) : 0;
   const hotbarItems = inventory.slice(0, 3);
+  const compactActionLabel =
+    primaryRouteAction?.label ??
+    (nearbyNpc ? `Talk to ${nearbyNpc.label}` :
+      groundItemHere ? `Pick up ${itemLabel(groundItemHere.item_type)}` :
+        attackReady ? 'Attack ready' :
+          ritualReady ? 'Rune ready' :
+            'Ready');
 
   if (compact) {
     return (
       <div className="actions-panel actions-panel--compact" aria-label="Quick actions">
-        <div className="compact-objective-card" aria-label="Current objective">
-          <span>Objective</span>
-          <strong>{objectiveLabel}</strong>
-          {primaryRouteAction && <em>Action: {primaryRouteAction.short}</em>}
-        </div>
+        {presentationMode ? (
+          <div className="compact-action-card" aria-label="Action dock">
+            <span>Actions</span>
+            <strong>{compactActionLabel}</strong>
+            {primaryRouteAction && <em>{primaryRouteAction.short}</em>}
+          </div>
+        ) : (
+          <div className="compact-objective-card" aria-label="Current objective">
+            <span>Objective</span>
+            <strong>{objectiveLabel}</strong>
+            {primaryRouteAction && <em>Action: {primaryRouteAction.short}</em>}
+          </div>
+        )}
         {!presentationMode && stage < 1 && (
           <div className="action-locked action-locked--compact">
             <strong>Locked</strong>
