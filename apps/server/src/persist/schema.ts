@@ -7,7 +7,7 @@ import type Database from 'better-sqlite3';
 // Schema Version
 // ============================================================================
 
-export const SCHEMA_VERSION = 21;
+export const SCHEMA_VERSION = 22;
 
 // ============================================================================
 // DDL Statements
@@ -21,7 +21,10 @@ CREATE TABLE IF NOT EXISTS players (
   created_receipt TEXT NOT NULL UNIQUE,
   deleted_at      TEXT DEFAULT NULL,
   auth_method     TEXT NOT NULL DEFAULT 'guest',
-  name_lower      TEXT
+  name_lower      TEXT,
+  origin_receipt_id TEXT DEFAULT NULL,
+  origin_action     TEXT DEFAULT NULL,
+  origin_sealed_at  TEXT DEFAULT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_players_name ON players(name);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_players_name_lower ON players(name_lower) WHERE deleted_at IS NULL;
@@ -624,6 +627,9 @@ function runMigration(db: Database.Database, version: number): void {
     case 21:
       migrateToV21(db);
       break;
+    case 22:
+      migrateToV22(db);
+      break;
     default:
       throw new Error(`Unknown schema version: ${version}`);
   }
@@ -958,6 +964,31 @@ function migrateToV21(db: Database.Database): void {
     'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
   );
   insertMeta.run('schema_version', '21');
+}
+
+function migrateToV22(db: Database.Database): void {
+  // Origin Act restore (regression repair): the original V8 migration that added
+  // the players.origin_* columns (commit 8916b4f) was dropped in a divergent-history
+  // merge, but queries.ts/materializers.ts still read+write them — so every
+  // origin-worthy action crashed the server with "no such column: origin_receipt_id".
+  // Re-add the columns additively + idempotently for existing DBs (fresh DBs get them
+  // from DDL_PLAYERS). Columns nullable, default NULL; no existing rows are modified.
+  const columns = db.prepare(`PRAGMA table_info(players)`).all() as Array<{ name: string }>;
+  const names = new Set(columns.map((c) => c.name));
+  if (!names.has('origin_receipt_id')) {
+    db.exec(`ALTER TABLE players ADD COLUMN origin_receipt_id TEXT DEFAULT NULL;`);
+  }
+  if (!names.has('origin_action')) {
+    db.exec(`ALTER TABLE players ADD COLUMN origin_action TEXT DEFAULT NULL;`);
+  }
+  if (!names.has('origin_sealed_at')) {
+    db.exec(`ALTER TABLE players ADD COLUMN origin_sealed_at TEXT DEFAULT NULL;`);
+  }
+
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', '22');
 }
 
 function ensureWorldEventEvidenceColumns(db: Database.Database): void {
