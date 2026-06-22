@@ -1,0 +1,18 @@
+{
+  "artifact": "AKALYNTH_BUILDER_PALETTE_MANIFEST_V1",
+  "preview_only": true,
+  "icons": [
+    { "id": "sign", "label": "World Sign", "kind": "object" },
+    { "id": "runestone", "label": "Runestone", "kind": "object" },
+    { "id": "clue_shard", "label": "Clue Shard", "kind": "object" },
+    { "id": "vocation_lectern", "label": "Vocation Lectern", "kind": "object" },
+    { "id": "spawn_anchor", "label": "Spawn Anchor", "kind": "spawn_anchor" }
+  ],
+  "plates": [
+    {
+      "id": "builder-surface-hero",
+      "path": "codex/assets/out/akalynth-game-loop-bible-poster-v1.png",
+      "label": "Builder Surface Hero"
+    }
+  ]
+}

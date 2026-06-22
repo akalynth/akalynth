@@ -97,6 +97,8 @@ async function main() {
         );
         assert(r.status === 200, 'status');
         assert(r.json.object_id === manifest.object_id, 'object_id');
+        const overlay = r.json.overlay as { rooms: number; objects: number } | undefined;
+        assert(overlay && overlay.rooms === 2 && overlay.objects === 6, 'overlay counts');
       },
     },
     {

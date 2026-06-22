@@ -11,6 +11,7 @@ import {
   validatePreviewSession,
 } from '../../../../packages/shared/builderDraft.js';
 import type { BuilderDraftNamespaceStore } from './draftNamespace.js';
+import { appendPreviewReplayEvent, previewReplayRelPath, rookguardPreviewScreenshotRefs } from './previewReplay.js';
 
 export interface ActivePreviewSession {
   session: LocalPreviewSession;
@@ -25,6 +26,17 @@ export function startPreviewSession(
 ): ActivePreviewSession {
   store.load(manifest);
   const startedUtc = new Date().toISOString();
+  const replayRef = previewReplayRelPath(manifest.preview_namespace);
+  appendPreviewReplayEvent(manifest.preview_namespace, {
+    event: 'preview_session_start',
+    session_id: sessionId,
+    namespace: manifest.preview_namespace,
+    draft_manifest_ref: draftManifestRef,
+  });
+  const screenshots =
+    manifest.preview_namespace === 'preview:rookguard:kit-v1'
+      ? rookguardPreviewScreenshotRefs()
+      : [];
   const session: LocalPreviewSession = {
     schema_version: LOCAL_PREVIEW_SESSION_SCHEMA_VERSION,
     session_id: sessionId,
@@ -34,8 +46,8 @@ export function startPreviewSession(
     preview_only: true,
     artifacts: {
       manifest_checksum: computeManifestChecksum(manifest),
-      replay_log_ref: '',
-      screenshots: [],
+      replay_log_ref: replayRef,
+      screenshots,
       abuse_review_note: 'preview session scaffold — no chronicle writes',
     },
     receipt_expectations: [
@@ -60,6 +72,12 @@ export function startPreviewSession(
 
 export function endPreviewSession(active: ActivePreviewSession): PreviewReceiptRecord[] {
   const endedUtc = new Date().toISOString();
+  const namespace = active.receipts[0]?.namespace ?? 'preview:unknown';
+  appendPreviewReplayEvent(namespace, {
+    event: 'preview_session_end',
+    session_id: active.session.session_id,
+    namespace,
+  });
   active.session.ended_utc = endedUtc;
   const endReceipt: PreviewReceiptRecord = {
     receipt_type: 'preview_session_end',

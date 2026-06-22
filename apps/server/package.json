@@ -65,6 +65,8 @@
     "verify:play-build-govern-surface-v1": "tsx tools/verify-play-build-govern-surface-v1.ts",
     "verify:builder-draft-namespace-v1": "tsx tools/verify-builder-draft-namespace-v1.ts",
     "verify:builder-preview-api-v1": "tsx tools/verify-builder-preview-api-v1.ts",
+    "verify:builder-preview-runtime-v1": "tsx tools/verify-builder-preview-runtime-v1.ts",
+    "verify:builder-operator-review-v1": "tsx tools/verify-builder-operator-review-v1.ts",
     "verify:item-pickup-type": "tsx tools/verify-item-pickup-type.ts",
     "verify:property-auction-handlers": "tsx tools/verify-property-auction-handlers.ts",
     "verify:property-auction-settle": "tsx tools/verify-property-auction-settle.ts",

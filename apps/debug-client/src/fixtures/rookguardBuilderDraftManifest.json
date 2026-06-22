@@ -1,0 +1,83 @@
+{
+  "schema_version": "builder-draft-manifest/v1",
+  "object_id": "AKALYNTH_BUILDER_DRAFT_ROOKGUARD_KIT_V1",
+  "source_object": "rookguard",
+  "packet_ref": "codex/design/play-build-govern-surface.md#rookguard-builder-kit",
+  "created_utc": "2026-06-23T01:00:00Z",
+  "status": "submitted",
+  "preview_namespace": "preview:rookguard:kit-v1",
+  "map_deltas": [
+    {
+      "room_id": "guild_hall_annex",
+      "cells": [[12, 8], [13, 8], [12, 9]],
+      "note": "Annex room off guild hall for vocation lectern"
+    },
+    {
+      "room_id": "gate_overlook",
+      "cells": [[20, 4], [21, 4]],
+      "note": "Overlook platform above gate transition"
+    }
+  ],
+  "objects": [
+    {
+      "id": "sign_movement_hint",
+      "kind": "sign",
+      "text": "Prove movement before the gate opens.",
+      "placement": [10, 6]
+    },
+    {
+      "id": "sign_tem_reminder",
+      "kind": "sign",
+      "text": "Tem watches newcomers who linger too long.",
+      "placement": [11, 7]
+    },
+    {
+      "id": "sign_gate_condition",
+      "kind": "sign",
+      "text": "The gate opens only after training and vocation.",
+      "placement": [20, 5]
+    },
+    {
+      "id": "runestone_training_anchor",
+      "kind": "object",
+      "placement": [14, 10]
+    },
+    {
+      "id": "training_slime_anchor",
+      "kind": "spawn_anchor",
+      "placement": [15, 11]
+    },
+    {
+      "id": "vocation_lectern",
+      "kind": "object",
+      "placement": [12, 9]
+    }
+  ],
+  "npc_lines": [
+    {
+      "npc_id": "gate_keeper",
+      "line_id": "gate_condition",
+      "text": "Return when your vocation is declared and the slime is defeated."
+    },
+    {
+      "npc_id": "guild_registrar",
+      "line_id": "vocation_intro",
+      "text": "Choose a Heroes Codex vocation before you face the gate."
+    }
+  ],
+  "changed_files": [
+    {
+      "path": "codex/samples/rookguard-builder-draft-manifest.sample.json",
+      "sha256": "490990e212156a691ecbbe128a5b346296a91efac46f04ac2ce41f8b81d11dcc"
+    }
+  ],
+  "abuse_review": {
+    "grants_live_rewards": false,
+    "grants_live_access": false,
+    "notes": "Draft adds signs, objects, and dialogue only."
+  },
+  "non_claims": [
+    "Does not mutate live beta/staging map registries.",
+    "Preview session is not an authority source."
+  ]
+}

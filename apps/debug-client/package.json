@@ -5,13 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/verify-account-character-guard.mjs && node scripts/verify-gather-wire-authority.mjs && node scripts/verify-nine-slice-panel.mjs && node scripts/verify-character-create-preview.mjs && node scripts/verify-death-chronicle-glyphs.mjs",
+    "prebuild": "node scripts/verify-account-character-guard.mjs && node scripts/verify-gather-wire-authority.mjs && node scripts/verify-nine-slice-panel.mjs && node scripts/verify-character-create-preview.mjs && node scripts/verify-death-chronicle-glyphs.mjs && node scripts/verify-builder-panel-v1.mjs",
     "build": "tsc -p tsconfig.json && vite build",
     "verify:account-character": "node scripts/verify-account-character-guard.mjs && node scripts/verify-debug-gameplay-wire-authority.mjs && node scripts/verify-gather-wire-authority.mjs",
     "verify:gather-client": "node scripts/verify-gather-wire-authority.mjs",
     "verify:character-create-preview": "node scripts/verify-character-create-preview.mjs",
     "verify:death-chronicle-glyphs": "node scripts/verify-death-chronicle-glyphs.mjs",
     "verify:nine-slice-panel": "node scripts/verify-nine-slice-panel.mjs",
+    "verify:builder-panel-v1": "node scripts/verify-builder-panel-v1.mjs",
     "preview": "vite preview",
     "lint": "tsc -p tsconfig.json",
     "smoke:mobile": "node scripts/mobile-playable-smoke.mjs"

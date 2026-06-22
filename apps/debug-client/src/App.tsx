@@ -24,6 +24,7 @@ import { ChronicleGlyphIcon } from './components/ChronicleGlyphIcon';
 import { HudChromePanel } from './components/HudChromePanel';
 import { BackpackSheet } from './components/BackpackSheet';
 import { ProofSheet } from './components/ProofSheet';
+import { BuilderPanel } from './components/BuilderPanel';
 import { TemChallengeModal } from './components/TemChallengeModal';
 import { TemWitnessDialog } from './components/TemWitnessDialog';
 import { PropertyLedgerModal } from './components/PropertyLedgerModal';
@@ -386,12 +387,14 @@ function DebugApp() {
   const initialMap: MapName = config.defaultMap;
   const presentationMode = usePresentationMode();
   const studioProofEnabled = import.meta.env.VITE_ENABLE_STUDIO_PROOF === '1';
+  const builderPreviewEnabled = import.meta.env.VITE_ENABLE_BUILDER_PREVIEW === '1';
   const phoneLandscape = useMediaQuery('(max-width: 950px) and (orientation: landscape)');
   const viewport = useViewportSize();
   const [state, api] = useGameClient(initialMap);
   const [chatOpen, setChatOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [proofSheetOpen, setProofSheetOpen] = useState(false);
+  const [builderSheetOpen, setBuilderSheetOpen] = useState(false);
   const [sealOpen, setSealOpen] = useState(false);
   const [proof, setProof] = useState<StudioProofState | null>(null);
   const [proofRunning, setProofRunning] = useState(false);
@@ -1103,6 +1106,21 @@ function DebugApp() {
                   {proofRunning ? 'Running' : 'Proof'}
                 </button>
               )}
+              {!presentationMode && builderPreviewEnabled && (
+                <button
+                  className="builder-toggle"
+                  aria-label="Open builder preview"
+                  onClick={() => {
+                    setChatOpen(false);
+                    setInventoryOpen(false);
+                    setProofSheetOpen(false);
+                    api.closeChronicle();
+                    setBuilderSheetOpen(true);
+                  }}
+                >
+                  Build
+                </button>
+              )}
               {!presentationMode && (
                 <button
                   className="seal-toggle"
@@ -1111,6 +1129,7 @@ function DebugApp() {
                     setChatOpen(false);
                     setInventoryOpen(false);
                     setProofSheetOpen(false);
+                    setBuilderSheetOpen(false);
                     api.closeChronicle();
                     setSealOpen(true);
                   }}
@@ -1187,6 +1206,11 @@ function DebugApp() {
           </div>
         </div>
       )}
+      <BuilderPanel
+        open={builderSheetOpen}
+        httpBase={config.httpBase}
+        onClose={() => setBuilderSheetOpen(false)}
+      />
       <ProofSheet
         open={proofSheetOpen}
         objectiveLabel={objectiveLabel}

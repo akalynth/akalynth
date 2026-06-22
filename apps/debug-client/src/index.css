@@ -6163,3 +6163,118 @@ body {
   border: 1px solid var(--classic-edge-light);
   background: var(--classic-panel);
 }
+
+/* PR-8: Builder preview panel (preview_only; consumes PR-7 routes) */
+.builder-sheet {
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  z-index: 83;
+  display: flex;
+  width: min(24rem, calc(100vw - 2rem));
+  max-height: min(36rem, calc(100dvh - 2rem));
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.62rem;
+  border: 1px solid var(--classic-edge-dark);
+  border-radius: 5px;
+  background: linear-gradient(180deg, rgba(40, 48, 58, 0.97), rgba(14, 16, 20, 0.98));
+  color: var(--classic-text);
+  box-shadow: 0 18px 56px rgba(0, 0, 0, 0.62);
+  overflow: auto;
+}
+
+.builder-sheet__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.builder-sheet__title {
+  color: var(--classic-gold);
+  font-weight: 800;
+}
+
+.builder-sheet__subtitle {
+  color: var(--classic-muted);
+  font-size: 0.7rem;
+}
+
+.builder-sheet__close {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid #111;
+  border-radius: 2px;
+  background: #1b1b19;
+  color: var(--classic-gold);
+  cursor: pointer;
+}
+
+.builder-card {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.builder-card__title {
+  color: var(--classic-gold);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.builder-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+}
+
+.builder-checksum {
+  font-size: 0.65rem;
+}
+
+.builder-palette {
+  margin: 0;
+  padding-left: 1rem;
+  font-size: 0.72rem;
+}
+
+.builder-palette__kind {
+  display: inline-block;
+  min-width: 5rem;
+  color: var(--classic-muted);
+}
+
+.builder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.builder-btn {
+  min-height: 40px;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid #111;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #3b3a35, #1b1b19);
+  color: var(--classic-gold);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.builder-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.builder-btn--ghost {
+  color: var(--classic-muted);
+}
+
+.builder-error {
+  color: #f5a6a6;
+  font-size: 0.72rem;
+}

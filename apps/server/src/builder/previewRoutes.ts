@@ -5,6 +5,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { URL } from 'node:url';
 import type { BuilderDraftManifest } from '../../../../packages/shared/builderDraft.js';
 import { BuilderDraftNamespaceStore } from './draftNamespace.js';
+import { buildPreviewOverlay } from './previewRegistry.js';
 import {
   assertPreviewReceiptsNonAuthoritative,
   endPreviewSession,
@@ -126,6 +127,7 @@ export function makeBuilderPreviewRouter(deps: BuilderPreviewRouterDeps = {}) {
           json(res, 404, { ok: false, error: 'namespace_not_loaded' });
           return true;
         }
+        const overlay = buildPreviewOverlay(loaded.manifest);
         json(res, 200, {
           ok: true,
           preview_only: true,
@@ -134,6 +136,12 @@ export function makeBuilderPreviewRouter(deps: BuilderPreviewRouterDeps = {}) {
           object_id: loaded.manifest.object_id,
           source_object: loaded.manifest.source_object,
           status: loaded.manifest.status,
+          overlay: {
+            rooms: overlay.rooms.length,
+            objects: overlay.objects.length,
+            npc_lines: overlay.npc_lines.length,
+          },
+          registry: overlay,
         });
       } catch (err) {
         json(res, 400, { ok: false, error: String(err) });

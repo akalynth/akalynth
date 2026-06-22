@@ -63,6 +63,16 @@ Builder preview routes (no chronicle writes):
 
 ```bash
 npm -w apps/server run verify:builder-preview-api-v1
+npm -w apps/server run verify:builder-preview-runtime-v1
+npm -w apps/server run verify:builder-operator-review-v1
+```
+
+## Debug-Client Builder Panel (PR-8)
+
+Set `VITE_ENABLE_BUILDER_PREVIEW=1` and use the **Build** dock button.
+
+```bash
+npm -w akalynth-client run verify:builder-panel-v1
 ```
 
 ## Validation Commands
