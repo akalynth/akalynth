@@ -28,6 +28,8 @@ each asset lineage (prompt + raw + cleaned + hash), a lifecycle gate, and a hard
 | `license_status` | enum | `hand_authored` \| `original_generated_asset`. |
 | `review_status` | enum | `needs_human_review` \| `approved` \| `legacy`. |
 | `tile_code` | int \| null | Optional display-only link to a `TileCode` (0–8, packages/shared/types.ts) for ground/structure tiles. **Never authority.** |
+| `item_type` | string | **Required when `asset_type` is `item`.** Server-authoritative inventory key (`torch`, `healing_herb`, …); snake_case. Becomes the runtime lookup key for `AssetRegistry.itemIcon(itemType)` after promotion. Omit on all other asset types. |
+| `chronicle_kind` | string \| absent | Optional on `asset_type: effect` chronicle glyphs. Snake_case label (e.g. `death`, `legendary_obtained`) indexed at registry compile time. Omit on all other asset types. |
 | `mechanics` | null | **MUST be `null`.** Lockstep: art never asserts collision/walkability/zone/etc.; mechanics live server-side. |
 | `copyright_boundary` | string | e.g. `"original generated asset; no copied third-party sprite, UI, logo, or map layout"`. |
 | `notes` | string | Design intent / originality note. |
@@ -59,6 +61,29 @@ each asset lineage (prompt + raw + cleaned + hash), a lifecycle gate, and a hard
   "notes": "Closed dark-oak chest; crescent lock + small blue crystal motif; subtle moss."
 }
 ```
+
+## Item manifests (`asset_type: item`)
+
+Item icons use the factory sidecar schema with `asset_type: "item"` and naming
+`<class>__<name>` (e.g. `item__torch.png` / `item__torch.json`). **`item_type` is
+required** — it must match the server protocol `item_type` string, not merely the
+filename. Registry inclusion (PR-005) gates on `status === "promoted"` **and**
+`item_type` present; non-promoted items may still pass `verify:assets`.
+
+```json
+{
+  "asset_id": "akalynth_item_torch_001",
+  "game": "Akalynth",
+  "asset_type": "item",
+  "item_type": "torch",
+  "status": "promoted",
+  "dimensions_target_px": [32, 32],
+  "mechanics": null
+}
+```
+
+Effect assets may optionally carry `chronicle_kind` to link a chronicle glyph to a
+server chronicle event kind. Display-only; never authority.
 
 ## Lockstep reminder
 

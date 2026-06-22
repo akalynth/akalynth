@@ -34,6 +34,10 @@ const WORLD_VISUAL_TYPES = new Set(['terrain_tile', 'wall_overlay', 'door_overla
 const WORLD_VISUAL_ANCHORS = new Set(['tile_top_left', 'bottom_center', 'bottom_left', 'center']);
 const WORLD_VISUAL_LAYERS = new Set(['terrain', 'object_overlay', 'floor_overlay']);
 const WORLD_VISUAL_Z_POLICIES = new Set(['fixed_layer', 'sort_by_anchor_y', 'fixed_above_building']);
+/** Runtime inventory key (server item_type); snake_case, matches protocol receipts. */
+const ITEM_TYPE_RE = /^[a-z][a-z0-9_]*$/;
+/** Optional chronicle glyph index on effect assets; snake_case event kind label. */
+const CHRONICLE_KIND_RE = /^[a-z][a-z0-9_]*$/;
 
 const errors: string[] = [];
 const fail = (f: string, msg: string) => errors.push(`${f}: ${msg}`);
@@ -46,6 +50,33 @@ function pngDims(buf: Buffer): [number, number] | null {
 const isMult32 = (n: unknown): n is number => typeof n === 'number' && Number.isInteger(n) && n > 0 && n % 32 === 0;
 const repoRel = (abs: string) => path.relative(REPO_ROOT, abs);
 const arrayEq = (a: unknown, b: readonly unknown[]) => Array.isArray(a) && a.length === b.length && a.every((v, i) => v === b[i]);
+
+/** A-3 extension: item manifests require item_type; effect assets may carry chronicle_kind. */
+function validateFactoryRegistryFields(owner: string, m: Record<string, unknown>) {
+  const assetType = m.asset_type as string;
+  const hasItemType = Object.prototype.hasOwnProperty.call(m, 'item_type');
+  const hasChronicleKind = Object.prototype.hasOwnProperty.call(m, 'chronicle_kind');
+
+  if (assetType === 'item') {
+    const itemType = m.item_type;
+    if (typeof itemType !== 'string' || !ITEM_TYPE_RE.test(itemType)) {
+      fail(owner, 'item_type required for asset_type item (non-empty snake_case)');
+    }
+  } else if (hasItemType) {
+    fail(owner, 'item_type only allowed when asset_type is item');
+  }
+
+  if (assetType === 'effect') {
+    if (hasChronicleKind) {
+      const chronicleKind = m.chronicle_kind;
+      if (typeof chronicleKind !== 'string' || !CHRONICLE_KIND_RE.test(chronicleKind)) {
+        fail(owner, 'chronicle_kind must be non-empty snake_case when present on effect assets');
+      }
+    }
+  } else if (hasChronicleKind) {
+    fail(owner, 'chronicle_kind only allowed when asset_type is effect');
+  }
+}
 
 function validateTilemapTestRef(owner: string, testRel: unknown, assetId: string) {
   if (typeof testRel !== 'string' || testRel.length === 0) {
@@ -126,6 +157,7 @@ function validateFactorySidecar(jsonPath: string, pngPath: string) {
   if (!['hand_authored', 'original_generated_asset'].includes(m.license_status as string)) fail(f, 'license_status invalid');
   if (!['needs_human_review', 'approved', 'legacy'].includes(m.review_status as string)) fail(f, 'review_status invalid');
   if (typeof m.copyright_boundary !== 'string' || !m.copyright_boundary) fail(f, 'copyright_boundary required');
+  validateFactoryRegistryFields(f, m);
   // A-6 lockstep
   if (m.mechanics !== null) fail(f, 'mechanics MUST be null (server-metadata lockstep)');
   // tile_code: null or int 0..8
@@ -331,6 +363,7 @@ function run() {
       const id = a.id ?? '(no id)';
       if (typeof a.id !== 'string' || !/^akalynth_[a-z0-9_]+$/.test(a.id)) fail(f, `asset id invalid: ${id}`);
       if (!ASSET_TYPES.has(a.asset_type as string)) fail(f, `${id}: asset_type invalid`);
+      validateFactoryRegistryFields(f, a);
       if (!LIFECYCLE.includes(a.status as string)) fail(f, `${id}: status invalid`);
       const td = a.target_dims;
       if (!Array.isArray(td) || !isMult32(td[0]) || !isMult32(td[1])) fail(f, `${id}: target_dims must be [w,h] multiples of 32`);
