@@ -22,6 +22,7 @@ jobs:
     outputs:
       codex_plugin_only: ${{ steps.classify.outputs.codex_plugin_only }}
       full_ci_required: ${{ steps.classify.outputs.full_ci_required }}
+      android_changed: ${{ steps.classify.outputs.android_changed }}
 
     steps:
       - uses: actions/checkout@v4
@@ -39,6 +40,9 @@ jobs:
 
           codex_plugin_only=false
           full_ci_required=true
+          # android_changed gates the slow Android emulator job: only run it on PRs that
+          # touch apps/android/** (push to main still runs it via the job's own condition).
+          android_changed=false
 
           if [ "$EVENT_NAME" = "pull_request" ]; then
             changed_files="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
@@ -55,6 +59,11 @@ jobs:
 
               case "$file" in
                 .codex/*|.agents/*|plugins/akalynth-studio/*|tools/validate-codex-plugin.mjs|.github/ISSUE_TEMPLATE/*)
+                  ;;
+                apps/android/*)
+                  codex_plugin_only=false
+                  full_ci_required=true
+                  android_changed=true
                   ;;
                 package.json)
                   package_diff="$(git diff --unified=0 "$BASE_SHA" "$HEAD_SHA" -- package.json)"
@@ -74,6 +83,7 @@ jobs:
           {
             echo "codex_plugin_only=$codex_plugin_only"
             echo "full_ci_required=$full_ci_required"
+            echo "android_changed=$android_changed"
           } >> "$GITHUB_OUTPUT"
 
           {
@@ -494,7 +504,9 @@ jobs:
     needs: [changes]
     # Runs on both GitHub and the self-hosted Gitea runner (KVM + Android SDK prepped below).
     # Artifact upload stays GitHub-only (see the upload step) since Gitea artifact storage differs.
-    if: github.event_name == 'push' || needs.changes.outputs.full_ci_required == 'true'
+    # Only run the slow emulator job when Android code actually changed (or on push to main,
+    # which keeps full coverage on the trunk). Server/web-only PRs skip it.
+    if: github.event_name == 'push' || needs.changes.outputs.android_changed == 'true'
 
     steps:
       - uses: actions/checkout@v4
