@@ -441,8 +441,20 @@ function DebugApp() {
     ? `${vocation[0].toUpperCase() + vocation.slice(1)}${vocationBoon ? ` · ${vocationBoon}` : ''}`
     : '';
   const guildRank = meBadges.find((b) => b.startsWith('guild_rank_'))?.replace('guild_rank_', '');
+  // Next-rank progress (feature #15): martial vocations have lower thresholds (4/8 vs 5/10),
+  // matching the server boon. Shows how many more deeds until the next rank.
+  const isMartialVoc = vocation === 'warden' || vocation === 'reaver';
+  const steadyAt = isMartialVoc ? 4 : 5;
+  const devotedAt = isMartialVoc ? 8 : 10;
+  let rankProgress = '';
+  if (state.guildContributions !== null && guildRank && guildRank !== 'devoted') {
+    const nextAt = guildRank === 'steady' ? devotedAt : steadyAt;
+    const nextRank = guildRank === 'steady' ? 'devoted' : 'steady';
+    const remaining = Math.max(0, nextAt - state.guildContributions);
+    if (remaining > 0) rankProgress = ` (${remaining} to ${nextRank})`;
+  }
   const guildPart = guildRank
-    ? `Guild · ${guildRank}`
+    ? `Guild · ${guildRank}${rankProgress}`
     : isGuildMember
       ? 'Guild member'
       : '';
