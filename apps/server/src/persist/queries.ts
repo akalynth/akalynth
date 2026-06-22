@@ -387,6 +387,12 @@ export function getHouseStorage(db: Database.Database): Array<{ item_id: string;
   return db.prepare(`SELECT item_id, property_id FROM house_storage`).all() as Array<{ item_id: string; property_id: string }>;
 }
 
+// Guild v1.1: durable treasury total, for boot hydration.
+export function getGuildTreasury(db: Database.Database): number {
+  const row = db.prepare(`SELECT total FROM guild_treasury WHERE id = 1`).get() as { total: number } | undefined;
+  return row?.total ?? 0;
+}
+
 export function getPlayerInventory(
   db: Database.Database,
   playerId: string

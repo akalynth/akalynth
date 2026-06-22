@@ -545,6 +545,7 @@ export interface PersistenceLayer {
   // Read queries - Inventory (Phase 2)
   getInventoryItems(): InventoryItemRow[];
   getHouseStorage(): Array<{ item_id: string; property_id: string }>;
+  getGuildTreasury(): number;
   getPlayerInventory(player_id: string): InventoryItemRow[];
   getInventoryItem(item_id: string): InventoryItemRow | null;
   getActiveWorldItems(zone: string): WorldObjectRow[];

@@ -7,7 +7,7 @@ import type Database from 'better-sqlite3';
 // Schema Version
 // ============================================================================
 
-export const SCHEMA_VERSION = 23;
+export const SCHEMA_VERSION = 24;
 
 // ============================================================================
 // DDL Statements
@@ -633,6 +633,9 @@ function runMigration(db: Database.Database, version: number): void {
     case 23:
       migrateToV23(db);
       break;
+    case 24:
+      migrateToV24(db);
+      break;
     default:
       throw new Error(`Unknown schema version: ${version}`);
   }
@@ -1011,6 +1014,25 @@ function migrateToV23(db: Database.Database): void {
     'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
   );
   insertMeta.run('schema_version', '23');
+}
+
+function migrateToV24(db: Database.Database): void {
+  // Guild v1.1: durable guild treasury. The shared collective total was in-memory and reset
+  // on every restart (undermining it as a collective goal). Single-row table holding the
+  // monotonic total, written by the guild_contribution materializer (from the receipt's
+  // guild_treasury_total) and hydrated into memory at boot.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS guild_treasury (
+      id           INTEGER PRIMARY KEY CHECK (id = 1),
+      total        INTEGER NOT NULL DEFAULT 0,
+      last_receipt TEXT
+    );
+    INSERT OR IGNORE INTO guild_treasury (id, total) VALUES (1, 0);
+  `);
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', '24');
 }
 
 function ensureWorldEventEvidenceColumns(db: Database.Database): void {

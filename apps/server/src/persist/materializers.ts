@@ -38,10 +38,13 @@ const MODERATION_RESOLVED = 'moderation_resolved';
 // Houses v1.2: house storage (item moves inventory <-> house; row is the durable location).
 const HOUSE_ITEM_STORED = 'house_item_stored';
 const HOUSE_ITEM_RETRIEVED = 'house_item_retrieved';
+// Guild v1.1: durable treasury — guild_contribution carries the monotonic guild_treasury_total.
+const GUILD_CONTRIBUTION = 'guild_contribution';
 
 const HANDLERS: Record<string, Handler> = {
   [HOUSE_ITEM_STORED]: handleHouseItemStored,
   [HOUSE_ITEM_RETRIEVED]: handleHouseItemRetrieved,
+  [GUILD_CONTRIBUTION]: handleGuildContribution,
   // Phase 1: Core
   [RECEIPT_ACTIONS.PLAYER_CREATED]: handlePlayerCreated,
   [RECEIPT_ACTIONS.PLAYER_RENAMED]: handlePlayerRenamed,
@@ -204,6 +207,21 @@ function handleHouseItemRetrieved(
   const itemId = receipt.inputs?.item_id as string | undefined;
   if (!itemId) return;
   db.prepare(`DELETE FROM house_storage WHERE item_id = ?`).run(itemId);
+}
+
+// Guild v1.1: durable treasury. Each guild_contribution receipt carries the monotonic
+// guild_treasury_total at that point; keep the max so replay (any order) converges to the
+// true total, which is hydrated into memory at boot.
+function handleGuildContribution(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string
+): void {
+  const total = receipt.inputs?.guild_treasury_total;
+  if (typeof total !== 'number') return;
+  db.prepare(`
+    UPDATE guild_treasury SET total = MAX(total, ?), last_receipt = ? WHERE id = 1
+  `).run(total, receiptHash);
 }
 
 // ============================================================================

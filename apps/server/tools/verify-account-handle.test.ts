@@ -41,10 +41,10 @@ async function main(): Promise<void> {
   });
   const PW = 'correct horse battery';
 
-  // schema is v23 (handle columns from v21; players.origin_* restored in migrateToV22;
-  // house_storage table added in migrateToV23)
+  // schema is v24 (handle columns from v21; players.origin_* restored in migrateToV22;
+  // house_storage table added in migrateToV23; guild_treasury table added in migrateToV24)
   const ver = db.prepare(`SELECT value FROM _meta WHERE key='schema_version'`).get() as { value: string };
-  check('schema_version is 23', ver.value === '23');
+  check('schema_version is 24', ver.value === '24');
 
   // nickname-only register
   const reg = await svc.register({ handle: 'Brannic', password: PW });
