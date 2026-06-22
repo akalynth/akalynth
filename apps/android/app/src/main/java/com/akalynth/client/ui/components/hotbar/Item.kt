@@ -58,8 +58,14 @@ data class Item(
     /** Item rarity (determines confirmation tier on drop) */
     val rarity: ItemRarity,
 
-    /** Sprite/icon identifier */
-    val spriteId: String = "item_default",
+    /**
+     * Optional protocol override for icon asset_id (PR-030 `icon_sprite_id`).
+     * When null, [itemType] registry lookup is used.
+     */
+    val iconSpriteId: String? = null,
+
+    /** Sprite/icon identifier (registry asset_id or legacy stem). */
+    val spriteId: String = ITEM_DEFAULT_SPRITE_ID,
 
     /** Current stack count (1 for non-stackable) */
     val stackCount: Int = 1,
