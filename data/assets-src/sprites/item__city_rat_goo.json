@@ -1,0 +1,30 @@
+{
+  "game": "Akalynth",
+  "asset_type": "item",
+  "biome": null,
+  "status": "promoted",
+  "dimensions_px": [
+    32,
+    32
+  ],
+  "dimensions_target_px": [
+    32,
+    32
+  ],
+  "camera": "top_down_slight_isometric",
+  "background": "transparent",
+  "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+  "prompt_file": null,
+  "raw_file": null,
+  "tilemap_test": "data/assets-src/test-maps/p1-item-icons-v1.json",
+  "license_status": "hand_authored",
+  "review_status": "approved",
+  "tile_code": null,
+  "mechanics": null,
+  "copyright_boundary": "original hand-authored placeholder asset; no copied third-party sprite, UI, logo, or map layout",
+  "asset_id": "akalynth_item_city_rat_goo_001",
+  "item_type": "city_rat_goo",
+  "cleaned_file": "data/assets-src/sprites/item__city_rat_goo.png",
+  "sha256": "7ae194406a683d8675dc62a02d4ffe201cd1237463b47bae5510d853a384593a",
+  "notes": "P1 placeholder: brown-gray rat goo square; replace with readable loot icon before final art pass."
+}

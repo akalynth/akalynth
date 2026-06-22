@@ -1,0 +1,30 @@
+{
+  "game": "Akalynth",
+  "asset_type": "item",
+  "biome": null,
+  "status": "promoted",
+  "dimensions_px": [
+    32,
+    32
+  ],
+  "dimensions_target_px": [
+    32,
+    32
+  ],
+  "camera": "top_down_slight_isometric",
+  "background": "transparent",
+  "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+  "prompt_file": null,
+  "raw_file": null,
+  "tilemap_test": "data/assets-src/test-maps/p1-item-icons-v1.json",
+  "license_status": "hand_authored",
+  "review_status": "approved",
+  "tile_code": null,
+  "mechanics": null,
+  "copyright_boundary": "original hand-authored placeholder asset; no copied third-party sprite, UI, logo, or map layout",
+  "asset_id": "akalynth_item_soulsteel_frame_001",
+  "item_type": "soulsteel_frame",
+  "cleaned_file": "data/assets-src/sprites/item__soulsteel_frame.png",
+  "sha256": "65e8de7f10df5292ba462d9ecff320ab83386993f6911bbbadcad7ee43ed47e0",
+  "notes": "P1 placeholder: dark soulsteel frame square; replace with readable frame icon before final art pass."
+}

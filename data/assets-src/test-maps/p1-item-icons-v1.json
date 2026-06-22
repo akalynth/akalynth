@@ -1,0 +1,171 @@
+{
+  "id": "p1_item_icons_v1",
+  "kind": "asset_tilemap_test",
+  "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+  "tile_size_px": 32,
+  "canvas_tiles": [
+    15,
+    1
+  ],
+  "scope": "Source-side visual placement proof for P1 inventory item icons (refined_ley_mote, keystone_token, refined_soulsteel_component, healing_herb, city_rat_goo, pilgrim_mark, rookguard_training_blade, rookguard_threadbare_cloak, rookguard_patience_charm, stabilized_soulsteel_component, slime, tending_token, ashglass_shard, charred_shipment_plate, soulsteel_frame). Display only; no mechanics.",
+  "runtime_authority": "Display only. Inventory keys, drops, gather rewards, and receipt behavior remain server-authoritative.",
+  "assets": [
+    "akalynth_item_refined_ley_mote_001",
+    "akalynth_item_keystone_token_001",
+    "akalynth_item_refined_soulsteel_component_001",
+    "akalynth_item_healing_herb_001",
+    "akalynth_item_city_rat_goo_001",
+    "akalynth_item_pilgrim_mark_001",
+    "akalynth_item_rookguard_training_blade_001",
+    "akalynth_item_rookguard_threadbare_cloak_001",
+    "akalynth_item_rookguard_patience_charm_001",
+    "akalynth_item_stabilized_soulsteel_component_001",
+    "akalynth_item_slime_001",
+    "akalynth_item_tending_token_001",
+    "akalynth_item_ashglass_shard_001",
+    "akalynth_item_charred_shipment_plate_001",
+    "akalynth_item_soulsteel_frame_001"
+  ],
+  "placements": [
+    {
+      "asset_id": "akalynth_item_refined_ley_mote_001",
+      "cleaned_file": "data/assets-src/sprites/item__refined_ley_mote.png",
+      "x": 0,
+      "y": 0,
+      "role": "refined_ley_mote inventory icon placeholder",
+      "tile_code": null,
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_item_keystone_token_001",
+      "cleaned_file": "data/assets-src/sprites/item__keystone_token.png",
+      "x": 1,
+      "y": 0,
+      "role": "keystone_token inventory icon placeholder",
+      "tile_code": null,
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_item_refined_soulsteel_component_001",
+      "cleaned_file": "data/assets-src/sprites/item__refined_soulsteel_component.png",
+      "x": 2,
+      "y": 0,
+      "role": "refined_soulsteel_component inventory icon placeholder",
+      "tile_code": null,
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_item_healing_herb_001",
+      "cleaned_file": "data/assets-src/sprites/item__healing_herb.png",
+      "x": 3,
+      "y": 0,
+      "role": "healing_herb inventory icon placeholder",
+      "tile_code": null,
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_item_city_rat_goo_001",
+      "cleaned_file": "data/assets-src/sprites/item__city_rat_goo.png",
+      "x": 4,
+      "y": 0,
+      "role": "city_rat_goo inventory icon placeholder",
+      "tile_code": null,
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_item_pilgrim_mark_001",
+      "cleaned_file": "data/assets-src/sprites/item__pilgrim_mark.png",
+      "x": 5,
+      "y": 0,
+      "role": "pilgrim_mark inventory icon placeholder",
+      "tile_code": null,
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_item_rookguard_training_blade_001",
+      "cleaned_file": "data/assets-src/sprites/item__rookguard_training_blade.png",
+      "x": 6,
+      "y": 0,
+      "role": "rookguard_training_blade inventory icon placeholder",
+      "tile_code": null,
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_item_rookguard_threadbare_cloak_001",
+      "cleaned_file": "data/assets-src/sprites/item__rookguard_threadbare_cloak.png",
+      "x": 7,
+      "y": 0,
+      "role": "rookguard_threadbare_cloak inventory icon placeholder",
+      "tile_code": null,
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_item_rookguard_patience_charm_001",
+      "cleaned_file": "data/assets-src/sprites/item__rookguard_patience_charm.png",
+      "x": 8,
+      "y": 0,
+      "role": "rookguard_patience_charm inventory icon placeholder",
+      "tile_code": null,
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_item_stabilized_soulsteel_component_001",
+      "cleaned_file": "data/assets-src/sprites/item__stabilized_soulsteel_component.png",
+      "x": 9,
+      "y": 0,
+      "role": "stabilized_soulsteel_component inventory icon placeholder",
+      "tile_code": null,
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_item_slime_001",
+      "cleaned_file": "data/assets-src/sprites/item__slime.png",
+      "x": 10,
+      "y": 0,
+      "role": "slime inventory icon placeholder",
+      "tile_code": null,
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_item_tending_token_001",
+      "cleaned_file": "data/assets-src/sprites/item__tending_token.png",
+      "x": 11,
+      "y": 0,
+      "role": "tending_token inventory icon placeholder",
+      "tile_code": null,
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_item_ashglass_shard_001",
+      "cleaned_file": "data/assets-src/sprites/item__ashglass_shard.png",
+      "x": 12,
+      "y": 0,
+      "role": "ashglass_shard inventory icon placeholder",
+      "tile_code": null,
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_item_charred_shipment_plate_001",
+      "cleaned_file": "data/assets-src/sprites/item__charred_shipment_plate.png",
+      "x": 13,
+      "y": 0,
+      "role": "charred_shipment_plate inventory icon placeholder",
+      "tile_code": null,
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_item_soulsteel_frame_001",
+      "cleaned_file": "data/assets-src/sprites/item__soulsteel_frame.png",
+      "x": 14,
+      "y": 0,
+      "role": "soulsteel_frame inventory icon placeholder",
+      "tile_code": null,
+      "mechanics": null
+    }
+  ],
+  "checks": [
+    "all placements reference tracked cleaned PNGs and sidecars",
+    "all mechanics fields are null",
+    "item_type fields match server protocol inventory keys"
+  ]
+}
