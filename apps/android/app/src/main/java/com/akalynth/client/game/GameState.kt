@@ -14,6 +14,7 @@ data class GameState(
     val connection: ConnectionState = ConnectionState.Idle,
     val session: SessionState = SessionState(),
     val world: WorldState = WorldState(),
+    val inventory: InventoryState = InventoryState(),
     val progression: ProgressionState = ProgressionState(),
     val economy: EconomyState = EconomyState(),
     val gather: GatherState = GatherState(),

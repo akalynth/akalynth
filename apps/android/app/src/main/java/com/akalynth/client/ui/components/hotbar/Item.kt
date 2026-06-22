@@ -49,6 +49,9 @@ data class Item(
     /** Unique item instance ID */
     val id: String,
 
+    /** Server item_type key (authoritative identity for icon/presentation mapping). */
+    val itemType: String,
+
     /** Item display name */
     val name: String,
 

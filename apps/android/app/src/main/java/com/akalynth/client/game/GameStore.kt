@@ -2,7 +2,10 @@ package com.akalynth.client.game
 
 import android.content.Context
 import com.akalynth.client.BuildConfig
+import com.akalynth.client.actions.ActionBus
+import com.akalynth.client.chronicle.ChronicleStore
 import com.akalynth.client.network.ConnectionState
+import com.akalynth.client.network.WsClientActionTransport
 import com.akalynth.client.network.EndpointInfo
 import com.akalynth.client.network.HealthApi
 import com.akalynth.client.network.IdentityStore
@@ -48,13 +51,18 @@ private val ROUTE_ACTION_SKILL_IDS = setOf(
 class GameStore(
     private val wsClient: WsClient,
     private val scope: CoroutineScope,
-    private val context: Context
+    private val context: Context,
+    actionBus: ActionBus? = null,
 ) {
     private val _state = MutableStateFlow(GameState.INITIAL)
     val state: StateFlow<GameState> = _state.asStateFlow()
 
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     private val identityStore = IdentityStore(context)
+    private val actionBus: ActionBus = actionBus ?: ActionBus(
+        chronicle = ChronicleStore(),
+        transport = WsClientActionTransport(wsClient),
+    )
 
     init {
         // Load saved guest token and server URL
@@ -257,6 +265,9 @@ class GameStore(
             is GameEvent.SetServerUrl -> setServerUrl(event.url)
             is GameEvent.ToggleDebugDrawer -> toggleDebugDrawer()
             is GameEvent.ClearDebugLog -> clearDebugLog()
+            is GameEvent.UseHotbarSlot -> useHotbarSlot(event.index)
+            is GameEvent.DropHotbarSlot -> dropHotbarSlot(event.index)
+            is GameEvent.AssignHotbarSlot -> assignHotbarSlot(event.index, event.itemId)
         }
     }
 
@@ -391,9 +402,9 @@ class GameStore(
             // Gameplay handling for these is intentionally deferred (server stays authoritative).
             is RunestoneResultMessage -> {}
             is RunestoneDeniedMessage -> {}
-            is DropItemResultMessage -> {}
-            is PickupItemResultMessage -> {}
-            is InventorySnapshotMessage -> {}
+            is DropItemResultMessage -> handleDropItemResult(msg)
+            is PickupItemResultMessage -> handlePickupItemResult(msg)
+            is InventorySnapshotMessage -> handleInventorySnapshot(msg)
             is WorldItemAddedMessage -> {}
             is WorldItemRemovedMessage -> {}
             is ProtectedSlotSetMessage -> {}
@@ -513,6 +524,7 @@ class GameStore(
     private fun handleWorldState(msg: WorldStateMessage) {
         wsClient.updateState(ConnectionState.InWorld)
         val others = msg.nearbyPlayers.associateBy { it.id }
+        syncActionBusPosition(msg.map.displayName, msg.player.x, msg.player.y)
         _state.update {
             it.copy(
                 world = it.world.copy(
@@ -523,6 +535,61 @@ class GameStore(
                 progression = it.progression.copy(loop = msg.player.loop)
             )
         }
+    }
+
+    private fun handleInventorySnapshot(msg: InventorySnapshotMessage) {
+        _state.update {
+            it.copy(inventory = InventoryProjection.fromSnapshot(msg.items, it.inventory))
+        }
+    }
+
+    private fun handlePickupItemResult(msg: PickupItemResultMessage) {
+        if (!msg.ok) return
+        _state.update {
+            it.copy(inventory = InventoryProjection.onPickupSuccess(msg.itemId, it.inventory))
+        }
+    }
+
+    private fun handleDropItemResult(msg: DropItemResultMessage) {
+        if (!msg.ok) return
+        _state.update {
+            it.copy(inventory = InventoryProjection.onDropSuccess(msg.itemId, it.inventory))
+        }
+    }
+
+    private fun useHotbarSlot(index: Int) {
+        val item = _state.value.inventory.hotbarSlots.getOrNull(index) ?: return
+        syncActionBusFromState()
+        scope.launch {
+            actionBus.dispatchUseHotbarSlot(index, item.id)
+        }
+    }
+
+    private fun dropHotbarSlot(index: Int) {
+        val item = _state.value.inventory.hotbarSlots.getOrNull(index) ?: return
+        syncActionBusFromState()
+        scope.launch {
+            actionBus.dispatchDropHotbarSlot(index, item.id, item.name, item.rarity)
+        }
+    }
+
+    private fun assignHotbarSlot(index: Int, itemId: String) {
+        _state.update {
+            it.copy(inventory = InventoryProjection.assignHotbarSlot(index, itemId, it.inventory))
+        }
+    }
+
+    private fun syncActionBusFromState() {
+        val world = _state.value.world
+        syncActionBusPosition(
+            zone = world.currentMap.displayName,
+            x = world.me?.x,
+            y = world.me?.y,
+        )
+    }
+
+    private fun syncActionBusPosition(zone: String?, x: Int?, y: Int?) {
+        actionBus.updatePosition(zone, x, y)
     }
 
     private fun handleLoopUpdate(msg: LoopUpdateMessage) {
@@ -538,12 +605,14 @@ class GameStore(
 
     private fun handleMoveResult(msg: MoveResultMessage) {
         val currentMe = _state.value.world.me ?: return
+        val nextMap = msg.map ?: _state.value.world.currentMap
+        syncActionBusPosition(nextMap.displayName, msg.x, msg.y)
         // Always snap to server position (server authoritative)
         _state.update {
             it.copy(
                 world = it.world.copy(
                     me = currentMe.copy(x = msg.x, y = msg.y),
-                    currentMap = msg.map ?: it.world.currentMap
+                    currentMap = nextMap
                 )
             )
         }

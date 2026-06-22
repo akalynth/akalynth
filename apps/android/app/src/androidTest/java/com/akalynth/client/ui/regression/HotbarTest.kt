@@ -374,6 +374,7 @@ class HotbarTest {
         stackCount: Int = 1
     ): Item = Item(
         id = "item_${name.lowercase().replace(" ", "_")}",
+        itemType = name.lowercase().replace(" ", "_"),
         name = name,
         rarity = rarity,
         stackCount = stackCount
