@@ -33,6 +33,10 @@ import com.akalynth.client.protocol.PlayerPublic
 import com.akalynth.client.ui.diagnostics.DiagnosticsFormatter
 import com.akalynth.client.ui.components.*
 import com.akalynth.client.ui.components.chronicle.ChronicleSheet
+import com.akalynth.client.ui.components.hotbar.DropConfirmationOverlay
+import com.akalynth.client.ui.components.hotbar.Hotbar
+import com.akalynth.client.ui.components.hud.GameHUD
+import com.akalynth.client.ui.state.UiOverlayState
 import com.akalynth.client.ui.theme.ClassicButton
 import com.akalynth.client.ui.theme.ClassicPanel
 import com.akalynth.client.ui.theme.ClassicShellColors
@@ -74,6 +78,9 @@ fun WorldScreen(
     val gatherStation = GatherHelpers.nearestDeliverableStation(state.gather, state.world.me)
     val gatherRefinery = GatherHelpers.nearestRefineryStation(state.gather, state.world.me)
     var showcaseMap by remember { mutableStateOf(false) }
+    var overlayState by remember { mutableStateOf<UiOverlayState>(UiOverlayState.None) }
+    val unlockStage = state.unlock.stage
+    val hotbarBottomPadding = if (state.ui.chatOpen) 292.dp else 0.dp
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -200,51 +207,76 @@ fun WorldScreen(
         )
 
         if (!state.ui.showDebugDrawer) {
-            DPad(
-                onMove = { dir -> onEvent(GameEvent.Move(dir)) },
+            GameHUD(
                 modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(start = 12.dp, bottom = if (state.ui.chatOpen) 304.dp else 12.dp)
-            )
-
-            ActionButtons(
-                onChat = { onEvent(GameEvent.ToggleChat) },
-                onChronicle = { onEvent(GameEvent.ToggleChronicle) },
-                showWitnessMothBloom = state.world.currentMap.isHighCityCompatible,
-                onWorldEventContribution = { contributionId ->
-                    onEvent(GameEvent.WorldEventContribution(contributionId))
+                    .fillMaxSize()
+                    .padding(bottom = hotbarBottomPadding),
+                stage = unlockStage,
+                dpad = { modifier ->
+                    DPad(
+                        onMove = { dir -> onEvent(GameEvent.Move(dir)) },
+                        modifier = modifier
+                    )
                 },
-                showRouteActions = showRouteActions,
-                routeActionSkillIds = routeActionSkillIds,
-                onRouteAction = { skillId -> onEvent(GameEvent.RouteAction(skillId)) },
-                showRookguardActions = !state.world.currentMap.isHighCityCompatible,
-                showRookguardVocations = showRookguardVocations,
-                showHighCityActions = state.world.currentMap.isHighCityCompatible,
-                onTalkToNpc = { npcId -> onEvent(GameEvent.TalkToNpc(npcId)) },
-                onDeclareVocation = { vocation -> onEvent(GameEvent.DeclareVocation(vocation)) },
-                onInspectWallet = { onEvent(GameEvent.InspectWallet) },
-                onStartWork = { onEvent(GameEvent.StartWorkContract) },
-                onTickWork = { onEvent(GameEvent.TickWorkContract) },
-                onBuyHouse = { propertyId -> onEvent(GameEvent.BuyHouse(propertyId)) },
-                onListHouse = { propertyId, price -> onEvent(GameEvent.ListHouse(propertyId, price)) },
-                onUnlistHouse = { propertyId -> onEvent(GameEvent.UnlistHouse(propertyId)) },
-                showTrainingAttack = showTrainingAttack,
-                trainingSlimeTargetId = trainingSlime?.id,
-                onAttack = { targetId -> onEvent(GameEvent.Attack(targetId)) },
-                showGather = state.gather.isEnabled,
-                gatherNodeId = gatherNode?.nodeId,
-                gatherStationId = gatherStation?.stationId,
-                gatherRefineStationId = gatherRefinery?.stationId,
-                gatherBusy = state.gather.activeNodeId != null || state.gather.activeRefineStationId != null,
-                gatherRefining = state.gather.activeRefineStationId != null,
-                gatherProgressPct = state.gather.progressPct,
-                gatherHeldItem = state.gather.heldItemType,
-                onGather = { nodeId -> onEvent(GameEvent.Gather(nodeId)) },
-                onDeliver = { stationId -> onEvent(GameEvent.Deliver(stationId)) },
-                onRefine = { stationId -> onEvent(GameEvent.Refine(stationId)) },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 12.dp, bottom = if (state.ui.chatOpen) 304.dp else 12.dp)
+                actions = { modifier ->
+                    ActionButtons(
+                        onChat = { onEvent(GameEvent.ToggleChat) },
+                        onChronicle = { onEvent(GameEvent.ToggleChronicle) },
+                        showWitnessMothBloom = state.world.currentMap.isHighCityCompatible,
+                        onWorldEventContribution = { contributionId ->
+                            onEvent(GameEvent.WorldEventContribution(contributionId))
+                        },
+                        showRouteActions = showRouteActions,
+                        routeActionSkillIds = routeActionSkillIds,
+                        onRouteAction = { skillId -> onEvent(GameEvent.RouteAction(skillId)) },
+                        showRookguardActions = !state.world.currentMap.isHighCityCompatible,
+                        showRookguardVocations = showRookguardVocations,
+                        showHighCityActions = state.world.currentMap.isHighCityCompatible,
+                        onTalkToNpc = { npcId -> onEvent(GameEvent.TalkToNpc(npcId)) },
+                        onDeclareVocation = { vocation -> onEvent(GameEvent.DeclareVocation(vocation)) },
+                        onInspectWallet = { onEvent(GameEvent.InspectWallet) },
+                        onStartWork = { onEvent(GameEvent.StartWorkContract) },
+                        onTickWork = { onEvent(GameEvent.TickWorkContract) },
+                        onBuyHouse = { propertyId -> onEvent(GameEvent.BuyHouse(propertyId)) },
+                        onListHouse = { propertyId, price -> onEvent(GameEvent.ListHouse(propertyId, price)) },
+                        onUnlistHouse = { propertyId -> onEvent(GameEvent.UnlistHouse(propertyId)) },
+                        showTrainingAttack = showTrainingAttack,
+                        trainingSlimeTargetId = trainingSlime?.id,
+                        onAttack = { targetId -> onEvent(GameEvent.Attack(targetId)) },
+                        showGather = state.gather.isEnabled,
+                        gatherNodeId = gatherNode?.nodeId,
+                        gatherStationId = gatherStation?.stationId,
+                        gatherRefineStationId = gatherRefinery?.stationId,
+                        gatherBusy = state.gather.activeNodeId != null || state.gather.activeRefineStationId != null,
+                        gatherRefining = state.gather.activeRefineStationId != null,
+                        gatherProgressPct = state.gather.progressPct,
+                        gatherHeldItem = state.gather.heldItemType,
+                        onGather = { nodeId -> onEvent(GameEvent.Gather(nodeId)) },
+                        onDeliver = { stationId -> onEvent(GameEvent.Deliver(stationId)) },
+                        onRefine = { stationId -> onEvent(GameEvent.Refine(stationId)) },
+                        modifier = modifier
+                    )
+                },
+                hotbar = { modifier ->
+                    Box(
+                        modifier = modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Hotbar(
+                            slots = state.inventory.hotbarSlots,
+                            onSlotTap = { index -> onEvent(GameEvent.UseHotbarSlot(index)) },
+                            onSlotLongPress = { index ->
+                                val item = state.inventory.hotbarSlots.getOrNull(index) ?: return@Hotbar
+                                overlayState = UiOverlayState.ConfirmDrop(
+                                    slotIndex = index,
+                                    itemId = item.id,
+                                    itemName = item.name,
+                                    isLegendary = item.rarity.requiresTier3Confirm
+                                )
+                            }
+                        )
+                    }
+                }
             )
 
             ChatOverlay(
@@ -310,6 +342,24 @@ fun WorldScreen(
             ) {
                 Text(error)
             }
+        }
+
+        when (val overlay = overlayState) {
+            is UiOverlayState.ConfirmDrop -> {
+                DropConfirmationOverlay(
+                    slotIndex = overlay.slotIndex,
+                    itemId = overlay.itemId,
+                    itemName = overlay.itemName,
+                    isLegendary = overlay.isLegendary,
+                    onConfirmDrop = { slotIndex, _ ->
+                        overlayState = UiOverlayState.None
+                        onEvent(GameEvent.DropHotbarSlot(slotIndex))
+                    },
+                    onCancel = { overlayState = UiOverlayState.None },
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            else -> Unit
         }
     }
 }

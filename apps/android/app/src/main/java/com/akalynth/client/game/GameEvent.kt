@@ -60,7 +60,7 @@ sealed class GameEvent {
     // Settings
     data class SetServerUrl(val url: String) : GameEvent()
 
-    // Hotbar (PR-017 plumbing; drop confirm overlay wired in PR-018b)
+    // Hotbar (PR-017 plumbing; WorldScreen wiring in PR-018b)
     data class UseHotbarSlot(val index: Int) : GameEvent()
     data class DropHotbarSlot(val index: Int) : GameEvent()
     data class AssignHotbarSlot(val index: Int, val itemId: String) : GameEvent()
