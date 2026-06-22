@@ -391,6 +391,18 @@ const GUILD_MEMBER_BADGE = 'guild_member';
 // guild_joined receipt; this restores the member badge across reconnects within a run).
 const guildMembers = new Set<string>();
 
+// Houses v1: first runtime Door/House authority gate (owner-gated entry). Additive,
+// routed through use_skill ('house:enter' / 'house:exit'), receipted, behind HOUSES_ENABLED.
+// Promotes the DOOR_AND_HOUSE_AUTHORITY design's reserved "who may pass / inside-outside"
+// question into runtime: only the plot owner may enter, recorded as a receipt.
+const HOUSES_ENABLED = parseBoolEnv(process.env.HOUSES_ENABLED, DEBUG_MODE);
+const HOUSE_ENTERED_ACTION = 'house_entered';
+const HOUSE_LEFT_ACTION = 'house_left';
+const INSIDE_HOUSE_BADGE = 'inside_house';
+// player_id -> property_id of the house they are currently inside (in-session; the
+// house_entered/house_left receipts are the durable truth).
+const playersInsideHouse = new Map<string, string>();
+
 // Plan B: Per-IP Rate Limiting (Anti-Bot Hardening)
 const IP_RATE_LIMIT_ENABLED = parseBoolEnv(process.env.IP_RATE_LIMIT_ENABLED, true);
 const IP_CONNECTION_LIMIT = parseEnvInt(process.env.IP_CONNECTION_LIMIT, 5, 1);
@@ -5996,6 +6008,61 @@ function processSessionQueue(s: Session, now: number) {
           s.player.badges = [...(s.player.badges ?? []), GUILD_MEMBER_BADGE];
           send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { guild_member: true } }));
           sendLoopUpdate(s, 'guild_joined');
+          break;
+        }
+
+        // Houses v1: enter the house on the Azura plot you own and are standing on.
+        // First runtime owner-gated door authority — server is the sole authority on who may pass.
+        if (HOUSES_ENABLED && msg.skill_id === 'house:enter') {
+          if (s.currentMap !== 'Azura') {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_target' }));
+            break;
+          }
+          const plots = worlds.Azura.map.landmarks.house_plots ?? [];
+          const plot = plots.find((p) => landmarkContains({ x: s.player!.x, y: s.player!.y }, p));
+          if (!plot) {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_target' }));
+            break;
+          }
+          const propertyId = makePropertyId('Azura', plot.id);
+          if (getProperty(propertyId)?.owner_player_id !== s.player.id) {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_skill', payload: { error: 'not_owner' } }));
+            break;
+          }
+          if (playersInsideHouse.has(s.player.id)) {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_skill', payload: { error: 'already_inside' } }));
+            break;
+          }
+          audit.write({
+            player_id: s.player.id,
+            action: HOUSE_ENTERED_ACTION,
+            inputs: { property_id: propertyId, plot_id: plot.id },
+            result: 'ok',
+          });
+          playersInsideHouse.set(s.player.id, propertyId);
+          s.player.badges = [...(s.player.badges ?? []), INSIDE_HOUSE_BADGE];
+          send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { inside_house: propertyId } }));
+          sendLoopUpdate(s, 'house_entered');
+          break;
+        }
+
+        // Houses v1: leave the house you are inside.
+        if (HOUSES_ENABLED && msg.skill_id === 'house:exit') {
+          const inside = playersInsideHouse.get(s.player.id);
+          if (!inside) {
+            send(s.ws, ServerMessages.skillResult(msg.skill_id, false, { reason: 'invalid_skill', payload: { error: 'not_inside' } }));
+            break;
+          }
+          audit.write({
+            player_id: s.player.id,
+            action: HOUSE_LEFT_ACTION,
+            inputs: { property_id: inside },
+            result: 'ok',
+          });
+          playersInsideHouse.delete(s.player.id);
+          s.player.badges = (s.player.badges ?? []).filter((b) => b !== INSIDE_HOUSE_BADGE);
+          send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { inside_house: null } }));
+          sendLoopUpdate(s, 'house_left');
           break;
         }
 
