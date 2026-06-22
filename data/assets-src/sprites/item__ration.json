@@ -1,0 +1,30 @@
+{
+  "game": "Akalynth",
+  "asset_type": "item",
+  "biome": null,
+  "status": "promoted",
+  "dimensions_px": [
+    32,
+    32
+  ],
+  "dimensions_target_px": [
+    32,
+    32
+  ],
+  "camera": "top_down_slight_isometric",
+  "background": "transparent",
+  "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+  "prompt_file": null,
+  "raw_file": null,
+  "tilemap_test": "data/assets-src/test-maps/p0-item-icons-v1.json",
+  "license_status": "hand_authored",
+  "review_status": "approved",
+  "tile_code": null,
+  "mechanics": null,
+  "copyright_boundary": "original hand-authored placeholder asset; no copied third-party sprite, UI, logo, or map layout",
+  "asset_id": "akalynth_item_ration_001",
+  "item_type": "ration",
+  "cleaned_file": "data/assets-src/sprites/item__ration.png",
+  "sha256": "4607f34c404b09b06a07d8754dfdf30244ab87de5d98d3d2caefd8668a436774",
+  "notes": "P0 placeholder: tan ration bundle square; replace with readable consumable icon before final art pass."
+}

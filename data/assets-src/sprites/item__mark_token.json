@@ -1,0 +1,30 @@
+{
+  "game": "Akalynth",
+  "asset_type": "item",
+  "biome": null,
+  "status": "promoted",
+  "dimensions_px": [
+    32,
+    32
+  ],
+  "dimensions_target_px": [
+    32,
+    32
+  ],
+  "camera": "top_down_slight_isometric",
+  "background": "transparent",
+  "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+  "prompt_file": null,
+  "raw_file": null,
+  "tilemap_test": "data/assets-src/test-maps/p0-item-icons-v1.json",
+  "license_status": "hand_authored",
+  "review_status": "approved",
+  "tile_code": null,
+  "mechanics": null,
+  "copyright_boundary": "original hand-authored placeholder asset; no copied third-party sprite, UI, logo, or map layout",
+  "asset_id": "akalynth_item_mark_token_001",
+  "item_type": "mark_token",
+  "cleaned_file": "data/assets-src/sprites/item__mark_token.png",
+  "sha256": "63e44c4b16c409b29511f6229b625f2b2d6de91e0f541eadd044915dbbdf957a",
+  "notes": "P0 placeholder: gold token square; replace with readable mark icon before final art pass."
+}

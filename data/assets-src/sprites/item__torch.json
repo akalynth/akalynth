@@ -1,0 +1,30 @@
+{
+  "game": "Akalynth",
+  "asset_type": "item",
+  "biome": null,
+  "status": "promoted",
+  "dimensions_px": [
+    32,
+    32
+  ],
+  "dimensions_target_px": [
+    32,
+    32
+  ],
+  "camera": "top_down_slight_isometric",
+  "background": "transparent",
+  "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+  "prompt_file": null,
+  "raw_file": null,
+  "tilemap_test": "data/assets-src/test-maps/p0-item-icons-v1.json",
+  "license_status": "hand_authored",
+  "review_status": "approved",
+  "tile_code": null,
+  "mechanics": null,
+  "copyright_boundary": "original hand-authored placeholder asset; no copied third-party sprite, UI, logo, or map layout",
+  "asset_id": "akalynth_item_torch_001",
+  "item_type": "torch",
+  "cleaned_file": "data/assets-src/sprites/item__torch.png",
+  "sha256": "c2fc87cf10ed7a93bf77067a0dacee93125373763d7ac897e5441a1fb95f2c4f",
+  "notes": "P0 placeholder: warm orange square; replace with readable torch icon before final art pass."
+}
