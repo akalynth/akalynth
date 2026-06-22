@@ -1,0 +1,172 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://akalynth.dev/schemas/asset-registry/v1",
+  "title": "AkalynthAssetRegistry",
+  "description": "Compiled asset registry written to data/assets-built/registry.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "entries"],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "entries": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/assetRegistryEntry" }
+    }
+  },
+  "$defs": {
+    "assetFrame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["w", "h"],
+      "properties": {
+        "w": { "type": "integer", "minimum": 1 },
+        "h": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "atlasRect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sheet", "x", "y", "w", "h"],
+      "properties": {
+        "sheet": { "type": "string", "minLength": 1 },
+        "x": { "type": "integer", "minimum": 0 },
+        "y": { "type": "integer", "minimum": 0 },
+        "w": { "type": "integer", "minimum": 1 },
+        "h": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "worldVisualAnchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "source_pixels"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["tile_top_left", "bottom_center", "bottom_left", "center"]
+        },
+        "source_pixels": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "integer" }
+        }
+      }
+    },
+    "worldVisualRendering": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["filtering", "display_only", "draw_scale", "anchor", "layer"],
+      "properties": {
+        "filtering": { "type": "string", "const": "nearest" },
+        "display_only": { "type": "boolean", "const": true },
+        "draw_scale": { "type": "number", "exclusiveMinimum": 0 },
+        "anchor": { "$ref": "#/$defs/worldVisualAnchor" },
+        "layer": {
+          "type": "string",
+          "enum": ["terrain", "object_overlay", "floor_overlay"]
+        },
+        "z_policy": {
+          "type": "string",
+          "enum": ["fixed_layer", "sort_by_anchor_y", "fixed_above_building"]
+        }
+      }
+    },
+    "assetRegistryEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "asset_id",
+        "source",
+        "asset_type",
+        "file",
+        "frame",
+        "style_contract",
+        "mechanics"
+      ],
+      "properties": {
+        "asset_id": {
+          "type": "string",
+          "pattern": "^akalynth_[a-z0-9_]+$"
+        },
+        "source": {
+          "type": "string",
+          "enum": ["factory", "ui_pack", "world_sidecar"]
+        },
+        "asset_type": { "type": "string", "minLength": 1 },
+        "file": { "type": "string", "minLength": 1 },
+        "frame": { "$ref": "#/$defs/assetFrame" },
+        "style_contract": {
+          "type": "string",
+          "const": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1"
+        },
+        "mechanics": { "type": "null" },
+        "atlas": { "$ref": "#/$defs/atlasRect" },
+        "slice_px": { "type": "integer", "minimum": 0 },
+        "kind": {
+          "type": "string",
+          "enum": ["nine_slice", "circle", "bar", "sprite"]
+        },
+        "rendering": { "$ref": "#/$defs/worldVisualRendering" },
+        "item_type": { "type": "string", "minLength": 1 },
+        "chronicle_kind": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "source": { "const": "factory" } } },
+          "then": {
+            "properties": {
+              "kind": false,
+              "slice_px": false,
+              "rendering": false
+            }
+          }
+        },
+        {
+          "if": { "properties": { "source": { "const": "ui_pack" } } },
+          "then": {
+            "required": ["kind", "slice_px"],
+            "properties": {
+              "asset_type": { "const": "ui" },
+              "rendering": false,
+              "item_type": false,
+              "chronicle_kind": false
+            }
+          }
+        },
+        {
+          "if": { "properties": { "source": { "const": "world_sidecar" } } },
+          "then": {
+            "required": ["rendering"],
+            "properties": {
+              "asset_type": {
+                "enum": [
+                  "terrain_tile",
+                  "wall_overlay",
+                  "door_overlay",
+                  "world_object",
+                  "floor_overlay"
+                ]
+              },
+              "kind": false,
+              "slice_px": false,
+              "item_type": false,
+              "chronicle_kind": false
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "asset_type": { "const": "item" },
+              "source": { "const": "factory" }
+            }
+          },
+          "then": { "required": ["item_type"] }
+        }
+      ]
+    }
+  }
+}
