@@ -41,7 +41,8 @@ for (const rel of [
   }
 }
 
-requirePattern('map overlay hook', /onMapOverlayChange/, panel, 'src/components/BuilderPanel.tsx');
+requirePattern('display state hook', /onDisplayChange/, panel, 'src/components/BuilderPanel.tsx');
+requirePattern('guest token on start', /guest_token/, service, 'src/services/builderPreview.ts');
 requirePattern('palette asset resolver', /resolvePaletteIcon/, panel, 'src/components/BuilderPanel.tsx');
 
-console.log('OK — BuilderPanel scaffolding (PR-8 + G1/A1)');
+console.log('OK — BuilderPanel scaffolding (PR-8 + G1/A1/G2)');

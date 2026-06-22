@@ -33,6 +33,7 @@ import type {
   PlaceHouseBidMessage,
   CancelHouseAuctionMessage,
 } from '@shared/protocol';
+import type { BuilderPreviewWorldFork } from '@shared/builderDraft';
 import type { AccountCharacterCreateRequest, AccountCharacterPlayResponse, MapName } from '@shared/http';
 import { normalizeMapName } from '@shared/http';
 import { loadIdentity, saveIdentity, clearIdentity, hasValidToken } from '../identity';
@@ -171,7 +172,7 @@ function characterOptionsErrorMessage(error: unknown): string {
 
 function initialState(mapName: MapName): GameClientState {
   return {
-    world: { map: getMap(mapName), me: null, others: new Map() },
+    world: { map: getMap(mapName), me: null, others: new Map(), builderPreview: null },
     conn: { phase: 'idle' },
     session: { guestToken: null, playerId: null, name: null, status: 'alive', token: null, authenticated: false },
     cooldowns: { attackEndsAt: 0 } as ActionCooldown,
@@ -427,6 +428,18 @@ function isLoop(value: unknown): value is PlayLoopProgress {
   );
 }
 
+function isBuilderPreviewWorldFork(value: unknown): value is BuilderPreviewWorldFork {
+  if (!value || typeof value !== 'object') return false;
+  const fork = value as Partial<BuilderPreviewWorldFork>;
+  return (
+    fork.preview_only === true &&
+    typeof fork.namespace === 'string' &&
+    typeof fork.map_name === 'string' &&
+    Array.isArray(fork.rooms) &&
+    Array.isArray(fork.objects)
+  );
+}
+
 export function useGameClient(mapName: MapName): [GameClientState, GameClientApi] {
   const config = useMemo(() => loadConfig(), []);
   const [state, setState] = useState(() => initialState(mapName));
@@ -504,7 +517,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
       return {
         ...s,
         conn: { phase: 'awaiting_world_state' },
-        world: { map: getMap(map), me: null, others: new Map() },
+        world: { map: getMap(map), me: null, others: new Map(), builderPreview: null },
         chat: [],
         loop: null,
         toast: null,
@@ -1062,11 +1075,19 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
               const prevHp = s.world.me?.hp;
               const newHp = (data.player as PlayerPublic | undefined)?.hp;
               const sameMap = !nextMap || nextMap === s.world.map.name;
+              const builderPreview = isBuilderPreviewWorldFork(data.builder_preview)
+                ? data.builder_preview
+                : null;
               let next: GameClientState = {
                 ...base,
                 conn,
                 loop,
-                world: { map: runtimeMap ?? base.world.map, me: data.player, others },
+                world: {
+                  map: runtimeMap ?? base.world.map,
+                  me: data.player,
+                  others,
+                  builderPreview,
+                },
               };
               if (
                 sameMap &&

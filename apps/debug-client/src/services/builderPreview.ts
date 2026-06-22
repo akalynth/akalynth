@@ -1,4 +1,4 @@
-import type { BuilderDraftManifest } from '@shared/builderDraft';
+import type { BuilderDraftManifest, BuilderPreviewWorldFork } from '@shared/builderDraft';
 import { computeManifestChecksum } from '@shared/builderDraft';
 import rookguardManifest from '../fixtures/rookguardBuilderDraftManifest.json';
 
@@ -7,6 +7,8 @@ export interface PreviewStartResponse {
   preview_only?: boolean;
   session?: { session_id: string; artifacts: { manifest_checksum: string } };
   receipts?: Array<{ receipt_type: string; lane: string }>;
+  builder_preview?: BuilderPreviewWorldFork;
+  guest_bound?: boolean;
   error?: string;
 }
 
@@ -64,11 +66,13 @@ async function getJson<T>(httpBase: string, path: string): Promise<T> {
 export async function startBuilderPreview(
   httpBase: string,
   sessionId: string,
+  guestToken?: string | null,
 ): Promise<PreviewStartResponse> {
   return postJson(httpBase, '/v1/builder/preview/start', {
     manifest: ROOKGUARD_BUILDER_DRAFT,
     session_id: sessionId,
     draft_manifest_ref: 'codex/samples/rookguard-builder-draft-manifest.sample.json',
+    ...(guestToken ? { guest_token: guestToken } : {}),
   });
 }
 

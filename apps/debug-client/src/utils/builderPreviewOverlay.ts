@@ -1,4 +1,4 @@
-import type { BuilderDraftManifest } from '@shared/builderDraft';
+import type { BuilderDraftManifest, BuilderPreviewWorldFork } from '@shared/builderDraft';
 import type { MapDebugOverlay } from '../components/MapCanvas';
 
 export interface PreviewRegistryOverlay {
@@ -29,12 +29,50 @@ function shortLabel(text: string | undefined, fallback: string, max = 10): strin
   return `${trimmed.slice(0, max - 1)}…`;
 }
 
-/** Build map debug overlays from server registry or local draft manifest. */
+function isWorldFork(
+  source: PreviewRegistryOverlay | BuilderDraftManifest | BuilderPreviewWorldFork,
+): source is BuilderPreviewWorldFork {
+  return 'preview_only' in source && source.preview_only === true;
+}
+
+/** Build map debug overlays from server world fork, registry, or local draft manifest. */
 export function builderPreviewOverlays(
-  source: PreviewRegistryOverlay | BuilderDraftManifest,
+  source: PreviewRegistryOverlay | BuilderDraftManifest | BuilderPreviewWorldFork,
   cellSource?: BuilderDraftManifest,
 ): MapDebugOverlay[] {
   const overlays: MapDebugOverlay[] = [];
+
+  if (isWorldFork(source)) {
+    for (const room of source.rooms) {
+      for (const [x, y] of room.cells) {
+        overlays.push({
+          id: `builder-room-${room.room_id}-${x}-${y}`,
+          x,
+          y,
+          fill: ROOM_STYLE.fill,
+          stroke: ROOM_STYLE.stroke,
+          label: room.room_id.split('_').pop()?.slice(0, 3) ?? 'rm',
+        });
+      }
+    }
+    for (const obj of source.objects) {
+      const [x, y] = obj.placement;
+      const style = kindStyle(obj.kind);
+      overlays.push({
+        id: `builder-obj-${obj.id}`,
+        x,
+        y,
+        fill: style.fill,
+        stroke: style.stroke,
+        label:
+          obj.kind === 'sign'
+            ? shortLabel(obj.text, style.short)
+            : shortLabel(obj.id.replace(/_/g, ' '), style.short, 8),
+      });
+    }
+    return overlays;
+  }
+
   const mapDeltas =
     ('map_deltas' in source ? source.map_deltas : undefined) ?? cellSource?.map_deltas ?? [];
   const objects = 'objects' in source && Array.isArray(source.objects) ? source.objects : [];

@@ -26,6 +26,8 @@ export interface BuilderPreviewRouterDeps {
   store?: BuilderDraftNamespaceStore;
   sessions?: Map<string, ActivePreviewSession>;
   bindings?: PreviewSessionBindingStore;
+  onPreviewBound?: (guestToken: string) => void;
+  onPreviewUnbound?: (guestToken: string) => void;
 }
 
 function json(res: ServerResponse, status: number, body: unknown): void {
@@ -70,6 +72,8 @@ export function makeBuilderPreviewRouter(deps: BuilderPreviewRouterDeps = {}) {
   const store = deps.store ?? builderPreviewStore;
   const sessions = deps.sessions ?? builderPreviewSessions;
   const bindings = deps.bindings ?? builderPreviewBindings;
+  const onPreviewBound = deps.onPreviewBound;
+  const onPreviewUnbound = deps.onPreviewUnbound;
 
   return async function handleBuilderPreview(
     req: IncomingMessage,
@@ -104,6 +108,7 @@ export function makeBuilderPreviewRouter(deps: BuilderPreviewRouterDeps = {}) {
         sessions.set(sessionId, active);
         if (guestToken) {
           bindings.bind(guestToken, sessionId, fork);
+          onPreviewBound?.(guestToken);
         }
         assertPreviewReceiptsNonAuthoritative(active.receipts);
         json(res, 200, {
@@ -129,7 +134,9 @@ export function makeBuilderPreviewRouter(deps: BuilderPreviewRouterDeps = {}) {
         return true;
       }
       const receipts = endPreviewSession(active);
+      const binding = bindings.getBindingBySession(sessionId);
       bindings.unbindBySession(sessionId);
+      if (binding) onPreviewUnbound?.(binding.guest_token);
       assertPreviewReceiptsNonAuthoritative(receipts);
       json(res, 200, {
         ok: true,

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import palette from '../data/builderPaletteManifest.json';
 import { resolvePaletteIcon } from '../data/builderPaletteAssets';
-import type { MapDebugOverlay } from './MapCanvas';
 import {
   ROOKGUARD_BUILDER_DRAFT,
   endBuilderPreview,
@@ -10,19 +9,26 @@ import {
   startBuilderPreview,
   type PreviewRegistryOverlay,
 } from '../services/builderPreview';
-import { builderPreviewOverlays } from '../utils/builderPreviewOverlay';
+
+export type MapPreviewView = 'before' | 'after';
+
+export interface BuilderPreviewDisplay {
+  sessionActive: boolean;
+  mapView: MapPreviewView;
+  showOnMap: boolean;
+}
 
 interface BuilderPanelProps {
   open: boolean;
   httpBase: string;
+  guestToken: string | null;
   onClose: () => void;
-  onMapOverlayChange?: (overlays: MapDebugOverlay[] | null) => void;
+  onDisplayChange?: (display: BuilderPreviewDisplay | null) => void;
 }
 
 type PanelPhase = 'idle' | 'active' | 'ended' | 'error';
-type MapPreviewView = 'before' | 'after';
 
-export function BuilderPanel({ open, httpBase, onClose, onMapOverlayChange }: BuilderPanelProps) {
+export function BuilderPanel({ open, httpBase, guestToken, onClose, onDisplayChange }: BuilderPanelProps) {
   const [phase, setPhase] = useState<PanelPhase>('idle');
   const [sessionId, setSessionId] = useState('');
   const [checksum, setChecksum] = useState(() => rookguardManifestChecksum());
@@ -34,17 +40,17 @@ export function BuilderPanel({ open, httpBase, onClose, onMapOverlayChange }: Bu
   const [mapView, setMapView] = useState<MapPreviewView>('after');
   const [showOnMap, setShowOnMap] = useState(true);
 
-  const pushMapOverlays = useCallback(
-    (nextRegistry: PreviewRegistryOverlay | null, nextPhase: PanelPhase, view: MapPreviewView, visible: boolean) => {
-      if (!onMapOverlayChange) return;
+  const pushDisplay = useCallback(
+    (nextPhase: PanelPhase, view: MapPreviewView, visible: boolean) => {
+      if (!onDisplayChange) return;
       const previewing = nextPhase === 'active' || nextPhase === 'ended';
-      if (!previewing || !visible || view === 'before' || !nextRegistry) {
-        onMapOverlayChange(null);
+      if (!previewing) {
+        onDisplayChange(null);
         return;
       }
-      onMapOverlayChange(builderPreviewOverlays(nextRegistry, ROOKGUARD_BUILDER_DRAFT));
+      onDisplayChange({ sessionActive: true, mapView: view, showOnMap: visible });
     },
-    [onMapOverlayChange],
+    [onDisplayChange],
   );
 
   const reset = useCallback(() => {
@@ -55,15 +61,15 @@ export function BuilderPanel({ open, httpBase, onClose, onMapOverlayChange }: Bu
     setError(null);
     setRegistry(null);
     setChecksum(rookguardManifestChecksum());
-    pushMapOverlays(null, 'idle', mapView, showOnMap);
-  }, [mapView, pushMapOverlays, showOnMap]);
+    pushDisplay('idle', mapView, showOnMap);
+  }, [mapView, pushDisplay, showOnMap]);
 
   const runStart = useCallback(async () => {
     setBusy(true);
     setError(null);
     const sid = `AKALYNTH_PREVIEW_CLIENT_${Date.now()}`;
     try {
-      const start = await startBuilderPreview(httpBase, sid);
+      const start = await startBuilderPreview(httpBase, sid, guestToken);
       if (!start.ok || !start.preview_only) {
         throw new Error(start.error ?? 'preview start failed');
       }
@@ -80,15 +86,15 @@ export function BuilderPanel({ open, httpBase, onClose, onMapOverlayChange }: Bu
       setReceiptCount(start.receipts?.length ?? 0);
       setRegistry(loadedRegistry);
       setPhase('active');
-      pushMapOverlays(loadedRegistry ?? ROOKGUARD_BUILDER_DRAFT, 'active', mapView, showOnMap);
+      pushDisplay('active', mapView, showOnMap);
     } catch (err) {
       setPhase('error');
       setError(String(err));
-      pushMapOverlays(null, 'error', mapView, showOnMap);
+      pushDisplay('error', mapView, showOnMap);
     } finally {
       setBusy(false);
     }
-  }, [httpBase, checksum, mapView, pushMapOverlays, showOnMap]);
+  }, [httpBase, checksum, guestToken, mapView, pushDisplay, showOnMap]);
 
   const runEnd = useCallback(async () => {
     if (!sessionId) return;
@@ -99,22 +105,22 @@ export function BuilderPanel({ open, httpBase, onClose, onMapOverlayChange }: Bu
       if (!end.ok || !end.preview_only) throw new Error(end.error ?? 'preview end failed');
       setReceiptCount(end.receipts?.length ?? 0);
       setPhase('ended');
-      pushMapOverlays(registry ?? ROOKGUARD_BUILDER_DRAFT, 'ended', mapView, showOnMap);
+      pushDisplay('ended', mapView, showOnMap);
     } catch (err) {
       setPhase('error');
       setError(String(err));
     } finally {
       setBusy(false);
     }
-  }, [httpBase, sessionId, registry, mapView, pushMapOverlays, showOnMap]);
+  }, [httpBase, sessionId, mapView, pushDisplay, showOnMap]);
 
   useEffect(() => {
     if (!open) {
-      onMapOverlayChange?.(null);
+      onDisplayChange?.(null);
       return;
     }
-    pushMapOverlays(registry, phase, mapView, showOnMap);
-  }, [open, registry, phase, mapView, showOnMap, pushMapOverlays, onMapOverlayChange]);
+    pushDisplay(phase, mapView, showOnMap);
+  }, [open, phase, mapView, showOnMap, pushDisplay, onDisplayChange]);
 
   if (!open) return null;
 
@@ -127,7 +133,7 @@ export function BuilderPanel({ open, httpBase, onClose, onMapOverlayChange }: Bu
         <div className="builder-sheet__header">
           <div>
             <div className="builder-sheet__title">Builder Preview</div>
-            <div className="builder-sheet__subtitle">preview_only · map overlay G1</div>
+            <div className="builder-sheet__subtitle">preview_only · world_state G2</div>
           </div>
           <button type="button" className="builder-sheet__close" onClick={onClose} aria-label="Close">
             ×
@@ -156,6 +162,10 @@ export function BuilderPanel({ open, httpBase, onClose, onMapOverlayChange }: Bu
           <div className="builder-row">
             <span>Loaded</span>
             <strong>{namespaceMeta}</strong>
+          </div>
+          <div className="builder-row">
+            <span>Guest bind</span>
+            <strong>{guestToken ? 'bound' : 'login first'}</strong>
           </div>
           <div className="builder-row">
             <span>Receipts</span>

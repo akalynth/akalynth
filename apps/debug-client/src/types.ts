@@ -1,3 +1,4 @@
+import type { BuilderPreviewWorldFork } from '@shared/builderDraft';
 import type { Direction, MapData, PlayerPublic, PlayerStatus, PlayLoopProgress, SovereignVocation } from '@shared/types';
 import type {
   AccountCharacterCreateRequest,
@@ -20,6 +21,8 @@ export interface WorldSnapshot {
   map: MapData;
   me: PlayerPublic | null;
   others: Map<string, PlayerPublic>;
+  /** Server-authoritative preview fork from world_state.builder_preview (G2). */
+  builderPreview: BuilderPreviewWorldFork | null;
 }
 
 export interface ConnectionState {

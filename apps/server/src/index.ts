@@ -1368,7 +1368,17 @@ const characterService = new CharacterService({
   now: () => Date.now(),
   maxCharactersPerAccount: 5,
 });
-const handleBuilderPreview = makeBuilderPreviewRouter();
+const previewRouterHooks: {
+  onPreviewBound: ((guestToken: string) => void) | null;
+  onPreviewUnbound: ((guestToken: string) => void) | null;
+} = {
+  onPreviewBound: null,
+  onPreviewUnbound: null,
+};
+const handleBuilderPreview = makeBuilderPreviewRouter({
+  onPreviewBound: (guestToken) => previewRouterHooks.onPreviewBound?.(guestToken),
+  onPreviewUnbound: (guestToken) => previewRouterHooks.onPreviewUnbound?.(guestToken),
+});
 
 const handleCharacter = makeCharacterRouter({
   service: characterService,
@@ -2999,6 +3009,15 @@ function applyRespawnNow(s: Session, now: number) {
 function builderPreviewForSession(s: Session) {
   return builderPreviewForMap(s.guestToken, s.currentMap, builderPreviewBindings);
 }
+
+function refreshWorldStateForGuestToken(guestToken: string): void {
+  for (const s of sessions.values()) {
+    if (s.guestToken === guestToken) sendWorldStateRefresh(s);
+  }
+}
+
+previewRouterHooks.onPreviewBound = refreshWorldStateForGuestToken;
+previewRouterHooks.onPreviewUnbound = refreshWorldStateForGuestToken;
 
 // Re-send the authoritative world snapshot to one player (used after HP changes).
 function sendWorldStateRefresh(s: Session): void {

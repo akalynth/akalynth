@@ -24,7 +24,8 @@ import { ChronicleGlyphIcon } from './components/ChronicleGlyphIcon';
 import { HudChromePanel } from './components/HudChromePanel';
 import { BackpackSheet } from './components/BackpackSheet';
 import { ProofSheet } from './components/ProofSheet';
-import { BuilderPanel } from './components/BuilderPanel';
+import { BuilderPanel, type BuilderPreviewDisplay } from './components/BuilderPanel';
+import { builderPreviewOverlays } from './utils/builderPreviewOverlay';
 import { TemChallengeModal } from './components/TemChallengeModal';
 import { TemWitnessDialog } from './components/TemWitnessDialog';
 import { PropertyLedgerModal } from './components/PropertyLedgerModal';
@@ -395,7 +396,7 @@ function DebugApp() {
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [proofSheetOpen, setProofSheetOpen] = useState(false);
   const [builderSheetOpen, setBuilderSheetOpen] = useState(false);
-  const [builderMapOverlays, setBuilderMapOverlays] = useState<MapDebugOverlay[] | null>(null);
+  const [builderDisplay, setBuilderDisplay] = useState<BuilderPreviewDisplay | null>(null);
   const [sealOpen, setSealOpen] = useState(false);
   const [proof, setProof] = useState<StudioProofState | null>(null);
   const [proofRunning, setProofRunning] = useState(false);
@@ -558,11 +559,22 @@ function DebugApp() {
     [state.world.map.name]
   );
   const gatherOverlays = useMemo(() => gatherMapOverlays(state.gather), [state.gather]);
+  const serverBuilderOverlays = useMemo(() => {
+    const fork = state.world.builderPreview;
+    if (!fork || fork.map_name !== state.world.map.name) return [];
+    return builderPreviewOverlays(fork);
+  }, [state.world.builderPreview, state.world.map.name]);
   const mapDebugOverlays = useMemo(() => {
     const merged = [...gatherOverlays];
-    if (builderMapOverlays?.length) merged.push(...builderMapOverlays);
+    const showBuilder =
+      builderPreviewEnabled &&
+      builderDisplay?.sessionActive &&
+      builderDisplay.showOnMap &&
+      builderDisplay.mapView === 'after' &&
+      serverBuilderOverlays.length > 0;
+    if (showBuilder) merged.push(...serverBuilderOverlays);
     return merged;
-  }, [gatherOverlays, builderMapOverlays]);
+  }, [gatherOverlays, builderPreviewEnabled, builderDisplay, serverBuilderOverlays]);
   const roster = useMemo(() => others.slice().sort((a, b) => a.name.localeCompare(b.name)), [others]);
   const targetName = useMemo(() => {
     if (!state.combat.targetId) return null;
@@ -1215,11 +1227,12 @@ function DebugApp() {
       <BuilderPanel
         open={builderSheetOpen}
         httpBase={config.httpBase}
+        guestToken={state.session.guestToken}
         onClose={() => {
           setBuilderSheetOpen(false);
-          setBuilderMapOverlays(null);
+          setBuilderDisplay(null);
         }}
-        onMapOverlayChange={setBuilderMapOverlays}
+        onDisplayChange={setBuilderDisplay}
       />
       <ProofSheet
         open={proofSheetOpen}
