@@ -244,7 +244,9 @@ jobs:
       - name: Generate CI chronicle log fixture
         run: |
           cd apps/server
-          node tools/generate-chronicle-log.js fixtures/ci-chronicle/chronicle.log
+          # generate-chronicle-log.js imports packages/shared/chronicleChain.ts
+          # (TS source, never built in-place), so run via tsx to resolve .js -> .ts.
+          npx tsx tools/generate-chronicle-log.js fixtures/ci-chronicle/chronicle.log
 
       - name: Materialize DB from fixture receipts
         # Replays the signed fixture receipts into data/akalynth.db so the
