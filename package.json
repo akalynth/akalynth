@@ -42,6 +42,8 @@
     "verify:outcome": "tsx tools/verify-outcome/src/index.ts",
     "verify:outcome:test": "tsx tools/verify-outcome/test.ts",
     "verify:assets": "tsx tools/asset-gen/verify-assets.ts",
+    "sync:assets": "node tools/atlas/sync-to-clients.mjs",
+    "verify:asset-sync": "node tools/atlas/verify-sync.mjs",
     "verify:web-visual-assets": "node scripts/verify-web-visual-assets.mjs",
     "verify:web-rust-cleanup": "node scripts/verify-web-rust-cleanup.mjs"
   },
