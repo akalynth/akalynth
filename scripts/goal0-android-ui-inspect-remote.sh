@@ -186,13 +186,18 @@ app_meta
     printf '"%s"' "${f}"
   done < <(find "${REMOTE_ROOT}" -maxdepth 1 -type f -name '*.png' -printf '%f\n' | sort)
   printf '],\n  "inspect_checklist": [\n'
+  printf '    "mvp: rookguard registry overlays visible (162 placements loaded on map)",\n'
+  printf '    "mvp: hotbar slots render ItemIcon PNGs for MVP item_type keys (not emoji)",\n'
+  printf '    "mvp: chronicle sheet rows show ChronicleGlyph sprites (testTag ChronicleIcon_*)",\n'
   printf '    "top_bar: map chip centered, no overlap with Issue/DBG/TILES",\n'
   printf '    "dpad: dark scrim behind frame, readable over playfield",\n'
   printf '    "action_dock: textured rings (Chat/Chronicle/ATK), vocation chips use action ring",\n'
   printf '    "gather: Gthr/Deliv visible when adjacent to node/station (Azura chill zone)",\n'
   printf '    "textures: nine-slice panels/buttons/dock — no full-screen overlay bleed",\n'
   printf '    "azura_gather: High City map, pos (34,32) on azura_ley_mote_e, Gather section shows Gthr"\n'
-  printf '  ]\n}\n'
+  printf '  ],\n'
+  printf '  "mvp_proof_receipt": "docs/evidence/UI_REFRESH_MVP_PROOF.json"\n'
+  printf '}\n'
 } > "${REMOTE_ROOT}/manifest.json"
 log_line "manifest written"
 log_line "bundle=${REMOTE_ROOT}"

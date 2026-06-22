@@ -4,10 +4,19 @@
 # Produces a timestamped bundle an agent can pull locally and Read() as images.
 #
 # Usage:
+#   ./scripts/goal0-android-ui-inspect.sh --mvp-proof
+#     Local PR-023 MVP verification checklist + asset pipeline proof (no VM).
+#     Writes docs/evidence/UI_REFRESH_MVP_PROOF.json.
 #   ./scripts/goal0-android-ui-inspect.sh
 #   GOAL0_VM_PORT=5576 AKALYNTH_UI_SCENARIOS=login,world,world_debug ./scripts/goal0-android-ui-inspect.sh
 #   AKALYNTH_UI_SCENARIOS=azura_gather ./scripts/goal0-android-ui-inspect.sh   # codex → Azura → (34,32) gather shot
 #   AKALYNTH_UI_INSTALL=1 ./scripts/goal0-android-ui-inspect.sh
+#
+# MVP verification checklist (PR-023, also enforced by --mvp-proof):
+#   - Rookguard placements loaded (162) — built JSON + Android assets mirror
+#   - 20 item icons in registry — ItemPresentationCatalog.MVP_ITEM_TYPES indexed
+#   - Hotbar ItemIcon path — Hotbar.kt → ItemIcon → ItemIconResolver.item_type lookup
+#   - Chronicle glyph resolver — ChronicleGlyphResolver + 9 chronicle_kind registry entries
 #
 # azura_gather runs the full Rookguard codex path (move/chat/tem/training/vocation/gate), walks to
 # gather node tile 34,32 (azura_ley_mote_e), captures azura_gather.png (~5–10 min).
@@ -17,6 +26,10 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+if [[ "${1:-}" == "--mvp-proof" ]]; then
+  exec "${ROOT}/scripts/goal0-android-ui-inspect-mvp-proof.sh"
+fi
 HOST="${GOAL0_EDGE_HOST:-goal0-edge-01}"
 PORT="${GOAL0_VM_PORT:-5576}"
 SERIAL="${GOAL0_ADB_SERIAL:-emulator-${PORT}}"

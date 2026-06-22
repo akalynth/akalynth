@@ -1,0 +1,41 @@
+{
+  "schema_version": "ui-refresh-mvp-proof/v1",
+  "proof_target": "UI_REFRESH_MVP_PROOF",
+  "pr": "PR-023",
+  "title": "MVP UI refresh proof receipt",
+  "generated_at": "2026-06-22T21:33:59Z",
+  "git_commit": "e7e625fcc57f62012fc960a25fdb4b842c8d180e",
+  "overall_status": "pass",
+  "mvp_checklist": [
+    {"id": "rookguard_placements_162", "status": "pass", "detail": "built=162 android_mirror=162"},
+    {"id": "registry_item_icons_20", "status": "pass", "detail": "registry item entries=20"},
+    {"id": "registry_mvp_item_type_coverage", "status": "pass", "detail": "all ItemPresentationCatalog.MVP_ITEM_TYPES indexed"},
+    {"id": "hotbar_item_icon_path", "status": "pass", "detail": "Hotbar.kt → ItemIcon → ItemIconResolver (registry item_type index)"},
+    {"id": "chronicle_glyph_resolver", "status": "pass", "detail": "ChronicleGlyphResolver.kt + registry chronicle_kind entries=9"},
+    {"id": "asset_sync_post_build", "status": "pass", "detail": "verify:asset-sync clean after build:assets"}
+  ],
+  "asset_pipeline": [
+    {"command": "verify_assets", "status": "pass", "detail": "> tsx tools/asset-gen/verify-assets.ts ✓ verify:assets — 121 sprite manifest(s) + 3 pack(s) valid (Factory v1 + visual spritesheet/world render sidecars; lockstep mechanics=null). "},
+    {"command": "verify_asset_sync", "status": "pass", "detail": "> node tools/atlas/verify-sync.mjs ✓ verify:asset-sync — 121 loose PNG(s) + registry in sync across data/assets-built/ and 2 client mirror(s) "},
+    {"command": "build_assets", "status": "pass", "detail": "✓ sync:assets — 121 loose PNG(s) + compiled registry (104 entries) → data/assets-built/ mirrored → /home/sovereign/akalynth-ops/repos/akalynth/apps/android/app/src/main/assets (android) mirrored → /home/sovereign/akalynth-ops/repos/akalynth/apps/debug-client/public/atlas (debug-client) "}
+  ],
+  "artifacts": {
+    "rookguard_placements_built": "data/assets-built/placements/rookguard-overlays.json",
+    "rookguard_placements_android": "apps/android/app/src/main/assets/placements/rookguard-overlays.json",
+    "registry_built": "data/assets-built/registry.json",
+    "hotbar_item_icon": "apps/android/app/src/main/java/com/akalynth/client/ui/components/hotbar/ItemIcon.kt",
+    "chronicle_glyph_resolver": "apps/android/app/src/main/java/com/akalynth/client/chronicle/ChronicleGlyphResolver.kt"
+  },
+  "counts": {
+    "rookguard_placements_built": 162,
+    "rookguard_placements_android": 162,
+    "registry_item_icons": 20,
+    "registry_chronicle_glyphs": 9
+  },
+  "registry_item_types": ["ashglass_shard","charred_shipment_plate","city_rat_goo","healing_herb","keystone_token","ley_mote","mark_token","pilgrim_mark","ration","refined_ley_mote","refined_soulsteel_component","rookguard_patience_charm","rookguard_threadbare_cloak","rookguard_training_blade","slime","soulsteel_frame","stabilized_soulsteel_component","tending_token","torch","training_slime_goo"],
+  "screenshot_inspect": {
+    "script": "scripts/goal0-android-ui-inspect.sh",
+    "note": "Run on goal0-edge-01 for Rookguard world + hotbar + chronicle PNG proof when VM available",
+    "recommended_scenarios": "login,world,world_debug"
+  }
+}
