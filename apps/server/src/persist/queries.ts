@@ -382,6 +382,11 @@ export function getInventoryItems(db: Database.Database): InventoryItemRow[] {
   return stmt.all() as InventoryItemRow[];
 }
 
+// Houses v1.2: all items currently held in houses (item_id -> property_id), for boot hydration.
+export function getHouseStorage(db: Database.Database): Array<{ item_id: string; property_id: string }> {
+  return db.prepare(`SELECT item_id, property_id FROM house_storage`).all() as Array<{ item_id: string; property_id: string }>;
+}
+
 export function getPlayerInventory(
   db: Database.Database,
   playerId: string
