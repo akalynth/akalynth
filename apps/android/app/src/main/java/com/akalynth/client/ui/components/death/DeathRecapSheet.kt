@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.akalynth.client.chronicle.ChronicleGlyphIcon
 import com.akalynth.client.ui.components.displayZoneName
 import com.akalynth.client.ui.state.ChronicleEvent
 import com.akalynth.client.ui.state.ChronicleEventKind
@@ -80,11 +81,10 @@ fun DeathRecapSheet(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Skull icon
-            Text(
-                text = "☠",
-                fontSize = 24.sp,
-                modifier = Modifier.testTag("DeathRecapSheet_Icon")
+            ChronicleGlyphIcon(
+                kind = ChronicleEventKind.DEATH,
+                modifier = Modifier.testTag("DeathRecapSheet_Icon"),
+                size = 24.dp,
             )
 
             // Title

@@ -331,7 +331,7 @@ class DeathRecapSheetTest {
 
         composeTestRule.waitForIdle()
 
-        composeTestRule.onNodeWithText("☠").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("DeathRecapSheet_Icon").assertIsDisplayed()
     }
 
     @Test

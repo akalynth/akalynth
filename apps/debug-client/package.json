@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/verify-account-character-guard.mjs && node scripts/verify-gather-wire-authority.mjs && node scripts/verify-nine-slice-panel.mjs && node scripts/verify-character-create-preview.mjs",
+    "prebuild": "node scripts/verify-account-character-guard.mjs && node scripts/verify-gather-wire-authority.mjs && node scripts/verify-nine-slice-panel.mjs && node scripts/verify-character-create-preview.mjs && node scripts/verify-death-chronicle-glyphs.mjs",
     "build": "tsc -p tsconfig.json && vite build",
     "verify:account-character": "node scripts/verify-account-character-guard.mjs && node scripts/verify-debug-gameplay-wire-authority.mjs && node scripts/verify-gather-wire-authority.mjs",
     "verify:gather-client": "node scripts/verify-gather-wire-authority.mjs",

@@ -108,7 +108,6 @@ class DeathToastTest {
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithTag("DeathToast_Icon").assertIsDisplayed()
-        composeTestRule.onNodeWithText("☠").assertIsDisplayed()
     }
 
     @Test

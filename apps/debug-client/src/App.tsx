@@ -20,6 +20,8 @@ import { SimLifeRookguardTimelapse } from './components/SimLifeRookguardTimelaps
 import { VisualSmokeReview } from './components/VisualSmokeReview';
 import { WorldShowcase } from './components/WorldShowcase';
 import { CharacterBar } from './components/CharacterBar';
+import { ChronicleGlyphIcon } from './components/ChronicleGlyphIcon';
+import { HudChromePanel } from './components/HudChromePanel';
 import { BackpackSheet } from './components/BackpackSheet';
 import { ProofSheet } from './components/ProofSheet';
 import { TemChallengeModal } from './components/TemChallengeModal';
@@ -79,7 +81,7 @@ function groupChronicleByDay(events: ChronicleEvent[]): ChronicleGroup[] {
     .sort((a, b) => Date.parse(b.items[0]?.timestamp ?? '0') - Date.parse(a.items[0]?.timestamp ?? '0'));
 }
 
-type ChronicleRender = { icon: string; text: string };
+type ChronicleRender = { text: string };
 
 type LandmarkBox = { x: number; y: number; width: number; height: number };
 
@@ -134,26 +136,24 @@ function renderChronicleEvent(ev: ChronicleEvent): ChronicleRender {
   switch (ev.kind) {
     case 'death':
       return {
-        icon: '☠',
         text: `Died at ${ev.zone ?? 'Unknown'} (${ev.x ?? '?'}, ${ev.y ?? '?'})`,
       };
     case 'item_pickup':
-      return { icon: '📦', text: `Picked up ${String(details.item_type ?? 'item')}` };
+      return { text: `Picked up ${String(details.item_type ?? 'item')}` };
     case 'zone_enter':
-      return { icon: '🏛', text: `Entered ${ev.zone ?? 'Unknown'}` };
+      return { text: `Entered ${ev.zone ?? 'Unknown'}` };
     case 'combat_kill':
       return {
-        icon: '⚔',
         text: `Killed ${String(details.target_name ?? details.target_id ?? 'target')}`,
       };
     case 'tutorial_complete':
-      return { icon: '🎓', text: 'Completed tutorial' };
+      return { text: 'Completed tutorial' };
     case 'character_created':
-      return { icon: '✨', text: 'Character created' };
+      return { text: 'Character created' };
     case 'item_lost':
-      return { icon: '—', text: '' };
+      return { text: '' };
     default:
-      return { icon: '•', text: String(ev.kind) };
+      return { text: String(ev.kind) };
   }
 }
 
@@ -654,19 +654,26 @@ function DebugApp() {
         presentationMode={presentationMode}
       />
       {toast && (
-        <button
-          type="button"
-          className="toast"
-          onClick={() => api.requestChronicle(10, true)}
-        >
-          <div className="toast-title">{toast.title}</div>
-          {toast.detail && <div className="toast-detail">{toast.detail}</div>}
-        </button>
+        <HudChromePanel className="toast" variant="dock" padding={12}>
+          <button
+            type="button"
+            className="toast__button"
+            onClick={() => api.requestChronicle(10, true)}
+          >
+            <ChronicleGlyphIcon eventKind="death" size={28} className="toast__glyph" />
+            <div className="toast-copy">
+              <div className="toast-title">{toast.title}</div>
+              {toast.detail && <div className="toast-detail">{toast.detail}</div>}
+            </div>
+          </button>
+        </HudChromePanel>
       )}
       {state.recapOpen && (
         <div className="recap-overlay">
-          <div className="recap-sheet" role="dialog" aria-live="polite">
+          <HudChromePanel className="recap-sheet" variant="panel" padding={16}>
+            <div role="dialog" aria-live="polite">
             <div className="recap-header">
+              <ChronicleGlyphIcon eventKind="death" size={24} className="recap-glyph" />
               <div className="recap-title">Death Recap</div>
               <button type="button" className="recap-close" onClick={api.closeRecap}>
                 Close
@@ -694,7 +701,8 @@ function DebugApp() {
                 )}
               </div>
             )}
-          </div>
+            </div>
+          </HudChromePanel>
         </div>
       )}
       {state.chronicleOpen && (
@@ -720,7 +728,7 @@ function DebugApp() {
                     <div className="chronicle-day-label">{group.day}</div>
                     <div className="chronicle-list">
                       {group.items.map((ev) => {
-                        const { icon, text } = renderChronicleEvent(ev);
+                        const { text } = renderChronicleEvent(ev);
                         if (!text) return null;
                         if (ev.kind === 'death') {
                           const gid =
@@ -740,14 +748,14 @@ function DebugApp() {
                                 y: ev.y,
                               })}
                             >
-                              <span className="chronicle-icon">{icon}</span>
+                              <ChronicleGlyphIcon eventKind={ev.kind} className="chronicle-icon" />
                               <span className="chronicle-text">{text}</span>
                             </button>
                           );
                         }
                         return (
                           <div key={`${ev.kind}-${ev.timestamp}`} className="chronicle-row">
-                            <span className="chronicle-icon">{icon}</span>
+                            <ChronicleGlyphIcon eventKind={ev.kind} className="chronicle-icon" />
                             <span className="chronicle-text">{text}</span>
                           </div>
                         );
@@ -797,7 +805,8 @@ function DebugApp() {
           )}
           {deathModalOpen && (
             <div className="death-overlay" role="dialog" aria-modal="true">
-              <div className="death-modal">
+              <HudChromePanel className="death-modal" variant="panel" padding={20}>
+                <ChronicleGlyphIcon eventKind="death" size={32} className="death-modal__glyph" />
                 <div className="death-overlay-title">You died</div>
                 <div className="death-overlay-sub">
                   Your run has ended. Sign back in to return to character select.
@@ -813,12 +822,12 @@ function DebugApp() {
                     Sign in again
                   </button>
                 </div>
-              </div>
+              </HudChromePanel>
             </div>
           )}
           {!presentationEntryMode && !phoneLandscape && (
             <div className="hud hud-primary" aria-label="play status">
-              <div className="hud-card hud-card--identity">
+              <HudChromePanel className="hud-card hud-card--identity" padding={10}>
                 <span className="hud-kicker">Akalynth</span>
                 <strong>{playerDisplayName}</strong>
                 <span>{currentMapDisplayName}</span>
@@ -835,8 +844,8 @@ function DebugApp() {
                     onSignOut={api.signOut}
                   />
                 )}
-              </div>
-            <div className="hud-card hud-card--stats">
+              </HudChromePanel>
+            <HudChromePanel className="hud-card hud-card--stats" padding={10}>
               <div>
                 <span>Position</span>
                 <strong>{playerPositionLabel}</strong>
@@ -897,7 +906,7 @@ function DebugApp() {
                 <span>Link</span>
                 <strong>{displayConnectionLabel(state.conn)}</strong>
               </div>
-            </div>
+            </HudChromePanel>
             </div>
           )}
           {showPlayEntry && (

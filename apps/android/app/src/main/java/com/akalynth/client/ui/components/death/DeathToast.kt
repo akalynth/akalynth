@@ -32,6 +32,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.akalynth.client.chronicle.ChronicleGlyphIcon
+import com.akalynth.client.ui.state.ChronicleEventKind
 import com.akalynth.client.ui.state.DeathNotice
 import kotlinx.coroutines.delay
 
@@ -114,10 +116,10 @@ fun DeathToast(
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = "☠",
-                    fontSize = 28.sp,
-                    modifier = Modifier.testTag("DeathToast_Icon")
+                ChronicleGlyphIcon(
+                    kind = ChronicleEventKind.DEATH,
+                    modifier = Modifier.testTag("DeathToast_Icon"),
+                    size = 28.dp,
                 )
                 Spacer(modifier = Modifier.size(8.dp))
                 Text(
