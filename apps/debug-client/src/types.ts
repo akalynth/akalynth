@@ -153,6 +153,8 @@ export interface GameClientState {
   inventory: { item_id: string; item_type: string; slot?: string | null }[];
   // Houses v1.2: items stored in the house the player is currently inside.
   houseStorage: { item_id: string; item_type: string }[];
+  // Guild treasury: shared collective total, captured from the latest guild:contribute result.
+  guildTreasury: number | null;
   gold: number;
   // Property Ownership v0: house registry, keyed by property_id (server-authoritative).
   properties: Map<string, PropertyPublic>;

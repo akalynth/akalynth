@@ -190,6 +190,7 @@ function initialState(mapName: MapName): GameClientState {
     workContract: null,
     inventory: [],
     houseStorage: [],
+    guildTreasury: null,
     gold: 0,
     properties: new Map(),
     gather: { nodes: new Map(), stations: new Map(), activeNodeId: null, activeRefineStationId: null, progressPct: 0, held: null, tendingTokens: 0, keystoneTokens: 0, status: null },
@@ -517,6 +518,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
         workContract: null,
         inventory: [],
         houseStorage: [],
+        guildTreasury: null,
         gold: 0,
         properties: new Map(),
         gather: { ...s.gather, nodes: new Map(), stations: new Map(), activeNodeId: null, activeRefineStationId: null, progressPct: 0 },
@@ -1274,6 +1276,13 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
                 const effect = typeof payload?.effect === 'string' ? payload.effect : 'Used.';
                 const line = success ? effect : 'Cannot use that item here.';
                 return pushToast(s, 'npc', line, 'USE');
+              }
+              if (skillId === 'guild:contribute' && success) {
+                // Capture the shared guild treasury total so the HUD can surface the collective goal.
+                const total = typeof payload?.guild_treasury_total === 'number' ? payload.guild_treasury_total : s.guildTreasury;
+                const rank = typeof payload?.rank === 'string' ? payload.rank : null;
+                const line = `Tended the guild${rank ? ` — ${rank}` : ''}${total !== null ? ` · treasury ${total}` : ''}`;
+                return pushToast({ ...s, guildTreasury: total }, 'npc', line, 'GUILD');
               }
               if (skillId.startsWith('shop:')) {
                 const itemType = payload?.item_type;
