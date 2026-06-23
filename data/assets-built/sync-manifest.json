@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "mode": "loose_png+atlas",
-  "generated_at": "2026-06-23T02:22:21.898Z",
+  "generated_at": "2026-06-23T13:48:09.654Z",
   "files": [
     {
       "path": "atlas/chronicle.png",
@@ -13,7 +13,7 @@
     },
     {
       "path": "atlas/manifest.json",
-      "sha256": "cd2d5397f775ed086d5342c56e7978f74ba8c1a21d850f6b4aa27421b8ab502d"
+      "sha256": "1f3fbcc9446b5ba162618f64033129d7302ae2a879da6c818db7cb810f421e78"
     },
     {
       "path": "atlas/ui.png",
@@ -596,5 +596,5 @@
       "sha256": "38a1a46cb41267f20a4543655be006522bb11f6df4ab18cbbbc8ccab699a514e"
     }
   ],
-  "atlas_generated_at": "2026-06-23T02:22:22.207Z"
+  "atlas_generated_at": "2026-06-23T13:48:09.938Z"
 }
