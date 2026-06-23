@@ -12,6 +12,7 @@ object InventoryToHotbarMapper {
         return ServerInventoryItem(
             itemId = info.itemId,
             itemType = info.itemType,
+            iconSpriteId = info.iconSpriteId,
             slot = info.slot,
             displayName = presentation.name,
             rarity = presentation.rarity,
@@ -21,6 +22,7 @@ object InventoryToHotbarMapper {
     fun toHotbarItem(serverItem: ServerInventoryItem): Item = Item(
         id = serverItem.itemId,
         itemType = serverItem.itemType,
+        iconSpriteId = serverItem.iconSpriteId,
         name = serverItem.displayName,
         rarity = serverItem.rarity,
         spriteId = "item_${serverItem.itemType}",

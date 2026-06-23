@@ -87,6 +87,22 @@ class InventoryProjectionTest {
     }
 
     @Test
+    fun `snapshot passes icon_sprite_id to hotbar item`() {
+        val next = InventoryProjection.fromSnapshot(
+            serverItems = listOf(
+                ItemInfo(
+                    itemId = "a",
+                    itemType = "torch",
+                    iconSpriteId = "akalynth_item_torch_001",
+                ),
+            ),
+        )
+
+        assertEquals("akalynth_item_torch_001", next.items["a"]?.iconSpriteId)
+        assertEquals("akalynth_item_torch_001", next.hotbarSlots[0]?.iconSpriteId)
+    }
+
+    @Test
     fun `assignHotbarSlot moves item to requested index`() {
         val previous = InventoryState(
             items = mapOf(

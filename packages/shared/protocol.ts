@@ -519,6 +519,8 @@ export interface TemWitnessRequestMessage extends BaseMessage {
 export interface ItemInfo {
   item_id: string;
   item_type: string;
+  /** Optional registry asset_id override for item icon rendering (PR-030). */
+  icon_sprite_id?: string;
   slot?: string | null; // Phase 3.2: 'protected' or null
 }
 

@@ -2055,6 +2055,11 @@
             "optional": false,
             "readonly": false
           },
+          "icon_sprite_id": {
+            "type": "string",
+            "optional": true,
+            "readonly": false
+          },
           "slot": {
             "type": "null | string",
             "optional": true,

@@ -76,6 +76,7 @@ import {
   validateKeyFile,
 } from '../../../packages/shared/paths.js';
 import { createPersistenceLayer, computeReceiptHash, generateItemId } from './persist/index.js';
+import { loadItemIconIndex, toItemInfo, toItemInfoFromPersist } from './item-info.js';
 import type { InventoryItemRow, PersistenceLayer, WorldObjectRow } from './persist/index.js';
 import { AccountStore } from './account/store.js';
 import { AccountService } from './account/service.js';
@@ -1169,6 +1170,7 @@ function chronicleEvent(
 
 // Canonical path resolution (single source of truth)
 const repoRoot = path.resolve(process.cwd());
+loadItemIconIndex(repoRoot);
 const chainPaths = resolveChainPaths(repoRoot);
 logResolvedPaths(chainPaths);
 
@@ -1929,7 +1931,7 @@ function loadInventories(): void {
 // client can render deposit/withdraw. Sent on house enter and after each store/retrieve.
 function sendHouseInventory(s: Session, propertyId: string): void {
   if (!s.player) return;
-  const toInfo = (id: string) => ({ item_id: id, item_type: persist.getItem(id)?.item_type ?? 'unknown' });
+  const toInfo = (id: string) => toItemInfoFromPersist(id, persist.getItem.bind(persist));
   const inv = Array.from(inventory.get(s.player.id) ?? []).map(toInfo);
   const stored = Array.from(houseStorage.get(propertyId) ?? []).map(toInfo);
   send(s.ws, ServerMessages.inventorySnapshot(inv, stored));
@@ -3678,10 +3680,9 @@ function processSessionQueue(s: Session, now: number) {
 
         // Send inventory snapshot (Phase 2)
         const playerItems = getPlayerInventoryIds(s.player!.id);
-        const itemInfos = playerItems.map((itemId) => {
-          const item = persist.getItem(itemId);
-          return { item_id: itemId, item_type: item?.item_type ?? 'unknown' };
-        });
+        const itemInfos = playerItems.map((itemId) =>
+          toItemInfoFromPersist(itemId, persist.getItem.bind(persist))
+        );
         send(s.ws, ServerMessages.inventorySnapshot(itemInfos));
 
         // Send property snapshot (Property Ownership v0) so the client can
@@ -3890,10 +3891,9 @@ function processSessionQueue(s: Session, now: number) {
           const validTier = isNaN(tier) || tier < 1 || tier > 5 ? 1 : tier;
           const itemId = mintLegendaryItem(s.player!.id, 'mark_token', validTier);
           // Send inventory snapshot with new item
-          const playerItems = Array.from(inventory.get(s.player!.id) ?? []).map((id) => {
-            const item = persist.getItem(id);
-            return { item_id: id, item_type: item?.item_type ?? 'unknown' };
-          });
+          const playerItems = Array.from(inventory.get(s.player!.id) ?? []).map((id) =>
+            toItemInfoFromPersist(id, persist.getItem.bind(persist))
+          );
           send(s.ws, ServerMessages.inventorySnapshot(playerItems));
           // Broadcast confirmation via chat
           broadcastToMap(
@@ -4759,10 +4759,9 @@ function processSessionQueue(s: Session, now: number) {
 
           // Sync inventory to client
           const invIds = getPlayerInventoryIds(s.player!.id);
-          const invItems = invIds.map(id => {
-            const item = persist.getItem(id);
-            return { item_id: id, item_type: item?.item_type ?? 'unknown', slot: null };
-          });
+          const invItems = invIds.map((id) =>
+            toItemInfoFromPersist(id, persist.getItem.bind(persist), null)
+          );
           send(s.ws, ServerMessages.inventorySnapshot(invItems));
 
           audit.write({
@@ -5112,7 +5111,7 @@ function processSessionQueue(s: Session, now: number) {
         // Send inventory snapshot to player
         const items = Array.from(inventory.get(playerId) ?? []).map((id) => {
           const item = persist.getItem(id);
-          return { item_id: id, item_type: item?.item_type ?? itemType };
+          return toItemInfo(id, item?.item_type ?? itemType);
         });
         send(s.ws, ServerMessages.inventorySnapshot(items));
 
@@ -6374,11 +6373,13 @@ function processSessionQueue(s: Session, now: number) {
 
           // Sync inventory (use known type for newly minted item)
           const shopInvIds = getPlayerInventoryIds(s.player.id);
-          const shopInvItems = shopInvIds.map(id => ({
-            item_id: id,
-            item_type: persist.getItem(id)?.item_type ?? (id === shopItemId ? shopItem.item_type : 'unknown'),
-            slot: null,
-          }));
+          const shopInvItems = shopInvIds.map((id) =>
+            toItemInfo(
+              id,
+              persist.getItem(id)?.item_type ?? (id === shopItemId ? shopItem.item_type : 'unknown'),
+              null
+            )
+          );
           send(s.ws, ServerMessages.inventorySnapshot(shopInvItems));
           send(s.ws, ServerMessages.walletSnapshot(getGoldBalance(s.player.id)));
           send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { item_id: shopItemId, item_type: shopItem.item_type } }));
@@ -6427,11 +6428,9 @@ function processSessionQueue(s: Session, now: number) {
           });
 
           const invIds = getPlayerInventoryIds(s.player.id);
-          const invItems = invIds.map(id => ({
-            item_id: id,
-            item_type: persist.getItem(id)?.item_type ?? 'unknown',
-            slot: null,
-          }));
+          const invItems = invIds.map((id) =>
+            toItemInfoFromPersist(id, persist.getItem.bind(persist), null)
+          );
           send(s.ws, ServerMessages.inventorySnapshot(invItems));
           if (hpChanged) sendWorldStateRefresh(s);
           send(s.ws, ServerMessages.skillResult(msg.skill_id, true, { payload: { effect: effectMsg, item_type: itemType } }));
@@ -6493,11 +6492,9 @@ function processSessionQueue(s: Session, now: number) {
             mintItemToInventory(s.player!.id, itemType, meta, reason, source),
           syncInventory: () => {
             const invIds = getPlayerInventoryIds(s.player!.id);
-            const invItems = invIds.map(id => ({
-              item_id: id,
-              item_type: persist.getItem(id)?.item_type ?? 'unknown',
-              slot: null,
-            }));
+            const invItems = invIds.map((id) =>
+              toItemInfoFromPersist(id, persist.getItem.bind(persist), null)
+            );
             send(s.ws, ServerMessages.inventorySnapshot(invItems));
           },
           creditWallet: (amount, reason) => {
