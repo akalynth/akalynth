@@ -1,5 +1,11 @@
 import type { PlayerPublic } from '@shared/types';
 import type { GameClientState } from '../types';
+import {
+  GATHER_PANEL_HINT,
+  GATHER_PANEL_TITLE,
+  nodeLabel,
+  stationLabel,
+} from '../data/gatherLabels';
 
 interface GatherPanelProps {
   gather: GameClientState['gather'];
@@ -29,16 +35,21 @@ export function GatherPanel({ gather, me, onGather, onDeliver, onRefine }: Gathe
 
   const inRange = (x: number, y: number) => me != null && manhattan(me.x, me.y, x, y) <= 1;
   const busy = gather.activeNodeId != null || gather.activeRefineStationId != null;
+  const refining = gather.activeRefineStationId != null;
 
   return (
     <div className="gather-card">
-      <div className="gather-title">Chill-Zone Gather</div>
+      <div className="gather-title">{GATHER_PANEL_TITLE}</div>
+      <div className="gather-hint">{GATHER_PANEL_HINT}</div>
       <div className="gather-held">Held: {gather.held ? gather.held.item_type : '—'}</div>
       <div className="gather-held">Tending: {gather.tendingTokens} · Keystone: {gather.keystoneTokens}</div>
 
       {busy && (
         <div className="gather-progress" aria-label="gather-progress">
-          <div className="gather-progress-bar" style={{ width: `${Math.round(gather.progressPct)}%` }} />
+          <div
+            className={`gather-progress-bar${refining ? ' refining' : ''}`}
+            style={{ width: `${Math.round(gather.progressPct)}%` }}
+          />
           <span className="gather-progress-label">{Math.round(gather.progressPct)}%</span>
         </div>
       )}
@@ -49,7 +60,7 @@ export function GatherPanel({ gather, me, onGather, onDeliver, onRefine }: Gathe
           return (
             <div key={n.node_id} className="gather-row" aria-label={`node-${n.node_id}`}>
               <span className={`gather-dot ${n.state}`} />
-              <span className="gather-name">{n.node_id}</span>
+              <span className="gather-name">{nodeLabel(n.node_id)}</span>
               <span className="gather-state">{n.state}</span>
               <button type="button" className="gather-btn" disabled={!canGather} onClick={() => onGather(n.node_id)}>
                 Gather
@@ -64,12 +75,18 @@ export function GatherPanel({ gather, me, onGather, onDeliver, onRefine }: Gathe
           const here = inRange(st.x, st.y);
           if (st.kind === 'refinery') {
             const canRefine = here && !busy && gather.held != null && isRefinable(gather.held.item_type);
+            const refiningHere = gather.activeRefineStationId === st.station_id;
             return (
               <div key={st.station_id} className="gather-row" aria-label={`station-${st.station_id}`}>
                 <span className="gather-dot refinery" />
-                <span className="gather-name">{st.station_id}</span>
-                <button type="button" className="gather-btn" disabled={!canRefine} onClick={() => onRefine(st.station_id)}>
-                  Refn
+                <span className="gather-name">{stationLabel(st.station_id, st.kind)}</span>
+                <button
+                  type="button"
+                  className={`gather-btn${refiningHere ? ' gather-btn--active' : ''}`}
+                  disabled={!canRefine}
+                  onClick={() => onRefine(st.station_id)}
+                >
+                  {refiningHere ? `Refn ${Math.round(gather.progressPct)}%` : 'Refn'}
                 </button>
               </div>
             );
@@ -78,7 +95,7 @@ export function GatherPanel({ gather, me, onGather, onDeliver, onRefine }: Gathe
           return (
             <div key={st.station_id} className="gather-row" aria-label={`station-${st.station_id}`}>
               <span className="gather-dot station" />
-              <span className="gather-name">{st.station_id}</span>
+              <span className="gather-name">{stationLabel(st.station_id, st.kind)}</span>
               <button type="button" className="gather-btn" disabled={!canDeliver} onClick={() => onDeliver(st.station_id)}>
                 Deliver
               </button>

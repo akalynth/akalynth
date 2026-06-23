@@ -92,10 +92,10 @@ export const SPAWN_LORE: Record<string, LoreEntry> = {
     body: 'Where every guest first wakes in Rookguard, at the head of the tutorial corridor.',
   },
   Azura: {
-    title: 'Spawn',
+    title: 'High City · Azura',
     body:
-      'Rookguard has opened. High City receives you at its center and asks ' +
-      'what your living hand will leave behind.',
+      'Rookguard has opened. Ley motes glimmer on the stones nearby — gather one, ' +
+      'attune it at the stand, and deliver a keystone to the curation post.',
   },
   HighCity: {
     title: 'Spawn',

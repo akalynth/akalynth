@@ -69,5 +69,7 @@ if (
 requireLiteral('GatherPanel uses intent callbacks only', 'onGather(n.node_id)', panelSource);
 requireLiteral('GatherPanel uses deliver callbacks only', 'onDeliver(st.station_id)', panelSource);
 requireLiteral('GatherPanel uses refine callbacks only', 'onRefine(st.station_id)', panelSource);
+requireLiteral('GatherPanel player-facing title', 'GATHER_PANEL_TITLE', panelSource);
+requireLiteral('GatherPanel onboarding hint', 'GATHER_PANEL_HINT', panelSource);
 
 console.log('debug-client gather wire authority verifier passed');

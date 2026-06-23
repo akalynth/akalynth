@@ -982,9 +982,27 @@ body {
   border: 1px solid #1f2937;
   background: rgba(15, 23, 42, 0.9);
   width: min(240px, 42vw);
+  max-height: min(52vh, 420px);
+  overflow-y: auto;
   z-index: 6;
 }
-.gather-title { font-weight: 700; margin-bottom: 0.35rem; color: var(--muted); font-size: 0.9rem; }
+@media (max-width: 720px) {
+  .gather-card {
+    top: auto;
+    bottom: 5.5rem;
+    right: 0.5rem;
+    left: 0.5rem;
+    width: auto;
+    max-height: 38vh;
+  }
+}
+.gather-title { font-weight: 700; margin-bottom: 0.25rem; color: #f7e9a7; font-size: 0.9rem; }
+.gather-hint {
+  font-size: 0.72rem;
+  color: var(--muted);
+  line-height: 1.35;
+  margin-bottom: 0.45rem;
+}
 .gather-held { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.4rem; }
 .gather-list { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 0.4rem; }
 .gather-row { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; }
@@ -995,6 +1013,9 @@ body {
 .gather-dot.depleting { background: #fbbf24; }
 .gather-dot.depleted { background: #ef4444; }
 .gather-dot.station { background: #60a5fa; }
+.gather-dot.refinery { background: #fbbf24; }
+.gather-progress-bar.refining { background: #fbbf24; }
+.gather-btn--active { border-color: #fbbf24; color: #fef3c7; }
 .gather-btn {
   padding: 0.15rem 0.5rem;
   border-radius: 0.4rem;
