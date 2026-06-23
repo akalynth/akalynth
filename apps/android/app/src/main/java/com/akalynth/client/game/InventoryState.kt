@@ -22,6 +22,7 @@ data class InventoryState(
 data class ServerInventoryItem(
     val itemId: String,
     val itemType: String,
+    val iconSpriteId: String? = null,
     val slot: String? = null,
     val displayName: String,
     val rarity: ItemRarity,

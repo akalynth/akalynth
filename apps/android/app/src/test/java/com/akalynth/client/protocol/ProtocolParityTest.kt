@@ -259,7 +259,7 @@ class ProtocolParityTest {
             """{"type":"runestone_denied","reason":"cooldown"}""" to RunestoneDeniedMessage::class.java,
             """{"type":"drop_item_result","ok":true,"item_id":"i","reason":null}""" to DropItemResultMessage::class.java,
             """{"type":"pickup_item_result","ok":false,"item_id":"i","reason":"gone"}""" to PickupItemResultMessage::class.java,
-            """{"type":"inventory_snapshot","items":[{"item_id":"i","item_type":"sword","slot":null}]}""" to InventorySnapshotMessage::class.java,
+            """{"type":"inventory_snapshot","items":[{"item_id":"i","item_type":"sword","icon_sprite_id":"akalynth_item_sword_001","slot":null}]}""" to InventorySnapshotMessage::class.java,
             """{"type":"world_item_added","item_id":"i","item_type":"sword","x":1,"y":1}""" to WorldItemAddedMessage::class.java,
             """{"type":"world_item_removed","item_id":"i"}""" to WorldItemRemovedMessage::class.java,
             """{"type":"combat_resolved","attacker_id":"a","defender_id":"d","outcome":"kill","map":"Azura","x":1,"y":1}""" to CombatResolvedMessage::class.java,

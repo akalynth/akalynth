@@ -249,6 +249,7 @@ data class RunestoneDeniedMessage(
 data class ItemInfo(
     @SerialName("item_id") val itemId: String,
     @SerialName("item_type") val itemType: String,
+    @SerialName("icon_sprite_id") val iconSpriteId: String? = null,
     val slot: String? = null
 )
 

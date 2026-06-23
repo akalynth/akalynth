@@ -75,6 +75,26 @@ export interface AssetManifest {
   entries: AssetRegistryEntry[];
 }
 
+/** item_type → registry asset_id for promoted item icons (PR-030). */
+export function buildItemIconSpriteIndex(
+  manifest: AssetManifest
+): ReadonlyMap<string, string> {
+  const index = new Map<string, string>();
+  for (const entry of manifest.entries) {
+    if (entry.asset_type === 'item' && entry.item_type) {
+      index.set(entry.item_type, entry.asset_id);
+    }
+  }
+  return index;
+}
+
+export function itemIconSpriteIdForType(
+  itemType: string,
+  index: ReadonlyMap<string, string>
+): string | undefined {
+  return index.get(itemType);
+}
+
 /** Resolve canonical world asset_id from a short placement id (e.g. grass_01). */
 export function canonicalWorldAssetId(shortId: string): string {
   return shortId.startsWith(WORLD_ASSET_ID_PREFIX)

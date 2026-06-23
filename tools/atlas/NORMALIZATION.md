@@ -158,4 +158,4 @@ Item manifests use the **factory sidecar** schema with `asset_type: "item"`. Nor
 
 - Placement coordinates (`data/assets-built/placements/*.json`) — see `tools/atlas/placement.schema.json` and `docs/ASSET_MANIFEST.md` (PR-006).
 - Character/creature spritesheet sidecars — not unified into this registry in MVP.
-- Protocol `icon_sprite_id` — deferred PR-030; MVP uses `item_type` index only.
+- Protocol `icon_sprite_id` — PR-030: optional on `ItemInfo` in `inventory_snapshot`; server resolves from registry `item_type` index; clients may still fall back to `item_type` lookup.
