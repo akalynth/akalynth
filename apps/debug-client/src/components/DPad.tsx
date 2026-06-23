@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { InputDirection } from '../types';
+import { HudChromePanel } from './HudChromePanel';
+import { TextureCircle } from './TextureCircle';
 
 interface DPadProps {
   onMove: (dir: InputDirection) => void;
@@ -90,11 +92,18 @@ export function DPad({ onMove, onRelease, onStopAll }: DPadProps) {
   }, [releaseAllPointerDirs]);
 
   return (
+    <HudChromePanel className="dpad-shell" variant="dpad" padding={8}>
     <div className="dpad" role="group" aria-label="Movement pad">
       {buttons.map((b, idx) => (
-        <button
+        <TextureCircle
           key={idx}
+          variant="dpad-button"
+          size={44}
           className={`dpad-btn ${b.dir ? '' : 'dpad-btn--stop'}`}
+        >
+        <button
+          type="button"
+          className="dpad-btn__hit"
           aria-label={b.dir ? `Move ${b.dir.replace('_', ' ')}` : 'Stop movement'}
           onPointerDown={(e) => {
             e.preventDefault();
@@ -116,8 +125,11 @@ export function DPad({ onMove, onRelease, onStopAll }: DPadProps) {
         >
           {b.label}
         </button>
+        </TextureCircle>
       ))}
+      <TextureCircle variant="dpad-button-pressed" size={44} className="dpad-stop-wrap">
       <button
+        type="button"
         className="dpad-stop"
         aria-label="Stop movement"
         onPointerDown={(e) => {
@@ -128,6 +140,8 @@ export function DPad({ onMove, onRelease, onStopAll }: DPadProps) {
       >
         ✕
       </button>
+      </TextureCircle>
     </div>
+    </HudChromePanel>
   );
 }

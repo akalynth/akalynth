@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { UiAssetKind } from '@shared/assetRegistry';
-import { atlasPublicUrl } from '../lib/atlasPaths';
+import { uiBuiltPublicUrl } from '../lib/uiPaths';
 import { uiRegistryEntry, useAssetRegistry } from './useAssetRegistry';
 
 export type UiChromeStem =
@@ -87,7 +87,7 @@ export function useUiTextures(): { textures: UiTextureMap; ready: boolean; loade
       const kind: UiTextureSlice['kind'] = entry?.kind ?? 'unknown';
       return {
         stem,
-        src: entry ? atlasPublicUrl(entry.file) : null,
+        src: entry ? uiBuiltPublicUrl(entry.file.replace(/^ui\//, '')) : null,
         slicePx: entry?.slice_px ?? FALLBACK_SLICE[stem],
         kind,
       };

@@ -13,6 +13,7 @@ from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT_SRC = ROOT / "data/assets-src/sprites/ui"
+OUT_BUILT = ROOT / "data/assets-built/ui"
 OUT_ANDROID = ROOT / "apps/android/app/src/main/assets/ui"
 
 # ClassicShell palette (ARGB -> RGB)
@@ -218,14 +219,17 @@ ASSETS: list[dict] = [
 
 def main() -> None:
     OUT_SRC.mkdir(parents=True, exist_ok=True)
+    OUT_BUILT.mkdir(parents=True, exist_ok=True)
     OUT_ANDROID.mkdir(parents=True, exist_ok=True)
     manifest: list[dict] = []
 
     for spec in ASSETS:
         img = spec["generator"]()
         src_path = OUT_SRC / spec["file"]
+        built_path = OUT_BUILT / spec["file"]
         android_path = OUT_ANDROID / spec["file"]
         img.save(src_path)
+        img.save(built_path)
         img.save(android_path)
         manifest.append(
             {
@@ -244,6 +248,7 @@ def main() -> None:
     pack_path = OUT_SRC / "ui_gameplay_v1.json"
     pack_path.write_text(json.dumps({"pack": "ui_gameplay_v1", "assets": manifest}, indent=2) + "\n")
     print(f"[ui-textures] manifest -> {pack_path}")
+    print(f"[ui-textures] built assets -> {OUT_BUILT}")
     print(f"[ui-textures] android assets -> {OUT_ANDROID}")
 
 

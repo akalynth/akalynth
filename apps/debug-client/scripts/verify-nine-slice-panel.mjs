@@ -30,11 +30,17 @@ function requirePattern(name, pattern, source, rel) {
 
 const files = [
   'src/lib/atlasPaths.ts',
+  'src/lib/uiPaths.ts',
+  'src/lib/codexPaths.ts',
   'src/lib/nineSlice.ts',
   'src/hooks/useAssetRegistry.ts',
   'src/hooks/useUiTextures.ts',
+  'src/hooks/useCodexGraph.ts',
   'src/components/NineSlicePanel.tsx',
   'src/components/TextureCircle.tsx',
+  'src/components/UiStatBar.tsx',
+  'src/components/PlayShellDock.tsx',
+  'src/components/CodexShelfPanel.tsx',
 ];
 
 for (const rel of files) requireFile(rel);
@@ -56,8 +62,19 @@ requirePattern('nine-slice default on (PR-026)', /VITE_USE_NINE_SLICE_WEB !== 'f
 const hudChrome = read('src/components/HudChromePanel.tsx');
 requirePattern('HudChromePanel export (PR-027)', /export function HudChromePanel/, hudChrome, 'src/components/HudChromePanel.tsx');
 
+const uiPaths = read('src/lib/uiPaths.ts');
+requirePattern('UI built root', /data\/assets-built\/ui/, uiPaths, 'src/lib/uiPaths.ts');
+
+const codexPaths = read('src/lib/codexPaths.ts');
+requirePattern('codex repo path', /akalynth-codex/, codexPaths, 'src/lib/codexPaths.ts');
+
+const vite = readFileSync(resolve(root, 'vite.config.ts'), 'utf8');
+requirePattern('vite @codex alias', /akalynth-codex/, vite, 'vite.config.ts');
+
 const app = read('src/App.tsx');
 requirePattern('HudChromePanel wired', /HudChromePanel/, app, 'src/App.tsx');
+requirePattern('Codex shelf wired', /CodexShelfPanel/, app, 'src/App.tsx');
+requirePattern('Play shell dock wired', /PlayShellDock/, app, 'src/App.tsx');
 
 const pkg = read('package.json');
 requirePattern('verify script wired', /verify-nine-slice-panel/, pkg, 'package.json');

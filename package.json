@@ -21,6 +21,7 @@
     "build:game": "(cd apps/phone-server && npm run build) && (cd apps/studio && npm run build) && (cd apps/debug-client && npm run build) && npm run studio-smoke",
     "build:assets:rookguard": "node tools/asset-gen/build-rookguard-tutorial-tiles.mjs && node tools/asset-gen/build-rookguard-canal-visuals.mjs",
     "build:assets:highcity": "node tools/asset-gen/build-high-city-lantern-ward.mjs",
+    "build:assets:ui": "python3 tools/asset-gen/build_ui_textures.py",
     "verify": "npm run build:packages && node packages/verification-spine/bin/akalynth-verify.js",
     "verify:quick": "npm run build:packages && node packages/verification-spine/bin/akalynth-verify.js --profile quick --skip-build",
     "verify:full": "npm run build:packages && node packages/verification-spine/bin/akalynth-verify.js --profile full",

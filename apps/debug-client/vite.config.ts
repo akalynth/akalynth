@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
@@ -6,12 +7,29 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const monorepoReposRoot = path.resolve(__dirname, '../../../..');
 
+function resolveCodexRoot(): string {
+  const envRoot = process.env.AKALYNTH_CODEX_ROOT;
+  if (envRoot && existsSync(envRoot)) return envRoot;
+  const candidates = [
+    path.resolve(monorepoReposRoot, 'akalynth-codex'),
+    path.resolve(__dirname, '../../../akalynth-codex'),
+    '/home/sovereign/akalynth-ops/repos/akalynth-codex',
+  ];
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) return candidate;
+  }
+  return candidates[0];
+}
+
+const codexRoot = resolveCodexRoot();
+
 export default defineConfig({
   base: process.env.AKALYNTH_CLIENT_BASE ?? '/play/',
   plugins: [react()],
   resolve: {
     alias: {
       '@shared': path.resolve(__dirname, '../../packages/shared'),
+      '@codex': codexRoot,
     },
     extensions: ['.ts', '.tsx', '.mjs', '.js', '.mts', '.jsx', '.json'],
   },
@@ -23,7 +41,7 @@ export default defineConfig({
       allow: [
         path.resolve(__dirname, '../../..'),
         path.resolve(monorepoReposRoot, 'akalynth-site'),
-        path.resolve(monorepoReposRoot, 'akalynth-codex'),
+        codexRoot,
       ],
     },
   },

@@ -1,6 +1,7 @@
 import type { MapName } from '@shared/http';
 import { displayMapName } from '@shared/http';
 import type { ConnectionState, UiStage } from '../types';
+import { HudChromePanel } from './HudChromePanel';
 
 interface TopBarProps {
   stage: UiStage['stage'];
@@ -22,7 +23,8 @@ function connectionLabel(conn: ConnectionState): string {
 export function TopBar({ stage, onStageChange, map, onMapChange, conn, presentationMode = false }: TopBarProps) {
   const label = connectionLabel(conn);
   return (
-    <header className="top-bar">
+    <header className="top-bar-shell" role="banner">
+    <HudChromePanel className="top-bar play-shell-top-bar" variant="dock" padding="0.5rem 0.75rem">
       <div className="brand">{presentationMode ? 'Akalynth' : 'Akalynth v0'}</div>
       {!presentationMode && (
         <div className="stage-gates">
@@ -48,6 +50,7 @@ export function TopBar({ stage, onStageChange, map, onMapChange, conn, presentat
       <div className={`conn-pill ${conn.phase}`}>
         {label}
       </div>
+    </HudChromePanel>
     </header>
   );
 }
