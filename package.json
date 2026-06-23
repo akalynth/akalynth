@@ -32,6 +32,8 @@
     "smoke:beta-account-play": "node scripts/smoke-beta-account-play.mjs --live",
     "smoke:beta-account-play:api": "node scripts/smoke-beta-account-play.mjs --live --no-browser",
     "smoke:beta-account-play:real": "node scripts/smoke-beta-account-play.mjs --live --real-account",
+    "smoke:beta-azura-loop": "node scripts/smoke-beta-azura-loop.mjs --live",
+    "smoke:beta-azura-loop:browser": "node scripts/smoke-beta-azura-loop.mjs --live --browser",
     "smoke:web-play-shell": "node scripts/smoke-web-play-shell.mjs",
     "verify:showcase": "bash scripts/showcase_local.sh",
     "verify:docker-runtime": "bash scripts/verify-docker-runtime.sh",
