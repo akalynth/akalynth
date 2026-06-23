@@ -22,9 +22,12 @@ const preview = read('src/services/builderPreview.ts');
 const mapPath = resolve(root, '../../packages/shared/maps/rookguard.json');
 
 requirePattern('studio shell views', /build.*assets.*review/s, app, 'src/App.tsx');
-requirePattern('preview env cycle (no prod)', /Local.*Beta.*Staging/s, app, 'src/App.tsx');
+requirePattern('preview env cycle (no prod)', /Local.*Beta.*Staging.*Sim/s, app, 'src/App.tsx');
 requirePattern('production direct link', /PRODUCTION_PLAY_URL|studio-prod-link/, app, 'src/App.tsx');
-requirePattern('preview lane api map', /previewApiBase/, read('src/config/studioLanes.ts'), 'src/config/studioLanes.ts');
+requirePattern('sim lane link', /SIM_DASHBOARD_URL|studio-sim-link/, app, 'src/App.tsx');
+const lanes = read('src/config/studioLanes.ts');
+requirePattern('preview lane api map', /previewApiBase/, lanes, 'src/config/studioLanes.ts');
+requirePattern('sim api host', /sim-api\.akalynth\.com/, lanes, 'src/config/studioLanes.ts');
 requirePattern('rookguard json import', /rookguard\.json/, build, 'src/views/BuildView.tsx');
 requirePattern('save and sign', /Save.*sign/, build, 'src/views/BuildView.tsx');
 requirePattern('preview start route', /\/v1\/builder\/preview\/start/, preview, 'src/services/builderPreview.ts');

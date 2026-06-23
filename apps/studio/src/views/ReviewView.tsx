@@ -1,4 +1,4 @@
-import { previewApiBase, type StudioPreviewEnv } from '../config/studioLanes';
+import { isSimulatedReceiptLane, previewApiBase, SIM_DASHBOARD_URL, type StudioPreviewEnv } from '../config/studioLanes';
 import type { PreviewStartResponse } from '../services/builderPreview';
 
 interface ReviewViewProps {
@@ -17,6 +17,15 @@ export function ReviewView({ lastPreview, lastError, busy, env }: ReviewViewProp
       <h1>Review</h1>
       <p className="studio-lead">
         preview_only on <code>{env}</code> ({previewApiBase(env)}) — session receipts only, no chronicle authority.
+        {isSimulatedReceiptLane(env) && (
+          <>
+            {' '}
+            Sim lane boundary: <code>simulated_receipts_only</code>.{' '}
+            <a href={SIM_DASHBOARD_URL} target="_blank" rel="noreferrer">
+              Open sim dashboard
+            </a>
+          </>
+        )}
       </p>
 
       {busy && <p className="studio-muted">Signing preview session…</p>}

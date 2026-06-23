@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import type { BuilderDraftManifest } from '@shared/builderDraft';
-import { PREVIEW_ENV_CYCLE, PRODUCTION_PLAY_URL, type StudioPreviewEnv } from './config/studioLanes';
+import { PREVIEW_ENV_CYCLE, PRODUCTION_PLAY_URL, SIM_DASHBOARD_URL, type StudioPreviewEnv } from './config/studioLanes';
 import { BuildView } from './views/BuildView';
 import { AssetsView } from './views/AssetsView';
 import { ReviewView } from './views/ReviewView';
@@ -52,6 +52,9 @@ export function App() {
           <button type="button" className={`studio-env studio-env--${env.toLowerCase()}`} onClick={() => setEnv(PREVIEW_ENV_CYCLE[env])}>
             {env}
           </button>
+          <a className="studio-sim-link" href={SIM_DASHBOARD_URL} target="_blank" rel="noreferrer">
+            Sim
+          </a>
           <a className="studio-prod-link" href={PRODUCTION_PLAY_URL} target="_blank" rel="noreferrer">
             Production
           </a>
@@ -73,7 +76,7 @@ export function App() {
             Review
           </button>
           <p className="studio-nav-foot">
-            Preview lanes (Local · Beta · Staging) are receipt-gated. Production is direct — not on this node.
+            Preview lanes (Local · Beta · Staging · Sim) are receipt-gated. Sim uses simulated receipts only. Production is direct — not on this node.
           </p>
         </nav>
 
