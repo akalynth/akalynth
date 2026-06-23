@@ -1,4 +1,5 @@
-# Akalynth beta + staging lanes - ops-dev-01 (194.147.221.89)
+# Akalynth preview lanes only — ops-dev-01 (194.147.221.89) / K8s preview node
+# Production (api.akalynth.com, akalynth-prod-01) is NOT routed here — direct play, ungated.
 #
 # Mobile lane model: the SITE hosts (beta./staging./sim.) serve static files
 # only. Beta may serve the public marketing/download payload plus APK artifacts.

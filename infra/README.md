@@ -24,8 +24,8 @@ Used by automation and operations only.
   trips the limit and parks the unit instead of restarting forever.
 - `infra/deploy_beta.sh` — beta deploy helper.
 - `infra/caddy/Caddyfile.example` — reverse-proxy template for the prod box.
-- `infra/caddy/Caddyfile.ops-dev-01` — checked-in Caddy source for the beta
-  and staging Android lanes on ops-dev-01.
+- `infra/caddy/Caddyfile.ops-dev-01` — preview-node Caddy source (beta, staging,
+  sim on ops-dev-01 / K8s preview cluster). Production is not routed here.
 - `infra/web/beta/index.html` — fallback static APK download page for the beta
   lane. The live beta root may instead be populated from the public
   `akalynth-site` repository when the marketing/download lane is published.

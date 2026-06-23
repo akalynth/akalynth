@@ -1,4 +1,5 @@
 import type { BuilderDraftManifest, BuilderPreviewWorldFork } from '@shared/builderDraft';
+import { previewApiBase, type StudioPreviewEnv } from '../config/studioLanes';
 import manifestFixture from '../fixtures/rookguardBuilderDraftManifest.json';
 
 export const ROOKGUARD_BUILDER_DRAFT = manifestFixture as BuilderDraftManifest;
@@ -20,18 +21,13 @@ export interface PreviewWorldStateResponse {
   error?: string;
 }
 
-function apiBase(): string {
-  const configured = import.meta.env.VITE_STUDIO_API_BASE;
-  if (configured) return configured.replace(/\/$/, '');
-  return `${window.location.protocol}//${window.location.hostname}:3010`;
-}
-
 export async function startBuilderPreview(
   manifest: BuilderDraftManifest,
   sessionId: string,
-  guestToken?: string | null,
+  guestToken: string | null | undefined,
+  env: StudioPreviewEnv,
 ): Promise<PreviewStartResponse> {
-  const resp = await fetch(`${apiBase()}/v1/builder/preview/start`, {
+  const resp = await fetch(`${previewApiBase(env)}/v1/builder/preview/start`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
@@ -46,10 +42,11 @@ export async function startBuilderPreview(
 
 export async function queryPreviewWorldState(
   namespace: string,
+  env: StudioPreviewEnv,
   guestToken?: string | null,
 ): Promise<PreviewWorldStateResponse> {
   const params = new URLSearchParams({ ns: namespace });
   if (guestToken) params.set('guest_token', guestToken);
-  const resp = await fetch(`${apiBase()}/v1/builder/preview/world-state?${params}`);
+  const resp = await fetch(`${previewApiBase(env)}/v1/builder/preview/world-state?${params}`);
   return (await resp.json()) as PreviewWorldStateResponse;
 }

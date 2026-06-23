@@ -1,19 +1,23 @@
+import { previewApiBase, type StudioPreviewEnv } from '../config/studioLanes';
 import type { PreviewStartResponse } from '../services/builderPreview';
 
 interface ReviewViewProps {
   lastPreview: PreviewStartResponse | null;
   lastError: string | null;
   busy: boolean;
+  env: StudioPreviewEnv;
 }
 
-export function ReviewView({ lastPreview, lastError, busy }: ReviewViewProps) {
+export function ReviewView({ lastPreview, lastError, busy, env }: ReviewViewProps) {
   const fork = lastPreview?.builder_preview;
   const receipts = lastPreview?.receipts ?? [];
 
   return (
     <div className="studio-review">
       <h1>Review</h1>
-      <p className="studio-lead">preview_only — local session receipts, no chronicle authority.</p>
+      <p className="studio-lead">
+        preview_only on <code>{env}</code> ({previewApiBase(env)}) — session receipts only, no chronicle authority.
+      </p>
 
       {busy && <p className="studio-muted">Signing preview session…</p>}
       {lastError && <p className="studio-error">{lastError}</p>}

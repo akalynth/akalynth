@@ -107,6 +107,27 @@ code {
   cursor: pointer;
 }
 
+.studio-env--beta {
+  color: #e6b85a;
+  border-color: rgba(217, 164, 65, 0.35);
+}
+
+.studio-env--staging {
+  color: #82b7e4;
+  border-color: rgba(91, 155, 213, 0.35);
+}
+
+.studio-prod-link {
+  padding: 6px 11px;
+  border-radius: 8px;
+  border: 1px solid rgba(91, 191, 122, 0.35);
+  background: rgba(91, 191, 122, 0.12);
+  color: var(--good);
+  font-size: 12.5px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
 .studio-pending {
   font-size: 12px;
   color: var(--gold);
