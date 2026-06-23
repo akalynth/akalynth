@@ -156,7 +156,8 @@ export function handleHttp(
     deps.handleBuilderPreview &&
     (path === '/v1/builder/preview/start' ||
       path === '/v1/builder/preview/end' ||
-      path === '/v1/builder/preview/namespace')
+      path === '/v1/builder/preview/namespace' ||
+      path === '/v1/builder/preview/world-state')
   ) {
     return deps.handleBuilderPreview(req, res);
   }

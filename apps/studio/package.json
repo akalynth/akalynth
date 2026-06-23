@@ -7,6 +7,7 @@
     "dev": "vite --host 0.0.0.0 --port 5174 --strictPort",
     "build": "tsc -p tsconfig.json && vite build",
     "verify:studio-map-builder-bridges-v1": "node scripts/verify-studio-map-builder-bridges-v1.mjs",
+    "e2e:studio-sim-lane-v1": "node scripts/e2e-studio-sim-lane-v1.mjs",
     "preview": "vite preview --host 0.0.0.0 --port 4174"
   },
   "dependencies": {
