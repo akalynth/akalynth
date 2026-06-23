@@ -1,0 +1,100 @@
+{
+  "pack": "ui_gameplay_grok_v1",
+  "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+  "raw_dir": "data/assets-src/grok-ui/raw",
+  "out_built": "data/assets-built/ui",
+  "out_src": "data/assets-src/sprites/ui",
+  "specs": [
+    {
+      "stem": "ui_panel_frame",
+      "brief": "data/assets-src/briefs/ui/ui_panel_frame.prompt.md",
+      "dimensions_px": [48, 48],
+      "slice_px": 8,
+      "kind": "nine_slice"
+    },
+    {
+      "stem": "ui_button_frame",
+      "brief": "data/assets-src/briefs/ui/ui_button_frame.prompt.md",
+      "dimensions_px": [32, 32],
+      "slice_px": 6,
+      "kind": "nine_slice"
+    },
+    {
+      "stem": "ui_button_pressed_frame",
+      "brief": "data/assets-src/briefs/ui/ui_button_pressed_frame.prompt.md",
+      "dimensions_px": [32, 32],
+      "slice_px": 6,
+      "kind": "nine_slice"
+    },
+    {
+      "stem": "ui_dock_frame",
+      "brief": "data/assets-src/briefs/ui/ui_dock_frame.prompt.md",
+      "dimensions_px": [40, 40],
+      "slice_px": 8,
+      "kind": "nine_slice"
+    },
+    {
+      "stem": "ui_dpad_frame",
+      "brief": "data/assets-src/briefs/ui/ui_dpad_frame.prompt.md",
+      "dimensions_px": [64, 64],
+      "slice_px": 10,
+      "kind": "nine_slice"
+    },
+    {
+      "stem": "ui_action_ring",
+      "brief": "data/assets-src/briefs/ui/ui_action_ring.prompt.md",
+      "dimensions_px": [32, 32],
+      "slice_px": 0,
+      "kind": "circle"
+    },
+    {
+      "stem": "ui_action_ring_pressed",
+      "brief": "data/assets-src/briefs/ui/ui_action_ring_pressed.prompt.md",
+      "dimensions_px": [32, 32],
+      "slice_px": 0,
+      "kind": "circle"
+    },
+    {
+      "stem": "ui_action_ring_danger",
+      "brief": "data/assets-src/briefs/ui/ui_action_ring_danger.prompt.md",
+      "dimensions_px": [32, 32],
+      "slice_px": 0,
+      "kind": "circle"
+    },
+    {
+      "stem": "ui_dpad_button",
+      "brief": "data/assets-src/briefs/ui/ui_dpad_button.prompt.md",
+      "dimensions_px": [32, 32],
+      "slice_px": 0,
+      "kind": "circle"
+    },
+    {
+      "stem": "ui_dpad_button_pressed",
+      "brief": "data/assets-src/briefs/ui/ui_dpad_button_pressed.prompt.md",
+      "dimensions_px": [32, 32],
+      "slice_px": 0,
+      "kind": "circle"
+    },
+    {
+      "stem": "ui_hp_fill",
+      "brief": "data/assets-src/briefs/ui/ui_hp_fill.prompt.md",
+      "dimensions_px": [16, 4],
+      "slice_px": 2,
+      "kind": "bar"
+    },
+    {
+      "stem": "ui_mp_fill",
+      "brief": "data/assets-src/briefs/ui/ui_mp_fill.prompt.md",
+      "dimensions_px": [16, 4],
+      "slice_px": 2,
+      "kind": "bar"
+    },
+    {
+      "stem": "ui_bar_track",
+      "brief": "data/assets-src/briefs/ui/ui_bar_track.prompt.md",
+      "dimensions_px": [16, 6],
+      "slice_px": 2,
+      "kind": "bar"
+    }
+  ]
+}
