@@ -22,7 +22,7 @@ function check(name: string, cond: boolean): void {
 
 check('MVP count is 38', MVP_ROOKGUARD_WORLD_ASSET_IDS.length === 38);
 check('deferred count is 13', DEFERRED_WORLD_ASSET_IDS.length === 13);
-check('total registry is 51', ALL_WORLD_VISUAL_ASSET_IDS.length === 51);
+check('total registry is 64', ALL_WORLD_VISUAL_ASSET_IDS.length === 64);
 
 const mvpDeferredOverlap = MVP_ROOKGUARD_WORLD_ASSET_IDS.filter((id) =>
   DEFERRED_WORLD_ASSET_IDS.includes(id as (typeof DEFERRED_WORLD_ASSET_IDS)[number]),

@@ -37,7 +37,7 @@ export function toItemInfo(
 
 export function toItemInfoFromPersist(
   itemId: string,
-  getItem: (id: string) => { item_type: string } | undefined,
+  getItem: (id: string) => { item_type: string } | null | undefined,
   slot?: string | null
 ): ItemInfo {
   return toItemInfo(itemId, getItem(itemId)?.item_type ?? 'unknown', slot);
