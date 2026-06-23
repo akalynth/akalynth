@@ -238,6 +238,61 @@ function overlaps(a, b) {
   return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
 }
 
+function validateAzuraPlacementArtifacts() {
+  const landmarksBuilt = 'data/assets-built/placements/azura-overlays.json';
+  const mergedBuilt = 'data/assets-built/placements/azura-all-overlays.json';
+  const landmarks = readJson(landmarksBuilt);
+  const merged = readJson(mergedBuilt);
+  if (!landmarks) return;
+  if (!merged) return;
+
+  if (landmarks.map !== 'azura') fail(`${landmarksBuilt}: map must be azura`);
+  if (merged.map !== 'azura') fail(`${mergedBuilt}: map must be azura`);
+  if (landmarks.mechanics !== null) fail(`${landmarksBuilt}: mechanics must be null`);
+  if (merged.mechanics !== null) fail(`${mergedBuilt}: mechanics must be null`);
+
+  const landmarkCount = Array.isArray(landmarks.placements) ? landmarks.placements.length : 0;
+  const mergedCount = Array.isArray(merged.placements) ? merged.placements.length : 0;
+  if (landmarkCount < 1450) {
+    fail(`${landmarksBuilt}: expected >=1450 landmark placements, got ${landmarkCount}`);
+  }
+  if (mergedCount < 1500) {
+    fail(`${mergedBuilt}: expected >=1500 merged placements, got ${mergedCount}`);
+  }
+
+  const androidRepoRel = 'apps/android/app/src/main/java/com/akalynth/client/game/WorldPlacementRepository.kt';
+  const androidRepo = read(androidRepoRel);
+  assertContains(
+    androidRepoRel,
+    androidRepo,
+    'placements/azura-all-overlays.json',
+    'Android Azura placement bundle path',
+  );
+
+  for (const file of [landmarksBuilt, mergedBuilt]) {
+    const manifest = readJson(file);
+    if (!manifest) continue;
+    for (const placement of manifest.placements) {
+      if (!placement?.asset_id || !Number.isInteger(placement.x) || !Number.isInteger(placement.y)) {
+        fail(`${file}: invalid placement entry ${JSON.stringify(placement)}`);
+      }
+    }
+  }
+
+  const requiredAnchors = [
+    ['high_city_crystal_fountain', 32, 33],
+    ['high_city_lantern_post', 32, 40],
+    ['high_city_sigil_banner_blue', 26, 32],
+    ['market_food_stall', 44, 26],
+    ['throne', 60, 7],
+  ];
+  for (const [assetId, x, y] of requiredAnchors) {
+    if (!merged.placements.some((p) => p.asset_id === assetId && p.x === x && p.y === y)) {
+      fail(`${mergedBuilt}: missing anchor ${assetId} at ${x},${y}`);
+    }
+  }
+}
+
 function validateRookguardTutorialVisibility() {
   const landmarksRel = 'apps/debug-client/src/data/highCityVisualLandmarks.ts';
   const source = read(landmarksRel);
@@ -452,6 +507,7 @@ collectImportedSprites([
 ]);
 validateTutorialTileSprites();
 validateRookguardTutorialVisibility();
+validateAzuraPlacementArtifacts();
 validateAppUsesWorldVisuals();
 validateMobilePlayShellContract();
 

@@ -76,6 +76,8 @@ wall_stone_south
 
 **Consumer:** PR-008 ports `ROOKGUARD_VISUAL_LANDMARKS` from `highCityVisualLandmarks.ts` into `data/assets-built/placements/rookguard-overlays.json`.
 
+**Consumer:** AKALYNTH_HIGH_CITY_SPRITE Phase 1 ports `HIGH_CITY_VISUAL_LANDMARKS` into `data/assets-built/placements/azura-overlays.json`, merges with `azura-deferred-overlays.json` into `azura-all-overlays.json` (Android + bundled clients).
+
 ---
 
 ## Deferred post-MVP (13 assets)

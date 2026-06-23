@@ -1,31 +1,31 @@
 import type { MapName } from '@shared/http';
-import type { WorldVisualAssetId, WorldVisualObjectPlacement } from './worldVisualAssets';
+import type { RegistryWorldVisualAssetId, RegistryWorldVisualPlacement } from './worldVisualRegistry';
 
-function obj(assetId: WorldVisualAssetId, x: number, y: number, instance = 0, prefix = 'high-city'): WorldVisualObjectPlacement {
+function obj(assetId: RegistryWorldVisualAssetId, x: number, y: number, instance = 0, prefix = 'high-city'): RegistryWorldVisualPlacement {
   return { id: `${prefix}:${assetId}:${x}:${y}:${instance}`, assetId, x, y };
 }
 
-function row(assetId: WorldVisualAssetId, x1: number, x2: number, y: number, prefix = 'high-city'): WorldVisualObjectPlacement[] {
-  const out: WorldVisualObjectPlacement[] = [];
+function row(assetId: RegistryWorldVisualAssetId, x1: number, x2: number, y: number, prefix = 'high-city'): RegistryWorldVisualPlacement[] {
+  const out: RegistryWorldVisualPlacement[] = [];
   for (let x = x1; x <= x2; x += 1) out.push(obj(assetId, x, y, 0, prefix));
   return out;
 }
 
-function col(assetId: WorldVisualAssetId, x: number, y1: number, y2: number, prefix = 'high-city'): WorldVisualObjectPlacement[] {
-  const out: WorldVisualObjectPlacement[] = [];
+function col(assetId: RegistryWorldVisualAssetId, x: number, y1: number, y2: number, prefix = 'high-city'): RegistryWorldVisualPlacement[] {
+  const out: RegistryWorldVisualPlacement[] = [];
   for (let y = y1; y <= y2; y += 1) out.push(obj(assetId, x, y, 0, prefix));
   return out;
 }
 
-function floorPatch(assetId: WorldVisualAssetId, x1: number, y1: number, x2: number, y2: number, prefix = 'high-city'): WorldVisualObjectPlacement[] {
-  const out: WorldVisualObjectPlacement[] = [];
+function floorPatch(assetId: RegistryWorldVisualAssetId, x1: number, y1: number, x2: number, y2: number, prefix = 'high-city'): RegistryWorldVisualPlacement[] {
+  const out: RegistryWorldVisualPlacement[] = [];
   for (let y = y1; y <= y2; y += 1) {
     for (let x = x1; x <= x2; x += 1) out.push(obj(assetId, x, y, 0, prefix));
   }
   return out;
 }
 
-const ROOKGUARD_VISUAL_LANDMARKS: WorldVisualObjectPlacement[] = [
+const ROOKGUARD_VISUAL_LANDMARKS: RegistryWorldVisualPlacement[] = [
   // Plaza and tutorial corridor. Display only; leave tutorial-code tiles
   // uncovered so their Classic-32 rune sprites remain visible.
   ...floorPatch('floor_cobble_01', 1, 1, 10, 1, 'rookguard'),
@@ -60,16 +60,18 @@ const ROOKGUARD_VISUAL_LANDMARKS: WorldVisualObjectPlacement[] = [
   obj('weapon_rack', 12, 17, 1, 'rookguard'),
 ];
 
-const HIGH_CITY_VISUAL_LANDMARKS: WorldVisualObjectPlacement[] = [
+const HIGH_CITY_VISUAL_LANDMARKS: RegistryWorldVisualPlacement[] = [
   // Arrival spine: a civic road from the Guild Hall down through the spawn
   // court toward Central Plaza. Display only; tile walkability is unchanged.
-  ...floorPatch('floor_cobble_01', 29, 18, 35, 48),
-  ...floorPatch('floor_cobble_01', 24, 30, 39, 35),
+  ...floorPatch('high_city_cobble_var_02', 29, 18, 35, 48),
+  ...floorPatch('high_city_cobble_var_03', 24, 30, 39, 35),
   ...floorPatch('floor_stone_01', 27, 29, 37, 35),
-  obj('fountain', 32, 33),
-  obj('notice_board', 28, 32),
-  obj('banner_blue', 26, 32),
-  obj('banner_red', 38, 32),
+  obj('high_city_crystal_fountain', 32, 33),
+  obj('high_city_witness_lantern', 28, 32),
+  obj('high_city_sigil_banner_blue', 26, 32),
+  obj('high_city_sigil_banner_red', 38, 32),
+  obj('high_city_lantern_post', 32, 40),
+  obj('high_city_lantern_post', 32, 44, 1),
   obj('bench', 29, 36),
   obj('bench', 36, 36, 1),
 
@@ -92,21 +94,23 @@ const HIGH_CITY_VISUAL_LANDMARKS: WorldVisualObjectPlacement[] = [
   ...floorPatch('floor_wood_01', 10, 32, 11, 33),
   ...floorPatch('floor_wood_01', 14, 32, 15, 33),
   ...floorPatch('floor_wood_01', 18, 32, 19, 33),
-  obj('notice_board', 10, 34),
-  obj('notice_board', 14, 34, 1),
-  obj('notice_board', 18, 34, 2),
-  obj('banner_blue', 8, 32, 1),
-  obj('banner_red', 21, 32, 1),
+  obj('high_city_plot_stake', 10, 34),
+  obj('high_city_plot_stake', 14, 34, 1),
+  obj('high_city_plot_stake', 18, 34, 2),
+  obj('high_city_sigil_banner_blue', 8, 32, 1),
+  obj('high_city_sigil_banner_red', 21, 32, 1),
 
   // Central Plaza: reinforce the existing stone plaza with a visible monument
   // and social furniture while leaving all plaza mechanics unchanged.
   ...floorPatch('floor_cobble_01', 24, 46, 39, 57),
   ...floorPatch('floor_stone_01', 26, 48, 37, 55),
-  obj('fountain', 32, 53, 1),
+  obj('high_city_crystal_fountain', 32, 53, 1),
   obj('stone_column', 28, 50),
   obj('stone_column', 36, 50),
-  obj('banner_blue', 27, 52, 2),
-  obj('banner_red', 37, 52, 2),
+  obj('high_city_sigil_banner_blue', 27, 52, 2),
+  obj('high_city_sigil_banner_red', 37, 52, 2),
+  obj('high_city_lantern_post', 30, 50, 2),
+  obj('high_city_lantern_post', 34, 50, 3),
   obj('bench', 27, 56, 2),
   obj('bench', 36, 56, 3),
   obj('notice_board', 32, 49, 3),
@@ -118,6 +122,8 @@ const HIGH_CITY_VISUAL_LANDMARKS: WorldVisualObjectPlacement[] = [
   obj('market_food_stall', 44, 26),
   obj('market_cloth_stall', 49, 26),
   obj('market_food_stall', 54, 26, 1),
+  obj('high_city_merchant_crate', 47, 28),
+  obj('high_city_merchant_crate', 52, 28, 1),
   obj('market_awning_overlay', 44, 25),
   obj('market_awning_overlay', 49, 25, 1),
   obj('market_awning_overlay', 54, 25, 2),
@@ -132,9 +138,9 @@ const HIGH_CITY_VISUAL_LANDMARKS: WorldVisualObjectPlacement[] = [
   obj('wall_stone_corner_ne', 57, 42, 1),
   obj('stone_column', 47, 45, 1),
   obj('stone_column', 55, 45, 1),
-  obj('banner_blue', 48, 47, 3),
-  obj('banner_red', 54, 47, 3),
-  obj('fountain', 51, 49, 2),
+  obj('high_city_sigil_banner_blue', 48, 47, 3),
+  obj('high_city_sigil_banner_red', 54, 47, 3),
+  obj('high_city_temple_brazier', 51, 49, 2),
 
   // Craft Quarter: workshop flavor for future equipment/spellcraft loops. The
   // racks and benches are visual only; crafting remains receipt-gated elsewhere.
@@ -148,7 +154,7 @@ const HIGH_CITY_VISUAL_LANDMARKS: WorldVisualObjectPlacement[] = [
   obj('door_wood_closed_south', 12, 55, 1),
 ];
 
-export function highCityVisualLandmarksForMap(mapName: MapName): WorldVisualObjectPlacement[] {
+export function highCityVisualLandmarksForMap(mapName: MapName): RegistryWorldVisualPlacement[] {
   if (mapName === 'Azura') return HIGH_CITY_VISUAL_LANDMARKS;
   if (mapName === 'Rookguard') return ROOKGUARD_VISUAL_LANDMARKS;
   return [];
