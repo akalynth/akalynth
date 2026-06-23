@@ -37,12 +37,27 @@ class WorldPlacementRepositoryTest {
     }
 
     @Test
-    fun azuraLoadsDeferredRegistryPlacementsFromBundledJson() {
+    fun azuraLoadsMergedRegistryPlacementsFromBundledJson() {
         val azura = WorldPlacementRepository.registryPlacementsFor(context, MapName.AZURA)
         val highCity = WorldPlacementRepository.registryPlacementsFor(context, MapName.HIGH_CITY)
 
-        assertEquals(65, azura.size)
+        assertTrue("expected >=1500 Azura placements, got ${azura.size}", azura.size >= 1500)
         assertEquals(azura.size, highCity.size)
+        assertTrue(
+            azura.any {
+                it.assetId == "fountain" && it.x == 32 && it.y == 33
+            },
+        )
+        assertTrue(
+            azura.any {
+                it.assetId == "market_food_stall" && it.x == 44 && it.y == 26
+            },
+        )
+        assertTrue(
+            azura.any {
+                it.assetId == "stone_column" && it.x == 14 && it.y == 9
+            },
+        )
         assertTrue(
             azura.any {
                 it.assetId == "throne" && it.x == 60 && it.y == 7

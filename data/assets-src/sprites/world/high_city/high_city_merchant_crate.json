@@ -1,0 +1,32 @@
+{
+  "id": "high_city_merchant_crate",
+  "asset_type": "world_object",
+  "source_kind": "sprite",
+  "image": "high_city_merchant_crate.png",
+  "frame": {
+    "width": 32,
+    "height": 32
+  },
+  "rendering": {
+    "filtering": "nearest",
+    "display_only": true,
+    "draw_scale": 1,
+    "anchor": {
+      "type": "bottom_center",
+      "source_pixels": [
+        16,
+        28
+      ]
+    },
+    "z_policy": "sort_by_anchor_y",
+    "layer": "object_overlay"
+  },
+  "mechanics": null,
+  "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+  "prompt_file": "data/assets-src/prompts/world/high_city_merchant_crate_001.txt",
+  "sha256": "379e49597ea34f0b3fd1ab308cb1c197ce8909c9f8b9cc6167db55546a73b916",
+  "copyright_boundary": "original hand-authored script-rendered asset; no copied third-party sprite, UI, logo, or map layout",
+  "visual_notes": [
+    "Market merchant crate with cloth cover. Display only."
+  ]
+}

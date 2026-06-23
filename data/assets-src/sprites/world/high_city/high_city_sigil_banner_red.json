@@ -1,0 +1,32 @@
+{
+  "id": "high_city_sigil_banner_red",
+  "asset_type": "world_object",
+  "source_kind": "sprite",
+  "image": "high_city_sigil_banner_red.png",
+  "frame": {
+    "width": 32,
+    "height": 64
+  },
+  "rendering": {
+    "filtering": "nearest",
+    "display_only": true,
+    "draw_scale": 1,
+    "anchor": {
+      "type": "bottom_center",
+      "source_pixels": [
+        16,
+        58
+      ]
+    },
+    "z_policy": "sort_by_anchor_y",
+    "layer": "object_overlay"
+  },
+  "mechanics": null,
+  "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+  "prompt_file": "data/assets-src/prompts/world/high_city_sigil_banner_red_001.txt",
+  "sha256": "c297252d1e0559f834c50a2b6c39c055fed8aed8b9a37a3f87f0322e2282a409",
+  "copyright_boundary": "original hand-authored script-rendered asset; no copied third-party sprite, UI, logo, or map layout",
+  "visual_notes": [
+    "High City civic sigil banner, red field. Display only."
+  ]
+}

@@ -25,6 +25,9 @@ import { HudChromePanel } from './components/HudChromePanel';
 import { BackpackSheet } from './components/BackpackSheet';
 import { ProofSheet } from './components/ProofSheet';
 import { BuilderPanel, type BuilderPreviewDisplay } from './components/BuilderPanel';
+import { CodexShelfPanel } from './components/CodexShelfPanel';
+import { PlayShellDock } from './components/PlayShellDock';
+import { UiStatBar } from './components/UiStatBar';
 import { builderPreviewOverlays } from './utils/builderPreviewOverlay';
 import { TemChallengeModal } from './components/TemChallengeModal';
 import { TemWitnessDialog } from './components/TemWitnessDialog';
@@ -321,15 +324,26 @@ interface MobileStatusRailProps {
   conn: ConnectionState;
 }
 
-function MobileStatusRail({ name, position, health, conn }: MobileStatusRailProps) {
+function MobileStatusRail({
+  name,
+  position,
+  health,
+  healthPct,
+  conn,
+}: MobileStatusRailProps & { healthPct: number }) {
   const connLabel = displayConnectionLabel(conn);
   return (
-    <div className="mobile-status-rail" aria-label="Mobile player status">
+    <HudChromePanel className="mobile-status-rail" variant="dock" padding={8}>
       <span>{name ?? 'Guest'}</span>
-      <strong>{health}</strong>
+      <UiStatBar
+        label="Health"
+        valueLabel={health}
+        fillPct={healthPct}
+        low={healthPct <= 30}
+      />
       <span>{position}</span>
       <i>{connLabel}</i>
-    </div>
+    </HudChromePanel>
   );
 }
 
@@ -396,6 +410,7 @@ function DebugApp() {
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [proofSheetOpen, setProofSheetOpen] = useState(false);
   const [builderSheetOpen, setBuilderSheetOpen] = useState(false);
+  const [codexSheetOpen, setCodexSheetOpen] = useState(false);
   const [builderDisplay, setBuilderDisplay] = useState<BuilderPreviewDisplay | null>(null);
   const [sealOpen, setSealOpen] = useState(false);
   const [proof, setProof] = useState<StudioProofState | null>(null);
@@ -740,7 +755,8 @@ function DebugApp() {
       )}
       {state.chronicleOpen && (
         <div className="chronicle-overlay">
-          <div className="chronicle-sheet" role="dialog" aria-live="polite">
+          <HudChromePanel className="chronicle-sheet" variant="panel" padding={16}>
+          <div role="dialog" aria-live="polite">
             <div className="chronicle-header">
               <div className="chronicle-title">My Chronicle</div>
               <button type="button" className="chronicle-close" onClick={api.closeChronicle}>
@@ -812,6 +828,7 @@ function DebugApp() {
               </button>
             )}
           </div>
+          </HudChromePanel>
         </div>
       )}
 
@@ -883,16 +900,12 @@ function DebugApp() {
                 <span>Position</span>
                 <strong>{playerPositionLabel}</strong>
               </div>
-              <div>
-                <span>Health</span>
-                <strong>{healthLabel}</strong>
-                <div className="hp-bar" aria-hidden="true">
-                  <div
-                    className={`hp-bar-fill ${healthPct <= 30 ? 'low' : ''}`}
-                    style={{ width: `${state.world.me?.status === 'dead' ? 0 : healthPct}%` }}
-                  />
-                </div>
-              </div>
+              <UiStatBar
+                label="Health"
+                valueLabel={healthLabel}
+                fillPct={state.world.me?.status === 'dead' ? 0 : healthPct}
+                low={healthPct <= 30}
+              />
               <div>
                 <span>Respect</span>
                 <strong>{respectRank} ({respectValue})</strong>
@@ -964,6 +977,7 @@ function DebugApp() {
               name={playerDisplayName}
               position={playerPositionLabel}
               health={healthLabel}
+              healthPct={state.world.me?.status === 'dead' ? 0 : healthPct}
               conn={state.conn}
             />
           )}
@@ -1065,104 +1079,129 @@ function DebugApp() {
         )}
 
         {showPlayShell && (
-          <section
-            className={`stage stage-bottom command-dock proof-${smokeState}`}
-          >
-            <div className="bottom-actions">
-              <button
-                className="chat-toggle"
-                aria-label="Open chat"
-                onClick={() => {
-                  setInventoryOpen(false);
-                  setProofSheetOpen(false);
-                  api.closeChronicle();
-                  setChatOpen(true);
-                }}
-              >
-                Chat
-              </button>
-              <button
-                className="chronicle-toggle"
-                aria-label="Open log"
-                onClick={() => {
-                  setChatOpen(false);
-                  setInventoryOpen(false);
-                  setProofSheetOpen(false);
-                  api.openChronicle();
-                }}
-              >
-                Log
-              </button>
-              <button
-                className="inventory-toggle"
-                aria-label="Open backpack"
-                onClick={() => {
-                  setChatOpen(false);
-                  setProofSheetOpen(false);
-                  api.closeChronicle();
-                  setInventoryOpen(true);
-                }}
-              >
-                Pack
-              </button>
-              {!presentationMode && (
-                <button
-                  className="proof-toggle"
-                  aria-label={phoneLandscape ? 'Open proof status' : proofRunning ? 'Running proof' : 'Run proof'}
-                  onClick={() => {
-                    if (phoneLandscape) {
-                      setChatOpen(false);
-                      setInventoryOpen(false);
-                      api.closeChronicle();
-                      setProofSheetOpen(true);
-                      return;
-                    }
-                    void runProofSmoke();
-                  }}
-                  disabled={!phoneLandscape && (proofRunning || !studioProofEnabled)}
-                >
-                  {proofRunning ? 'Running' : 'Proof'}
-                </button>
-              )}
-              {!presentationMode && builderPreviewEnabled && (
-                <button
-                  className="builder-toggle"
-                  aria-label="Open builder preview"
-                  onClick={() => {
+          <section className="stage stage-bottom">
+            <PlayShellDock
+              smokeState={smokeState}
+              buttons={[
+                {
+                  key: 'chat',
+                  label: 'Chat',
+                  ariaLabel: 'Open chat',
+                  className: 'chat-toggle',
+                  onClick: () => {
+                    setInventoryOpen(false);
+                    setProofSheetOpen(false);
+                    setCodexSheetOpen(false);
+                    api.closeChronicle();
+                    setChatOpen(true);
+                  },
+                },
+                {
+                  key: 'log',
+                  label: 'Log',
+                  ariaLabel: 'Open log',
+                  className: 'chronicle-toggle',
+                  onClick: () => {
                     setChatOpen(false);
                     setInventoryOpen(false);
                     setProofSheetOpen(false);
+                    setCodexSheetOpen(false);
+                    api.openChronicle();
+                  },
+                },
+                {
+                  key: 'pack',
+                  label: 'Pack',
+                  ariaLabel: 'Open backpack',
+                  className: 'inventory-toggle',
+                  onClick: () => {
+                    setChatOpen(false);
+                    setProofSheetOpen(false);
+                    setCodexSheetOpen(false);
                     api.closeChronicle();
-                    setBuilderSheetOpen(true);
-                  }}
-                >
-                  Build
-                </button>
-              )}
-              {!presentationMode && (
-                <button
-                  className="seal-toggle"
-                  aria-label="Adventurer Seal"
-                  onClick={() => {
+                    setInventoryOpen(true);
+                  },
+                },
+                {
+                  key: 'codex',
+                  label: 'Codex',
+                  ariaLabel: 'Open Akalynth Codex shelf',
+                  className: 'codex-toggle',
+                  onClick: () => {
                     setChatOpen(false);
                     setInventoryOpen(false);
                     setProofSheetOpen(false);
                     setBuilderSheetOpen(false);
                     api.closeChronicle();
-                    setSealOpen(true);
-                  }}
-                >
-                  Seal
-                </button>
+                    setCodexSheetOpen(true);
+                  },
+                },
+                ...(!presentationMode
+                  ? [{
+                      key: 'proof',
+                      label: proofRunning ? 'Running' : 'Proof',
+                      ariaLabel: phoneLandscape ? 'Open proof status' : proofRunning ? 'Running proof' : 'Run proof',
+                      className: 'proof-toggle',
+                      disabled: !phoneLandscape && (proofRunning || !studioProofEnabled),
+                      onClick: () => {
+                        if (phoneLandscape) {
+                          setChatOpen(false);
+                          setInventoryOpen(false);
+                          setCodexSheetOpen(false);
+                          api.closeChronicle();
+                          setProofSheetOpen(true);
+                          return;
+                        }
+                        void runProofSmoke();
+                      },
+                    }]
+                  : []),
+                ...(!presentationMode && builderPreviewEnabled
+                  ? [{
+                      key: 'build',
+                      label: 'Build',
+                      ariaLabel: 'Open builder preview',
+                      className: 'builder-toggle',
+                      onClick: () => {
+                        setChatOpen(false);
+                        setInventoryOpen(false);
+                        setProofSheetOpen(false);
+                        setCodexSheetOpen(false);
+                        api.closeChronicle();
+                        setBuilderSheetOpen(true);
+                      },
+                    }]
+                  : []),
+                ...(!presentationMode
+                  ? [{
+                      key: 'seal',
+                      label: 'Seal',
+                      ariaLabel: 'Adventurer Seal',
+                      className: 'seal-toggle',
+                      onClick: () => {
+                        setChatOpen(false);
+                        setInventoryOpen(false);
+                        setProofSheetOpen(false);
+                        setBuilderSheetOpen(false);
+                        setCodexSheetOpen(false);
+                        api.closeChronicle();
+                        setSealOpen(true);
+                      },
+                    }]
+                  : []),
+              ]}
+              statusPills={(
+                <>
+                  <span className="pill">World synced</span>
+                  {!presentationMode && proof?.lastSmoke?.worldSpawn && (
+                    <span className="pill proof-pill">
+                      Proof {proof.lastSmoke.worldSpawn.x},{proof.lastSmoke.worldSpawn.y}
+                    </span>
+                  )}
+                  {state.world.me?.status === 'dead' && <span className="pill warning">Dead</span>}
+                </>
               )}
-            </div>
-            <div className="status-pills">
-              <span className="pill">World synced</span>
-              {!presentationMode && proof?.lastSmoke?.worldSpawn && (
-                <span className="pill proof-pill">Proof {proof.lastSmoke.worldSpawn.x},{proof.lastSmoke.worldSpawn.y}</span>
-              )}
-              {state.world.me?.status === 'dead' && <span className="pill warning">Dead</span>}
-            </div>
+            />
           </section>
         )}
       </main>
@@ -1224,6 +1263,10 @@ function DebugApp() {
           </div>
         </div>
       )}
+      <CodexShelfPanel
+        open={codexSheetOpen}
+        onClose={() => setCodexSheetOpen(false)}
+      />
       <BuilderPanel
         open={builderSheetOpen}
         httpBase={config.httpBase}

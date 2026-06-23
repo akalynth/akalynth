@@ -80,7 +80,20 @@ export type WorldVisualAssetId =
   | 'swamp_log'
   | 'swamp_mud'
   | 'swamp_mushroom'
-  | 'swamp_reeds';
+  | 'swamp_reeds'
+  | 'high_city_lantern_post'
+  | 'high_city_sigil_banner_blue'
+  | 'high_city_sigil_banner_red'
+  | 'high_city_crystal_fountain'
+  | 'high_city_half_timber_wall_n'
+  | 'high_city_clay_roof_overlay'
+  | 'high_city_plot_stake'
+  | 'high_city_cobble_var_02'
+  | 'high_city_cobble_var_03'
+  | 'high_city_witness_lantern'
+  | 'high_city_merchant_crate'
+  | 'high_city_temple_brazier'
+  | 'high_city_grass_edge';
 
 /**
  * MVP Rookguard subset: 38 base world visuals (excludes 4 High City castle/prison props).
@@ -147,10 +160,28 @@ export const DEFERRED_WORLD_ASSET_IDS = [
   'swamp_reeds',
 ] as const satisfies readonly WorldVisualAssetId[];
 
-/** Full debug-client registry: 42 base + 9 extended = 51. */
+/** High City Lantern Ward native sprites (13). */
+export const HIGH_CITY_NATIVE_WORLD_ASSET_IDS = [
+  'high_city_lantern_post',
+  'high_city_sigil_banner_blue',
+  'high_city_sigil_banner_red',
+  'high_city_crystal_fountain',
+  'high_city_half_timber_wall_n',
+  'high_city_clay_roof_overlay',
+  'high_city_plot_stake',
+  'high_city_cobble_var_02',
+  'high_city_cobble_var_03',
+  'high_city_witness_lantern',
+  'high_city_merchant_crate',
+  'high_city_temple_brazier',
+  'high_city_grass_edge',
+] as const satisfies readonly WorldVisualAssetId[];
+
+/** Full debug-client registry: 42 base + 9 extended + 13 High City native = 64. */
 export const ALL_WORLD_VISUAL_ASSET_IDS = [
   ...MVP_ROOKGUARD_WORLD_ASSET_IDS,
   ...DEFERRED_WORLD_ASSET_IDS,
+  ...HIGH_CITY_NATIVE_WORLD_ASSET_IDS,
 ] as const satisfies readonly WorldVisualAssetId[];
 
 const MVP_ROOKGUARD_SET = new Set<string>(MVP_ROOKGUARD_WORLD_ASSET_IDS);

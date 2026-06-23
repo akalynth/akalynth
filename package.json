@@ -20,6 +20,8 @@
     "studio-smoke": "node scripts/studio-smoke.mjs",
     "build:game": "(cd apps/phone-server && npm run build) && (cd apps/studio && npm run build) && (cd apps/debug-client && npm run build) && npm run studio-smoke",
     "build:assets:rookguard": "node tools/asset-gen/build-rookguard-tutorial-tiles.mjs && node tools/asset-gen/build-rookguard-canal-visuals.mjs",
+    "build:assets:highcity": "node tools/asset-gen/build-high-city-lantern-ward.mjs",
+    "build:assets:ui": "python3 tools/asset-gen/build_ui_textures.py",
     "verify": "npm run build:packages && node packages/verification-spine/bin/akalynth-verify.js",
     "verify:quick": "npm run build:packages && node packages/verification-spine/bin/akalynth-verify.js --profile quick --skip-build",
     "verify:full": "npm run build:packages && node packages/verification-spine/bin/akalynth-verify.js --profile full",
@@ -50,7 +52,9 @@
     "verify:asset-sync": "node tools/atlas/verify-sync.mjs",
     "validate:placement": "node tools/atlas/validate-placement.mjs",
     "port:rookguard-placements": "node tools/atlas/port-rookguard-placements.mjs",
+    "port:azura-placements": "node tools/atlas/port-azura-placements.mjs",
     "port:deferred-placements": "node tools/atlas/port-deferred-placements.mjs",
+    "port:azura-all": "node tools/atlas/port-azura-placements.mjs && node tools/atlas/port-deferred-placements.mjs && node tools/atlas/merge-azura-placements.mjs",
     "verify:web-visual-assets": "node scripts/verify-web-visual-assets.mjs",
     "verify:web-rust-cleanup": "node scripts/verify-web-rust-cleanup.mjs"
   },

@@ -1220,7 +1220,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 70,
+        "x": 274,
         "y": 422,
         "w": 96,
         "h": 48
@@ -1649,10 +1649,439 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 168,
+        "x": 372,
         "y": 422,
         "w": 32,
         "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_high_city_clay_roof_overlay",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/high_city/high_city_clay_roof_overlay.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "tile_top_left",
+          "source_pixels": [
+            0,
+            0
+          ]
+        },
+        "z_policy": "fixed_above_building",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 406,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_high_city_cobble_var_02",
+      "source": "world_sidecar",
+      "asset_type": "floor_overlay",
+      "file": "world/high_city/high_city_cobble_var_02.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "tile_top_left",
+          "source_pixels": [
+            0,
+            0
+          ]
+        },
+        "z_policy": "fixed_layer",
+        "layer": "floor_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 440,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_high_city_cobble_var_03",
+      "source": "world_sidecar",
+      "asset_type": "floor_overlay",
+      "file": "world/high_city/high_city_cobble_var_03.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "tile_top_left",
+          "source_pixels": [
+            0,
+            0
+          ]
+        },
+        "z_policy": "fixed_layer",
+        "layer": "floor_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 474,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_high_city_crystal_fountain",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/high_city/high_city_crystal_fountain.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1848,
+        "y": 324,
+        "w": 32,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_high_city_grass_edge",
+      "source": "world_sidecar",
+      "asset_type": "terrain_tile",
+      "file": "world/high_city/high_city_grass_edge.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "tile_top_left",
+          "source_pixels": [
+            0,
+            0
+          ]
+        },
+        "z_policy": "fixed_layer",
+        "layer": "terrain"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 508,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_high_city_half_timber_wall_n",
+      "source": "world_sidecar",
+      "asset_type": "wall_overlay",
+      "file": "world/high_city/high_city_half_timber_wall_n.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "tile_top_left",
+          "source_pixels": [
+            0,
+            0
+          ]
+        },
+        "z_policy": "fixed_layer",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 542,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_high_city_lantern_post",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/high_city/high_city_lantern_post.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1882,
+        "y": 324,
+        "w": 32,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_high_city_merchant_crate",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/high_city/high_city_merchant_crate.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            28
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 576,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_high_city_plot_stake",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/high_city/high_city_plot_stake.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            28
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 610,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_high_city_sigil_banner_blue",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/high_city/high_city_sigil_banner_blue.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1916,
+        "y": 324,
+        "w": 32,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_high_city_sigil_banner_red",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/high_city/high_city_sigil_banner_red.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1950,
+        "y": 324,
+        "w": 32,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_high_city_temple_brazier",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/high_city/high_city_temple_brazier.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1984,
+        "y": 324,
+        "w": 32,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_high_city_witness_lantern",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/high_city/high_city_witness_lantern.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 2,
+        "y": 422,
+        "w": 32,
+        "h": 64
       }
     },
     {
@@ -1852,8 +2281,8 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 1848,
-        "y": 324,
+        "x": 36,
+        "y": 422,
         "w": 32,
         "h": 64
       }
@@ -1999,8 +2428,8 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 1882,
-        "y": 324,
+        "x": 70,
+        "y": 422,
         "w": 32,
         "h": 64
       }
@@ -2032,7 +2461,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 202,
+        "x": 644,
         "y": 422,
         "w": 32,
         "h": 32
@@ -2065,8 +2494,8 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 1916,
-        "y": 324,
+        "x": 104,
+        "y": 422,
         "w": 32,
         "h": 64
       }
@@ -2098,8 +2527,8 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 1950,
-        "y": 324,
+        "x": 138,
+        "y": 422,
         "w": 32,
         "h": 64
       }
@@ -2131,7 +2560,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 236,
+        "x": 678,
         "y": 422,
         "w": 32,
         "h": 32
@@ -2164,8 +2593,8 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 1984,
-        "y": 324,
+        "x": 172,
+        "y": 422,
         "w": 32,
         "h": 64
       }
@@ -2329,7 +2758,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 270,
+        "x": 712,
         "y": 422,
         "w": 32,
         "h": 32
@@ -2362,7 +2791,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 304,
+        "x": 746,
         "y": 422,
         "w": 32,
         "h": 32
@@ -2395,7 +2824,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 2,
+        "x": 206,
         "y": 422,
         "w": 32,
         "h": 64
@@ -2428,7 +2857,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 338,
+        "x": 780,
         "y": 422,
         "w": 32,
         "h": 32
@@ -2461,7 +2890,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 372,
+        "x": 814,
         "y": 422,
         "w": 32,
         "h": 32
@@ -2494,7 +2923,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 406,
+        "x": 848,
         "y": 422,
         "w": 32,
         "h": 32
@@ -2527,7 +2956,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 440,
+        "x": 882,
         "y": 422,
         "w": 32,
         "h": 32
@@ -2560,7 +2989,7 @@
       },
       "atlas": {
         "sheet": "world.png",
-        "x": 36,
+        "x": 240,
         "y": 422,
         "w": 32,
         "h": 64

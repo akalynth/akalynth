@@ -55,7 +55,7 @@ object WorldPlacementRepository {
 
     private fun assetPathFor(map: MapName): String? = when (map) {
         MapName.ROOKGUARD -> "placements/rookguard-overlays.json"
-        MapName.AZURA, MapName.HIGH_CITY -> "placements/azura-deferred-overlays.json"
+        MapName.AZURA, MapName.HIGH_CITY -> "placements/azura-all-overlays.json"
         else -> null
     }
 }

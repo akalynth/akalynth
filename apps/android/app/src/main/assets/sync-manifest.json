@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "mode": "loose_png+atlas",
-  "generated_at": "2026-06-22T21:56:34.066Z",
+  "generated_at": "2026-06-23T02:22:21.898Z",
   "files": [
     {
       "path": "atlas/chronicle.png",
@@ -13,15 +13,15 @@
     },
     {
       "path": "atlas/manifest.json",
-      "sha256": "1e1b5b4d5db67004a53b046dbd22aad0b9ad9648ef3d2b4b1633b62a49ce8c1c"
+      "sha256": "cd2d5397f775ed086d5342c56e7978f74ba8c1a21d850f6b4aa27421b8ab502d"
     },
     {
       "path": "atlas/ui.png",
-      "sha256": "2ef6678e4f8c58d45ba677ea81ae66dd8634fd9f84751913cad89660c1194580"
+      "sha256": "d98c9a2860ac86d3fae32ca480923d8f8c256c678acd7a151bce24adcd8d7b76"
     },
     {
       "path": "atlas/world.png",
-      "sha256": "1d26eb399caeb0a81a5e4d87453739f52a795bbae330969009add50688503c2d"
+      "sha256": "bbfe8265cce4bcbe78f5316819f5d406be8f69dacaef737752327cc2abd2ac91"
     },
     {
       "path": "sprites/characters/base_human_male_01.png",
@@ -289,55 +289,55 @@
     },
     {
       "path": "ui/ui_action_ring_danger.png",
-      "sha256": "9e459caec2e413730a509830acd08c6493e53e33d6d0e7a75c75b8008381baae"
+      "sha256": "6979c7b64b89649053514ace69350553840cb4b91d49e5054886ffc02dd12c0e"
     },
     {
       "path": "ui/ui_action_ring_pressed.png",
-      "sha256": "53d9b9d2d4af97a858e5b140db1b43cf0617391d7f760dc25cf74875ce7fecf1"
+      "sha256": "4541a70d69513b1b0cc6211d97095ff42e7e80b026ee68e89365e149cb87eef0"
     },
     {
       "path": "ui/ui_action_ring.png",
-      "sha256": "5727d8b9f6dd2188d75986158ab45772ca9748a2da9f4b8c2651b012d441ceec"
+      "sha256": "5494e0d4bd3c7f72a7db4fd61622918dbb2c4e33e7048d27bb0f4f4c69e2e018"
     },
     {
       "path": "ui/ui_bar_track.png",
-      "sha256": "7ed8f22561388ef974057e09261f3348e90c1da2cb3e6cb61ad65b09a6b251eb"
+      "sha256": "5edc78efb266d325ab34295c8e6f73d09651c5f82c74ca33d36bfb491a876652"
     },
     {
       "path": "ui/ui_button_frame.png",
-      "sha256": "5824a294640e8f97ceb5fca87bcd0e4a5b3e1ef3aa5a86728a31a88aa22b021e"
+      "sha256": "a65a32b3eb06909ea1a26f949c96cff6df791c76b02f4542e6b6ac7b82befcb1"
     },
     {
       "path": "ui/ui_button_pressed_frame.png",
-      "sha256": "7fa46eb7496ffb0fb582d460cace9aee7b2ee39cc2c23ee691b1e25324127981"
+      "sha256": "8c15a9e49731bb6372939bbb4d07b69d9815398ae15a625c9b4560325b58d061"
     },
     {
       "path": "ui/ui_dock_frame.png",
-      "sha256": "356727cbbfaac53d99e40c404cdbfe059903dd02eab90cafdc6dac8e2c215bd5"
+      "sha256": "e158c0390d6f962eb07389fcbd4188f1399e8758cf769e6cfa677fe3d04c3859"
     },
     {
       "path": "ui/ui_dpad_button_pressed.png",
-      "sha256": "662462a6861d9a4c6cee255eb91b3ecefca721df2852d3bf3524b0e26bd2e431"
+      "sha256": "e75662705a93a33ca9e9e35b2b86845fc52c8c3c3f6bada6aee8c8b68932dd75"
     },
     {
       "path": "ui/ui_dpad_button.png",
-      "sha256": "a248b0a97187935e95e9c4eb8c8e03c9cdcf72b04536a0b4f3f81566713d7d60"
+      "sha256": "044798e77168fd70eda7cd3496f4925536515064c730ca66c58f32389b66474f"
     },
     {
       "path": "ui/ui_dpad_frame.png",
-      "sha256": "1faae598235374cd5e0634c024c8c90e85351f07a506a263fe55a6b666b2aed9"
+      "sha256": "d1fd7dddfbfd11220d81a4694580590bf049c40b7280dde6a1eb7e2031e7235d"
     },
     {
       "path": "ui/ui_hp_fill.png",
-      "sha256": "620cbc0b3fd1ca6308c769771121a5b1ed4c86df5204bedcebb35390fb9a7c8b"
+      "sha256": "226e370f6bbb251a61dea872ffa787094f478e2e37a72d943011a12d1549c742"
     },
     {
       "path": "ui/ui_mp_fill.png",
-      "sha256": "692f317cd67954c8fabff0006b772534c99641483dc1906573384cd8709ce9f4"
+      "sha256": "d39391230ab5df18f1925ee80d3839e198b23bde81dfcf00d1b8d051aad1c526"
     },
     {
       "path": "ui/ui_panel_frame.png",
-      "sha256": "6d9c9d32ebf119d7ce25974f12309630ea28a37e407fa1f9a8e2cd3edfd10d74"
+      "sha256": "2c40638d27d13b00da6ebd73cc3725d4f912b058f85df14525ee163c48761613"
     },
     {
       "path": "world/castle/prison_bars.png",
@@ -414,6 +414,58 @@
     {
       "path": "world/doors/door_wood_open_south.png",
       "sha256": "785309e1c153607b652c2a341a9a7aeecaed76677d1936474fb999e0ac3f1c98"
+    },
+    {
+      "path": "world/high_city/high_city_clay_roof_overlay.png",
+      "sha256": "5c51a764fc6243739d4a69a5a86984e5c47c34dec54f99f2c2232129544bda17"
+    },
+    {
+      "path": "world/high_city/high_city_cobble_var_02.png",
+      "sha256": "33c13000618e055416cc2284d7e579eed0d408438f31b914b6f370ab754356e1"
+    },
+    {
+      "path": "world/high_city/high_city_cobble_var_03.png",
+      "sha256": "4373ea2fea6d5a5159e4c8378445f2e61eeda2941bb88af3e42bb1a07146032f"
+    },
+    {
+      "path": "world/high_city/high_city_crystal_fountain.png",
+      "sha256": "bb34e6bb10acc61fe3b47ab41a86594e75e830020eb77a49f0e2948c659988e3"
+    },
+    {
+      "path": "world/high_city/high_city_grass_edge.png",
+      "sha256": "0d5a07ef5989cd589a4ff5221c763411bbfb4e85c31ef9b8aac782112b297ef4"
+    },
+    {
+      "path": "world/high_city/high_city_half_timber_wall_n.png",
+      "sha256": "8c06970e0fd8ef3831787ef283939a0f65b191865e274f15841a8d602a60e18e"
+    },
+    {
+      "path": "world/high_city/high_city_lantern_post.png",
+      "sha256": "165a079e4803ac0cc388624eb5320f304919d912464f353f8bfc5fdc006142fb"
+    },
+    {
+      "path": "world/high_city/high_city_merchant_crate.png",
+      "sha256": "379e49597ea34f0b3fd1ab308cb1c197ce8909c9f8b9cc6167db55546a73b916"
+    },
+    {
+      "path": "world/high_city/high_city_plot_stake.png",
+      "sha256": "1f7bf1b0e85d8e93b9916deadfd262269bca6088ac0082a2e520dc4180f6d825"
+    },
+    {
+      "path": "world/high_city/high_city_sigil_banner_blue.png",
+      "sha256": "dae87566e2200db77261401e1618fc5a6177e30b64d621b55196f26bf832d4e6"
+    },
+    {
+      "path": "world/high_city/high_city_sigil_banner_red.png",
+      "sha256": "c297252d1e0559f834c50a2b6c39c055fed8aed8b9a37a3f87f0322e2282a409"
+    },
+    {
+      "path": "world/high_city/high_city_temple_brazier.png",
+      "sha256": "9d747485a1f0ac99c1a9d37dea6ec435dcb320e29dc8bbdd13ad90c759db2719"
+    },
+    {
+      "path": "world/high_city/high_city_witness_lantern.png",
+      "sha256": "833c377b946a05b3c232a459742baddd745c63a9cdbb7e744d99d6af48aa57fb"
     },
     {
       "path": "world/interior/bed_single.png",
@@ -544,5 +596,5 @@
       "sha256": "38a1a46cb41267f20a4543655be006522bb11f6df4ab18cbbbc8ccab699a514e"
     }
   ],
-  "atlas_generated_at": "2026-06-22T21:56:34.314Z"
+  "atlas_generated_at": "2026-06-23T02:22:22.207Z"
 }

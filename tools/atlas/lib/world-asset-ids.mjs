@@ -62,8 +62,26 @@ export const DEFERRED_WORLD_ASSET_IDS = [
   'swamp_reeds',
 ];
 
+/** High City Lantern Ward native sprites (13). */
+export const HIGH_CITY_NATIVE_WORLD_ASSET_IDS = [
+  'high_city_lantern_post',
+  'high_city_sigil_banner_blue',
+  'high_city_sigil_banner_red',
+  'high_city_crystal_fountain',
+  'high_city_half_timber_wall_n',
+  'high_city_clay_roof_overlay',
+  'high_city_plot_stake',
+  'high_city_cobble_var_02',
+  'high_city_cobble_var_03',
+  'high_city_witness_lantern',
+  'high_city_merchant_crate',
+  'high_city_temple_brazier',
+  'high_city_grass_edge',
+];
+
 const MVP_SET = new Set(MVP_ROOKGUARD_WORLD_ASSET_IDS);
 const DEFERRED_SET = new Set(DEFERRED_WORLD_ASSET_IDS);
+const HIGH_CITY_SET = new Set(HIGH_CITY_NATIVE_WORLD_ASSET_IDS);
 
 /** @param {string} assetId canonical akalynth_world_<short> or short id */
 export function worldShortIdFromAssetId(assetId) {
@@ -79,6 +97,14 @@ export function isDeferredWorldAsset(assetId) {
   return DEFERRED_SET.has(worldShortIdFromAssetId(assetId));
 }
 
+export function isHighCityNativeWorldAsset(assetId) {
+  return HIGH_CITY_SET.has(worldShortIdFromAssetId(assetId));
+}
+
 export function isAtlasWorldAsset(assetId) {
-  return isMvpRookguardWorldAsset(assetId) || isDeferredWorldAsset(assetId);
+  return (
+    isMvpRookguardWorldAsset(assetId)
+    || isDeferredWorldAsset(assetId)
+    || isHighCityNativeWorldAsset(assetId)
+  );
 }

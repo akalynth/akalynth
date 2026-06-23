@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-06-22T21:56:34.311Z",
+  "generated_at": "2026-06-23T02:22:22.203Z",
   "max_sheet_size": 2048,
   "padding_px": 2,
   "filtering": "nearest",
   "sheets": [
     {
       "sheet": "ui.png",
-      "bytes": 3549,
+      "bytes": 34408,
       "sprites": 13,
       "width": 452,
       "height": 68
@@ -28,8 +28,8 @@
     },
     {
       "sheet": "world.png",
-      "bytes": 57443,
-      "sprites": 51,
+      "bytes": 58953,
+      "sprites": 64,
       "width": 2018,
       "height": 488
     }
@@ -720,7 +720,7 @@
       "padding": 2
     },
     {
-      "asset_id": "akalynth_world_prop_tree",
+      "asset_id": "akalynth_world_high_city_crystal_fountain",
       "sheet": "world.png",
       "x": 1848,
       "y": 324,
@@ -729,7 +729,7 @@
       "padding": 2
     },
     {
-      "asset_id": "akalynth_world_rookguard_amber_lantern",
+      "asset_id": "akalynth_world_high_city_lantern_post",
       "sheet": "world.png",
       "x": 1882,
       "y": 324,
@@ -738,7 +738,7 @@
       "padding": 2
     },
     {
-      "asset_id": "akalynth_world_rookguard_canal_reeds",
+      "asset_id": "akalynth_world_high_city_sigil_banner_blue",
       "sheet": "world.png",
       "x": 1916,
       "y": 324,
@@ -747,7 +747,7 @@
       "padding": 2
     },
     {
-      "asset_id": "akalynth_world_rookguard_fishing_post",
+      "asset_id": "akalynth_world_high_city_sigil_banner_red",
       "sheet": "world.png",
       "x": 1950,
       "y": 324,
@@ -756,7 +756,7 @@
       "padding": 2
     },
     {
-      "asset_id": "akalynth_world_rookguard_waymarker",
+      "asset_id": "akalynth_world_high_city_temple_brazier",
       "sheet": "world.png",
       "x": 1984,
       "y": 324,
@@ -765,7 +765,7 @@
       "padding": 2
     },
     {
-      "asset_id": "akalynth_world_swamp_dead_tree",
+      "asset_id": "akalynth_world_high_city_witness_lantern",
       "sheet": "world.png",
       "x": 2,
       "y": 422,
@@ -774,7 +774,7 @@
       "padding": 2
     },
     {
-      "asset_id": "akalynth_world_swamp_reeds",
+      "asset_id": "akalynth_world_prop_tree",
       "sheet": "world.png",
       "x": 36,
       "y": 422,
@@ -783,9 +783,63 @@
       "padding": 2
     },
     {
-      "asset_id": "akalynth_world_bench",
+      "asset_id": "akalynth_world_rookguard_amber_lantern",
       "sheet": "world.png",
       "x": 70,
+      "y": 422,
+      "w": 32,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_rookguard_canal_reeds",
+      "sheet": "world.png",
+      "x": 104,
+      "y": 422,
+      "w": 32,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_rookguard_fishing_post",
+      "sheet": "world.png",
+      "x": 138,
+      "y": 422,
+      "w": 32,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_rookguard_waymarker",
+      "sheet": "world.png",
+      "x": 172,
+      "y": 422,
+      "w": 32,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_swamp_dead_tree",
+      "sheet": "world.png",
+      "x": 206,
+      "y": 422,
+      "w": 32,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_swamp_reeds",
+      "sheet": "world.png",
+      "x": 240,
+      "y": 422,
+      "w": 32,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_bench",
+      "sheet": "world.png",
+      "x": 274,
       "y": 422,
       "w": 96,
       "h": 48,
@@ -794,60 +848,6 @@
     {
       "asset_id": "akalynth_world_grass_01",
       "sheet": "world.png",
-      "x": 168,
-      "y": 422,
-      "w": 32,
-      "h": 32,
-      "padding": 2
-    },
-    {
-      "asset_id": "akalynth_world_rookguard_bait_crate",
-      "sheet": "world.png",
-      "x": 202,
-      "y": 422,
-      "w": 32,
-      "h": 32,
-      "padding": 2
-    },
-    {
-      "asset_id": "akalynth_world_rookguard_supply_sack",
-      "sheet": "world.png",
-      "x": 236,
-      "y": 422,
-      "w": 32,
-      "h": 32,
-      "padding": 2
-    },
-    {
-      "asset_id": "akalynth_world_swamp_bog_slime",
-      "sheet": "world.png",
-      "x": 270,
-      "y": 422,
-      "w": 32,
-      "h": 32,
-      "padding": 2
-    },
-    {
-      "asset_id": "akalynth_world_swamp_bog_water",
-      "sheet": "world.png",
-      "x": 304,
-      "y": 422,
-      "w": 32,
-      "h": 32,
-      "padding": 2
-    },
-    {
-      "asset_id": "akalynth_world_swamp_frog",
-      "sheet": "world.png",
-      "x": 338,
-      "y": 422,
-      "w": 32,
-      "h": 32,
-      "padding": 2
-    },
-    {
-      "asset_id": "akalynth_world_swamp_log",
-      "sheet": "world.png",
       "x": 372,
       "y": 422,
       "w": 32,
@@ -855,7 +855,7 @@
       "padding": 2
     },
     {
-      "asset_id": "akalynth_world_swamp_mud",
+      "asset_id": "akalynth_world_high_city_clay_roof_overlay",
       "sheet": "world.png",
       "x": 406,
       "y": 422,
@@ -864,9 +864,126 @@
       "padding": 2
     },
     {
-      "asset_id": "akalynth_world_swamp_mushroom",
+      "asset_id": "akalynth_world_high_city_cobble_var_02",
       "sheet": "world.png",
       "x": 440,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_high_city_cobble_var_03",
+      "sheet": "world.png",
+      "x": 474,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_high_city_grass_edge",
+      "sheet": "world.png",
+      "x": 508,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_high_city_half_timber_wall_n",
+      "sheet": "world.png",
+      "x": 542,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_high_city_merchant_crate",
+      "sheet": "world.png",
+      "x": 576,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_high_city_plot_stake",
+      "sheet": "world.png",
+      "x": 610,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_rookguard_bait_crate",
+      "sheet": "world.png",
+      "x": 644,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_rookguard_supply_sack",
+      "sheet": "world.png",
+      "x": 678,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_swamp_bog_slime",
+      "sheet": "world.png",
+      "x": 712,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_swamp_bog_water",
+      "sheet": "world.png",
+      "x": 746,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_swamp_frog",
+      "sheet": "world.png",
+      "x": 780,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_swamp_log",
+      "sheet": "world.png",
+      "x": 814,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_swamp_mud",
+      "sheet": "world.png",
+      "x": 848,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_swamp_mushroom",
+      "sheet": "world.png",
+      "x": 882,
       "y": 422,
       "w": 32,
       "h": 32,
