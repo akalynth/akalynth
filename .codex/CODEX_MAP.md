@@ -28,16 +28,16 @@ repo examples unless the user explicitly says to apply the repo example posture.
 ## Skill Stores (COLLAPSED TO ONE SOURCE — 2026-06-06)
 
 There is now a **single authored source** for the Akalynth skill set:
-`.claude/skills/` (21 skills). Every other store is a symlink into it, so the
+`.claude/skills/` (22 skills). Every other store is a symlink into it, so the
 old "skills/plugins keep getting installed and drifting" problem is gone — a
 re-install can only ever resolve back to the one source.
 
 | Store | Count | Tracked? | Role after collapse |
 |---|---|---|---|
-| `.claude/skills/` | 21 | yes | **Canonical source.** Edit skills only here. |
-| `plugins/akalynth-studio/skills/` | 9 | yes | Curated Codex plugin pack — 9 relative symlinks (`../../../.claude/skills/<name>`) into canonical. |
-| `.agents/skills` | symlink | no (gitignored) | `→ ../.claude/skills`. Agent-runtime store; sees all 21. |
-| `/home/g0admin/.codex/skills/` | 21 symlinks | n/a (global) | Each akalynth skill `→ /opt/goal0/sources/akalynth/.claude/skills/<name>` (absolute). `.system/` left as real dirs. |
+| `.claude/skills/` | 22 | yes | **Canonical source.** Edit skills only here. |
+| `plugins/akalynth-studio/skills/` | 10 | yes | Curated Codex plugin pack — 10 relative symlinks (`../../../.claude/skills/<name>`) into canonical. |
+| `.agents/skills` | symlink | no (gitignored) | `→ ../.claude/skills`. Agent-runtime store; sees all 22. |
+| `/home/g0admin/.codex/skills/` | 22 symlinks | n/a (global) | Each akalynth skill `→ /opt/goal0/sources/akalynth/.claude/skills/<name>` (absolute). `.system/` left as real dirs. |
 | `.codex/skills/akalynth-system-audit/` | 1 | yes | **Intentional exception:** a Codex project-skill in `skill.md`+`README.md` form with audit-specific content; not part of the duplicated set. Left as-is. |
 
 The 5 formerly-orphan skills (`economy-steward`, `game-server-steward`,
@@ -55,9 +55,9 @@ dereference the symlinks at pack time, e.g. `cp -RL plugins/akalynth-studio
 
 - Project plugin count: 1 (`akalynth-studio`)
 - Project-scoped Codex skill count (`.codex/skills/`): 1
-- Akalynth Studio plugin skill count: 9
-- Claude Code skill count (`.claude/skills/`): 21 (canonical source)
-- User-level Codex skill count (`/home/g0admin/.codex/skills/`): 21
+- Akalynth Studio plugin skill count: 10
+- Claude Code skill count (`.claude/skills/`): 22 (canonical source)
+- User-level Codex skill count (`/home/g0admin/.codex/skills/`): 22
 - User system skill dir (`/home/g0admin/.codex/skills/.system/`): present
 - Enabled cached user plugin count: 4 (`akalynth-studio`, `github`,
   `game-studio`, `superpowers`)
@@ -107,16 +107,18 @@ Source: `.codex/config.toml.example`
 - Skills root: `plugins/akalynth-studio/skills/`
 - Version `0.2.0`, Author `VaultSovereign`, License `UNLICENSED`
 - Repository: `https://github.com/VaultSovereign/akalynth`
-- Skills (9): `anti-cheat-steward`, `delegation-steward`, `deploy-steward`,
+- Skills (10): `anti-cheat-steward`, `delegation-steward`, `deploy-steward`,
   `gameplay-loop-designer`, `map-and-lore-builder`, `protocol-guardian`,
-  `receipt-chain-steward`, `server-cartographer`, `test-runner`.
+  `receipt-chain-steward`, `server-cartographer`, `test-runner`,
+  `git-push-steward`.
 
 ## User-Level Skills
 
-`/home/g0admin/.codex/skills/` (21): `akalynth-system-audit`,
+`/home/g0admin/.codex/skills/` (22): `akalynth-system-audit`,
 `android-client`, `anti-cheat-steward`, `ci-steward`,
 `classic-32-art-pipeline`, `content-designer`, `coordination-kernel-steward`,
 `debug-client`, `delegation-steward`, `deploy-steward`, `economy-steward`,
+`git-push-steward`,
 `game-server-steward`, `gameplay-loop-designer`, `map-and-lore-builder`,
 `observability-steward`, `package-steward`, `protocol-guardian`,
 `receipt-chain-steward`, `release-steward`, `server-cartographer`,
@@ -148,10 +150,33 @@ Source: `.codex/config.toml.example`
 - Gameplay loops, rituals, progression, game feel: `gameplay-loop-designer`
 - Maps, signs, lore, place names, world text: `map-and-lore-builder`
 - Verification command selection and test interpretation: `test-runner`
+- Git custody, commit staging, push readiness: `git-push-steward`
 - Delegated GitHub issue TODOs: `delegation-steward`
 - External PR/issue/CI/publish workflows: cached `github` plugin skills
 - Raster image generation/editing: system `imagegen`
 - Creating local Codex plugins or skills: system `plugin-creator`, `skill-creator`, `skill-installer`
+
+## Git Custody / Push Boundary
+
+Use `git-push-steward` before committing or pushing any Codex-generated change.
+
+Primary responsibility:
+- worktree hygiene
+- branch discipline
+- staged diff review
+- commit message evidence
+- push readiness
+
+Supporting skills:
+- `test-runner` for verification command selection
+- `ci-steward` for CI-impacting changes
+- relevant domain skill for the implementation domain
+
+Required sequence:
+1. Route implementation through the relevant domain skill.
+2. Run focused verification through `test-runner`.
+3. Route commit/push through `git-push-steward`.
+4. Push only after the push gate passes.
 
 ## Sovereign Operating Rules For Akalynth
 
@@ -180,7 +205,7 @@ Source: `.codex/config.toml.example`
 - 2026-06-14: installed `github@openai-curated`; `game-studio@openai-curated`
   and `superpowers@openai-curated` were already enabled and left as-is.
 - 2026-06-06: collapsed the five skill stores to a single source
-  (`.claude/skills/`, now 21). `plugins/akalynth-studio/skills/` (9),
+  (`.claude/skills/`, now 22). `plugins/akalynth-studio/skills/` (10),
   `.agents/skills`, and the akalynth entries in `/home/g0admin/.codex/skills/`
   are now symlinks into it; `.codex/skills/akalynth-system-audit/` kept as an
   intentional Codex-format exception. See Skill Stores above.

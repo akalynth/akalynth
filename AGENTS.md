@@ -11,21 +11,22 @@ A social-first, low-grind MMO prototype — a TypeScript monorepo (`apps/`,
 
 ## Skills (single source of truth)
 
-- **Canonical source: `.claude/skills/`** (21 steward skills + meta/handoff skills).
+- **Canonical source: `.claude/skills/`** (22 steward skills + meta/handoff skills).
   Edit skills **only** here.
 - **Session handoff:** `akalynth-continue` — read
   `.claude/skills/akalynth-continue/references/CONTINUATION_STATE.md` before
   resuming beta Android, gather, or Goal0 UI inspect work. Mirror to Claude Code
   with `./scripts/sync-claude-continue-skill.sh`.
 - Every other store is a symlink into it: the Codex plugin
-  `plugins/akalynth-studio/skills/` (9 curated), the gitignored runtime
+  `plugins/akalynth-studio/skills/` (10 curated), the gitignored runtime
   `.agents/skills`, and `~/.codex/skills/`. CI enforces this via
   `npm run verify:skills` (`scripts/verify_skills.sh`).
 - Routing (which skill for which task) lives in the Routing Matrix of
   `.codex/CODEX_MAP.md`. Quick pointers: server runtime → `game-server-steward`;
   protocol / WS / HTTP → `protocol-guardian`; deploy / systemd / Caddy →
   `deploy-steward`; receipts / chronicle → `receipt-chain-steward`; whole-system
-  evidence audit → `akalynth-system-audit`; verification commands → `test-runner`.
+  evidence audit → `akalynth-system-audit`; verification commands → `test-runner`;
+  commit / push custody → `git-push-steward`.
 
 ## Operating posture
 
