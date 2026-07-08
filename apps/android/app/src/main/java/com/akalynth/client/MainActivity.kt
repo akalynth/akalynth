@@ -103,7 +103,9 @@ class MainActivity : ComponentActivity() {
                     if (updateState is ClientUpdateState.Checking ||
                         updateState is ClientUpdateState.Downloading ||
                         updateState is ClientUpdateState.ReadyToInstall ||
-                        updateState is ClientUpdateState.Failed
+                        updateState is ClientUpdateState.Failed ||
+                        updateState is ClientUpdateState.FdroidPreferred ||
+                        updateState is ClientUpdateState.ChannelGuidance
                     ) {
                         ClientUpdateOverlay(updateState)
                     }

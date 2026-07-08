@@ -15,8 +15,8 @@ android {
         applicationId = "com.akalynth.client"
         minSdk = 26
         targetSdk = 35
-        versionCode = 10
-        versionName = "0.1.8-beta-character-sprites"
+        versionCode = 12
+        versionName = "0.1.10-beta-self-update-identity"
     }
 
     buildTypes {

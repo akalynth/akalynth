@@ -21,6 +21,11 @@ sealed class ClientUpdateState {
     data class Downloading(val progressPercent: Int, val versionName: String) : ClientUpdateState()
     data class ReadyToInstall(val versionName: String) : ClientUpdateState()
     data class Failed(val message: String) : ClientUpdateState()
+    // New states for install-source-aware policy branching (AKALYNTH_ANDROID_SIGNING_POLICY_V1)
+    /** F-Droid source detected: route to F-Droid flow. Do not offer direct APK. */
+    data object FdroidPreferred : ClientUpdateState()
+    /** Unknown or untrusted install source: show instructions; no auto download. */
+    data class ChannelGuidance(val guidance: String) : ClientUpdateState()
 }
 
 class ClientUpdateController(
@@ -35,6 +40,7 @@ class ClientUpdateController(
         get() = _state.value is ClientUpdateState.Checking ||
             _state.value is ClientUpdateState.Downloading ||
             _state.value is ClientUpdateState.ReadyToInstall
+        // FdroidPreferred and ChannelGuidance do not block login (policy UX: advise but allow use).
 
     suspend fun checkAndUpdate() {
         if (BuildConfig.BUILD_TYPE != "beta" && BuildConfig.BUILD_TYPE != "staging") {
@@ -42,10 +48,19 @@ class ClientUpdateController(
             return
         }
 
+        // 1. Resolve install source (required by signing policy)
+        val source = InstallSourceResolver.resolve(context)
+
         _state.value = ClientUpdateState.Checking
         val manifest = withContext(Dispatchers.IO) { api.fetchManifest() }
         if (manifest == null) {
             _state.value = ClientUpdateState.UpToDate
+            return
+        }
+
+        // 2. Safety checks (package, version)
+        if (context.packageName != "com.akalynth.client") {
+            _state.value = ClientUpdateState.Failed("Package name mismatch (expected com.akalynth.client)")
             return
         }
 
@@ -55,16 +70,39 @@ class ClientUpdateController(
             return
         }
 
-        val apkFile = downloadApk(manifest) ?: return
-        if (!verifySha256(apkFile, manifest.apkSha256)) {
-            apkFile.delete()
-            _state.value = ClientUpdateState.Failed("Download checksum mismatch")
-            return
-        }
+        // 3. Policy branching on install source (CRITICAL: respect signer mismatch)
+        when (source) {
+            InstallSource.FDROID -> {
+                // F-Droid installs: never promise or attempt direct APK update.
+                // Route to F-Droid update flow or guidance. Do not download.
+                _state.value = ClientUpdateState.FdroidPreferred
+                return
+            }
+            InstallSource.UNKNOWN -> {
+                // Unknown sideload: show canonical instructions. No automatic download.
+                _state.value = ClientUpdateState.ChannelGuidance(
+                    "Update source unknown or untrusted. " +
+                    "For Akalynth via F-Droid, use the F-Droid app. " +
+                    "For direct installs of Akalynth Beta visit beta.akalynth.com or use the provided APK URL. " +
+                    "No automatic update offered."
+                )
+                return
+            }
+            InstallSource.DIRECT_APK, InstallSource.DEV_LOCAL -> {
+                // Direct / dev: proceed with user-approved download + Package Installer prompt only.
+                // SHA + version already checked above.
+                val apkFile = downloadApk(manifest) ?: return
+                if (!verifySha256(apkFile, manifest.apkSha256)) {
+                    apkFile.delete()
+                    _state.value = ClientUpdateState.Failed("Download checksum mismatch")
+                    return
+                }
 
-        _state.value = ClientUpdateState.ReadyToInstall(manifest.versionName)
-        withContext(Dispatchers.Main) {
-            ApkInstaller.install(context, apkFile)
+                _state.value = ClientUpdateState.ReadyToInstall(manifest.versionName)
+                withContext(Dispatchers.Main) {
+                    ApkInstaller.install(context, apkFile)
+                }
+            }
         }
     }
 

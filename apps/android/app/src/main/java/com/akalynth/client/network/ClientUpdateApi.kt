@@ -21,7 +21,13 @@ class ClientUpdateApi(
         val apkSha256: String,
         val sizeBytes: Long,
         val required: Boolean,
-        val publishedAt: String
+        val publishedAt: String,
+        // Extended per AKALYNTH_ANDROID_SIGNING_POLICY_V1 metadata contract
+        val releaseNotes: String? = null,
+        val compatibleServerCommit: String? = null,
+        val minServerCommit: String? = null,
+        val signingCertificateSha256: String? = null,
+        val channel: String? = null
     )
 
     fun fetchManifest(): UpdateManifest? {
@@ -43,7 +49,24 @@ class ClientUpdateApi(
                     apkSha256 = json.getString("apk_sha256"),
                     sizeBytes = json.getLong("size_bytes"),
                     required = json.optBoolean("required", false),
-                    publishedAt = json.getString("published_at")
+                    publishedAt = json.getString("published_at"),
+                    // Parse extended fields (flexible key names) per policy metadata contract.
+                    // These are optional and not required for the direct download path.
+                    releaseNotes = listOf("releaseNotes", "release_notes").firstNotNullOfOrNull { k ->
+                        if (json.has(k)) json.optString(k).takeIf { it.isNotBlank() } else null
+                    },
+                    compatibleServerCommit = listOf("compatible_server_commit", "compatibleServerCommit").firstNotNullOfOrNull { k ->
+                        if (json.has(k)) json.optString(k).takeIf { it.isNotBlank() } else null
+                    },
+                    minServerCommit = listOf("min_server_commit", "minServerCommit").firstNotNullOfOrNull { k ->
+                        if (json.has(k)) json.optString(k).takeIf { it.isNotBlank() } else null
+                    },
+                    signingCertificateSha256 = listOf("signingCertificateSha256", "signing_certificate_sha256").firstNotNullOfOrNull { k ->
+                        if (json.has(k)) json.optString(k).takeIf { it.isNotBlank() } else null
+                    },
+                    channel = listOf("channel", "lane").firstNotNullOfOrNull { k ->
+                        if (json.has(k)) json.optString(k).takeIf { it.isNotBlank() } else null
+                    }
                 )
             }
         } catch (_: Exception) {

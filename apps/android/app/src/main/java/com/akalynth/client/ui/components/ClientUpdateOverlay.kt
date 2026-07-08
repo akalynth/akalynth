@@ -24,10 +24,14 @@ import com.akalynth.client.update.ClientUpdateState
 @Composable
 fun ClientUpdateOverlay(state: ClientUpdateState) {
     val message = when (state) {
-        is ClientUpdateState.Checking -> "Checking beta server for client updates..."
+        is ClientUpdateState.Checking -> "Checking for Akalynth updates..."
         is ClientUpdateState.Downloading -> "Downloading ${state.versionName} (${state.progressPercent}%)"
-        is ClientUpdateState.ReadyToInstall -> "Installing ${state.versionName}..."
+        is ClientUpdateState.ReadyToInstall -> "Ready to install ${state.versionName} via Android Package Installer (user approval required)..."
         is ClientUpdateState.Failed -> "Update failed: ${state.message}"
+        // New policy-aware states (no auto action for these)
+        is ClientUpdateState.FdroidPreferred ->
+            "Akalynth (F-Droid) detected. Update via the F-Droid app only. Direct APK updates are blocked for F-Droid installs due to channel signer mismatch (see AKALYNTH_ANDROID_SIGNING_POLICY_V1)."
+        is ClientUpdateState.ChannelGuidance -> state.guidance
         else -> return
     }
 
@@ -60,7 +64,8 @@ fun ClientUpdateOverlay(state: ClientUpdateState) {
                     progress = { state.progressPercent / 100f },
                     modifier = Modifier.fillMaxWidth()
                 )
-            } else if (state !is ClientUpdateState.Failed) {
+            } else if (state is ClientUpdateState.Checking || state is ClientUpdateState.Downloading || state is ClientUpdateState.ReadyToInstall) {
+                // Only show spinner for active download/check flows. Guidance/Fdroid states are informational.
                 CircularProgressIndicator(color = ClassicShellColors.Brass)
             }
         }
