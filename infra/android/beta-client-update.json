@@ -1,11 +1,12 @@
 {
   "ok": true,
   "lane": "beta",
-  "version_code": 10,
-  "version_name": "0.1.8-beta-character-sprites",
-  "apk_url": "https://beta.akalynth.com/download/akalynth-beta.apk",
-  "apk_sha256": "b28585c80a1762e5965a4a9fe19acf5b26a58ea9e926e95177e3e0e468f4e239",
-  "size_bytes": 12817730,
+  "version_code": 12,
+  "version_name": "0.1.10-beta-self-update-identity",
+  "apk_url": "https://beta.akalynth.com/download/akalynth-beta-v12.apk",
+  "apk_sha256": "99be43cf5467746f7f768ef7172cde617acb866b7546c34974d1ec35658bc1ac",
+  "size_bytes": 42341209,
   "required": false,
-  "published_at": "2026-06-20T20:42:20.000Z"
+  "published_at": "2026-07-09T00:10:00.000Z",
+  "releaseNotes": "Self-update logic + Akalynth Beta identity labels (v12)"
 }
