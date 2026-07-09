@@ -1,8 +1,104 @@
 # Akalynth continuation state
 
-Last updated: **2026-06-22** (Origin Act crash fix + beta patch, 226dd25 reconcile onto main, chronicle CI fix, web /play/ UI polish + beta patch, full repo cleanup/archive).
+Last updated: **2026-07-09** (Beta Refresh V5 success: schema25 V3 container-built artifact deployed via full preflight + rollout; continuation state refreshed).
 
 Read this before implementing. For skill routing see `AGENTS.md` and `.codex/CODEX_MAP.md`.
+
+---
+
+## 2026-07-09 — Beta Refresh V5 (schema25 V3 target) — SUCCESS / LIVE_BETA_REFRESHED_V5_PASS
+
+**Current live beta runtime:** `47690e84c797d5f183b42f2c47a9b19a4ea6e86d`
+
+**Container image:** `25c9b6e0d7c2`
+
+**Status:** LIVE_BETA_REFRESHED_V5_PASS
+
+**Proof path:** schema25 source reconstruction (V3 with TS2345 fix `[string, number][]` + prior casts) → Node 24.15.0 container build (image 25c9b6e0d7c2, npm ci + rebuild + tsc success) → staged preflight (BUILD_INFO match, SCHEMA_VERSION=25, live DB=25, schema gate PASS, ws OK, better-sqlite3 native OK, v12 JSON present) → live rollout to /opt/akalynth-beta
+
+**Receipt / evidence:** `docs/evidence/publish-beta/20260709T0150Z-V5.json`
+
+**Rollback:** backup `/opt/akalynth-beta.pre-refresh-20260709T015050Z` created and preserved; rollback **not invoked** (success path).
+
+**Android direct channel:** v12 live/intended (`version_code: 12`); APK URL/SHA verified (HTTP 200, matching sha256).
+
+**Pod status:** 1/1 Running, no CrashLoopBackOff.
+
+**Note on prior V3 abort (54c6):** That attempt used a non-schema25 target (code=24 vs DB=25) and was rolled back. The successful V5 used the corrected schema25 V3 reconstruction target that passed all gates.
+
+**Current safe claims (post V5):**
+- LIVE_BETA_REFRESHED_V5_PASS: live beta healthy, pod 1/1 Running, reports V5 target `47690e84c797d5f183b42f2c47a9b19a4ea6e86d`.
+- Schema 25 source provenance closed via AKALYNTH_SCHEMA25_SOURCE_RECONSTRUCTION_V3 (TS fixes) + container build + full preflight.
+- Direct Android v12 channel live and verified (APK URL/SHA match).
+- Rollback backup preserved but not needed.
+- Container-built artifact (image 25c9b6e0d7c2) successfully deployed.
+
+**Forbidden claims:**
+- F-Droid aligned with v12 or runtime line
+- public projection / safety review completed
+- game launch-ready
+- all WIP (Android/debug-client/outfit/economy/etc) resolved by this refresh
+- git pushed (local edit only)
+- continuation represents full resolution of all surfaces
+
+**Standing beta target policy (updated post-V5):** Beta is now on the V5 schema25 container-built target. F-Droid, public site projection, and unrelated WIP remain separate unresolved surfaces and require their own lanes. No automatic alignment assumed.
+
+**Evidence references (V5):**
+- V5 receipt: `docs/evidence/publish-beta/20260709T0150Z-V5.json`
+- Stage: `/tmp/akalynth-schema25-v3-dist`
+- Build log: `/tmp/schema25-v3-build.log`
+- Rollback backup: `/opt/akalynth-beta.pre-refresh-20260709T015050Z`
+- Post-refresh /opt BUILD_INFO and pod confirm V5 target.
+
+---
+
+## 2026-07-09 — Beta Refresh V3 (54c6 target) — ABORTED / ROLLBACK COMPLETED (historical)
+
+**Live beta runtime (healthy, post-rollback):** `4aef0a96aed14fa043a43aae5ed980c75a5cb1b3` (superseded by V5)
+
+**Failed target:** `54c6d37c4cfd5f70bbf3a2e911587dc13f2fb4fc`
+
+**Block reason:** target SCHEMA_VERSION = 24 < live persisted DB schema = 25. 54c6 is **not deployable** against the current beta DB.
+
+**Decision:** beta refresh line aborted.
+
+**Classification:** SCHEMA25_ONLY_DEPLOYED_ARTIFACT_FOUND
+
+**Schema 25 provenance gap:** Schema 25 is evidenced **only** in the healthy deployed `/opt/akalynth-beta` artifact (dist has 25 + `migrateToV25` / Outfits engine; source files at the labeled commit and inside snapshot trees are 24). BUILD_INFO commit label alone is **not sufficient proof** of reproducible source state for the current schema-25 runtime.
+
+**Android v12 channel:** Live and serving independently (`version_code: 12`, correct APK URL/SHA). The direct channel is intentionally ahead of / separate from any runtime refresh. F-Droid remains separate/divergent.
+
+**Preflight gates (now durable):** block incomplete runtime artifact layout, ws/runtime dependency resolution failure, better-sqlite3 native load failure, **and** persisted DB schema regression (current > target) **before** live mutation.
+
+**V3 attempt summary:**
+- Used verified native stage `/tmp/akalynth-native-stage-20260709T015500Z` (BUILD 54c6, v12 JSON present, ws + native preflight passed).
+- Deploy (rsync + chown + rollout) produced: `Error: Schema version too new: db=25 code=24` (in `persist/schema.js:472` during `initSchema` / `createPersistenceLayer`).
+- Pod: Error → CrashLoopBackOff (restarts observed in traces).
+- Failure evidence preserved **first**: `/tmp/refresh-failure-evidence-20260709T003748Z/` (pods, logs, opt-BUILD 54c6, events, bg traces).
+- Rollback: restored exact pre-refresh backup `/opt/akalynth-beta.pre-refresh-20260709T003647Z` + restarted deployment only.
+- Post-rollback: health `4aef0a96`, pod 1/1 Running, v12 still 12.
+- Receipt: `docs/evidence/publish-beta/20260709T003838Z-V3-apply.json` (status: `ROLLBACK_COMPLETED`).
+
+**Current safe claims (historical for this aborted attempt):**
+- Akalynth beta service is healthy at 4aef0a96 (pre-V5).
+- 54c6 refresh attempts failed and were rolled back cleanly.
+- 54c6 (schema 24) was not deployable against the current persisted beta DB (25).
+- (See new V5 section above for current state; provenance gap addressed via schema25 V3 recon + container build.)
+
+**Forbidden claims (historical):**
+- beta is refreshed to 54c6
+- 54c6 or current HEAD (at time) is deployable
+- schema 25 has clean source provenance in git (pre-V3 recon)
+- continuation state represents a successful runtime refresh (this attempt)
+
+**Standing beta target policy:** See updated policy in V5 success section above. The 54c6 attempt is superseded.
+
+**Evidence references:**
+- V3 receipt + rollback record: `docs/evidence/publish-beta/20260709T003838Z-V3-apply.json`
+- Failure traces: `/tmp/refresh-failure-evidence-20260709T003748Z/` (pod-logs showing exact "db=25 code=24" error, bg-poll-trace showing CrashLoopBackOff → rollback pod, opt-BUILD 54c6)
+- Rollback backup: `/opt/akalynth-beta.pre-refresh-20260709T003647Z`
+- Stage used: `/tmp/akalynth-native-stage-20260709T015500Z`
+- Preflight repair (schema gate + native): committed locally in ops tooling (see prior lanes)
 
 ---
 
@@ -270,21 +366,40 @@ AKALYNTH_UI_SCENARIOS=azura_gather ./scripts/goal0-android-ui-inspect.sh
 
 ---
 
-## Open / next work (as of 2026-06-22 handoff)
+## AZURA_LOOP_ALIVE_V1 (2026-06-23 strike)
+
+**Ticket:** one vertical slice — Rookguard-cleared player completes gather → refine → deliver on
+Azura via `/play/`, with live smoke + evidence.
+
+| Phase | Status | Artifact |
+|-------|--------|----------|
+| T1 beta probe | pending on ops-dev-01 | `evidence/20260623T114341Z-azura-loop-alive/beta-probe.txt` |
+| T2 live smoke | **landed** (unproven live) | `scripts/smoke-beta-azura-loop.mjs`, `npm run smoke:beta-azura-loop` |
+| T3 web UX | **landed** | `gatherLabels.ts`, `GatherPanel.tsx`, mobile `.gather-card` CSS |
+| T4 Azura flavor | **landed** | spawn lore + panel title "Ley Mote Tending" |
+| T5 live proof | **blocked here** | run on ops-dev-01: `npm run smoke:beta-azura-loop:browser` |
+| T6 evidence | **partial** | `evidence/20260623T114341Z-azura-loop-alive/receipt.json` |
+
+**Close gate:** green `smoke:beta-azura-loop` on beta + screenshot in evidence folder + publish
+`/play/` UI if not already deployed.
+
+---
+
+## Open / next work (as of 2026-06-23 handoff)
 
 1. ~~**Merge PR #348** (web `/play/` UI polish)~~ — **done** (merged `0504381`; #346 reconcile
    `d088eb8` and #349 handoff `c537ce0` also merged). `origin/main` == what's live on beta.
 2. ~~**Full clean deploy of beta from `origin/main`**~~ — **done 2026-06-22** (`/opt` reconciled
    `bceaf10 → c537ce0`, rebuilt + restarted + `/play/` republished + live smoke 28/28). See the
    "Beta runtime — RECONCILED" note above. No drift remains.
-3. **Chronicle-rust now on main (`crates/chronicle/`).** It was previously *parked* as
-   premature; reconciled via #346. The CI fixture generator runs via tsx; the Rust parity
-   gate still needs a `cargo` toolchain on the runners before it can run (per chronicle
-   `CI_WIRING.md`). Decide whether to wire it or leave the crate inert.
-4. **Chill-zone refine step 4** — economy/Tem tuning + enable `CHILL_ZONE_REFINE_ENABLED=1`
-   on beta. (Beta already has the gather+refine flags on per `systemctl show`.) Steps 1-3 done.
-5. **Prod** — every 2026-06-22 change is **beta-only**; prod (`/opt/akalynth`, `api.akalynth.com`)
-   is a separate host and has NOT received any of it.
+3. **AZURA_LOOP_ALIVE_V1 — publish + live proof** — implementation landed 2026-06-23; run
+   `npm run smoke:beta-azura-loop:browser` on ops-dev-01, then `publish-account-play` if UI diff
+   not yet on beta.
+4. **Chronicle-rust now on main (`crates/chronicle/`).** Rust parity gate still needs `cargo` on
+   runners (per `CI_WIRING.md`). Deferred until AZURA_LOOP_ALIVE_V1 accepted.
+5. ~~**Chill-zone refine step 4**~~ — **done** (#332 token-only keystone + refine_cadence heat;
+   beta flags on per `systemctl show`).
+6. **Prod** — every 2026-06-22+ change is **beta-only**; prod has NOT received any of it.
 
 ---
 
