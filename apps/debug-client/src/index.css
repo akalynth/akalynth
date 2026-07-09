@@ -32,6 +32,8 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  /* Explicit fallback background for mobile gate/entry states and unresolved render */
+  background: #05070d;
 }
 
 .top-bar {
@@ -2174,6 +2176,50 @@ button {
   display: none;
 }
 
+/* Guaranteed visible initial fallback shell for mobile + unresolved state.
+   Explicit colors (no reliance on unresolved vars) to prevent blank/black root. */
+.mobile-initial-fallback {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 205;
+  align-items: center;
+  justify-content: center;
+  background: #05070d;
+  color: #f0c83c;
+  font-family: inherit;
+  text-align: center;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.mobile-initial-fallback__inner {
+  background: #0a0f1a;
+  border: 1px solid #3a3f4a;
+  border-radius: 8px;
+  padding: 0.85rem 1.1rem;
+  display: grid;
+  gap: 0.3rem;
+  min-width: 220px;
+}
+
+.mobile-initial-fallback__title {
+  font-weight: 700;
+  color: #f0c83c;
+  font-size: 1rem;
+}
+
+.mobile-initial-fallback__state {
+  font-size: 0.9rem;
+  color: #c9d0e0;
+}
+
+.mobile-initial-fallback__note {
+  font-size: 0.72rem;
+  color: #8a93a5;
+  letter-spacing: 0.02em;
+}
+
 @media (max-width: 950px) and (orientation: portrait) {
   .mobile-rotate-gate {
     position: fixed;
@@ -2186,6 +2232,11 @@ button {
     background:
       radial-gradient(circle at 50% 24%, rgba(97, 216, 198, 0.18), transparent 38%),
       linear-gradient(145deg, rgba(5, 8, 15, 0.98), rgba(9, 18, 26, 0.98));
+  }
+
+  /* Hide entry fallback under gate; gate is the visible portrait initial */
+  .mobile-initial-fallback {
+    display: none;
   }
 
   .mobile-rotate-panel {
@@ -2210,7 +2261,7 @@ button {
   }
 
   .mobile-rotate-title {
-    color: var(--accent-strong);
+    color: var(--accent-strong, #ffd65a);
     font-size: 1.1rem;
     font-weight: 700;
   }
@@ -2245,6 +2296,12 @@ button {
 
   .app-shell {
     background: #05070d;
+  }
+
+  /* Explicit fallback shell visible for landscape mobile entry (guarantees shell not blank root) */
+  .mobile-initial-fallback {
+    display: flex;
+    z-index: 30;
   }
 
   .top-bar {
@@ -3960,6 +4017,7 @@ body {
 
 @media (max-width: 950px) and (orientation: portrait) {
   .mobile-rotate-gate {
+    display: flex;
     background:
       repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 11px),
       linear-gradient(180deg, #050505, #171715);

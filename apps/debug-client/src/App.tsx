@@ -24,6 +24,7 @@ import { ChronicleGlyphIcon } from './components/ChronicleGlyphIcon';
 import { HudChromePanel } from './components/HudChromePanel';
 import { BackpackSheet } from './components/BackpackSheet';
 import { ProofSheet } from './components/ProofSheet';
+import { FairPlaySheet } from './components/FairPlaySheet';
 import { BuilderPanel, type BuilderPreviewDisplay } from './components/BuilderPanel';
 import { CodexShelfPanel } from './components/CodexShelfPanel';
 import { PlayShellDock } from './components/PlayShellDock';
@@ -173,7 +174,7 @@ function useNow(interval = 200) {
 
 function useMediaQuery(query: string): boolean {
   const read = useCallback(() => window.matchMedia(query).matches, [query]);
-  const [matches, setMatches] = useState(read);
+  const [matches, setMatches] = useState(() => read());
 
   useEffect(() => {
     const media = window.matchMedia(query);
@@ -191,7 +192,7 @@ function useViewportSize() {
     width: window.innerWidth,
     height: window.innerHeight,
   }), []);
-  const [size, setSize] = useState(read);
+  const [size, setSize] = useState(() => read());
 
   useEffect(() => {
     const update = () => setSize(read());
@@ -411,6 +412,7 @@ function DebugApp() {
   const [proofSheetOpen, setProofSheetOpen] = useState(false);
   const [builderSheetOpen, setBuilderSheetOpen] = useState(false);
   const [codexSheetOpen, setCodexSheetOpen] = useState(false);
+  const [fairPlayOpen, setFairPlayOpen] = useState(false);
   const [builderDisplay, setBuilderDisplay] = useState<BuilderPreviewDisplay | null>(null);
   const [sealOpen, setSealOpen] = useState(false);
   const [proof, setProof] = useState<StudioProofState | null>(null);
@@ -693,6 +695,16 @@ function DebugApp() {
   return (
     <div className={`app-shell${presentationMode ? ' app-shell--presentation' : ''}${entryMode ? ' app-shell--entry' : ''}${accountPanelMode ? ' app-shell--account-panel' : ''}`}>
       <MobileLandscapeGate />
+      {/* Guaranteed visible initial render/fallback for mobile + unresolved client state (prevents blank root) */}
+      {entryMode && (
+        <div className="mobile-initial-fallback" role="status" aria-label="Akalynth play surface initial state">
+          <div className="mobile-initial-fallback__inner">
+            <span className="mobile-initial-fallback__title">Akalynth</span>
+            <span className="mobile-initial-fallback__state">{phoneLandscape ? 'Preparing entry shell…' : 'Landscape required'}</span>
+            <span className="mobile-initial-fallback__note">Pre-alpha • controlled beta</span>
+          </div>
+        </div>
+      )}
       <TopBar
         stage={state.ui.stage}
         onStageChange={api.setStage}
@@ -833,18 +845,19 @@ function DebugApp() {
       )}
 
       <main className="main">
-        <section className="stage stage-map">
-          <MapCanvas
-            map={state.world.map}
-            me={state.world.me}
-            others={others}
-            viewMode={phoneLandscape ? 'follow-player' : 'full-map'}
-            viewportPixels={mobileViewport}
-            nowMs={now}
-            targetId={state.combat.targetId}
-            fx={state.combat.fx}
-            onSelectTarget={api.setTarget}
-            groundItems={state.groundItems}
+        {!(phoneLandscape && showPlayEntry) && (
+          <section className="stage stage-map">
+            <MapCanvas
+              map={state.world.map}
+              me={state.world.me}
+              others={others}
+              viewMode={phoneLandscape ? 'follow-player' : 'full-map'}
+              viewportPixels={mobileViewport}
+              nowMs={now}
+              targetId={state.combat.targetId}
+              fx={state.combat.fx}
+              onSelectTarget={api.setTarget}
+              groundItems={state.groundItems}
             propertyByPlot={propertyByPlot}
             worldVisualObjects={worldVisualObjects}
             debugOverlays={mapDebugOverlays}
@@ -1032,7 +1045,8 @@ function DebugApp() {
               api.stopMoves();
             }}
           />
-        </section>
+          </section>
+        )}
 
         {showPlayShell && (
           <section className="stage stage-controls" aria-label="touch controls">
@@ -1134,6 +1148,21 @@ function DebugApp() {
                     setBuilderSheetOpen(false);
                     api.closeChronicle();
                     setCodexSheetOpen(true);
+                  },
+                },
+                {
+                  key: 'fair-play',
+                  label: 'Fair Play',
+                  ariaLabel: 'Open Fair Play public ledger',
+                  className: 'fair-play-toggle',
+                  onClick: () => {
+                    setChatOpen(false);
+                    setInventoryOpen(false);
+                    setProofSheetOpen(false);
+                    setBuilderSheetOpen(false);
+                    setCodexSheetOpen(false);
+                    api.closeChronicle();
+                    setFairPlayOpen(true);
                   },
                 },
                 ...(!presentationMode
@@ -1266,6 +1295,11 @@ function DebugApp() {
       <CodexShelfPanel
         open={codexSheetOpen}
         onClose={() => setCodexSheetOpen(false)}
+      />
+      <FairPlaySheet
+        open={fairPlayOpen}
+        httpBase={config.httpBase}
+        onClose={() => setFairPlayOpen(false)}
       />
       <BuilderPanel
         open={builderSheetOpen}
