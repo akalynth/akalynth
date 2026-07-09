@@ -24,7 +24,6 @@ import { ChronicleGlyphIcon } from './components/ChronicleGlyphIcon';
 import { HudChromePanel } from './components/HudChromePanel';
 import { BackpackSheet } from './components/BackpackSheet';
 import { ProofSheet } from './components/ProofSheet';
-import { FairPlaySheet } from './components/FairPlaySheet';
 import { BuilderPanel, type BuilderPreviewDisplay } from './components/BuilderPanel';
 import { CodexShelfPanel } from './components/CodexShelfPanel';
 import { PlayShellDock } from './components/PlayShellDock';
@@ -412,7 +411,6 @@ function DebugApp() {
   const [proofSheetOpen, setProofSheetOpen] = useState(false);
   const [builderSheetOpen, setBuilderSheetOpen] = useState(false);
   const [codexSheetOpen, setCodexSheetOpen] = useState(false);
-  const [fairPlayOpen, setFairPlayOpen] = useState(false);
   const [builderDisplay, setBuilderDisplay] = useState<BuilderPreviewDisplay | null>(null);
   const [sealOpen, setSealOpen] = useState(false);
   const [proof, setProof] = useState<StudioProofState | null>(null);
@@ -1150,21 +1148,6 @@ function DebugApp() {
                     setCodexSheetOpen(true);
                   },
                 },
-                {
-                  key: 'fair-play',
-                  label: 'Fair Play',
-                  ariaLabel: 'Open Fair Play public ledger',
-                  className: 'fair-play-toggle',
-                  onClick: () => {
-                    setChatOpen(false);
-                    setInventoryOpen(false);
-                    setProofSheetOpen(false);
-                    setBuilderSheetOpen(false);
-                    setCodexSheetOpen(false);
-                    api.closeChronicle();
-                    setFairPlayOpen(true);
-                  },
-                },
                 ...(!presentationMode
                   ? [{
                       key: 'proof',
@@ -1295,11 +1278,6 @@ function DebugApp() {
       <CodexShelfPanel
         open={codexSheetOpen}
         onClose={() => setCodexSheetOpen(false)}
-      />
-      <FairPlaySheet
-        open={fairPlayOpen}
-        httpBase={config.httpBase}
-        onClose={() => setFairPlayOpen(false)}
       />
       <BuilderPanel
         open={builderSheetOpen}
