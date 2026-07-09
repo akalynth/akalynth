@@ -1,8 +1,46 @@
 # Akalynth continuation state
 
-Last updated: **2026-07-09** (Beta Refresh V5 success: schema25 V3 container-built artifact deployed via full preflight + rollout; continuation state refreshed).
+Last updated: **2026-07-09** (Beta Refresh V5 success + F-Droid refresh held pending signing authority; FDROID_REFRESH_HELD_PENDING_SIGNING_AUTHORITY recorded).
 
 Read this before implementing. For skill routing see `AGENTS.md` and `.codex/CODEX_MAP.md`.
+
+---
+
+## 2026-07-09 — F-Droid Refresh Hold — FDROID_REFRESH_HELD_PENDING_SIGNING_AUTHORITY
+
+**F-Droid current state:** versionCode 5, versionName "0.1.3-beta-harvest", signer `b58026521f3df84808a2d18d586267c5d4021557ab82e016e5639dad2ab91442`, APK SHA `da7086149d0c3eb64dc72411a19e8dd91c8e454c0ac4d6ff5b15e567318b0bdc` (at /var/lib/akalynth-fdroid/public/fdroid/repo/akalynth-beta.apk). Metadata yml uses placeholder CurrentVersionCode 2147483647.
+
+**Direct Android v12 channel:** versionCode 12, SHA `99be43cf5467746f7f768ef7172cde617acb866b7546c34974d1ec35658bc1ac`, separate signer `df2acbbf9140f61507623b68268372ee368c7abf0c070a613c47bb791787d5cd`. Remains valid and independently refreshed (V5 target `47690e84c797d5f183b42f2c47a9b19a4ea6e86d`, status PASS).
+
+**Blocker:** FDROID_SIGNING_AUTHORITY_STILL_AMBIGUOUS
+
+**Signing policy (AKALYNTH_ANDROID_SIGNING_POLICY_V1):** private_keys_accessed: False, signing_key_custody_inspected: False, cross_channel_signer_aligned: False. "Signing key custody was not inspected." "This document freezes trust rules... does not authorize signing, keystore access, builds, or publish actions." F-Droid channel authority: fdroid_client. Direct channel separate.
+
+**Keystore:** /var/lib/akalynth-fdroid/public/fdroid/keystore.p12 exists (0600, sovereign, size 4340) but no custody approval or usage documentation found. Not inspected.
+
+**No F-Droid mutation occurred.** Refresh intentionally held. Direct v12 key must not be reused.
+
+**Safe claims:**
+- Direct Android beta channel is v12.
+- F-Droid remains separate/divergent.
+- F-Droid refresh is held pending signing authority.
+- No private signing material was inspected.
+- No F-Droid publication occurred.
+
+**Forbidden claims:**
+- F-Droid is refreshed.
+- F-Droid is aligned with direct channel.
+- F-Droid v12 is available.
+- Existing keystore is approved for use.
+- Direct-channel signer can be reused.
+- Channels are launch-ready.
+
+**Future authority options:**
+- Establish F-Droid key custody through an approved human/operator authority path.
+- Rotate F-Droid signer through a separate governed lane.
+- Keep F-Droid frozen.
+
+**Evidence:** See dedicated hold record in docs/evidence/fdroid-refresh-hold/
 
 ---
 
