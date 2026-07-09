@@ -1,6 +1,6 @@
 # Akalynth continuation state
 
-Last updated: **2026-07-09** (Beta Refresh V5 success + F-Droid refresh held pending signing authority; FDROID_REFRESH_HELD_PENDING_SIGNING_AUTHORITY recorded; postmortem + runbook applied).
+Last updated: **2026-07-09** (Beta Refresh V5 success + F-Droid refresh held pending signing authority; FDROID_REFRESH_HELD_PENDING_SIGNING_AUTHORITY recorded; postmortem + runbook applied; FDROID_SIGNING_AUTHORITY_STILL_BLOCKED confirmed after signer rotation plan).
 
 Read this before implementing. For skill routing see `AGENTS.md` and `.codex/CODEX_MAP.md`.
 
@@ -18,7 +18,9 @@ Read this before implementing. For skill routing see `AGENTS.md` and `.codex/COD
 
 **Direct Android v12 channel:** versionCode 12, SHA `99be43cf5467746f7f768ef7172cde617acb866b7546c34974d1ec35658bc1ac`, separate signer `df2acbbf9140f61507623b68268372ee368c7abf0c070a613c47bb791787d5cd`. Remains valid and independently refreshed (V5 target `47690e84c797d5f183b42f2c47a9b19a4ea6e86d`, status PASS).
 
-**Blocker:** FDROID_SIGNING_AUTHORITY_STILL_AMBIGUOUS
+**Blocker:** FDROID_SIGNING_AUTHORITY_STILL_BLOCKED
+
+**Hold record update (AKALYNTH_FDROID_HOLD_RECORD_UPDATE_APPLY_V1):** See 20260709T050000Z-FDROID-HOLD-UPDATE.json. Repo/index key (7517DE35...) and F-Droid v5 APK signer (b58026...) are distinct. Direct v12 signer (df2acbb...) is separate and must not be reused. Existing custody remains insufficiently evidenced (private_keys_accessed=false, signing_key_custody_inspected=false). No continuity proof for v12 on F-Droid. Rotation would require reinstall/new trust line for F-Droid users. Signer age does not equal authority. F-Droid stays held.
 
 **Signing policy (AKALYNTH_ANDROID_SIGNING_POLICY_V1):** private_keys_accessed: False, signing_key_custody_inspected: False, cross_channel_signer_aligned: False. "Signing key custody was not inspected." "This document freezes trust rules... does not authorize signing, keystore access, builds, or publish actions." F-Droid channel authority: fdroid_client. Direct channel separate.
 
