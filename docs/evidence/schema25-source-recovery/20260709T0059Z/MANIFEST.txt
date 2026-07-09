@@ -1,0 +1,21 @@
+AKALYNTH_SCHEMA25_SOURCE_RECOVERY_APPLY_V1 evidence packet
+Created: 2026-07-09
+Purpose: Capture deployed schema-25 artifact vs available source (24)
+
+Contents:
+- health.json : live commit 4aef0a96
+- build-info.json : /opt labeled 4aef0a96
+- db-schema.txt : 25 (read-only)
+- schema-dist.js.sha256 + snippet : 25 + V25 code
+- schema-source.ts.sha256 + snippet : 24
+- 54c6-blocked.txt : target 24 vs DB 25
+- android-v12.json : v12 serving independently
+- comparison.txt : dist 25 vs source 24
+- missing-provenance.txt : gaps
+
+Non-claims:
+- This packet does not make the schema-25 /opt source-reproducible.
+- No new source target created.
+- No mutations performed.
+
+Next required before beta refresh: recoverable schema-25 source + v12 in same clean target that passes preflight.

@@ -1,0 +1,15 @@
+) REFERENCES players(player_id)
+);
+CREATE INDEX IF NOT EXISTS idx_rep_player_ts ON reputation_events(player_id, timestamp);
+`;
+const DDL_DEATHS = `
+CREATE TABLE IF NOT EXISTS deaths (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  player_id       TEXT NOT NULL,
+  zone            TEXT NOT NULL,
+  x               INTEGER NOT NULL,
+  y               INTEGER NOT NULL,
+  timestamp       TEXT NOT NULL,
+  cause           TEXT NOT NULL,
+  receipt_hash    TEXT NOT NULL UNIQUE,
+  witnesses       T

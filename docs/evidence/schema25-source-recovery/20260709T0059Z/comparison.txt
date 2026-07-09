@@ -1,0 +1,4 @@
+Deployed /opt dist: SCHEMA_VERSION=25 (has migrateToV25, Outfits engine)
+Source in /opt + git at 4aef0a96 + HEAD: SCHEMA_VERSION=24
+No git commit carries schema 25 source.
+54c6 stage: 24
