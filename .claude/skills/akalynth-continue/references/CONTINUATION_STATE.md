@@ -1,8 +1,14 @@
 # Akalynth continuation state
 
-Last updated: **2026-07-09** (Beta Refresh V5 success + F-Droid refresh held pending signing authority; FDROID_REFRESH_HELD_PENDING_SIGNING_AUTHORITY recorded).
+Last updated: **2026-07-09** (Beta Refresh V5 success + F-Droid refresh held pending signing authority; FDROID_REFRESH_HELD_PENDING_SIGNING_AUTHORITY recorded; postmortem + runbook applied).
 
 Read this before implementing. For skill routing see `AGENTS.md` and `.codex/CODEX_MAP.md`.
+
+**Postmortem / Runbook cross-ref (AKALYNTH_BETA_REFRESH_POSTMORTEM_AND_RUNBOOK_APPLY_V1)**:
+- Postmortem: `docs/postmortems/AKALYNTH_BETA_REFRESH_V5_AND_PUBLIC_PROJECTION_POSTMORTEM_20260709.md` (timeline, failures 54c6/V3, root causes, controls, V5 success, evidence index, safe/forbidden claims, unresolved).
+- Runbook: `docs/runbooks/beta-refresh-runbook-v1.md` (preconditions, target rules, build/container, stage/preflight, schema gate, Android separation, F-Droid hold, public claim rule, rollback, receipts, hard stops).
+- Evidence summary: `docs/evidence/beta-refresh-v5-postmortem-summary.json`.
+- All future beta refreshes must follow these + gates + continuation.
 
 ---
 

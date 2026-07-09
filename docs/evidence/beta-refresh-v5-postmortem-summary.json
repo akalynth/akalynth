@@ -1,0 +1,104 @@
+{
+  "schema_version": "witnessops.akalynth-beta-refresh-v5-postmortem-summary.v1",
+  "stamp": "20260709T0400Z",
+  "lane": "AKALYNTH_BETA_REFRESH_POSTMORTEM_AND_RUNBOOK_APPLY_V1",
+  "decision": "POSTMORTEM_RUNBOOK_APPLY_READY",
+  "title": "AKALYNTH_BETA_REFRESH_V5_AND_PUBLIC_PROJECTION_POSTMORTEM_20260709 + runbook",
+  "summary": "V5 runtime refresh (schema25 container-built) succeeded after prior failures. Public projection repaired and deployed cleanly. F-Droid held. Controls (staging, preflight, schema gate, container build, bounded lanes) added and recorded.",
+  "final_live_state": {
+    "beta_runtime_commit": "47690e84c797d5f183b42f2c47a9b19a4ea6e86d",
+    "schema_version": 25,
+    "pod_status": "1/1 Running",
+    "direct_android": {
+      "version_code": 12,
+      "apk_url": "https://beta.akalynth.com/download/akalynth-beta-v12.apk",
+      "status": "independent"
+    },
+    "fdroid": {
+      "version_code": 5,
+      "status": "held pending signing authority",
+      "note": "separate signer and path; not synchronized"
+    },
+    "public_site": {
+      "wording_separated": true,
+      "browser_beta": "current pre-alpha beta",
+      "direct_v12": "Direct channel (current v12)",
+      "fdroid_hold": "F-Droid is held pending signing authority (older version). ... not synchronized with the current beta.",
+      "no_forbidden_claims": true
+    }
+  },
+  "key_receipts_and_evidence": [
+    "docs/evidence/publish-beta/20260709T0150Z-V5.json (PASS, V5 target, android 12, rollback backup preserved)",
+    "docs/evidence/publish-beta/20260709T003838Z-V3-apply.json (ROLLBACK_COMPLETED, 54c6 db=25 code=24 failure, traces)",
+    "docs/evidence/publish-beta/20260709T014000Z.json and preflight-test-20260709T014439.json (staging_preflight FAILs)",
+    "docs/evidence/schema25-source-recovery/20260709T0059Z/ (MANIFEST.txt, comparison.txt dist-25-vs-source-24, 54c6-blocked.txt, health/build-info/db-schema, android-v12.json, shas)",
+    "docs/evidence/fdroid-refresh-hold/20260709T030500Z-FDROID-HOLD.json (v5 details, v12 direct, signing policy, safe/forbidden claims, no mutation)",
+    "docs/evidence/public-projection-deploy/20260709T0256Z-PUBLIC-PROJECTION-DEPLOY.json (commit 9fdab54, 3 HTMLs only, pre/post checks, non-claims)",
+    ".claude/skills/akalynth-continue/references/CONTINUATION_STATE.md (V3 abort, V5 success, F-Droid hold, safe claims, policy)",
+    "infra/docker/server-node24-build.Dockerfile (pinned 24.15.0, ci + rebuild + build steps)",
+    "bin/lib/akalynth-publish-gates.sh (G1-G9+, manifest, schema, preflight helpers)",
+    "bin/akalynth-beta-publish.sh (prepare_staged_release + run_preflight_in_stage + publish_lane)",
+    "rollback backups: /opt/akalynth-beta.pre-refresh-20260709T015050Z (V5), ...003647Z (V3)",
+    "live verification: beta-api health, beta.akalynth.com (wording), APK mtimes/sizes"
+  ],
+  "failure_classes_addressed": [
+    "schema provenance gap (deployed 25 vs git 24)",
+    "schema version mismatch (54c6=24 vs live DB 25)",
+    "insufficient preflight (layout, native, real-DB schema, ws)",
+    "container/host build drift (node ABI, node_modules)",
+    "public claim ambiguity (undifferentiated Android, missing hold)"
+  ],
+  "controls_enforced": [
+    "staged publish + .preflight-passed sentinel",
+    "pod-equivalent preflight (ws resolve, entrypoint, BUILD match, schema DB gate, native)",
+    "containerized pinned Node 24.15 build",
+    "G1-G9 gates + manifest + codex + k8s parity",
+    "F-Droid hold record + separation rule",
+    "public projection review + bounded static deploy only",
+    "receipts + continuation + evidence packets mandatory"
+  ],
+  "safe_claims_recorded": [
+    "LIVE_BETA_REFRESHED_V5_PASS",
+    "Direct Android beta channel is v12 (independent)",
+    "F-Droid remains separate/divergent, held pending signing authority, not synchronized",
+    "Schema 25 provenance closed for V5 via recon + container + preflight",
+    "Public wording separates browser / direct v12 / F-Droid hold with no forbidden claims",
+    "Staging, preflight, gates enforced; rollback preserved"
+  ],
+  "forbidden_claims_recorded": [
+    "F-Droid aligned / refreshed / v12 / launch-ready",
+    "Android channels synchronized",
+    "Akalynth launch-ready",
+    "Schema 25 always in git pre-recon",
+    "All WIP resolved by V5",
+    "Git push occurred",
+    "F-Droid keystore approved or direct signer reusable",
+    "Future refresh can skip staging/preflight/gates/evidence"
+  ],
+  "unresolved": [
+    "F-Droid signing authority/custody (ambiguous, v5 frozen)",
+    "Git custody/push (local lane records only)",
+    "In-flight WIP (Android, debug-client, etc.; worktrees present)",
+    "Public projection future changes (require process)",
+    "Launch readiness (pre-alpha / controlled beta)"
+  ],
+  "files_created": [
+    "docs/postmortems/AKALYNTH_BETA_REFRESH_V5_AND_PUBLIC_PROJECTION_POSTMORTEM_20260709.md",
+    "docs/runbooks/beta-refresh-runbook-v1.md",
+    "docs/evidence/beta-refresh-v5-postmortem-summary.json"
+  ],
+  "cross_references": [
+    "CONTINUATION_STATE.md (updated with postmortem/runbook refs)",
+    "AGENTS.md (via continuation entry point)"
+  ],
+  "no_mutations": {
+    "runtime": true,
+    "apk": true,
+    "update_json": true,
+    "fdroid": true,
+    "k8s": true,
+    "git_push": true,
+    "source_edits": "only approved docs",
+    "db": true
+  }
+}
