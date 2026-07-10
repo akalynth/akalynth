@@ -80,6 +80,8 @@ Grouped by role. `L` = line count at last review. Entries marked **(non-binding)
 ### Governance & process
 | Doc | L | Role |
 | --- | --- | --- |
+| [AKALYNTH_DECISION_RECORD_V1.md](./AKALYNTH_DECISION_RECORD_V1.md) | 297 | Design-provenance governance contract: decision lineage, conformance, conflict resolution, and World Architect mandate. |
+| [decisions/AKALYNTH_DESIGN_PROVENANCE_ADOPTION_V1/ADOPTION_DECISION.md](./decisions/AKALYNTH_DESIGN_PROVENANCE_ADOPTION_V1/ADOPTION_DECISION.md) | 90 | Adoption decision establishing the federated scope of civil governance, design provenance, and narrative canon. |
 | [CONSTITUTIONAL_AMENDMENTS.md](./CONSTITUTIONAL_AMENDMENTS.md) | 126 | Amendment process for constitutional surfaces. |
 | [HIGH_LEVERAGE_DECISION_CHECKLIST.md](./HIGH_LEVERAGE_DECISION_CHECKLIST.md) | 288 | Decision checklist for high-leverage tasks. |
 | [LEVERAGE_TIER_MAPPING.md](./LEVERAGE_TIER_MAPPING.md) | 266 | Leverage-tier mapping of current state. |
