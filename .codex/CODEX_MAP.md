@@ -28,15 +28,15 @@ repo examples unless the user explicitly says to apply the repo example posture.
 ## Skill Stores (COLLAPSED TO ONE SOURCE — 2026-06-06)
 
 There is now a **single authored source** for the Akalynth skill set:
-`.claude/skills/` (22 skills). Every other store is a symlink into it, so the
+`.claude/skills/` (27 skills). Every other store is a symlink into it, so the
 old "skills/plugins keep getting installed and drifting" problem is gone — a
 re-install can only ever resolve back to the one source.
 
 | Store | Count | Tracked? | Role after collapse |
 |---|---|---|---|
-| `.claude/skills/` | 22 | yes | **Canonical source.** Edit skills only here. |
+| `.claude/skills/` | 27 | yes | **Canonical source.** Edit skills only here. |
 | `plugins/akalynth-studio/skills/` | 10 | yes | Curated Codex plugin pack — 10 relative symlinks (`../../../.claude/skills/<name>`) into canonical. |
-| `.agents/skills` | symlink | no (gitignored) | `→ ../.claude/skills`. Agent-runtime store; sees all 22. |
+| `.agents/skills` | symlink | no (gitignored) | `→ ../.claude/skills`. Agent-runtime store; sees all 27. |
 | `/home/g0admin/.codex/skills/` | 22 symlinks | n/a (global) | Each akalynth skill `→ /opt/goal0/sources/akalynth/.claude/skills/<name>` (absolute). `.system/` left as real dirs. |
 | `.codex/skills/akalynth-system-audit/` | 1 | yes | **Intentional exception:** a Codex project-skill in `skill.md`+`README.md` form with audit-specific content; not part of the duplicated set. Left as-is. |
 
@@ -56,7 +56,7 @@ dereference the symlinks at pack time, e.g. `cp -RL plugins/akalynth-studio
 - Project plugin count: 1 (`akalynth-studio`)
 - Project-scoped Codex skill count (`.codex/skills/`): 1
 - Akalynth Studio plugin skill count: 10
-- Claude Code skill count (`.claude/skills/`): 22 (canonical source)
+- Claude Code skill count (`.claude/skills/`): 27 (canonical source)
 - User-level Codex skill count (`/home/g0admin/.codex/skills/`): 22
 - User system skill dir (`/home/g0admin/.codex/skills/.system/`): present
 - Enabled cached user plugin count: 4 (`akalynth-studio`, `github`,
@@ -141,6 +141,8 @@ Source: `.codex/config.toml.example`
 
 ## Routing Matrix
 
+- World coherence, canon reconciliation, design provenance, cross-domain
+  conflicts, and design conformance: `world-architect`
 - Whole-system evidence audit: `akalynth-system-audit`
 - Host or topology discovery before changes: `server-cartographer`
 - Deploy, rollback, systemd, Caddy, firewall, runtime paths: `deploy-steward`
@@ -155,6 +157,11 @@ Source: `.codex/config.toml.example`
 - External PR/issue/CI/publish workflows: cached `github` plugin skills
 - Raster image generation/editing: system `imagegen`
 - Creating local Codex plugins or skills: system `plugin-creator`, `skill-creator`, `skill-installer`
+
+`world-architect` coordinates world-facing design and conformance but does not
+replace the domain steward selected for implementation, verification, Git
+custody, or deployment. Plugin distribution is deferred; the canonical skill is
+repository-local under `.claude/skills/world-architect/`.
 
 ## Git Custody / Push Boundary
 

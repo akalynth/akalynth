@@ -11,7 +11,7 @@ A social-first, low-grind MMO prototype — a TypeScript monorepo (`apps/`,
 
 ## Skills (single source of truth)
 
-- **Canonical source: `.claude/skills/`** (22 steward skills + meta/handoff skills).
+- **Canonical source: `.claude/skills/`** (27 steward and meta/handoff skills).
   Edit skills **only** here.
 - **Session handoff:** `akalynth-continue` — read
   `.claude/skills/akalynth-continue/references/CONTINUATION_STATE.md` before
@@ -26,7 +26,27 @@ A social-first, low-grind MMO prototype — a TypeScript monorepo (`apps/`,
   protocol / WS / HTTP → `protocol-guardian`; deploy / systemd / Caddy →
   `deploy-steward`; receipts / chronicle → `receipt-chain-steward`; whole-system
   evidence audit → `akalynth-system-audit`; verification commands → `test-runner`;
-  commit / push custody → `git-push-steward`.
+  commit / push custody → `git-push-steward`; world coherence, canon conflicts,
+  design provenance, and conformance → `world-architect`.
+
+## World Architect
+
+Use `world-architect` for world-facing design, canon reconciliation,
+cross-domain conflicts, and design-conformance review. Before substantial work:
+
+1. Read `docs/AKALYNTH_DECISION_RECORD_V1.md`.
+2. Identify the applicable authority domain and approval state.
+3. Inspect existing canon, decisions, implementation, and evidence.
+4. Label observations, canon, inferences, assumptions, proposals, conflicts,
+   open questions, and decisions explicitly.
+5. Route implementation and verification through the relevant specialist skills.
+
+The World Architect may classify, reconcile, propose, and assess conformance. It
+may not establish canon, approve its own proposals, modify Civil Guarantees
+G1–G15, promote assets, commit, push, or deploy without separate authority.
+Implementation and observed behavior do not become approval or canon by
+existence. Cross-domain discrepancies enter the design-provenance conflict
+procedure; no source wins automatically by format or implementation status.
 
 ## Operating posture
 
