@@ -1,0 +1,36 @@
+{
+  "pack": "AKALYNTH_MARKET_STALL_001_V1",
+  "version": 1,
+  "status": "accepted_source_asset",
+  "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+  "description": "Week 1 compact market-stall source asset. Generated, cleaned, hashed, rendered in a source-side comparison layout, and explicitly accepted by human review without runtime promotion.",
+  "tilemap_test_candidate": "data/assets-src/test-maps/market-stall-001-v1.json",
+  "screenshot_receipt": "data/assets-src/packs/market-stall-001-v1-review.png",
+  "weekly_outcome": "ACCEPTED_SOURCE_ASSET",
+  "assets": [
+    {
+      "id": "akalynth_prop_market_stall_001",
+      "asset_type": "prop",
+      "target_dims": [
+        32,
+        32
+      ],
+      "status": "human_reviewed",
+      "prompt_file": "data/assets-src/prompts/props/akalynth_prop_market_stall_001.txt",
+      "cleaned_file": "data/assets-src/sprites/props__market_stall.png",
+      "tilemap_test": "data/assets-src/test-maps/market-stall-001-v1.json"
+    }
+  ],
+  "verification": {
+    "verify_assets": "pass_in_isolated_clean_worktree",
+    "human_review": "pass_explicit_project_direction",
+    "world_review": "pass_source_side_comparison",
+    "promotion": "not_authorized"
+  },
+  "non_claims": [
+    "not runtime-map promoted",
+    "not promoted",
+    "not synchronized to runtime clients",
+    "does not replace or extend existing large market stalls"
+  ]
+}

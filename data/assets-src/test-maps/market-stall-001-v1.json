@@ -1,0 +1,75 @@
+{
+  "id": "market_stall_001_v1",
+  "kind": "asset_tilemap_test",
+  "status": "placement_human_reviewed",
+  "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+  "tile_size_px": 32,
+  "canvas_tiles": [
+    20,
+    6
+  ],
+  "scope": "Source-side comparison layout for the compact market stall beside a character, cobble ground, merchant crate, and existing large stall family. This is not a runtime map and grants no mechanics.",
+  "runtime_authority": "Display only. Collision, walkability, shop behavior, inventory, interaction, placement, and receipt behavior remain server-authoritative.",
+  "screenshot_receipt": "data/assets-src/packs/market-stall-001-v1-review.png",
+  "assets": [
+    "akalynth_prop_market_stall_001",
+    "base_human_male_01",
+    "floor_cobble_01",
+    "high_city_merchant_crate",
+    "market_cloth_stall",
+    "market_food_stall"
+  ],
+  "placements": [
+    {
+      "asset_id": "akalynth_prop_market_stall_001",
+      "cleaned_file": "data/assets-src/sprites/props__market_stall.png",
+      "x": 2,
+      "y": 3,
+      "role": "compact stall candidate",
+      "tile_code": null,
+      "mechanics": null
+    },
+    {
+      "asset_id": "base_human_male_01",
+      "cleaned_file": "data/assets-src/sprites/characters/base_human_male_01.png",
+      "x": 4,
+      "y": 2,
+      "role": "character scale reference",
+      "tile_code": null,
+      "mechanics": null
+    },
+    {
+      "asset_id": "high_city_merchant_crate",
+      "cleaned_file": "data/assets-src/sprites/world/high_city/high_city_merchant_crate.png",
+      "x": 6,
+      "y": 3,
+      "role": "crate scale reference",
+      "tile_code": null,
+      "mechanics": null
+    },
+    {
+      "asset_id": "market_cloth_stall",
+      "cleaned_file": "data/assets-src/sprites/world/market/market_cloth_stall.png",
+      "x": 8,
+      "y": 1,
+      "role": "existing large cloth-stall comparison",
+      "tile_code": null,
+      "mechanics": null
+    },
+    {
+      "asset_id": "market_food_stall",
+      "cleaned_file": "data/assets-src/sprites/world/market/market_food_stall.png",
+      "x": 14,
+      "y": 1,
+      "role": "existing large food-stall comparison",
+      "tile_code": null,
+      "mechanics": null
+    }
+  ],
+  "checks": [
+    "compact stall remains readable at native 32x32",
+    "compact stall is visually distinct from both existing 160x128 stalls",
+    "all mechanics fields remain null",
+    "human screenshot review is required before tilemap_tested or human_reviewed status"
+  ]
+}

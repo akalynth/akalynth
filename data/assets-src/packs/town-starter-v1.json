@@ -8,7 +8,7 @@
     { "id": "akalynth_prop_lamp_post_001", "asset_type": "prop", "target_dims": [32, 64], "status": "prompt_written", "prompt_file": "data/assets-src/prompts/props/akalynth_prop_lamp_post_001.txt" },
     { "id": "akalynth_prop_wooden_sign_001", "asset_type": "prop", "target_dims": [32, 32], "status": "prompt_written", "prompt_file": "data/assets-src/prompts/props/akalynth_prop_wooden_sign_001.txt" },
     { "id": "akalynth_prop_stone_well_001", "asset_type": "prop", "target_dims": [32, 32], "status": "prompt_written", "prompt_file": "data/assets-src/prompts/props/akalynth_prop_stone_well_001.txt" },
-    { "id": "akalynth_prop_market_stall_001", "asset_type": "prop", "target_dims": [32, 32], "status": "prompt_written", "prompt_file": "data/assets-src/prompts/props/akalynth_prop_market_stall_001.txt" },
+    { "id": "akalynth_prop_market_stall_001", "asset_type": "prop", "target_dims": [32, 32], "status": "human_reviewed", "prompt_file": "data/assets-src/prompts/props/akalynth_prop_market_stall_001.txt", "cleaned_file": "data/assets-src/sprites/props__market_stall.png", "tilemap_test": "data/assets-src/test-maps/market-stall-001-v1.json" },
     { "id": "akalynth_tile_cobblestone_001", "asset_type": "tile", "target_dims": [32, 32], "status": "prompt_written", "prompt_file": "data/assets-src/prompts/tiles/akalynth_tile_cobblestone_001.txt" },
     { "id": "akalynth_tile_grass_001", "asset_type": "tile", "target_dims": [32, 32], "status": "prompt_written", "prompt_file": "data/assets-src/prompts/tiles/akalynth_tile_grass_001.txt" },
     { "id": "akalynth_tile_dirt_path_001", "asset_type": "tile", "target_dims": [32, 32], "status": "prompt_written", "prompt_file": "data/assets-src/prompts/tiles/akalynth_tile_dirt_path_001.txt" },

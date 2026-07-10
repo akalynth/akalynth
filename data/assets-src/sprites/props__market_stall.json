@@ -1,0 +1,29 @@
+{
+  "asset_id": "akalynth_prop_market_stall_001",
+  "game": "Akalynth",
+  "asset_type": "prop",
+  "biome": "town",
+  "status": "human_reviewed",
+  "dimensions_px": [
+    32,
+    32
+  ],
+  "dimensions_target_px": [
+    32,
+    32
+  ],
+  "camera": "top_down_slight_isometric",
+  "background": "transparent",
+  "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+  "prompt_file": "data/assets-src/prompts/props/akalynth_prop_market_stall_001.txt",
+  "raw_file": "data/assets-src/_raw/props/akalynth_prop_market_stall_001_raw.png",
+  "cleaned_file": "data/assets-src/sprites/props__market_stall.png",
+  "sha256": "a83fead1d9d14684b072b68b31eaad6bb51726536b0467db8aa114032eeaddbc",
+  "tilemap_test": "data/assets-src/test-maps/market-stall-001-v1.json",
+  "license_status": "original_generated_asset",
+  "review_status": "approved",
+  "tile_code": null,
+  "mechanics": null,
+  "copyright_boundary": "original generated asset; no copied third-party sprite, UI, logo, map layout, or existing Akalynth stall",
+  "notes": "Compact ochre-and-dusty-blue market stall with timber frame, counter, crate forms, and lantern; distinct from the existing 160x128 market stalls. Generated source was chroma-key cleaned, alpha-trimmed, nearest-neighbor normalized, and palette-limited to 32 colors. Source-side comparison placement and human visual acceptance are recorded. Runtime promotion remains unauthorized."
+}
