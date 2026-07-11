@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "mode": "loose_png+atlas",
-  "generated_at": "2026-06-23T13:48:09.654Z",
+  "generated_at": "2026-07-11T11:35:58.948Z",
   "files": [
     {
       "path": "atlas/chronicle.png",
@@ -13,11 +13,11 @@
     },
     {
       "path": "atlas/manifest.json",
-      "sha256": "1f3fbcc9446b5ba162618f64033129d7302ae2a879da6c818db7cb810f421e78"
+      "sha256": "7c45b3e648acdf64307b75982bc45c2b3b3b56fdec726798c17b8878b1ce45d4"
     },
     {
       "path": "atlas/ui.png",
-      "sha256": "d98c9a2860ac86d3fae32ca480923d8f8c256c678acd7a151bce24adcd8d7b76"
+      "sha256": "2ef6678e4f8c58d45ba677ea81ae66dd8634fd9f84751913cad89660c1194580"
     },
     {
       "path": "atlas/world.png",
@@ -220,6 +220,10 @@
       "sha256": "5d07c6d89cef403d061827610ad2f74f357fdd29c63f7d684557e4e26585e863"
     },
     {
+      "path": "sprites/props__market_stall.png",
+      "sha256": "a83fead1d9d14684b072b68b31eaad6bb51726536b0467db8aa114032eeaddbc"
+    },
+    {
       "path": "sprites/props__tree.png",
       "sha256": "bcdec8107b5bd7be490c8bf831d0889a82ac0ce94fe4713169ee2d24d6e058cf"
     },
@@ -289,55 +293,55 @@
     },
     {
       "path": "ui/ui_action_ring_danger.png",
-      "sha256": "6979c7b64b89649053514ace69350553840cb4b91d49e5054886ffc02dd12c0e"
+      "sha256": "563693f69f8ce0b0361b50dbdf8c9b071d6753a914a89662c74c21ea1df45f3e"
     },
     {
       "path": "ui/ui_action_ring_pressed.png",
-      "sha256": "4541a70d69513b1b0cc6211d97095ff42e7e80b026ee68e89365e149cb87eef0"
+      "sha256": "d56ba1ab6be50046f593012df00f330c4566f6d644253bcf58c0465685a72ef2"
     },
     {
       "path": "ui/ui_action_ring.png",
-      "sha256": "5494e0d4bd3c7f72a7db4fd61622918dbb2c4e33e7048d27bb0f4f4c69e2e018"
+      "sha256": "23b8d13f48de780dff98a30617eddbc141840ea5e9fe08c308ba63137c8f86a7"
     },
     {
       "path": "ui/ui_bar_track.png",
-      "sha256": "5edc78efb266d325ab34295c8e6f73d09651c5f82c74ca33d36bfb491a876652"
+      "sha256": "7ed8f22561388ef974057e09261f3348e90c1da2cb3e6cb61ad65b09a6b251eb"
     },
     {
       "path": "ui/ui_button_frame.png",
-      "sha256": "a65a32b3eb06909ea1a26f949c96cff6df791c76b02f4542e6b6ac7b82befcb1"
+      "sha256": "3a24d26a15c4cb2ce7bf4ffbc38bc002ed7abc4daa5a15189a21924eefca86b6"
     },
     {
       "path": "ui/ui_button_pressed_frame.png",
-      "sha256": "8c15a9e49731bb6372939bbb4d07b69d9815398ae15a625c9b4560325b58d061"
+      "sha256": "7fa46eb7496ffb0fb582d460cace9aee7b2ee39cc2c23ee691b1e25324127981"
     },
     {
       "path": "ui/ui_dock_frame.png",
-      "sha256": "e158c0390d6f962eb07389fcbd4188f1399e8758cf769e6cfa677fe3d04c3859"
+      "sha256": "610447a135f709c7debab0d552fb772a5b05c46bc4a9f2a4a2bf0c2eb7f02242"
     },
     {
       "path": "ui/ui_dpad_button_pressed.png",
-      "sha256": "e75662705a93a33ca9e9e35b2b86845fc52c8c3c3f6bada6aee8c8b68932dd75"
+      "sha256": "df75663e2014ba82996cb46c28e6d4d61dba01ed8d9bacf1ffa087d50ad113f5"
     },
     {
       "path": "ui/ui_dpad_button.png",
-      "sha256": "044798e77168fd70eda7cd3496f4925536515064c730ca66c58f32389b66474f"
+      "sha256": "329b5e3fd19b463b74cfde5864b0648da0ede9de55a2b2e79772578332d139d2"
     },
     {
       "path": "ui/ui_dpad_frame.png",
-      "sha256": "d1fd7dddfbfd11220d81a4694580590bf049c40b7280dde6a1eb7e2031e7235d"
+      "sha256": "3e11f84a57bd3bb1a493691b24307c99060c6b2782f02df1188ef9508bdef375"
     },
     {
       "path": "ui/ui_hp_fill.png",
-      "sha256": "226e370f6bbb251a61dea872ffa787094f478e2e37a72d943011a12d1549c742"
+      "sha256": "620cbc0b3fd1ca6308c769771121a5b1ed4c86df5204bedcebb35390fb9a7c8b"
     },
     {
       "path": "ui/ui_mp_fill.png",
-      "sha256": "d39391230ab5df18f1925ee80d3839e198b23bde81dfcf00d1b8d051aad1c526"
+      "sha256": "692f317cd67954c8fabff0006b772534c99641483dc1906573384cd8709ce9f4"
     },
     {
       "path": "ui/ui_panel_frame.png",
-      "sha256": "2c40638d27d13b00da6ebd73cc3725d4f912b058f85df14525ee163c48761613"
+      "sha256": "16a519805f576149aacae6c198f62884bc5ce20d33b8eed0a3166f684421559e"
     },
     {
       "path": "world/castle/prison_bars.png",
@@ -596,5 +600,5 @@
       "sha256": "38a1a46cb41267f20a4543655be006522bb11f6df4ab18cbbbc8ccab699a514e"
     }
   ],
-  "atlas_generated_at": "2026-06-23T13:48:09.938Z"
+  "atlas_generated_at": "2026-07-11T11:35:59.703Z"
 }

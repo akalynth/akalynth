@@ -9,9 +9,13 @@ import type {
   CharacterCatalog,
   CharacterCreateInput,
   CharacterSex,
+  OutfitColorIndices,
   SessionInfo,
 } from '../types';
+import { supportsOutfitRecolorPreview } from '../data/outfitRecolorEngine';
 import { CharacterSpritePreview } from './CharacterSpritePreview';
+import { OutfitColorPicker } from './OutfitColorPicker';
+import { OutfitRecolorPreview } from './OutfitRecolorPreview';
 
 function accountSessionGuardMessage(accountSession: AccountSessionStatus): string | null {
   if (!accountSession.authenticated) {
@@ -57,6 +61,12 @@ export function CharacterBar({
   const [worldId, setWorldId] = useState<CharacterCreateInput['world_id'] | ''>('');
   const [sex, setSex] = useState<CharacterSex>('male');
   const [outfitId, setOutfitId] = useState<CharacterCreateInput['outfit_id'] | ''>('');
+  const [outfitColors, setOutfitColors] = useState<OutfitColorIndices>({
+    head: 5,
+    body: 24,
+    legs: 36,
+    feet: 38,
+  });
   const [selectedCharacterId, setSelectedCharacterId] = useState('');
   const outfitOptions = useMemo(
     () => catalog.outfits.filter((entry) => entry.sex === sex),
@@ -72,6 +82,11 @@ export function CharacterBar({
     if (catalog.worlds.some((world) => world.world_id === worldId)) return;
     setWorldId(catalog.worlds[0].world_id);
   }, [catalog.worlds, worldId]);
+
+  useEffect(() => {
+    const defaults = catalog.outfitEngine?.default_colors;
+    if (defaults) setOutfitColors(defaults);
+  }, [catalog.outfitEngine]);
 
   useEffect(() => {
     if (!outfitOptions.length) {
@@ -153,6 +168,7 @@ export function CharacterBar({
       world_id: worldId,
       sex,
       outfit_id: outfitId,
+      outfit_colors: outfitColors,
     });
     setBusy(false);
     if (result.ok) {
@@ -261,10 +277,18 @@ export function CharacterBar({
           </button>
         </>
       )}
-      <CharacterSpritePreview
-        spriteId={bundledSpriteForPreview(outfitPreview.outfitId, sex)}
-        spriteLabel={outfitPreview.spriteLabel}
-      />
+      {supportsOutfitRecolorPreview(outfitId || outfitPreview.outfitId) ? (
+        <OutfitRecolorPreview
+          outfitId={outfitId || outfitPreview.outfitId}
+          colors={outfitColors}
+          spriteLabel={outfitPreview.spriteLabel}
+        />
+      ) : (
+        <CharacterSpritePreview
+          spriteId={bundledSpriteForPreview(outfitPreview.outfitId, sex)}
+          spriteLabel={outfitPreview.spriteLabel}
+        />
+      )}
       <input
         className="character-bar-input"
         type="text"
@@ -316,6 +340,14 @@ export function CharacterBar({
           </option>
         ))}
       </select>
+      {catalog.outfitEngine && (
+        <OutfitColorPicker
+          engine={catalog.outfitEngine}
+          value={outfitColors}
+          onChange={setOutfitColors}
+          disabled={createFieldsDisabled || !catalog.loaded || catalog.loading}
+        />
+      )}
       <button
         type="submit"
         className="character-bar-btn"

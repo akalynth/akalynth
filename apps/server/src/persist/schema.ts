@@ -7,7 +7,7 @@ import type Database from 'better-sqlite3';
 // Schema Version
 // ============================================================================
 
-export const SCHEMA_VERSION = 24;
+export const SCHEMA_VERSION = 25;
 
 // ============================================================================
 // DDL Statements
@@ -380,6 +380,42 @@ CREATE TABLE IF NOT EXISTS account_characters (
 CREATE INDEX IF NOT EXISTS idx_account_characters_account ON account_characters(account_id);
 `;
 
+// Controlled beta operations v1. Invite codes are stored only as hashes; the
+// raw code exists in the operator's delivery channel and in the player's
+// request body. This is operational cohort state, not world state.
+const DDL_BETA_COHORTS = `
+CREATE TABLE IF NOT EXISTS beta_cohorts (
+  cohort_id       TEXT PRIMARY KEY,
+  release_commit  TEXT NOT NULL,
+  platform        TEXT NOT NULL DEFAULT 'web',
+  invite_cap      INTEGER NOT NULL CHECK (invite_cap > 0),
+  status          TEXT NOT NULL DEFAULT 'open',
+  rollback_commit TEXT DEFAULT NULL,
+  created_at      TEXT NOT NULL,
+  opens_at        TEXT DEFAULT NULL,
+  closes_at       TEXT DEFAULT NULL,
+  created_by      TEXT DEFAULT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_beta_cohorts_status ON beta_cohorts(status);
+`;
+
+const DDL_BETA_INVITES = `
+CREATE TABLE IF NOT EXISTS beta_invites (
+  invite_id       TEXT PRIMARY KEY,
+  cohort_id       TEXT NOT NULL,
+  token_hash      TEXT NOT NULL UNIQUE,
+  token_hint      TEXT NOT NULL,
+  status          TEXT NOT NULL DEFAULT 'issued',
+  issued_at       TEXT NOT NULL,
+  expires_at      TEXT DEFAULT NULL,
+  redeemed_at     TEXT DEFAULT NULL,
+  account_id      TEXT DEFAULT NULL,
+  FOREIGN KEY (cohort_id) REFERENCES beta_cohorts(cohort_id)
+);
+CREATE INDEX IF NOT EXISTS idx_beta_invites_cohort_status ON beta_invites(cohort_id, status);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_beta_invites_account ON beta_invites(account_id) WHERE account_id IS NOT NULL;
+`;
+
 // Identity Seal v1: accountless principal registry. This is additive beside the
 // Account Platform tables; it stores public keys/fingerprints and privacy-light
 // identity state, never private keys, raw session tokens, emails, or passwords.
@@ -635,6 +671,9 @@ function runMigration(db: Database.Database, version: number): void {
       break;
     case 24:
       migrateToV24(db);
+      break;
+    case 25:
+      migrateToV25(db);
       break;
     default:
       throw new Error(`Unknown schema version: ${version}`);
@@ -1035,6 +1074,18 @@ function migrateToV24(db: Database.Database): void {
   insertMeta.run('schema_version', '24');
 }
 
+function migrateToV25(db: Database.Database): void {
+  // Beta Player Readiness v1: bounded cohort and invitation ledger. The raw
+  // invitation token is never persisted; player measurement remains receipt-
+  // backed and is reconstructed by the readiness report.
+  db.exec(DDL_BETA_COHORTS);
+  db.exec(DDL_BETA_INVITES);
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', '25');
+}
+
 function ensureWorldEventEvidenceColumns(db: Database.Database): void {
   const columns = db.prepare(`PRAGMA table_info(world_events)`).all() as Array<{ name: string }>;
   const names = new Set(columns.map((column) => column.name));
@@ -1062,6 +1113,8 @@ export function resetSchema(db: Database.Database): void {
   db.exec('DROP TABLE IF EXISTS principal_keys');
   db.exec('DROP TABLE IF EXISTS principals');
   db.exec('DROP TABLE IF EXISTS account_characters');
+  db.exec('DROP TABLE IF EXISTS beta_invites');
+  db.exec('DROP TABLE IF EXISTS beta_cohorts');
   db.exec('DROP TABLE IF EXISTS account_password_resets');
   db.exec('DROP TABLE IF EXISTS account_sessions');
   db.exec('DROP TABLE IF EXISTS account_email_verifications');
@@ -1087,7 +1140,7 @@ export function resetSchema(db: Database.Database): void {
 export function getTableCounts(
   db: Database.Database
 ): Record<string, number> {
-  const tables = ['players', 'reputation_events', 'deaths', 'world_objects', 'items', 'inventory_items', 'legendary_heat', 'player_heat', 'player_anticheat_enforcement', 'chronicle_events', 'moderation_reports', 'npc_talk_events', 'world_events', 'properties'];
+  const tables = ['players', 'reputation_events', 'deaths', 'world_objects', 'items', 'inventory_items', 'legendary_heat', 'player_heat', 'player_anticheat_enforcement', 'chronicle_events', 'moderation_reports', 'npc_talk_events', 'world_events', 'properties', 'beta_cohorts', 'beta_invites'];
   const counts: Record<string, number> = {};
 
   for (const table of tables) {

@@ -82,6 +82,9 @@ import { AccountStore } from './account/store.js';
 import { AccountService } from './account/service.js';
 import { makeAccountRouter } from './account/router.js';
 import { RateLimiter } from './account/rateLimit.js';
+import { BetaStore } from './beta/store.js';
+import { BetaService } from './beta/service.js';
+import { makeBetaRouter } from './beta/router.js';
 import { PrincipalStore } from './principal/store.js';
 import { PrincipalService } from './principal/service.js';
 import { makePrincipalRouter } from './principal/router.js';
@@ -314,6 +317,11 @@ const ANTICHEAT_PRIORS_PATH = process.env.AKALYNTH_ANTICHEAT_PRIORS_PATH;
 const DEV_MINT_ENABLED = parseBoolEnv(process.env.AKALYNTH_DEV_MINT, false);
 const REQUIRE_TLS = parseBoolEnv(process.env.REQUIRE_TLS, true);
 const ALLOW_INSECURE_LOCAL = parseBoolEnv(process.env.ALLOW_INSECURE_LOCAL, false);
+// Controlled Beta Player Readiness v1. Measurement is additive; invite gating
+// is opt-in so existing local/debug flows remain usable until an operator opens
+// a named cohort explicitly.
+const BETA_ENABLED = parseBoolEnv(process.env.AKALYNTH_BETA_ENABLED, true);
+const BETA_REQUIRE_INVITE = parseBoolEnv(process.env.AKALYNTH_BETA_REQUIRE_INVITE, false);
 // Account portal CORS (E5 companion): the static website is a separate origin
 // from this API and uses cookie sessions (`credentials: 'include'`), so the API
 // must reflect an explicit allowlisted Origin — never `*`. ACCOUNT_CORS_ORIGINS
@@ -1301,6 +1309,19 @@ const audit = createAuditLogger({
 });
 const receiptsReader = createReceiptsReader(chainPaths.receiptsPath);
 
+// Controlled beta operations: cohort/invite state lives in the derived account
+// database, while readiness events and feedback are written to the canonical
+// receipt chain through BetaService.
+const betaStore = new BetaStore(persist.db);
+const betaService = new BetaService({
+  store: betaStore,
+  enabled: BETA_ENABLED,
+  requireInvite: BETA_REQUIRE_INVITE,
+  releaseCommit: BUILD_INFO.commit ?? 'unknown',
+  now: () => Date.now(),
+  emitReceipt: (e) => audit.write({ actor_id: e.actorId, action: e.action, inputs: e.inputs, result: e.result }),
+});
+
 // Account Platform v1 (E2 / AKALYNTH_ACCOUNT_AUTH_API_V1): the /v1/accounts/*
 // surface. Receipts are privacy-bounded (emitReceipt passes only event + opaque
 // account_id + redacted inputs to the audit chain). Account rows are written
@@ -1335,6 +1356,10 @@ const accountService = new AccountService({
     // response (and logs it) for local testing. Production never exposes it.
     devExposeLinks: ALLOW_INSECURE_LOCAL,
   },
+  beta: {
+    requireInvite: BETA_REQUIRE_INVITE,
+    claimInvite: (code, accountId) => betaService.claimInvite(code, accountId),
+  },
   // Tokens are secrets: only log them under insecure-local dev, never in prod.
   logLink: ALLOW_INSECURE_LOCAL
     ? (kind, accountId, token) => console.log(`[account] ${kind} token for ${accountId}: ${token}`)
@@ -1351,6 +1376,12 @@ const handleAccount = makeAccountRouter({
   service: accountService,
   loginLimiter: new RateLimiter(10, 5 * 60 * 1000),
   writeLimiter: new RateLimiter(5, 60 * 60 * 1000),
+});
+const handleBeta = makeBetaRouter({
+  service: betaService,
+  resolveAccount: (cookies) => accountService.sessionAccount(cookies),
+  eventLimiter: new RateLimiter(120, 60 * 1000),
+  feedbackLimiter: new RateLimiter(10, 60 * 60 * 1000),
 });
 
 // Account Platform v1 (E4 / AKALYNTH_ACCOUNT_CHARACTER_V2_V1): catalogs +
@@ -2538,6 +2569,7 @@ const httpServer = http.createServer((req, res) => {
     getBuildInfo: () => BUILD_INFO,
     getTickMs: () => TICK_MS,
     handleAccount,
+    handleBeta,
     handleCharacter,
     handlePrincipal,
     handleEconomy,

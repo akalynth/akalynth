@@ -58,6 +58,8 @@ export interface ApiDeps {
   getPropertyLedger?: (property_id: string) => PropertyLedgerResponse | null;
   // Account Platform v1 (E2): self-contained router for /v1/accounts/*.
   handleAccount?: (req: IncomingMessage, res: ServerResponse) => boolean | Promise<boolean>;
+  // Beta Player Readiness v1: cohort status, bounded readiness events, feedback.
+  handleBeta?: (req: IncomingMessage, res: ServerResponse) => boolean | Promise<boolean>;
   // Account Platform v1 (E4): catalogs + account-gated character endpoints
   // (/v1/worlds, /v1/outfits, /v1/characters, /v1/characters/select).
   handleCharacter?: (req: IncomingMessage, res: ServerResponse) => boolean | Promise<boolean>;
@@ -117,6 +119,10 @@ export function handleHttp(
   const url = new URL(req.url ?? '/', 'http://localhost');
   const path = url.pathname;
   const method = (req.method ?? 'GET').toUpperCase();
+
+  if (path.startsWith('/v1/beta/') && deps.handleBeta) {
+    return deps.handleBeta(req, res);
+  }
 
   // Account Platform v1 (E2): delegate the whole /v1/accounts/* surface to the
   // self-contained account router (parses body/cookies/CSRF, sets Set-Cookie).

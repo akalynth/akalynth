@@ -404,6 +404,7 @@ async function main() {
           ...process.env,
           VITE_HTTP_BASE: fakeServer.httpBase,
           VITE_WS_BASE: fakeServer.wsBase,
+          AKALYNTH_BROWSER_SMOKE: '1',
         }
       : process.env;
     vite = spawnLogged(

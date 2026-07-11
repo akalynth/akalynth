@@ -2654,6 +2654,156 @@ button {
   }
 }
 
+/* Beta feedback: player-readable, keyboard reachable, and touch-safe. */
+.beta-feedback-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(7, 8, 11, 0.78);
+}
+
+.beta-feedback-sheet {
+  width: min(100%, 36rem);
+  max-height: min(92dvh, 48rem);
+  overflow: auto;
+  padding: 1.1rem;
+  border: 1px solid rgba(219, 180, 92, 0.45);
+  border-radius: 0.75rem;
+  background: #15130f;
+  color: #f3ead8;
+  box-shadow: 0 1rem 4rem rgba(0, 0, 0, 0.55);
+}
+
+.beta-feedback-header,
+.beta-feedback-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.beta-feedback-kicker {
+  display: block;
+  color: #d9b25a;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.beta-feedback-header h2 {
+  margin: 0.2rem 0 0;
+  font-size: 1.2rem;
+}
+
+.beta-feedback-close,
+.beta-feedback-secondary,
+.beta-feedback-primary {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  border-radius: 0.45rem;
+  cursor: pointer;
+  font: inherit;
+}
+
+.beta-feedback-close,
+.beta-feedback-secondary {
+  border: 1px solid rgba(243, 234, 216, 0.22);
+  background: transparent;
+  color: #d9cfbd;
+}
+
+.beta-feedback-close {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.beta-feedback-primary {
+  padding: 0.6rem 1rem;
+  border: 1px solid #d9b25a;
+  background: #d9b25a;
+  color: #1a1408;
+  font-weight: 700;
+}
+
+.beta-feedback-primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.beta-feedback-sheet label {
+  display: block;
+  margin-top: 0.85rem;
+  color: #cfc3ad;
+  font-size: 0.82rem;
+}
+
+.beta-feedback-sheet input,
+.beta-feedback-sheet textarea,
+.beta-feedback-sheet select {
+  display: block;
+  width: 100%;
+  margin-top: 0.3rem;
+  padding: 0.7rem;
+  border: 1px solid rgba(243, 234, 216, 0.22);
+  border-radius: 0.4rem;
+  background: #0d0c0a;
+  color: #f3ead8;
+  font: inherit;
+}
+
+.beta-feedback-sheet input:focus,
+.beta-feedback-sheet textarea:focus,
+.beta-feedback-sheet select:focus,
+.beta-feedback-close:focus-visible,
+.beta-feedback-secondary:focus-visible,
+.beta-feedback-primary:focus-visible {
+  outline: 2px solid #f3ce73;
+  outline-offset: 2px;
+}
+
+.beta-feedback-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.beta-feedback-note,
+.beta-feedback-privacy,
+.beta-feedback-notice {
+  margin: 0.8rem 0 0;
+  color: #cfc3ad;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.beta-feedback-notice {
+  color: #9ae09e;
+}
+
+.beta-feedback-actions {
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+@media (max-width: 600px) {
+  .beta-feedback-overlay {
+    place-items: end center;
+    padding: 0;
+  }
+
+  .beta-feedback-sheet {
+    max-height: 94dvh;
+    border-radius: 0.75rem 0.75rem 0 0;
+  }
+
+  .beta-feedback-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ============================================================================
    AKALYNTH_CLASSIC_MMO_UI_SKIN_V1
    Original classic MMO-inspired stone/iron interface skin. This is presentation
@@ -6894,5 +7044,436 @@ body {
 @media (max-width: 950px) and (orientation: landscape) and (max-height: 430px) {
   .app-shell--presentation .mobile-hotbar-btn {
     min-height: 48px;
+  }
+}
+
+/* ============================================================================
+   AKALYNTH_MODERN_GAME_HUD_V1
+
+   Modern game presentation: compact glass-like surfaces, readable hierarchy,
+   stronger state color, and touch-first controls. The Classic 32 textures stay
+   as a low-opacity material layer so the game keeps its identity without
+   letting decorative chrome overpower the playfield.
+   ============================================================================ */
+
+.app-shell--modern {
+  --modern-surface: rgba(10, 18, 32, 0.86);
+  --modern-surface-raised: rgba(18, 29, 48, 0.94);
+  --modern-border: rgba(148, 163, 184, 0.22);
+  --modern-border-strong: rgba(125, 211, 252, 0.58);
+  --modern-text: #f8fafc;
+  --modern-muted: #a9b6c8;
+  --modern-accent: #7dd3fc;
+  --modern-success: #6ee7b7;
+  --modern-warning: #f8cf73;
+  --modern-danger: #fb7185;
+  color: var(--modern-text);
+}
+
+.app-shell--modern .nine-slice-panel--png {
+  border: 1px solid var(--modern-border);
+  border-radius: 14px;
+  background: var(--modern-surface);
+  box-shadow: 0 16px 40px rgba(2, 6, 23, 0.34), inset 0 1px rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  backdrop-filter: blur(18px) saturate(130%);
+}
+
+.app-shell--modern .nine-slice-panel__canvas {
+  opacity: 0.16;
+}
+
+.app-shell--modern .nine-slice-panel__content {
+  z-index: 1;
+}
+
+.app-shell--modern .top-bar-shell {
+  filter: drop-shadow(0 10px 24px rgba(2, 6, 23, 0.28));
+}
+
+.app-shell--modern .play-shell-top-bar {
+  gap: 0.65rem;
+  border-radius: 16px;
+}
+
+.app-shell--modern .brand {
+  color: var(--modern-text);
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.app-shell--modern .stage-chip,
+.app-shell--modern .conn-pill,
+.app-shell--modern .layout-toggle,
+.app-shell--modern .layout-reset,
+.app-shell--modern .panel-drag-handle {
+  border: 1px solid var(--modern-border);
+  border-radius: 10px;
+  background: rgba(15, 27, 45, 0.82);
+  color: var(--modern-muted);
+  font-weight: 700;
+}
+
+.app-shell--modern .stage-chip.active,
+.app-shell--modern .layout-toggle[aria-pressed='true'] {
+  border-color: var(--modern-border-strong);
+  background: rgba(14, 116, 144, 0.28);
+  color: var(--modern-accent);
+}
+
+.app-shell--modern .conn-pill.connected,
+.app-shell--modern .conn-pill.open,
+.app-shell--modern .conn-pill.ready {
+  border-color: rgba(110, 231, 183, 0.36);
+  color: var(--modern-success);
+}
+
+.app-shell--modern .hud-primary {
+  gap: 0.65rem;
+}
+
+.app-shell--modern .hud-card {
+  min-width: 150px;
+  border-radius: 16px;
+  color: var(--modern-text);
+}
+
+.app-shell--modern .hud-card--identity {
+  gap: 0.26rem;
+  min-width: 172px;
+}
+
+.app-shell--modern .hud-kicker,
+.app-shell--modern .hud-card span,
+.app-shell--modern .proof-chip span,
+.app-shell--modern .ui-stat-bar__meta {
+  color: var(--modern-muted);
+}
+
+.app-shell--modern .hud-card strong,
+.app-shell--modern .proof-chip strong {
+  color: var(--modern-text);
+  font-size: 0.94rem;
+}
+
+.app-shell--modern .hud-card--stats {
+  gap: 0.65rem;
+}
+
+.app-shell--modern .ui-stat-bar__meta strong {
+  color: var(--modern-accent);
+}
+
+.app-shell--modern .ui-stat-bar__track {
+  height: 7px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 999px;
+  background-color: rgba(2, 6, 23, 0.74);
+}
+
+.app-shell--modern .ui-stat-bar__fill {
+  border-radius: 999px;
+  box-shadow: 0 0 12px rgba(248, 113, 113, 0.4);
+}
+
+.app-shell--modern .hud-proof .proof-chip,
+.app-shell--modern .motion-objective-rail,
+.app-shell--modern .mobile-status-rail {
+  border: 1px solid var(--modern-border);
+  border-radius: 14px;
+  background: var(--modern-surface);
+  color: var(--modern-text);
+  box-shadow: 0 12px 30px rgba(2, 6, 23, 0.26);
+  backdrop-filter: blur(18px) saturate(130%);
+}
+
+.app-shell--modern .motion-objective-rail strong {
+  color: var(--modern-text);
+}
+
+.app-shell--modern .stage-controls {
+  gap: 0.75rem;
+}
+
+.app-shell--modern .thumb-zone {
+  border: 1px solid var(--modern-border);
+  border-radius: 22px;
+  background: rgba(10, 18, 32, 0.58);
+  box-shadow: 0 18px 44px rgba(2, 6, 23, 0.28);
+  backdrop-filter: blur(16px) saturate(125%);
+}
+
+.app-shell--modern .dpad-shell {
+  border-radius: 18px;
+}
+
+.app-shell--modern .texture-circle--png {
+  filter: drop-shadow(0 6px 10px rgba(2, 6, 23, 0.4));
+}
+
+.app-shell--modern .dpad-btn__hit,
+.app-shell--modern .dpad-stop {
+  color: #dbeafe;
+  font-size: 1.08rem;
+  font-weight: 800;
+  text-shadow: 0 1px 2px rgba(2, 6, 23, 0.8);
+}
+
+.app-shell--modern .dpad-stop {
+  color: var(--modern-danger);
+}
+
+.app-shell--modern .actions-panel--compact,
+.app-shell--modern .compact-action-card,
+.app-shell--modern .compact-objective-card {
+  border-radius: 16px;
+}
+
+.app-shell--modern .mobile-hotbar {
+  gap: 0.5rem;
+}
+
+.app-shell--modern .mobile-hotbar-btn,
+.app-shell--modern .action-btn {
+  min-height: 52px;
+  border: 1px solid var(--modern-border);
+  border-radius: 14px;
+  background: var(--modern-surface-raised);
+  color: var(--modern-text);
+  box-shadow: 0 8px 18px rgba(2, 6, 23, 0.24);
+  font-weight: 800;
+  transition: border-color 120ms ease, background-color 120ms ease, transform 120ms ease;
+}
+
+.app-shell--modern .mobile-hotbar-btn:hover:not(:disabled),
+.app-shell--modern .action-btn:hover:not(:disabled) {
+  border-color: var(--modern-border-strong);
+  background: rgba(30, 64, 92, 0.96);
+}
+
+.app-shell--modern .mobile-hotbar-btn:active:not(:disabled),
+.app-shell--modern .action-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.app-shell--modern .attack-btn:not(:disabled) {
+  border-color: rgba(251, 113, 133, 0.58);
+  color: #fecdd3;
+}
+
+.app-shell--modern .ritual-btn:not(:disabled) {
+  border-color: rgba(125, 211, 252, 0.58);
+  color: var(--modern-accent);
+}
+
+.app-shell--modern .stage-bottom {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.app-shell--modern .play-shell-dock {
+  min-height: 60px;
+  border-radius: 18px;
+}
+
+.app-shell--modern .bottom-actions {
+  gap: 0.45rem;
+}
+
+.app-shell--modern .dock-chip__hit {
+  min-height: 48px;
+  border-radius: 12px;
+  color: var(--modern-muted);
+  font-size: 0.76rem;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+.app-shell--modern .dock-chip__hit:hover,
+.app-shell--modern .dock-chip__hit:focus-visible {
+  background: rgba(14, 116, 144, 0.24);
+  color: var(--modern-accent);
+  outline: none;
+}
+
+.app-shell--modern .status-pills .pill {
+  border: 1px solid rgba(110, 231, 183, 0.3);
+  background: rgba(6, 78, 59, 0.24);
+  color: var(--modern-success);
+}
+
+.app-shell--modern.app-shell--customize [data-ui-panel] {
+  outline-color: rgba(125, 211, 252, 0.82);
+}
+
+.app-shell--modern .panel-drag-handle {
+  color: var(--modern-accent);
+  box-shadow: 0 8px 18px rgba(2, 6, 23, 0.28);
+}
+
+@media (min-width: 951px) {
+  .app-shell--modern .motion-objective-rail {
+    top: max(5.75rem, calc(env(safe-area-inset-top) + 5.75rem));
+  }
+}
+
+@media (max-width: 950px) and (orientation: landscape) {
+  .app-shell--modern .mobile-status-rail {
+    border-radius: 14px;
+  }
+
+  .app-shell--modern .mobile-hotbar-btn {
+    min-height: 50px;
+  }
+}
+
+/* ============================================================================
+   AKALYNTH_CUSTOMIZABLE_HUD_V1
+
+   Layout mode is explicit so normal taps, movement, and combat never start a
+   drag by accident. Each panel moves through a 44px touch-safe handle and is
+   persisted independently for portrait and landscape play.
+   ============================================================================ */
+
+[data-ui-panel] {
+  translate: var(--ui-drag-x, 0px) var(--ui-drag-y, 0px);
+}
+
+.app-shell--customize [data-ui-panel] {
+  outline: 1px dashed rgba(226, 183, 20, 0.72);
+  outline-offset: 4px;
+}
+
+.play-shell-top-bar {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+}
+
+.layout-controls {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.3rem;
+  min-width: max-content;
+}
+
+.layout-toggle,
+.layout-reset,
+.panel-drag-handle {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid rgba(226, 183, 20, 0.42);
+  border-radius: 6px;
+  background: rgba(8, 12, 20, 0.88);
+  color: var(--classic-gold, #e2b714);
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.layout-toggle:hover,
+.layout-reset:hover,
+.panel-drag-handle:hover,
+.layout-toggle:focus-visible,
+.layout-reset:focus-visible,
+.panel-drag-handle:focus-visible {
+  border-color: var(--accent, #e2b714);
+  box-shadow: 0 0 0 2px rgba(226, 183, 20, 0.2);
+  outline: none;
+}
+
+.panel-drag-handle {
+  touch-action: none;
+  cursor: grab;
+}
+
+.panel-drag-handle:active {
+  cursor: grabbing;
+}
+
+.panel-drag-handle--topbar {
+  min-width: 48px;
+}
+
+.play-shell-dock {
+  position: relative;
+}
+
+.hud-primary > .panel-drag-handle,
+.stage-controls > .panel-drag-handle {
+  position: absolute;
+  z-index: 4;
+}
+
+.panel-drag-handle--hud {
+  top: -0.25rem;
+  left: -0.25rem;
+}
+
+.panel-drag-handle--controls {
+  top: -3.2rem;
+  left: 0;
+}
+
+.mobile-status-rail--customize,
+.motion-objective-rail--customize,
+.play-shell-dock--customize {
+  padding-top: 2.55rem;
+}
+
+.panel-drag-handle--status,
+.panel-drag-handle--objective {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  z-index: 4;
+}
+
+.play-shell-dock__tools {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  z-index: 4;
+  display: flex;
+}
+
+.play-shell-dock--customize .bottom-actions {
+  padding-top: 0.1rem;
+}
+
+.stage-controls--customize,
+.stage-bottom--customize {
+  pointer-events: auto;
+}
+
+.app-shell--customize .stage-controls > .thumb-zone,
+.app-shell--customize .stage-bottom .dock-chip__hit {
+  /* Only the handles move panels; gameplay controls remain usable while
+     players inspect their layout. */
+  touch-action: manipulation;
+}
+
+.app-shell--customize .motion-objective-rail {
+  pointer-events: auto;
+}
+
+@media (max-width: 820px) {
+  .play-shell-top-bar {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .play-shell-top-bar .stage-gates {
+    grid-column: 1 / -1;
+  }
+
+  .play-shell-top-bar .layout-controls {
+    grid-column: 1 / -1;
+    justify-self: end;
   }
 }

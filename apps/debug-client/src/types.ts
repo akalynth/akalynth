@@ -2,6 +2,8 @@ import type { BuilderPreviewWorldFork } from '@shared/builderDraft';
 import type { Direction, MapData, PlayerPublic, PlayerStatus, PlayLoopProgress, SovereignVocation } from '@shared/types';
 import type {
   AccountCharacterCreateRequest,
+  AccountCharacterOutfitColors,
+  AccountCharacterOutfitEngineMeta,
   AccountCharacterOutfitOption,
   AccountCharacterPublic,
   AccountCharacterSex,
@@ -88,10 +90,13 @@ export interface LostItemCount {
 export type CharacterSex = AccountCharacterSex;
 export type CharacterWorldOption = AccountCharacterWorldOption;
 export type CharacterOutfitOption = AccountCharacterOutfitOption;
+export type OutfitColorIndices = AccountCharacterOutfitColors;
+export type OutfitEngineMeta = AccountCharacterOutfitEngineMeta;
 
 export interface CharacterCatalog {
   worlds: CharacterWorldOption[];
   outfits: CharacterOutfitOption[];
+  outfitEngine: OutfitEngineMeta | null;
   loading: boolean;
   loaded: boolean;
   error: string | null;

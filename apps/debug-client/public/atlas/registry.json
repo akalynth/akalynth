@@ -690,6 +690,18 @@
       "mechanics": null
     },
     {
+      "asset_id": "akalynth_prop_market_stall_001",
+      "source": "factory",
+      "asset_type": "prop",
+      "file": "sprites/props__market_stall.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null
+    },
+    {
       "asset_id": "akalynth_prop_mushroom_001",
       "source": "factory",
       "asset_type": "prop",

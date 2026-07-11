@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { CSSProperties, KeyboardEvent, PointerEvent as ReactPointerEvent } from 'react';
 import type { MapName } from '@shared/http';
 import { displayMapName } from '@shared/http';
 import type { ChronicleEvent } from '@shared/protocol';
 import type { MapData, PlayerPublic } from '@shared/types';
 import { respectRankForReputation } from '@shared/types';
 import { useGameClient } from './hooks/useGameClient';
+import { useBetaTelemetry } from './hooks/useBetaTelemetry';
 import { useExistenceMode } from './hooks/useExistenceMode';
 import { usePresentationMode } from './hooks/usePresentationMode';
+import { useUiLayout, type UiPanelId } from './hooks/useUiLayout';
 import { MapCanvas, type MapDebugOverlay } from './components/MapCanvas';
 import { DPad } from './components/DPad';
 import { ActionsPanel } from './components/ActionsPanel';
@@ -33,6 +36,7 @@ import { TemChallengeModal } from './components/TemChallengeModal';
 import { TemWitnessDialog } from './components/TemWitnessDialog';
 import { PropertyLedgerModal } from './components/PropertyLedgerModal';
 import { AdventurerSealSheet } from './components/AdventurerSealSheet';
+import { BetaFeedbackSheet } from './components/BetaFeedbackSheet';
 import { loadConfig } from './config';
 import { highCityVisualLandmarksForMap } from './data/highCityVisualLandmarks';
 import { gatherMapOverlays } from './data/gatherMapOverlays';
@@ -323,6 +327,10 @@ interface MobileStatusRailProps {
   position: string;
   health: string;
   conn: ConnectionState;
+  customizeMode?: boolean;
+  onDragStart?: (event: ReactPointerEvent<HTMLButtonElement>) => void;
+  onNudge?: (event: KeyboardEvent<HTMLButtonElement>) => void;
+  style?: CSSProperties;
 }
 
 function MobileStatusRail({
@@ -331,10 +339,32 @@ function MobileStatusRail({
   health,
   healthPct,
   conn,
+  customizeMode = false,
+  onDragStart,
+  onNudge,
+  style,
 }: MobileStatusRailProps & { healthPct: number }) {
   const connLabel = displayConnectionLabel(conn);
   return (
-    <HudChromePanel className="mobile-status-rail" variant="dock" padding={8}>
+    <HudChromePanel
+      className={`mobile-status-rail${customizeMode ? ' mobile-status-rail--customize' : ''}`}
+      variant="dock"
+      padding={8}
+      dataUiPanel="status"
+      style={style}
+    >
+      {customizeMode && (
+        <button
+          type="button"
+          className="panel-drag-handle panel-drag-handle--status"
+          aria-label="Drag status rail. Use arrow keys to nudge it."
+          title="Drag status rail"
+          onPointerDown={onDragStart}
+          onKeyDown={onNudge}
+        >
+          Move
+        </button>
+      )}
       <span>{name ?? 'Guest'}</span>
       <UiStatBar
         label="Health"
@@ -350,11 +380,33 @@ function MobileStatusRail({
 
 interface MotionObjectiveRailProps {
   objectiveLabel: string;
+  customizeMode?: boolean;
+  onDragStart?: (event: ReactPointerEvent<HTMLButtonElement>) => void;
+  onNudge?: (event: KeyboardEvent<HTMLButtonElement>) => void;
+  style?: CSSProperties;
 }
 
-function MotionObjectiveRail({ objectiveLabel }: MotionObjectiveRailProps) {
+function MotionObjectiveRail({
+  objectiveLabel,
+  customizeMode = false,
+  onDragStart,
+  onNudge,
+  style,
+}: MotionObjectiveRailProps) {
   return (
-    <div className="motion-objective-rail" role="status" aria-label="Current objective">
+    <div className={`motion-objective-rail${customizeMode ? ' motion-objective-rail--customize' : ''}`} role="status" aria-label="Current objective" data-ui-panel="objective" style={style}>
+      {customizeMode && (
+        <button
+          type="button"
+          className="panel-drag-handle panel-drag-handle--objective"
+          aria-label="Drag objective rail. Use arrow keys to nudge it."
+          title="Drag objective rail"
+          onPointerDown={onDragStart}
+          onKeyDown={onNudge}
+        >
+          Move
+        </button>
+      )}
       <span>Objective</span>
       <strong>{objectiveLabel}</strong>
     </div>
@@ -404,6 +456,7 @@ function DebugApp() {
   const config = useMemo(() => loadConfig(), []);
   const initialMap: MapName = config.defaultMap;
   const presentationMode = usePresentationMode();
+  const uiLayout = useUiLayout();
   const studioProofEnabled = import.meta.env.VITE_ENABLE_STUDIO_PROOF === '1';
   const builderPreviewEnabled = import.meta.env.VITE_ENABLE_BUILDER_PREVIEW === '1';
   const phoneLandscape = useMediaQuery('(max-width: 950px) and (orientation: landscape)');
@@ -414,6 +467,7 @@ function DebugApp() {
       ? 'compact-desktop'
       : 'desktop';
   const [state, api] = useGameClient(initialMap);
+  useBetaTelemetry(config.httpBase, state);
   const [chatOpen, setChatOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [proofSheetOpen, setProofSheetOpen] = useState(false);
@@ -421,6 +475,7 @@ function DebugApp() {
   const [codexSheetOpen, setCodexSheetOpen] = useState(false);
   const [builderDisplay, setBuilderDisplay] = useState<BuilderPreviewDisplay | null>(null);
   const [sealOpen, setSealOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [proof, setProof] = useState<StudioProofState | null>(null);
   const [proofRunning, setProofRunning] = useState(false);
   const [proofError, setProofError] = useState<string | null>(null);
@@ -432,6 +487,13 @@ function DebugApp() {
   const currentMapDisplayName = displayMapName(currentMapName);
   const objectiveLabel =
     state.loop?.objective ?? (currentMapDisplayName === 'High City' ? 'Arrive in High City' : 'Enter Rookguard');
+  const feedbackTutorialStep = state.loop
+    ? !state.loop.move ? 'move'
+      : !state.loop.chat ? 'chat'
+        : !state.loop.tem ? 'tem'
+          : !state.loop.gate ? 'gate'
+            : state.loop.complete ? 'complete' : undefined
+    : undefined;
   const meHp = state.world.me?.hp;
   const meMaxHp = state.world.me?.max_hp;
   const healthLabel =
@@ -449,6 +511,20 @@ function DebugApp() {
   const respectRank = respectRankForReputation(respectValue);
   const playerPositionLabel = state.world.me ? `${state.world.me.x},${state.world.me.y}` : '--';
   const hasWorldPlayer = Boolean(state.world.me);
+
+  const handlePanelNudge = useCallback((id: UiPanelId, event: KeyboardEvent<HTMLButtonElement>) => {
+    const distance = event.shiftKey ? 10 : 2;
+    const deltas: Record<string, [number, number]> = {
+      ArrowLeft: [-distance, 0],
+      ArrowRight: [distance, 0],
+      ArrowUp: [0, -distance],
+      ArrowDown: [0, distance],
+    };
+    const delta = deltas[event.key];
+    if (!delta) return;
+    event.preventDefault();
+    uiLayout.nudge(id, delta[0], delta[1]);
+  }, [uiLayout]);
 
   // Houses v1: surface Enter/Leave House when standing on a house plot / inside a house.
   // Server is authoritative on ownership; the client only gates the button to plot tiles.
@@ -699,7 +775,7 @@ function DebugApp() {
   }
 
   return (
-    <div className={`app-shell${presentationMode ? ` app-shell--presentation app-shell--presentation-${presentationViewport}` : ''}${entryMode ? ' app-shell--entry' : ''}${accountPanelMode ? ' app-shell--account-panel' : ''}`}>
+    <div className={`app-shell app-shell--modern${presentationMode ? ` app-shell--presentation app-shell--presentation-${presentationViewport}` : ''}${entryMode ? ' app-shell--entry' : ''}${accountPanelMode ? ' app-shell--account-panel' : ''}${uiLayout.customizeMode ? ' app-shell--customize' : ''}`}>
       <MobileLandscapeGate />
       {/* Guaranteed visible initial render/fallback for mobile + unresolved client state (prevents blank root) */}
       {entryMode && (
@@ -718,6 +794,12 @@ function DebugApp() {
         onMapChange={() => {}}
         conn={state.conn}
         presentationMode={presentationMode}
+        customizeMode={uiLayout.customizeMode}
+        onToggleCustomize={uiLayout.toggleCustomize}
+        onResetLayout={uiLayout.reset}
+        onDragStart={(event) => uiLayout.beginDrag('topbar', event)}
+        onNudge={(event) => handlePanelNudge('topbar', event)}
+        style={uiLayout.panelStyle('topbar')}
       />
       {toast && (
         <HudChromePanel className="toast" variant="dock" padding={12}>
@@ -895,7 +977,24 @@ function DebugApp() {
             </div>
           )}
           {!presentationEntryMode && !phoneLandscape && (
-            <div className="hud hud-primary" aria-label="play status">
+            <div
+              className={`hud hud-primary${uiLayout.customizeMode ? ' hud-primary--customize' : ''}`}
+              aria-label="play status"
+              data-ui-panel="hud"
+              style={uiLayout.panelStyle('hud')}
+            >
+              {uiLayout.customizeMode && (
+                <button
+                  type="button"
+                  className="panel-drag-handle panel-drag-handle--hud"
+                  aria-label="Drag player status HUD. Use arrow keys to nudge it."
+                  title="Drag player status HUD"
+                  onPointerDown={(event) => uiLayout.beginDrag('hud', event)}
+                  onKeyDown={(event) => handlePanelNudge('hud', event)}
+                >
+                  Move
+                </button>
+              )}
               <HudChromePanel className="hud-card hud-card--identity" padding={10}>
                 <span className="hud-kicker">Akalynth</span>
                 <strong>{playerDisplayName}</strong>
@@ -998,10 +1097,20 @@ function DebugApp() {
               health={healthLabel}
               healthPct={state.world.me?.status === 'dead' ? 0 : healthPct}
               conn={state.conn}
+              customizeMode={uiLayout.customizeMode}
+              onDragStart={(event) => uiLayout.beginDrag('status', event)}
+              onNudge={(event) => handlePanelNudge('status', event)}
+              style={uiLayout.panelStyle('status')}
             />
           )}
           {presentationMode && showPlayShell && (
-            <MotionObjectiveRail objectiveLabel={objectiveLabel} />
+            <MotionObjectiveRail
+              objectiveLabel={objectiveLabel}
+              customizeMode={uiLayout.customizeMode}
+              onDragStart={(event) => uiLayout.beginDrag('objective', event)}
+              onNudge={(event) => handlePanelNudge('objective', event)}
+              style={uiLayout.panelStyle('objective')}
+            />
           )}
           {!presentationMode && (
             <div className="hud hud-proof" aria-label="studio proof">
@@ -1055,7 +1164,24 @@ function DebugApp() {
         )}
 
         {showPlayShell && (
-          <section className="stage stage-controls" aria-label="touch controls">
+          <section
+            className={`stage stage-controls${uiLayout.customizeMode ? ' stage-controls--customize' : ''}`}
+            aria-label="touch controls"
+            data-ui-panel="controls"
+            style={uiLayout.panelStyle('controls')}
+          >
+            {uiLayout.customizeMode && (
+              <button
+                type="button"
+                className="panel-drag-handle panel-drag-handle--controls"
+                aria-label="Drag touch controls. Use arrow keys to nudge them."
+                title="Drag touch controls"
+                onPointerDown={(event) => uiLayout.beginDrag('controls', event)}
+                onKeyDown={(event) => handlePanelNudge('controls', event)}
+              >
+                Move
+              </button>
+            )}
             <div className="thumb-zone left">
               <DPad onMove={api.sendMove} onRelease={api.releaseMove} onStopAll={api.stopMoves} />
             </div>
@@ -1099,10 +1225,33 @@ function DebugApp() {
         )}
 
         {showPlayShell && (
-          <section className="stage stage-bottom">
+          <section
+            className={`stage stage-bottom${uiLayout.customizeMode ? ' stage-bottom--customize' : ''}`}
+            data-ui-panel="dock"
+            style={uiLayout.panelStyle('dock')}
+          >
             <PlayShellDock
               smokeState={smokeState}
+              customizeMode={uiLayout.customizeMode}
+              onDragStart={(event) => uiLayout.beginDrag('dock', event)}
+              onNudge={(event) => handlePanelNudge('dock', event)}
               buttons={[
+                {
+                  key: 'feedback',
+                  label: 'Report',
+                  ariaLabel: 'Send beta feedback',
+                  className: 'feedback-toggle',
+                  onClick: () => {
+                    setChatOpen(false);
+                    setInventoryOpen(false);
+                    setProofSheetOpen(false);
+                    setCodexSheetOpen(false);
+                    setBuilderSheetOpen(false);
+                    api.closeChronicle();
+                    setSealOpen(false);
+                    setFeedbackOpen(true);
+                  },
+                },
                 {
                   key: 'chat',
                   label: 'Chat',
@@ -1314,6 +1463,14 @@ function DebugApp() {
         open={sealOpen}
         httpBase={config.httpBase}
         onClose={() => setSealOpen(false)}
+      />
+      <BetaFeedbackSheet
+        open={feedbackOpen}
+        httpBase={config.httpBase}
+        accountSession={api.accountSession}
+        map={state.world.map.name as MapName}
+        tutorialStep={feedbackTutorialStep}
+        onClose={() => setFeedbackOpen(false)}
       />
     </div>
   );

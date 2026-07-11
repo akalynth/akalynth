@@ -1,0 +1,1203 @@
+{
+  "id": "AKALYNTH_MOBILE_PLAYABLE_SMOKE_SCRIPT_V1",
+  "status": "pass",
+  "started_at": "2026-07-11T11:40:39.459Z",
+  "base_url": "http://127.0.0.1:42893/play/",
+  "screenshots": [
+    {
+      "file": "../../../../akalynth-release-modern-ui-smoke-v3/screenshots/01_portrait_rotate_gate_390x844.png",
+      "label": "Portrait rotate gate"
+    },
+    {
+      "file": "../../../../akalynth-release-modern-ui-smoke-v3/screenshots/02_landscape_entry_play_surface_932x430.png",
+      "label": "Landscape play surface after entry"
+    },
+    {
+      "file": "../../../../akalynth-release-modern-ui-smoke-v3/screenshots/03_dpad_press_release_cancel_932x430.png",
+      "label": "DPad press/release/cancel smoke"
+    },
+    {
+      "file": "../../../../akalynth-release-modern-ui-smoke-v3/screenshots/04_pack_sheet_932x430.png",
+      "label": "Pack sheet"
+    },
+    {
+      "file": "../../../../akalynth-release-modern-ui-smoke-v3/screenshots/05_chat_sheet_932x430.png",
+      "label": "Chat sheet"
+    },
+    {
+      "file": "../../../../akalynth-release-modern-ui-smoke-v3/screenshots/06_log_sheet_932x430.png",
+      "label": "Log sheet"
+    },
+    {
+      "file": "../../../../akalynth-release-modern-ui-smoke-v3/screenshots/08_clean_play_surface_restored_932x430.png",
+      "label": "Clean play surface restored"
+    },
+    {
+      "file": "../../../../akalynth-release-modern-ui-smoke-v3/screenshots/09_modern_ui_1280x568.png",
+      "label": "Modern UI reference viewport"
+    },
+    {
+      "file": "../../../../akalynth-release-modern-ui-smoke-v3/screenshots/09_desktop_debug_mode_1440x900.png",
+      "label": "Desktop debug mode"
+    },
+    {
+      "file": "../../../../akalynth-release-modern-ui-smoke-v3/screenshots/10_desktop_presentation_mode_1440x900.png",
+      "label": "Desktop presentation mode"
+    }
+  ],
+  "checks": [
+    {
+      "id": "debug_client_url_available",
+      "status": "pass",
+      "details": {
+        "url": "http://127.0.0.1:42893/play/"
+      }
+    },
+    {
+      "id": "app_shell_mounted",
+      "status": "pass",
+      "details": {
+        "selector": ".app-shell",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 844,
+          "bottom": 844,
+          "right": 390
+        }
+      }
+    },
+    {
+      "id": "presentation_shell_active",
+      "status": "pass",
+      "details": {
+        "className": "app-shell app-shell--modern app-shell--presentation app-shell--presentation-compact-desktop"
+      }
+    },
+    {
+      "id": "portrait_rotate_gate_visible",
+      "status": "pass",
+      "details": {
+        "visible": true,
+        "painted": true,
+        "mqPortrait": true,
+        "mqNarrow": true,
+        "display": "flex",
+        "hasCopy": true,
+        "rect": {
+          "width": 390,
+          "height": 844
+        }
+      }
+    },
+    {
+      "id": "mobile_landscape_cold_start_entry_visible",
+      "status": "pass",
+      "details": {
+        "entryVisible": false,
+        "playable": true,
+        "state": {
+          "entry": null,
+          "map": {
+            "visible": true,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 932,
+              "height": 430,
+              "bottom": 430,
+              "right": 932
+            },
+            "text": ""
+          },
+          "button": {
+            "disabled": null
+          },
+          "dpadPresent": true,
+          "dockPresent": true,
+          "accountGateText": false,
+          "rawFetchErrorVisible": false,
+          "connectionLabel": "",
+          "playerReadableServiceStatus": false,
+          "gateTextFits": true,
+          "textFitChecks": []
+        }
+      }
+    },
+    {
+      "id": "mobile_entry_state_detected",
+      "status": "pass",
+      "details": {
+        "entry": null,
+        "map": {
+          "visible": true,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 932,
+            "height": 430,
+            "bottom": 430,
+            "right": 932
+          },
+          "text": ""
+        },
+        "button": {
+          "disabled": null
+        },
+        "dpadPresent": true,
+        "dockPresent": true,
+        "accountGateText": false,
+        "rawFetchErrorVisible": false,
+        "connectionLabel": "",
+        "playerReadableServiceStatus": false,
+        "gateTextFits": true,
+        "textFitChecks": []
+      }
+    },
+    {
+      "id": "mobile_enter_play_clicked",
+      "status": "pass",
+      "details": {
+        "skipped": "already_in_play_surface"
+      }
+    },
+    {
+      "id": "map_canvas_visible_after_entry",
+      "status": "pass",
+      "details": {
+        "selector": ".map-canvas",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 932,
+          "height": 430,
+          "bottom": 430,
+          "right": 932
+        }
+      }
+    },
+    {
+      "id": "dpad_visible_after_entry",
+      "status": "pass",
+      "details": {
+        "selector": ".dpad",
+        "rect": {
+          "x": 22.625,
+          "y": 221.71875,
+          "width": 141.65625,
+          "height": 185.65625,
+          "bottom": 407.375,
+          "right": 164.28125
+        }
+      }
+    },
+    {
+      "id": "mobile_dock_visible_after_entry",
+      "status": "pass",
+      "details": {
+        "selector": ".command-dock",
+        "rect": {
+          "x": 321.109375,
+          "y": 322.390625,
+          "width": 289.78125,
+          "height": 95.3125,
+          "bottom": 417.703125,
+          "right": 610.890625
+        }
+      }
+    },
+    {
+      "id": "playable_world_entry_controls_visible_after_server_world_state",
+      "status": "pass",
+      "details": {
+        "entry": null,
+        "map": {
+          "visible": true,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 932,
+            "height": 430,
+            "bottom": 430,
+            "right": 932
+          },
+          "text": ""
+        },
+        "button": {
+          "disabled": null
+        },
+        "dpadPresent": true,
+        "dockPresent": true,
+        "accountGateText": false,
+        "rawFetchErrorVisible": false,
+        "connectionLabel": "",
+        "playerReadableServiceStatus": false,
+        "gateTextFits": true,
+        "textFitChecks": []
+      }
+    },
+    {
+      "id": "landscape_play_surface_has_no_main_scrollbars",
+      "status": "pass",
+      "details": {
+        "innerWidth": 932,
+        "innerHeight": 430,
+        "scrollWidth": 932,
+        "scrollHeight": 430,
+        "bodyScrollWidth": 932,
+        "bodyScrollHeight": 430
+      }
+    },
+    {
+      "id": "dpad_real_pointer_targets_found",
+      "status": "pass",
+      "details": {
+        "east": {
+          "x": 137,
+          "y": 293,
+          "rect": {
+            "x": 104.265625,
+            "y": 263.359375,
+            "width": 66.375,
+            "height": 58.375,
+            "bottom": 321.734375,
+            "right": 170.640625
+          }
+        },
+        "stop": {
+          "x": 93,
+          "y": 293,
+          "rect": {
+            "x": 60.265625,
+            "y": 263.359375,
+            "width": 66.375,
+            "height": 58.375,
+            "bottom": 321.734375,
+            "right": 126.640625
+          }
+        }
+      }
+    },
+    {
+      "id": "dpad_real_pointer_tap_and_stop_exercised",
+      "status": "pass",
+      "details": {
+        "east": {
+          "x": 137,
+          "y": 293,
+          "rect": {
+            "x": 104.265625,
+            "y": 263.359375,
+            "width": 66.375,
+            "height": 58.375,
+            "bottom": 321.734375,
+            "right": 170.640625
+          }
+        },
+        "stop": {
+          "x": 93,
+          "y": 293,
+          "rect": {
+            "x": 60.265625,
+            "y": 263.359375,
+            "width": 66.375,
+            "height": 58.375,
+            "bottom": 321.734375,
+            "right": 126.640625
+          }
+        }
+      }
+    },
+    {
+      "id": "pack_dock_clicked",
+      "status": "pass",
+      "details": {
+        "selector": "[aria-label=\"Open backpack\"]"
+      }
+    },
+    {
+      "id": "pack_sheet_visible",
+      "status": "pass",
+      "details": {
+        "selector": ".backpack-sheet",
+        "rect": {
+          "x": 635.203125,
+          "y": 182.5,
+          "width": 288,
+          "height": 176.3125,
+          "bottom": 358.8125,
+          "right": 923.203125
+        }
+      }
+    },
+    {
+      "id": "only_pack_sheet_visible",
+      "status": "pass",
+      "details": {
+        "visible": [
+          ".backpack-sheet"
+        ]
+      }
+    },
+    {
+      "id": "pack_sheet_closed",
+      "status": "pass",
+      "details": {
+        "selector": ".backpack-sheet__header button"
+      }
+    },
+    {
+      "id": "no_sheets_after_pack_close",
+      "status": "pass",
+      "details": {
+        "visible": []
+      }
+    },
+    {
+      "id": "chat_dock_clicked",
+      "status": "pass",
+      "details": {
+        "selector": "[aria-label=\"Open chat\"]"
+      }
+    },
+    {
+      "id": "chat_sheet_visible",
+      "status": "pass",
+      "details": {
+        "selector": ".chat-sheet",
+        "rect": {
+          "x": 242,
+          "y": 110.8125,
+          "width": 448,
+          "height": 248,
+          "bottom": 358.8125,
+          "right": 690
+        }
+      }
+    },
+    {
+      "id": "only_chat_sheet_visible",
+      "status": "pass",
+      "details": {
+        "visible": [
+          ".chat-sheet"
+        ]
+      }
+    },
+    {
+      "id": "chat_sheet_closed",
+      "status": "pass",
+      "details": {
+        "selector": ".chat-sheet__header button"
+      }
+    },
+    {
+      "id": "no_sheets_after_chat_close",
+      "status": "pass",
+      "details": {
+        "visible": []
+      }
+    },
+    {
+      "id": "log_dock_clicked",
+      "status": "pass",
+      "details": {
+        "selector": "[aria-label=\"Open log\"]"
+      }
+    },
+    {
+      "id": "log_sheet_visible",
+      "status": "pass",
+      "details": {
+        "selector": ".chronicle-sheet",
+        "rect": {
+          "x": 226,
+          "y": 185.984375,
+          "width": 480,
+          "height": 172.828125,
+          "bottom": 358.8125,
+          "right": 706
+        }
+      }
+    },
+    {
+      "id": "only_log_sheet_visible",
+      "status": "pass",
+      "details": {
+        "visible": [
+          ".chronicle-sheet"
+        ]
+      }
+    },
+    {
+      "id": "log_sheet_closed",
+      "status": "pass",
+      "details": {
+        "selector": ".chronicle-close"
+      }
+    },
+    {
+      "id": "no_sheets_after_log_close",
+      "status": "pass",
+      "details": {
+        "visible": []
+      }
+    },
+    {
+      "id": "proof_dock_clicked",
+      "status": "pass",
+      "details": {
+        "skipped": "presentation_mode_hides_proof_toggle"
+      }
+    },
+    {
+      "id": "proof_sheet_visible",
+      "status": "pass",
+      "details": {
+        "skipped": "presentation_mode_hides_proof_toggle"
+      }
+    },
+    {
+      "id": "only_proof_sheet_visible",
+      "status": "pass",
+      "details": {
+        "skipped": "presentation_mode_hides_proof_toggle"
+      }
+    },
+    {
+      "id": "proof_sheet_closed",
+      "status": "pass",
+      "details": {
+        "skipped": "presentation_mode_hides_proof_toggle"
+      }
+    },
+    {
+      "id": "no_sheets_after_proof_close",
+      "status": "pass",
+      "details": {
+        "skipped": "presentation_mode_hides_proof_toggle"
+      }
+    },
+    {
+      "id": "clean_play_surface_has_no_main_scrollbars_after_sheet_flow",
+      "status": "pass",
+      "details": {
+        "innerWidth": 932,
+        "innerHeight": 430,
+        "scrollWidth": 932,
+        "scrollHeight": 430,
+        "bodyScrollWidth": 932,
+        "bodyScrollHeight": 430
+      }
+    },
+    {
+      "id": "layout_mode_opened",
+      "status": "pass",
+      "details": {
+        "selector": ".layout-toggle"
+      }
+    },
+    {
+      "id": "topbar_drag_handle_visible",
+      "status": "pass",
+      "details": {
+        "selector": ".panel-drag-handle--topbar",
+        "rect": {
+          "x": 26.90625,
+          "y": 78.90625,
+          "width": 48,
+          "height": 44,
+          "bottom": 122.90625,
+          "right": 74.90625
+        }
+      }
+    },
+    {
+      "id": "layout_drag_moves_topbar",
+      "status": "pass",
+      "details": {
+        "before": {
+          "x": 0,
+          "y": 0,
+          "dragX": "0px",
+          "dragY": "0px"
+        },
+        "after": {
+          "x": 42,
+          "y": 16,
+          "dragX": "42px",
+          "dragY": "16px"
+        }
+      }
+    },
+    {
+      "id": "layout_keyboard_nudge_moves_topbar",
+      "status": "pass",
+      "details": {
+        "afterDrag": {
+          "x": 42,
+          "y": 16,
+          "dragX": "42px",
+          "dragY": "16px"
+        },
+        "afterKeyboardNudge": {
+          "x": 44,
+          "y": 16,
+          "dragX": "44px",
+          "dragY": "16px"
+        }
+      }
+    },
+    {
+      "id": "layout_mode_closed_after_drag",
+      "status": "pass",
+      "details": {
+        "selector": ".layout-toggle"
+      }
+    },
+    {
+      "id": "layout_done_returns_to_play",
+      "status": "pass",
+      "details": {
+        "layoutClosed": true
+      }
+    },
+    {
+      "id": "layout_position_persists_after_reload",
+      "status": "pass",
+      "details": {
+        "persistedTopbar": {
+          "x": 44,
+          "y": 16,
+          "dragX": "44px",
+          "dragY": "16px"
+        }
+      }
+    },
+    {
+      "id": "layout_mode_reopened_for_reset",
+      "status": "pass",
+      "details": {
+        "selector": ".layout-toggle"
+      }
+    },
+    {
+      "id": "layout_reset_clicked",
+      "status": "pass",
+      "details": {
+        "selector": ".layout-reset"
+      }
+    },
+    {
+      "id": "layout_reset_restores_default_position",
+      "status": "pass",
+      "details": {
+        "resetTopbar": {
+          "x": 0,
+          "y": 0,
+          "dragX": "0px",
+          "dragY": "0px"
+        }
+      }
+    },
+    {
+      "id": "layout_mode_closed_after_reset",
+      "status": "pass",
+      "details": {
+        "selector": ".layout-toggle"
+      }
+    },
+    {
+      "id": "layout_orientation_bucket_is_independent",
+      "status": "pass",
+      "details": {
+        "portraitLayout": {
+          "x": 0,
+          "y": 0,
+          "dragX": "0px",
+          "dragY": "0px"
+        }
+      }
+    },
+    {
+      "id": "layout_landscape_reset_persists_independently",
+      "status": "pass",
+      "details": {
+        "landscapeResetLayout": {
+          "x": 0,
+          "y": 0,
+          "dragX": "0px",
+          "dragY": "0px"
+        }
+      }
+    },
+    {
+      "id": "modern_1280_map_visible",
+      "status": "pass",
+      "details": {
+        "selector": ".map-canvas",
+        "rect": {
+          "x": 428,
+          "y": 139.4375,
+          "width": 424,
+          "height": 424,
+          "bottom": 563.4375,
+          "right": 852
+        }
+      }
+    },
+    {
+      "id": "modern_1280_surface_bounds_fit_viewport",
+      "status": "pass",
+      "details": {
+        "viewport": {
+          "width": 1280,
+          "height": 568
+        },
+        "surfaces": [
+          {
+            "selector": ".top-bar",
+            "visible": true,
+            "withinViewport": true,
+            "rect": {
+              "x": 10.390625,
+              "y": 10.390625,
+              "width": 720,
+              "height": 75.4375,
+              "bottom": 85.828125,
+              "right": 730.390625
+            }
+          },
+          {
+            "selector": ".map-canvas",
+            "visible": true,
+            "withinViewport": true,
+            "rect": {
+              "x": 428,
+              "y": 139.4375,
+              "width": 424,
+              "height": 424,
+              "bottom": 563.4375,
+              "right": 852
+            }
+          },
+          {
+            "selector": ".stage-controls",
+            "visible": true,
+            "withinViewport": true,
+            "rect": {
+              "x": 12,
+              "y": 156.453125,
+              "width": 1256,
+              "height": 277.15625,
+              "bottom": 433.609375,
+              "right": 1268
+            }
+          },
+          {
+            "selector": ".command-dock",
+            "visible": true,
+            "withinViewport": true,
+            "rect": {
+              "x": 17.59375,
+              "y": 376.484375,
+              "width": 296.3125,
+              "height": 175.53125,
+              "bottom": 552.015625,
+              "right": 313.90625
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "modern_1280_surface_has_no_scrollbars",
+      "status": "pass",
+      "details": {
+        "innerWidth": 1280,
+        "innerHeight": 568,
+        "scrollWidth": 1280,
+        "scrollHeight": 568,
+        "bodyScrollWidth": 1280,
+        "bodyScrollHeight": 568
+      }
+    },
+    {
+      "id": "desktop_debug_map_canvas_visible",
+      "status": "pass",
+      "details": {
+        "selector": ".map-canvas",
+        "rect": {
+          "x": 342,
+          "y": 139.4375,
+          "width": 756,
+          "height": 756,
+          "bottom": 895.4375,
+          "right": 1098
+        }
+      }
+    },
+    {
+      "id": "desktop_debug_does_not_show_rotate_gate",
+      "status": "pass",
+      "details": {
+        "visible": false,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "bottom": 0,
+          "right": 0
+        },
+        "display": "none",
+        "visibility": "visible"
+      }
+    },
+    {
+      "id": "desktop_connection_label_is_player_readable",
+      "status": "pass",
+      "details": {
+        "shellClass": "app-shell app-shell--modern app-shell--presentation app-shell--presentation-desktop",
+        "topConnLabel": "Connected",
+        "topConnClass": "conn-pill connected",
+        "identity": {
+          "selector": ".hud-card--identity",
+          "visible": false,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "bottom": 0,
+            "right": 0
+          },
+          "withinViewport": true
+        },
+        "stats": {
+          "selector": ".hud-card--stats",
+          "visible": true,
+          "rect": {
+            "x": 1128,
+            "y": 12,
+            "width": 300,
+            "height": 141.703125,
+            "bottom": 153.703125,
+            "right": 1428
+          },
+          "withinViewport": true
+        },
+        "dock": {
+          "selector": ".command-dock",
+          "visible": true,
+          "rect": {
+            "x": 17.59375,
+            "y": 708.484375,
+            "width": 296.3125,
+            "height": 175.53125,
+            "bottom": 884.015625,
+            "right": 313.90625
+          },
+          "withinViewport": true
+        },
+        "controls": {
+          "selector": ".stage-controls",
+          "visible": true,
+          "rect": {
+            "x": 12,
+            "y": 273.515625,
+            "width": 1416,
+            "height": 492.09375,
+            "bottom": 765.609375,
+            "right": 1428
+          },
+          "withinViewport": true
+        },
+        "identityOverlapsDock": false,
+        "identityOverlapsControls": false,
+        "statsOverlapsDock": false,
+        "statsOverlapsControls": false
+      }
+    },
+    {
+      "id": "desktop_account_panel_and_stats_fit_viewport",
+      "status": "pass",
+      "details": {
+        "shellClass": "app-shell app-shell--modern app-shell--presentation app-shell--presentation-desktop",
+        "topConnLabel": "Connected",
+        "topConnClass": "conn-pill connected",
+        "identity": {
+          "selector": ".hud-card--identity",
+          "visible": false,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0,
+            "bottom": 0,
+            "right": 0
+          },
+          "withinViewport": true
+        },
+        "stats": {
+          "selector": ".hud-card--stats",
+          "visible": true,
+          "rect": {
+            "x": 1128,
+            "y": 12,
+            "width": 300,
+            "height": 141.703125,
+            "bottom": 153.703125,
+            "right": 1428
+          },
+          "withinViewport": true
+        },
+        "dock": {
+          "selector": ".command-dock",
+          "visible": true,
+          "rect": {
+            "x": 17.59375,
+            "y": 708.484375,
+            "width": 296.3125,
+            "height": 175.53125,
+            "bottom": 884.015625,
+            "right": 313.90625
+          },
+          "withinViewport": true
+        },
+        "controls": {
+          "selector": ".stage-controls",
+          "visible": true,
+          "rect": {
+            "x": 12,
+            "y": 273.515625,
+            "width": 1416,
+            "height": 492.09375,
+            "bottom": 765.609375,
+            "right": 1428
+          },
+          "withinViewport": true
+        },
+        "identityOverlapsDock": false,
+        "identityOverlapsControls": false,
+        "statsOverlapsDock": false,
+        "statsOverlapsControls": false
+      }
+    },
+    {
+      "id": "desktop_presentation_map_canvas_visible",
+      "status": "pass",
+      "details": {
+        "selector": ".map-canvas",
+        "rect": {
+          "x": 342,
+          "y": 139.4375,
+          "width": 756,
+          "height": 756,
+          "bottom": 895.4375,
+          "right": 1098
+        }
+      }
+    },
+    {
+      "id": "desktop_presentation_hides_debug_chrome",
+      "status": "pass",
+      "details": {
+        "shellClass": "app-shell app-shell--modern app-shell--presentation app-shell--presentation-desktop",
+        "brandText": "Akalynth",
+        "topBar": {
+          "selector": ".top-bar",
+          "visible": true,
+          "text": "AkalynthConnectedLayout",
+          "rect": {
+            "x": 10.390625,
+            "y": 10.390625,
+            "width": 720,
+            "height": 75.4375,
+            "bottom": 85.828125,
+            "right": 730.390625
+          }
+        },
+        "stageGates": {
+          "selector": ".stage-gates",
+          "visible": false,
+          "text": "",
+          "rect": null
+        },
+        "mapSwitcher": {
+          "selector": ".map-switcher",
+          "visible": false,
+          "text": "",
+          "rect": null
+        },
+        "proofHud": {
+          "selector": ".hud-proof",
+          "visible": false,
+          "text": "",
+          "rect": null
+        },
+        "proofButton": {
+          "selector": ".proof-toggle",
+          "visible": false,
+          "text": "",
+          "rect": null
+        },
+        "sealButton": {
+          "selector": ".seal-toggle",
+          "visible": false,
+          "text": "",
+          "rect": null
+        },
+        "entry": {
+          "selector": ".mobile-play-entry",
+          "visible": false,
+          "text": "",
+          "rect": null
+        },
+        "entryWithinViewport": true,
+        "entryOverlapsTopBar": false,
+        "entryTextFits": true,
+        "entryTextFitChecks": [],
+        "entryButton": {
+          "selector": ".mobile-enter-play-btn",
+          "visible": false,
+          "text": "",
+          "rect": null,
+          "disabled": null
+        },
+        "dpad": {
+          "selector": ".dpad",
+          "visible": true,
+          "text": "↖↑↗←■→↙↓↘✕",
+          "rect": {
+            "x": 33.1875,
+            "y": 509.640625,
+            "width": 185.1875,
+            "height": 234.78125,
+            "bottom": 744.421875,
+            "right": 218.375
+          }
+        },
+        "dock": {
+          "selector": ".command-dock",
+          "visible": true,
+          "text": "ReportChatLogPackCodexWorld synced",
+          "rect": {
+            "x": 17.59375,
+            "y": 708.484375,
+            "width": 296.3125,
+            "height": 175.53125,
+            "bottom": 884.015625,
+            "right": 313.90625
+          }
+        },
+        "chat": {
+          "selector": ".chat-toggle",
+          "visible": true,
+          "text": "Chat",
+          "rect": {
+            "x": 98.96875,
+            "y": 719.484375,
+            "width": 63.1875,
+            "height": 83.5625,
+            "bottom": 803.046875,
+            "right": 162.15625
+          }
+        },
+        "log": {
+          "selector": ".chronicle-toggle",
+          "visible": true,
+          "text": "Log",
+          "rect": {
+            "x": 169.34375,
+            "y": 719.484375,
+            "width": 63.1875,
+            "height": 83.5625,
+            "bottom": 803.046875,
+            "right": 232.53125
+          }
+        },
+        "pack": {
+          "selector": ".inventory-toggle",
+          "visible": true,
+          "text": "Pack",
+          "rect": {
+            "x": 239.71875,
+            "y": 719.484375,
+            "width": 63.1875,
+            "height": 83.5625,
+            "bottom": 803.046875,
+            "right": 302.90625
+          }
+        },
+        "rawFetchErrorVisible": false,
+        "playerReadableServiceStatus": false,
+        "hasDebugCopy": false
+      }
+    },
+    {
+      "id": "desktop_presentation_world_player_shows_play_controls",
+      "status": "pass",
+      "details": {
+        "shellClass": "app-shell app-shell--modern app-shell--presentation app-shell--presentation-desktop",
+        "brandText": "Akalynth",
+        "topBar": {
+          "selector": ".top-bar",
+          "visible": true,
+          "text": "AkalynthConnectedLayout",
+          "rect": {
+            "x": 10.390625,
+            "y": 10.390625,
+            "width": 720,
+            "height": 75.4375,
+            "bottom": 85.828125,
+            "right": 730.390625
+          }
+        },
+        "stageGates": {
+          "selector": ".stage-gates",
+          "visible": false,
+          "text": "",
+          "rect": null
+        },
+        "mapSwitcher": {
+          "selector": ".map-switcher",
+          "visible": false,
+          "text": "",
+          "rect": null
+        },
+        "proofHud": {
+          "selector": ".hud-proof",
+          "visible": false,
+          "text": "",
+          "rect": null
+        },
+        "proofButton": {
+          "selector": ".proof-toggle",
+          "visible": false,
+          "text": "",
+          "rect": null
+        },
+        "sealButton": {
+          "selector": ".seal-toggle",
+          "visible": false,
+          "text": "",
+          "rect": null
+        },
+        "entry": {
+          "selector": ".mobile-play-entry",
+          "visible": false,
+          "text": "",
+          "rect": null
+        },
+        "entryWithinViewport": true,
+        "entryOverlapsTopBar": false,
+        "entryTextFits": true,
+        "entryTextFitChecks": [],
+        "entryButton": {
+          "selector": ".mobile-enter-play-btn",
+          "visible": false,
+          "text": "",
+          "rect": null,
+          "disabled": null
+        },
+        "dpad": {
+          "selector": ".dpad",
+          "visible": true,
+          "text": "↖↑↗←■→↙↓↘✕",
+          "rect": {
+            "x": 33.1875,
+            "y": 509.640625,
+            "width": 185.1875,
+            "height": 234.78125,
+            "bottom": 744.421875,
+            "right": 218.375
+          }
+        },
+        "dock": {
+          "selector": ".command-dock",
+          "visible": true,
+          "text": "ReportChatLogPackCodexWorld synced",
+          "rect": {
+            "x": 17.59375,
+            "y": 708.484375,
+            "width": 296.3125,
+            "height": 175.53125,
+            "bottom": 884.015625,
+            "right": 313.90625
+          }
+        },
+        "chat": {
+          "selector": ".chat-toggle",
+          "visible": true,
+          "text": "Chat",
+          "rect": {
+            "x": 98.96875,
+            "y": 719.484375,
+            "width": 63.1875,
+            "height": 83.5625,
+            "bottom": 803.046875,
+            "right": 162.15625
+          }
+        },
+        "log": {
+          "selector": ".chronicle-toggle",
+          "visible": true,
+          "text": "Log",
+          "rect": {
+            "x": 169.34375,
+            "y": 719.484375,
+            "width": 63.1875,
+            "height": 83.5625,
+            "bottom": 803.046875,
+            "right": 232.53125
+          }
+        },
+        "pack": {
+          "selector": ".inventory-toggle",
+          "visible": true,
+          "text": "Pack",
+          "rect": {
+            "x": 239.71875,
+            "y": 719.484375,
+            "width": 63.1875,
+            "height": 83.5625,
+            "bottom": 803.046875,
+            "right": 302.90625
+          }
+        },
+        "rawFetchErrorVisible": false,
+        "playerReadableServiceStatus": false,
+        "hasDebugCopy": false
+      }
+    },
+    {
+      "id": "browser_console_errors_absent",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "id": "browser_runtime_exceptions_absent",
+      "status": "pass",
+      "details": []
+    },
+    {
+      "id": "browser_network_failures_absent",
+      "status": "pass",
+      "details": []
+    }
+  ],
+  "browser_runtime": {
+    "console_errors": [],
+    "exceptions": [],
+    "network_failures": []
+  },
+  "notes": [
+    "Debug-client presentation smoke only.",
+    "Does not change gameplay authority, protocol, server, shared types, Android/native, runtime, or deploy state."
+  ],
+  "chrome": "/snap/chromium/current/usr/lib/chromium-browser/chrome",
+  "devtools_port": 38149,
+  "finished_at": "2026-07-11T11:41:21.276Z"
+}

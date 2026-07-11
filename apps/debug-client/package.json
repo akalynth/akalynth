@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/verify-account-character-guard.mjs && node scripts/verify-gather-wire-authority.mjs && node scripts/verify-nine-slice-panel.mjs && node scripts/verify-character-create-preview.mjs && node scripts/verify-death-chronicle-glyphs.mjs && node scripts/verify-builder-panel-v1.mjs && node scripts/verify-presentation-layout.mjs",
+    "prebuild": "node scripts/verify-account-character-guard.mjs && node scripts/verify-gather-wire-authority.mjs && node scripts/verify-nine-slice-panel.mjs && node scripts/verify-character-create-preview.mjs && node scripts/verify-death-chronicle-glyphs.mjs && node scripts/verify-builder-panel-v1.mjs && node scripts/verify-presentation-layout.mjs && node scripts/verify-ui-customization.mjs",
     "build": "tsc -p tsconfig.json && vite build",
     "verify:account-character": "node scripts/verify-account-character-guard.mjs && node scripts/verify-debug-gameplay-wire-authority.mjs && node scripts/verify-gather-wire-authority.mjs",
     "verify:gather-client": "node scripts/verify-gather-wire-authority.mjs",
@@ -15,6 +15,7 @@
     "verify:builder-panel-v1": "node scripts/verify-builder-panel-v1.mjs",
     "verify:builder-preview-render-v1": "node scripts/verify-builder-preview-render-v1.mjs",
     "verify:presentation-layout": "node scripts/verify-presentation-layout.mjs",
+    "verify:ui-customization": "node scripts/verify-ui-customization.mjs",
     "preview": "vite preview",
     "lint": "tsc -p tsconfig.json",
     "smoke:mobile": "node scripts/mobile-playable-smoke.mjs"

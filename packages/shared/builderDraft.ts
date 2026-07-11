@@ -2,7 +2,8 @@
 // Codex authority: AKALYNTH_PLAY_BUILD_GOVERN_SURFACE_V1
 // Preview namespaces are non-authoritative; live lanes must never read them as truth.
 
-import { createHash } from 'node:crypto';
+import { sha256 } from '@noble/hashes/sha2';
+import { bytesToHex, utf8ToBytes } from '@noble/hashes/utils';
 
 export const BUILDER_DRAFT_MANIFEST_SCHEMA_VERSION = 'builder-draft-manifest/v1';
 export const LOCAL_PREVIEW_SESSION_SCHEMA_VERSION = 'local-preview-session/v1';
@@ -132,7 +133,7 @@ export function computeManifestChecksum(manifest: BuilderDraftManifest): string 
       item.sha256 = '0'.repeat(64);
     }
   }
-  return createHash('sha256').update(stableStringify(clone)).digest('hex');
+  return bytesToHex(sha256(utf8ToBytes(stableStringify(clone))));
 }
 
 export function assertPreviewNamespace(namespace: string): void {
