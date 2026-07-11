@@ -553,6 +553,13 @@ export function initSchema(db: Database.Database): void {
     migrateSchema(db, currentVersion, SCHEMA_VERSION);
   }
 
+  // Beta Player Readiness v1 was introduced after a schema-alignment repair
+  // could already have advanced _meta.schema_version. Keep these additive
+  // tables self-healing so a DB that reports v25 but is missing the beta
+  // tables cannot turn measurement requests into 500s.
+  db.exec(DDL_BETA_COHORTS);
+  db.exec(DDL_BETA_INVITES);
+
   // Patch A: Force version alignment after all migrations
   // Ensures _meta.schema_version always equals SCHEMA_VERSION, even if
   // structural changes were applied earlier (e.g., indexes created in V5 DDL).

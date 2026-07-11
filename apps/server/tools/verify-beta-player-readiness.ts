@@ -120,6 +120,16 @@ try {
   const registeredWithInvite = await accountService.register({ handle: 'BetaPlayer2', password: 'password123', invite_code: redeemable });
   assert.equal(registeredWithInvite.status, 201);
   assert.equal((registeredWithInvite.body as { beta_cohort?: { cohort_id?: string } }).beta_cohort?.cohort_id, 'verify-registration-cohort');
+
+  const alignedDb = new Database(':memory:');
+  try {
+    alignedDb.exec("CREATE TABLE _meta (key TEXT PRIMARY KEY, value TEXT NOT NULL); INSERT INTO _meta (key, value) VALUES ('schema_version', '25');");
+    initSchema(alignedDb);
+    assert.ok(alignedDb.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'beta_cohorts'").get());
+    assert.ok(alignedDb.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'beta_invites'").get());
+  } finally {
+    alignedDb.close();
+  }
   console.log('[verify-beta-player-readiness] PASS: schema, cap, hashed invite, redemption, readiness event, and P1 feedback contracts');
 } finally {
   db.close();
