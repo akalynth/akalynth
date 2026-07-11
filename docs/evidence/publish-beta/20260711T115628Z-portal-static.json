@@ -1,0 +1,15 @@
+{
+  "schema_version": "akalynth.beta.static_portal_publish.v1",
+  "stamp": "20260711T115628Z",
+  "status": "PASS",
+  "intended_commit": "cb87f09f36d9fd146cb5eb089fd97ea86876b9e3",
+  "webroot": "/var/www/akalynth-beta",
+  "files": ["account.html", "register.html"],
+  "backup": "/var/backups/akalynth-beta-play/portal.post-runtime-fix-pre-modern-ui-20260711T115628Z",
+  "live_checks": {
+    "account_html": 200,
+    "register_html": 200,
+    "play_index_sha256": "fadf26ed1e3721d131dd59e2494ebf1ac1691fb72c10eecbf55e49efaa5c9eef",
+    "api_commit": "cb87f09f36d9fd146cb5eb089fd97ea86876b9e3"
+  }
+}

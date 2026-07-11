@@ -1,0 +1,1012 @@
+{
+  "receipt": "AKALYNTH_BETA_ACCOUNT_PLAY_SMOKE_V2",
+  "mode": "disposable-account",
+  "status": "pass",
+  "started_at": "2026-07-11T11:56:34.848Z",
+  "finished_at": "2026-07-11T11:56:38.708Z",
+  "live_targets": {
+    "account_url": "https://beta.akalynth.com/account.html",
+    "play_url": "https://beta.akalynth.com/play/",
+    "api_base": "https://beta-api.akalynth.com",
+    "websocket": "wss://beta-api.akalynth.com"
+  },
+  "disposable_account": {
+    "handle": "Smoke11563428d9d2",
+    "email_domain": "example.invalid",
+    "account_id_prefix": "acc_5fd2e1...",
+    "status": "email_verified",
+    "email_verified": true,
+    "dev_verification_token_present": true
+  },
+  "created_character": {
+    "character_id_prefix": "p_5e845661...",
+    "name": "Smk11563428d9d2",
+    "world_id": "rookguard",
+    "sex": "male",
+    "outfit_id": "male_wanderer"
+  },
+  "browser": {
+    "ok": true,
+    "chrome": "/snap/chromium/current/usr/lib/chromium-browser/chrome",
+    "url": "https://beta.akalynth.com/play/",
+    "connection_text": "Connected",
+    "hud_name": "Smk11563428d9d2",
+    "expected_name": "Smk11563428d9d2",
+    "error": null,
+    "frame_summary": [
+      {
+        "direction": "sent",
+        "type": "connect"
+      },
+      {
+        "direction": "sent",
+        "type": "login",
+        "token_present": true,
+        "guest_token_present": false
+      },
+      {
+        "direction": "sent",
+        "type": "enter_world"
+      },
+      {
+        "direction": "received",
+        "type": "welcome"
+      },
+      {
+        "direction": "received",
+        "type": "welcome"
+      },
+      {
+        "direction": "received",
+        "type": "login_ack",
+        "ok": true,
+        "token_present": true,
+        "player_id_prefix": "p_5e845661...",
+        "name": "Smk11563428d9d2"
+      },
+      {
+        "direction": "received",
+        "type": "world_state",
+        "map": "Rookguard"
+      },
+      {
+        "direction": "sent",
+        "type": "inspect_wallet"
+      },
+      {
+        "direction": "received",
+        "type": "inventory_snapshot"
+      },
+      {
+        "direction": "received",
+        "type": "property_snapshot"
+      },
+      {
+        "direction": "received",
+        "type": "wallet_snapshot"
+      }
+    ]
+  },
+  "portal_ui": {
+    "ok": true,
+    "chrome": "/snap/chromium/current/usr/lib/chromium-browser/chrome",
+    "account_url": "https://beta.akalynth.com/account.html",
+    "account_html_source": "live",
+    "account_html_file": null,
+    "final_url": "https://beta.akalynth.com/play/",
+    "character_rows": 1,
+    "selected_character_name": "Smk11563428d9d2",
+    "connection_text": "Connected",
+    "hud_name": "Smk11563428d9d2",
+    "expected_name": "Smk11563428d9d2",
+    "local_storage_identity": {
+      "present": true,
+      "name": "Smk11563428d9d2",
+      "player_id_prefix": "p_5e845661...",
+      "token_present": true,
+      "expires_at_present": true
+    },
+    "api_responses": [
+      {
+        "method": "GET",
+        "path": "/v1/outfits",
+        "status": 200,
+        "ok": true,
+        "body": {
+          "ok": null,
+          "keys": [
+            "outfits"
+          ],
+          "outfit_count": 3
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/v1/outfits",
+        "status": 200,
+        "ok": true,
+        "body": {
+          "ok": null,
+          "keys": [
+            "outfits"
+          ],
+          "outfit_count": 3
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/v1/accounts/me",
+        "status": 401,
+        "ok": false,
+        "body": {
+          "ok": false,
+          "error": "not_authenticated",
+          "keys": [
+            "error",
+            "ok"
+          ]
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/v1/accounts/login",
+        "status": 200,
+        "ok": true,
+        "body": {
+          "ok": true,
+          "keys": [
+            "account",
+            "ok"
+          ]
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/v1/accounts/me",
+        "status": 200,
+        "ok": true,
+        "body": {
+          "ok": true,
+          "keys": [
+            "account",
+            "ok"
+          ]
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/v1/characters",
+        "status": 200,
+        "ok": true,
+        "body": {
+          "ok": null,
+          "keys": [
+            "characters"
+          ],
+          "character_count": 1
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/v1/beta/me",
+        "status": 200,
+        "ok": true,
+        "body": {
+          "ok": true,
+          "keys": [
+            "cohort",
+            "enabled",
+            "ok"
+          ]
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/v1/characters/select",
+        "status": 200,
+        "ok": true,
+        "body": {
+          "ok": true,
+          "keys": [
+            "character",
+            "expires_at",
+            "ok"
+          ]
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/v1/worlds",
+        "status": 200,
+        "ok": true,
+        "body": {
+          "ok": null,
+          "keys": [
+            "worlds"
+          ]
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/v1/outfits",
+        "status": 200,
+        "ok": true,
+        "body": {
+          "ok": null,
+          "keys": [
+            "outfits"
+          ],
+          "outfit_count": 6
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/v1/beta/events",
+        "status": 200,
+        "ok": true,
+        "body": {
+          "ok": true,
+          "keys": [
+            "event_id",
+            "ok",
+            "server_recorded_at"
+          ]
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/v1/beta/events",
+        "status": 200,
+        "ok": true,
+        "body": {
+          "ok": true,
+          "keys": [
+            "event_id",
+            "ok",
+            "server_recorded_at"
+          ]
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/v1/beta/events",
+        "status": 200,
+        "ok": true,
+        "body": {
+          "ok": true,
+          "keys": [
+            "event_id",
+            "ok",
+            "server_recorded_at"
+          ]
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/v1/beta/events",
+        "status": 200,
+        "ok": true,
+        "body": {
+          "ok": true,
+          "keys": [
+            "event_id",
+            "ok",
+            "server_recorded_at"
+          ]
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/v1/beta/events",
+        "status": 200,
+        "ok": true,
+        "body": {
+          "ok": true,
+          "keys": [
+            "event_id",
+            "ok",
+            "server_recorded_at"
+          ]
+        }
+      }
+    ],
+    "console_messages": [
+      {
+        "type": "verbose",
+        "text": "[DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o"
+      },
+      {
+        "type": "error",
+        "text": "Failed to load resource: the server responded with a status of 401 ()"
+      }
+    ],
+    "page_errors": [],
+    "error": null,
+    "frame_summary": [
+      {
+        "direction": "sent",
+        "type": "connect"
+      },
+      {
+        "direction": "sent",
+        "type": "login",
+        "token_present": true,
+        "guest_token_present": false
+      },
+      {
+        "direction": "sent",
+        "type": "enter_world"
+      },
+      {
+        "direction": "received",
+        "type": "welcome"
+      },
+      {
+        "direction": "received",
+        "type": "welcome"
+      },
+      {
+        "direction": "received",
+        "type": "login_ack",
+        "ok": true,
+        "token_present": true,
+        "player_id_prefix": "p_5e845661...",
+        "name": "Smk11563428d9d2"
+      },
+      {
+        "direction": "received",
+        "type": "world_state",
+        "map": "Rookguard"
+      },
+      {
+        "direction": "sent",
+        "type": "inspect_wallet"
+      },
+      {
+        "direction": "received",
+        "type": "inventory_snapshot"
+      },
+      {
+        "direction": "received",
+        "type": "property_snapshot"
+      },
+      {
+        "direction": "received",
+        "type": "wallet_snapshot"
+      }
+    ]
+  },
+  "token_custody": {
+    "password_saved": false,
+    "session_cookie_saved": false,
+    "csrf_saved": false,
+    "email_verification_token_saved": false,
+    "play_token_saved": false,
+    "note": "Secrets were used in process memory only and omitted from this receipt."
+  },
+  "endpoints": {
+    "GET account.html": {
+      "status": 200,
+      "ok": true,
+      "bytes": 20256
+    },
+    "GET play/": {
+      "status": 200,
+      "ok": true,
+      "bytes": 730
+    },
+    "POST accounts/register": {
+      "status": 201,
+      "ok": true,
+      "body": {
+        "ok": true,
+        "message": "If this email can be registered, a verification link has been sent.",
+        "keys": [
+          "account",
+          "message",
+          "ok",
+          "recovery"
+        ]
+      }
+    },
+    "POST accounts/verify-email": {
+      "status": 200,
+      "ok": true,
+      "body": {
+        "ok": true,
+        "keys": [
+          "ok"
+        ]
+      }
+    },
+    "POST accounts/login": {
+      "status": 200,
+      "ok": true,
+      "body": {
+        "ok": true,
+        "keys": [
+          "account",
+          "ok"
+        ]
+      }
+    },
+    "GET accounts/me": {
+      "status": 200,
+      "ok": true,
+      "body": {
+        "ok": true,
+        "keys": [
+          "account",
+          "ok"
+        ]
+      }
+    },
+    "POST accounts/verify/resend": {
+      "status": 200,
+      "ok": true,
+      "body": {
+        "ok": true,
+        "message": "Email is already verified.",
+        "keys": [
+          "message",
+          "ok",
+          "status"
+        ]
+      }
+    },
+    "GET outfits?sex=male": {
+      "status": 200,
+      "ok": true,
+      "body": {
+        "ok": null,
+        "keys": [
+          "outfits"
+        ],
+        "outfit_count": 3
+      }
+    },
+    "GET characters(before)": {
+      "status": 200,
+      "ok": true,
+      "body": {
+        "ok": null,
+        "keys": [
+          "characters"
+        ],
+        "character_count": 0
+      }
+    },
+    "POST characters": {
+      "status": 201,
+      "ok": true,
+      "body": {
+        "ok": true,
+        "keys": [
+          "character",
+          "expires_at",
+          "ok"
+        ]
+      }
+    },
+    "GET characters(after)": {
+      "status": 200,
+      "ok": true,
+      "body": {
+        "ok": null,
+        "keys": [
+          "characters"
+        ],
+        "character_count": 1
+      }
+    },
+    "POST characters/select": {
+      "status": 200,
+      "ok": true,
+      "body": {
+        "ok": true,
+        "keys": [
+          "character",
+          "expires_at",
+          "ok"
+        ]
+      }
+    },
+    "WS token login": {
+      "ok": true,
+      "seen_types": [
+        "welcome",
+        "login_ack",
+        "world_state"
+      ],
+      "map": "Rookguard",
+      "player_id_prefix": null
+    },
+    "Playwright localStorage /play/ autoconnect": {
+      "ok": true,
+      "url": "https://beta.akalynth.com/play/",
+      "connection_text": "Connected",
+      "hud_name": "Smk11563428d9d2",
+      "frame_summary": [
+        {
+          "direction": "sent",
+          "type": "connect"
+        },
+        {
+          "direction": "sent",
+          "type": "login",
+          "token_present": true,
+          "guest_token_present": false
+        },
+        {
+          "direction": "sent",
+          "type": "enter_world"
+        },
+        {
+          "direction": "received",
+          "type": "welcome"
+        },
+        {
+          "direction": "received",
+          "type": "welcome"
+        },
+        {
+          "direction": "received",
+          "type": "login_ack",
+          "ok": true,
+          "token_present": true,
+          "player_id_prefix": "p_5e845661...",
+          "name": "Smk11563428d9d2"
+        },
+        {
+          "direction": "received",
+          "type": "world_state",
+          "map": "Rookguard"
+        },
+        {
+          "direction": "sent",
+          "type": "inspect_wallet"
+        },
+        {
+          "direction": "received",
+          "type": "inventory_snapshot"
+        },
+        {
+          "direction": "received",
+          "type": "property_snapshot"
+        },
+        {
+          "direction": "received",
+          "type": "wallet_snapshot"
+        }
+      ]
+    },
+    "Playwright account.html login/select/play": {
+      "ok": true,
+      "account_url": "https://beta.akalynth.com/account.html",
+      "account_html_source": "live",
+      "account_html_file": null,
+      "final_url": "https://beta.akalynth.com/play/",
+      "character_rows": 1,
+      "selected_character_name": "Smk11563428d9d2",
+      "connection_text": "Connected",
+      "hud_name": "Smk11563428d9d2",
+      "local_storage_identity": {
+        "present": true,
+        "name": "Smk11563428d9d2",
+        "player_id_prefix": "p_5e845661...",
+        "token_present": true,
+        "expires_at_present": true
+      },
+      "api_responses": [
+        {
+          "method": "GET",
+          "path": "/v1/outfits",
+          "status": 200,
+          "ok": true,
+          "body": {
+            "ok": null,
+            "keys": [
+              "outfits"
+            ],
+            "outfit_count": 3
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/v1/outfits",
+          "status": 200,
+          "ok": true,
+          "body": {
+            "ok": null,
+            "keys": [
+              "outfits"
+            ],
+            "outfit_count": 3
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/v1/accounts/me",
+          "status": 401,
+          "ok": false,
+          "body": {
+            "ok": false,
+            "error": "not_authenticated",
+            "keys": [
+              "error",
+              "ok"
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/v1/accounts/login",
+          "status": 200,
+          "ok": true,
+          "body": {
+            "ok": true,
+            "keys": [
+              "account",
+              "ok"
+            ]
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/v1/accounts/me",
+          "status": 200,
+          "ok": true,
+          "body": {
+            "ok": true,
+            "keys": [
+              "account",
+              "ok"
+            ]
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/v1/characters",
+          "status": 200,
+          "ok": true,
+          "body": {
+            "ok": null,
+            "keys": [
+              "characters"
+            ],
+            "character_count": 1
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/v1/beta/me",
+          "status": 200,
+          "ok": true,
+          "body": {
+            "ok": true,
+            "keys": [
+              "cohort",
+              "enabled",
+              "ok"
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/v1/characters/select",
+          "status": 200,
+          "ok": true,
+          "body": {
+            "ok": true,
+            "keys": [
+              "character",
+              "expires_at",
+              "ok"
+            ]
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/v1/worlds",
+          "status": 200,
+          "ok": true,
+          "body": {
+            "ok": null,
+            "keys": [
+              "worlds"
+            ]
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/v1/outfits",
+          "status": 200,
+          "ok": true,
+          "body": {
+            "ok": null,
+            "keys": [
+              "outfits"
+            ],
+            "outfit_count": 6
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/v1/beta/events",
+          "status": 200,
+          "ok": true,
+          "body": {
+            "ok": true,
+            "keys": [
+              "event_id",
+              "ok",
+              "server_recorded_at"
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/v1/beta/events",
+          "status": 200,
+          "ok": true,
+          "body": {
+            "ok": true,
+            "keys": [
+              "event_id",
+              "ok",
+              "server_recorded_at"
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/v1/beta/events",
+          "status": 200,
+          "ok": true,
+          "body": {
+            "ok": true,
+            "keys": [
+              "event_id",
+              "ok",
+              "server_recorded_at"
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/v1/beta/events",
+          "status": 200,
+          "ok": true,
+          "body": {
+            "ok": true,
+            "keys": [
+              "event_id",
+              "ok",
+              "server_recorded_at"
+            ]
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/v1/beta/events",
+          "status": 200,
+          "ok": true,
+          "body": {
+            "ok": true,
+            "keys": [
+              "event_id",
+              "ok",
+              "server_recorded_at"
+            ]
+          }
+        }
+      ],
+      "console_messages": [
+        {
+          "type": "verbose",
+          "text": "[DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 401 ()"
+        }
+      ],
+      "page_errors": [],
+      "phase": "play",
+      "error": null,
+      "frame_summary": [
+        {
+          "direction": "sent",
+          "type": "connect"
+        },
+        {
+          "direction": "sent",
+          "type": "login",
+          "token_present": true,
+          "guest_token_present": false
+        },
+        {
+          "direction": "sent",
+          "type": "enter_world"
+        },
+        {
+          "direction": "received",
+          "type": "welcome"
+        },
+        {
+          "direction": "received",
+          "type": "welcome"
+        },
+        {
+          "direction": "received",
+          "type": "login_ack",
+          "ok": true,
+          "token_present": true,
+          "player_id_prefix": "p_5e845661...",
+          "name": "Smk11563428d9d2"
+        },
+        {
+          "direction": "received",
+          "type": "world_state",
+          "map": "Rookguard"
+        },
+        {
+          "direction": "sent",
+          "type": "inspect_wallet"
+        },
+        {
+          "direction": "received",
+          "type": "inventory_snapshot"
+        },
+        {
+          "direction": "received",
+          "type": "property_snapshot"
+        },
+        {
+          "direction": "received",
+          "type": "wallet_snapshot"
+        }
+      ]
+    },
+    "POST accounts/logout": {
+      "status": 200,
+      "ok": true,
+      "body": {
+        "ok": true,
+        "keys": [
+          "ok"
+        ]
+      }
+    }
+  },
+  "checks": [
+    {
+      "name": "account.html_200",
+      "ok": true
+    },
+    {
+      "name": "account.html_links_support_pages",
+      "ok": true
+    },
+    {
+      "name": "play_200",
+      "ok": true
+    },
+    {
+      "name": "register_201",
+      "ok": true,
+      "status": 201
+    },
+    {
+      "name": "verify_email_200_when_dev_token_present",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "login_200",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "login_csrf_returned",
+      "ok": true
+    },
+    {
+      "name": "session_cookie_set",
+      "ok": true
+    },
+    {
+      "name": "csrf_cookie_set",
+      "ok": true
+    },
+    {
+      "name": "me_200",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "resend_verification_endpoint_reachable",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "outfits_available",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "characters_before_200",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "character_create_201",
+      "ok": true,
+      "status": 201
+    },
+    {
+      "name": "characters_after_contains_created",
+      "ok": true
+    },
+    {
+      "name": "character_select_200",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "play_token_issued",
+      "ok": true,
+      "expires_at_present": true
+    },
+    {
+      "name": "websocket_play_token_world_state",
+      "ok": true,
+      "map": "Rookguard"
+    },
+    {
+      "name": "playwright_localstorage_sent_token_login",
+      "ok": true
+    },
+    {
+      "name": "playwright_localstorage_reached_world_state",
+      "ok": true
+    },
+    {
+      "name": "playwright_hud_shows_character_name",
+      "ok": true,
+      "hud_name": "Smk11563428d9d2"
+    },
+    {
+      "name": "playwright_portal_ui_reached_character_list",
+      "ok": true,
+      "character_rows": 1
+    },
+    {
+      "name": "playwright_portal_ui_saved_localstorage_identity",
+      "ok": true
+    },
+    {
+      "name": "playwright_portal_ui_redirected_to_play",
+      "ok": true,
+      "final_url": "https://beta.akalynth.com/play/"
+    },
+    {
+      "name": "playwright_portal_ui_sent_token_login",
+      "ok": true
+    },
+    {
+      "name": "playwright_portal_ui_reached_world_state",
+      "ok": true
+    },
+    {
+      "name": "playwright_portal_ui_hud_shows_character_name",
+      "ok": true,
+      "hud_name": "Smk11563428d9d2"
+    },
+    {
+      "name": "logout_200",
+      "ok": true,
+      "status": 200
+    }
+  ]
+}
