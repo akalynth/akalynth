@@ -117,6 +117,7 @@ function isNearLandmark(player: PlayerPublic | null, map: MapData, key: string, 
 
 const NPC_DEFS = [
   { npc_id: 'rookguard_guide', place_id: 'rookguard:plaza', label: 'Guide' },
+  { npc_id: 'rookguard_herald', place_id: 'rookguard:plaza', label: 'Herald' },
   { npc_id: 'rookguard_steward', place_id: 'rookguard:guild_hall', label: 'Rookguard Steward' },
   { npc_id: 'azura_herald',   place_id: 'azura:plaza',      label: 'Herald' },
   { npc_id: 'azura_steward',  place_id: 'azura:guild_hall', label: 'Steward' },
@@ -549,9 +550,9 @@ function DebugApp() {
   const ritualReady = isNearLandmark(state.world.me, state.world.map, 'runestone_table');
   const ritualHint = ritualReady ? 'Runestone nearby' : 'No runestone nearby';
   const nearLegendStone = isNearLandmark(state.world.me, state.world.map, 'legend_stone', 2);
-  const nearbyNpc = NPC_DEFS.find(n =>
+  const nearbyNpcs = NPC_DEFS.filter(n =>
     isInPlace(state.world.me, state.world.map, currentMapName, n.place_id)
-  ) ?? null;
+  );
   const groundItemHere = useMemo(() => {
     if (!state.world.me) return null;
     const { x, y } = state.world.me;
@@ -1076,7 +1077,7 @@ function DebugApp() {
                 ritualReady={ritualReady}
                 ritualHint={ritualHint}
                 nearLegendStone={nearLegendStone}
-                nearbyNpc={nearbyNpc}
+                nearbyNpcs={nearbyNpcs}
                 groundItemHere={groundItemHere}
                 workContract={state.workContract}
                 targetName={targetName}

@@ -303,6 +303,57 @@ body {
   border-color: rgba(74, 222, 128, 0.44);
   color: var(--proof);
 }
+.gate-status {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.25;
+  color: var(--muted);
+}
+
+.gate-status.open {
+  color: var(--proof);
+}
+
+.gate-status.locked {
+  color: #fbbf24;
+}
+
+.mission-flags--six {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mission-flags--compact {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.2rem;
+  margin-top: 0.25rem;
+}
+
+.mission-flags--compact i {
+  min-width: 0;
+  padding: 0.18rem 0.22rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 0.58rem;
+  font-style: normal;
+  text-align: center;
+}
+
+.mission-flags--compact i.done {
+  border-color: rgba(74, 222, 128, 0.44);
+  color: var(--proof);
+}
+
+.npc-talk-row {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.compact-objective-card .gate-status {
+  font-style: normal;
+}
+
 
 .codex-profession {
   display: grid;

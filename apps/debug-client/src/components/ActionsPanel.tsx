@@ -1,4 +1,5 @@
 import type { PlayLoopProgress, SovereignVocation } from '@shared/types';
+import { rookguardGateStatusLabel } from '../data/rookguardPresentation';
 import { respectRankForReputation } from '@shared/types';
 import {
   isUsableItemType,
@@ -116,7 +117,7 @@ interface ActionsPanelProps {
   ritualReady: boolean;
   ritualHint: string;
   nearLegendStone: boolean;
-  nearbyNpc: NpcRef | null;
+  nearbyNpcs: NpcRef[];
   groundItemHere: GroundItem | null;
   workContract: WorkContractRef | null;
   targetName: string | null;
@@ -151,7 +152,7 @@ export function ActionsPanel({
   ritualReady,
   ritualHint,
   nearLegendStone,
-  nearbyNpc,
+  nearbyNpcs,
   groundItemHere,
   workContract,
   targetName,
@@ -162,9 +163,24 @@ export function ActionsPanel({
   reputation,
 }: ActionsPanelProps) {
   const respectRank = respectRankForReputation(reputation);
-  const inGuildHall = nearbyNpc?.npc_id === 'azura_steward';
-  const inRookguardProfessionHall = nearbyNpc?.npc_id === 'rookguard_steward';
+  const inGuildHall = nearbyNpcs.some((npc) => npc.npc_id === 'azura_steward');
+  const inRookguardProfessionHall = nearbyNpcs.some((npc) => npc.npc_id === 'rookguard_steward');
   const rookguardQuest = loop?.rookguardQuest ?? null;
+  const gateStatus = rookguardGateStatusLabel(loop);
+  const missionSteps = rookguardQuest?.steps ?? [
+    { step_id: 'move', label: 'Move', complete: !!loop?.move },
+    { step_id: 'chat', label: 'Signal', complete: !!loop?.chat },
+    { step_id: 'tem', label: 'Tem', complete: !!loop?.tem },
+    { step_id: 'gate', label: 'Gate', complete: !!loop?.gate },
+  ];
+  const missionFlagLabel: Record<string, string> = {
+    move: 'Move',
+    chat: 'Signal',
+    tem: 'Tem',
+    training: 'Train',
+    profession: 'Guild',
+    gate: 'Gate',
+  };
   const codexProfession = rookguardQuest?.codexProfession ?? null;
   const onwardRoutes = loop?.onwardRoutes ?? [];
   const routeActionIds = routeActionIdsFor(onwardRoutes);
@@ -182,7 +198,8 @@ export function ActionsPanel({
   const hotbarItems = inventory.slice(0, 3);
   const compactActionLabel =
     primaryRouteAction?.label ??
-    (nearbyNpc ? `Talk to ${nearbyNpc.label}` :
+    (nearbyNpcs.length === 1 ? `Talk to ${nearbyNpcs[0].label}` :
+      nearbyNpcs.length > 1 ? `Talk (${nearbyNpcs.length} nearby)` :
       groundItemHere ? `Pick up ${itemLabel(groundItemHere.item_type)}` :
         attackReady ? 'Attack ready' :
           ritualReady ? 'Rune ready' :
@@ -201,6 +218,16 @@ export function ActionsPanel({
           <div className="compact-objective-card" aria-label="Current objective">
             <span>Objective</span>
             <strong>{objectiveLabel}</strong>
+            {gateStatus && (
+              <em className={`gate-status ${loop?.gateOpen ? 'open' : 'locked'}`}>{gateStatus}</em>
+            )}
+            <div className="mission-flags mission-flags--compact" aria-label="tutorial progress">
+              {missionSteps.map((step) => (
+                <i key={step.step_id} className={step.complete ? 'done' : ''}>
+                  {missionFlagLabel[step.step_id] ?? step.label}
+                </i>
+              ))}
+            </div>
             {primaryRouteAction && <em>Action: {primaryRouteAction.short}</em>}
           </div>
         )}
@@ -242,15 +269,16 @@ export function ActionsPanel({
                 Rune
               </button>
             )}
-            {nearbyNpc && (
+            {nearbyNpcs.map((npc) => (
               <button
+                key={npc.npc_id}
                 className="action-btn mobile-hotbar-btn talk-btn"
-                onClick={() => onTalk(nearbyNpc.npc_id)}
-                aria-label={`Talk to ${nearbyNpc.label}`}
+                onClick={() => onTalk(npc.npc_id)}
+                aria-label={`Talk to ${npc.label}`}
               >
-                Talk
+                {nearbyNpcs.length > 1 ? npc.label.slice(0, 4) : 'Talk'}
               </button>
-            )}
+            ))}
             {groundItemHere && (
               <button
                 className="action-btn mobile-hotbar-btn pickup-btn"
@@ -363,13 +391,17 @@ export function ActionsPanel({
       <div className="mission-card">
         <span>Objective</span>
         <strong>{objectiveLabel}</strong>
+        {gateStatus && (
+          <p className={`gate-status ${loop?.gateOpen ? 'open' : 'locked'}`}>{gateStatus}</p>
+        )}
         {!presentationMode && (
           <>
-            <div className="mission-flags" aria-label="objective progress">
-              <i className={loop?.move ? 'done' : ''}>Move</i>
-              <i className={loop?.chat ? 'done' : ''}>Signal</i>
-              <i className={loop?.tem ? 'done' : ''}>Tem</i>
-              <i className={loop?.gate ? 'done' : ''}>Gate</i>
+            <div className="mission-flags mission-flags--six" aria-label="objective progress">
+              {missionSteps.map((step) => (
+                <i key={step.step_id} className={step.complete ? 'done' : ''}>
+                  {missionFlagLabel[step.step_id] ?? step.label}
+                </i>
+              ))}
             </div>
             {rookguardQuest && (
               <div className="quest-flags" aria-label={`${rookguardQuest.title} progress`}>
@@ -484,17 +516,17 @@ export function ActionsPanel({
           >
             Ritual
           </button>
-          {nearbyNpc && (
-            <>
-              <div className="npc-line">{nearbyNpc.label} is nearby</div>
+          {nearbyNpcs.map((npc) => (
+            <div key={npc.npc_id} className="npc-talk-row">
+              <div className="npc-line">{npc.label} is nearby</div>
               <button
                 className="action-btn talk-btn"
-                onClick={() => onTalk(nearbyNpc.npc_id)}
+                onClick={() => onTalk(npc.npc_id)}
               >
-                Talk
+                Talk to {npc.label}
               </button>
-            </>
-          )}
+            </div>
+          ))}
           {groundItemHere && (
             <>
               <div className="npc-line">{groundItemHere.item_type.replace(/_/g, ' ')} on ground</div>

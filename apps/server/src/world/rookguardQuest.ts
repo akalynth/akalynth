@@ -198,6 +198,17 @@ export const ROOKGUARD_CODEX_PROFESSIONS: Record<SovereignVocation, RookguardCod
   },
 };
 
+export function rookguardGateBlockedHint(input: RookguardQuestInput): string {
+  const missing: string[] = [];
+  if (!input.tutorial.move) missing.push("move rune");
+  if (!input.tutorial.chat) missing.push("chat signal");
+  if (!input.tutorial.tem) missing.push("Tem answer");
+  if (!input.trainingComplete) missing.push("training slime");
+  if (!input.vocation) missing.push("Codex vocation");
+  if (missing.length === 0) return "Gate open — walk onto the golden arch at (10,2).";
+  return `Gate locked — still need: ${missing.join(", ")}.`;
+}
+
 export function rookguardGateOpen(input: RookguardQuestInput): boolean {
   return (
     input.tutorial.move &&

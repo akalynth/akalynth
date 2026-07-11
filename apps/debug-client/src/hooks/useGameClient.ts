@@ -34,7 +34,13 @@ import type {
   CancelHouseAuctionMessage,
 } from '@shared/protocol';
 import type { BuilderPreviewWorldFork } from '@shared/builderDraft';
-import type { AccountCharacterCreateRequest, AccountCharacterPlayResponse, MapName } from '@shared/http';
+import type {
+  AccountCharacterCreateRequest,
+  AccountCharacterOutfitColors,
+  AccountCharacterOutfitEngineMeta,
+  AccountCharacterPlayResponse,
+  MapName,
+} from '@shared/http';
 import { normalizeMapName } from '@shared/http';
 import { loadIdentity, saveIdentity, clearIdentity, hasValidToken } from '../identity';
 import {
@@ -68,6 +74,7 @@ import type {
   AccountSessionStatus,
 } from '../types';
 import { loadConfig } from '../config';
+import { rookguardGateLockedToast } from '../data/rookguardPresentation';
 
 const MOVE_REPEAT_MS = 130;
 const MOVE_TOKENS_PER_SEC_MAX = 10;
@@ -263,6 +270,28 @@ function isCharacterCatalogOutfit(value: unknown): value is CharacterOutfitOptio
   );
 }
 
+function isOutfitColorIndex(n: unknown): n is number {
+  return typeof n === 'number' && Number.isInteger(n) && n >= 0 && n < 64;
+}
+
+function isOutfitColorsShape(value: unknown): value is AccountCharacterOutfitColors {
+  if (!value || typeof value !== 'object') return false;
+  const o = value as Record<string, unknown>;
+  return isOutfitColorIndex(o.head) && isOutfitColorIndex(o.body) && isOutfitColorIndex(o.legs) && isOutfitColorIndex(o.feet);
+}
+
+function isOutfitEngineMeta(value: unknown): value is AccountCharacterOutfitEngineMeta {
+  if (!value || typeof value !== 'object') return false;
+  const o = value as Record<string, unknown>;
+  return (
+    o.palette_size === 64 &&
+    isOutfitColorsShape(o.default_colors) &&
+    Array.isArray(o.color_slots) &&
+    o.color_slots.length === 4 &&
+    Array.isArray(o.recolor_sprite_ids)
+  );
+}
+
 function isAccountCharacter(value: unknown): value is AccountCharacter {
   const worldId = (value as Record<string, unknown>)?.world_id;
   const sex = (value as Record<string, unknown>).sex;
@@ -276,7 +305,8 @@ function isAccountCharacter(value: unknown): value is AccountCharacter {
     ACCOUNT_CHARACTER_WORLD_IDS.has(worldId) &&
     (sex === 'male' || sex === 'female') &&
     typeof outfitId === 'string' &&
-    ACCOUNT_CHARACTER_OUTFIT_IDS.has(outfitId)
+    ACCOUNT_CHARACTER_OUTFIT_IDS.has(outfitId) &&
+    isOutfitColorsShape((value as Record<string, unknown>).outfit_colors)
   );
 }
 
@@ -456,6 +486,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
   const [characterCatalog, setCharacterCatalog] = useState<CharacterCatalog>({
     worlds: [],
     outfits: [],
+    outfitEngine: null,
     loading: false,
     loaded: false,
     error: null,
@@ -1150,8 +1181,15 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
             }
             case 'loop_update': {
               const loop = isLoop(data.loop) ? data.loop : s.loop;
-              const next = loop && data.event
-                ? pushToast(s, 'objective', loop.objective, String(data.event).includes('complete') ? 'DONE' : 'STEP')
+              const event = typeof data.event === 'string' ? data.event : '';
+              let toastLine = loop?.objective ?? '';
+              let toastTag = event.includes('complete') ? 'DONE' : 'STEP';
+              if (event === 'rookguard_gate_locked' && loop) {
+                toastLine = rookguardGateLockedToast(loop);
+                toastTag = 'GATE';
+              }
+              const next = loop && event
+                ? pushToast(s, 'objective', toastLine, toastTag)
                 : s;
               return { ...next, conn, loop };
             }
@@ -1710,9 +1748,11 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
       const outfits = Array.isArray(outfitsBody?.outfits)
         ? outfitsBody.outfits.filter(isCharacterCatalogOutfit)
         : [];
+      const outfitEngine = isOutfitEngineMeta(outfitsBody?.outfit_engine) ? outfitsBody.outfit_engine : null;
       const next: CharacterCatalog = {
         worlds,
         outfits,
+        outfitEngine,
         loading: false,
         loaded: true,
         error: null,
@@ -1723,6 +1763,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
       const next: CharacterCatalog = {
         worlds: [],
         outfits: [],
+        outfitEngine: null,
         loading: false,
         loaded: false,
         error: characterOptionsErrorMessage(err),
@@ -1889,7 +1930,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
   // returned play token, then reconnect as that character. Returns an error
   // string for the UI on failure (name taken / invalid / rate limited).
   const createCharacter = useCallback(
-    async ({ name, world_id, sex, outfit_id }: CharacterCreateInput): Promise<CreateResult> => {
+    async ({ name, world_id, sex, outfit_id, outfit_colors }: CharacterCreateInput): Promise<CreateResult> => {
       const trimmed = name.trim();
       if (!trimmed) return { ok: false, error: 'Name is required' };
       if (!world_id || !outfit_id || (sex !== 'male' && sex !== 'female')) {
@@ -1925,6 +1966,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
             world_id,
             sex,
             outfit_id,
+            ...(outfit_colors && isOutfitColorsShape(outfit_colors) ? { outfit_colors } : {}),
           } satisfies AccountCharacterCreateRequest),
         });
         const body = await resp.json().catch(() => null);

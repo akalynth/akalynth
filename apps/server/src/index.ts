@@ -255,6 +255,7 @@ import {
   buildRookguardQuestProgress,
   getRookguardQuestInput,
   rookguardGateOpen,
+  rookguardGateBlockedHint,
   rookguardQuestObjective,
   type RookguardQuestInput,
 } from './world/rookguardQuest.js';
@@ -323,6 +324,7 @@ const DEFAULT_WEBSITE_ORIGINS = [
   'https://www.akalynth.com',
   'https://beta.akalynth.com',
   'https://sim.akalynth.com',
+  'https://codex.akalynth.com',
 ] as const;
 const ACCOUNT_CORS_ORIGINS = parseCorsOrigins(process.env.ACCOUNT_CORS_ORIGINS, DEFAULT_WEBSITE_ORIGINS);
 const CORS_POLICY: CorsPolicy = {
@@ -4400,6 +4402,8 @@ function processSessionQueue(s: Session, now: number) {
                 finalX = s.player!.x;
                 finalY = s.player!.y;
                 transferred = true;
+              } else {
+                sendLoopUpdate(s, 'rookguard_gate_locked');
               }
             }
           }

@@ -19,6 +19,7 @@ import {
   clearRookguardQuestProjection,
   getRookguardQuestInput,
   rookguardGateOpen,
+  rookguardGateBlockedHint,
   rookguardQuestObjective,
   type RookguardQuestInput,
 } from '../src/world/rookguardQuest.js';
@@ -119,6 +120,10 @@ test('initial quest starts at the move objective', () => {
   assert(quest.phase === 'tutorial', `expected tutorial phase, got ${quest.phase}`);
   assert(rookguardQuestObjective(state) === 'Step onto the glowing move rune (east plaza, tile 3,2)', 'initial objective mismatch');
   assert(!rookguardGateOpen(state), 'gate must not open before tutorial/training/profession');
+  assert(
+    rookguardGateBlockedHint(state).includes('move rune'),
+    'gate blocked hint should name the first missing proof'
+  );
   assert(routes.every((route) => route.status === 'locked'), 'onward routes must start locked');
   assert(
     routes.some((route) => route.route_id === 'forgehold_route_slice_v1' && route.objectives.some((objective) => objective.system === 'crafting')),
@@ -161,6 +166,10 @@ test('vocation declaration opens the gate but quest is not complete until handof
   const quest = buildRookguardQuestProgress(state);
   assert(quest.phase === 'gate', `expected gate phase, got ${quest.phase}`);
   assert(rookguardGateOpen(state), 'gate should open after tutorial, training, and vocation');
+  assert(
+    rookguardGateBlockedHint(state).includes('Gate open'),
+    'gate blocked hint should report open when requirements are met'
+  );
   assert(!quest.completed, 'quest should wait for the gate step before completion');
 });
 
