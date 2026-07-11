@@ -6664,3 +6664,235 @@ body {
   border: 1px solid rgba(143, 211, 214, 0.35);
   color: var(--classic-rune);
 }
+
+/*
+   AKALYNTH_PRESENTATION_LAYOUT_REPAIR_V1
+
+   The presentation shell has fixed control rails around a square map. Keep
+   the existing server-authoritative map renderer, but size its viewport to
+   the available desktop geometry so the rails never cover the playfield.
+*/
+@media (min-width: 951px) {
+  .app-shell--presentation .stage-map {
+    place-items: start center;
+    padding: 4rem 1rem 5.5rem;
+    overflow: hidden;
+  }
+
+  .app-shell--presentation .map-canvas {
+    width: min(1024px, calc(100vw - 36rem), calc(100dvh - 9rem));
+    height: min(1024px, calc(100vw - 36rem), calc(100dvh - 9rem));
+    max-width: none;
+    max-height: none;
+    aspect-ratio: 1;
+  }
+
+  .app-shell--presentation .hud-card--stats {
+    display: block;
+    width: min(18.75rem, 28vw);
+  }
+
+  .app-shell--presentation .hud-card--stats > .nine-slice-panel__content {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.35rem;
+    padding: 0.45rem !important;
+  }
+
+  .app-shell--presentation .hud-card--stats > .nine-slice-panel__content > div {
+    min-width: 0;
+  }
+
+  .app-shell--presentation .hud-card--stats .ui-stat-bar {
+    min-width: 0;
+  }
+
+  .app-shell--presentation .hud-card--stats span {
+    font-size: 0.62rem;
+  }
+
+  .app-shell--presentation .hud-card--stats strong {
+    font-size: 0.72rem;
+    line-height: 1.05;
+    overflow-wrap: anywhere;
+  }
+
+  .app-shell--presentation .stage-controls {
+    bottom: max(8.4rem, calc(env(safe-area-inset-bottom) + 8.4rem));
+  }
+
+  .app-shell--presentation .thumb-zone.right {
+    align-self: start;
+    max-height: calc(100dvh - 23rem);
+    overflow: hidden;
+  }
+
+  .app-shell--presentation .actions-panel {
+    max-height: 100%;
+    gap: 0.35rem;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+
+  .app-shell--presentation .actions-panel .mission-card {
+    gap: 0.18rem;
+    padding: 0.4rem 0.45rem;
+  }
+
+  .app-shell--presentation .actions-panel .action-btn {
+    min-height: 44px;
+    padding: 0.45rem 0.55rem;
+  }
+
+  .app-shell--presentation .stage-bottom {
+    left: max(0.75rem, env(safe-area-inset-left));
+    right: auto;
+    bottom: max(0.65rem, env(safe-area-inset-bottom));
+    width: min(20rem, 26vw);
+    max-width: min(20rem, 26vw);
+    min-height: 0;
+    padding: 0.35rem;
+  }
+
+  .app-shell--presentation .stage-bottom .status-pills {
+    display: none;
+  }
+
+  .app-shell--presentation .bottom-actions {
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.3rem;
+  }
+
+  .app-shell--presentation .stage-bottom .dock-chip {
+    min-width: 0;
+  }
+
+  .app-shell--presentation .stage-bottom .dock-chip__hit {
+    width: 100%;
+    min-width: 0;
+    padding: 0.4rem 0.25rem;
+    font-size: 0.72rem;
+  }
+}
+
+/*
+   AKALYNTH_PRESENTATION_LAYOUT_REPAIR_V2
+
+   Consolidate presentation-only hierarchy after the first geometry repair:
+   one objective rail, one primary action summary, and viewport-contained
+   controls. Gameplay callbacks and server authority remain unchanged.
+*/
+.presentation-action-summary {
+  display: grid;
+  gap: 0.16rem;
+  min-width: 0;
+  padding: 0.12rem 0;
+}
+
+.presentation-action-summary span,
+.presentation-action-summary small {
+  color: var(--classic-muted);
+  font-size: 0.62rem;
+  line-height: 1.15;
+}
+
+.presentation-action-summary strong {
+  overflow: hidden;
+  color: var(--classic-gold);
+  font-size: 0.76rem;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-shell--presentation .mission-card--presentation .onward-routes,
+.app-shell--presentation .mission-card--presentation .quest-flags,
+.app-shell--presentation .mission-card--presentation .codex-profession,
+.app-shell--presentation .mission-card--presentation .codex-shelves {
+  display: none;
+}
+
+.app-shell--presentation .actions-panel--presentation .gold-display,
+.app-shell--presentation .actions-panel--presentation .legend-stone-hint {
+  display: none;
+}
+
+.app-shell--presentation .motion-objective-rail {
+  top: max(0.75rem, env(safe-area-inset-top));
+  width: min(25rem, 34vw);
+  height: auto;
+  min-height: 3.05rem;
+  pointer-events: none;
+}
+
+@media (min-width: 951px) {
+  .app-shell--presentation .stage-controls {
+    grid-template-columns: minmax(188px, 280px) minmax(220px, 300px);
+    bottom: max(8.4rem, calc(env(safe-area-inset-bottom) + 8.4rem));
+  }
+
+  .app-shell--presentation .thumb-zone.left {
+    justify-self: start;
+  }
+
+  .app-shell--presentation .thumb-zone.right {
+    justify-self: end;
+  }
+
+  .app-shell--presentation .actions-panel--presentation .shop-actions {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .app-shell--presentation .actions-panel--presentation .action-btn {
+    min-height: 48px;
+  }
+}
+
+@media (min-width: 951px) and (max-width: 1199px) {
+  .app-shell--presentation-compact-desktop .motion-objective-rail {
+    width: min(21rem, 42vw);
+  }
+
+  .app-shell--presentation-compact-desktop .stage-map {
+    padding-top: 4.15rem;
+    padding-bottom: 5.5rem;
+  }
+
+  .app-shell--presentation-compact-desktop .stage-controls {
+    grid-template-columns: minmax(174px, 220px) minmax(190px, 250px);
+    bottom: max(7rem, calc(env(safe-area-inset-bottom) + 7rem));
+  }
+
+  .app-shell--presentation-compact-desktop .thumb-zone.right {
+    max-height: calc(100dvh - 14rem);
+  }
+
+  .app-shell--presentation-compact-desktop .stage-bottom {
+    width: min(19rem, 32vw);
+    max-width: min(19rem, 32vw);
+  }
+}
+
+@media (max-width: 950px) and (orientation: landscape) {
+  .app-shell--presentation .motion-objective-rail {
+    width: min(16.5rem, 40vw);
+  }
+
+  .app-shell--presentation .mobile-hotbar-btn {
+    min-height: 48px;
+  }
+
+  .app-shell--presentation .mobile-hotbar {
+    gap: 0.32rem;
+  }
+}
+
+@media (max-width: 950px) and (orientation: landscape) and (max-height: 430px) {
+  .app-shell--presentation .mobile-hotbar-btn {
+    min-height: 48px;
+  }
+}

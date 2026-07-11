@@ -1,0 +1,638 @@
+[
+  {
+    "label": "beta-desktop",
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "file": "beta-desktop.png",
+    "data": {
+      "innerWidth": 1280,
+      "innerHeight": 720,
+      "scrollWidth": 1280,
+      "scrollHeight": 720,
+      "classes": "app-shell app-shell--presentation app-shell--presentation-desktop",
+      "layout": {
+        "map": {
+          "x": 352,
+          "y": 129.4375,
+          "w": 576,
+          "h": 576,
+          "right": 928,
+          "bottom": 705.4375
+        },
+        "hud": {
+          "x": 968,
+          "y": 12,
+          "w": 300,
+          "h": 93.46875,
+          "right": 1268,
+          "bottom": 105.46875
+        },
+        "controls": {
+          "x": 12,
+          "y": 233.609375,
+          "w": 1256,
+          "h": 352,
+          "right": 1268,
+          "bottom": 585.609375
+        },
+        "left": {
+          "x": 12,
+          "y": 310.453125,
+          "w": 225.5625,
+          "h": 275.15625,
+          "right": 237.5625,
+          "bottom": 585.609375
+        },
+        "right": {
+          "x": 1064.921875,
+          "y": 233.609375,
+          "w": 203.078125,
+          "h": 352,
+          "right": 1268,
+          "bottom": 585.609375
+        },
+        "dock": {
+          "x": 12,
+          "y": 596.859375,
+          "w": 320,
+          "h": 112.75,
+          "right": 332,
+          "bottom": 709.609375
+        },
+        "objective": {
+          "x": 440,
+          "y": 12,
+          "w": 400,
+          "h": 48.796875,
+          "right": 840,
+          "bottom": 60.796875
+        },
+        "nav": null
+      },
+      "buttons": [
+        {
+          "text": "↖",
+          "aria": "Move north west",
+          "w": 66.4,
+          "h": 58.4,
+          "disabled": false
+        },
+        {
+          "text": "↑",
+          "aria": "Move north",
+          "w": 66.4,
+          "h": 58.4,
+          "disabled": false
+        },
+        {
+          "text": "↗",
+          "aria": "Move north east",
+          "w": 66.4,
+          "h": 58.4,
+          "disabled": false
+        },
+        {
+          "text": "←",
+          "aria": "Move west",
+          "w": 66.4,
+          "h": 58.4,
+          "disabled": false
+        },
+        {
+          "text": "■",
+          "aria": "Stop movement",
+          "w": 66.4,
+          "h": 58.4,
+          "disabled": false
+        },
+        {
+          "text": "→",
+          "aria": "Move east",
+          "w": 66.4,
+          "h": 58.4,
+          "disabled": false
+        },
+        {
+          "text": "↙",
+          "aria": "Move south west",
+          "w": 66.4,
+          "h": 58.4,
+          "disabled": false
+        },
+        {
+          "text": "↓",
+          "aria": "Move south",
+          "w": 66.4,
+          "h": 58.4,
+          "disabled": false
+        },
+        {
+          "text": "↘",
+          "aria": "Move south east",
+          "w": 66.4,
+          "h": 58.4,
+          "disabled": false
+        },
+        {
+          "text": "✕",
+          "aria": "Stop movement",
+          "w": 48,
+          "h": 48,
+          "disabled": false
+        },
+        {
+          "text": "Fish Rookguard canal",
+          "aria": null,
+          "w": 162.3,
+          "h": 48,
+          "disabled": false
+        },
+        {
+          "text": "Attack",
+          "aria": "Attack nearest available target",
+          "w": 178.7,
+          "h": 48,
+          "disabled": false
+        },
+        {
+          "text": "Ritual",
+          "aria": "No runestone nearby",
+          "w": 178.7,
+          "h": 48,
+          "disabled": true
+        },
+        {
+          "text": "Talk to Guide",
+          "aria": null,
+          "w": 178.7,
+          "h": 48,
+          "disabled": false
+        },
+        {
+          "text": "Talk to Herald",
+          "aria": null,
+          "w": 178.7,
+          "h": 48,
+          "disabled": false
+        },
+        {
+          "text": "Fish Rookguard canal",
+          "aria": null,
+          "w": 178.7,
+          "h": 48,
+          "disabled": false
+        },
+        {
+          "text": "Chat",
+          "aria": "Open chat",
+          "w": 42,
+          "h": 56.8,
+          "disabled": false
+        },
+        {
+          "text": "Log",
+          "aria": "Open log",
+          "w": 36,
+          "h": 56.8,
+          "disabled": false
+        },
+        {
+          "text": "Pack",
+          "aria": "Open backpack",
+          "w": 69.2,
+          "h": 56.8,
+          "disabled": false
+        },
+        {
+          "text": "Codex",
+          "aria": "Open Akalynth Codex shelf",
+          "w": 51,
+          "h": 56.8,
+          "disabled": false
+        }
+      ],
+      "focusable": 20
+    },
+    "errors": [],
+    "failed": []
+  },
+  {
+    "label": "beta-landscape",
+    "viewport": {
+      "width": 932,
+      "height": 430
+    },
+    "file": "beta-landscape.png",
+    "data": {
+      "innerWidth": 932,
+      "innerHeight": 430,
+      "scrollWidth": 932,
+      "scrollHeight": 430,
+      "classes": "app-shell app-shell--presentation app-shell--presentation-mobile-landscape",
+      "layout": {
+        "map": {
+          "x": 0,
+          "y": 0,
+          "w": 932,
+          "h": 430,
+          "right": 932,
+          "bottom": 430
+        },
+        "hud": null,
+        "controls": {
+          "x": 7.1875,
+          "y": 208.28125,
+          "w": 917.625,
+          "h": 214.53125,
+          "right": 924.8125,
+          "bottom": 422.8125
+        },
+        "left": {
+          "x": 7.1875,
+          "y": 208.28125,
+          "w": 170.53125,
+          "h": 214.53125,
+          "right": 177.71875,
+          "bottom": 422.8125
+        },
+        "right": {
+          "x": 743.21875,
+          "y": 257.125,
+          "w": 181.59375,
+          "h": 165.6875,
+          "right": 924.8125,
+          "bottom": 422.8125
+        },
+        "dock": {
+          "x": 316,
+          "y": 321.28125,
+          "w": 300,
+          "h": 101.53125,
+          "right": 616,
+          "bottom": 422.8125
+        },
+        "objective": {
+          "x": 334,
+          "y": 12,
+          "w": 264,
+          "h": 48.796875,
+          "right": 598,
+          "bottom": 60.796875
+        },
+        "nav": null
+      },
+      "buttons": [
+        {
+          "text": "↖",
+          "aria": "Move north west",
+          "w": 66.4,
+          "h": 58.4,
+          "disabled": false
+        },
+        {
+          "text": "↑",
+          "aria": "Move north",
+          "w": 66.4,
+          "h": 58.4,
+          "disabled": false
+        },
+        {
+          "text": "↗",
+          "aria": "Move north east",
+          "w": 66.4,
+          "h": 58.4,
+          "disabled": false
+        },
+        {
+          "text": "←",
+          "aria": "Move west",
+          "w": 66.4,
+          "h": 58.4,
+          "disabled": false
+        },
+        {
+          "text": "■",
+          "aria": "Stop movement",
+          "w": 66.4,
+          "h": 58.4,
+          "disabled": false
+        },
+        {
+          "text": "→",
+          "aria": "Move east",
+          "w": 66.4,
+          "h": 58.4,
+          "disabled": false
+        },
+        {
+          "text": "↙",
+          "aria": "Move south west",
+          "w": 66.4,
+          "h": 58.4,
+          "disabled": false
+        },
+        {
+          "text": "↓",
+          "aria": "Move south",
+          "w": 66.4,
+          "h": 58.4,
+          "disabled": false
+        },
+        {
+          "text": "↘",
+          "aria": "Move south east",
+          "w": 66.4,
+          "h": 58.4,
+          "disabled": false
+        },
+        {
+          "text": "Fish",
+          "aria": "Fish Rookguard canal",
+          "w": 79.5,
+          "h": 48,
+          "disabled": false
+        },
+        {
+          "text": "Attack",
+          "aria": "Attack nearest available target",
+          "w": 79.5,
+          "h": 48,
+          "disabled": false
+        },
+        {
+          "text": "Guid",
+          "aria": "Talk to Guide",
+          "w": 79.5,
+          "h": 48,
+          "disabled": false
+        },
+        {
+          "text": "Hera",
+          "aria": "Talk to Herald",
+          "w": 79.5,
+          "h": 48,
+          "disabled": false
+        },
+        {
+          "text": "Chat",
+          "aria": "Open chat",
+          "w": 66.4,
+          "h": 58.4,
+          "disabled": false
+        },
+        {
+          "text": "Log",
+          "aria": "Open log",
+          "w": 66.4,
+          "h": 58.4,
+          "disabled": false
+        },
+        {
+          "text": "Pack",
+          "aria": "Open backpack",
+          "w": 66.4,
+          "h": 58.4,
+          "disabled": false
+        },
+        {
+          "text": "Codex",
+          "aria": "Open Akalynth Codex shelf",
+          "w": 66.4,
+          "h": 58.4,
+          "disabled": false
+        }
+      ],
+      "focusable": 17
+    },
+    "errors": [],
+    "failed": []
+  },
+  {
+    "label": "atlas-desktop",
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "file": "atlas-desktop.png",
+    "data": {
+      "innerWidth": 1280,
+      "innerHeight": 720,
+      "scrollWidth": 1280,
+      "scrollHeight": 1898,
+      "layout": {
+        "map": null,
+        "hud": null,
+        "controls": null,
+        "left": null,
+        "right": null,
+        "dock": null,
+        "objective": null,
+        "nav": {
+          "x": 206.40625,
+          "y": 0,
+          "w": 743,
+          "h": 65,
+          "right": 949.40625,
+          "bottom": 65
+        }
+      },
+      "buttons": [
+        {
+          "text": "Index",
+          "aria": null,
+          "w": 41,
+          "h": 44,
+          "disabled": false
+        },
+        {
+          "text": "Codex",
+          "aria": null,
+          "w": 47,
+          "h": 44,
+          "disabled": false
+        },
+        {
+          "text": "Play",
+          "aria": null,
+          "w": 33,
+          "h": 44,
+          "disabled": false
+        },
+        {
+          "text": "Outfits",
+          "aria": null,
+          "w": 50,
+          "h": 44,
+          "disabled": false
+        },
+        {
+          "text": "Atlas",
+          "aria": null,
+          "w": 39,
+          "h": 44,
+          "disabled": false
+        },
+        {
+          "text": "Behavior",
+          "aria": null,
+          "w": 62,
+          "h": 44,
+          "disabled": false
+        },
+        {
+          "text": "Agent",
+          "aria": null,
+          "w": 44,
+          "h": 44,
+          "disabled": false
+        },
+        {
+          "text": "Gaps",
+          "aria": null,
+          "w": 39,
+          "h": 44,
+          "disabled": false
+        },
+        {
+          "text": "Stage",
+          "aria": null,
+          "w": 56,
+          "h": 32,
+          "disabled": false
+        },
+        {
+          "text": "Beta",
+          "aria": null,
+          "w": 50,
+          "h": 32,
+          "disabled": false
+        },
+        {
+          "text": "Prod",
+          "aria": null,
+          "w": 50,
+          "h": 32,
+          "disabled": false
+        }
+      ],
+      "focusable": 13
+    },
+    "errors": [],
+    "failed": []
+  },
+  {
+    "label": "atlas-mobile",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "file": "atlas-mobile.png",
+    "data": {
+      "innerWidth": 978,
+      "innerHeight": 2117,
+      "scrollWidth": 978,
+      "scrollHeight": 3020,
+      "layout": {
+        "map": null,
+        "hud": null,
+        "controls": null,
+        "left": null,
+        "right": null,
+        "dock": null,
+        "objective": null,
+        "nav": {
+          "x": 16,
+          "y": 96,
+          "w": 358,
+          "h": 91,
+          "right": 374,
+          "bottom": 187
+        }
+      },
+      "buttons": [
+        {
+          "text": "Index",
+          "aria": null,
+          "w": 41,
+          "h": 40,
+          "disabled": false
+        },
+        {
+          "text": "Codex",
+          "aria": null,
+          "w": 47,
+          "h": 40,
+          "disabled": false
+        },
+        {
+          "text": "Play",
+          "aria": null,
+          "w": 33,
+          "h": 40,
+          "disabled": false
+        },
+        {
+          "text": "Outfits",
+          "aria": null,
+          "w": 50,
+          "h": 40,
+          "disabled": false
+        },
+        {
+          "text": "Atlas",
+          "aria": null,
+          "w": 39,
+          "h": 40,
+          "disabled": false
+        },
+        {
+          "text": "Behavior",
+          "aria": null,
+          "w": 62,
+          "h": 40,
+          "disabled": false
+        },
+        {
+          "text": "Agent",
+          "aria": null,
+          "w": 44,
+          "h": 40,
+          "disabled": false
+        },
+        {
+          "text": "Gaps",
+          "aria": null,
+          "w": 39,
+          "h": 40,
+          "disabled": false
+        },
+        {
+          "text": "Stage",
+          "aria": null,
+          "w": 56,
+          "h": 32,
+          "disabled": false
+        },
+        {
+          "text": "Beta",
+          "aria": null,
+          "w": 50,
+          "h": 32,
+          "disabled": false
+        },
+        {
+          "text": "Prod",
+          "aria": null,
+          "w": 50,
+          "h": 32,
+          "disabled": false
+        }
+      ],
+      "focusable": 13
+    },
+    "errors": [],
+    "failed": []
+  }
+]
