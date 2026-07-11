@@ -187,10 +187,11 @@ export function ActionsPanel({
         attackReady ? 'Attack ready' :
           ritualReady ? 'Rune ready' :
             'Ready');
+  const ritualHintId = 'play-ritual-hint';
 
   if (compact) {
     return (
-      <div className="actions-panel actions-panel--compact" aria-label="Quick actions">
+      <div className={`actions-panel actions-panel--compact${presentationMode ? ' actions-panel--presentation' : ''}`} aria-label="Quick actions">
         {presentationMode ? (
           <div className="compact-action-card" aria-label="Action dock">
             <span>Actions</span>
@@ -229,7 +230,7 @@ export function ActionsPanel({
                 disabled={!attackReady}
                 aria-label={targetName ? `Attack ${targetName}` : 'Attack nearest available target'}
               >
-                Atk
+                Attack
               </button>
             )}
             {(!presentationMode || ritualReady) && (
@@ -238,6 +239,7 @@ export function ActionsPanel({
                 onClick={() => ritualReady && onRitual()}
                 disabled={!ritualReady}
                 aria-label={ritualHint}
+                aria-describedby={ritualHintId}
               >
                 Rune
               </button>
@@ -359,12 +361,12 @@ export function ActionsPanel({
   }
 
   return (
-    <div className="actions-panel" aria-label="Actions">
-      <div className="mission-card">
-        <span>Objective</span>
-        <strong>{objectiveLabel}</strong>
+    <div className={`actions-panel${presentationMode ? ' actions-panel--presentation' : ''}`} aria-label="Actions">
+      <div className={`mission-card${presentationMode ? ' mission-card--presentation' : ''}`}>
         {!presentationMode && (
           <>
+            <span>Objective</span>
+            <strong>{objectiveLabel}</strong>
             <div className="mission-flags" aria-label="objective progress">
               <i className={loop?.move ? 'done' : ''}>Move</i>
               <i className={loop?.chat ? 'done' : ''}>Signal</i>
@@ -436,6 +438,13 @@ export function ActionsPanel({
             )}
           </>
         )}
+        {presentationMode && (
+          <div className="presentation-action-summary" aria-label="Primary action summary">
+            <span>Next action</span>
+            <strong>{primaryRouteAction?.label ?? compactActionLabel}</strong>
+            {targetName && <small>Target: {targetName}</small>}
+          </div>
+        )}
         {routeActionsOpen && (
           <div className="shop-actions" aria-label="Route actions">
             {routeActions.map((action) => (
@@ -473,14 +482,17 @@ export function ActionsPanel({
             className={`action-btn ${attackReady ? '' : 'cooling'}`}
             onClick={() => attackReady && onAttack()}
             disabled={!attackReady}
+            aria-label={targetName ? `Attack ${targetName}` : 'Attack nearest available target'}
           >
             Attack
           </button>
-          <div className="ritual-line">{ritualHint}</div>
+          <div className="ritual-line" id={ritualHintId} role="status">{ritualHint}</div>
           <button
             className={`action-btn ritual-btn ${ritualReady ? '' : 'cooling'}`}
             onClick={() => ritualReady && onRitual()}
             disabled={!ritualReady}
+            aria-label={ritualHint}
+            aria-describedby={ritualHintId}
           >
             Ritual
           </button>

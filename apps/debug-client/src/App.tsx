@@ -353,12 +353,14 @@ interface MotionObjectiveRailProps {
 
 function MotionObjectiveRail({ objectiveLabel }: MotionObjectiveRailProps) {
   return (
-    <div className="motion-objective-rail" aria-label="Current motion objective">
+    <div className="motion-objective-rail" role="status" aria-label="Current objective">
       <span>Objective</span>
       <strong>{objectiveLabel}</strong>
     </div>
   );
 }
+
+type PresentationViewport = 'mobile-landscape' | 'compact-desktop' | 'desktop';
 
 export default function App() {
   // Hooks must run unconditionally and in a stable order, so call them before any
@@ -405,6 +407,11 @@ function DebugApp() {
   const builderPreviewEnabled = import.meta.env.VITE_ENABLE_BUILDER_PREVIEW === '1';
   const phoneLandscape = useMediaQuery('(max-width: 950px) and (orientation: landscape)');
   const viewport = useViewportSize();
+  const presentationViewport: PresentationViewport = phoneLandscape
+    ? 'mobile-landscape'
+    : viewport.width < 1200
+      ? 'compact-desktop'
+      : 'desktop';
   const [state, api] = useGameClient(initialMap);
   const [chatOpen, setChatOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
@@ -691,7 +698,7 @@ function DebugApp() {
   }
 
   return (
-    <div className={`app-shell${presentationMode ? ' app-shell--presentation' : ''}${entryMode ? ' app-shell--entry' : ''}${accountPanelMode ? ' app-shell--account-panel' : ''}`}>
+    <div className={`app-shell${presentationMode ? ` app-shell--presentation app-shell--presentation-${presentationViewport}` : ''}${entryMode ? ' app-shell--entry' : ''}${accountPanelMode ? ' app-shell--account-panel' : ''}`}>
       <MobileLandscapeGate />
       <TopBar
         stage={state.ui.stage}
@@ -981,7 +988,7 @@ function DebugApp() {
               conn={state.conn}
             />
           )}
-          {presentationMode && phoneLandscape && showPlayShell && (
+          {presentationMode && showPlayShell && (
             <MotionObjectiveRail objectiveLabel={objectiveLabel} />
           )}
           {!presentationMode && (
@@ -1042,7 +1049,7 @@ function DebugApp() {
             <div className="thumb-zone right">
               <ActionsPanel
                 stage={state.ui.stage}
-                compact={phoneLandscape}
+                compact={phoneLandscape || (presentationMode && presentationViewport === 'compact-desktop')}
                 presentationMode={presentationMode}
                 onAttack={api.sendAttack}
                 onRitual={api.castRunestone}
