@@ -50,3 +50,14 @@ These were removed because their remotes were `:gone`, their commits were repres
   - `feat/high-city-phase-1-2-play-shell` (archived as `refs/cleanup/20260711-feat_high-city-phase-1-2-play-shell`)
   - `agent/beta-ui-presentation-clean` (archived as `refs/cleanup/20260711-agent_beta-ui-presentation-clean`)
 - `akalynth-codex` repo check: no remote-tracking stale (`:gone`) branches and no additional merge candidates under this sweep.
+
+## End-to-end closeout (2026-07-11T18:18Z)
+
+- Contract and private payload gate: PASS; 8 root-area contracts and 3 private payload contracts validated.
+- Release workflow contract check: PASS; generated contract JSON is in sync with workflow source.
+- Combined release gates: PASS; evidence recorded in `akalynth-codex/evidence/codex-release-gates/20260711T181625Z-full-loop/`.
+- Beta publish: PASS for commit `250aa878695ca925c149e97015a8cf2a2b2705c9`.
+- Live checks: rollout, API health, APK URL, site title, and `/play/` returned successfully.
+- Durable publish receipt: `docs/evidence/publish-beta/20260711T181828Z.json`.
+- The hygiene branch HEAD was correctly rejected when paired with the older static artifact; the successful publish used an isolated clone pinned to the artifact's exact commit. No source branch or build metadata was rewritten.
+- Existing unrelated dirty WIP remains preserved for separate ownership and review.
