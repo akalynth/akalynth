@@ -14,8 +14,8 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..
 const ROOKGUARD_MAP_PATH = path.join(REPO_ROOT, 'packages/shared/maps/rookguard.json');
 const LANE = 'AKALYNTH_BETA_AZURA_LOOP_ALIVE_V1';
 const TEM_CHALLENGE_RESPONSE = 'AKALYNTH';
-const WALKABLE = new Set([0, 3, 4, 5, 6, 7, 8]);
-const TILE = { Wall: 1, TutorialMove: 4, TutorialChat: 5, TutorialTem: 6, GateToAzura: 8 };
+const WALKABLE = new Set([0, 1, 5, 6, 7, 8]);
+const TILE = { Wall: 2, TutorialMove: 5, TutorialChat: 6, TutorialTem: 7, GateToAzura: 8 };
 
 function stamp() {
   return new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
@@ -246,7 +246,7 @@ async function sendMove(client, direction, timeoutMs) {
   client.send({ type: 'move_intent', direction });
   const result = await client.waitFor((m) => m.type === 'move_result', `move:${direction}`, timeoutMs);
   if (result.ok !== true) throw new Error(`move ${direction} failed: ${JSON.stringify(result)}`);
-  await sleep(140);
+  await sleep(260);
   return result;
 }
 
@@ -314,6 +314,7 @@ async function onboardToAzura(client, map, startWorld, timeoutMs) {
     }
   }
   await walkPath(client, pathTo(map, current, guildTile), timeoutMs);
+  current = guildTile;
   client.send({ type: 'declare_vocation', vocation: 'hexer' });
   await client.waitFor((m) => m.type === 'loop_update' && m.event === 'rookguard_profession_declared', 'loop:profession', timeoutMs);
 
