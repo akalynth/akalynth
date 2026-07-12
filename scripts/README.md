@@ -14,6 +14,7 @@ Scripts should be idempotent and documented.
 - Beta account/play live smoke: root `npm run smoke:beta-account-play`
 - Docker runtime: `verify-docker-runtime.sh`, `smoke-docker-runtime.sh`, `render-docker-runtime.sh`
 - Edge ops: `add-plane-c-android-peer.sh`, `verify-plane-c-ollama.sh`, `open-graphene-termux.sh`, `open-graphene-droidvnc.sh`, `deploy-temp-android-novnc-lane.sh`, `deploy-temp-rustdesk-server.sh`
+- Android Pixel smoke: `akalynth-install-to-pixel.sh`
 - Policy guards / hooks: `phase_gate.ts`, `precommit-hook.sh`, `refuse_windows.{js,sh}`, `warn_protocol_change.sh`, `require-chronicle.js`
 - Formatting: `format_ts.sh`
 - Verification harness: `verify/` (see `verify/README.md`)
@@ -52,6 +53,10 @@ Scripts should be idempotent and documented.
   GrapheneOS emulator clone, defaulting to `emulator-5576`, and mirror it with
   `scrcpy` when `scrcpy` and a graphical display are available. Run:
   `ANDROID_SERIAL=emulator-5576 scripts/open-graphene-droidvnc.sh`.
+- `scripts/akalynth-install-to-pixel.sh`: Build the debug Android client on
+  `ops-dev-01`, copy the APK through `scp`, install it on the Pixel bridge at
+  `127.0.0.1:15575`, and launch the app. Run after `pixel vm-connect`:
+  `scripts/akalynth-install-to-pixel.sh`.
 - `scripts/deploy-temp-android-novnc-lane.sh`: Create a temporary public
   HTTPS/noVNC lane on `edge02` to Android droidVNC-NG over Plane C. It refuses
   raw public VNC, requires a dedicated `PUBLIC_HOSTNAME`, generates a random
