@@ -135,6 +135,7 @@ interface BaseMessage {
 | `mint_legendary` | DEBUG/dev-only legendary item minting message. It is not a normal client capability. |
 | `set_protected_slot` | Requests changing the item protected from death drops. |
 | `get_chronicle` | Requests chronicle events for self or another player, with optional pagination. |
+| `get_shared_world_observation` | Requests shared-world observation events for a world with optional pagination. |
 | `get_evidence` | Requests evidence by `chronicle_event_id` or `receipt_hash`. |
 | `get_pressure_metrics` | Requests pressure metrics over optional `since`/`until` timestamps. |
 | `declare_vocation` | Declares the player's vocation from the shared vocation enum. |
@@ -188,6 +189,7 @@ interface BaseMessage {
 | `combat_rejected` | Combat rejection with a shared rejection reason. |
 | `protected_slot_set` | Protected slot change result. |
 | `chronicle_snapshot` | Chronicle event response with pagination flag. |
+| `shared_world_observation` | Shared world observation response with replayable event stream state for an observer. |
 | `evidence_snapshot` | Evidence response with status, anchor echo, and optional drop explanation. |
 | `pressure_metrics_snapshot` | Pressure metrics response for the requested interval. |
 | `player_inspect` | Player profile/identity response. |
@@ -281,6 +283,10 @@ Requests changing the protected item slot.
 #### `get_chronicle`
 
 Requests chronicle events. Optional fields are `player_id`, `limit`, and `before`.
+
+#### `get_shared_world_observation`
+
+Requests shared-world projection for `world_id` with optional `limit`.
 
 #### `get_evidence`
 
@@ -545,6 +551,10 @@ Protected slot change result.
 #### `chronicle_snapshot`
 
 Chronicle event response.
+
+#### `shared_world_observation`
+
+Shared-world observation for `observer_player_id` and `world_id` with optional projection `state`, event stream cursor fields (`latest_event_id`, `latest_receipt_hash`), and observed `events`.
 
 #### `evidence_snapshot`
 
