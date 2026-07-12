@@ -221,6 +221,10 @@ export function createPersistenceLayer(
       return queries.getChronicleForPlayer(db, playerId, limit, before);
     },
 
+    getSharedWorldEvents(worldId: string, limit?: number): ChronicleEventRow[] {
+      return queries.getSharedWorldEvents(db, worldId, limit);
+    },
+
     // Evidence queries (Phase 4.4)
     getChronicleEventById(eventId: number): ChronicleEventRow | null {
       return queries.getChronicleEventById(db, eventId);

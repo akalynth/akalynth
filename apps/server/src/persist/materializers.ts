@@ -2,9 +2,16 @@
 // Phase 1 + 2: Transform receipts into SQLite rows (idempotent, transactional)
 
 import type Database from 'better-sqlite3';
+import { buildCausalParityEvent, SHARED_WORLD_IDS } from '../../../../packages/shared/causalParity.js';
 import type { AuditReceipt } from '../../../../packages/shared/types.js';
 import { THROTTLE_DURATION_MS } from '../../../../packages/shared/types.js';
-import { ROOKGUARD_CANAL_FISHED_ACTION } from '../../../../packages/shared/skills.js';
+import {
+  FORGEHOLD_CARAVAN_EVENT_ID,
+  FORGEHOLD_CARAVAN_EVIDENCE_RECOVERED_ACTION,
+  FORGEHOLD_CARAVAN_GUARD_DECISION_ACTION,
+  FORGEHOLD_CARAVAN_GUARD_ID,
+  ROOKGUARD_CANAL_FISHED_ACTION,
+} from '../../../../packages/shared/skills.js';
 import { ACTION_ALIASES, RECEIPT_ACTIONS } from './types.js';
 import { computeReceiptHash, hashUtf8Hex } from './hash.js';
 import {
@@ -1533,6 +1540,59 @@ function insertChronicleEvent(
 }
 
 /**
+ * Insert a world-event Chronicle row and attach the normalized causal record
+ * derived from the same receipt. The nested record is the durable hand-off to
+ * the player protocol and Codex projection; neither view authors its own
+ * causal facts.
+ */
+function insertCausalChronicleEvent(
+  db: Database.Database,
+  receipt: AuditReceipt,
+  receiptHash: string,
+  zone: string | null,
+  entityId: string,
+  details: Record<string, unknown>,
+): void {
+  const eventId = insertChronicleEvent(
+    db,
+    receipt.actor_id,
+    'world_event',
+    receipt.timestamp,
+    receipt.action,
+    receiptHash,
+    zone,
+    null,
+    null,
+    entityId,
+    details,
+    null,
+  );
+  const persistedEventId = eventId ?? (db.prepare(`
+    SELECT id FROM chronicle_events
+    WHERE player_id = ? AND receipt_hash = ? AND kind = 'world_event' AND entity_id = ?
+    LIMIT 1
+  `).get(receipt.actor_id, receiptHash, entityId) as { id: number } | undefined)?.id;
+  if (persistedEventId === undefined) return;
+
+  const causal = buildCausalParityEvent({
+    receipt,
+    receipt_hash: receiptHash,
+    chronicle: {
+      event_id: persistedEventId,
+      kind: 'world_event',
+      source_action: receipt.action,
+      receipt_hash: receiptHash,
+      zone,
+      x: null,
+      y: null,
+    },
+    details,
+  });
+  db.prepare('UPDATE chronicle_events SET details_json = ? WHERE id = ?')
+    .run(JSON.stringify({ ...details, causal }), persistedEventId);
+}
+
+/**
  * Build evidence_ref JSON for a chronicle event.
  * Format: { chronicle_event_id: number, receipt_hash: string }
  */
@@ -1780,7 +1840,9 @@ export function materializeChronicle(
       if (receipt.result !== 'ok' || !playerId) break;
       const instanceId = (inputs.event_id as string | undefined)
         ?? `${ROOKGUARD_FISHING_ACTIVITY_ID}:${receipt.sequence}`;
-      insertChronicleEvent(db, playerId, 'world_event', timestamp, originalAction, receiptHash, 'Rookguard', null, null, instanceId, {
+      const mintedItem = inputs.minted_item as Record<string, unknown> | undefined | null;
+      insertCausalChronicleEvent(db, receipt, receiptHash, 'Rookguard', instanceId, {
+        world_id: SHARED_WORLD_IDS.rookguardCanal,
         event_id: 'rookguard_canal_fishing',
         event_instance_id: instanceId,
         phase: 'resolved',
@@ -1788,6 +1850,20 @@ export function materializeChronicle(
         activity_id: inputs.activity_id ?? ROOKGUARD_FISHING_ACTIVITY_ID,
         place_id: inputs.place_id ?? 'rookguard_canal',
         recovers_at_ms: inputs.recovers_at_ms ?? null,
+        state_before: inputs.state_before ?? null,
+        state_after: inputs.state_after ?? null,
+        effects: inputs.effects ?? null,
+        downstream_event_ids: inputs.downstream_event_ids ?? [],
+        next_objective: (inputs.next_objective as string | undefined)
+          ?? (inputs.state_after as Record<string, unknown> | undefined)?.next_objective
+          ?? 'Wait for the canal to settle, then fish again.',
+        world_state: {
+          canal_state: (inputs.state_after as Record<string, unknown> | undefined)?.canal_state ?? 'disturbed',
+          catch_state: inputs.catch_state ?? 'nothing_tradeable',
+          cast_count: (inputs.state_after as Record<string, unknown> | undefined)?.cast_count ?? null,
+          recovers_at_ms: inputs.recovers_at_ms ?? null,
+          minted_item: mintedItem ?? null,
+        },
         memory: inputs.memory ?? null,
         economy_impact: inputs.economy_impact ?? 'none',
       });
@@ -1801,7 +1877,8 @@ export function materializeChronicle(
       const after = inputs.state_after !== null && typeof inputs.state_after === 'object'
         ? inputs.state_after as Record<string, unknown>
         : {};
-      insertChronicleEvent(db, playerId, 'world_event', timestamp, originalAction, receiptHash, 'Rookguard', null, null, instanceId, {
+      insertCausalChronicleEvent(db, receipt, receiptHash, 'Rookguard', instanceId, {
+        world_id: SHARED_WORLD_IDS.rookguardCanal,
         event_id: 'rookguard_canal_merchant',
         event_instance_id: instanceId,
         phase: 'agent_reaction',
@@ -1809,6 +1886,89 @@ export function materializeChronicle(
         activity_id: inputs.activity_id ?? ROOKGUARD_FISHING_ACTIVITY_ID,
         agent_id: inputs.agent_id ?? null,
         parent_event_id: inputs.parent_event_id ?? null,
+        state_before: inputs.state_before ?? null,
+        state_after: inputs.state_after ?? null,
+        effects: inputs.effects ?? null,
+        downstream_event_ids: inputs.downstream_event_ids ?? [],
+        world_state: {
+          merchant_behavior: after.merchant_behavior ?? 'noticing_patience',
+          merchant_respect: after.merchant_respect ?? null,
+        },
+        memory: inputs.memory ?? null,
+        economy_impact: inputs.economy_impact ?? 'none',
+      });
+      break;
+    }
+
+    // Caravan evidence uses the same canonical world_event Chronicle lane as
+    // fishing. The route projection remains the gameplay read model; this row
+    // is the durable player-facing memory and is rebuilt from the receipt log.
+    case FORGEHOLD_CARAVAN_EVIDENCE_RECOVERED_ACTION: {
+      if (receipt.result !== 'ok' || !playerId) break;
+      const routeId = inputs.route_id as string | undefined;
+      const evidenceObjectId = inputs.evidence_object_id as string | undefined;
+      if (!routeId || !evidenceObjectId) break;
+      const eventId = (inputs.event_id as string | undefined) ?? FORGEHOLD_CARAVAN_EVENT_ID;
+      const instanceId = `${routeId}:${evidenceObjectId}`;
+      insertCausalChronicleEvent(db, receipt, receiptHash,
+        (inputs.location_id as string | undefined) ?? null, instanceId, {
+          world_id: SHARED_WORLD_IDS.forgeholdCaravanRoute,
+          event_id: eventId,
+          event_instance_id: instanceId,
+          state_before: inputs.state_before ?? null,
+          state_after: inputs.state_after ?? null,
+          event_type: inputs.event_type ?? 'caravan_evidence_recovered',
+          phase: 'evidence_recovered',
+          outcome: 'recovered',
+          route_id: routeId,
+          act_id: inputs.act_id ?? null,
+          location_id: inputs.location_id ?? null,
+          evidence_object_id: evidenceObjectId,
+          required_evidence: inputs.required_evidence ?? null,
+          next_objective: inputs.next_objective ?? null,
+          world_state: inputs.state_after ?? null,
+          effects: inputs.effects ?? null,
+          downstream_event_ids: inputs.downstream_event_ids ?? [],
+          authority_guard: inputs.authority_guard ?? null,
+          economy_impact: inputs.economy_impact ?? 'none',
+        });
+      break;
+    }
+
+    case FORGEHOLD_CARAVAN_GUARD_DECISION_ACTION: {
+      if (receipt.result !== 'ok' || !playerId) break;
+      const routeId = inputs.route_id as string | undefined;
+      if (!routeId) break;
+      const parentEventId = inputs.parent_event_id as string | undefined;
+      const instanceId = (inputs.event_instance_id as string | undefined)
+        ?? `${routeId}:caravan_guard`;
+      const after = inputs.state_after !== null && typeof inputs.state_after === 'object'
+        ? inputs.state_after as Record<string, unknown>
+        : {};
+      insertCausalChronicleEvent(db, receipt, receiptHash, 'Rookguard', instanceId, {
+        world_id: SHARED_WORLD_IDS.forgeholdCaravanRoute,
+        event_id: (inputs.event_id as string) ?? FORGEHOLD_CARAVAN_EVENT_ID,
+        event_instance_id: instanceId,
+        event_type: inputs.event_type ?? 'caravan_guard_decision',
+        phase: 'agent_decision',
+        outcome: 'resolved',
+        route_id: routeId,
+        act_id: inputs.act_id ?? null,
+        location_id: inputs.location_id ?? inputs.place_id ?? null,
+        parent_event_id: parentEventId ?? null,
+        agent_id: (inputs.agent_id as string) ?? FORGEHOLD_CARAVAN_GUARD_ID,
+        state_before: inputs.state_before ?? null,
+        state_after: inputs.state_after ?? null,
+        world_state: {
+          route_safety: after.route_safety ?? null,
+          merchant_access: after.merchant_access ?? null,
+          merchant_stock: after.merchant_stock ?? null,
+          bandit_pressure: after.bandit_pressure ?? null,
+          player_trust: after.player_trust ?? null,
+        },
+        next_objective: inputs.next_objective ?? null,
+        effects: inputs.effects ?? null,
+        downstream_event_ids: inputs.downstream_event_ids ?? [],
         memory: inputs.memory ?? null,
         economy_impact: inputs.economy_impact ?? 'none',
       });

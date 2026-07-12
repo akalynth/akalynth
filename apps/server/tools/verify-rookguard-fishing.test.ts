@@ -20,7 +20,7 @@ import {
   type UseSkillMessage,
 } from '../../../packages/shared/protocol.js';
 import { createAuditLogger } from '../src/audit/logger.js';
-import { createPersistenceLayer } from '../src/persist/index.js';
+import { createPersistenceLayer, computeReceiptHash, generateItemId } from '../src/persist/index.js';
 import { handleUseSkill, type SkillContext } from '../src/skills/index.js';
 import {
   ROOKGUARD_FISHING_MERCHANT_REACTED_ACTION,
@@ -75,12 +75,32 @@ function verifySignedChain(receipts: AuditReceipt[], keyPath: string): void {
 
 function makeSkillContext(input: {
   nowMs: number;
-  audit: SkillContext['audit'];
+  write: (receipt: Parameters<SkillContext['audit']>[0]) => AuditReceipt;
   sent: unknown[];
   cooldowns?: Map<string, number>;
   onResolved?: (skillId: string) => void;
   map?: 'Rookguard' | 'Azura';
+  withInventoryMint?: boolean;
 }): SkillContext {
+  const mintItemToInventory = input.withInventoryMint
+    ? (itemType: string, meta: Record<string, unknown>, reason: string, source: string) => {
+      const minted = input.write({
+        player_id: PLAYER_ID,
+        action: 'item_minted',
+        inputs: { item_type: itemType, meta, reason },
+        result: 'ok',
+      });
+      const itemId = generateItemId(computeReceiptHash(minted));
+      input.write({
+        player_id: PLAYER_ID,
+        action: 'item_added_to_inventory',
+        inputs: { item_id: itemId, slot: null, source },
+        result: 'ok',
+      });
+      return { item_id: itemId, item_type: itemType };
+    }
+    : undefined;
+
   return {
     playerId: PLAYER_ID,
     playerName: PLAYER_NAME,
@@ -90,11 +110,13 @@ function makeSkillContext(input: {
     currentMap: input.map ?? 'Rookguard',
     inWorld: true,
     nowMs: () => input.nowMs,
-    audit: input.audit,
+    audit: (receipt) => { input.write(receipt); },
     findPlayerOnline: () => null,
     issueTem: () => ({ outcome: 'none' }),
     getChronicle: () => [],
     send: (message) => input.sent.push(message),
+    mintItemToInventory,
+    syncInventory: input.withInventoryMint ? () => {} : undefined,
     onSkillResolved: input.onResolved as SkillContext['onSkillResolved'],
   };
 }
@@ -138,7 +160,7 @@ async function main(): Promise<void> {
   await handleUseSkill(
     makeSkillContext({
       nowMs: BASE_NOW_MS,
-      audit: (receipt) => { logger.write(receipt); },
+      write: (receipt) => logger.write(receipt),
       sent: wrongMapSent,
       cooldowns: new Map(),
       map: 'Azura',
@@ -151,11 +173,19 @@ async function main(): Promise<void> {
 
   const sent: unknown[] = [];
   const resolvedIds: string[] = [];
+  const mintedItemIds: string[] = [];
   await handleUseSkill(
     makeSkillContext({
       nowMs: BASE_NOW_MS,
-      audit: (receipt) => { logger.write(receipt); },
+      write: (receipt) => {
+        const written = logger.write(receipt);
+        if (receipt.action === 'item_added_to_inventory') {
+          mintedItemIds.push((receipt.inputs.item_id as string));
+        }
+        return written;
+      },
       sent,
+      withInventoryMint: true,
       onResolved: (skillId) => resolvedIds.push(skillId),
     }),
     androidFishMessage(),
@@ -171,6 +201,9 @@ async function main(): Promise<void> {
   assert.equal(firstState.merchant_respect, 1);
   assert.equal(firstState.last_actor, PLAYER_ID);
   assert.equal(firstState.recovers_at_ms, BASE_NOW_MS + ROOKGUARD_FISHING_RECOVERY_MS);
+  assert.equal(mintedItemIds.length, 1, 'first Fish call mints one inventory item');
+  const firstInventoryItems = live.getPlayerInventory(PLAYER_ID);
+  assert.equal(firstInventoryItems.length, 1, 'first Fish action persists an inventory item');
 
   const firstRunReceipts = readReceipts(receiptsPath);
   clearRookguardFishingProjection();
@@ -186,7 +219,7 @@ async function main(): Promise<void> {
   await handleUseSkill(
     makeSkillContext({
       nowMs: BASE_NOW_MS + 1_000,
-      audit: (receipt) => { logger.write(receipt); },
+      write: (receipt) => logger.write(receipt),
       sent: beforeRecoverySent,
       cooldowns: new Map(),
     }),
@@ -202,15 +235,33 @@ async function main(): Promise<void> {
   await handleUseSkill(
     makeSkillContext({
       nowMs: secondNowMs,
-      audit: (receipt) => { logger.write(receipt); },
+      write: (receipt) => {
+        const written = logger.write(receipt);
+        if (receipt.action === 'item_added_to_inventory') {
+          mintedItemIds.push((receipt.inputs.item_id as string));
+        }
+        return written;
+      },
       sent: afterRecoverySent,
       cooldowns: new Map(),
+      withInventoryMint: true,
     }),
     androidFishMessage(),
   );
   assert.equal(skillResult(afterRecoverySent).success, true, 'elapsed deadline restores Fish availability');
   assert.equal(getRookguardFishingState().cast_count, 2);
   assert.equal(getRookguardFishingState().merchant_respect, 2);
+  assert.equal(mintedItemIds.length, 2, 'second Fish call mints another inventory item');
+  assert.equal(
+    new Set(mintedItemIds).size,
+    mintedItemIds.length,
+    'each Fish mint produces a distinct item',
+  );
+  assert.equal(
+    live.getPlayerInventory(PLAYER_ID).length,
+    2,
+    'second Fish action persists an additional inventory item',
+  );
 
   const liveCanonicalState = getRookguardFishingState();
   const liveChronicle = live.getChronicleForPlayer(PLAYER_ID, 50)
@@ -226,6 +277,10 @@ async function main(): Promise<void> {
   live.close();
 
   const receipts = readReceipts(receiptsPath);
+  const mintedReceipts = receipts.filter((receipt) => receipt.action === 'item_minted');
+  const inventoryReceipts = receipts.filter((receipt) => receipt.action === 'item_added_to_inventory');
+  assert.equal(mintedReceipts.length, 2, 'fishing mints one item per accepted action');
+  assert.equal(inventoryReceipts.length, 2, 'fishing adds one item per accepted action');
   verifySignedChain(receipts, keyPath);
   const intentReceipt = receipts.find((receipt) => receipt.action === 'skill_use_intent');
   assert.ok(intentReceipt, 'server records the existing Fish intent');

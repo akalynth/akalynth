@@ -21,6 +21,9 @@ import {
   DREAM_GATE_INTERPRETED_ACTION,
   FORGEHOLD_ASHGLASS_RAVINE_EVIDENCE_RECOVERED_ACTION,
   FORGEHOLD_CARAVAN_EVIDENCE_RECOVERED_ACTION,
+  FORGEHOLD_CARAVAN_EVENT_ID,
+  FORGEHOLD_CARAVAN_GUARD_DECISION_ACTION,
+  FORGEHOLD_CARAVAN_GUARD_ID,
   FORGEHOLD_MILEPOST_EVIDENCE_RECOVERED_ACTION,
   FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION,
 } from '../../../../packages/shared/skills.js';
@@ -216,6 +219,20 @@ export function handleGiftGold(ctx: SkillContext, targetId: string): SkillResult
 // ============================================================================
 
 export function handleRookguardCanalFishing(ctx: SkillContext): SkillResult {
+  const mintItemToInventory = ctx.mintItemToInventory;
+  const mintReward = mintItemToInventory
+    ? () => mintItemToInventory(
+      'mark_token',
+      {
+        source: 'rookguard_fishing',
+        flavor: 'canal_patience',
+        actor: ctx.playerId,
+      },
+      'rookguard_fishing_inventory_reward',
+      'rookguard_fishing',
+    )
+    : undefined;
+
   const result = resolveRookguardCanalFishing(
     {
       player_id: ctx.playerId,
@@ -223,9 +240,17 @@ export function handleRookguardCanalFishing(ctx: SkillContext): SkillResult {
       map: ctx.currentMap ?? 'Rookguard',
       in_world: ctx.inWorld === true,
       now_ms: ctx.nowMs?.() ?? Date.now(),
+      mintReward,
     },
     (receipt) => ctx.audit(receipt),
   );
+
+  if (result.ok && mintReward) {
+    const first = result.payload.inventory_item;
+    if (first && typeof first === 'object' && 'item_id' in first) {
+      ctx.syncInventory?.();
+    }
+  }
 
   if (!result.ok) {
     return {
@@ -1032,6 +1057,7 @@ export function handleForgeholdMilepostEvidence(ctx: SkillContext): SkillResult 
       evidence_object_id: 'broken_route_seal',
       source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
       recovered_at: recoveredAt,
+      downstream_event_ids: [],
       authority_guard: authorityGuard,
     },
     result: 'ok',
@@ -1058,21 +1084,80 @@ export function handleForgeholdCaravanEvidence(ctx: SkillContext): SkillResult {
   if (!routeProgress?.forgeholdMilepostEvidenceRecovered) return { success: false, reason: 'invalid_target' };
   if (routeProgress.forgeholdCaravanEvidenceRecovered) return { success: false, reason: 'invalid_target' };
 
+  const beforeState = routeProgress.forgeholdCaravanProtection;
+  const evidenceAfter = {
+    route_safety: 'sealed' as const,
+    merchant_access: 'open' as const,
+    merchant_stock: 1,
+    bandit_pressure: 2,
+    player_trust: beforeState.player_trust + 1,
+  };
+  const guardAfter = {
+    route_safety: 'monitored' as const,
+    merchant_access: 'open' as const,
+    merchant_stock: Math.max(evidenceAfter.merchant_stock - 1, 0),
+    bandit_pressure: Math.max(evidenceAfter.bandit_pressure - 1, 0),
+    player_trust: evidenceAfter.player_trust + 1,
+  };
+
   const recoveredAt = new Date().toISOString();
   const authorityGuard = actIIEvidenceGuard();
+  const eventId = `${FORGEHOLD_CARAVAN_EVENT_ID}:${beforeState.event_sequence + 1}`;
+  const guardEventId = `${eventId}:guard`;
 
   ctx.audit({
     player_id: ctx.playerId,
     action: FORGEHOLD_CARAVAN_EVIDENCE_RECOVERED_ACTION,
     inputs: {
+      event_id: FORGEHOLD_CARAVAN_EVENT_ID,
+      event_sequence: beforeState.event_sequence + 1,
+      event_type: 'caravan_evidence_recovered',
+      intent: 'recover_caravan_evidence',
+      state_before: beforeState,
+      state_after: evidenceAfter,
       route_id: 'forgehold_route_slice_v1',
       act_id: 'act_02_ember_road_recovery',
       location_id: 'burned_caravan_site',
       evidence_object_id: 'charred_shipment_plate',
       required_evidence: FORGEHOLD_MILEPOST_EVIDENCE_RECOVERED_ACTION,
+      next_objective: 'Recover the Ashglass Shard at Ashglass Ravine.',
       source_drop: 'drop/AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1',
       recovered_at: recoveredAt,
       authority_guard: authorityGuard,
+      downstream_event_ids: [guardEventId],
+    },
+    result: 'ok',
+  });
+
+  ctx.audit({
+    player_id: ctx.playerId,
+    action: FORGEHOLD_CARAVAN_GUARD_DECISION_ACTION,
+    inputs: {
+      event_id: FORGEHOLD_CARAVAN_EVENT_ID,
+      event_instance_id: guardEventId,
+      parent_event_id: eventId,
+      activity_id: beforeState.activity_id,
+      event_sequence: beforeState.event_sequence + 2,
+      event_type: 'caravan_guard_patrol_set',
+      agent_id: FORGEHOLD_CARAVAN_GUARD_ID,
+      map: 'Rookguard',
+      route_id: 'forgehold_route_slice_v1',
+      place_id: 'forgehold_route_slice_v1',
+      state_before: evidenceAfter,
+      state_after: guardAfter,
+      downstream_event_ids: [],
+      effects: {
+        route_safety: guardAfter.route_safety,
+        merchant_access: guardAfter.merchant_access,
+        merchant_stock_delta: -1,
+        bandit_pressure_delta: -1,
+        trust_delta: +1,
+      },
+      reacted_at_ms: ctx.nowMs?.() ?? Date.now(),
+      authority_guard: authorityGuard,
+      next_objective: 'Recover the Ashglass Shard at Ashglass Ravine.',
+      economy_impact: 'none',
+      memory: `${ctx.playerName} recovered the charred shipment plate; a caravan guard now monitors the route.`,
     },
     result: 'ok',
   });
@@ -1085,6 +1170,13 @@ export function handleForgeholdCaravanEvidence(ctx: SkillContext): SkillResult {
       location_id: 'burned_caravan_site',
       evidence_object_id: 'charred_shipment_plate',
       status: 'recovered',
+      world_state: {
+        route_safety: evidenceAfter.route_safety,
+        merchant_access: evidenceAfter.merchant_access,
+        merchant_stock: evidenceAfter.merchant_stock,
+        bandit_pressure: evidenceAfter.bandit_pressure,
+        player_trust: evidenceAfter.player_trust,
+      },
       next_objective: 'Recover the Ashglass Shard at Ashglass Ravine.',
       receipt_action: FORGEHOLD_CARAVAN_EVIDENCE_RECOVERED_ACTION,
       authority_guard: authorityGuard,

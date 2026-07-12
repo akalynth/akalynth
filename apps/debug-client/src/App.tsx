@@ -32,6 +32,7 @@ import { CodexShelfPanel } from './components/CodexShelfPanel';
 import { PlayShellDock } from './components/PlayShellDock';
 import { UiStatBar } from './components/UiStatBar';
 import { builderPreviewOverlays } from './utils/builderPreviewOverlay';
+import { causalVisibilityForEvent, type CausalVisibilitySummary } from './chronicle/causalVisibility';
 import { TemChallengeModal } from './components/TemChallengeModal';
 import { TemWitnessDialog } from './components/TemWitnessDialog';
 import { PropertyLedgerModal } from './components/PropertyLedgerModal';
@@ -90,7 +91,7 @@ function groupChronicleByDay(events: ChronicleEvent[]): ChronicleGroup[] {
     .sort((a, b) => Date.parse(b.items[0]?.timestamp ?? '0') - Date.parse(a.items[0]?.timestamp ?? '0'));
 }
 
-type ChronicleRender = { text: string };
+type ChronicleRender = { text: string; causal?: CausalVisibilitySummary };
 
 type LandmarkBox = { x: number; y: number; width: number; height: number };
 
@@ -143,6 +144,7 @@ function isInPlace(player: PlayerPublic | null, map: MapData, mapName: string, p
 
 function renderChronicleEvent(ev: ChronicleEvent): ChronicleRender {
   const details = (ev.details ?? {}) as Record<string, unknown>;
+  const causal = causalVisibilityForEvent(ev) ?? undefined;
   switch (ev.kind) {
     case 'death':
       return {
@@ -162,10 +164,18 @@ function renderChronicleEvent(ev: ChronicleEvent): ChronicleRender {
       return { text: 'Character created' };
     case 'world_event': {
       if (details.event_id === 'rookguard_canal_fishing') {
-        return { text: 'Fished the Rookguard canal · nothing tradeable caught' };
+        return { text: 'Fished the Rookguard canal · nothing tradeable caught', causal };
       }
       if (details.event_id === 'rookguard_canal_merchant') {
-        return { text: 'The canal merchant noticed patient fishing' };
+        return { text: 'The canal merchant noticed patient fishing', causal };
+      }
+      if (details.event_id === 'forgehold_caravan_evidence') {
+        return {
+          text: details.event_type === 'caravan_guard_patrol_set'
+            ? 'A caravan guard now monitors the Forgehold route'
+            : 'Recovered the charred shipment plate at the burned caravan site',
+          causal,
+        };
       }
       return { text: String(details.event_id ?? 'World event') };
     }
@@ -694,6 +704,11 @@ function DebugApp() {
     const visible = events.filter((ev) => ev.kind !== 'item_lost');
     return groupChronicleByDay(visible);
   }, [state.chronicle?.events]);
+  const sharedLatestCausal = useMemo(() => {
+    const observation = state.sharedWorldObservation;
+    if (!observation) return null;
+    return observation.events.find((event) => event.causal?.event_id === observation.latest_event_id)?.causal ?? null;
+  }, [state.sharedWorldObservation]);
 
   const recap = state.deathRecap;
   const recapEvent = recap?.deathEvent;
@@ -867,11 +882,31 @@ function DebugApp() {
           <HudChromePanel className="chronicle-sheet" variant="panel" padding={16}>
           <div role="dialog" aria-live="polite">
             <div className="chronicle-header">
-              <div className="chronicle-title">My Chronicle</div>
+                  <div>
+                    <div className="chronicle-title">My Chronicle</div>
+                    <div className="chronicle-subtitle">Because of you, the world remembers.</div>
+                  </div>
               <button type="button" className="chronicle-close" onClick={api.closeChronicle}>
                 Close
               </button>
             </div>
+            <button
+              type="button"
+              className="chronicle-more"
+              onClick={() => api.requestSharedWorldObservation('forgehold_caravan_route')}
+            >
+              Observe the shared Forgehold route
+            </button>
+            {state.sharedWorldObservation && (
+              <div className="chronicle-causal" aria-label="Shared world observation">
+                <div className="chronicle-causal__label">Shared world observation</div>
+                <div><strong>World:</strong> {state.sharedWorldObservation.world_id}</div>
+                <div><strong>Latest consequence:</strong> {sharedLatestCausal?.player_view?.result ?? 'No completed consequence yet.'}</div>
+                <div><strong>The world now:</strong> {sharedLatestCausal?.player_view?.world ?? 'No shared state recorded yet.'}</div>
+                <div><strong>Chronicle event:</strong> {sharedLatestCausal?.chronicle.event_id ?? 'Unavailable'}</div>
+                <div><strong>Origin:</strong> {state.sharedWorldObservation.latest_receipt_hash ?? 'Unavailable'}</div>
+              </div>
+            )}
             {!state.chronicle && <div className="chronicle-loading">Loading chronicle...</div>}
             {state.chronicle && state.chronicle.loading && state.chronicle.events.length === 0 && (
               <div className="chronicle-loading">Loading chronicle...</div>
@@ -886,8 +921,25 @@ function DebugApp() {
                     <div className="chronicle-day-label">{group.day}</div>
                     <div className="chronicle-list">
                       {group.items.map((ev) => {
-                        const { text } = renderChronicleEvent(ev);
+                        const { text, causal } = renderChronicleEvent(ev);
                         if (!text) return null;
+                        const rowContent = (
+                          <>
+                            <ChronicleGlyphIcon eventKind={ev.kind} className="chronicle-icon" />
+                            <div className="chronicle-text">
+                              <div>{text}</div>
+                              {causal && (
+                                <div className="chronicle-causal" aria-label="Because of you">
+                                  <div className="chronicle-causal__label">Because of you</div>
+                                  <div><strong>You did:</strong> {causal.action}</div>
+                                  <div><strong>Result:</strong> {causal.result}</div>
+                                  <div><strong>The world now:</strong> {causal.world}</div>
+                                  {causal.future && <div><strong>Next:</strong> {causal.future}</div>}
+                                </div>
+                              )}
+                            </div>
+                          </>
+                        );
                         if (ev.kind === 'death') {
                           const gid =
                             typeof ev.evidence_ref?.chronicle_event_id === 'number'
@@ -906,15 +958,13 @@ function DebugApp() {
                                 y: ev.y,
                               })}
                             >
-                              <ChronicleGlyphIcon eventKind={ev.kind} className="chronicle-icon" />
-                              <span className="chronicle-text">{text}</span>
+                              {rowContent}
                             </button>
                           );
                         }
                         return (
                           <div key={`${ev.kind}-${ev.timestamp}`} className="chronicle-row">
-                            <ChronicleGlyphIcon eventKind={ev.kind} className="chronicle-icon" />
-                            <span className="chronicle-text">{text}</span>
+                            {rowContent}
                           </div>
                         );
                       })}

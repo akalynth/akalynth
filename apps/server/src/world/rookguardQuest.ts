@@ -14,6 +14,7 @@ import {
   TEM_CHALLENGE_RESPONSE,
   VOCATION_DECLARED_ACTION,
 } from '../../../../packages/shared/types.js';
+import { FORGEHOLD_CARAVAN_ACTIVITY_ID } from '../../../../packages/shared/skills.js';
 import type { OnwardRouteReceiptProgress } from './onwardRoutes.js';
 
 export interface RookguardQuestInput {
@@ -315,6 +316,20 @@ export function buildOnwardRouteProgress(
     dreamGateSealPrepared: false,
     dreamGateTraversalAuthorized: false,
     dreamGateArrivalRecorded: false,
+    forgeholdCaravanProtection: {
+      activity_id: FORGEHOLD_CARAVAN_ACTIVITY_ID,
+      route_id: 'forgehold_route_slice_v1',
+      act_id: 'act_02_ember_road_recovery',
+      event_sequence: 0,
+      last_event_id: null,
+      last_actor: null,
+      last_event_at_ms: null,
+      route_safety: 'unsecured',
+      merchant_access: 'closed',
+      merchant_stock: 0,
+      bandit_pressure: 0,
+      player_trust: 0,
+    },
   }
 ): OnwardRouteProgress[] {
   const available = buildRookguardQuestProgress(input).completed;

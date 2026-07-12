@@ -537,6 +537,31 @@ export function getChronicleForPlayer(
 }
 
 /**
+ * Get canonical world-event Chronicle rows visible to any authenticated
+ * observer. This is deliberately world-scoped rather than player-scoped; the
+ * causal record still identifies the originating actor and receipt.
+ */
+export function getSharedWorldEvents(
+  db: Database.Database,
+  worldId: string,
+  limit: number = 50,
+): ChronicleEventRow[] {
+  const boundLimit = Math.min(Math.max(1, limit), 200);
+  const stmt = db.prepare(`
+    SELECT id, player_id, kind, timestamp, zone, x, y, entity_id, details_json, source_action, receipt_hash, evidence_ref
+    FROM chronicle_events
+    WHERE kind = 'world_event'
+      AND (
+        json_extract(details_json, '$.world_id') = ?
+        OR json_extract(details_json, '$.causal.world_id') = ?
+      )
+    ORDER BY timestamp DESC, id DESC
+    LIMIT ?
+  `);
+  return stmt.all(worldId, worldId, boundLimit) as ChronicleEventRow[];
+}
+
+/**
  * Get total chronicle event count for a player.
  */
 export function getChronicleCount(

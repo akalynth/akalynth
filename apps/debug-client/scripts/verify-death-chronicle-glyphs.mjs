@@ -45,7 +45,7 @@ requirePattern('ASCII fallback', /chronicleGlyphExportLabel/, icon, 'src/compone
 const app = read('src/App.tsx');
 requirePattern('chronicle rows use glyph icon', /ChronicleGlyphIcon eventKind=\{ev\.kind\}/, app, 'src/App.tsx');
 requirePattern('death toast glyph', /ChronicleGlyphIcon eventKind="death"/, app, 'src/App.tsx');
-requirePattern('emoji icons removed from render', /type ChronicleRender = \{ text: string \}/, app, 'src/App.tsx');
+requirePattern('emoji icons removed from render', /type ChronicleRender = \{ text: string; causal\?: CausalVisibilitySummary \}/, app, 'src/App.tsx');
 
 const config = read('src/config.ts');
 requirePattern('nine-slice default on', /VITE_USE_NINE_SLICE_WEB !== 'false'/, config, 'src/config.ts');

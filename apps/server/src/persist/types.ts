@@ -621,6 +621,7 @@ export interface PersistenceLayer {
 
   // Read queries - Chronicle (Phase 4)
   getChronicleForPlayer(player_id: string, limit?: number, before?: string): ChronicleEventRow[];
+  getSharedWorldEvents(world_id: string, limit?: number): ChronicleEventRow[];
 
   // Read queries - Evidence (Phase 4.4)
   getChronicleEventById(event_id: number): ChronicleEventRow | null;

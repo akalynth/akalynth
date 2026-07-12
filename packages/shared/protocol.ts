@@ -2,6 +2,8 @@
 // All messages sent over WebSocket
 
 import type { BuilderPreviewWorldFork } from './builderDraft.js';
+import { isSharedWorldId } from './causalParity.js';
+import type { CausalParityEvent, SharedWorldId } from './causalParity.js';
 import type { Direction, Element, PlayerPublic, PlayLoopProgress, PropertyAuctionKind, PropertyAuctionDenialReason, PropertyDenialReason, PropertyStatus, RunestoneDenialReason, SovereignVocation } from './types.js';
 import { ELEMENTS, SOVEREIGN_VOCATIONS, TEM_CHALLENGE_RESPONSE } from './types.js';
 import type { MapName } from './http.js';
@@ -107,6 +109,12 @@ export interface GetChronicleMessage extends BaseMessage {
   player_id?: string; // if omitted, returns own chronicle
   limit?: number;     // default 50, max 200
   before?: string;    // pagination cursor (ISO8601 timestamp)
+}
+
+export interface GetSharedWorldObservationMessage extends BaseMessage {
+  type: 'get_shared_world_observation';
+  world_id: SharedWorldId;
+  limit?: number;
 }
 
 // Phase 4.4: Chronicle Evidence
@@ -348,6 +356,7 @@ export type ClientMessage =
   | MintLegendaryMessage
   | SetProtectedSlotMessage
   | GetChronicleMessage
+  | GetSharedWorldObservationMessage
   | GetEvidenceMessage
   | GetPressureMetricsMessage
   | DeclareVocationMessage
@@ -606,6 +615,7 @@ export interface ChronicleEvent {
   x: number | null;
   y: number | null;
   details: Record<string, unknown>;
+  causal?: CausalParityEvent | null;
   evidence_ref?: EvidenceRef | null;  // Phase 4.4 E2: present for death/item_lost/legendary_lost
 }
 
@@ -614,6 +624,16 @@ export interface ChronicleSnapshotMessage extends BaseMessage {
   player_id: string;
   events: ChronicleEvent[];
   has_more: boolean;         // true if more events exist before oldest in this batch
+}
+
+export interface SharedWorldObservationMessage extends BaseMessage {
+  type: 'shared_world_observation';
+  observer_player_id: string;
+  world_id: SharedWorldId;
+  state: Record<string, unknown> | null;
+  latest_event_id: string | null;
+  latest_receipt_hash: string | null;
+  events: ChronicleEvent[];
 }
 
 // Phase 4.4: Chronicle Evidence
@@ -1073,6 +1093,7 @@ export type ServerMessage =
   | CombatRejectedMessage
   | ProtectedSlotSetMessage
   | ChronicleSnapshotMessage
+  | SharedWorldObservationMessage
   | EvidenceSnapshotMessage
   | PressureMetricsSnapshotMessage
   | PlayerInspectMessage
@@ -1407,6 +1428,23 @@ export const ServerMessages = {
     player_id,
     events,
     has_more,
+  }),
+
+  sharedWorldObservation: (
+    observer_player_id: string,
+    world_id: SharedWorldId,
+    state: Record<string, unknown> | null,
+    latest_event_id: string | null,
+    latest_receipt_hash: string | null,
+    events: ChronicleEvent[],
+  ): SharedWorldObservationMessage => ({
+    type: 'shared_world_observation',
+    observer_player_id,
+    world_id,
+    state,
+    latest_event_id,
+    latest_receipt_hash,
+    events,
   }),
 
   // Phase 4.4: Chronicle Evidence
@@ -1781,6 +1819,12 @@ export function parseClientMessage(data: unknown): ClientMessage | null {
       const limit = typeof msg.limit === 'number' ? msg.limit : undefined;
       const before = typeof msg.before === 'string' ? msg.before : undefined;
       return { type: 'get_chronicle', player_id, limit, before };
+    }
+
+    case 'get_shared_world_observation': {
+      if (!isSharedWorldId(msg.world_id)) return null;
+      const limit = typeof msg.limit === 'number' ? msg.limit : undefined;
+      return { type: 'get_shared_world_observation', world_id: msg.world_id, limit };
     }
 
     // Phase 4.4: Chronicle Evidence

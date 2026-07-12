@@ -13,7 +13,9 @@ import type {
   WorkTickMessage,
   ChatMessage,
   GetChronicleMessage,
+  GetSharedWorldObservationMessage,
   ChronicleEvent,
+  SharedWorldObservationMessage,
   PropertyPublic,
   GatherIntentMessage,
   DeliverIntentMessage,
@@ -193,6 +195,7 @@ function initialState(mapName: MapName): GameClientState {
     recapPreferredGroupId: null,
     chronicleOpen: false,
     chronicle: null,
+    sharedWorldObservation: null,
     combat: { targetId: null, fx: [] },
     groundItems: new Map(),
     workContract: null,
@@ -558,6 +561,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
         recapPreferredGroupId: null,
         chronicleOpen: false,
         chronicle: null,
+        sharedWorldObservation: null,
         combat: { targetId: null, fx: [] },
         groundItems: new Map(),
         workContract: null,
@@ -948,6 +952,17 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
       send(payload);
     },
     [send]
+  );
+
+  const requestSharedWorldObservation = useCallback(
+    (worldId: GetSharedWorldObservationMessage['world_id']) => {
+      const payload: GetSharedWorldObservationMessage = {
+        type: 'get_shared_world_observation',
+        world_id: worldId,
+      };
+      send(payload);
+    },
+    [send],
   );
 
   const requestChronicle = useCallback(
@@ -1571,6 +1586,11 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
               };
             }
 
+            case 'shared_world_observation': {
+              const observation = data as SharedWorldObservationMessage;
+              return { ...s, conn, sharedWorldObservation: observation };
+            }
+
             case 'death_notice': {
               const nextMap = typeof data.map === 'string' ? normalizeMapName(data.map) : null;
               if (nextMap && nextMap !== s.world.map.name) {
@@ -2128,6 +2148,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
     tickWork,
     sendChat,
     requestChronicle,
+    requestSharedWorldObservation,
     openChronicle,
     closeChronicle,
     loadMoreChronicle,

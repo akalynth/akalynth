@@ -10,7 +10,8 @@ import type {
   AccountCharacterWorldOption,
   MapName,
 } from '@shared/http';
-import type { ChronicleEvent, PropertyPublic, PropertyOwnerHistoryEntry, GatherNodePublic, GatherStationPublic } from '@shared/protocol';
+import type { ChronicleEvent, PropertyPublic, PropertyOwnerHistoryEntry, GatherNodePublic, GatherStationPublic, SharedWorldObservationMessage } from '@shared/protocol';
+import type { SharedWorldId } from '@shared/causalParity';
 
 export type InputDirection =
   | Direction
@@ -146,6 +147,7 @@ export interface GameClientState {
     loading: boolean;
     before: string | null;
   } | null;
+  sharedWorldObservation: SharedWorldObservationMessage | null;
   combat: {
     targetId: string | null;
     fx: FloatingText[];
@@ -208,6 +210,7 @@ export interface GameClientApi {
   tickWork: () => void;
   sendChat: (message: string) => void;
   requestChronicle: (limit?: number, openRecap?: boolean) => void;
+  requestSharedWorldObservation: (worldId: SharedWorldId) => void;
   openChronicle: () => void;
   closeChronicle: () => void;
   loadMoreChronicle: () => void;

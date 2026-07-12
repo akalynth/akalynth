@@ -6,6 +6,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { createHash, randomUUID } from 'node:crypto';
 
 import type { ClientMessage, LostItemSummary, ServerMessage, PropertyPublic, PropertyOwnerHistoryEntry, GatherRejectReason, GatherNodePublic, GatherStationPublic } from '../../../packages/shared/protocol.js';
+import type { CausalParityEvent } from '../../../packages/shared/causalParity.js';
 import { PROTOCOL_VERSION, ServerMessages, parseClientMessage } from '../../../packages/shared/protocol.js';
 import {
   computeCapsHash,
@@ -78,6 +79,7 @@ import {
 import { createPersistenceLayer, computeReceiptHash, generateItemId } from './persist/index.js';
 import { loadItemIconIndex, toItemInfo, toItemInfoFromPersist } from './item-info.js';
 import type { InventoryItemRow, PersistenceLayer, WorldObjectRow } from './persist/index.js';
+import { sharedWorldObservationFromRows } from './chronicle/sharedWorldObservation.js';
 import { AccountStore } from './account/store.js';
 import { AccountService } from './account/service.js';
 import { makeAccountRouter } from './account/router.js';
@@ -5242,6 +5244,7 @@ function processSessionQueue(s: Session, now: number) {
         // Transform to protocol format
         // Phase 4.4 E2: Include evidence_ref for applicable kinds
         const chronicleEvents = events.map((e) => {
+          const details = JSON.parse(e.details_json) as Record<string, unknown>;
           const event: {
             kind: string;
             timestamp: string;
@@ -5249,6 +5252,7 @@ function processSessionQueue(s: Session, now: number) {
             x: number | null;
             y: number | null;
             details: Record<string, unknown>;
+            causal?: CausalParityEvent | null;
             evidence_ref?: { chronicle_event_id: number; receipt_hash: string } | null;
           } = {
             kind: e.kind,
@@ -5256,8 +5260,12 @@ function processSessionQueue(s: Session, now: number) {
             zone: e.zone,
             x: e.x,
             y: e.y,
-            details: JSON.parse(e.details_json) as Record<string, unknown>,
+            details,
           };
+
+          if (details.causal !== null && typeof details.causal === 'object' && !Array.isArray(details.causal)) {
+            event.causal = details.causal as CausalParityEvent;
+          }
 
           // Parse and include evidence_ref if present
           if (e.evidence_ref) {
@@ -5275,6 +5283,20 @@ function processSessionQueue(s: Session, now: number) {
         const hasMore = events.length === Math.min(Math.max(1, limit), 200);
 
         send(s.ws, ServerMessages.chronicleSnapshot(targetPlayerId, chronicleEvents, hasMore));
+        break;
+      }
+
+      case 'get_shared_world_observation': {
+        if (!requireAuth(s)) break;
+
+        const observerPlayerId = s.player?.id;
+        if (!observerPlayerId) {
+          send(s.ws, ServerMessages.error('not_authenticated', 'player_id_required'));
+          break;
+        }
+
+        const rows = persist.getSharedWorldEvents(msg.world_id, msg.limit);
+        send(s.ws, sharedWorldObservationFromRows(observerPlayerId, msg.world_id, rows));
         break;
       }
 
@@ -6537,7 +6559,7 @@ function processSessionQueue(s: Session, now: number) {
           getChronicle: (pid, limit) => persist.getChronicleForPlayer(pid, limit),
           send: (m) => send(s.ws, m as ServerMessage),
           onSkillResolved: (skillId) => {
-            if (skillId.startsWith('route:')) sendLoopUpdate(s, 'onward_route_progress');
+            if (skillId.startsWith('route:')) sendLoopUpdateToMap(s.currentMap, 'onward_route_progress');
             if (skillId === ROOKGUARD_FISHING_SKILL_ID) {
               sendLoopUpdateToMap('Rookguard', 'rookguard_fishing_resolved');
             }

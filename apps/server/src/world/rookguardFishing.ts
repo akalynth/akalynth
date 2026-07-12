@@ -43,6 +43,8 @@ export interface RookguardFishingState {
   last_updated_at_ms: number | null;
 }
 
+type MintReward = () => { item_id: string; item_type: string } | null;
+
 type WriteReceipt = (receipt: {
   player_id: string;
   action: string;
@@ -230,6 +232,7 @@ export function resolveRookguardCanalFishing(
     map: MapName;
     in_world: boolean;
     now_ms: number;
+    mintReward?: MintReward;
   },
   writeReceipt: WriteReceipt,
 ): ResolveRookguardFishingResult {
@@ -256,14 +259,18 @@ export function resolveRookguardCanalFishing(
 
   const eventId = `${ROOKGUARD_FISHING_ACTIVITY_ID}:${state.cast_count + 1}`;
   const recoversAtMs = input.now_ms + ROOKGUARD_FISHING_RECOVERY_MS;
+  const reward = input.mintReward ? input.mintReward() : null;
+  const rewardPayload = reward
+    ? { item_id: reward.item_id, item_type: reward.item_type }
+    : null;
   const memory = `${input.player_name} fished the Rookguard canal with patience; the canal merchant took notice.`;
   const fishingAfter = {
     canal_state: 'disturbed',
-    catch_state: 'nothing_tradeable',
-    cast_count: state.cast_count + 1,
-    last_fished_at_ms: input.now_ms,
-    recovers_at_ms: recoversAtMs,
-  };
+      catch_state: 'nothing_tradeable',
+      cast_count: state.cast_count + 1,
+      last_fished_at_ms: input.now_ms,
+      recovers_at_ms: recoversAtMs,
+    };
 
   writeReceipt({
     player_id: input.player_id,
@@ -280,13 +287,16 @@ export function resolveRookguardCanalFishing(
       fished_at: new Date(input.now_ms).toISOString(),
       recovery_ms: ROOKGUARD_FISHING_RECOVERY_MS,
       recovers_at_ms: recoversAtMs,
+      next_objective: 'Wait for the canal to settle, then fish again.',
       state_before: stateSnapshotAt(state, input.now_ms),
       state_after: fishingAfter,
+      downstream_event_ids: [`${eventId}:merchant`],
       effects: {
         canal_state: 'disturbed',
         catch_state: 'nothing_tradeable',
         respect_delta: 1,
       },
+      minted_item: rewardPayload,
       activity_guard: ACTIVITY_GUARD,
       economy_impact: 'none',
       memory,
@@ -316,6 +326,7 @@ export function resolveRookguardCanalFishing(
       place_id: ROOKGUARD_FISHING_PLACE_ID,
       state_before: merchantBefore,
       state_after: merchantAfter,
+      downstream_event_ids: [],
       effects: { merchant_respect_delta: 1 },
       reacted_at_ms: input.now_ms,
       memory,
@@ -341,6 +352,8 @@ export function resolveRookguardCanalFishing(
       merchant_receipt_action: ROOKGUARD_FISHING_MERCHANT_REACTED_ACTION,
       activity_guard: ACTIVITY_GUARD,
       economy_impact: 'none',
+      inventory_item: rewardPayload,
+      minted_item: rewardPayload,
       world_state: rookguardFishingPublicState(input.now_ms),
     },
   };
