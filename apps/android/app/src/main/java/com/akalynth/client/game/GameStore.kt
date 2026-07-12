@@ -290,7 +290,12 @@ class GameStore(
     }
 
     private fun toggleChronicle() {
-        _state.update { it.copy(ui = it.ui.copy(showChronicleSheet = !it.ui.showChronicleSheet)) }
+        val opening = !_state.value.ui.showChronicleSheet
+        _state.update { it.copy(ui = it.ui.copy(showChronicleSheet = opening)) }
+        if (opening) {
+            wsClient.send(GetChronicleMessage(limit = 50))
+            logSent("get_chronicle", "limit=50")
+        }
     }
 
     private fun clearDebugLog() {
@@ -821,7 +826,8 @@ class GameStore(
         }
         val line = if (msg.success) {
             when (msg.skillId) {
-                "activity:fishing:rookguard" -> "Rookguard fishing reflected by server."
+                "activity:fishing:rookguard" ->
+                    "Nothing tradeable bites. The canal merchant notices your patience."
                 "route:safety:forgehold", "route:safety:moonspire" -> "$title boundary reviewed by server."
                 "route:quest:shipment" -> "$title investigation recorded by server."
                 "route:economy:forgehold" -> "$title quote recorded by server."

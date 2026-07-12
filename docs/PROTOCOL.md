@@ -65,6 +65,15 @@ WebSocket message type. Resend/logout are account-session gated and require
 double-submit CSRF; verification and reset tokens are plaintext only in transit
 and hashed at rest.
 
+Beta Player Readiness and Measurement v1 adds `/v1/beta/me`,
+`/v1/beta/events`, `/v1/beta/feedback`, and `/v1/beta/invites/redeem`. These
+are additive HTTP endpoints and do not add a WebSocket message type. Invite
+codes are accepted only as registration/redeem inputs and are stored only as
+hashes. Authenticated feedback and invite redemption require double-submit
+CSRF. Readiness events are allow-listed browser/connection observations written
+to the signed receipt chain; clients must not submit movement, combat,
+inventory, quest, position, or retention truth through these endpoints.
+
 Web economy portal endpoints live on the HTTP control plane under
 `/v1/shop/catalog`, `/v1/shop/purchase`, `/v1/wallet`, `/v1/property/buy`,
 `/v1/property/list`, `/v1/property/unlist`, `/v1/work/start`, and
@@ -137,7 +146,7 @@ interface BaseMessage {
 | `start_work_contract` | Starts a work contract. The current `contract_type` literal is `temple_sweep`. |
 | `work_tick` | Records a presence tick for an active work contract. |
 | `talk_to_npc` | Interacts with an NPC by `npc_id`. |
-| `use_skill` | Uses a utility/admin skill by `skill_id` and optional `target_id`. |
+| `use_skill` | Sends intent for a registered server skill/action by `skill_id` and optional `target_id`. |
 | `get_mod_reports` | DEBUG-only moderation report listing. Current runtime gate is authenticated session plus DEBUG mode. |
 | `mod_resolve` | DEBUG-only moderation resolution. `receipt_hash` is the preferred lookup key; `case_id` is legacy. Current runtime gate is authenticated session plus DEBUG mode. |
 | `buy_house` | Buys a house by `property_id` (primary sale if unowned, resale if listed). Price is server-side. |
@@ -159,7 +168,7 @@ interface BaseMessage {
 | `login_ack` | Returns login result, player identity, token fields, and optional failure reason. |
 | `world_state` | Initial world snapshot containing `map`, the current player, and nearby players. |
 | `move_result` | Result of a move intent. The server returns authoritative coordinates and optional `map`. |
-| `loop_update` | Objective/progression update. The loop payload may include Rookguard quest, Codex profession state, and read-only onward route projections. |
+| `loop_update` | Objective/progression update. The loop payload may include Rookguard quest, Codex profession state, Fish world state, and read-only onward route projections. |
 | `player_moved` | Broadcast that another player moved. |
 | `player_joined` | Broadcast that another player entered the world. |
 | `player_left` | Broadcast that a player left. |
@@ -303,6 +312,10 @@ not recognize. Rookguard loop payloads can include:
   Codex, Emberwilds Atlas, Factions Codex, and Heroes Codex shelf descriptors;
 - `rookguardQuest.codexProfession`: selected vocation profile anchored to
   `heroes-codex` / `AKALYNTH_HEROES_CODEX_V1` after `vocation_declared`.
+- `fishing`: receipt-replayed state for the existing Rookguard canal Fish
+  action, including server-owned recovery deadline, cast count, and the canal
+  merchant's non-economic memory. `phase` is derived from the receipt-authored
+  `recovers_at_ms` deadline using server time; clients do not advance it.
 - `onwardRoutes`: read-only next-slice projections for Forgehold Route and
   Moonspire Dream Gate. These entries are locked until the server-owned
   Rookguard Codex Path is complete, then become available as UI planning state.
@@ -345,7 +358,14 @@ Interacts with an NPC by `npc_id`.
 
 #### `use_skill`
 
-Uses a utility/admin skill by `skill_id` and optional `target_id`.
+Sends intent for a registered server skill/action by `skill_id` and optional
+`target_id`.
+`activity:fishing:rookguard` is the existing intent-only Rookguard Fish action.
+The client sends only the skill id. The server validates world context and
+recovery, writes `rookguard_canal_fished` before projecting the disturbed canal,
+then writes `rookguard_canal_merchant_reacted` before projecting merchant
+memory. Neither receipt mints or transfers an item, changes gold or prices,
+awards XP, unlocks travel, or changes anti-cheat state.
 Current onward-route skill ids are additive intent-only values:
 `route:survey:forgehold`, `route:quest:shipment`,
 `route:economy:forgehold`, `route:craft:soulsteel`,
@@ -568,7 +588,11 @@ NPC dialogue error response.
 
 #### `skill_result`
 
-Utility/admin skill result.
+Registered skill/action result.
+For `activity:fishing:rookguard`, the result reports the server-owned catch,
+merchant response, recovery deadline, and read-only world projection. A new
+session cannot bypass canal recovery; the server returns `reason: "cooldown"`
+with the canonical deadline until elapsed server time makes it available.
 For onward-route skills, successful results echo the completed `skill_id` with
 route-owned payload fields such as `title`, `next_objective`, and optional
 status markers including `quality`, `gate_state`, or `route_state`. Browser and

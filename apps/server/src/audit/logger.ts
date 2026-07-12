@@ -8,6 +8,7 @@ import { applyReceiptToPresence } from '../world/presence.js';
 import { applyReceiptToProperty } from '../world/property.js';
 import { applyReceiptToRookguardQuest } from '../world/rookguardQuest.js';
 import { applyReceiptToOnwardRoutes } from '../world/onwardRoutes.js';
+import { applyReceiptToRookguardFishing } from '../world/rookguardFishing.js';
 
 // ============================================================================
 // Types
@@ -63,6 +64,7 @@ export function createAuditLogger(config: AuditLoggerConfig): AuditLogger {
       applyReceiptToProperty(receipt);
       applyReceiptToRookguardQuest(receipt);
       applyReceiptToOnwardRoutes(receipt);
+      applyReceiptToRookguardFishing(receipt);
 
       // Forward to external callback if provided
       config.onWrite?.(receipt, offsetAfterLine);

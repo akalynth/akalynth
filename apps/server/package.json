@@ -38,6 +38,7 @@
     "verify:treasury": "tsx tools/verify-treasury.ts",
     "verify:work-contracts": "tsx tools/verify-work-contracts.ts",
     "verify:world-events": "tsx tools/verify-world-events.ts",
+    "verify:rookguard-fishing": "tsx tools/verify-rookguard-fishing.test.ts",
     "verify:evidence-loop": "tsx tools/verify-evidence-loop.ts",
     "verify:property": "tsx tools/verify-property.ts",
     "verify:property-auction": "tsx tools/verify-property-auction.ts",
@@ -78,13 +79,17 @@
     "verify:agent-economy-simulation": "tsx tools/verify-agent-economy-simulation.ts",
     "test:account-auth": "tsx tools/verify-account-auth.test.ts",
     "test:character-v2": "tsx tools/verify-character-v2.test.ts",
+    "test:outfit-colors-loop": "tsx tools/verify-outfit-colors-loop.test.ts",
     "test:web-economy": "tsx tools/verify-web-economy.test.ts",
     "test:cors": "tsx tools/verify-cors.test.ts",
     "test:account-email": "tsx tools/verify-account-email.test.ts",
     "test:account-roles": "tsx tools/verify-account-roles.test.ts",
     "test:account-handle": "tsx tools/verify-account-handle.test.ts",
     "grant:account-role": "tsx tools/grant-account-role.ts",
-    "test:principal-seal": "tsx tools/verify-principal-identity-seal.test.ts"
+    "test:principal-seal": "tsx tools/verify-principal-identity-seal.test.ts",
+    "beta:cohort": "tsx tools/beta-cohort.ts",
+    "report:beta-player-readiness": "tsx tools/beta-player-readiness-report.ts",
+    "verify:beta-player-readiness": "tsx tools/verify-beta-player-readiness.ts"
   },
   "dependencies": {
     "@akalynth/coordination-kernel": "file:../../packages/coordination-kernel",

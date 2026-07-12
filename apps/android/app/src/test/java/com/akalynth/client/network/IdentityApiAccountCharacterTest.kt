@@ -200,6 +200,62 @@ class IdentityApiAccountCharacterTest {
             assertEquals("csrf-test", request()["csrf"])
             assertTrue((request()["body"] ?: "").contains(""""world_id":"rookguard""""))
             assertTrue((request()["body"] ?: "").contains(""""outfit_id":"male_wanderer""""))
+            assertTrue((request()["body"] ?: "").contains(""""outfit_colors""""))
+            assertTrue((request()["body"] ?: "").contains(""""head":5"""))
+        }
+    }
+
+    @Test
+    fun `create character sends custom outfit colors when provided`() {
+        withPostServer(
+            body = """{"ok":true,"character":{"character_id":"p_test","name":"Sovereign","world_id":"rookguard","sex":"male","outfit_id":"male_guard","outfit_colors":{"head":9,"body":26,"legs":20,"feet":38}},"token":"play_test","expires_at":1705852800000}"""
+        ) { baseUrl, request ->
+            val api = IdentityApi(baseUrl)
+            setSessionAndCsrf(api)
+            val latch = CountDownLatch(1)
+            api.createCharacter(
+                name = "Sovereign",
+                worldId = "rookguard",
+                sex = "male",
+                outfitId = "male_guard",
+                outfitColors = com.akalynth.client.ui.components.character.OutfitColorIndices(
+                    head = 9,
+                    body = 26,
+                    legs = 20,
+                    feet = 38,
+                ),
+                callback = object : IdentityApi.CreateCallback {
+                    override fun onResult(next: IdentityApi.CharacterCreateResult) {
+                        latch.countDown()
+                    }
+                },
+            )
+            assertTrue("create callback timed out", latch.await(2, TimeUnit.SECONDS))
+            val body = request()["body"] ?: ""
+            assertTrue(body.contains(""""body":26"""))
+            assertTrue(body.contains(""""feet":38"""))
+        }
+    }
+
+    @Test
+    fun `load outfits parses outfit engine meta`() {
+        withCatalogServer(
+            path = "/v1/outfits",
+            body = """{"outfits":[{"outfit_id":"male_guard","sex":"male","name":"City Guard"}],"outfit_engine":{"palette_size":64,"default_colors":{"head":5,"body":24,"legs":36,"feet":38},"color_slots":[{"key":"head","label":"Head","mask":"hair"},{"key":"body","label":"Body","mask":"primary_cloth"},{"key":"legs","label":"Legs","mask":"secondary_cloth"},{"key":"feet","label":"Feet","mask":"boots"}],"recolor_sprite_ids":["guard_city_01"]}}"""
+        ) { baseUrl, _ ->
+            val api = IdentityApi(baseUrl)
+            val latch = CountDownLatch(1)
+            api.loadOutfits(object : IdentityApi.CatalogCallback<IdentityApi.Outfit> {
+                override fun onSuccess(items: List<IdentityApi.Outfit>) {
+                    latch.countDown()
+                }
+                override fun onError(code: String, message: String) {
+                    latch.countDown()
+                }
+            })
+            assertTrue(latch.await(2, TimeUnit.SECONDS))
+            assertEquals(64, api.lastOutfitEngine?.paletteSize)
+            assertEquals(24, api.lastOutfitEngine?.defaultColors?.body)
         }
     }
 

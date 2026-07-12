@@ -80,6 +80,28 @@ class ActionButtonsTest {
     }
 
     @Test
+    fun fishActionEmitsExistingServerSkillIntent() {
+        val actions = mutableListOf<String>()
+
+        composeTestRule.setContent {
+            AkalynthTheme(darkTheme = true) {
+                ActionButtons(
+                    onChat = {},
+                    showRouteActions = true,
+                    routeActionSkillIds = listOf("activity:fishing:rookguard"),
+                    onRouteAction = { actions.add(it) }
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag("ActionButtons_RouteAction_Fish")
+            .assertIsDisplayed()
+            .performClick()
+
+        assertEquals(listOf("activity:fishing:rookguard"), actions)
+    }
+
+    @Test
     fun rookguardCodexVocationControlsEmitVocationIntents() {
         val vocations = mutableListOf<SovereignVocation>()
 

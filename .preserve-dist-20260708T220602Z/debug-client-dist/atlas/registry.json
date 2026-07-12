@@ -1,0 +1,3230 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "asset_id": "akalynth_creature_bog_slime_001",
+      "source": "factory",
+      "asset_type": "creature",
+      "file": "sprites/swamp__bog_slime.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_creature_frog_001",
+      "source": "factory",
+      "asset_type": "creature",
+      "file": "sprites/swamp__frog.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_creature_rookguard_training_slime_001",
+      "source": "factory",
+      "asset_type": "creature",
+      "file": "sprites/creature__rookguard_training_slime.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_creature_skeleton_001",
+      "source": "factory",
+      "asset_type": "creature",
+      "file": "sprites/creatures__skeleton.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_effect_chronicle_combat_001",
+      "source": "factory",
+      "asset_type": "effect",
+      "file": "sprites/effect__chronicle_combat.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "chronicle_kind": "combat_kill",
+      "atlas": {
+        "sheet": "chronicle.png",
+        "x": 2,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_effect_chronicle_create_001",
+      "source": "factory",
+      "asset_type": "effect",
+      "file": "sprites/effect__chronicle_create.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "chronicle_kind": "character_created",
+      "atlas": {
+        "sheet": "chronicle.png",
+        "x": 36,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_effect_chronicle_death_001",
+      "source": "factory",
+      "asset_type": "effect",
+      "file": "sprites/effect__chronicle_death.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "chronicle_kind": "death",
+      "atlas": {
+        "sheet": "chronicle.png",
+        "x": 70,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_effect_chronicle_drop_001",
+      "source": "factory",
+      "asset_type": "effect",
+      "file": "sprites/effect__chronicle_drop.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "chronicle_kind": "item_drop",
+      "atlas": {
+        "sheet": "chronicle.png",
+        "x": 104,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_effect_chronicle_pickup_001",
+      "source": "factory",
+      "asset_type": "effect",
+      "file": "sprites/effect__chronicle_pickup.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "chronicle_kind": "item_pickup",
+      "atlas": {
+        "sheet": "chronicle.png",
+        "x": 138,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_effect_chronicle_tutorial_001",
+      "source": "factory",
+      "asset_type": "effect",
+      "file": "sprites/effect__chronicle_tutorial.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "chronicle_kind": "tutorial_complete",
+      "atlas": {
+        "sheet": "chronicle.png",
+        "x": 172,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_effect_chronicle_unknown_001",
+      "source": "factory",
+      "asset_type": "effect",
+      "file": "sprites/effect__chronicle_unknown.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "chronicle_kind": "unknown",
+      "atlas": {
+        "sheet": "chronicle.png",
+        "x": 206,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_effect_chronicle_world_001",
+      "source": "factory",
+      "asset_type": "effect",
+      "file": "sprites/effect__chronicle_world.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "chronicle_kind": "world_event",
+      "atlas": {
+        "sheet": "chronicle.png",
+        "x": 240,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_effect_chronicle_zone_001",
+      "source": "factory",
+      "asset_type": "effect",
+      "file": "sprites/effect__chronicle_zone.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "chronicle_kind": "zone_enter",
+      "atlas": {
+        "sheet": "chronicle.png",
+        "x": 274,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_ground_bog_water_001",
+      "source": "factory",
+      "asset_type": "ground",
+      "file": "sprites/swamp__bog_water.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_ground_grass_001",
+      "source": "factory",
+      "asset_type": "ground",
+      "file": "sprites/ground__grass.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_ground_mud_001",
+      "source": "factory",
+      "asset_type": "ground",
+      "file": "sprites/swamp__mud.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_item_ashglass_shard_001",
+      "source": "factory",
+      "asset_type": "item",
+      "file": "sprites/item__ashglass_shard.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "item_type": "ashglass_shard",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 2,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_item_charred_shipment_plate_001",
+      "source": "factory",
+      "asset_type": "item",
+      "file": "sprites/item__charred_shipment_plate.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "item_type": "charred_shipment_plate",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 36,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_item_city_rat_goo_001",
+      "source": "factory",
+      "asset_type": "item",
+      "file": "sprites/item__city_rat_goo.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "item_type": "city_rat_goo",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 70,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_item_healing_herb_001",
+      "source": "factory",
+      "asset_type": "item",
+      "file": "sprites/item__healing_herb.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "item_type": "healing_herb",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 104,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_item_keystone_token_001",
+      "source": "factory",
+      "asset_type": "item",
+      "file": "sprites/item__keystone_token.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "item_type": "keystone_token",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 138,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_item_ley_mote_001",
+      "source": "factory",
+      "asset_type": "item",
+      "file": "sprites/item__ley_mote.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "item_type": "ley_mote",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 172,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_item_mark_token_001",
+      "source": "factory",
+      "asset_type": "item",
+      "file": "sprites/item__mark_token.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "item_type": "mark_token",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 206,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_item_pilgrim_mark_001",
+      "source": "factory",
+      "asset_type": "item",
+      "file": "sprites/item__pilgrim_mark.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "item_type": "pilgrim_mark",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 240,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_item_ration_001",
+      "source": "factory",
+      "asset_type": "item",
+      "file": "sprites/item__ration.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "item_type": "ration",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 274,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_item_refined_ley_mote_001",
+      "source": "factory",
+      "asset_type": "item",
+      "file": "sprites/item__refined_ley_mote.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "item_type": "refined_ley_mote",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 308,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_item_refined_soulsteel_component_001",
+      "source": "factory",
+      "asset_type": "item",
+      "file": "sprites/item__refined_soulsteel_component.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "item_type": "refined_soulsteel_component",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 342,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_item_rookguard_patience_charm_001",
+      "source": "factory",
+      "asset_type": "item",
+      "file": "sprites/item__rookguard_patience_charm.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "item_type": "rookguard_patience_charm",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 376,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_item_rookguard_threadbare_cloak_001",
+      "source": "factory",
+      "asset_type": "item",
+      "file": "sprites/item__rookguard_threadbare_cloak.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "item_type": "rookguard_threadbare_cloak",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 410,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_item_rookguard_training_blade_001",
+      "source": "factory",
+      "asset_type": "item",
+      "file": "sprites/item__rookguard_training_blade.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "item_type": "rookguard_training_blade",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 444,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_item_slime_001",
+      "source": "factory",
+      "asset_type": "item",
+      "file": "sprites/item__slime.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "item_type": "slime",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 478,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_item_soulsteel_frame_001",
+      "source": "factory",
+      "asset_type": "item",
+      "file": "sprites/item__soulsteel_frame.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "item_type": "soulsteel_frame",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 512,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_item_stabilized_soulsteel_component_001",
+      "source": "factory",
+      "asset_type": "item",
+      "file": "sprites/item__stabilized_soulsteel_component.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "item_type": "stabilized_soulsteel_component",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 546,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_item_tending_token_001",
+      "source": "factory",
+      "asset_type": "item",
+      "file": "sprites/item__tending_token.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "item_type": "tending_token",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 580,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_item_torch_001",
+      "source": "factory",
+      "asset_type": "item",
+      "file": "sprites/item__torch.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "item_type": "torch",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 614,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_item_training_slime_goo_001",
+      "source": "factory",
+      "asset_type": "item",
+      "file": "sprites/item__training_slime_goo.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "item_type": "training_slime_goo",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 648,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_prop_dead_tree_001",
+      "source": "factory",
+      "asset_type": "prop",
+      "file": "sprites/swamp__dead_tree.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_prop_log_001",
+      "source": "factory",
+      "asset_type": "prop",
+      "file": "sprites/swamp__log.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_prop_mushroom_001",
+      "source": "factory",
+      "asset_type": "prop",
+      "file": "sprites/swamp__mushroom.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_prop_reeds_001",
+      "source": "factory",
+      "asset_type": "prop",
+      "file": "sprites/swamp__reeds.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_prop_tree_001",
+      "source": "factory",
+      "asset_type": "prop",
+      "file": "sprites/props__tree.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_structure_stone_wall_001",
+      "source": "factory",
+      "asset_type": "structure",
+      "file": "sprites/structures__stone_wall.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_tile_gate_to_azura_001",
+      "source": "factory",
+      "asset_type": "tile",
+      "file": "sprites/tile__gate_to_azura.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_tile_grass_001",
+      "source": "factory",
+      "asset_type": "tile",
+      "file": "sprites/tile__grass.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_tile_stone_ground_001",
+      "source": "factory",
+      "asset_type": "tile",
+      "file": "sprites/tile__stone_ground.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_tile_tutorial_chat_001",
+      "source": "factory",
+      "asset_type": "tile",
+      "file": "sprites/tile__tutorial_chat.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_tile_tutorial_move_001",
+      "source": "factory",
+      "asset_type": "tile",
+      "file": "sprites/tile__tutorial_move.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_tile_tutorial_tem_001",
+      "source": "factory",
+      "asset_type": "tile",
+      "file": "sprites/tile__tutorial_tem.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_tile_water_001",
+      "source": "factory",
+      "asset_type": "tile",
+      "file": "sprites/tile__water.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null
+    },
+    {
+      "asset_id": "akalynth_ui_ui_action_ring",
+      "source": "ui_pack",
+      "asset_type": "ui",
+      "file": "ui/ui_action_ring.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "kind": "circle",
+      "slice_px": 0,
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "atlas": {
+        "sheet": "ui.png",
+        "x": 160,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_ui_ui_action_ring_danger",
+      "source": "ui_pack",
+      "asset_type": "ui",
+      "file": "ui/ui_action_ring_danger.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "kind": "circle",
+      "slice_px": 0,
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "atlas": {
+        "sheet": "ui.png",
+        "x": 194,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_ui_ui_action_ring_pressed",
+      "source": "ui_pack",
+      "asset_type": "ui",
+      "file": "ui/ui_action_ring_pressed.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "kind": "circle",
+      "slice_px": 0,
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "atlas": {
+        "sheet": "ui.png",
+        "x": 228,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_ui_ui_bar_track",
+      "source": "ui_pack",
+      "asset_type": "ui",
+      "file": "ui/ui_bar_track.png",
+      "frame": {
+        "w": 16,
+        "h": 6
+      },
+      "kind": "bar",
+      "slice_px": 2,
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "atlas": {
+        "sheet": "ui.png",
+        "x": 398,
+        "y": 2,
+        "w": 16,
+        "h": 6
+      }
+    },
+    {
+      "asset_id": "akalynth_ui_ui_button_frame",
+      "source": "ui_pack",
+      "asset_type": "ui",
+      "file": "ui/ui_button_frame.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "kind": "nine_slice",
+      "slice_px": 6,
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "atlas": {
+        "sheet": "ui.png",
+        "x": 262,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_ui_ui_button_pressed_frame",
+      "source": "ui_pack",
+      "asset_type": "ui",
+      "file": "ui/ui_button_pressed_frame.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "kind": "nine_slice",
+      "slice_px": 6,
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "atlas": {
+        "sheet": "ui.png",
+        "x": 296,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_ui_ui_dock_frame",
+      "source": "ui_pack",
+      "asset_type": "ui",
+      "file": "ui/ui_dock_frame.png",
+      "frame": {
+        "w": 40,
+        "h": 40
+      },
+      "kind": "nine_slice",
+      "slice_px": 8,
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "atlas": {
+        "sheet": "ui.png",
+        "x": 118,
+        "y": 2,
+        "w": 40,
+        "h": 40
+      }
+    },
+    {
+      "asset_id": "akalynth_ui_ui_dpad_button",
+      "source": "ui_pack",
+      "asset_type": "ui",
+      "file": "ui/ui_dpad_button.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "kind": "circle",
+      "slice_px": 0,
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "atlas": {
+        "sheet": "ui.png",
+        "x": 330,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_ui_ui_dpad_button_pressed",
+      "source": "ui_pack",
+      "asset_type": "ui",
+      "file": "ui/ui_dpad_button_pressed.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "kind": "circle",
+      "slice_px": 0,
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "atlas": {
+        "sheet": "ui.png",
+        "x": 364,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_ui_ui_dpad_frame",
+      "source": "ui_pack",
+      "asset_type": "ui",
+      "file": "ui/ui_dpad_frame.png",
+      "frame": {
+        "w": 64,
+        "h": 64
+      },
+      "kind": "nine_slice",
+      "slice_px": 10,
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "atlas": {
+        "sheet": "ui.png",
+        "x": 2,
+        "y": 2,
+        "w": 64,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_ui_ui_hp_fill",
+      "source": "ui_pack",
+      "asset_type": "ui",
+      "file": "ui/ui_hp_fill.png",
+      "frame": {
+        "w": 16,
+        "h": 4
+      },
+      "kind": "bar",
+      "slice_px": 2,
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "atlas": {
+        "sheet": "ui.png",
+        "x": 416,
+        "y": 2,
+        "w": 16,
+        "h": 4
+      }
+    },
+    {
+      "asset_id": "akalynth_ui_ui_mp_fill",
+      "source": "ui_pack",
+      "asset_type": "ui",
+      "file": "ui/ui_mp_fill.png",
+      "frame": {
+        "w": 16,
+        "h": 4
+      },
+      "kind": "bar",
+      "slice_px": 2,
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "atlas": {
+        "sheet": "ui.png",
+        "x": 434,
+        "y": 2,
+        "w": 16,
+        "h": 4
+      }
+    },
+    {
+      "asset_id": "akalynth_ui_ui_panel_frame",
+      "source": "ui_pack",
+      "asset_type": "ui",
+      "file": "ui/ui_panel_frame.png",
+      "frame": {
+        "w": 48,
+        "h": 48
+      },
+      "kind": "nine_slice",
+      "slice_px": 8,
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "atlas": {
+        "sheet": "ui.png",
+        "x": 68,
+        "y": 2,
+        "w": 48,
+        "h": 48
+      }
+    },
+    {
+      "asset_id": "akalynth_world_banner_blue",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/city_objects/banner_blue.png",
+      "frame": {
+        "w": 64,
+        "h": 96
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 0.75,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            32,
+            90
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 132,
+        "y": 324,
+        "w": 64,
+        "h": 96
+      }
+    },
+    {
+      "asset_id": "akalynth_world_banner_red",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/city_objects/banner_red.png",
+      "frame": {
+        "w": 64,
+        "h": 96
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 0.75,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            32,
+            90
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 198,
+        "y": 324,
+        "w": 64,
+        "h": 96
+      }
+    },
+    {
+      "asset_id": "akalynth_world_bed_single",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/interior/bed_single.png",
+      "frame": {
+        "w": 64,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            32,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 330,
+        "y": 324,
+        "w": 64,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_bench",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/city_objects/bench.png",
+      "frame": {
+        "w": 96,
+        "h": 48
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 0.85,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            48,
+            42
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 274,
+        "y": 422,
+        "w": 96,
+        "h": 48
+      }
+    },
+    {
+      "asset_id": "akalynth_world_bookshelf",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/interior/bookshelf.png",
+      "frame": {
+        "w": 64,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            32,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 396,
+        "y": 324,
+        "w": 64,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_chair_wood",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/interior/chair_wood.png",
+      "frame": {
+        "w": 64,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 0.75,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            32,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 462,
+        "y": 324,
+        "w": 64,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_chest_small",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/interior/chest_small.png",
+      "frame": {
+        "w": 64,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 0.75,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            32,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 528,
+        "y": 324,
+        "w": 64,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_door_wood_closed_east",
+      "source": "world_sidecar",
+      "asset_type": "door_overlay",
+      "file": "world/doors/door_wood_closed_east.png",
+      "frame": {
+        "w": 64,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1.15,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            32,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 594,
+        "y": 324,
+        "w": 64,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_door_wood_closed_south",
+      "source": "world_sidecar",
+      "asset_type": "door_overlay",
+      "file": "world/doors/door_wood_closed_south.png",
+      "frame": {
+        "w": 64,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1.15,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            32,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 660,
+        "y": 324,
+        "w": 64,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_door_wood_open_east",
+      "source": "world_sidecar",
+      "asset_type": "door_overlay",
+      "file": "world/doors/door_wood_open_east.png",
+      "frame": {
+        "w": 64,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1.15,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            32,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 726,
+        "y": 324,
+        "w": 64,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_door_wood_open_south",
+      "source": "world_sidecar",
+      "asset_type": "door_overlay",
+      "file": "world/doors/door_wood_open_south.png",
+      "frame": {
+        "w": 64,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1.15,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            32,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 792,
+        "y": 324,
+        "w": 64,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_fireplace",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/interior/fireplace.png",
+      "frame": {
+        "w": 64,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            32,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 858,
+        "y": 324,
+        "w": 64,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_floor_cobble_01",
+      "source": "world_sidecar",
+      "asset_type": "terrain_tile",
+      "file": "world/terrain/floor_cobble_01.png",
+      "frame": {
+        "w": 64,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 0.5,
+        "anchor": {
+          "type": "tile_top_left",
+          "source_pixels": [
+            0,
+            0
+          ]
+        },
+        "z_policy": "fixed_layer",
+        "layer": "terrain"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 924,
+        "y": 324,
+        "w": 64,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_floor_stone_01",
+      "source": "world_sidecar",
+      "asset_type": "terrain_tile",
+      "file": "world/terrain/floor_stone_01.png",
+      "frame": {
+        "w": 64,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 0.5,
+        "anchor": {
+          "type": "tile_top_left",
+          "source_pixels": [
+            0,
+            0
+          ]
+        },
+        "z_policy": "fixed_layer",
+        "layer": "terrain"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 990,
+        "y": 324,
+        "w": 64,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_floor_wood_01",
+      "source": "world_sidecar",
+      "asset_type": "terrain_tile",
+      "file": "world/terrain/floor_wood_01.png",
+      "frame": {
+        "w": 64,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 0.5,
+        "anchor": {
+          "type": "tile_top_left",
+          "source_pixels": [
+            0,
+            0
+          ]
+        },
+        "z_policy": "fixed_layer",
+        "layer": "terrain"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1056,
+        "y": 324,
+        "w": 64,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_fountain",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/city_objects/fountain.png",
+      "frame": {
+        "w": 128,
+        "h": 128
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 0.9,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            64,
+            122
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1870,
+        "y": 2,
+        "w": 128,
+        "h": 128
+      }
+    },
+    {
+      "asset_id": "akalynth_world_grass_01",
+      "source": "world_sidecar",
+      "asset_type": "terrain_tile",
+      "file": "world/terrain/grass_01.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "tile_top_left",
+          "source_pixels": [
+            0,
+            0
+          ]
+        },
+        "z_policy": "fixed_layer",
+        "layer": "terrain"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 372,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_high_city_clay_roof_overlay",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/high_city/high_city_clay_roof_overlay.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "tile_top_left",
+          "source_pixels": [
+            0,
+            0
+          ]
+        },
+        "z_policy": "fixed_above_building",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 406,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_high_city_cobble_var_02",
+      "source": "world_sidecar",
+      "asset_type": "floor_overlay",
+      "file": "world/high_city/high_city_cobble_var_02.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "tile_top_left",
+          "source_pixels": [
+            0,
+            0
+          ]
+        },
+        "z_policy": "fixed_layer",
+        "layer": "floor_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 440,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_high_city_cobble_var_03",
+      "source": "world_sidecar",
+      "asset_type": "floor_overlay",
+      "file": "world/high_city/high_city_cobble_var_03.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "tile_top_left",
+          "source_pixels": [
+            0,
+            0
+          ]
+        },
+        "z_policy": "fixed_layer",
+        "layer": "floor_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 474,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_high_city_crystal_fountain",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/high_city/high_city_crystal_fountain.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1848,
+        "y": 324,
+        "w": 32,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_high_city_grass_edge",
+      "source": "world_sidecar",
+      "asset_type": "terrain_tile",
+      "file": "world/high_city/high_city_grass_edge.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "tile_top_left",
+          "source_pixels": [
+            0,
+            0
+          ]
+        },
+        "z_policy": "fixed_layer",
+        "layer": "terrain"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 508,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_high_city_half_timber_wall_n",
+      "source": "world_sidecar",
+      "asset_type": "wall_overlay",
+      "file": "world/high_city/high_city_half_timber_wall_n.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "tile_top_left",
+          "source_pixels": [
+            0,
+            0
+          ]
+        },
+        "z_policy": "fixed_layer",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 542,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_high_city_lantern_post",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/high_city/high_city_lantern_post.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1882,
+        "y": 324,
+        "w": 32,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_high_city_merchant_crate",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/high_city/high_city_merchant_crate.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            28
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 576,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_high_city_plot_stake",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/high_city/high_city_plot_stake.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            28
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 610,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_high_city_sigil_banner_blue",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/high_city/high_city_sigil_banner_blue.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1916,
+        "y": 324,
+        "w": 32,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_high_city_sigil_banner_red",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/high_city/high_city_sigil_banner_red.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1950,
+        "y": 324,
+        "w": 32,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_high_city_temple_brazier",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/high_city/high_city_temple_brazier.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1984,
+        "y": 324,
+        "w": 32,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_high_city_witness_lantern",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/high_city/high_city_witness_lantern.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 2,
+        "y": 422,
+        "w": 32,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_market_awning_overlay",
+      "source": "world_sidecar",
+      "asset_type": "floor_overlay",
+      "file": "world/roofs/market_awning_overlay.png",
+      "frame": {
+        "w": 384,
+        "h": 160
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "tile_top_left",
+          "source_pixels": [
+            0,
+            0
+          ]
+        },
+        "layer": "floor_overlay",
+        "z_policy": "fixed_above_building",
+        "visibility_modes": [
+          "visible",
+          "faded",
+          "hidden"
+        ]
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 902,
+        "y": 2,
+        "w": 384,
+        "h": 160
+      }
+    },
+    {
+      "asset_id": "akalynth_world_market_cloth_stall",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/market/market_cloth_stall.png",
+      "frame": {
+        "w": 160,
+        "h": 128
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 0.9,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            80,
+            122
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1546,
+        "y": 2,
+        "w": 160,
+        "h": 128
+      }
+    },
+    {
+      "asset_id": "akalynth_world_market_food_stall",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/market/market_food_stall.png",
+      "frame": {
+        "w": 160,
+        "h": 128
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 0.9,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            80,
+            122
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1708,
+        "y": 2,
+        "w": 160,
+        "h": 128
+      }
+    },
+    {
+      "asset_id": "akalynth_world_notice_board",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/city_objects/notice_board.png",
+      "frame": {
+        "w": 128,
+        "h": 96
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 0.8,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            64,
+            90
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 2,
+        "y": 324,
+        "w": 128,
+        "h": 96
+      }
+    },
+    {
+      "asset_id": "akalynth_world_prison_bars",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/castle/prison_bars.png",
+      "frame": {
+        "w": 64,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1.1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            32,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1122,
+        "y": 324,
+        "w": 64,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_prop_tree",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/props/prop_tree.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 36,
+        "y": 422,
+        "w": 32,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_roof_castle_overlay",
+      "source": "world_sidecar",
+      "asset_type": "floor_overlay",
+      "file": "world/roofs/roof_castle_overlay.png",
+      "frame": {
+        "w": 512,
+        "h": 320
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "tile_top_left",
+          "source_pixels": [
+            0,
+            0
+          ]
+        },
+        "layer": "floor_overlay",
+        "z_policy": "fixed_above_building",
+        "visibility_modes": [
+          "visible",
+          "faded",
+          "hidden"
+        ]
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 2,
+        "y": 2,
+        "w": 512,
+        "h": 320
+      }
+    },
+    {
+      "asset_id": "akalynth_world_roof_red_large_overlay",
+      "source": "world_sidecar",
+      "asset_type": "floor_overlay",
+      "file": "world/roofs/roof_red_large_overlay.png",
+      "frame": {
+        "w": 384,
+        "h": 224
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "tile_top_left",
+          "source_pixels": [
+            0,
+            0
+          ]
+        },
+        "layer": "floor_overlay",
+        "z_policy": "fixed_above_building",
+        "visibility_modes": [
+          "visible",
+          "faded",
+          "hidden"
+        ]
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 516,
+        "y": 2,
+        "w": 384,
+        "h": 224
+      }
+    },
+    {
+      "asset_id": "akalynth_world_roof_red_small_overlay",
+      "source": "world_sidecar",
+      "asset_type": "floor_overlay",
+      "file": "world/roofs/roof_red_small_overlay.png",
+      "frame": {
+        "w": 256,
+        "h": 160
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "tile_top_left",
+          "source_pixels": [
+            0,
+            0
+          ]
+        },
+        "layer": "floor_overlay",
+        "z_policy": "fixed_above_building",
+        "visibility_modes": [
+          "visible",
+          "faded",
+          "hidden"
+        ]
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1288,
+        "y": 2,
+        "w": 256,
+        "h": 160
+      }
+    },
+    {
+      "asset_id": "akalynth_world_rookguard_amber_lantern",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/city_objects/rookguard_amber_lantern.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 70,
+        "y": 422,
+        "w": 32,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_rookguard_bait_crate",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/city_objects/rookguard_bait_crate.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            28
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 644,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_rookguard_canal_reeds",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/city_objects/rookguard_canal_reeds.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 104,
+        "y": 422,
+        "w": 32,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_rookguard_fishing_post",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/city_objects/rookguard_fishing_post.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 138,
+        "y": 422,
+        "w": 32,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_rookguard_supply_sack",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/city_objects/rookguard_supply_sack.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            28
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 678,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_rookguard_waymarker",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/city_objects/rookguard_waymarker.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 172,
+        "y": 422,
+        "w": 32,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_sewer_grate",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/sewer/sewer_grate.png",
+      "frame": {
+        "w": 64,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 0.8,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            32,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1188,
+        "y": 324,
+        "w": 64,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_sewer_pipe",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/sewer/sewer_pipe.png",
+      "frame": {
+        "w": 64,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            32,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1254,
+        "y": 324,
+        "w": 64,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_slime_pool",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/sewer/slime_pool.png",
+      "frame": {
+        "w": 64,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 0.75,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            32,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1320,
+        "y": 324,
+        "w": 64,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_stone_column",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/castle/stone_column.png",
+      "frame": {
+        "w": 64,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1.15,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            32,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1386,
+        "y": 324,
+        "w": 64,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_swamp_bog_slime",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/swamp/swamp_bog_slime.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            28
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 712,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_swamp_bog_water",
+      "source": "world_sidecar",
+      "asset_type": "terrain_tile",
+      "file": "world/swamp/swamp_bog_water.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "tile_top_left",
+          "source_pixels": [
+            0,
+            0
+          ]
+        },
+        "z_policy": "fixed_layer",
+        "layer": "terrain"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 746,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_swamp_dead_tree",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/swamp/swamp_dead_tree.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 206,
+        "y": 422,
+        "w": 32,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_swamp_frog",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/swamp/swamp_frog.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            28
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 780,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_swamp_log",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/swamp/swamp_log.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            28
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 814,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_swamp_mud",
+      "source": "world_sidecar",
+      "asset_type": "terrain_tile",
+      "file": "world/swamp/swamp_mud.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "tile_top_left",
+          "source_pixels": [
+            0,
+            0
+          ]
+        },
+        "z_policy": "fixed_layer",
+        "layer": "terrain"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 848,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_swamp_mushroom",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/swamp/swamp_mushroom.png",
+      "frame": {
+        "w": 32,
+        "h": 32
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            28
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 882,
+        "y": 422,
+        "w": 32,
+        "h": 32
+      }
+    },
+    {
+      "asset_id": "akalynth_world_swamp_reeds",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/swamp/swamp_reeds.png",
+      "frame": {
+        "w": 32,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            16,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 240,
+        "y": 422,
+        "w": 32,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_table_small",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/interior/table_small.png",
+      "frame": {
+        "w": 64,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 0.9,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            32,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1452,
+        "y": 324,
+        "w": 64,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_throne",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/castle/throne.png",
+      "frame": {
+        "w": 64,
+        "h": 96
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            32,
+            90
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 264,
+        "y": 324,
+        "w": 64,
+        "h": 96
+      }
+    },
+    {
+      "asset_id": "akalynth_world_wall_stone_corner_ne",
+      "source": "world_sidecar",
+      "asset_type": "wall_overlay",
+      "file": "world/walls/wall_stone_corner_ne.png",
+      "frame": {
+        "w": 64,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1.1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            32,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1518,
+        "y": 324,
+        "w": 64,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_wall_stone_corner_nw",
+      "source": "world_sidecar",
+      "asset_type": "wall_overlay",
+      "file": "world/walls/wall_stone_corner_nw.png",
+      "frame": {
+        "w": 64,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1.1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            32,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1584,
+        "y": 324,
+        "w": 64,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_wall_stone_north",
+      "source": "world_sidecar",
+      "asset_type": "wall_overlay",
+      "file": "world/walls/wall_stone_north.png",
+      "frame": {
+        "w": 64,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1.1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            32,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1650,
+        "y": 324,
+        "w": 64,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_wall_stone_south",
+      "source": "world_sidecar",
+      "asset_type": "wall_overlay",
+      "file": "world/walls/wall_stone_south.png",
+      "frame": {
+        "w": 64,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1.1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            32,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1716,
+        "y": 324,
+        "w": 64,
+        "h": 64
+      }
+    },
+    {
+      "asset_id": "akalynth_world_weapon_rack",
+      "source": "world_sidecar",
+      "asset_type": "world_object",
+      "file": "world/castle/weapon_rack.png",
+      "frame": {
+        "w": 64,
+        "h": 64
+      },
+      "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "mechanics": null,
+      "rendering": {
+        "filtering": "nearest",
+        "display_only": true,
+        "draw_scale": 1,
+        "anchor": {
+          "type": "bottom_center",
+          "source_pixels": [
+            32,
+            58
+          ]
+        },
+        "z_policy": "sort_by_anchor_y",
+        "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1782,
+        "y": 324,
+        "w": 64,
+        "h": 64
+      }
+    }
+  ]
+}

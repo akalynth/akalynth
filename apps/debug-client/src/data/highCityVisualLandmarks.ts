@@ -58,6 +58,16 @@ const ROOKGUARD_VISUAL_LANDMARKS: RegistryWorldVisualPlacement[] = [
   ...floorPatch('floor_cobble_01', 12, 12, 17, 17, 'rookguard'),
   obj('slime_pool', 14, 14, 0, 'rookguard'),
   obj('weapon_rack', 12, 17, 1, 'rookguard'),
+
+  // New district: Rookguard North Ward. Expanded layout for a second playable
+  // district with landmark anchors and visual boundaries in static atlas output.
+  ...floorPatch('floor_stone_01', 20, 18, 37, 35, 'rookguard'),
+  obj('notice_board', 21, 20, 5, 'rookguard'),
+  obj('bench', 24, 21, 5, 'rookguard'),
+  obj('banner_blue', 22, 19, 5, 'rookguard'),
+  obj('banner_red', 36, 19, 5, 'rookguard'),
+  obj('wall_stone_corner_ne', 37, 18, 5, 'rookguard'),
+  obj('wall_stone_corner_ne', 37, 35, 5, 'rookguard'),
 ];
 
 const HIGH_CITY_VISUAL_LANDMARKS: RegistryWorldVisualPlacement[] = [

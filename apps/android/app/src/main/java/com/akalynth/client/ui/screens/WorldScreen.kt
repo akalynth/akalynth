@@ -62,9 +62,9 @@ fun WorldScreen(
             mapData?.landmarks?.get("guild_hall")?.contains(me.x, me.y)
         } == true
     )
-    val routeActionSkillIds = routeActionSkillIdsFor(state.progression.loop?.onwardRoutes ?: emptyList())
-    val showRouteActions = routeActionSkillIds.isNotEmpty()
     val loop = state.progression.loop
+    val routeActionSkillIds = routeActionSkillIdsFor(loop?.onwardRoutes ?: emptyList())
+    val showRouteActions = routeActionSkillIds.isNotEmpty()
     val objective = loop?.objective.orEmpty()
     val trainingSlime = findTrainingSlime(state.world.otherPlayers.values)
     val showTrainingAttack = state.world.currentMap == MapName.ROOKGUARD &&

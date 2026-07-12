@@ -1,0 +1,600 @@
+{
+  "schema_version": 1,
+  "mode": "loose_png+atlas",
+  "generated_at": "2026-06-23T02:22:21.898Z",
+  "files": [
+    {
+      "path": "atlas/chronicle.png",
+      "sha256": "a86fd7beb7f3a015d55de612c202570cd51a916b7008e31bd81b63bf43f9f1de"
+    },
+    {
+      "path": "atlas/items.png",
+      "sha256": "a28116854d2bff108bffd547d709d633b595c8fbb6116eb3f27250b043082cd5"
+    },
+    {
+      "path": "atlas/manifest.json",
+      "sha256": "cd2d5397f775ed086d5342c56e7978f74ba8c1a21d850f6b4aa27421b8ab502d"
+    },
+    {
+      "path": "atlas/ui.png",
+      "sha256": "d98c9a2860ac86d3fae32ca480923d8f8c256c678acd7a151bce24adcd8d7b76"
+    },
+    {
+      "path": "atlas/world.png",
+      "sha256": "bbfe8265cce4bcbe78f5316819f5d406be8f69dacaef737752327cc2abd2ac91"
+    },
+    {
+      "path": "sprites/characters/base_human_male_01.png",
+      "sha256": "f6c294b2108eedb5fe7fa27613059bb9f49ba5902a9074c3fd29777d713540ce"
+    },
+    {
+      "path": "sprites/characters/blacksmith_01.png",
+      "sha256": "432f9648c7093150607277a7bdec40e6d655b5eeb55dc88a95f2033d8e078804"
+    },
+    {
+      "path": "sprites/characters/castle_guard_red_01.png",
+      "sha256": "1bfb93da33e55770416394ff346093354c498ed5e26b614ff35668f26ee8c9d0"
+    },
+    {
+      "path": "sprites/characters/guard_city_01.png",
+      "sha256": "e5a12dcfa57666bc2584210e460359e80d52ac07b1a9daa71012ae1e3b850b4f"
+    },
+    {
+      "path": "sprites/characters/mage_apprentice_01.png",
+      "sha256": "ba91f938e2a7728ce5d1b31c33779e9d0fed49d466e7bcf55857e44d38c357bf"
+    },
+    {
+      "path": "sprites/characters/merchant_cloth_01.png",
+      "sha256": "16ff91f6411a10bdf00b60f183ee423a3a0766bceb136547006926a4fc370d60"
+    },
+    {
+      "path": "sprites/characters/merchant_food_01.png",
+      "sha256": "6e80764e784896394470086b3f6903aa847fe092c556aa2f874df3cdaf98d0c2"
+    },
+    {
+      "path": "sprites/characters/noble_male_01.png",
+      "sha256": "03fb0266300a82bfd6d506c6da021df4c532537002d16b1671de9878768eb719"
+    },
+    {
+      "path": "sprites/characters/priest_01.png",
+      "sha256": "6a88a9a4cc7a10b1bfa266fd890e1f3053c0faecc94255c747f68ada7d7262fc"
+    },
+    {
+      "path": "sprites/characters/rat_hunter_01.png",
+      "sha256": "a7a02559c7abf4b9b8b8351528370b9ba986a6ef1be462f1371d4c1023a7f7f9"
+    },
+    {
+      "path": "sprites/characters/sewer_worker_01.png",
+      "sha256": "8e6900d88548166eb21266c38ea5b46334d93f1b51bfd7c29908f7b3366d5285"
+    },
+    {
+      "path": "sprites/characters/skeleton_warrior_01.png",
+      "sha256": "5525c323ac20a0d58ff1f7cacec361a2fe3d1e1e746d05cc45e5c5850c72e93e"
+    },
+    {
+      "path": "sprites/creature__rookguard_training_slime.png",
+      "sha256": "30f17644c04ea8ea6fbeefa95c84f8dd76af3f25c7d2848eac94340e7b8eb586"
+    },
+    {
+      "path": "sprites/creatures__skeleton.png",
+      "sha256": "77c41d7c5acccea1b9370c91e4643298e0c8b75cac170228ccaaf7ab5f877f75"
+    },
+    {
+      "path": "sprites/creatures/cat_01.png",
+      "sha256": "26b59ed61dc13cde9a7be972d84d8b757d8b199f2bd85558ad7693b5811ddc8b"
+    },
+    {
+      "path": "sprites/creatures/diseased_rat_01.png",
+      "sha256": "082822866f2972504e4f94f49e7e7a8855b3367f61f9cb1aa4f6d0d79bd7b068"
+    },
+    {
+      "path": "sprites/creatures/dog_01.png",
+      "sha256": "05409b520d1655a932efb6cec364847cd3054901c4ea751257850372aef287f2"
+    },
+    {
+      "path": "sprites/creatures/rat_large_01.png",
+      "sha256": "7bb389093b3658e3ba2dfb923b32f44bc5b63000efa13bfa3f10f40bcb8c3039"
+    },
+    {
+      "path": "sprites/creatures/rat_small_01.png",
+      "sha256": "c5228c1a0da5a919d844d987ad3c8f8470273792d8961459203be15486a20a85"
+    },
+    {
+      "path": "sprites/effect__chronicle_combat.png",
+      "sha256": "14d95557e73a3467026a2d16a0c43b117181839c2ef41f44fc05c078e36e8420"
+    },
+    {
+      "path": "sprites/effect__chronicle_create.png",
+      "sha256": "c9e75cd43cc32b233acfbb320a4bbe387393cd91691fe36cecdb7a3c8af7f60d"
+    },
+    {
+      "path": "sprites/effect__chronicle_death.png",
+      "sha256": "86fc9a951cd7fd265f339c4d543408da409fbf20cc5274499b4584f4055167f8"
+    },
+    {
+      "path": "sprites/effect__chronicle_drop.png",
+      "sha256": "7dfbf4760a494f971584b88ac9e9213b13153309d98f1c12f2b998a0d1402908"
+    },
+    {
+      "path": "sprites/effect__chronicle_pickup.png",
+      "sha256": "d675abe8e413a642105a09e824e6373b192e2b90efb29e3b1c461c29392c883a"
+    },
+    {
+      "path": "sprites/effect__chronicle_tutorial.png",
+      "sha256": "4356a4f3a6d647fad38828c81ddc8b41f5c510ea5d803f2c202ddbf6d92b19bc"
+    },
+    {
+      "path": "sprites/effect__chronicle_unknown.png",
+      "sha256": "834919eb94838420ff6e465c489e4f5e2c84a0804e4b5ad1cdcd76e4fdcbf185"
+    },
+    {
+      "path": "sprites/effect__chronicle_world.png",
+      "sha256": "4c37ffe6e47475ab19214dabe4368cd47b1ded3987516caa5c5435dea0d34f5c"
+    },
+    {
+      "path": "sprites/effect__chronicle_zone.png",
+      "sha256": "89e962299ac6316e4984381a1c6824c37680474322351aebc49ad95d3d4ff708"
+    },
+    {
+      "path": "sprites/ground__grass.png",
+      "sha256": "41e49e3f873fe1215976440846b9ec668ee6d8e2a46f2a2ee83db395a1a5b6dd"
+    },
+    {
+      "path": "sprites/item__ashglass_shard.png",
+      "sha256": "92f10404febd16378d15a12d31cd8423cdd25cac2c3d4c3fb9ea9b41a69a5e3e"
+    },
+    {
+      "path": "sprites/item__charred_shipment_plate.png",
+      "sha256": "581ba7ad70ca9d2deafe620ec2cc63b3cf25336cdab3892afa1076f5871929d4"
+    },
+    {
+      "path": "sprites/item__city_rat_goo.png",
+      "sha256": "7ae194406a683d8675dc62a02d4ffe201cd1237463b47bae5510d853a384593a"
+    },
+    {
+      "path": "sprites/item__healing_herb.png",
+      "sha256": "ddc6d3dae3f73484435cf9c756c8b4c7ed4d5bbd14f8336de2ab95b4db703902"
+    },
+    {
+      "path": "sprites/item__keystone_token.png",
+      "sha256": "f7ee6782379589e9070de34ea998b9bfbf771bf548113db91b472a54663d19d7"
+    },
+    {
+      "path": "sprites/item__ley_mote.png",
+      "sha256": "5bb9e135e6faea7072414e4c844427bdc2dd6b9be59953d8c1299768d352a778"
+    },
+    {
+      "path": "sprites/item__mark_token.png",
+      "sha256": "63e44c4b16c409b29511f6229b625f2b2d6de91e0f541eadd044915dbbdf957a"
+    },
+    {
+      "path": "sprites/item__pilgrim_mark.png",
+      "sha256": "e44268cdde677e810abf18bfdb322d2e91144e5ad10232713eb9c8aaff24c606"
+    },
+    {
+      "path": "sprites/item__ration.png",
+      "sha256": "4607f34c404b09b06a07d8754dfdf30244ab87de5d98d3d2caefd8668a436774"
+    },
+    {
+      "path": "sprites/item__refined_ley_mote.png",
+      "sha256": "4165e39bd7bf45a7840b7de44afd01e5c01745328b9033a9f7f15bc3410ba3d5"
+    },
+    {
+      "path": "sprites/item__refined_soulsteel_component.png",
+      "sha256": "be9eed7df179959e0cce40c68a3c7084beae35cb41ae7a3fe33a0e9e94d500d9"
+    },
+    {
+      "path": "sprites/item__rookguard_patience_charm.png",
+      "sha256": "9bd6941f2fdbcb357f86106103a7d154baf3d8773d71c39d22630e4cb43ec98a"
+    },
+    {
+      "path": "sprites/item__rookguard_threadbare_cloak.png",
+      "sha256": "e554191a72a65024382a26ddaa027cfbe8d336462a2a14644ac041986ae04681"
+    },
+    {
+      "path": "sprites/item__rookguard_training_blade.png",
+      "sha256": "0dfdf84a3818dabf44376674fe8f7e00d58233772ad79970c06597136aa0d124"
+    },
+    {
+      "path": "sprites/item__slime.png",
+      "sha256": "94716840902b767f6889ebe6cf0692eedd21f57dc8ea218116346e77e0ece315"
+    },
+    {
+      "path": "sprites/item__soulsteel_frame.png",
+      "sha256": "65e8de7f10df5292ba462d9ecff320ab83386993f6911bbbadcad7ee43ed47e0"
+    },
+    {
+      "path": "sprites/item__stabilized_soulsteel_component.png",
+      "sha256": "1d362c551406c691dcc6aab397588179f7baa865cc2968fe5ab80dffcb3e947a"
+    },
+    {
+      "path": "sprites/item__tending_token.png",
+      "sha256": "38baca890774b9a41c44ac3867766043be8bb2467cb6965ae75b3bc31426d232"
+    },
+    {
+      "path": "sprites/item__torch.png",
+      "sha256": "c2fc87cf10ed7a93bf77067a0dacee93125373763d7ac897e5441a1fb95f2c4f"
+    },
+    {
+      "path": "sprites/item__training_slime_goo.png",
+      "sha256": "5d07c6d89cef403d061827610ad2f74f357fdd29c63f7d684557e4e26585e863"
+    },
+    {
+      "path": "sprites/props__tree.png",
+      "sha256": "bcdec8107b5bd7be490c8bf831d0889a82ac0ce94fe4713169ee2d24d6e058cf"
+    },
+    {
+      "path": "sprites/structures__stone_wall.png",
+      "sha256": "f05d188f61b3f90972a5a94b3a1f7fb402b31c00dd8fed8a03172f3f319b81ad"
+    },
+    {
+      "path": "sprites/swamp__bog_slime.png",
+      "sha256": "868052b9bfe12fc0870c21d1fb85f3755d99c29299194bbf7f2581ad84c73ab1"
+    },
+    {
+      "path": "sprites/swamp__bog_water.png",
+      "sha256": "b0775cba09eadf2fde241b35daa28cdcd03af6d23e99e0decd32b42f13f6d220"
+    },
+    {
+      "path": "sprites/swamp__dead_tree.png",
+      "sha256": "6051f7ebad68421f1e74469afe32a630b4142c40937e093c21ff1a5abfdde56c"
+    },
+    {
+      "path": "sprites/swamp__frog.png",
+      "sha256": "c867ef71e424a8afbf322741a6c3983a571a727db35e894c57aa0384e288d266"
+    },
+    {
+      "path": "sprites/swamp__log.png",
+      "sha256": "662e3c0dc166d54eca67772c5ac02266ed36c06d3c3dd930b7a4e38babbd85da"
+    },
+    {
+      "path": "sprites/swamp__mud.png",
+      "sha256": "3440b409df3dd0854f834e8afe2b6d7cfc46e17b19c454829dcf40c86658cfbd"
+    },
+    {
+      "path": "sprites/swamp__mushroom.png",
+      "sha256": "5e5b765afd4e10564813923ca53e47d2221def2eb4db27dae68a1efc92150578"
+    },
+    {
+      "path": "sprites/swamp__reeds.png",
+      "sha256": "97d93d40301c55ea180e5ecce6b86e01681644a1744fadd45488b6dd954e011d"
+    },
+    {
+      "path": "sprites/tile__gate_to_azura.png",
+      "sha256": "ff3d456e9e3bb904a2fb1b4fb9f5828f3923636952bb9abc92fe14deb13030f2"
+    },
+    {
+      "path": "sprites/tile__grass.png",
+      "sha256": "d88480e31c7ef520d08548ff373dca02840272883294a8b27332ec9033d95e85"
+    },
+    {
+      "path": "sprites/tile__stone_ground.png",
+      "sha256": "ff1880cf72d3f2c2bfea95cec5388fcbdfee9da9c63dd14c078964a666315690"
+    },
+    {
+      "path": "sprites/tile__tutorial_chat.png",
+      "sha256": "400a53f754bd6a6d0451d8843c19e525b17c9e63e2a6bbb2fae5d6ee3ae325d5"
+    },
+    {
+      "path": "sprites/tile__tutorial_move.png",
+      "sha256": "bd412bc9bb46b37c4a8c72cd9345c17e9577c47f604671ff07d83c51da341264"
+    },
+    {
+      "path": "sprites/tile__tutorial_tem.png",
+      "sha256": "d5658434c6cf288b92a821ae1ce64c3e04887f235be2fcf10037633da68cb644"
+    },
+    {
+      "path": "sprites/tile__water.png",
+      "sha256": "1d9dea892b046d042931686d4419671c95a21e4bc3d6f6922b6a4126895e4acb"
+    },
+    {
+      "path": "ui/ui_action_ring_danger.png",
+      "sha256": "6979c7b64b89649053514ace69350553840cb4b91d49e5054886ffc02dd12c0e"
+    },
+    {
+      "path": "ui/ui_action_ring_pressed.png",
+      "sha256": "4541a70d69513b1b0cc6211d97095ff42e7e80b026ee68e89365e149cb87eef0"
+    },
+    {
+      "path": "ui/ui_action_ring.png",
+      "sha256": "5494e0d4bd3c7f72a7db4fd61622918dbb2c4e33e7048d27bb0f4f4c69e2e018"
+    },
+    {
+      "path": "ui/ui_bar_track.png",
+      "sha256": "5edc78efb266d325ab34295c8e6f73d09651c5f82c74ca33d36bfb491a876652"
+    },
+    {
+      "path": "ui/ui_button_frame.png",
+      "sha256": "a65a32b3eb06909ea1a26f949c96cff6df791c76b02f4542e6b6ac7b82befcb1"
+    },
+    {
+      "path": "ui/ui_button_pressed_frame.png",
+      "sha256": "8c15a9e49731bb6372939bbb4d07b69d9815398ae15a625c9b4560325b58d061"
+    },
+    {
+      "path": "ui/ui_dock_frame.png",
+      "sha256": "e158c0390d6f962eb07389fcbd4188f1399e8758cf769e6cfa677fe3d04c3859"
+    },
+    {
+      "path": "ui/ui_dpad_button_pressed.png",
+      "sha256": "e75662705a93a33ca9e9e35b2b86845fc52c8c3c3f6bada6aee8c8b68932dd75"
+    },
+    {
+      "path": "ui/ui_dpad_button.png",
+      "sha256": "044798e77168fd70eda7cd3496f4925536515064c730ca66c58f32389b66474f"
+    },
+    {
+      "path": "ui/ui_dpad_frame.png",
+      "sha256": "d1fd7dddfbfd11220d81a4694580590bf049c40b7280dde6a1eb7e2031e7235d"
+    },
+    {
+      "path": "ui/ui_hp_fill.png",
+      "sha256": "226e370f6bbb251a61dea872ffa787094f478e2e37a72d943011a12d1549c742"
+    },
+    {
+      "path": "ui/ui_mp_fill.png",
+      "sha256": "d39391230ab5df18f1925ee80d3839e198b23bde81dfcf00d1b8d051aad1c526"
+    },
+    {
+      "path": "ui/ui_panel_frame.png",
+      "sha256": "2c40638d27d13b00da6ebd73cc3725d4f912b058f85df14525ee163c48761613"
+    },
+    {
+      "path": "world/castle/prison_bars.png",
+      "sha256": "047625c0292b00f013d7ddad837172d8707b24877d963e0ae4d85b9b1595ed19"
+    },
+    {
+      "path": "world/castle/stone_column.png",
+      "sha256": "d97566d9b756a51d7b3ab9ed5a991bfeaa4c1a17699d9d4d747d5d7580f1fbeb"
+    },
+    {
+      "path": "world/castle/throne.png",
+      "sha256": "424ed7c3dad6728656676632ef66bdd902cfd2a28dea7d4ac61471a317bdc250"
+    },
+    {
+      "path": "world/castle/weapon_rack.png",
+      "sha256": "7a8093d50c9bf65df452726f26eb59af2f0f66a153f4deb17aae73cb9a227c16"
+    },
+    {
+      "path": "world/city_objects/banner_blue.png",
+      "sha256": "8689cf7227c50a51b8e8cf22bc51ce6834471443796c88acc5ecb733aaed1d0c"
+    },
+    {
+      "path": "world/city_objects/banner_red.png",
+      "sha256": "820e4e545c43db191e1fcf0d4dbee7a5c1af3801a01b07d53fd99a841ddf2710"
+    },
+    {
+      "path": "world/city_objects/bench.png",
+      "sha256": "4fc100d347ea32ab757904cfc03870dd63aeec6df19dcf496f247b47fae011da"
+    },
+    {
+      "path": "world/city_objects/fountain.png",
+      "sha256": "27ca001807d75f32464b3b6ce32fd60c58ba5037972b6968360f6c65378b91de"
+    },
+    {
+      "path": "world/city_objects/notice_board.png",
+      "sha256": "1a23496b42ee9f4c2e51a6b99238ad96e51b50ae7b14afdee52e4b6295a720a1"
+    },
+    {
+      "path": "world/city_objects/rookguard_amber_lantern.png",
+      "sha256": "635424ff962748931ec86ef355682f37df3f039a904d5d7057a59d97f85bdcbe"
+    },
+    {
+      "path": "world/city_objects/rookguard_bait_crate.png",
+      "sha256": "740dcf3848b9edfd07df170d7aa654bfe7143621fc6c4043d910324f43dc813a"
+    },
+    {
+      "path": "world/city_objects/rookguard_canal_reeds.png",
+      "sha256": "466a834bc739586852f41ae536d8b0432feca28f5a9eb5790e224a07976da88c"
+    },
+    {
+      "path": "world/city_objects/rookguard_fishing_post.png",
+      "sha256": "6365bf857d87482cd87a0a4bcc05885462df61c79de8f91ba5455f2bc2a876b8"
+    },
+    {
+      "path": "world/city_objects/rookguard_supply_sack.png",
+      "sha256": "0faf5f3c1ff64aa8d68c3b6a74561a0d5299d15d84a61d18d2d4b2ad5b43c35f"
+    },
+    {
+      "path": "world/city_objects/rookguard_waymarker.png",
+      "sha256": "695f88681772b27583a743379f78357a24006a1792aa550d70a9038ed363d120"
+    },
+    {
+      "path": "world/doors/door_wood_closed_east.png",
+      "sha256": "b30d25d10631466afe1b0b1254cfa55ffc2a1571095554ec856ecceb86aa4399"
+    },
+    {
+      "path": "world/doors/door_wood_closed_south.png",
+      "sha256": "d81f6ecac5ab5c20fc185ed2b51e35a4f25b4b2209c4bfd37ef258efd512b899"
+    },
+    {
+      "path": "world/doors/door_wood_open_east.png",
+      "sha256": "3a8d1eae78270c295a57d72ee61018d3d969de27de9f46c237104310386de4dd"
+    },
+    {
+      "path": "world/doors/door_wood_open_south.png",
+      "sha256": "785309e1c153607b652c2a341a9a7aeecaed76677d1936474fb999e0ac3f1c98"
+    },
+    {
+      "path": "world/high_city/high_city_clay_roof_overlay.png",
+      "sha256": "5c51a764fc6243739d4a69a5a86984e5c47c34dec54f99f2c2232129544bda17"
+    },
+    {
+      "path": "world/high_city/high_city_cobble_var_02.png",
+      "sha256": "33c13000618e055416cc2284d7e579eed0d408438f31b914b6f370ab754356e1"
+    },
+    {
+      "path": "world/high_city/high_city_cobble_var_03.png",
+      "sha256": "4373ea2fea6d5a5159e4c8378445f2e61eeda2941bb88af3e42bb1a07146032f"
+    },
+    {
+      "path": "world/high_city/high_city_crystal_fountain.png",
+      "sha256": "bb34e6bb10acc61fe3b47ab41a86594e75e830020eb77a49f0e2948c659988e3"
+    },
+    {
+      "path": "world/high_city/high_city_grass_edge.png",
+      "sha256": "0d5a07ef5989cd589a4ff5221c763411bbfb4e85c31ef9b8aac782112b297ef4"
+    },
+    {
+      "path": "world/high_city/high_city_half_timber_wall_n.png",
+      "sha256": "8c06970e0fd8ef3831787ef283939a0f65b191865e274f15841a8d602a60e18e"
+    },
+    {
+      "path": "world/high_city/high_city_lantern_post.png",
+      "sha256": "165a079e4803ac0cc388624eb5320f304919d912464f353f8bfc5fdc006142fb"
+    },
+    {
+      "path": "world/high_city/high_city_merchant_crate.png",
+      "sha256": "379e49597ea34f0b3fd1ab308cb1c197ce8909c9f8b9cc6167db55546a73b916"
+    },
+    {
+      "path": "world/high_city/high_city_plot_stake.png",
+      "sha256": "1f7bf1b0e85d8e93b9916deadfd262269bca6088ac0082a2e520dc4180f6d825"
+    },
+    {
+      "path": "world/high_city/high_city_sigil_banner_blue.png",
+      "sha256": "dae87566e2200db77261401e1618fc5a6177e30b64d621b55196f26bf832d4e6"
+    },
+    {
+      "path": "world/high_city/high_city_sigil_banner_red.png",
+      "sha256": "c297252d1e0559f834c50a2b6c39c055fed8aed8b9a37a3f87f0322e2282a409"
+    },
+    {
+      "path": "world/high_city/high_city_temple_brazier.png",
+      "sha256": "9d747485a1f0ac99c1a9d37dea6ec435dcb320e29dc8bbdd13ad90c759db2719"
+    },
+    {
+      "path": "world/high_city/high_city_witness_lantern.png",
+      "sha256": "833c377b946a05b3c232a459742baddd745c63a9cdbb7e744d99d6af48aa57fb"
+    },
+    {
+      "path": "world/interior/bed_single.png",
+      "sha256": "1d25e9097b6890353191fa0d11de08b21ffa9de696350c1ca0b92d239972670f"
+    },
+    {
+      "path": "world/interior/bookshelf.png",
+      "sha256": "8418e7db719c3fa6329323ef62085d0b1a5d836800e9f27e791381299e294c3d"
+    },
+    {
+      "path": "world/interior/chair_wood.png",
+      "sha256": "b9772db73afa6ee9a8be4152224969d763bd7b1eec4c874f409e24a404f842f0"
+    },
+    {
+      "path": "world/interior/chest_small.png",
+      "sha256": "37b411fb7190715416216c1cff36cd84f78fe400f2ec7d19aaff827399e7c3a0"
+    },
+    {
+      "path": "world/interior/fireplace.png",
+      "sha256": "5c3233e510bd9307be4150ee9480a8aa9dce242863800e830f31923576049b19"
+    },
+    {
+      "path": "world/interior/table_small.png",
+      "sha256": "fc76e16f59006bcbf0e283e8d6fde60fc5c4b812ecc10cf72389429ff2035768"
+    },
+    {
+      "path": "world/market/market_cloth_stall.png",
+      "sha256": "c64c779386a46e1a945912c812fcd344df29541dbcd465c9b03a19afd124abe5"
+    },
+    {
+      "path": "world/market/market_food_stall.png",
+      "sha256": "c419dad47e5233be4318365091fb326873fac3657748dfe0def4810f9c136435"
+    },
+    {
+      "path": "world/props/prop_tree.png",
+      "sha256": "bcdec8107b5bd7be490c8bf831d0889a82ac0ce94fe4713169ee2d24d6e058cf"
+    },
+    {
+      "path": "world/roofs/market_awning_overlay.png",
+      "sha256": "372feda41b86f0b3715e65974dce23a67d5c809009efcce92ba065499183b0eb"
+    },
+    {
+      "path": "world/roofs/roof_castle_overlay.png",
+      "sha256": "b2e188725e6ccc872221c3f608b65ff87bb7403b98bcec287cf844acf73b4738"
+    },
+    {
+      "path": "world/roofs/roof_red_large_overlay.png",
+      "sha256": "be7afe1b6d631b4322ad43f0c472c1495dbeb4487e52d0fdefcf432815c43641"
+    },
+    {
+      "path": "world/roofs/roof_red_small_overlay.png",
+      "sha256": "e2a5ec3e5d48c9c539f4f7ce4eec6dc3c94b7b784cc5827ba684a8057d47bb23"
+    },
+    {
+      "path": "world/sewer/sewer_grate.png",
+      "sha256": "541cd67ea05bf4a5d55cafe3904afa4eb9e5b548bee40b9c2da777a43467cf87"
+    },
+    {
+      "path": "world/sewer/sewer_pipe.png",
+      "sha256": "d79bf6177173ac23ad7cede8264c290c8445e5b51fff7bb5e1fd0c96639a0583"
+    },
+    {
+      "path": "world/sewer/slime_pool.png",
+      "sha256": "0ef7315d4a537cd1a5bc7c1bea5e213013212c0c2402fcdc8e0cba83ce0c019f"
+    },
+    {
+      "path": "world/swamp/swamp_bog_slime.png",
+      "sha256": "868052b9bfe12fc0870c21d1fb85f3755d99c29299194bbf7f2581ad84c73ab1"
+    },
+    {
+      "path": "world/swamp/swamp_bog_water.png",
+      "sha256": "b0775cba09eadf2fde241b35daa28cdcd03af6d23e99e0decd32b42f13f6d220"
+    },
+    {
+      "path": "world/swamp/swamp_dead_tree.png",
+      "sha256": "6051f7ebad68421f1e74469afe32a630b4142c40937e093c21ff1a5abfdde56c"
+    },
+    {
+      "path": "world/swamp/swamp_frog.png",
+      "sha256": "c867ef71e424a8afbf322741a6c3983a571a727db35e894c57aa0384e288d266"
+    },
+    {
+      "path": "world/swamp/swamp_log.png",
+      "sha256": "662e3c0dc166d54eca67772c5ac02266ed36c06d3c3dd930b7a4e38babbd85da"
+    },
+    {
+      "path": "world/swamp/swamp_mud.png",
+      "sha256": "3440b409df3dd0854f834e8afe2b6d7cfc46e17b19c454829dcf40c86658cfbd"
+    },
+    {
+      "path": "world/swamp/swamp_mushroom.png",
+      "sha256": "5e5b765afd4e10564813923ca53e47d2221def2eb4db27dae68a1efc92150578"
+    },
+    {
+      "path": "world/swamp/swamp_reeds.png",
+      "sha256": "97d93d40301c55ea180e5ecce6b86e01681644a1744fadd45488b6dd954e011d"
+    },
+    {
+      "path": "world/terrain/floor_cobble_01.png",
+      "sha256": "68fff6bc35f4ac501c5855a760fc4b2d6df8ee892e22b5ab4b0b362804a53099"
+    },
+    {
+      "path": "world/terrain/floor_stone_01.png",
+      "sha256": "3c6c02b3e6697366046bca1db1ad0b3914ec4e19842715dd1025204de3b85bc5"
+    },
+    {
+      "path": "world/terrain/floor_wood_01.png",
+      "sha256": "50f99a1b5a545148c1a46188c2403a831b18068163071b69d4304187905888e0"
+    },
+    {
+      "path": "world/terrain/grass_01.png",
+      "sha256": "41e49e3f873fe1215976440846b9ec668ee6d8e2a46f2a2ee83db395a1a5b6dd"
+    },
+    {
+      "path": "world/walls/wall_stone_corner_ne.png",
+      "sha256": "726539c46419b7242a64df25a33564622eea1c53599c5f52bafb18348ac2e4bb"
+    },
+    {
+      "path": "world/walls/wall_stone_corner_nw.png",
+      "sha256": "6763f194e12e4957bd8c59fe10b24541db02e5a39e35d3290e078eb0d9288fe6"
+    },
+    {
+      "path": "world/walls/wall_stone_north.png",
+      "sha256": "d30b7aaaf2280cc20c4db9f8284836a050439398bbd793d1ea86e51f3a5aca2a"
+    },
+    {
+      "path": "world/walls/wall_stone_south.png",
+      "sha256": "38a1a46cb41267f20a4543655be006522bb11f6df4ab18cbbbc8ccab699a514e"
+    }
+  ],
+  "atlas_generated_at": "2026-06-23T02:22:22.207Z"
+}

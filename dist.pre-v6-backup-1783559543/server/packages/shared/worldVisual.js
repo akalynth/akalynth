@@ -1,0 +1,106 @@
+// Akalynth world visual manifest types (PR-006).
+// Authoritative short registry IDs for placement JSON and registry cross-checks.
+// Placement files use snake_case; debug-client runtime adapters use camelCase.
+import { canonicalWorldAssetId } from './assetRegistry.js';
+export const WORLD_PLACEMENT_SCHEMA_VERSION = 1;
+/**
+ * MVP Rookguard subset: 38 base world visuals (excludes 4 High City castle/prison props).
+ * Ported from apps/debug-client/src/data/worldVisualAssets.ts WORLD_VISUAL_ASSET_IDS.
+ */
+export const MVP_ROOKGUARD_WORLD_ASSET_IDS = [
+    'banner_blue',
+    'banner_red',
+    'bench',
+    'bed_single',
+    'bookshelf',
+    'chair_wood',
+    'chest_small',
+    'door_wood_closed_east',
+    'door_wood_closed_south',
+    'door_wood_open_east',
+    'door_wood_open_south',
+    'fireplace',
+    'floor_cobble_01',
+    'floor_stone_01',
+    'floor_wood_01',
+    'fountain',
+    'grass_01',
+    'market_awning_overlay',
+    'market_cloth_stall',
+    'market_food_stall',
+    'notice_board',
+    'roof_castle_overlay',
+    'roof_red_large_overlay',
+    'roof_red_small_overlay',
+    'rookguard_amber_lantern',
+    'rookguard_bait_crate',
+    'rookguard_canal_reeds',
+    'rookguard_fishing_post',
+    'rookguard_supply_sack',
+    'rookguard_waymarker',
+    'sewer_grate',
+    'sewer_pipe',
+    'slime_pool',
+    'table_small',
+    'wall_stone_corner_ne',
+    'wall_stone_corner_nw',
+    'wall_stone_north',
+    'wall_stone_south',
+];
+/**
+ * Post-MVP deferred assets (13): High City castle/prison (4) + swamp extended (9).
+ * Ported from extendedWorldVisualAssets.ts + excluded base castle props.
+ */
+export const DEFERRED_WORLD_ASSET_IDS = [
+    'prison_bars',
+    'stone_column',
+    'throne',
+    'weapon_rack',
+    'prop_tree',
+    'swamp_bog_slime',
+    'swamp_bog_water',
+    'swamp_dead_tree',
+    'swamp_frog',
+    'swamp_log',
+    'swamp_mud',
+    'swamp_mushroom',
+    'swamp_reeds',
+];
+/** High City Lantern Ward native sprites (13). */
+export const HIGH_CITY_NATIVE_WORLD_ASSET_IDS = [
+    'high_city_lantern_post',
+    'high_city_sigil_banner_blue',
+    'high_city_sigil_banner_red',
+    'high_city_crystal_fountain',
+    'high_city_half_timber_wall_n',
+    'high_city_clay_roof_overlay',
+    'high_city_plot_stake',
+    'high_city_cobble_var_02',
+    'high_city_cobble_var_03',
+    'high_city_witness_lantern',
+    'high_city_merchant_crate',
+    'high_city_temple_brazier',
+    'high_city_grass_edge',
+];
+/** Full debug-client registry: 42 base + 9 extended + 13 High City native = 64. */
+export const ALL_WORLD_VISUAL_ASSET_IDS = [
+    ...MVP_ROOKGUARD_WORLD_ASSET_IDS,
+    ...DEFERRED_WORLD_ASSET_IDS,
+    ...HIGH_CITY_NATIVE_WORLD_ASSET_IDS,
+];
+const MVP_ROOKGUARD_SET = new Set(MVP_ROOKGUARD_WORLD_ASSET_IDS);
+const DEFERRED_SET = new Set(DEFERRED_WORLD_ASSET_IDS);
+const ALL_SET = new Set(ALL_WORLD_VISUAL_ASSET_IDS);
+export function isMvpRookguardAsset(id) {
+    return MVP_ROOKGUARD_SET.has(id);
+}
+export function isDeferredWorldAsset(id) {
+    return DEFERRED_SET.has(id);
+}
+export function isWorldVisualAssetId(id) {
+    return ALL_SET.has(id);
+}
+/** Resolve placement short id to canonical registry asset_id (akalynth_world_<id>). */
+export function canonicalPlacementAssetId(shortId) {
+    return canonicalWorldAssetId(shortId);
+}

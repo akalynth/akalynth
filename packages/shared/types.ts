@@ -178,11 +178,34 @@ export interface OnwardRouteProgress {
   receipt_actions: string[];
 }
 
+export type RookguardFishingPhase = 'ready' | 'recovering';
+export type RookguardFishingMerchantBehavior = 'unaware' | 'noticing_patience';
+
+/** Receipt-derived public state for the existing Rookguard Fish action. */
+export interface RookguardFishingProgress {
+  activity_id: 'rookguard_canal_fishing_v1';
+  map: 'Rookguard';
+  place_id: 'rookguard_canal';
+  phase: RookguardFishingPhase;
+  catch_state: 'nothing_tradeable' | null;
+  cast_count: number;
+  merchant_behavior: RookguardFishingMerchantBehavior;
+  merchant_respect: number;
+  merchant_memory: string | null;
+  last_event_id: string | null;
+  last_actor: string | null;
+  last_fished_at_ms: number | null;
+  recovers_at_ms: number | null;
+  remaining_recovery_ms: number;
+  next_consequence: string;
+}
+
 export interface PlayLoopProgress extends TutorialProgress {
   gateOpen: boolean;
   objective: string;
   rookguardQuest?: RookguardQuestProgress;
   onwardRoutes?: OnwardRouteProgress[];
+  fishing?: RookguardFishingProgress;
   lastEvent?: string | null;
   teaser?: {
     id: 'ember_road_marker';

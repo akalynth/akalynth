@@ -4,8 +4,13 @@
 import type Database from 'better-sqlite3';
 import type { AuditReceipt } from '../../../../packages/shared/types.js';
 import { THROTTLE_DURATION_MS } from '../../../../packages/shared/types.js';
+import { ROOKGUARD_CANAL_FISHED_ACTION } from '../../../../packages/shared/skills.js';
 import { ACTION_ALIASES, RECEIPT_ACTIONS } from './types.js';
 import { computeReceiptHash, hashUtf8Hex } from './hash.js';
+import {
+  ROOKGUARD_FISHING_ACTIVITY_ID,
+  ROOKGUARD_FISHING_MERCHANT_REACTED_ACTION,
+} from '../world/rookguardFishing.js';
 
 // ============================================================================
 // Item ID Derivation
@@ -1764,6 +1769,48 @@ export function materializeChronicle(
         recovered_count: inputs.recovered_count ?? null,
         required_evidence_count: inputs.required_evidence_count ?? null,
         unlocked: inputs.unlocked ?? null,
+      });
+      break;
+    }
+
+    // Existing Fish action: canonical receipts project onto the Chronicle's
+    // established world_event kind, so current clients can render the causal
+    // resolution and merchant reaction without a new UI or message type.
+    case ROOKGUARD_CANAL_FISHED_ACTION: {
+      if (receipt.result !== 'ok' || !playerId) break;
+      const instanceId = (inputs.event_id as string | undefined)
+        ?? `${ROOKGUARD_FISHING_ACTIVITY_ID}:${receipt.sequence}`;
+      insertChronicleEvent(db, playerId, 'world_event', timestamp, originalAction, receiptHash, 'Rookguard', null, null, instanceId, {
+        event_id: 'rookguard_canal_fishing',
+        event_instance_id: instanceId,
+        phase: 'resolved',
+        outcome: (inputs.catch_state as string | undefined) ?? 'nothing_tradeable',
+        activity_id: inputs.activity_id ?? ROOKGUARD_FISHING_ACTIVITY_ID,
+        place_id: inputs.place_id ?? 'rookguard_canal',
+        recovers_at_ms: inputs.recovers_at_ms ?? null,
+        memory: inputs.memory ?? null,
+        economy_impact: inputs.economy_impact ?? 'none',
+      });
+      break;
+    }
+
+    case ROOKGUARD_FISHING_MERCHANT_REACTED_ACTION: {
+      if (receipt.result !== 'ok' || !playerId) break;
+      const instanceId = (inputs.event_id as string | undefined)
+        ?? `${ROOKGUARD_FISHING_ACTIVITY_ID}:${receipt.sequence}:merchant`;
+      const after = inputs.state_after !== null && typeof inputs.state_after === 'object'
+        ? inputs.state_after as Record<string, unknown>
+        : {};
+      insertChronicleEvent(db, playerId, 'world_event', timestamp, originalAction, receiptHash, 'Rookguard', null, null, instanceId, {
+        event_id: 'rookguard_canal_merchant',
+        event_instance_id: instanceId,
+        phase: 'agent_reaction',
+        outcome: after.merchant_behavior ?? 'noticing_patience',
+        activity_id: inputs.activity_id ?? ROOKGUARD_FISHING_ACTIVITY_ID,
+        agent_id: inputs.agent_id ?? null,
+        parent_event_id: inputs.parent_event_id ?? null,
+        memory: inputs.memory ?? null,
+        economy_impact: inputs.economy_impact ?? 'none',
       });
       break;
     }

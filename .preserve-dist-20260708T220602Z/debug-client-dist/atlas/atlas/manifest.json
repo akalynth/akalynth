@@ -1,0 +1,993 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-06-23T02:22:22.203Z",
+  "max_sheet_size": 2048,
+  "padding_px": 2,
+  "filtering": "nearest",
+  "sheets": [
+    {
+      "sheet": "ui.png",
+      "bytes": 34408,
+      "sprites": 13,
+      "width": 452,
+      "height": 68
+    },
+    {
+      "sheet": "items.png",
+      "bytes": 787,
+      "sprites": 20,
+      "width": 682,
+      "height": 36
+    },
+    {
+      "sheet": "chronicle.png",
+      "bytes": 522,
+      "sprites": 9,
+      "width": 308,
+      "height": 36
+    },
+    {
+      "sheet": "world.png",
+      "bytes": 58953,
+      "sprites": 64,
+      "width": 2018,
+      "height": 488
+    }
+  ],
+  "sprites": [
+    {
+      "asset_id": "akalynth_ui_ui_dpad_frame",
+      "sheet": "ui.png",
+      "x": 2,
+      "y": 2,
+      "w": 64,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_ui_ui_panel_frame",
+      "sheet": "ui.png",
+      "x": 68,
+      "y": 2,
+      "w": 48,
+      "h": 48,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_ui_ui_dock_frame",
+      "sheet": "ui.png",
+      "x": 118,
+      "y": 2,
+      "w": 40,
+      "h": 40,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_ui_ui_action_ring",
+      "sheet": "ui.png",
+      "x": 160,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_ui_ui_action_ring_danger",
+      "sheet": "ui.png",
+      "x": 194,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_ui_ui_action_ring_pressed",
+      "sheet": "ui.png",
+      "x": 228,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_ui_ui_button_frame",
+      "sheet": "ui.png",
+      "x": 262,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_ui_ui_button_pressed_frame",
+      "sheet": "ui.png",
+      "x": 296,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_ui_ui_dpad_button",
+      "sheet": "ui.png",
+      "x": 330,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_ui_ui_dpad_button_pressed",
+      "sheet": "ui.png",
+      "x": 364,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_ui_ui_bar_track",
+      "sheet": "ui.png",
+      "x": 398,
+      "y": 2,
+      "w": 16,
+      "h": 6,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_ui_ui_hp_fill",
+      "sheet": "ui.png",
+      "x": 416,
+      "y": 2,
+      "w": 16,
+      "h": 4,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_ui_ui_mp_fill",
+      "sheet": "ui.png",
+      "x": 434,
+      "y": 2,
+      "w": 16,
+      "h": 4,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_item_ashglass_shard_001",
+      "sheet": "items.png",
+      "x": 2,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_item_charred_shipment_plate_001",
+      "sheet": "items.png",
+      "x": 36,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_item_city_rat_goo_001",
+      "sheet": "items.png",
+      "x": 70,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_item_healing_herb_001",
+      "sheet": "items.png",
+      "x": 104,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_item_keystone_token_001",
+      "sheet": "items.png",
+      "x": 138,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_item_ley_mote_001",
+      "sheet": "items.png",
+      "x": 172,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_item_mark_token_001",
+      "sheet": "items.png",
+      "x": 206,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_item_pilgrim_mark_001",
+      "sheet": "items.png",
+      "x": 240,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_item_ration_001",
+      "sheet": "items.png",
+      "x": 274,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_item_refined_ley_mote_001",
+      "sheet": "items.png",
+      "x": 308,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_item_refined_soulsteel_component_001",
+      "sheet": "items.png",
+      "x": 342,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_item_rookguard_patience_charm_001",
+      "sheet": "items.png",
+      "x": 376,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_item_rookguard_threadbare_cloak_001",
+      "sheet": "items.png",
+      "x": 410,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_item_rookguard_training_blade_001",
+      "sheet": "items.png",
+      "x": 444,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_item_slime_001",
+      "sheet": "items.png",
+      "x": 478,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_item_soulsteel_frame_001",
+      "sheet": "items.png",
+      "x": 512,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_item_stabilized_soulsteel_component_001",
+      "sheet": "items.png",
+      "x": 546,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_item_tending_token_001",
+      "sheet": "items.png",
+      "x": 580,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_item_torch_001",
+      "sheet": "items.png",
+      "x": 614,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_item_training_slime_goo_001",
+      "sheet": "items.png",
+      "x": 648,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_effect_chronicle_combat_001",
+      "sheet": "chronicle.png",
+      "x": 2,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_effect_chronicle_create_001",
+      "sheet": "chronicle.png",
+      "x": 36,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_effect_chronicle_death_001",
+      "sheet": "chronicle.png",
+      "x": 70,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_effect_chronicle_drop_001",
+      "sheet": "chronicle.png",
+      "x": 104,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_effect_chronicle_pickup_001",
+      "sheet": "chronicle.png",
+      "x": 138,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_effect_chronicle_tutorial_001",
+      "sheet": "chronicle.png",
+      "x": 172,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_effect_chronicle_unknown_001",
+      "sheet": "chronicle.png",
+      "x": 206,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_effect_chronicle_world_001",
+      "sheet": "chronicle.png",
+      "x": 240,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_effect_chronicle_zone_001",
+      "sheet": "chronicle.png",
+      "x": 274,
+      "y": 2,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_roof_castle_overlay",
+      "sheet": "world.png",
+      "x": 2,
+      "y": 2,
+      "w": 512,
+      "h": 320,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_roof_red_large_overlay",
+      "sheet": "world.png",
+      "x": 516,
+      "y": 2,
+      "w": 384,
+      "h": 224,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_market_awning_overlay",
+      "sheet": "world.png",
+      "x": 902,
+      "y": 2,
+      "w": 384,
+      "h": 160,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_roof_red_small_overlay",
+      "sheet": "world.png",
+      "x": 1288,
+      "y": 2,
+      "w": 256,
+      "h": 160,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_market_cloth_stall",
+      "sheet": "world.png",
+      "x": 1546,
+      "y": 2,
+      "w": 160,
+      "h": 128,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_market_food_stall",
+      "sheet": "world.png",
+      "x": 1708,
+      "y": 2,
+      "w": 160,
+      "h": 128,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_fountain",
+      "sheet": "world.png",
+      "x": 1870,
+      "y": 2,
+      "w": 128,
+      "h": 128,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_notice_board",
+      "sheet": "world.png",
+      "x": 2,
+      "y": 324,
+      "w": 128,
+      "h": 96,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_banner_blue",
+      "sheet": "world.png",
+      "x": 132,
+      "y": 324,
+      "w": 64,
+      "h": 96,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_banner_red",
+      "sheet": "world.png",
+      "x": 198,
+      "y": 324,
+      "w": 64,
+      "h": 96,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_throne",
+      "sheet": "world.png",
+      "x": 264,
+      "y": 324,
+      "w": 64,
+      "h": 96,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_bed_single",
+      "sheet": "world.png",
+      "x": 330,
+      "y": 324,
+      "w": 64,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_bookshelf",
+      "sheet": "world.png",
+      "x": 396,
+      "y": 324,
+      "w": 64,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_chair_wood",
+      "sheet": "world.png",
+      "x": 462,
+      "y": 324,
+      "w": 64,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_chest_small",
+      "sheet": "world.png",
+      "x": 528,
+      "y": 324,
+      "w": 64,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_door_wood_closed_east",
+      "sheet": "world.png",
+      "x": 594,
+      "y": 324,
+      "w": 64,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_door_wood_closed_south",
+      "sheet": "world.png",
+      "x": 660,
+      "y": 324,
+      "w": 64,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_door_wood_open_east",
+      "sheet": "world.png",
+      "x": 726,
+      "y": 324,
+      "w": 64,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_door_wood_open_south",
+      "sheet": "world.png",
+      "x": 792,
+      "y": 324,
+      "w": 64,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_fireplace",
+      "sheet": "world.png",
+      "x": 858,
+      "y": 324,
+      "w": 64,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_floor_cobble_01",
+      "sheet": "world.png",
+      "x": 924,
+      "y": 324,
+      "w": 64,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_floor_stone_01",
+      "sheet": "world.png",
+      "x": 990,
+      "y": 324,
+      "w": 64,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_floor_wood_01",
+      "sheet": "world.png",
+      "x": 1056,
+      "y": 324,
+      "w": 64,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_prison_bars",
+      "sheet": "world.png",
+      "x": 1122,
+      "y": 324,
+      "w": 64,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_sewer_grate",
+      "sheet": "world.png",
+      "x": 1188,
+      "y": 324,
+      "w": 64,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_sewer_pipe",
+      "sheet": "world.png",
+      "x": 1254,
+      "y": 324,
+      "w": 64,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_slime_pool",
+      "sheet": "world.png",
+      "x": 1320,
+      "y": 324,
+      "w": 64,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_stone_column",
+      "sheet": "world.png",
+      "x": 1386,
+      "y": 324,
+      "w": 64,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_table_small",
+      "sheet": "world.png",
+      "x": 1452,
+      "y": 324,
+      "w": 64,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_wall_stone_corner_ne",
+      "sheet": "world.png",
+      "x": 1518,
+      "y": 324,
+      "w": 64,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_wall_stone_corner_nw",
+      "sheet": "world.png",
+      "x": 1584,
+      "y": 324,
+      "w": 64,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_wall_stone_north",
+      "sheet": "world.png",
+      "x": 1650,
+      "y": 324,
+      "w": 64,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_wall_stone_south",
+      "sheet": "world.png",
+      "x": 1716,
+      "y": 324,
+      "w": 64,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_weapon_rack",
+      "sheet": "world.png",
+      "x": 1782,
+      "y": 324,
+      "w": 64,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_high_city_crystal_fountain",
+      "sheet": "world.png",
+      "x": 1848,
+      "y": 324,
+      "w": 32,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_high_city_lantern_post",
+      "sheet": "world.png",
+      "x": 1882,
+      "y": 324,
+      "w": 32,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_high_city_sigil_banner_blue",
+      "sheet": "world.png",
+      "x": 1916,
+      "y": 324,
+      "w": 32,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_high_city_sigil_banner_red",
+      "sheet": "world.png",
+      "x": 1950,
+      "y": 324,
+      "w": 32,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_high_city_temple_brazier",
+      "sheet": "world.png",
+      "x": 1984,
+      "y": 324,
+      "w": 32,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_high_city_witness_lantern",
+      "sheet": "world.png",
+      "x": 2,
+      "y": 422,
+      "w": 32,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_prop_tree",
+      "sheet": "world.png",
+      "x": 36,
+      "y": 422,
+      "w": 32,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_rookguard_amber_lantern",
+      "sheet": "world.png",
+      "x": 70,
+      "y": 422,
+      "w": 32,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_rookguard_canal_reeds",
+      "sheet": "world.png",
+      "x": 104,
+      "y": 422,
+      "w": 32,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_rookguard_fishing_post",
+      "sheet": "world.png",
+      "x": 138,
+      "y": 422,
+      "w": 32,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_rookguard_waymarker",
+      "sheet": "world.png",
+      "x": 172,
+      "y": 422,
+      "w": 32,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_swamp_dead_tree",
+      "sheet": "world.png",
+      "x": 206,
+      "y": 422,
+      "w": 32,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_swamp_reeds",
+      "sheet": "world.png",
+      "x": 240,
+      "y": 422,
+      "w": 32,
+      "h": 64,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_bench",
+      "sheet": "world.png",
+      "x": 274,
+      "y": 422,
+      "w": 96,
+      "h": 48,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_grass_01",
+      "sheet": "world.png",
+      "x": 372,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_high_city_clay_roof_overlay",
+      "sheet": "world.png",
+      "x": 406,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_high_city_cobble_var_02",
+      "sheet": "world.png",
+      "x": 440,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_high_city_cobble_var_03",
+      "sheet": "world.png",
+      "x": 474,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_high_city_grass_edge",
+      "sheet": "world.png",
+      "x": 508,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_high_city_half_timber_wall_n",
+      "sheet": "world.png",
+      "x": 542,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_high_city_merchant_crate",
+      "sheet": "world.png",
+      "x": 576,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_high_city_plot_stake",
+      "sheet": "world.png",
+      "x": 610,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_rookguard_bait_crate",
+      "sheet": "world.png",
+      "x": 644,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_rookguard_supply_sack",
+      "sheet": "world.png",
+      "x": 678,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_swamp_bog_slime",
+      "sheet": "world.png",
+      "x": 712,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_swamp_bog_water",
+      "sheet": "world.png",
+      "x": 746,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_swamp_frog",
+      "sheet": "world.png",
+      "x": 780,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_swamp_log",
+      "sheet": "world.png",
+      "x": 814,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_swamp_mud",
+      "sheet": "world.png",
+      "x": 848,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    },
+    {
+      "asset_id": "akalynth_world_swamp_mushroom",
+      "sheet": "world.png",
+      "x": 882,
+      "y": 422,
+      "w": 32,
+      "h": 32,
+      "padding": 2
+    }
+  ]
+}

@@ -17,6 +17,7 @@ import { applyReceiptToPresence, clearPresenceProjection } from '../world/presen
 import { applyReceiptToProperty, clearPropertyProjection } from '../world/property.js';
 import { applyReceiptToRookguardQuest, clearRookguardQuestProjection } from '../world/rookguardQuest.js';
 import { applyReceiptToOnwardRoutes, clearOnwardRouteProjection } from '../world/onwardRoutes.js';
+import { applyReceiptToRookguardFishing, clearRookguardFishingProjection } from '../world/rookguardFishing.js';
 
 // ============================================================================
 // Replay Configuration
@@ -119,6 +120,7 @@ export function replayReceipts(config: ReplayConfig): ReplayResult {
   clearPropertyProjection();
   clearRookguardQuestProjection();
   clearOnwardRouteProjection();
+  clearRookguardFishingProjection();
 
   // Open file from BEGINNING (identity needs all receipts, DB only needs new ones)
   const fd = fs.openSync(receiptsPath, 'r');
@@ -203,6 +205,7 @@ export function replayReceipts(config: ReplayConfig): ReplayResult {
         applyReceiptToProperty(receipt);
         applyReceiptToRookguardQuest(receipt);
         applyReceiptToOnwardRoutes(receipt);
+        applyReceiptToRookguardFishing(receipt);
 
         // Only materialize to DB if this is a new receipt (after startOffset)
         if (offsetBeforeLine >= startOffset) {

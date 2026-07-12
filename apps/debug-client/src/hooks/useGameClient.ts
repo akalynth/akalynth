@@ -1333,6 +1333,16 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
               const skillId = typeof data.skill_id === 'string' ? data.skill_id : '';
               const success = data.success === true;
               const payload = data.payload as Record<string, unknown> | undefined;
+              if (skillId === 'activity:fishing:rookguard') {
+                const line = success
+                  ? typeof payload?.line === 'string'
+                    ? payload.line
+                    : 'The canal merchant notices your patience.'
+                  : data.reason === 'cooldown'
+                    ? 'The canal is still settling.'
+                    : 'Fishing is unavailable here.';
+                return pushToast(s, 'objective', line, 'FISH');
+              }
               if (skillId.startsWith('item:use:')) {
                 const effect = typeof payload?.effect === 'string' ? payload.effect : 'Used.';
                 const line = success ? effect : 'Cannot use that item here.';

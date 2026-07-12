@@ -183,6 +183,27 @@ class ProtocolParityTest {
     }
 
     @Test
+    fun `Fish action sends only the existing use_skill intent`() {
+        val obj = json.decodeFromString<JsonObject>(
+            MessageSerializer.encodeClient(UseSkillMessage("activity:fishing:rookguard"))
+        )
+        assertEquals("use_skill", obj["type"]!!.jsonPrimitive.content)
+        assertEquals("activity:fishing:rookguard", obj["skill_id"]!!.jsonPrimitive.content)
+        assertFalse(obj.containsKey("target_id"))
+        assertNoClientAuthorityFields(obj)
+    }
+
+    @Test
+    fun `world_state decodes outfit_colors on player snapshot`() {
+        val msg = MessageSerializer.decodeServer(
+            """{"type":"world_state","map":"Rookguard","player":{"id":"p_guard","name":"Guard","x":3,"y":4,"sprite_id":"guard_city_01","outfit_colors":{"head":9,"body":26,"legs":20,"feet":38}},"nearby_players":[]}"""
+        ) as WorldStateMessage
+        assertEquals(9, msg.player.outfitColors?.head)
+        assertEquals(26, msg.player.outfitColors?.body)
+        assertEquals("guard_city_01", msg.player.spriteId)
+    }
+
+    @Test
     fun `rookguard training slime sprite id decodes as display-only player metadata`() {
         val message = MessageSerializer.decodeServer(
             """{"type":"world_state","map":"Rookguard","player":{"id":"p","name":"n","x":1,"y":1},"nearby_players":[{"id":"mob:training_slime","name":"Training Slime","x":14,"y":14,"status":"alive","sprite_id":"akalynth_creature_rookguard_training_slime_001","badges":["mob"],"mark":"training_mob"}]}"""
@@ -320,6 +341,24 @@ class ProtocolParityTest {
         assertTrue(route.objectives.any { it.system == "dream_gate" })
         assertTrue(route.objectives.any { it.system == "android" })
         assertTrue(route.objectives.any { it.system == "anti_cheat" })
+    }
+
+    @Test
+    fun loopUpdateDecodesReceiptReplayedRookguardFishingState() {
+        val decoded = MessageSerializer.decodeServer(
+            """{"type":"loop_update","event":"rookguard_fishing_resolved","loop":{"objective":"Fish the Rookguard canal","fishing":{"activity_id":"rookguard_canal_fishing_v1","map":"Rookguard","place_id":"rookguard_canal","phase":"recovering","catch_state":"nothing_tradeable","cast_count":1,"merchant_behavior":"noticing_patience","merchant_respect":1,"merchant_memory":"Arin fished patiently.","last_event_id":"rookguard_canal_fishing_v1:1","last_actor":"p:arin","last_fished_at_ms":1760000000000,"recovers_at_ms":1760000020000,"remaining_recovery_ms":19000,"next_consequence":"The canal is settling."}}}"""
+        ) as LoopUpdateMessage
+
+        val fishing = decoded.loop.fishing
+        assertEquals("rookguard_fishing_resolved", decoded.event)
+        assertEquals("recovering", fishing?.phase)
+        assertEquals("nothing_tradeable", fishing?.catchState)
+        assertEquals(1, fishing?.castCount)
+        assertEquals("noticing_patience", fishing?.merchantBehavior)
+        assertEquals(1, fishing?.merchantRespect)
+        assertEquals(1760000020000L, fishing?.recoversAtMs)
+        assertEquals(19000L, fishing?.remainingRecoveryMs)
+        assertEquals("p:arin", fishing?.lastActor)
     }
 
     @Test

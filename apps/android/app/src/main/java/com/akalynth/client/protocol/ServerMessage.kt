@@ -124,6 +124,25 @@ data class OnwardRouteProgress(
 )
 
 @Serializable
+data class RookguardFishingProgress(
+    @SerialName("activity_id") val activityId: String = "rookguard_canal_fishing_v1",
+    val map: MapName = MapName.ROOKGUARD,
+    @SerialName("place_id") val placeId: String = "rookguard_canal",
+    val phase: String = "ready",
+    @SerialName("catch_state") val catchState: String? = null,
+    @SerialName("cast_count") val castCount: Int = 0,
+    @SerialName("merchant_behavior") val merchantBehavior: String = "unaware",
+    @SerialName("merchant_respect") val merchantRespect: Int = 0,
+    @SerialName("merchant_memory") val merchantMemory: String? = null,
+    @SerialName("last_event_id") val lastEventId: String? = null,
+    @SerialName("last_actor") val lastActor: String? = null,
+    @SerialName("last_fished_at_ms") val lastFishedAtMs: Long? = null,
+    @SerialName("recovers_at_ms") val recoversAtMs: Long? = null,
+    @SerialName("remaining_recovery_ms") val remainingRecoveryMs: Long = 0,
+    @SerialName("next_consequence") val nextConsequence: String = "Fish the Rookguard canal."
+)
+
+@Serializable
 data class PlayLoopProgress(
     val move: Boolean = false,
     val chat: Boolean = false,
@@ -134,7 +153,8 @@ data class PlayLoopProgress(
     val objective: String = "",
     val rookguardQuest: RookguardQuestProgress? = null,
     val onwardRoutes: List<OnwardRouteProgress> = emptyList(),
-    val lastEvent: String? = null
+    val lastEvent: String? = null,
+    val fishing: RookguardFishingProgress? = null
 )
 
 @Serializable

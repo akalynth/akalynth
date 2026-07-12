@@ -84,6 +84,27 @@ class ChronicleSnapshotMapperTest {
     }
 
     @Test
+    fun mapsFishingMerchantReactionThroughExistingWorldEventShape() {
+        val event = ChronicleSnapshotMapper.mapEvent(
+            WireChronicleEvent(
+                kind = "world_event",
+                timestamp = "2026-06-06T08:12:00Z",
+                zone = "Rookguard",
+                details = buildJsonObject {
+                    put("event_id", "rookguard_canal_merchant")
+                    put("phase", "agent_reaction")
+                    put("outcome", "noticing_patience")
+                }
+            )
+        )
+
+        assertEquals(ChronicleEventKind.WORLD_EVENT, event.kind)
+        assertEquals("rookguard_canal_merchant", event.details.eventId)
+        assertEquals("agent_reaction", event.details.phase)
+        assertEquals("noticing_patience", event.details.outcome)
+    }
+
+    @Test
     fun missingOptionalFieldsUseHonestFallbacks() {
         val event = ChronicleSnapshotMapper.mapEvent(
             WireChronicleEvent(

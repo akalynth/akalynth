@@ -34,6 +34,7 @@ import com.akalynth.client.ui.render.WorldSprite
 import com.akalynth.client.ui.render.drawRegistryWorldOverlay
 import com.akalynth.client.ui.render.rememberAssetRegistry
 import com.akalynth.client.ui.render.rememberThermalTargetFps
+import com.akalynth.client.ui.render.rememberOutfitRecolorCache
 import com.akalynth.client.ui.render.rememberWorldSprites
 import kotlin.math.floor
 import kotlin.math.roundToInt
@@ -106,6 +107,7 @@ fun GameCanvas(
     val clock = remember { RenderClock(targetFps = { targetFps.value }) }
     // Display-only pixel art bundled in assets; absent keys fall back to procedural shapes below.
     val sprites = rememberWorldSprites()
+    val outfitRecolorCache = rememberOutfitRecolorCache()
     // World PNG overlays from compiled registry.json; absent keys fall back to procedural landmarks.
     val assetRegistry = rememberAssetRegistry()
     // Registry-driven placements (e.g. Rookguard overlays from placements/rookguard-overlays.json).
@@ -240,7 +242,12 @@ fun GameCanvas(
                 ?: TilePos(other.x.toFloat(), other.y.toFloat())
             val ex = centerX + (pos.x - camX) * tileSize
             val ey = centerY + (pos.y - camY) * tileSize
-            val creatureSprite = other.spriteId?.let { sprites.creatures[it] ?: sprites.characters[it] }
+            val baseCharacter = other.spriteId?.let { sprites.characters[it] }
+            val creatureSprite = other.spriteId?.let { id ->
+                sprites.creatures[id]
+                    ?: outfitRecolorCache.resolve(context, id, baseCharacter, other.outfitColors)
+                    ?: baseCharacter
+            }
             if (creatureSprite != null && other.status != PlayerStatus.DEAD) {
                 drawCreatureSprite(creatureSprite, ex, ey, tileSize)
             } else {
@@ -256,7 +263,10 @@ fun GameCanvas(
         }
 
         // Draw self (always at the camera centre, since the camera follows the smoothed self).
-        val selfSprite = player.spriteId?.let { sprites.characters[it] }
+        val selfBase = player.spriteId?.let { sprites.characters[it] }
+        val selfSprite = player.spriteId?.let { id ->
+            outfitRecolorCache.resolve(context, id, selfBase, player.outfitColors) ?: selfBase
+        }
         if (selfSprite != null && player.status != PlayerStatus.DEAD) {
             drawCreatureSprite(selfSprite, centerX, centerY, tileSize)
         } else {
