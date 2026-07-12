@@ -1,0 +1,159 @@
+// Receipt Chain Verification and Replay
+// Cryptographic integrity verification and deterministic state reconstruction
+import fs from 'node:fs';
+import { verifyChainLink, verifyGenesisReceipt, verifyReceiptHashes, verifyEventSignature, } from './hasher.js';
+import { loadVerifyingKey, resolveKeyPath, isProductionMode } from './key.js';
+// ============================================================================
+// Chain Verification
+// ============================================================================
+/**
+ * Verify complete receipt chain integrity
+ */
+export async function verifyChain(receipts) {
+    if (receipts.length === 0) {
+        return {
+            receipts: [],
+            integrity: 'valid',
+            last_hash: null,
+        };
+    }
+    const publicKey = loadPublicKey();
+    // Verify each receipt's hash
+    for (const receipt of receipts) {
+        const hashCheck = verifyReceiptHashes(receipt);
+        if (!hashCheck.ok) {
+            return {
+                receipts,
+                integrity: 'broken',
+                last_hash: null,
+            };
+        }
+        const signatureValid = verifyEventSignature(receipt.prev_hash, receipt.event_hash, receipt.signature, publicKey);
+        if (!signatureValid) {
+            return {
+                receipts,
+                integrity: 'broken',
+                last_hash: null,
+            };
+        }
+    }
+    // Verify genesis receipt
+    if (!verifyGenesisReceipt(receipts[0])) {
+        return {
+            receipts,
+            integrity: 'broken',
+            last_hash: null,
+        };
+    }
+    // Verify chain links
+    for (let i = 1; i < receipts.length; i++) {
+        if (!verifyChainLink(receipts[i - 1], receipts[i])) {
+            return {
+                receipts,
+                integrity: 'broken',
+                last_hash: null,
+            };
+        }
+    }
+    const lastHash = receipts.length > 0 ? receipts[receipts.length - 1].event_hash : null;
+    return {
+        receipts,
+        integrity: 'valid',
+        last_hash: lastHash,
+    };
+}
+/**
+ * Load and verify receipts from JSONL file
+ */
+export async function loadAndVerifyChain(filePath) {
+    try {
+        const content = fs.readFileSync(filePath, 'utf-8');
+        const lines = content.trim().split('\n').filter(line => line.length > 0);
+        const receipts = lines.map(line => {
+            try {
+                return JSON.parse(line);
+            }
+            catch (error) {
+                throw new Error(`Invalid JSON in receipt: ${line}`);
+            }
+        });
+        return await verifyChain(receipts);
+    }
+    catch (error) {
+        throw new Error(`Failed to load receipt chain: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+}
+// ============================================================================
+// State Replay
+// ============================================================================
+/**
+ * Replay receipts through a reducer to reconstruct state
+ */
+export async function replay(receipts, reducer, initialState) {
+    // First verify chain integrity
+    const verification = await verifyChain(receipts);
+    if (verification.integrity === 'broken') {
+        throw new Error('Cannot replay: receipt chain integrity is broken');
+    }
+    // Apply reducer to each receipt in order
+    let state = initialState;
+    for (const receipt of receipts) {
+        try {
+            state = reducer(state, receipt);
+        }
+        catch (error) {
+            throw new Error(`Reducer failed at receipt ${receipt.event_hash}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    }
+    return state;
+}
+/**
+ * Replay receipts from JSONL file
+ */
+export async function replayFromFile(filePath, reducer, initialState) {
+    const verification = await loadAndVerifyChain(filePath);
+    return await replay(verification.receipts, reducer, initialState);
+}
+// ============================================================================
+// Diagnostic Utilities
+// ============================================================================
+/**
+ * Generate integrity report for debugging
+ */
+export function generateIntegrityReport(receipts) {
+    const report = {
+        total_receipts: receipts.length,
+        hash_failures: 0,
+        chain_breaks: 0,
+        genesis_valid: receipts.length > 0 ? verifyGenesisReceipt(receipts[0]) : true,
+        first_error: undefined,
+    };
+    // Check hash integrity
+    for (let i = 0; i < receipts.length; i++) {
+        const hashCheck = verifyReceiptHashes(receipts[i]);
+        if (!hashCheck.ok) {
+            report.hash_failures++;
+            if (!report.first_error) {
+                report.first_error = `Hash failure at receipt ${i}: ${receipts[i].event_hash}`;
+            }
+        }
+    }
+    // Check chain links
+    for (let i = 1; i < receipts.length; i++) {
+        if (!verifyChainLink(receipts[i - 1], receipts[i])) {
+            report.chain_breaks++;
+            if (!report.first_error) {
+                report.first_error = `Chain break between receipts ${i - 1} and ${i}`;
+            }
+        }
+    }
+    return report;
+}
+function loadPublicKey() {
+    // Production key discipline check
+    if (isProductionMode() && !process.env.CHRONICLE_KEY_PATH) {
+        throw new Error('CHRONICLE_KEY_PATH is required in production');
+    }
+    const keyPath = resolveKeyPath();
+    return loadVerifyingKey(keyPath);
+}

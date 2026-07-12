@@ -161,6 +161,39 @@ fdroid.akalynth.com {
 codex.akalynth.com {
 	encode zstd gzip
 	root * /var/www/akalynth-codex
+	@codex_tab_route path_regexp ^/(index|codex|play|outfits|atlas|behavior|agent|gaps)/?$
+	handle /gaps/gap-ledger.js {
+		rewrite * /akalynth-ledger.js
+		file_server
+	}
+	handle @codex_tab_route {
+		try_files {path} /index.html
+		file_server
+	}
+	handle_path /index/* {
+		file_server
+	}
+	handle_path /play/* {
+		file_server
+	}
+	handle_path /codex/* {
+		file_server
+	}
+	handle_path /outfits/* {
+		file_server
+	}
+	handle /atlas/* {
+		file_server
+	}
+	handle_path /behavior/* {
+		file_server
+	}
+	handle_path /agent/* {
+		file_server
+	}
+	handle_path /gaps/* {
+		file_server
+	}
 	file_server
 	log {
 		output file /var/log/caddy/akalynth-codex.log

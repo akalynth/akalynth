@@ -1,0 +1,942 @@
+// Akalynth Persistence Schema
+// Phase 2: Identity, Death, Reputation, World Objects, Items, Inventory
+// ============================================================================
+// Schema Version
+// ============================================================================
+export const SCHEMA_VERSION = 24;
+// ============================================================================
+// DDL Statements
+// ============================================================================
+const DDL_PLAYERS = `
+CREATE TABLE IF NOT EXISTS players (
+  player_id       TEXT PRIMARY KEY,
+  name            TEXT NOT NULL,
+  created_at      TEXT NOT NULL,
+  created_receipt TEXT NOT NULL UNIQUE,
+  deleted_at      TEXT DEFAULT NULL,
+  auth_method     TEXT NOT NULL DEFAULT 'guest',
+  name_lower      TEXT,
+  origin_receipt_id TEXT DEFAULT NULL,
+  origin_action     TEXT DEFAULT NULL,
+  origin_sealed_at  TEXT DEFAULT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_players_name ON players(name);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_players_name_lower ON players(name_lower) WHERE deleted_at IS NULL;
+`;
+const DDL_REPUTATION_EVENTS = `
+CREATE TABLE IF NOT EXISTS reputation_events (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  player_id       TEXT NOT NULL,
+  event_type      TEXT NOT NULL,
+  delta           INTEGER NOT NULL,
+  timestamp       TEXT NOT NULL,
+  receipt_hash    TEXT NOT NULL UNIQUE,
+  witnesses       TEXT DEFAULT NULL,
+  context         TEXT DEFAULT NULL,
+  FOREIGN KEY (player_id) REFERENCES players(player_id)
+);
+CREATE INDEX IF NOT EXISTS idx_rep_player_ts ON reputation_events(player_id, timestamp);
+`;
+const DDL_DEATHS = `
+CREATE TABLE IF NOT EXISTS deaths (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  player_id       TEXT NOT NULL,
+  zone            TEXT NOT NULL,
+  x               INTEGER NOT NULL,
+  y               INTEGER NOT NULL,
+  timestamp       TEXT NOT NULL,
+  cause           TEXT NOT NULL,
+  receipt_hash    TEXT NOT NULL UNIQUE,
+  witnesses       TEXT DEFAULT NULL,
+  FOREIGN KEY (player_id) REFERENCES players(player_id)
+);
+CREATE INDEX IF NOT EXISTS idx_deaths_player_ts ON deaths(player_id, timestamp);
+`;
+const DDL_WORLD_OBJECTS = `
+CREATE TABLE IF NOT EXISTS world_objects (
+  object_id       TEXT PRIMARY KEY,
+  object_type     TEXT NOT NULL,
+  zone            TEXT NOT NULL,
+  x               INTEGER NOT NULL,
+  y               INTEGER NOT NULL,
+  created_at      TEXT NOT NULL,
+  decay_at        TEXT DEFAULT NULL,
+  status          TEXT NOT NULL DEFAULT 'active',
+  owner_history   TEXT NOT NULL,
+  last_receipt    TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_objects_zone_status ON world_objects(zone, status);
+CREATE INDEX IF NOT EXISTS idx_objects_zone_pos ON world_objects(zone, x, y);
+`;
+const DDL_META = `
+CREATE TABLE IF NOT EXISTS _meta (
+  key   TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
+`;
+// Phase 2: Items (immutable metadata)
+const DDL_ITEMS = `
+CREATE TABLE IF NOT EXISTS items (
+  item_id           TEXT PRIMARY KEY,
+  item_type         TEXT NOT NULL,
+  created_at        TEXT NOT NULL,
+  genesis_receipt   TEXT NOT NULL UNIQUE,
+  meta_json         TEXT NOT NULL DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_items_type ON items(item_type);
+`;
+// Phase 2: Inventory projection (current inventory state)
+const DDL_INVENTORY_ITEMS = `
+CREATE TABLE IF NOT EXISTS inventory_items (
+  item_id           TEXT PRIMARY KEY,
+  owner_player_id   TEXT NOT NULL,
+  slot              TEXT DEFAULT NULL,
+  updated_at        TEXT NOT NULL,
+  last_receipt      TEXT NOT NULL,
+  FOREIGN KEY(item_id) REFERENCES items(item_id),
+  FOREIGN KEY(owner_player_id) REFERENCES players(player_id)
+);
+CREATE INDEX IF NOT EXISTS idx_inv_owner ON inventory_items(owner_player_id);
+`;
+// Phase 3: Legendary heat projection (current heat per item)
+const DDL_LEGENDARY_HEAT = `
+CREATE TABLE IF NOT EXISTS legendary_heat (
+  item_id      TEXT PRIMARY KEY,
+  heat         INTEGER NOT NULL,
+  updated_at   TEXT NOT NULL,
+  last_receipt TEXT NOT NULL,
+  FOREIGN KEY(item_id) REFERENCES items(item_id)
+);
+CREATE INDEX IF NOT EXISTS idx_legendary_heat_heat ON legendary_heat(heat);
+`;
+// Phase 4: Chronicle events projection (civil records)
+// Phase 4.4 E2: evidence_ref for death/item_lost/legendary_lost linkage
+const DDL_CHRONICLE = `
+CREATE TABLE IF NOT EXISTS chronicle_events (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  player_id     TEXT NOT NULL,
+  kind          TEXT NOT NULL,
+  timestamp     TEXT NOT NULL,
+  zone          TEXT DEFAULT NULL,
+  x             INTEGER DEFAULT NULL,
+  y             INTEGER DEFAULT NULL,
+  entity_id     TEXT DEFAULT NULL,
+  details_json  TEXT NOT NULL DEFAULT '{}',
+  source_action TEXT NOT NULL,
+  receipt_hash  TEXT NOT NULL,
+  evidence_ref  TEXT DEFAULT NULL,
+  FOREIGN KEY(player_id) REFERENCES players(player_id)
+);
+CREATE INDEX IF NOT EXISTS idx_chronicle_player_ts ON chronicle_events(player_id, timestamp DESC, id DESC);
+CREATE INDEX IF NOT EXISTS idx_chronicle_kind ON chronicle_events(kind);
+CREATE INDEX IF NOT EXISTS idx_chronicle_player_kind_ts ON chronicle_events(player_id, kind, timestamp DESC, id DESC);
+CREATE INDEX IF NOT EXISTS idx_chronicle_receipt ON chronicle_events(receipt_hash);
+-- Partial unique indexes for dedup (NULL-safe): one for entity_id present, one for absent
+CREATE UNIQUE INDEX IF NOT EXISTS idx_chronicle_dedup_entity ON chronicle_events(player_id, receipt_hash, kind, entity_id) WHERE entity_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_chronicle_dedup_no_entity ON chronicle_events(player_id, receipt_hash, kind) WHERE entity_id IS NULL;
+`;
+// Moderation v1: Report queue table
+const DDL_MODERATION_REPORTS = `
+CREATE TABLE IF NOT EXISTS moderation_reports (
+  id                      INTEGER PRIMARY KEY AUTOINCREMENT,
+  case_id                 TEXT NOT NULL UNIQUE,
+  reporter_id             TEXT NOT NULL,
+  target_id               TEXT NOT NULL,
+  reported_at             TEXT NOT NULL,
+  receipt_hash            TEXT NOT NULL UNIQUE,
+
+  -- Resolution fields
+  status                  TEXT NOT NULL DEFAULT 'open',
+  resolved_by             TEXT DEFAULT NULL,
+  resolved_at             TEXT DEFAULT NULL,
+  resolution              TEXT DEFAULT NULL,
+  reason                  TEXT DEFAULT NULL,
+  resolution_receipt_hash TEXT DEFAULT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_mod_reports_status ON moderation_reports(status);
+CREATE INDEX IF NOT EXISTS idx_mod_reports_target ON moderation_reports(target_id);
+`;
+// Phase 3.5: Player heat projection (current heat per player)
+// NO FK constraint - avoids replay ordering issues when heat receipts arrive before player_created
+const DDL_PLAYER_HEAT = `
+CREATE TABLE IF NOT EXISTS player_heat (
+  player_id        TEXT PRIMARY KEY,
+  heat             INTEGER NOT NULL DEFAULT 0,
+  penalty_until_ms INTEGER,
+  last_tem_ms      INTEGER,
+  updated_at       TEXT NOT NULL,
+  last_receipt     TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_player_heat_score ON player_heat(heat DESC);
+`;
+// Phase 3.6: Durable anti-cheat enforcement memory
+const DDL_PLAYER_ANTICHEAT_ENFORCEMENT = `
+CREATE TABLE IF NOT EXISTS player_anticheat_enforcement (
+  player_id          TEXT PRIMARY KEY,
+  warn_count         INTEGER NOT NULL DEFAULT 0,
+  tem_failed_count   INTEGER NOT NULL DEFAULT 0,
+  throttle_count     INTEGER NOT NULL DEFAULT 0,
+  kick_count         INTEGER NOT NULL DEFAULT 0,
+  throttle_until_ms  INTEGER,
+  updated_at         TEXT NOT NULL,
+  last_receipt       TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_player_anticheat_throttle ON player_anticheat_enforcement(throttle_until_ms);
+CREATE INDEX IF NOT EXISTS idx_player_anticheat_kicks ON player_anticheat_enforcement(kick_count DESC);
+`;
+// Dialogue Contract v1: durable, replay-sourced NPC talk counter.
+// Append-only event log; the nonce is COUNT(*) per (player, npc, tier).
+// UNIQUE(receipt_hash) makes re-materialization idempotent (replay-safe).
+// NO FK to players — avoids replay ordering issues if a talk receipt is
+// materialized before player_created (mirrors player_heat).
+const DDL_NPC_TALK_EVENTS = `
+CREATE TABLE IF NOT EXISTS npc_talk_events (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  player_id     TEXT NOT NULL,
+  npc_id        TEXT NOT NULL,
+  tier          TEXT NOT NULL,
+  timestamp     TEXT NOT NULL,
+  receipt_hash  TEXT NOT NULL UNIQUE
+);
+CREATE INDEX IF NOT EXISTS idx_npc_talk_player_npc_tier ON npc_talk_events(player_id, npc_id, tier);
+`;
+// World Events v0: durable projection of server-authoritative event state.
+// Receipts remain canonical; this table lets runtime hydrate active/resolved
+// event state after restart without trusting client claims.
+const DDL_WORLD_EVENTS = `
+CREATE TABLE IF NOT EXISTS world_events (
+  event_id           TEXT PRIMARY KEY,
+  map                TEXT NOT NULL,
+  phase              TEXT NOT NULL,
+  started_by         TEXT DEFAULT NULL,
+  started_at         TEXT DEFAULT NULL,
+  resolved_by        TEXT DEFAULT NULL,
+  resolved_at        TEXT DEFAULT NULL,
+  outcome            TEXT DEFAULT NULL,
+  contributions_json TEXT NOT NULL DEFAULT '{}',
+  evidence_json      TEXT NOT NULL DEFAULT '{}',
+  teaser_json        TEXT NOT NULL DEFAULT '{}',
+  last_receipt       TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_world_events_map_phase ON world_events(map, phase);
+`;
+// Property Registry v0: durable house ownership projection.
+// owner_player_id NULL = treasury/unowned. Ownership, sale_count, and
+// owner_history are receipt-derived (property_* actions). genesis_receipt
+// UNIQUE makes property_created re-materialization idempotent.
+// NO FK to players — a property receipt may materialize before player_created
+// (mirrors player_heat rationale).
+const DDL_PROPERTIES = `
+CREATE TABLE IF NOT EXISTS properties (
+  property_id        TEXT PRIMARY KEY,
+  zone               TEXT NOT NULL,
+  plot_id            TEXT NOT NULL,
+  x                  INTEGER NOT NULL,
+  y                  INTEGER NOT NULL,
+  width              INTEGER NOT NULL,
+  height             INTEGER NOT NULL,
+  district           TEXT DEFAULT NULL,
+  owner_player_id    TEXT DEFAULT NULL,
+  status             TEXT NOT NULL DEFAULT 'unowned',
+  listed_price_gold  INTEGER DEFAULT NULL,
+  primary_price_gold INTEGER NOT NULL DEFAULT 0,
+  purchased_at       TEXT DEFAULT NULL,
+  sale_count         INTEGER NOT NULL DEFAULT 0,
+  owner_history      TEXT NOT NULL DEFAULT '[]',
+  genesis_receipt    TEXT NOT NULL UNIQUE,
+  last_receipt       TEXT NOT NULL,
+  created_at         TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_properties_zone_status ON properties(zone, status);
+CREATE INDEX IF NOT EXISTS idx_properties_owner ON properties(owner_player_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_properties_plot ON properties(zone, plot_id);
+`;
+// Property Auction Lane: durable mirror of the in-memory auction projection.
+// One row per property (the current/latest auction), keyed like the projection's
+// auctionByPropertyId map. Settled/cancelled rows are KEPT (status reflects it)
+// and only overwritten when a NEW auction opens on the same plot. Receipts remain
+// the source of truth; this table is a materialized mirror.
+const DDL_PROPERTY_AUCTIONS = `
+CREATE TABLE IF NOT EXISTS property_auctions (
+  property_id        TEXT PRIMARY KEY,
+  kind               TEXT NOT NULL,
+  seller_id          TEXT DEFAULT NULL,
+  min_bid            INTEGER NOT NULL,
+  min_increment_gold INTEGER NOT NULL,
+  current_high       INTEGER DEFAULT NULL,
+  high_bidder_id     TEXT DEFAULT NULL,
+  status             TEXT NOT NULL DEFAULT 'open',
+  scheduled_close_ms INTEGER DEFAULT NULL,
+  opened_receipt     TEXT NOT NULL,
+  last_receipt       TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_property_auctions_status ON property_auctions(status);
+`;
+// ============================================================================
+// Account Platform v1 (E1): email-verified accounts.
+//
+// PII (email) and security material (Argon2id password hash, hashed tokens) live
+// ONLY in these tables — NEVER in chronicle receipts. These tables are written
+// directly by the account API (E2), not materialized from receipts. Every token
+// column stores a HASH at rest; plaintext tokens exist only in transit/email.
+// See docs/account-portal/AKALYNTH_ACCOUNT_PORTAL_PRODUCT_DECISION_V1/.
+// ============================================================================
+const DDL_ACCOUNTS = `
+CREATE TABLE IF NOT EXISTS accounts (
+  account_id      TEXT PRIMARY KEY,
+  email           TEXT,
+  email_lower     TEXT,
+  handle          TEXT,
+  handle_lower    TEXT,
+  password_hash   TEXT NOT NULL,
+  email_verified  INTEGER NOT NULL DEFAULT 0,
+  status          TEXT NOT NULL DEFAULT 'registered_unverified',
+  roles           TEXT NOT NULL DEFAULT '["player"]',
+  created_at      TEXT NOT NULL,
+  created_receipt TEXT DEFAULT NULL,
+  updated_at      TEXT DEFAULT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_email_lower ON accounts(email_lower);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_handle_lower ON accounts(handle_lower);
+`;
+const DDL_ACCOUNT_EMAIL_VERIFICATIONS = `
+CREATE TABLE IF NOT EXISTS account_email_verifications (
+  id          TEXT PRIMARY KEY,
+  account_id  TEXT NOT NULL,
+  token_hash  TEXT NOT NULL,
+  created_at  TEXT NOT NULL,
+  expires_at  TEXT NOT NULL,
+  consumed_at TEXT DEFAULT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_acct_email_verif_account ON account_email_verifications(account_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_acct_email_verif_token ON account_email_verifications(token_hash);
+`;
+const DDL_ACCOUNT_SESSIONS = `
+CREATE TABLE IF NOT EXISTS account_sessions (
+  session_id   TEXT PRIMARY KEY,
+  account_id   TEXT NOT NULL,
+  token_hash   TEXT NOT NULL,
+  client       TEXT DEFAULT NULL,
+  created_at   TEXT NOT NULL,
+  expires_at   TEXT NOT NULL,
+  last_seen_at TEXT DEFAULT NULL,
+  revoked_at   TEXT DEFAULT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_acct_sessions_account ON account_sessions(account_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_acct_sessions_token ON account_sessions(token_hash);
+`;
+const DDL_ACCOUNT_PASSWORD_RESETS = `
+CREATE TABLE IF NOT EXISTS account_password_resets (
+  id          TEXT PRIMARY KEY,
+  account_id  TEXT NOT NULL,
+  token_hash  TEXT NOT NULL,
+  created_at  TEXT NOT NULL,
+  expires_at  TEXT NOT NULL,
+  consumed_at TEXT DEFAULT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_acct_pw_resets_account ON account_password_resets(account_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_acct_pw_resets_token ON account_password_resets(token_hash);
+`;
+// Account Platform v1 (E4): characters bound to an account. character_id is the
+// player_id (the play entity); this table records the account linkage + the
+// chosen world / sex / outfit. Additive — it does not modify the players table.
+const DDL_ACCOUNT_CHARACTERS = `
+CREATE TABLE IF NOT EXISTS account_characters (
+  character_id    TEXT PRIMARY KEY,
+  account_id      TEXT NOT NULL,
+  name            TEXT NOT NULL,
+  world_id        TEXT NOT NULL,
+  sex             TEXT NOT NULL,
+  outfit_id       TEXT NOT NULL,
+  created_at      TEXT NOT NULL,
+  created_receipt TEXT DEFAULT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_account_characters_account ON account_characters(account_id);
+`;
+// Identity Seal v1: accountless principal registry. This is additive beside the
+// Account Platform tables; it stores public keys/fingerprints and privacy-light
+// identity state, never private keys, raw session tokens, emails, or passwords.
+const DDL_PRINCIPALS = `
+CREATE TABLE IF NOT EXISTS principals (
+  principal_id           TEXT PRIMARY KEY,
+  handle                 TEXT NOT NULL,
+  handle_lower           TEXT NOT NULL,
+  display_name           TEXT NOT NULL,
+  status                 TEXT NOT NULL DEFAULT 'active',
+  roles_json             TEXT NOT NULL DEFAULT '["player"]',
+  recovery_mode          TEXT NOT NULL DEFAULT 'none',
+  created_at             TEXT NOT NULL,
+  updated_at             TEXT NOT NULL,
+  seal_retired_at        TEXT DEFAULT NULL,
+  principal_deleted_at   TEXT DEFAULT NULL,
+  deletion_requested_at  TEXT DEFAULT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_principals_handle_lower_active ON principals(handle_lower) WHERE status != 'principal_deleted';
+CREATE INDEX IF NOT EXISTS idx_principals_status ON principals(status);
+`;
+const DDL_PRINCIPAL_KEYS = `
+CREATE TABLE IF NOT EXISTS principal_keys (
+  key_id           TEXT PRIMARY KEY,
+  principal_id     TEXT NOT NULL,
+  key_type         TEXT NOT NULL,
+  public_key       TEXT NOT NULL,
+  key_fingerprint  TEXT NOT NULL,
+  status           TEXT NOT NULL DEFAULT 'active',
+  created_at       TEXT NOT NULL,
+  retired_at       TEXT DEFAULT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_principal_keys_principal ON principal_keys(principal_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_principal_keys_fingerprint ON principal_keys(key_fingerprint);
+`;
+const DDL_PRINCIPAL_CHALLENGES = `
+CREATE TABLE IF NOT EXISTS principal_challenges (
+  challenge_id  TEXT PRIMARY KEY,
+  principal_id  TEXT NOT NULL,
+  nonce_hash    TEXT NOT NULL,
+  purpose       TEXT NOT NULL,
+  domain        TEXT NOT NULL,
+  payload_json  TEXT NOT NULL,
+  client        TEXT NOT NULL,
+  issued_at     TEXT NOT NULL,
+  expires_at    TEXT NOT NULL,
+  consumed_at   TEXT DEFAULT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_principal_challenges_nonce ON principal_challenges(nonce_hash);
+CREATE INDEX IF NOT EXISTS idx_principal_challenges_principal ON principal_challenges(principal_id);
+CREATE INDEX IF NOT EXISTS idx_principal_challenges_expiry ON principal_challenges(expires_at);
+`;
+const DDL_PRINCIPAL_SESSIONS = `
+CREATE TABLE IF NOT EXISTS principal_sessions (
+  session_id      TEXT PRIMARY KEY,
+  principal_id    TEXT NOT NULL,
+  token_hash      TEXT NOT NULL,
+  identity_level  TEXT NOT NULL,
+  created_at      TEXT NOT NULL,
+  expires_at      TEXT NOT NULL,
+  last_seen_at    TEXT DEFAULT NULL,
+  revoked_at      TEXT DEFAULT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_principal_sessions_token ON principal_sessions(token_hash);
+CREATE INDEX IF NOT EXISTS idx_principal_sessions_principal ON principal_sessions(principal_id);
+`;
+const DDL_PRINCIPAL_TERMS = `
+CREATE TABLE IF NOT EXISTS principal_terms_acceptances (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  principal_id   TEXT NOT NULL,
+  terms_version  TEXT NOT NULL,
+  accepted_at    TEXT NOT NULL,
+  client         TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_principal_terms_principal ON principal_terms_acceptances(principal_id);
+`;
+const DDL_PRINCIPAL_BLOCKS = `
+CREATE TABLE IF NOT EXISTS principal_blocks (
+  blocker_principal_id  TEXT NOT NULL,
+  blocked_principal_id  TEXT NOT NULL,
+  reason                TEXT DEFAULT NULL,
+  created_at            TEXT NOT NULL,
+  PRIMARY KEY (blocker_principal_id, blocked_principal_id)
+);
+CREATE INDEX IF NOT EXISTS idx_principal_blocks_blocked ON principal_blocks(blocked_principal_id);
+`;
+const DDL_PRINCIPAL_REPORTS = `
+CREATE TABLE IF NOT EXISTS principal_reports (
+  report_id                 TEXT PRIMARY KEY,
+  reporter_principal_id     TEXT NOT NULL,
+  target_principal_id       TEXT NOT NULL,
+  content_ref               TEXT DEFAULT NULL,
+  reason                    TEXT NOT NULL,
+  detail                    TEXT DEFAULT NULL,
+  status                    TEXT NOT NULL DEFAULT 'open',
+  created_at                TEXT NOT NULL,
+  resolved_at               TEXT DEFAULT NULL,
+  resolved_by_principal_id  TEXT DEFAULT NULL,
+  resolution                TEXT DEFAULT NULL,
+  resolution_reason         TEXT DEFAULT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_principal_reports_status ON principal_reports(status);
+CREATE INDEX IF NOT EXISTS idx_principal_reports_target ON principal_reports(target_principal_id);
+`;
+// ============================================================================
+// Schema Initialization
+// ============================================================================
+export function initSchema(db) {
+    // Set required pragmas
+    db.pragma('journal_mode = WAL');
+    db.pragma('synchronous = NORMAL');
+    db.pragma('foreign_keys = ON');
+    db.pragma('busy_timeout = 5000');
+    // Check current schema version
+    const currentVersion = getSchemaVersion(db);
+    if (currentVersion > SCHEMA_VERSION) {
+        throw new Error(`Schema version too new: db=${currentVersion} code=${SCHEMA_VERSION}. ` +
+            'Upgrade server or rebuild DB.');
+    }
+    if (currentVersion < SCHEMA_VERSION) {
+        // Run migrations
+        migrateSchema(db, currentVersion, SCHEMA_VERSION);
+    }
+    // Patch A: Force version alignment after all migrations
+    // Ensures _meta.schema_version always equals SCHEMA_VERSION, even if
+    // structural changes were applied earlier (e.g., indexes created in V5 DDL).
+    const insertMeta = db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)');
+    insertMeta.run('schema_version', String(SCHEMA_VERSION));
+}
+function getSchemaVersion(db) {
+    try {
+        // Check if _meta table exists
+        const tableExists = db
+            .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='_meta'")
+            .get();
+        if (!tableExists) {
+            return 0;
+        }
+        const row = db
+            .prepare('SELECT value FROM _meta WHERE key = ?')
+            .get('schema_version');
+        return row ? parseInt(row.value, 10) : 0;
+    }
+    catch {
+        return 0;
+    }
+}
+function migrateSchema(db, fromVersion, toVersion) {
+    // Run migrations in a transaction
+    db.transaction(() => {
+        for (let v = fromVersion + 1; v <= toVersion; v++) {
+            runMigration(db, v);
+        }
+    })();
+}
+function runMigration(db, version) {
+    switch (version) {
+        case 1:
+            migrateToV1(db);
+            break;
+        case 2:
+            migrateToV2(db);
+            break;
+        case 3:
+            migrateToV3(db);
+            break;
+        case 4:
+            migrateToV4(db);
+            break;
+        case 5:
+            migrateToV5(db);
+            break;
+        case 6:
+            migrateToV6(db);
+            break;
+        case 7:
+            migrateToV7(db);
+            break;
+        case 8:
+            migrateToV8(db);
+            break;
+        case 9:
+            migrateToV9(db);
+            break;
+        case 10:
+            migrateToV10(db);
+            break;
+        case 11:
+            migrateToV11(db);
+            break;
+        case 12:
+            migrateToV12(db);
+            break;
+        case 13:
+            migrateToV13(db);
+            break;
+        case 14:
+            migrateToV14(db);
+            break;
+        case 15:
+            migrateToV15(db);
+            break;
+        case 16:
+            migrateToV16(db);
+            break;
+        case 17:
+            migrateToV17(db);
+            break;
+        case 18:
+            migrateToV18(db);
+            break;
+        case 19:
+            migrateToV19(db);
+            break;
+        case 20:
+            migrateToV20(db);
+            break;
+        case 21:
+            migrateToV21(db);
+            break;
+        case 22:
+            migrateToV22(db);
+            break;
+        case 23:
+            migrateToV23(db);
+            break;
+        case 24:
+            migrateToV24(db);
+            break;
+        default:
+            throw new Error(`Unknown schema version: ${version}`);
+    }
+}
+function migrateToV1(db) {
+    // Create all tables
+    db.exec(DDL_PLAYERS);
+    db.exec(DDL_REPUTATION_EVENTS);
+    db.exec(DDL_DEATHS);
+    db.exec(DDL_WORLD_OBJECTS);
+    db.exec(DDL_META);
+    // Initialize _meta keys
+    const insertMeta = db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)');
+    insertMeta.run('schema_version', '1');
+    insertMeta.run('last_materialized_hash', '');
+    insertMeta.run('last_materialized_offset', '0');
+}
+function migrateToV2(db) {
+    // Phase 2: Add items and inventory tables
+    db.exec(DDL_ITEMS);
+    db.exec(DDL_INVENTORY_ITEMS);
+    // Update schema version
+    const insertMeta = db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)');
+    insertMeta.run('schema_version', '2');
+}
+function migrateToV3(db) {
+    // Phase 3: Add legendary heat table
+    db.exec(DDL_LEGENDARY_HEAT);
+    // Update schema version
+    const insertMeta = db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)');
+    insertMeta.run('schema_version', '3');
+}
+function migrateToV4(db) {
+    // Phase 3.2: Add index for protected slot queries
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_inv_owner_slot ON inventory_items(owner_player_id, slot);`);
+    // Update schema version
+    const insertMeta = db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)');
+    insertMeta.run('schema_version', '4');
+}
+function migrateToV5(db) {
+    // Phase 4: Add chronicle_events table
+    db.exec(DDL_CHRONICLE);
+    // Update schema version
+    const insertMeta = db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)');
+    insertMeta.run('schema_version', '5');
+}
+function migrateToV6(db) {
+    // Phase 4.4 E2: Add evidence_ref column to chronicle_events
+    // For evidence linkage (death, item_lost, legendary_lost)
+    // Check if column already exists (DDL may have been updated)
+    const columns = db.prepare(`PRAGMA table_info(chronicle_events)`).all();
+    const hasEvidenceRef = columns.some((c) => c.name === 'evidence_ref');
+    if (!hasEvidenceRef) {
+        db.exec(`ALTER TABLE chronicle_events ADD COLUMN evidence_ref TEXT DEFAULT NULL;`);
+    }
+    // Update schema version
+    const insertMeta = db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)');
+    insertMeta.run('schema_version', '6');
+}
+function migrateToV7(db) {
+    // Placeholder migration (no schema change)
+    const insertMeta = db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)');
+    insertMeta.run('schema_version', '7');
+}
+function migrateToV8(db) {
+    // Fix chronicle dedup index: NULL values in entity_id bypass UNIQUE constraint.
+    // Replace single index with partial unique indexes for NULL-safe dedup.
+    // Step 1: Delete duplicate rows (keep lowest id per unique tuple)
+    db.exec(`
+    DELETE FROM chronicle_events
+    WHERE id NOT IN (
+      SELECT MIN(id)
+      FROM chronicle_events
+      GROUP BY player_id, receipt_hash, kind, COALESCE(entity_id, '')
+    );
+  `);
+    // Step 2: Drop old broken index
+    db.exec(`DROP INDEX IF EXISTS idx_chronicle_dedup;`);
+    // Step 3: Create partial unique indexes
+    // When entity_id is present
+    db.exec(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_chronicle_dedup_entity
+    ON chronicle_events(player_id, receipt_hash, kind, entity_id)
+    WHERE entity_id IS NOT NULL;
+  `);
+    // When entity_id is absent
+    db.exec(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_chronicle_dedup_no_entity
+    ON chronicle_events(player_id, receipt_hash, kind)
+    WHERE entity_id IS NULL;
+  `);
+    // Update schema version
+    const insertMeta = db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)');
+    insertMeta.run('schema_version', '8');
+}
+function migrateToV9(db) {
+    // Phase 4.5: Add player_heat table
+    db.exec(DDL_PLAYER_HEAT);
+    // Update schema version
+    const insertMeta = db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)');
+    insertMeta.run('schema_version', '9');
+}
+function migrateToV10(db) {
+    // Identity v0.1: Add auth_method and name_lower columns to players table
+    // Enables named character creation with case-insensitive uniqueness
+    // Check if auth_method column already exists (idempotent)
+    const columns = db.prepare(`PRAGMA table_info(players)`).all();
+    const hasAuthMethod = columns.some((c) => c.name === 'auth_method');
+    const hasNameLower = columns.some((c) => c.name === 'name_lower');
+    if (!hasAuthMethod) {
+        db.exec(`ALTER TABLE players ADD COLUMN auth_method TEXT NOT NULL DEFAULT 'guest';`);
+    }
+    if (!hasNameLower) {
+        db.exec(`ALTER TABLE players ADD COLUMN name_lower TEXT;`);
+        // Backfill existing rows
+        db.exec(`UPDATE players SET name_lower = LOWER(name) WHERE name_lower IS NULL;`);
+    }
+    // Create unique index for case-insensitive name lookup (only for non-deleted players)
+    // Idempotent: IF NOT EXISTS
+    db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_players_name_lower ON players(name_lower) WHERE deleted_at IS NULL;`);
+    // Update schema version
+    const insertMeta = db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)');
+    insertMeta.run('schema_version', '10');
+}
+function migrateToV11(db) {
+    // Phase 3.6: add durable anti-cheat enforcement state
+    db.exec(DDL_PLAYER_ANTICHEAT_ENFORCEMENT);
+    const insertMeta = db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)');
+    insertMeta.run('schema_version', '11');
+}
+function migrateToV12(db) {
+    // Dialogue Contract v1: durable NPC talk counter (seeds dialogue variation)
+    db.exec(DDL_NPC_TALK_EVENTS);
+    const insertMeta = db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)');
+    insertMeta.run('schema_version', '12');
+}
+function migrateToV13(db) {
+    // Property Ownership v0: durable house registry
+    db.exec(DDL_PROPERTIES);
+    const insertMeta = db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)');
+    insertMeta.run('schema_version', '13');
+}
+function migrateToV14(db) {
+    // Property Auction Lane: durable auction projection (additive — does not touch
+    // the properties table or any existing rows).
+    db.exec(DDL_PROPERTY_AUCTIONS);
+    const insertMeta = db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)');
+    insertMeta.run('schema_version', '14');
+}
+function migrateToV15(db) {
+    // Account Platform v1 (E1): email-verified accounts + sessions +
+    // verification/reset tokens (hashed at rest). Additive — does not touch any
+    // existing table or row. No PII/secrets ever leave these tables for receipts.
+    db.exec(DDL_ACCOUNTS);
+    db.exec(DDL_ACCOUNT_EMAIL_VERIFICATIONS);
+    db.exec(DDL_ACCOUNT_SESSIONS);
+    db.exec(DDL_ACCOUNT_PASSWORD_RESETS);
+    const insertMeta = db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)');
+    insertMeta.run('schema_version', '15');
+}
+function migrateToV16(db) {
+    // Account Platform v1 (E4): account_characters linkage. Additive — does not
+    // touch players or any existing table.
+    db.exec(DDL_ACCOUNT_CHARACTERS);
+    const insertMeta = db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)');
+    insertMeta.run('schema_version', '16');
+}
+function migrateToV17(db) {
+    // World Events v0: durable projection/hydration support. Additive — no
+    // existing tables or receipt rows are modified.
+    db.exec(DDL_WORLD_EVENTS);
+    const insertMeta = db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)');
+    insertMeta.run('schema_version', '17');
+}
+function migrateToV18(db) {
+    // Evidence Loop v0: add replayable Bloom evidence + teaser projection columns.
+    // Additive only; existing rows get empty JSON defaults.
+    db.exec(DDL_WORLD_EVENTS);
+    ensureWorldEventEvidenceColumns(db);
+    const insertMeta = db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)');
+    insertMeta.run('schema_version', '18');
+}
+function migrateToV19(db) {
+    // Identity Seal v1: principal/key/challenge/session/moderation state. Additive
+    // beside account tables; no existing account/player rows are modified.
+    db.exec(DDL_PRINCIPALS);
+    db.exec(DDL_PRINCIPAL_KEYS);
+    db.exec(DDL_PRINCIPAL_CHALLENGES);
+    db.exec(DDL_PRINCIPAL_SESSIONS);
+    db.exec(DDL_PRINCIPAL_TERMS);
+    db.exec(DDL_PRINCIPAL_BLOCKS);
+    db.exec(DDL_PRINCIPAL_REPORTS);
+    const insertMeta = db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)');
+    insertMeta.run('schema_version', '19');
+}
+function migrateToV20(db) {
+    // Account roles v1: add a roles column to accounts (JSON array of role strings),
+    // default '["player"]'. Enables admin/operator/builder/agent gating of the Codex
+    // operator surfaces. Additive + idempotent; no existing rows are modified.
+    const columns = db.prepare(`PRAGMA table_info(accounts)`).all();
+    const hasRoles = columns.some((c) => c.name === 'roles');
+    if (!hasRoles) {
+        db.exec(`ALTER TABLE accounts ADD COLUMN roles TEXT NOT NULL DEFAULT '["player"]';`);
+    }
+    const insertMeta = db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)');
+    insertMeta.run('schema_version', '20');
+}
+function migrateToV21(db) {
+    // Nickname accounts v1: make email/email_lower NULLABLE and add handle/handle_lower
+    // (unique). SQLite cannot drop NOT NULL via ALTER, so rebuild the accounts table,
+    // preserving every existing column (incl. roles from v20). No accounts reference
+    // accounts via FK, so the drop/rename is safe. Idempotent: skip if handle exists.
+    const cols = db.prepare(`PRAGMA table_info(accounts)`).all();
+    if (!cols.some((c) => c.name === 'handle')) {
+        db.exec(`
+      CREATE TABLE accounts_v21 (
+        account_id      TEXT PRIMARY KEY,
+        email           TEXT,
+        email_lower     TEXT,
+        handle          TEXT,
+        handle_lower    TEXT,
+        password_hash   TEXT NOT NULL,
+        email_verified  INTEGER NOT NULL DEFAULT 0,
+        status          TEXT NOT NULL DEFAULT 'registered_unverified',
+        roles           TEXT NOT NULL DEFAULT '["player"]',
+        created_at      TEXT NOT NULL,
+        created_receipt TEXT DEFAULT NULL,
+        updated_at      TEXT DEFAULT NULL
+      );
+      INSERT INTO accounts_v21
+        (account_id, email, email_lower, handle, handle_lower, password_hash,
+         email_verified, status, roles, created_at, created_receipt, updated_at)
+        SELECT account_id, email, email_lower, NULL, NULL, password_hash,
+               email_verified, status, roles, created_at, created_receipt, updated_at
+        FROM accounts;
+      DROP TABLE accounts;
+      ALTER TABLE accounts_v21 RENAME TO accounts;
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_email_lower ON accounts(email_lower);
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_handle_lower ON accounts(handle_lower);
+    `);
+    }
+    const insertMeta = db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)');
+    insertMeta.run('schema_version', '21');
+}
+function migrateToV22(db) {
+    // Origin Act restore (regression repair): the original V8 migration that added
+    // the players.origin_* columns (commit 8916b4f) was dropped in a divergent-history
+    // merge, but queries.ts/materializers.ts still read+write them — so every
+    // origin-worthy action crashed the server with "no such column: origin_receipt_id".
+    // Re-add the columns additively + idempotently for existing DBs (fresh DBs get them
+    // from DDL_PLAYERS). Columns nullable, default NULL; no existing rows are modified.
+    const columns = db.prepare(`PRAGMA table_info(players)`).all();
+    const names = new Set(columns.map((c) => c.name));
+    if (!names.has('origin_receipt_id')) {
+        db.exec(`ALTER TABLE players ADD COLUMN origin_receipt_id TEXT DEFAULT NULL;`);
+    }
+    if (!names.has('origin_action')) {
+        db.exec(`ALTER TABLE players ADD COLUMN origin_action TEXT DEFAULT NULL;`);
+    }
+    if (!names.has('origin_sealed_at')) {
+        db.exec(`ALTER TABLE players ADD COLUMN origin_sealed_at TEXT DEFAULT NULL;`);
+    }
+    const insertMeta = db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)');
+    insertMeta.run('schema_version', '22');
+}
+function migrateToV23(db) {
+    // Houses v1.2: durable house storage. Each row is an item currently held in a house
+    // (item_id is unique — an item is in exactly one place: inventory, world, or a house).
+    // Maintained by the house_item_stored/retrieved materializer; hydrated into memory at boot.
+    db.exec(`
+    CREATE TABLE IF NOT EXISTS house_storage (
+      item_id      TEXT PRIMARY KEY,
+      property_id  TEXT NOT NULL,
+      stored_at    TEXT NOT NULL DEFAULT (datetime('now')),
+      last_receipt TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_house_storage_property ON house_storage(property_id);
+  `);
+    const insertMeta = db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)');
+    insertMeta.run('schema_version', '23');
+}
+function migrateToV24(db) {
+    // Guild v1.1: durable guild treasury. The shared collective total was in-memory and reset
+    // on every restart (undermining it as a collective goal). Single-row table holding the
+    // monotonic total, written by the guild_contribution materializer (from the receipt's
+    // guild_treasury_total) and hydrated into memory at boot.
+    db.exec(`
+    CREATE TABLE IF NOT EXISTS guild_treasury (
+      id           INTEGER PRIMARY KEY CHECK (id = 1),
+      total        INTEGER NOT NULL DEFAULT 0,
+      last_receipt TEXT
+    );
+    INSERT OR IGNORE INTO guild_treasury (id, total) VALUES (1, 0);
+  `);
+    const insertMeta = db.prepare('INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)');
+    insertMeta.run('schema_version', '24');
+}
+function ensureWorldEventEvidenceColumns(db) {
+    const columns = db.prepare(`PRAGMA table_info(world_events)`).all();
+    const names = new Set(columns.map((column) => column.name));
+    if (!names.has('evidence_json')) {
+        db.exec(`ALTER TABLE world_events ADD COLUMN evidence_json TEXT NOT NULL DEFAULT '{}';`);
+    }
+    if (!names.has('teaser_json')) {
+        db.exec(`ALTER TABLE world_events ADD COLUMN teaser_json TEXT NOT NULL DEFAULT '{}';`);
+    }
+}
+// ============================================================================
+// Schema Utilities
+// ============================================================================
+export function resetSchema(db) {
+    // Drop all tables and recreate (for testing/recovery)
+    db.exec('DROP TABLE IF EXISTS world_events');
+    db.exec('DROP TABLE IF EXISTS principal_reports');
+    db.exec('DROP TABLE IF EXISTS principal_blocks');
+    db.exec('DROP TABLE IF EXISTS principal_terms_acceptances');
+    db.exec('DROP TABLE IF EXISTS principal_sessions');
+    db.exec('DROP TABLE IF EXISTS principal_challenges');
+    db.exec('DROP TABLE IF EXISTS principal_keys');
+    db.exec('DROP TABLE IF EXISTS principals');
+    db.exec('DROP TABLE IF EXISTS account_characters');
+    db.exec('DROP TABLE IF EXISTS account_password_resets');
+    db.exec('DROP TABLE IF EXISTS account_sessions');
+    db.exec('DROP TABLE IF EXISTS account_email_verifications');
+    db.exec('DROP TABLE IF EXISTS accounts');
+    db.exec('DROP TABLE IF EXISTS properties');
+    db.exec('DROP TABLE IF EXISTS npc_talk_events');
+    db.exec('DROP TABLE IF EXISTS player_anticheat_enforcement');
+    db.exec('DROP TABLE IF EXISTS player_heat');
+    db.exec('DROP TABLE IF EXISTS chronicle_events');
+    db.exec('DROP TABLE IF EXISTS legendary_heat');
+    db.exec('DROP TABLE IF EXISTS inventory_items');
+    db.exec('DROP TABLE IF EXISTS items');
+    db.exec('DROP TABLE IF EXISTS world_objects');
+    db.exec('DROP TABLE IF EXISTS deaths');
+    db.exec('DROP TABLE IF EXISTS reputation_events');
+    db.exec('DROP TABLE IF EXISTS players');
+    db.exec('DROP TABLE IF EXISTS _meta');
+    // Reinitialize
+    migrateToV1(db);
+}
+export function getTableCounts(db) {
+    const tables = ['players', 'reputation_events', 'deaths', 'world_objects', 'items', 'inventory_items', 'legendary_heat', 'player_heat', 'player_anticheat_enforcement', 'chronicle_events', 'moderation_reports', 'npc_talk_events', 'world_events', 'properties'];
+    const counts = {};
+    for (const table of tables) {
+        try {
+            const row = db
+                .prepare(`SELECT COUNT(*) as count FROM ${table}`)
+                .get();
+            counts[table] = row.count;
+        }
+        catch {
+            // Table may not exist in older schema versions
+            counts[table] = 0;
+        }
+    }
+    return counts;
+}

@@ -57,18 +57,20 @@ import com.akalynth.client.ui.render.rememberWorldSprites
  * This is a pure presentation component with no navigation assumptions.
  * All actions are exposed via callbacks.
  *
- * @param onCreate Called with (name, worldId, sex, outfitId) when create button is tapped and valid
+ * @param onCreate Called with (name, worldId, sex, outfitId, outfitColors) when create is valid
  * @param modifier Optional modifier for the root container
  */
 @Composable
 fun CharacterCreateScreen(
-    onCreate: (name: String, worldId: String, sex: CharacterSex, outfitId: String) -> Unit,
+    onCreate: (name: String, worldId: String, sex: CharacterSex, outfitId: String, outfitColors: OutfitColorIndices) -> Unit,
+    outfitEngine: OutfitEngineMeta = OutfitEngineMeta.FALLBACK,
     modifier: Modifier = Modifier
 ) {
     var name by remember { mutableStateOf("") }
     var selectedWorldId by remember { mutableStateOf(DEFAULT_WORLD_ID) }
     var selectedSex by remember { mutableStateOf(CharacterSex.MALE) }
     var selectedOutfitId by remember { mutableStateOf(defaultOutfitId(CharacterSex.MALE)) }
+    var outfitColors by remember(outfitEngine) { mutableStateOf(outfitEngine.defaultColors) }
 
     val isNameValid by remember {
         derivedStateOf {
@@ -162,6 +164,15 @@ fun CharacterCreateScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        OutfitColorPicker(
+            engine = outfitEngine,
+            value = outfitColors,
+            onChange = { outfitColors = it },
+            modifier = Modifier.testTag("CharacterCreateScreen_OutfitColors"),
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // Outfit selection
         OutfitSelector(
             selectedSex = selectedSex,
@@ -176,7 +187,7 @@ fun CharacterCreateScreen(
         Button(
             onClick = {
                 if (isFormValid) {
-                    onCreate(name.trim(), selectedWorldId, selectedSex, selectedOutfitId)
+                    onCreate(name.trim(), selectedWorldId, selectedSex, selectedOutfitId, outfitColors)
                 }
             },
             enabled = isFormValid,

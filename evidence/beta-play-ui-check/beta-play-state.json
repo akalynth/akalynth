@@ -1,0 +1,78 @@
+{
+  "title": "Akalynth Client v0",
+  "finalUrl": "https://beta.akalynth.com/play/",
+  "hasRoot": true,
+  "rootTag": "DIV",
+  "rootId": "root",
+  "rootClass": "",
+  "bodyTextSample": "AkalynthConnected Position 2,2 Health 10/10 Respect Unproven (0) Standing — Gold 0g Link connected ↖ ↑ ↗ ← ■ → ↙ ↓ ↘ ✕ Objective Step onto the glowing move rune (east plaza, tile 3,2) Fish Rookguard canal Attack No runestone nearby Ritual Guide is nearby Talk ONWARD ROUTES Fish Rookguard canal Chat Log Pack Codex World synced",
+  "bodyLen": 327,
+  "canvasCount": 10,
+  "canvases": [
+    {
+      "id": "",
+      "className": "nine-slice-panel__canvas",
+      "width": 718,
+      "height": 63
+    },
+    {
+      "id": "",
+      "className": "map-canvas",
+      "width": 1024,
+      "height": 1024
+    },
+    {
+      "id": "",
+      "className": "nine-slice-panel__canvas",
+      "width": 1,
+      "height": 1
+    },
+    {
+      "id": "",
+      "className": "nine-slice-panel__canvas",
+      "width": 592,
+      "height": 258
+    },
+    {
+      "id": "",
+      "className": "nine-slice-panel__canvas",
+      "width": 201,
+      "height": 251
+    },
+    {
+      "id": "",
+      "className": "nine-slice-panel__canvas",
+      "width": 319,
+      "height": 197
+    },
+    {
+      "id": "",
+      "className": "nine-slice-panel__canvas",
+      "width": 94,
+      "height": 79
+    },
+    {
+      "id": "",
+      "className": "nine-slice-panel__canvas",
+      "width": 94,
+      "height": 79
+    },
+    {
+      "id": "",
+      "className": "nine-slice-panel__canvas",
+      "width": 94,
+      "height": 79
+    },
+    {
+      "id": "",
+      "className": "nine-slice-panel__canvas",
+      "width": 96,
+      "height": 58
+    }
+  ],
+  "loaded": "complete",
+  "scripts": [
+    "https://beta.akalynth.com/play/assets/index-C5hv9MTq.js"
+  ],
+  "visibleControls": 30
+}

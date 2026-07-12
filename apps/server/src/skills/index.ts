@@ -3,6 +3,7 @@
 
 import type { WebSocket } from 'ws';
 import type { Player, AntiCheatState } from '../../../../packages/shared/types.js';
+import type { MapName } from '../../../../packages/shared/http.js';
 import type { UseSkillMessage, SkillRejectionReason } from '../../../../packages/shared/protocol.js';
 import type { OnwardRouteReceiptProgress } from '../world/onwardRoutes.js';
 import { ServerMessages } from '../../../../packages/shared/protocol.js';
@@ -53,6 +54,9 @@ export interface SkillContext {
   ws: WebSocket;
   antiState: AntiCheatState;
   skillCooldowns: Map<string, number>;
+  currentMap?: MapName;
+  inWorld?: boolean;
+  nowMs?: () => number;
   onwardRoutesAvailable?: boolean;
   getOnwardRouteProgress?: () => OnwardRouteReceiptProgress;
   // Audit write function
@@ -103,6 +107,7 @@ export interface SkillContext {
 export interface SkillResult {
   success: boolean;
   reason?: SkillRejectionReason;
+  cooldownUntilMs?: number;
   payload?: Record<string, unknown>;
 }
 
@@ -114,7 +119,7 @@ export async function handleUseSkill(
   ctx: SkillContext,
   msg: UseSkillMessage
 ): Promise<void> {
-  const now = Date.now();
+  const now = ctx.nowMs?.() ?? Date.now();
   const skillId = msg.skill_id;
 
   // 1. Always emit intent receipt
@@ -158,7 +163,13 @@ export async function handleUseSkill(
   const result = await executeSkill(ctx, skill, msg.target_id);
 
   if (!result.success) {
-    return rejectSkill(ctx, skillId, result.reason ?? 'invalid_skill');
+    return rejectSkill(
+      ctx,
+      skillId,
+      result.reason ?? 'invalid_skill',
+      result.cooldownUntilMs,
+      result.payload,
+    );
   }
 
   // 7. Set cooldown (only on success)
@@ -191,7 +202,8 @@ function rejectSkill(
   ctx: SkillContext,
   skillId: string,
   reason: SkillRejectionReason,
-  cooldownUntil?: number
+  cooldownUntil?: number,
+  payload?: Record<string, unknown>,
 ): void {
   // Emit rejected receipt
   ctx.audit({
@@ -205,6 +217,7 @@ function rejectSkill(
   ctx.send(ServerMessages.skillResult(skillId, false, {
     reason,
     cooldown_until_ms: cooldownUntil,
+    payload,
   }));
 }
 

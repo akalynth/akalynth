@@ -1,0 +1,82 @@
+{
+  "id": "AKALYNTH_WEB_PLAY_SHELL_SMOKE_V1",
+  "status": "fail",
+  "started_at": "2026-07-11T11:13:41.218Z",
+  "finished_at": "2026-07-11T11:14:12.875Z",
+  "base_url": "http://127.0.0.1:44181/play/",
+  "report": "docs/evidence/modern-ui-browser-qa-direct-chrome-v2/mobile_playable_smoke_report.json",
+  "screenshots": "docs/evidence/modern-ui-browser-qa-direct-chrome-v2/screenshots",
+  "fake_playable": true,
+  "fake_server": {
+    "http_base": "http://127.0.0.1:36229",
+    "ws_base": "ws://127.0.0.1:36229",
+    "received_count": 19,
+    "received_types": [
+      "connect",
+      "login",
+      "enter_world",
+      "inspect_wallet",
+      "connect",
+      "login",
+      "enter_world",
+      "inspect_wallet",
+      "move_intent",
+      "move_intent",
+      "get_chronicle",
+      "connect",
+      "login",
+      "enter_world",
+      "inspect_wallet",
+      "connect",
+      "login",
+      "enter_world",
+      "inspect_wallet"
+    ],
+    "received_move_intent": true,
+    "received_enter_world": true,
+    "received_login": true,
+    "latest_player": {
+      "id": "smoke-player",
+      "name": "Smoke Runner",
+      "x": 4,
+      "y": 2,
+      "status": "alive",
+      "hp": 10,
+      "max_hp": 10,
+      "reputation": 0,
+      "sprite_id": "base_human_male_01",
+      "title": null,
+      "badges": [],
+      "mark": null,
+      "loop": {
+        "move": true,
+        "chat": true,
+        "tem": false,
+        "gate": false,
+        "gateOpen": false,
+        "objective": "Step onto the glowing move rune (east plaza, tile 3,2)",
+        "rookguardQuest": {
+          "started": true,
+          "fishDelivered": false,
+          "branch": null,
+          "completed": false
+        }
+      }
+    }
+  },
+  "logs": {
+    "vite": "docs/evidence/modern-ui-browser-qa-direct-chrome-v2/vite.log",
+    "smoke": "docs/evidence/modern-ui-browser-qa-direct-chrome-v2/mobile-smoke.log"
+  },
+  "smoke_exit": {
+    "code": 1,
+    "signal": null
+  },
+  "smoke_status": "fail",
+  "checks_total": 42,
+  "checks_failed": [
+    "desktop_account_panel_and_stats_fit_viewport"
+  ],
+  "boundary": "Local source preview only; no API/server runtime, /opt sync, deploy, restart, Caddy, or key/config mutation.",
+  "error": "mobile-playable-smoke exited with 1"
+}

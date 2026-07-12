@@ -1,3 +1,5 @@
+// @ts-ignore - experimental .mjs without declarations (see BUILD_HEALTH_REPAIR_PLAN_V1)
+import { proposeWithLocalAI, buildContextFromSim } from "../tools/aiDecider.mjs";
 import {
   computeEventHash,
   computeInputsHash,
@@ -94,6 +96,7 @@ export interface AgentSimulationInput {
   maps: Record<'Rookguard' | 'Azura', MapData>;
   seed?: number;
   days?: number;
+  aiMode?: boolean;
   agents?: Array<{
     id: string;
     name: string;
@@ -122,6 +125,8 @@ export interface AgentTrainingStep {
   reward_gold_delta: number;
   accepted: boolean;
   loot_item_id: string | null;
+  leverage?: string | number;
+  decision?: any;
 }
 
 export interface AgentEconomySimulationResult {
@@ -185,9 +190,11 @@ const DEFAULT_AGENTS = [
   { id: 'sim:merchant:2', name: 'Sim Merchant 2', role: 'merchant' as const, startingGold: 4000 },
 ];
 
-export function runAgentEconomySimulation(input: AgentSimulationInput): AgentEconomySimulationResult {
+export async function runAgentEconomySimulation(input: AgentSimulationInput): Promise<AgentEconomySimulationResult> {
   const seed = input.seed ?? 1;
   const days = input.days ?? 2;
+  const aiMode = !!input.aiMode || process.env.AKALYNTH_AI_MODE === "1";
+  const knowledgeByAgent = new Map();
   const receiptState: ReceiptState = { lastEventHash: null, sequence: 0 };
   const receipts: AuditReceipt[] = [];
   const steps: AgentTrainingStep[] = [];
@@ -264,23 +271,81 @@ export function runAgentEconomySimulation(input: AgentSimulationInput): AgentEco
       let action = 'idle';
       let accepted = true;
       let loot: MobLootSpawn | null = null;
+      let leverageUsed = "";
+      let decisionMeta = null;
 
-      if (agent.role === 'worker') {
-        action = completeWorkLoop(agent.id, 'temple_sweep', nowMs, emit);
-        loot = mintAndPickupLoot(agent, 'training_slime_goo', nowMs + 2, emit, worldLoot, inventoryByAgent, itemById);
-      } else if (agent.role === 'homesteader') {
-        action = buyFirstAffordableProperty(agent.id, emit, nowMs) ? 'buy_property' : completeWorkLoop(agent.id, 'temple_sweep', nowMs, emit);
-        accepted = action !== 'idle';
+      if (aiMode) {
+        // AI-assisted decision with leverage analysis + contract gate + knowledge update
+        const observation = {
+          x: agent.player.x,
+          y: agent.player.y,
+          place_id: getCurrentPlace(agent.id),
+          gold: getGoldBalance(agent.id),
+          owned_property_count: getAllProperties().filter((p) => p.owner_player_id === agent.id).length,
+          market_listing_count: getMarketListings().length,
+          inventory_count: inventoryByAgent.get(agent.id)?.length ?? 0,
+          loot_event_count: worldLoot.length,
+        };
+        const agentReceipts = receipts.filter((r: any) => r.actor_id === agent.id);
+        const receiptWindow = agentReceipts.slice(-5);
+        const knowledge = (knowledgeByAgent.get(agent.id) as any) || { economy: {}, world: {}, rules: {} };
+        const ctx = buildContextFromSim({ id: agent.id, role: agent.role }, observation, receiptWindow, knowledge); ctx.seed = seed; ctx.step = stepNo;
+        let decision;
+        try {
+          decision = await proposeWithLocalAI(ctx);
+        } catch (e) {
+          decision = { error: "propose-err" };
+        }
+        if (decision && !decision.error && decision.proposedAction) {
+          try {
+            // @ts-ignore - experimental .mjs without declarations (see BUILD_HEALTH_REPAIR_PLAN_V1)
+            const mod = await import("../tools/pure-logic.mjs");
+            const v = mod.verifyDecision(decision, { seed, step: stepNo }, receiptWindow || []);
+            if (v && v.approved) {
+              const at = decision.proposedAction;
+              action = at.type || "observe";
+              if (at.params && Object.keys(at.params || {}).length) {
+                action += "+" + JSON.stringify(at.params);
+              }
+              leverageUsed = decision.leverage || v.leverage || "";
+              decisionMeta = { rationale: decision.rationale, leverage: leverageUsed, confidence: decision.confidence };
+            } else {
+              action = "observe";
+              leverageUsed = "gated-fallback";
+            }
+          } catch (ve) {
+            const at = decision.proposedAction;
+            action = at.type || "observe";
+            leverageUsed = decision.leverage || "ai-fallback";
+          }
+        } else {
+          action = "observe";
+          leverageUsed = "no-ai-proposal";
+        }
+        // update per-agent knowledge (learning observable in subsequent windows)
+        const k = knowledgeByAgent.get(agent.id) || { economy: {}, world: {}, rules: {} };
+        k.world = k.world || {}; k.world.steps = (k.world.steps || 0) + 1;
+        if (leverageUsed) { k.economy = k.economy || {}; k.economy.lastLeverage = String(leverageUsed).slice(0,60); }
+        if ((receiptWindow || []).some((r: any) => String(r.action || r.summary || "").includes("bid"))) {
+          k.economy = k.economy || {}; k.economy.saw_bid = true;
+        }
+        knowledgeByAgent.set(agent.id, k);
+      } else if (agent.role === "worker") {
+        action = completeWorkLoop(agent.id, "temple_sweep", nowMs, emit);
+        loot = mintAndPickupLoot(agent, "training_slime_goo", nowMs + 2, emit, worldLoot, inventoryByAgent, itemById);
+      } else if (agent.role === "homesteader") {
+        action = buyFirstAffordableProperty(agent.id, emit, nowMs) ? "buy_property" : completeWorkLoop(agent.id, "temple_sweep", nowMs, emit);
+        accepted = action !== "idle";
       } else {
         const marketResult = runMerchantAction(agent.id, emit, nowMs);
         action = marketResult.action;
         accepted = marketResult.accepted;
-        if (agent.id.endsWith(':2')) {
-          loot = mintAndPickupLoot(agent, 'city_rat_goo', nowMs + 2, emit, worldLoot, inventoryByAgent, itemById);
+        if (agent.id.endsWith(":2")) {
+          loot = mintAndPickupLoot(agent, "city_rat_goo", nowMs + 2, emit, worldLoot, inventoryByAgent, itemById);
         }
       }
 
-      const inspect = debitForAction(agent.id, 'inspect_player', (r) => emit(r.actor_id, r.action, r.inputs, nowMs + 1));
+      const inspect = debitForAction(agent.id, "inspect_player", (r) => emit(r.actor_id, r.action, r.inputs, nowMs + 1));
       if (inspect.ok) action = `${action}+inspect_player`;
       if (loot) action = `${action}+loot_pickup`;
 
@@ -304,13 +369,22 @@ export function runAgentEconomySimulation(input: AgentSimulationInput): AgentEco
         reward_gold_delta: getGoldBalance(agent.id) - beforeGold,
         accepted,
         loot_item_id: loot?.itemId ?? null,
+        leverage: leverageUsed || undefined,
+        decision: decisionMeta || undefined,
       });
       stepNo += 1;
       nowMs += WORK_CONTRACT_SCHEDULE.temple_sweep.cooldown_ms + 60_000;
     }
   }
 
-  npcDialogues.push(...runNpcDialogueTrainingPhase(agents));
+
+  if (aiMode) {
+    const knowledgeSummary: Record<string, any> = {};
+    for (const [aid, k] of knowledgeByAgent.entries()) { knowledgeSummary[aid] = k; }
+    console.log("AI_KNOWLEDGE_UPDATED:", JSON.stringify(knowledgeSummary));
+  }
+
+    npcDialogues.push(...runNpcDialogueTrainingPhase(agents));
   runWorldEventTrainingPhase(emit, nowMs + 60_000);
   runAuctionTrainingPhase(emit, nowMs);
   runCombatTrainingPhase(agents, nowMs + 120_000, emit, inventoryByAgent, itemById, worldItems, reputationByAgent);

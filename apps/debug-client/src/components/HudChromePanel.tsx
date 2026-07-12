@@ -6,6 +6,7 @@ interface HudChromePanelProps {
   children: ReactNode;
   className?: string;
   style?: CSSProperties;
+  dataUiPanel?: string;
   variant?: NineSlicePanelVariant;
   padding?: number | string;
 }
@@ -15,13 +16,14 @@ export function HudChromePanel({
   children,
   className,
   style,
+  dataUiPanel,
   variant = 'panel',
   padding,
 }: HudChromePanelProps) {
   const pngChrome = useNineSliceWeb();
   if (!pngChrome) {
     return (
-      <div className={className} style={style}>
+      <div className={className} style={style} data-ui-panel={dataUiPanel}>
         {children}
       </div>
     );
@@ -31,6 +33,7 @@ export function HudChromePanel({
       variant={variant}
       className={className}
       style={style}
+      data-ui-panel={dataUiPanel}
       padding={padding}
       alpha={0.96}
     >

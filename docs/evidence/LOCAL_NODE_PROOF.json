@@ -1,0 +1,92 @@
+{
+  "schema_version": "local-node-proof/v3",
+  "proof_target": "LOCAL_NODE_PROOF",
+  "node": "ops-laptop-02",
+  "generated_at": "2026-06-23T12:15:00Z",
+  "git_commit": "4aef0a96aed14fa043a43aae5ed980c75a5cb1b3",
+  "overall_status": "pass",
+  "goal0": {
+    "host": "goal0-edge-01",
+    "ssh_alias": "goal0-edge-01",
+    "emulator_serial": "emulator-5576",
+    "apk_on_device": "versionCode=10 debug → ws://10.0.2.2:3000 (SSH -R tunnel to laptop)",
+    "ssh_reverse_tunnel": "ssh -f -N -R 3000:127.0.0.1:3000 goal0-edge-01"
+  },
+  "checks": [
+    {
+      "id": "verify_account_character",
+      "status": "pass",
+      "detail": "npm run verify:account-character exit 0"
+    },
+    {
+      "id": "goal0_emulator_reachable",
+      "status": "pass",
+      "detail": "goal0-edge-01 emulator-5574 + emulator-5576 online",
+      "command": "ssh goal0-edge-01 adb devices"
+    },
+    {
+      "id": "goal0_debug_apk_local_play",
+      "status": "pass",
+      "detail": "debug APK v10 installed; world UI shows Connected + Pos 2,2 via laptop server tunnel",
+      "command": "scp app-debug.apk + adb install -r; GOAL0_UI_SCENARIOS=login,world ./scripts/goal0-android-ui-inspect.sh"
+    },
+    {
+      "id": "goal0_ui_inspect_login_world",
+      "status": "pass",
+      "detail": "docs/evidence/goal0-ui-inspect-debug-local-20260623T121418Z"
+    },
+    {
+      "id": "local_server_health",
+      "status": "pass",
+      "detail": "http://127.0.0.1:3000/v1/health ok (reachable on goal0-edge-01 via -R 3000)"
+    },
+    {
+      "id": "local_outfit_engine",
+      "status": "pass",
+      "detail": "palette 64 defaults 5/24/36/38"
+    },
+    {
+      "id": "beta_apk_local",
+      "status": "pass",
+      "detail": "sha_ok=True v11 on disk (beta lane; device currently on debug for local proof)"
+    },
+    {
+      "id": "debug_client_build",
+      "status": "pass",
+      "detail": "dist rebuilt; @noble/hashes replaces node:crypto in builderDraft"
+    },
+    {
+      "id": "mobile_playable_smoke_headless",
+      "status": "pass",
+      "detail": "npm run smoke:mobile exit 0 after crypto fix + dock/dpad selector updates",
+      "command": "npm -w apps/debug-client run smoke:mobile -- --base-url http://127.0.0.1:5174/play/?presentation=1"
+    },
+    {
+      "id": "remote_beta_publish",
+      "status": "skipped",
+      "detail": "Network publish deferred; APK + manifest ready on disk"
+    },
+    {
+      "id": "build_assets_full",
+      "status": "skipped",
+      "detail": "Sidecar JSON gaps — classic-32-art-pipeline lane"
+    }
+  ],
+  "artifacts": {
+    "beta_apk": "apps/android/app/build/outputs/apk/beta/app-beta.apk",
+    "debug_apk": "apps/android/app/build/outputs/apk/debug/app-debug.apk",
+    "beta_manifest": "infra/android/beta-client-update.json",
+    "goal0_ui_inspect_beta": "docs/evidence/goal0-ui-inspect-20260623T120333Z",
+    "goal0_ui_inspect_debug_local": "docs/evidence/goal0-ui-inspect-debug-local-20260623T121418Z",
+    "mobile_smoke_report": "docs/asset-decisions/AKALYNTH_MOBILE_PLAYABLE_SMOKE_SCRIPT_V1/validation/mobile_playable_smoke_report.json"
+  },
+  "adb_from_laptop": "ssh goal0-edge-01 adb -s emulator-5576 <cmd>",
+  "live_services": {
+    "server": "http://127.0.0.1:3000",
+    "debug_client_preview": "http://127.0.0.1:5174/play/?presentation=1"
+  },
+  "fixes_applied": [
+    "packages/shared/builderDraft.ts: @noble/hashes sha256 (browser-safe; fixes headless SPA crash)",
+    "apps/debug-client/scripts/mobile-playable-smoke.mjs: playable-state + dock/dpad hit targets"
+  ]
+}

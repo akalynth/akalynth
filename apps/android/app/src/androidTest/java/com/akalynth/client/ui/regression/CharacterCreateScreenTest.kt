@@ -43,7 +43,7 @@ class CharacterCreateScreenTest {
     @Test
     fun test_n1_name_input_field_is_displayed() {
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { _, _, _, _ -> })
+            CharacterCreateScreen(onCreate = { _, _, _, _, _ -> })
         }
 
         composeTestRule.waitForIdle()
@@ -57,7 +57,7 @@ class CharacterCreateScreenTest {
         var capturedSex: CharacterSex? = null
 
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { name, _, sex, _ ->
+            CharacterCreateScreen(onCreate = { name, _, sex, _, _ ->
                 capturedName = name
                 capturedSex = sex
             })
@@ -81,7 +81,7 @@ class CharacterCreateScreenTest {
     @Test
     fun test_n1_name_max_length_is_16_characters() {
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { _, _, _, _ -> })
+            CharacterCreateScreen(onCreate = { _, _, _, _, _ -> })
         }
 
         composeTestRule.waitForIdle()
@@ -99,7 +99,7 @@ class CharacterCreateScreenTest {
     @Test
     fun test_n1_blank_name_keeps_create_button_disabled() {
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { _, _, _, _ -> })
+            CharacterCreateScreen(onCreate = { _, _, _, _, _ -> })
         }
 
         composeTestRule.waitForIdle()
@@ -115,7 +115,7 @@ class CharacterCreateScreenTest {
     @Test
     fun test_n1_empty_name_keeps_create_button_disabled() {
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { _, _, _, _ -> })
+            CharacterCreateScreen(onCreate = { _, _, _, _, _ -> })
         }
 
         composeTestRule.waitForIdle()
@@ -128,7 +128,7 @@ class CharacterCreateScreenTest {
     @Test
     fun test_n1_character_count_displays_correctly() {
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { _, _, _, _ -> })
+            CharacterCreateScreen(onCreate = { _, _, _, _, _ -> })
         }
 
         composeTestRule.waitForIdle()
@@ -150,7 +150,7 @@ class CharacterCreateScreenTest {
         var capturedName: String? = null
 
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { name, _, _, _ ->
+            CharacterCreateScreen(onCreate = { name, _, _, _, _ ->
                 capturedName = name
             })
         }
@@ -172,7 +172,7 @@ class CharacterCreateScreenTest {
         var capturedName: String? = null
 
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { name, _, _, _ ->
+            CharacterCreateScreen(onCreate = { name, _, _, _, _ ->
                 capturedName = name
             })
         }
@@ -199,7 +199,7 @@ class CharacterCreateScreenTest {
     @Test
     fun test_n2_sex_selector_is_displayed() {
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { _, _, _, _ -> })
+            CharacterCreateScreen(onCreate = { _, _, _, _, _ -> })
         }
 
         composeTestRule.waitForIdle()
@@ -212,7 +212,7 @@ class CharacterCreateScreenTest {
     @Test
     fun test_n2_world_and_outfit_selectors_are_displayed() {
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { _, _, _, _ -> })
+            CharacterCreateScreen(onCreate = { _, _, _, _, _ -> })
         }
 
         composeTestRule.waitForIdle()
@@ -229,7 +229,7 @@ class CharacterCreateScreenTest {
         var capturedSex: CharacterSex? = null
 
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { _, _, sex, _ ->
+            CharacterCreateScreen(onCreate = { _, _, sex, _, _ ->
                 capturedSex = sex
             })
         }
@@ -252,7 +252,7 @@ class CharacterCreateScreenTest {
         var capturedOutfitId: String? = null
 
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { _, worldId, _, outfitId ->
+            CharacterCreateScreen(onCreate = { _, worldId, _, outfitId, _ ->
                 capturedWorldId = worldId
                 capturedOutfitId = outfitId
             })
@@ -276,7 +276,7 @@ class CharacterCreateScreenTest {
         var capturedOutfitId: String? = null
 
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { _, worldId, _, outfitId ->
+            CharacterCreateScreen(onCreate = { _, worldId, _, outfitId, _ ->
                 capturedWorldId = worldId
                 capturedOutfitId = outfitId
             })
@@ -301,7 +301,7 @@ class CharacterCreateScreenTest {
         var capturedSex: CharacterSex? = null
 
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { _, _, sex, _ ->
+            CharacterCreateScreen(onCreate = { _, _, sex, _, _ ->
                 capturedSex = sex
             })
         }
@@ -327,7 +327,7 @@ class CharacterCreateScreenTest {
         var capturedSex: CharacterSex? = null
 
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { _, _, sex, _ ->
+            CharacterCreateScreen(onCreate = { _, _, sex, _, _ ->
                 capturedSex = sex
             })
         }
@@ -353,7 +353,7 @@ class CharacterCreateScreenTest {
         var capturedSex: CharacterSex? = null
 
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { _, _, sex, _ ->
+            CharacterCreateScreen(onCreate = { _, _, sex, _, _ ->
                 capturedSex = sex
             })
         }
@@ -381,7 +381,7 @@ class CharacterCreateScreenTest {
     @Test
     fun test_n3_sprite_preview_is_displayed() {
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { _, _, _, _ -> })
+            CharacterCreateScreen(onCreate = { _, _, _, _, _ -> })
         }
 
         composeTestRule.waitForIdle()
@@ -392,7 +392,7 @@ class CharacterCreateScreenTest {
     @Test
     fun test_n3_male_sprite_shown_by_default() {
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { _, _, _, _ -> })
+            CharacterCreateScreen(onCreate = { _, _, _, _, _ -> })
         }
 
         composeTestRule.waitForIdle()
@@ -404,7 +404,7 @@ class CharacterCreateScreenTest {
     @Test
     fun test_n3_sprite_swaps_to_female_on_selection() {
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { _, _, _, _ -> })
+            CharacterCreateScreen(onCreate = { _, _, _, _, _ -> })
         }
 
         composeTestRule.waitForIdle()
@@ -424,7 +424,7 @@ class CharacterCreateScreenTest {
     @Test
     fun test_n3_sprite_swaps_back_to_male() {
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { _, _, _, _ -> })
+            CharacterCreateScreen(onCreate = { _, _, _, _, _ -> })
         }
 
         composeTestRule.waitForIdle()
@@ -441,7 +441,7 @@ class CharacterCreateScreenTest {
     @Test
     fun test_n3_sprite_swaps_on_outfit_selection() {
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { _, _, _, _ -> })
+            CharacterCreateScreen(onCreate = { _, _, _, _, _ -> })
         }
 
         composeTestRule.waitForIdle()
@@ -460,7 +460,7 @@ class CharacterCreateScreenTest {
     @Test
     fun test_n4_create_button_disabled_initially() {
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { _, _, _, _ -> })
+            CharacterCreateScreen(onCreate = { _, _, _, _, _ -> })
         }
 
         composeTestRule.waitForIdle()
@@ -472,7 +472,7 @@ class CharacterCreateScreenTest {
     @Test
     fun test_n4_create_button_enabled_with_valid_name() {
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { _, _, _, _ -> })
+            CharacterCreateScreen(onCreate = { _, _, _, _, _ -> })
         }
 
         composeTestRule.waitForIdle()
@@ -487,7 +487,7 @@ class CharacterCreateScreenTest {
     @Test
     fun test_n4_create_button_disabled_when_name_cleared() {
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { _, _, _, _ -> })
+            CharacterCreateScreen(onCreate = { _, _, _, _, _ -> })
         }
 
         composeTestRule.waitForIdle()
@@ -518,7 +518,7 @@ class CharacterCreateScreenTest {
         var callCount = 0
 
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { name, worldId, sex, outfitId ->
+            CharacterCreateScreen(onCreate = { name, worldId, sex, outfitId, _ ->
                 capturedName = name
                 capturedWorldId = worldId
                 capturedSex = sex
@@ -551,7 +551,7 @@ class CharacterCreateScreenTest {
         var callCount = 0
 
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { _, _, _, _ ->
+            CharacterCreateScreen(onCreate = { _, _, _, _, _ ->
                 callCount++
             })
         }
@@ -570,7 +570,7 @@ class CharacterCreateScreenTest {
         var callCount = 0
 
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { _, _, _, _ ->
+            CharacterCreateScreen(onCreate = { _, _, _, _, _ ->
                 callCount++
             })
         }
@@ -593,7 +593,7 @@ class CharacterCreateScreenTest {
     @Test
     fun test_screen_displays_title() {
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { _, _, _, _ -> })
+            CharacterCreateScreen(onCreate = { _, _, _, _, _ -> })
         }
 
         composeTestRule.waitForIdle()
@@ -608,7 +608,7 @@ class CharacterCreateScreenTest {
     @Test
     fun test_screen_has_proper_structure() {
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { _, _, _, _ -> })
+            CharacterCreateScreen(onCreate = { _, _, _, _, _ -> })
         }
 
         composeTestRule.waitForIdle()
@@ -621,13 +621,35 @@ class CharacterCreateScreenTest {
         composeTestRule.onNodeWithTag("CharacterCreateScreen_WorldSelector").assertIsDisplayed()
         composeTestRule.onNodeWithTag("CharacterCreateScreen_SexSelector").assertIsDisplayed()
         composeTestRule.onNodeWithTag("CharacterCreateScreen_OutfitSelector").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("CharacterCreateScreen_OutfitColorPicker").assertIsDisplayed()
         composeTestRule.onNodeWithTag("CharacterCreateScreen_CreateButton").assertIsDisplayed()
+    }
+
+    @Test
+    fun test_outfit_color_picker_emits_default_colors() {
+        var capturedColors: com.akalynth.client.ui.components.character.OutfitColorIndices? = null
+
+        composeTestRule.setContent {
+            CharacterCreateScreen(onCreate = { _, _, _, _, colors ->
+                capturedColors = colors
+            })
+        }
+
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("CharacterCreateScreen_NameInput").performTextInput("TintHero")
+        composeTestRule.onNodeWithTag("CharacterCreateScreen_CreateButton").performClick()
+
+        assertNotNull(capturedColors)
+        assertEquals(5, capturedColors?.head)
+        assertEquals(24, capturedColors?.body)
+        assertEquals(36, capturedColors?.legs)
+        assertEquals(38, capturedColors?.feet)
     }
 
     @Test
     fun test_create_button_has_correct_text() {
         composeTestRule.setContent {
-            CharacterCreateScreen(onCreate = { _, _, _, _ -> })
+            CharacterCreateScreen(onCreate = { _, _, _, _, _ -> })
         }
 
         composeTestRule.waitForIdle()

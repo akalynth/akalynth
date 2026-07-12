@@ -2,7 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <application android:label="Akalynth Beta">
+    <application
+        android:label="Akalynth Beta"
+        tools:replace="android:label">
         <activity android:name=".MainActivity">
             <intent-filter tools:node="remove">
                 <action android:name="android.intent.action.MAIN" />
@@ -13,7 +15,8 @@
         <activity
             android:name=".CharacterCreateActivity"
             android:exported="true"
-            android:label="Akalynth Beta">
+            android:label="Akalynth Beta"
+            tools:replace="android:label">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

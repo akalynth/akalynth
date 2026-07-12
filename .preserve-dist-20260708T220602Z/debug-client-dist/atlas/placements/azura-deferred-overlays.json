@@ -1,0 +1,397 @@
+{
+  "map": "azura",
+  "schema_version": 1,
+  "mechanics": null,
+  "placements": [
+    {
+      "id": "high-city-castle:throne:60:7:0",
+      "asset_id": "throne",
+      "x": 60,
+      "y": 7
+    },
+    {
+      "id": "high-city-castle:weapon_rack:58:6:0",
+      "asset_id": "weapon_rack",
+      "x": 58,
+      "y": 6
+    },
+    {
+      "id": "high-city-castle:prison_bars:62:5:0",
+      "asset_id": "prison_bars",
+      "x": 62,
+      "y": 5
+    },
+    {
+      "id": "high-city-castle:stone_column:59:4:0",
+      "asset_id": "stone_column",
+      "x": 59,
+      "y": 4
+    },
+    {
+      "id": "high-city-castle:stone_column:61:4:1",
+      "asset_id": "stone_column",
+      "x": 61,
+      "y": 4
+    },
+    {
+      "id": "high-city-swamp:swamp_dead_tree:2:58:0",
+      "asset_id": "swamp_dead_tree",
+      "x": 2,
+      "y": 58
+    },
+    {
+      "id": "high-city-swamp:swamp_reeds:4:60:0",
+      "asset_id": "swamp_reeds",
+      "x": 4,
+      "y": 60
+    },
+    {
+      "id": "high-city-swamp:swamp_reeds:6:61:1",
+      "asset_id": "swamp_reeds",
+      "x": 6,
+      "y": 61
+    },
+    {
+      "id": "high-city-swamp:swamp_mushroom:5:59:0",
+      "asset_id": "swamp_mushroom",
+      "x": 5,
+      "y": 59
+    },
+    {
+      "id": "high-city-swamp:swamp_log:7:60:0",
+      "asset_id": "swamp_log",
+      "x": 7,
+      "y": 60
+    },
+    {
+      "id": "high-city-swamp:swamp_frog:4:61:0",
+      "asset_id": "swamp_frog",
+      "x": 4,
+      "y": 61
+    },
+    {
+      "id": "high-city-swamp:swamp_bog_slime:6:59:0",
+      "asset_id": "swamp_bog_slime",
+      "x": 6,
+      "y": 59
+    },
+    {
+      "id": "high-city-grove:prop_tree:3:44:0",
+      "asset_id": "prop_tree",
+      "x": 3,
+      "y": 44
+    },
+    {
+      "id": "high-city-grove:prop_tree:5:42:1",
+      "asset_id": "prop_tree",
+      "x": 5,
+      "y": 42
+    },
+    {
+      "id": "high-city-grove:prop_tree:4:46:2",
+      "asset_id": "prop_tree",
+      "x": 4,
+      "y": 46
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:2:58:0",
+      "asset_id": "swamp_mud",
+      "x": 2,
+      "y": 58
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:3:58:0",
+      "asset_id": "swamp_mud",
+      "x": 3,
+      "y": 58
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:4:58:0",
+      "asset_id": "swamp_mud",
+      "x": 4,
+      "y": 58
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:5:58:0",
+      "asset_id": "swamp_mud",
+      "x": 5,
+      "y": 58
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:6:58:0",
+      "asset_id": "swamp_mud",
+      "x": 6,
+      "y": 58
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:7:58:0",
+      "asset_id": "swamp_mud",
+      "x": 7,
+      "y": 58
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:8:58:0",
+      "asset_id": "swamp_mud",
+      "x": 8,
+      "y": 58
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:2:59:0",
+      "asset_id": "swamp_mud",
+      "x": 2,
+      "y": 59
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:3:59:0",
+      "asset_id": "swamp_mud",
+      "x": 3,
+      "y": 59
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:4:59:0",
+      "asset_id": "swamp_mud",
+      "x": 4,
+      "y": 59
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:5:59:0",
+      "asset_id": "swamp_mud",
+      "x": 5,
+      "y": 59
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:6:59:0",
+      "asset_id": "swamp_mud",
+      "x": 6,
+      "y": 59
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:7:59:0",
+      "asset_id": "swamp_mud",
+      "x": 7,
+      "y": 59
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:8:59:0",
+      "asset_id": "swamp_mud",
+      "x": 8,
+      "y": 59
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:2:60:0",
+      "asset_id": "swamp_mud",
+      "x": 2,
+      "y": 60
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:3:60:0",
+      "asset_id": "swamp_mud",
+      "x": 3,
+      "y": 60
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:4:60:0",
+      "asset_id": "swamp_mud",
+      "x": 4,
+      "y": 60
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:5:60:0",
+      "asset_id": "swamp_mud",
+      "x": 5,
+      "y": 60
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:6:60:0",
+      "asset_id": "swamp_mud",
+      "x": 6,
+      "y": 60
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:7:60:0",
+      "asset_id": "swamp_mud",
+      "x": 7,
+      "y": 60
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:8:60:0",
+      "asset_id": "swamp_mud",
+      "x": 8,
+      "y": 60
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:2:61:0",
+      "asset_id": "swamp_mud",
+      "x": 2,
+      "y": 61
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:3:61:0",
+      "asset_id": "swamp_mud",
+      "x": 3,
+      "y": 61
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:4:61:0",
+      "asset_id": "swamp_mud",
+      "x": 4,
+      "y": 61
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:5:61:0",
+      "asset_id": "swamp_mud",
+      "x": 5,
+      "y": 61
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:6:61:0",
+      "asset_id": "swamp_mud",
+      "x": 6,
+      "y": 61
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:7:61:0",
+      "asset_id": "swamp_mud",
+      "x": 7,
+      "y": 61
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:8:61:0",
+      "asset_id": "swamp_mud",
+      "x": 8,
+      "y": 61
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:2:62:0",
+      "asset_id": "swamp_mud",
+      "x": 2,
+      "y": 62
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:3:62:0",
+      "asset_id": "swamp_mud",
+      "x": 3,
+      "y": 62
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:4:62:0",
+      "asset_id": "swamp_mud",
+      "x": 4,
+      "y": 62
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:5:62:0",
+      "asset_id": "swamp_mud",
+      "x": 5,
+      "y": 62
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:6:62:0",
+      "asset_id": "swamp_mud",
+      "x": 6,
+      "y": 62
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:7:62:0",
+      "asset_id": "swamp_mud",
+      "x": 7,
+      "y": 62
+    },
+    {
+      "id": "high-city-swamp:swamp_mud:8:62:0",
+      "asset_id": "swamp_mud",
+      "x": 8,
+      "y": 62
+    },
+    {
+      "id": "high-city-swamp:swamp_bog_water:3:59:0",
+      "asset_id": "swamp_bog_water",
+      "x": 3,
+      "y": 59
+    },
+    {
+      "id": "high-city-swamp:swamp_bog_water:4:59:0",
+      "asset_id": "swamp_bog_water",
+      "x": 4,
+      "y": 59
+    },
+    {
+      "id": "high-city-swamp:swamp_bog_water:5:59:0",
+      "asset_id": "swamp_bog_water",
+      "x": 5,
+      "y": 59
+    },
+    {
+      "id": "high-city-swamp:swamp_bog_water:6:59:0",
+      "asset_id": "swamp_bog_water",
+      "x": 6,
+      "y": 59
+    },
+    {
+      "id": "high-city-swamp:swamp_bog_water:7:59:0",
+      "asset_id": "swamp_bog_water",
+      "x": 7,
+      "y": 59
+    },
+    {
+      "id": "high-city-swamp:swamp_bog_water:3:60:0",
+      "asset_id": "swamp_bog_water",
+      "x": 3,
+      "y": 60
+    },
+    {
+      "id": "high-city-swamp:swamp_bog_water:4:60:0",
+      "asset_id": "swamp_bog_water",
+      "x": 4,
+      "y": 60
+    },
+    {
+      "id": "high-city-swamp:swamp_bog_water:5:60:0",
+      "asset_id": "swamp_bog_water",
+      "x": 5,
+      "y": 60
+    },
+    {
+      "id": "high-city-swamp:swamp_bog_water:6:60:0",
+      "asset_id": "swamp_bog_water",
+      "x": 6,
+      "y": 60
+    },
+    {
+      "id": "high-city-swamp:swamp_bog_water:7:60:0",
+      "asset_id": "swamp_bog_water",
+      "x": 7,
+      "y": 60
+    },
+    {
+      "id": "high-city-swamp:swamp_bog_water:3:61:0",
+      "asset_id": "swamp_bog_water",
+      "x": 3,
+      "y": 61
+    },
+    {
+      "id": "high-city-swamp:swamp_bog_water:4:61:0",
+      "asset_id": "swamp_bog_water",
+      "x": 4,
+      "y": 61
+    },
+    {
+      "id": "high-city-swamp:swamp_bog_water:5:61:0",
+      "asset_id": "swamp_bog_water",
+      "x": 5,
+      "y": 61
+    },
+    {
+      "id": "high-city-swamp:swamp_bog_water:6:61:0",
+      "asset_id": "swamp_bog_water",
+      "x": 6,
+      "y": 61
+    },
+    {
+      "id": "high-city-swamp:swamp_bog_water:7:61:0",
+      "asset_id": "swamp_bog_water",
+      "x": 7,
+      "y": 61
+    }
+  ]
+}

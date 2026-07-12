@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Account — Akalynth Portal</title>
+    <meta
+      name="description"
+      content="The Akalynth account portal — create an account with a nickname (email optional), sign in, create a character, choose a world, sex, and outfit, then play the current pre-alpha beta in your browser. The direct Android beta APK (v12) is available separately. F-Droid is held at an older version on a separate path."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%231f1a13'/%3E%3Cpath d='M16 5l7 11-7 11-7-11z' fill='%23d9b25a'/%3E%3C/svg%3E"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Akalynth" />
+    <meta property="og:title" content="Account Portal — Akalynth" />
+    <meta
+      property="og:description"
+      content="Create an Akalynth account with a nickname (email optional), choose a character, and play the current pre-alpha beta in your browser. The direct Android beta APK (v12) is available separately. F-Droid is held at an older version on a separate path."
+    />
+    <meta property="og:image" content="assets/akalynth/visuals/og/02-rookguard-gate.og-1200x630.webp" />
+    <meta
+      property="og:image:alt"
+      content="Rookguard Gate, the threshold where Akalynth adventurers begin."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="assets/akalynth/visuals/og/02-rookguard-gate.og-1200x630.webp" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/fonts.css" />
+    <link rel="stylesheet" href="css/theme-dark.css" />
+  </head>
+  <body class="theme-dark" data-page="account">
+    <!--
+      Akalynth account portal. Static frontend only: account authority,
+      sessions, character creation, and receipts live on the Akalynth API.
+    -->
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header" role="banner">
+      <div class="header-inner">
+        <a class="brand" href="index.html#home" data-nav="home">
+          <span class="brand-mark" aria-hidden="true">⚔</span>
+          <span class="brand-text">
+            <span class="brand-name">Akalynth</span>
+            <span class="brand-tag">High City awaits</span>
+          </span>
+        </a>
+        <input class="nav-toggle" type="checkbox" id="nav-toggle" aria-label="Toggle navigation menu" />
+        <label class="nav-burger" for="nav-toggle" aria-hidden="true"><span></span><span></span><span></span></label>
+        <nav class="top-nav" aria-label="Primary">
+          <ul>
+            <li><a class="tab-btn" href="index.html#home" data-nav="home">Home</a></li>
+            <li><a class="tab-btn" href="index.html#world" data-nav="world">High City</a></li>
+            <li><a class="tab-btn" href="library.html" data-nav="library">Library</a></li>
+            <li><a class="tab-btn" href="wallpapers.html" data-nav="wallpapers">Wallpapers</a></li>
+            <li class="requires-account"><a class="tab-btn" href="houses.html" data-nav="houses">Houses</a></li>
+            <li class="requires-account"><a class="tab-btn" href="shop.html" data-nav="shop">Shop</a></li>
+            <li><a class="tab-btn" href="forum.html" data-nav="forum">Forum</a></li>
+            <li><a class="tab-btn is-active" href="account.html" data-nav="account" aria-current="page">Account</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <div class="layout">
+      <!-- Ornate sidebar -->
+      <input class="aside-toggle" type="checkbox" id="aside-toggle" aria-label="Toggle realm status panels" />
+      <label class="aside-bar" for="aside-toggle" aria-hidden="true"><span class="aside-bar__label">Realm Status</span><span class="aside-bar__chev" aria-hidden="true">&#9662;</span></label>
+      <aside class="sidebar" aria-label="Sidebar">
+        <section class="panel">
+          <h2 class="panel-title">Realm Status</h2>
+          <div class="panel-body">
+            <ul class="status-list">
+              <li><span class="dot dot-amber"></span> Stage: <strong>Pre-alpha</strong></li>
+              <li><span class="dot dot-green"></span> City: <strong>High City</strong></li>
+              <li><span class="dot dot-green"></span> Authority model: <strong>Server-side</strong></li>
+              <li><span class="dot dot-blue"></span> Guardian: <strong>Tem (anti-bot)</strong></li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="panel" id="holdings-panel">
+          <h2 class="panel-title">Your Holdings</h2>
+          <div class="panel-body">
+            <div id="holdings-empty">
+              <p class="muted small">No character yet.</p>
+            </div>
+            <div id="holdings-body" hidden>
+              <p class="holdings-name"><strong id="holdings-name">—</strong></p>
+              <p class="muted small">City: <span id="holdings-world">—</span></p>
+              <p class="holdings-gold">
+                <span class="gold" id="holdings-gold">-</span> gold
+              </p>
+              <p class="muted small">Premium: <strong id="holdings-premium">—</strong></p>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <!-- Parchment content column -->
+      <main class="content" id="main" role="main" tabindex="-1">
+        <h1 class="page-title">Account Portal</h1>
+
+        <article class="parchment">
+          <p class="lede">
+            Every adventurer's story begins the same way — waking in the quiet
+            keep of Rookguard, with a name the world has yet to learn.
+          </p>
+          <p>
+            Create your account and choose that name here. Beyond the keep's gate lies High City, where the
+            Legend Stone keeps the deeds it chooses to remember; what it one day
+            records under your name is yours to earn. Your vocation — and your
+            place in the realm — is shaped in-game, not on this page.
+          </p>
+        </article>
+
+        <div id="account-portal-root">
+          <article class="parchment">
+            <p class="muted">Loading account portal...</p>
+          </article>
+        </div>
+      </main>
+    </div>
+
+    <footer class="site-footer" role="contentinfo">
+      <div class="footer-inner">
+        <p>© <span id="year"></span> Akalynth · High City — a pre-alpha, proof-native MMO.</p>
+        <p class="small muted">
+          Linux server + separate Android channels (direct v12 APK or F-Droid held). Classic-MMO aesthetic recreated with original art and copy.
+        </p>
+      </div>
+    </footer>
+
+    <script src="js/app.js" defer></script>
+  </body>
+</html>

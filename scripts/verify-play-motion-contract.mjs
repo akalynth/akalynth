@@ -1,17 +1,23 @@
 #!/usr/bin/env node
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '..');
+const browserCandidates = [
+  '/home/sovereign/.cache/ms-playwright/chromium-1223/chrome-linux64/chrome',
+  '/snap/chromium/current/usr/lib/chromium-browser/chrome',
+  '/usr/bin/chromium',
+  '/usr/bin/google-chrome',
+];
 
 const defaults = {
   url: process.env.AKALYNTH_PLAY_URL || 'https://beta.akalynth.com/play/',
   reportPath: resolve(root, 'evidence/play-motion-contract-report.json'),
   screenshotDir: resolve(root, 'evidence/play-motion-contract-screenshots'),
-  browser: process.env.AKALYNTH_CHROME_PATH || '/home/sovereign/.cache/ms-playwright/chromium-1223/chrome-linux64/chrome',
+  browser: process.env.AKALYNTH_CHROME_PATH || browserCandidates.find((candidate) => existsSync(candidate)) || browserCandidates[0],
 };
 
 function parseArgs(argv) {
@@ -88,16 +94,24 @@ async function waitForReady(page) {
   await page.waitForSelector('canvas', { timeout: 30000 });
   await page.waitForFunction(() => {
     const text = document.body.innerText || '';
-    const canvas = document.querySelector('canvas');
+    const canvas = document.querySelector('.map-canvas');
     return Boolean(canvas) && /connected/i.test(text);
   }, null, { timeout: 30000 });
   await page.waitForTimeout(1800);
 }
 
+async function enterPlayIfNeeded(page) {
+  const button = page.locator('.mobile-enter-play-btn');
+  if (await button.isVisible().catch(() => false)) {
+    await button.click();
+    await page.waitForTimeout(500);
+  }
+}
+
 async function snapshot(page, label) {
   return page.evaluate((label) => {
     const clean = (value) => (value || '').replace(/\s+/g, ' ').trim();
-    const canvas = document.querySelector('canvas');
+    const canvas = document.querySelector('.map-canvas');
     if (!canvas) throw new Error('missing canvas');
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('missing canvas context');
@@ -185,6 +199,10 @@ function addCheck(report, id, pass, evidence) {
   report.checks.push({ id, status: pass ? 'pass' : 'fail', evidence });
 }
 
+function positionFromText(text) {
+  return text.match(/(\d+,\d+)/)?.[1] ?? null;
+}
+
 async function inspectViewport(browser, args, mode) {
   const viewport = mode === 'desktop'
     ? { width: 1440, height: 1000 }
@@ -210,12 +228,19 @@ async function inspectViewport(browser, args, mode) {
 
   await page.goto(args.url, { waitUntil: 'networkidle', timeout: 30000 });
   await waitForReady(page);
+  await enterPlayIfNeeded(page);
   const idle0 = await snapshot(page, `${mode}:idle0`);
   await page.waitForTimeout(1000);
   const idle1 = await snapshot(page, `${mode}:idle1`);
   const beforeMoveScreenshot = resolve(args.screenshotDir, `${mode}-before-move.png`);
   await page.screenshot({ path: beforeMoveScreenshot, fullPage: true });
-  await page.getByText('→', { exact: true }).click();
+  const east = page.locator('[aria-label="Move east"]').first();
+  const eastBox = await east.boundingBox();
+  if (!eastBox) throw new Error(`missing visible east movement control for ${mode}`);
+  await page.mouse.move(eastBox.x + eastBox.width / 2, eastBox.y + eastBox.height / 2);
+  await page.mouse.down();
+  await page.waitForTimeout(260);
+  await page.mouse.up();
   await page.waitForTimeout(900);
   const moved = await snapshot(page, `${mode}:after-east`);
   const afterMoveScreenshot = resolve(args.screenshotDir, `${mode}-after-east.png`);
@@ -267,7 +292,9 @@ async function main() {
       : ['topBar', 'stageControls', 'stageBottom', 'mobileStatusRail', 'motionObjectiveRail', 'rightThumbZone'];
     const idleUnstable = stableBoxes(result.idle0, result.idle1, hudKeys);
     const moveUnstable = stableBoxes(result.idle1, result.moved, hudKeys);
-    const positionAdvanced = /\b3,2\b/.test(result.moved.bodyText);
+    const beforePosition = positionFromText(result.idle1.bodyText);
+    const afterPosition = positionFromText(result.moved.bodyText);
+    const positionAdvanced = Boolean(beforePosition && afterPosition && beforePosition !== afterPosition);
     const connected = /connected/i.test(result.moved.bodyText);
 
     addCheck(report, `${result.mode}_loads_connected`, connected, {
@@ -279,6 +306,8 @@ async function main() {
     });
     addCheck(report, `${result.mode}_east_input_moves_canvas`, result.moveDiff.changedPixels > 0 && positionAdvanced, {
       moveDiff: result.moveDiff,
+      beforePosition,
+      afterPosition,
       positionAdvanced,
       text: result.moved.bodyText.slice(0, 500),
     });

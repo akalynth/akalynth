@@ -1,0 +1,16 @@
+{
+  "url": "https://beta.akalynth.com/play/",
+  "finalUrl": "https://beta.akalynth.com/play/",
+  "httpStatus": 200,
+  "summary": {
+    "title": "Akalynth Client v0",
+    "statusText": true,
+    "bodyLen": 327,
+    "hasRoot": true,
+    "hasPlayText": true,
+    "visibleControls": 28,
+    "url": "https://beta.akalynth.com/play/"
+  },
+  "consoleErrors": [],
+  "pageErrors": []
+}

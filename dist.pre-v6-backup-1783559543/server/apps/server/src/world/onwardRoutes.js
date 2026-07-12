@@ -1,0 +1,115 @@
+import { ASHGLASS_EVIDENCE_RECOVERED_ACTION, DREAM_FRAGMENT_ANCHORED_ACTION, DREAM_GATE_ARRIVAL_RECORDED_ACTION, DREAM_GATE_INTERPRETED_ACTION, DREAM_GATE_SEAL_PREPARED_ACTION, DREAM_GATE_TRAVERSAL_AUTHORIZED_ACTION, FORGEHOLD_ASHGLASS_RAVINE_EVIDENCE_RECOVERED_ACTION, FORGEHOLD_CARAVAN_EVIDENCE_RECOVERED_ACTION, FORGEHOLD_COMPONENT_PAYOUT_CREDITED_ACTION, FORGEHOLD_COMPONENT_SETTLED_ACTION, FORGEHOLD_ECONOMY_QUOTED_ACTION, FORGEHOLD_MILEPOST_EVIDENCE_RECOVERED_ACTION, FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION, HEARTFORGE_GATE_PREPARED_ACTION, ROUTE_ABUSE_NOTES_REVIEWED_ACTION, ROUTE_SURVEYED_ACTION, SOULSTEEL_COMPONENT_MINTED_ACTION, SOULSTEEL_REFINEMENT_AUTHORIZED_ACTION, SOULSTEEL_STABILIZED_ACTION, } from '../../../../packages/shared/skills.js';
+function defaultProgress() {
+    return {
+        forgeholdSurveyed: false,
+        forgeholdMilepostEvidenceRecovered: false,
+        forgeholdCaravanEvidenceRecovered: false,
+        forgeholdAshglassRavineEvidenceRecovered: false,
+        forgeholdShipmentInvestigated: false,
+        forgeholdEconomyQuoted: false,
+        soulsteelStabilized: false,
+        forgeholdAbuseNotesReviewed: false,
+        heartforgeGatePrepared: false,
+        ashglassEvidenceRecovered: false,
+        soulsteelRefinementAuthorized: false,
+        soulsteelComponentMinted: false,
+        forgeholdComponentSettled: false,
+        forgeholdComponentPayoutCredited: false,
+        moonspireSurveyed: false,
+        dreamGateInterpreted: false,
+        dreamFragmentAnchored: false,
+        dreamGateAbuseNotesReviewed: false,
+        dreamGateSealPrepared: false,
+        dreamGateTraversalAuthorized: false,
+        dreamGateArrivalRecorded: false,
+    };
+}
+const progressByPlayerId = new Map();
+function cloneProgress(progress) {
+    return { ...progress };
+}
+export function getOnwardRouteReceiptProgress(playerId) {
+    return cloneProgress(progressByPlayerId.get(playerId) ?? defaultProgress());
+}
+export function clearOnwardRouteProjection() {
+    progressByPlayerId.clear();
+}
+function setProgress(playerId, next) {
+    progressByPlayerId.set(playerId, cloneProgress(next));
+}
+export function applyReceiptToOnwardRoutes(receipt) {
+    const playerId = receipt.actor_id;
+    if (!playerId || receipt.result === 'rejected')
+        return;
+    const current = getOnwardRouteReceiptProgress(playerId);
+    let next = null;
+    if (receipt.action === ROUTE_SURVEYED_ACTION) {
+        if (receipt.inputs?.route_id === 'forgehold_route_slice_v1') {
+            next = { ...current, forgeholdSurveyed: true };
+        }
+        else if (receipt.inputs?.route_id === 'moonspire_dream_gate_slice_v1') {
+            next = { ...current, moonspireSurveyed: true };
+        }
+    }
+    else if (receipt.action === FORGEHOLD_MILEPOST_EVIDENCE_RECOVERED_ACTION) {
+        next = { ...current, forgeholdMilepostEvidenceRecovered: true };
+    }
+    else if (receipt.action === FORGEHOLD_CARAVAN_EVIDENCE_RECOVERED_ACTION) {
+        next = { ...current, forgeholdCaravanEvidenceRecovered: true };
+    }
+    else if (receipt.action === FORGEHOLD_ASHGLASS_RAVINE_EVIDENCE_RECOVERED_ACTION) {
+        next = { ...current, forgeholdAshglassRavineEvidenceRecovered: true };
+    }
+    else if (receipt.action === FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION) {
+        next = { ...current, forgeholdShipmentInvestigated: true };
+    }
+    else if (receipt.action === FORGEHOLD_ECONOMY_QUOTED_ACTION) {
+        next = { ...current, forgeholdEconomyQuoted: true };
+    }
+    else if (receipt.action === SOULSTEEL_STABILIZED_ACTION) {
+        next = { ...current, soulsteelStabilized: true };
+    }
+    else if (receipt.action === DREAM_GATE_INTERPRETED_ACTION) {
+        next = { ...current, dreamGateInterpreted: true };
+    }
+    else if (receipt.action === DREAM_FRAGMENT_ANCHORED_ACTION) {
+        next = { ...current, dreamFragmentAnchored: true };
+    }
+    else if (receipt.action === ROUTE_ABUSE_NOTES_REVIEWED_ACTION) {
+        if (receipt.inputs?.route_id === 'forgehold_route_slice_v1') {
+            next = { ...current, forgeholdAbuseNotesReviewed: true };
+        }
+        else if (receipt.inputs?.route_id === 'moonspire_dream_gate_slice_v1') {
+            next = { ...current, dreamGateAbuseNotesReviewed: true };
+        }
+    }
+    else if (receipt.action === HEARTFORGE_GATE_PREPARED_ACTION) {
+        next = { ...current, heartforgeGatePrepared: true };
+    }
+    else if (receipt.action === ASHGLASS_EVIDENCE_RECOVERED_ACTION) {
+        next = { ...current, ashglassEvidenceRecovered: true };
+    }
+    else if (receipt.action === SOULSTEEL_REFINEMENT_AUTHORIZED_ACTION) {
+        next = { ...current, soulsteelRefinementAuthorized: true };
+    }
+    else if (receipt.action === SOULSTEEL_COMPONENT_MINTED_ACTION) {
+        next = { ...current, soulsteelComponentMinted: true };
+    }
+    else if (receipt.action === FORGEHOLD_COMPONENT_SETTLED_ACTION) {
+        next = { ...current, forgeholdComponentSettled: true };
+    }
+    else if (receipt.action === FORGEHOLD_COMPONENT_PAYOUT_CREDITED_ACTION) {
+        next = { ...current, forgeholdComponentPayoutCredited: true };
+    }
+    else if (receipt.action === DREAM_GATE_SEAL_PREPARED_ACTION) {
+        next = { ...current, dreamGateSealPrepared: true };
+    }
+    else if (receipt.action === DREAM_GATE_TRAVERSAL_AUTHORIZED_ACTION) {
+        next = { ...current, dreamGateTraversalAuthorized: true };
+    }
+    else if (receipt.action === DREAM_GATE_ARRIVAL_RECORDED_ACTION) {
+        next = { ...current, dreamGateArrivalRecorded: true };
+    }
+    if (next)
+        setProgress(playerId, next);
+}

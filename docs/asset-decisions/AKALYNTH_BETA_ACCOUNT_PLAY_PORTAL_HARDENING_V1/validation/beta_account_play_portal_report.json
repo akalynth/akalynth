@@ -1,7 +1,7 @@
 {
   "id": "AKALYNTH_BETA_ACCOUNT_PLAY_PORTAL_HARDENING_V1",
   "status": "pass",
-  "generated_at": "2026-06-21T06:47:33.256Z",
+  "generated_at": "2026-07-11T10:32:30.477Z",
   "scope": "beta static account portal, account-character play token handoff, debug-client /play/ identity bootstrap, Android beta portal URL",
   "checks": [
     {
@@ -365,25 +365,10 @@
       }
     },
     {
-      "id": "live_account.html_returns_200",
-      "status": "pass",
+      "id": "live_https_checks",
+      "status": "skipped",
       "evidence": {
-        "url": "https://beta.akalynth.com/account.html",
-        "statusCode": 200,
-        "contentType": "text/html; charset=utf-8",
-        "lastModified": "Sun, 21 Jun 2026 06:19:43 GMT",
-        "server": "Caddy"
-      }
-    },
-    {
-      "id": "live_play__returns_200",
-      "status": "pass",
-      "evidence": {
-        "url": "https://beta.akalynth.com/play/",
-        "statusCode": 200,
-        "contentType": "text/html; charset=utf-8",
-        "lastModified": "Sun, 21 Jun 2026 06:19:34 GMT",
-        "server": "Caddy"
+        "reason": "--skip-live"
       }
     }
   ],
@@ -392,5 +377,5 @@
     "Does not mutate runtime trees, runtime state, key/config custody, Caddy, or services.",
     "Live checks are limited to public HTTPS HEAD status for beta.akalynth.com/account.html and beta.akalynth.com/play/."
   ],
-  "completed_at": "2026-06-21T06:47:33.946Z"
+  "completed_at": "2026-07-11T10:32:30.478Z"
 }

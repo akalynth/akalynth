@@ -6,7 +6,6 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import kotlinx.serialization.json.putJsonObject
 
 /**
  * WebSocket-based action transport.
@@ -31,48 +30,35 @@ class WebSocketActionTransport(
      * {
      *   "type": "<action_type>",
      *   "action_id": "<correlation_id>",
-     *   "payload": { ... }
+     *   [type-specific fields]
      * }
      */
     private fun serializeIntent(intent: ActionIntent): String {
         val jsonObject = when (intent) {
             is ActionIntent.Attack -> buildJsonObject {
-                put("type", "attack")
+                put("type", "attack_intent")
                 put("action_id", intent.actionId)
-                putJsonObject("payload") {
-                    intent.targetId?.let { put("target_id", it) }
+                intent.targetId?.let {
+                    put("target_id", it)
                 }
             }
 
             is ActionIntent.UseHotbarSlot -> buildJsonObject {
-                put("type", "use_hotbar_slot")
+                put("type", "use_skill")
                 put("action_id", intent.actionId)
-                putJsonObject("payload") {
-                    put("slot_index", intent.slotIndex)
-                    put("item_id", intent.itemId)
-                }
+                put("skill_id", "item:use:${intent.itemId}")
             }
 
             is ActionIntent.DropHotbarSlot -> buildJsonObject {
-                put("type", "drop_hotbar_slot")
+                put("type", "drop_item")
                 put("action_id", intent.actionId)
-                putJsonObject("payload") {
-                    put("slot_index", intent.slotIndex)
-                    put("item_id", intent.itemId)
-                    put("item_name", intent.itemName)
-                    put("rarity", intent.rarity.name.lowercase())
-                }
+                put("item_id", intent.itemId)
             }
 
             is ActionIntent.PickupItem -> buildJsonObject {
                 put("type", "pickup_item")
                 put("action_id", intent.actionId)
-                putJsonObject("payload") {
-                    put("item_id", intent.itemId)
-                    put("item_name", intent.itemName)
-                    put("x", intent.x)
-                    put("y", intent.y)
-                }
+                put("item_id", intent.itemId)
             }
 
             is ActionIntent.WorldEventContribution -> buildJsonObject {

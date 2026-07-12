@@ -1,0 +1,73 @@
+{
+  "schema_version": "witnessops.akalynth-public-projection-deploy-apply.v1",
+  "stamp": "20260709T0256Z",
+  "lane": "AKALYNTH_PUBLIC_PROJECTION_DEPLOY_APPLY_V1",
+  "classification": "BOUNDED_STATIC_PUBLIC_PROJECTION_DEPLOY_ONLY",
+  "decision": "DEPLOY_APPLY_READY",
+  "commit_deployed": "9fdab54af7f283de3edfaece9c86971b96a87cde",
+  "short": "9fdab54",
+  "commit_message": "AKALYNTH_PUBLIC_PROJECTION_CLAIM_REPAIR_V1",
+  "files_deployed": [
+    "index.html",
+    "beta.html",
+    "account.html"
+  ],
+  "deploy_target": "/var/www/akalynth-beta",
+  "deploy_action": "sudo rsync -a --chown=caddy:caddy [site-repo]/index.html [site-repo]/beta.html [site-repo]/account.html /var/www/akalynth-beta/",
+  "pre_deploy_checks": {
+    "site_main_commit_matches_merged": true,
+    "files_limited_to_wording_repair": true,
+    "target_is_public_static_site_only": true,
+    "no_beta_runtime_apk_updatejson_fdroid_k8s_in_scope": true,
+    "live_site_observed_before": true,
+    "pre_deploy_evidence_preserved": true
+  },
+  "live_site_verification": {
+    "http_status": "200",
+    "caddy_root": "/var/www/akalynth-beta",
+    "post_deploy_html_mtimes": {
+      "index.html": "Jul 9 03:11",
+      "beta.html": "Jul 9 03:11",
+      "account.html": "Jul 9 03:11"
+    }
+  },
+  "browser_beta_wording": "Play the Akalynth pre-alpha beta instantly in your browser — no install needed. The direct Android beta APK (v12) is available separately through the direct channel. F-Droid follows a separate signing path and is currently held at an older version.",
+  "direct_android_v12_wording": "Direct channel (current v12): ... The direct Android beta APK (v12) is available separately through the direct channel.",
+  "fdroid_hold_wording": "F-Droid is held pending signing authority (older version). ... F-Droid follows a separate signing and publication path and is currently held pending signing authority (older version than direct v12). It is not synchronized with the current beta.",
+  "old_undifferentiated_claim_absent": true,
+  "forbidden_claim_check": {
+    "F-Droid_aligned": false,
+    "Android_channels_synchronized": false,
+    "launch_ready": false,
+    "overclaims_present": false,
+    "note": "Wording explicitly states separate paths and hold; notes not synchronized."
+  },
+  "actions_taken": {
+    "static_files_synced": true,
+    "runtime_touched": false,
+    "apk_touched": false,
+    "update_json_touched": false,
+    "fdroid_touched": false,
+    "k8s_touched": false,
+    "git_push": false,
+    "tag": false,
+    "caddy_reload": false,
+    "receipt_written": true
+  },
+  "pre_evidence": "/home/sovereign/akalynth-ops/docs/evidence/public-projection-deploy-pre/",
+  "post_evidence": "/home/sovereign/akalynth-ops/repos/akalynth/docs/evidence/public-projection-deploy/post-*.html",
+  "rollback_path": "Restore pre-*.html snapshots to /var/www/akalynth-beta/ or revert site repo to prior commit and re-deploy targeted files.",
+  "explicit_non_claims": [
+    "deploy does not make F-Droid aligned",
+    "deploy does not make Android channels synchronized",
+    "deploy does not make Akalynth launch-ready",
+    "deploy does not mutate beta runtime",
+    "deploy does not mutate APKs",
+    "deploy does not mutate update JSON",
+    "deploy does not mutate F-Droid metadata",
+    "no git push occurred",
+    "no beta publish executed"
+  ],
+  "success": true,
+  "observed": "Live public site now serves repaired wording clearly separating browser beta, direct Android v12, F-Droid held. No forbidden surfaces or claims mutated."
+}

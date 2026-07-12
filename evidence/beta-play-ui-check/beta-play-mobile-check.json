@@ -1,0 +1,69 @@
+{
+  "before": {
+    "textPreview": "Landscape required Turn the phone sideways for the play surface. Enter landscape AkalynthConnected Akalynth Guest_7e55 Rookguard ↖ ↑ ↗ ← ■ → ↙ ↓ ↘ ✕ Objective Step onto the glowing move rune (east plaza, tile 3,2) Fish Rookguard canal Attack Ritual Talk ONWARD ROUTES Fish Rookguard canal Chat Log Pack Codex",
+    "hasRoot": true,
+    "bodyWidth": 390,
+    "viewportWidth": 390,
+    "viewportHeight": 844,
+    "canvasCount": 10,
+    "canvases": [
+      {
+        "cls": "nine-slice-panel__canvas",
+        "w": 388,
+        "h": 62
+      },
+      {
+        "cls": "map-canvas",
+        "w": 1024,
+        "h": 1024
+      },
+      {
+        "cls": "nine-slice-panel__canvas",
+        "w": 119,
+        "h": 86
+      },
+      {
+        "cls": "nine-slice-panel__canvas",
+        "w": 1,
+        "h": 1
+      },
+      {
+        "cls": "nine-slice-panel__canvas",
+        "w": 145,
+        "h": 193
+      },
+      {
+        "cls": "nine-slice-panel__canvas",
+        "w": 356,
+        "h": 161
+      },
+      {
+        "cls": "nine-slice-panel__canvas",
+        "w": 106,
+        "h": 74
+      },
+      {
+        "cls": "nine-slice-panel__canvas",
+        "w": 106,
+        "h": 74
+      },
+      {
+        "cls": "nine-slice-panel__canvas",
+        "w": 106,
+        "h": 74
+      },
+      {
+        "cls": "nine-slice-panel__canvas",
+        "w": 108,
+        "h": 58
+      }
+    ],
+    "pos": null
+  },
+  "after": {
+    "textPreview": "Landscape required Turn the phone sideways for the play surface. Enter landscape AkalynthConnected Akalynth Guest_7e55 Rookguard ↖ ↑ ↗ ← ■ → ↙ ↓ ↘ ✕ Objective Open Chat and send any message in Rookguard Fish Rookguard canal Attack Ritual Talk ONWARD ROUTES Fish Rookguard canal Chat Log Pack Codex",
+    "pos": null,
+    "focused": "BODY"
+  },
+  "consoleErrors": []
+}

@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#050910" />
+    <title>Akalynth — Play the Beta</title>
+    <meta
+      name="description"
+      content="Play the Akalynth pre-alpha beta instantly in your browser — no install needed. The direct Android beta APK (v12) is available separately through the direct channel. F-Droid follows a separate signing path and is currently held at an older version."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%231f1a13'/%3E%3Cpath d='M16 5l7 11-7 11-7-11z' fill='%23d9b25a'/%3E%3C/svg%3E"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Akalynth" />
+    <meta property="og:title" content="Akalynth — Play the Beta" />
+    <meta
+      property="og:description"
+      content="Play the Akalynth pre-alpha beta in your browser. The direct Android beta APK (v12) is available separately. F-Droid is held pending signing authority (older version)."
+    />
+    <meta property="og:image" content="assets/akalynth/visuals/og/02-rookguard-gate.og-1200x630.webp" />
+    <meta
+      property="og:image:alt"
+      content="Rookguard Gate, the first bounded player path into Akalynth."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="assets/akalynth/visuals/og/02-rookguard-gate.og-1200x630.webp" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/fonts.css" />
+    <link rel="stylesheet" href="css/theme-dark.css" />
+    <style>
+      /* Beta page only — Android download options + F-Droid repo card.
+         Reuses the dark theme tokens (--td-*) from css/theme-dark.css. */
+      .dl-options { display: grid; gap: 16px; }
+      .dl-card { position: relative; }
+      .dl-card--primary { border-color: rgba(229, 183, 92, 0.4); }
+      .dl-badge {
+        position: absolute; top: 16px; right: 18px;
+        font-family: Inter, system-ui, sans-serif; font-size: 10.5px;
+        letter-spacing: 0.09em; text-transform: uppercase; color: var(--td-gold);
+        border: 1px solid rgba(229, 183, 92, 0.4); background: rgba(229, 183, 92, 0.1);
+        border-radius: 999px; padding: 2px 10px;
+      }
+      .fdroid-steps { margin: 12px 0 18px; padding-left: 20px; line-height: 1.6; }
+      .fdroid-steps li { margin-bottom: 6px; }
+      .fdroid-add { display: flex; flex-wrap: wrap; gap: 22px; align-items: flex-start; }
+      .qr-frame {
+        margin: 0; flex: 0 0 auto; background: #fff; border-radius: 10px;
+        padding: 10px 10px 6px; text-align: center;
+        box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
+      }
+      .qr-frame img { display: block; width: 200px; height: 200px; }
+      .qr-frame figcaption { font-size: 11px; color: #4a4030; margin-top: 5px; }
+      .fdroid-add__body { flex: 1 1 240px; min-width: 0; }
+      .repo-line { margin: 14px 0 0; font-size: 13px; color: var(--td-muted); }
+      .repo-line code {
+        display: inline-block; margin-top: 5px; font-family: ui-monospace, Menlo, Consolas, monospace;
+        font-size: 12.5px; color: var(--td-text); background: rgba(4, 9, 16, 0.6);
+        border: 1px solid var(--td-line-2); border-radius: 6px; padding: 6px 9px;
+        word-break: break-all;
+      }
+      .repo-line code.fp { font-size: 11.5px; letter-spacing: 0.05em; color: var(--td-gold-2); }
+      @media (max-width: 540px) {
+        .fdroid-add { justify-content: center; }
+        .qr-frame { margin: 0 auto; }
+      }
+    </style>
+  </head>
+  <body class="theme-dark" data-page="beta">
+    <!--
+      Akalynth public beta page (akalynth.com/beta.html).
+      Public beta page. Points players to account character setup and the
+      Android beta download.
+    -->
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header" role="banner">
+      <div class="header-inner">
+        <a class="brand" href="index.html#home" data-nav="home">
+          <span class="brand-mark" aria-hidden="true">⚔</span>
+          <span class="brand-text">
+            <span class="brand-name">Akalynth</span>
+            <span class="brand-tag">High City awaits</span>
+          </span>
+        </a>
+        <input class="nav-toggle" type="checkbox" id="nav-toggle" aria-label="Toggle navigation menu" />
+        <label class="nav-burger" for="nav-toggle" aria-hidden="true"><span></span><span></span><span></span></label>
+        <nav class="top-nav" aria-label="Primary">
+          <ul>
+            <li><a class="tab-btn" href="index.html#home" data-nav="home">Home</a></li>
+            <li><a class="tab-btn" href="index.html#world" data-nav="world">High City</a></li>
+            <li><a class="tab-btn" href="library.html" data-nav="library">Library</a></li>
+            <li><a class="tab-btn" href="wallpapers.html" data-nav="wallpapers">Wallpapers</a></li>
+            <li><a class="tab-btn is-active" href="beta.html" data-nav="beta" aria-current="page">Beta</a></li>
+            <li><a class="tab-btn" href="account.html" data-nav="account">Account</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <div class="layout">
+      <!-- Ornate sidebar -->
+      <input class="aside-toggle" type="checkbox" id="aside-toggle" aria-label="Toggle beta status panels" />
+      <label class="aside-bar" for="aside-toggle" aria-hidden="true"><span class="aside-bar__label">Beta Status</span><span class="aside-bar__chev" aria-hidden="true">&#9662;</span></label>
+      <aside class="sidebar" aria-label="Sidebar">
+        <section class="panel">
+          <h2 class="panel-title">Beta Status</h2>
+          <div class="panel-body">
+            <ul class="status-list">
+              <li><span class="dot dot-amber"></span> Stage: <strong>Pre-alpha beta</strong></li>
+              <li><span class="dot dot-green"></span> City: <strong>High City</strong></li>
+              <li><span class="dot dot-green"></span> Platform: <strong>Browser + Android</strong></li>
+              <li><span class="dot dot-blue"></span> Guardian: <strong>Tem (anti-bot)</strong></li>
+            </ul>
+            <p class="muted small">
+              Server-authoritative — the server is the single source of truth.
+            </p>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2 class="panel-title">Ways to Play</h2>
+          <div class="panel-body">
+            <a class="btn btn-gold btn-block" href="https://beta.akalynth.com/play/">Play in browser ▶</a>
+            <a class="btn btn-ghost btn-block" href="account.html">Create character</a>
+            <a class="btn btn-ghost btn-block" href="#fdroid">Install via F-Droid</a>
+            <a class="btn btn-ghost btn-block" href="#download">Sideload the APK</a>
+          </div>
+        </section>
+
+        <section class="panel" id="holdings-panel">
+          <h2 class="panel-title">Your Character</h2>
+          <div class="panel-body">
+            <div id="holdings-empty">
+              <p class="muted small">No account character selected.</p>
+              <a class="btn btn-ghost btn-block" href="account.html">Create character</a>
+            </div>
+            <div id="holdings-body" hidden>
+              <p class="holdings-name"><strong id="holdings-name">—</strong></p>
+              <p class="muted small">City: <span id="holdings-world">—</span></p>
+              <p class="holdings-gold">
+                <span class="gold" id="holdings-gold">-</span> gold
+              </p>
+              <p class="muted small">Premium: <strong id="holdings-premium">—</strong></p>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <!-- Parchment content column -->
+      <main class="content" id="main" role="main" tabindex="-1">
+        <section class="tab-panel is-active" role="tabpanel">
+          <h1 class="page-title">Play the Akalynth Beta</h1>
+          <article class="parchment">
+            <p class="lede">
+              Step into <strong>High City</strong> — a top-down, server-authoritative
+              realm where the server is the single source of truth. Akalynth is in
+              <strong>pre-alpha beta</strong>: <strong>play instantly in your browser</strong>,
+              or install via the direct Android channel (v12) or F-Droid (held).
+            </p>
+            <p>
+              Create an account character, then
+              <a href="https://beta.akalynth.com/play/">play in your browser</a> — no install
+              needed. Prefer a native app? The direct Android channel (v12) below signs in to the same
+              character in the same live, server-authoritative world.
+            </p>
+          </article>
+
+          <article class="parchment" id="beta-account-status">
+            <p class="lede">Checking account character readiness...</p>
+            <p class="muted small">This page uses the Akalynth API session. It does not create local play authority.</p>
+          </article>
+
+          <h2 class="section-title" id="play">Play in your browser</h2>
+          <div class="dl-options">
+            <article class="parchment dl-card dl-card--primary" id="webplay">
+              <span class="dl-badge">Recommended</span>
+              <h3 class="news-title">Open the web client</h3>
+              <p>
+                The fastest way in — no install, no sideloading. The browser client connects
+                to the same live, server-authoritative world as the Android build, on desktop
+                or mobile.
+              </p>
+              <a class="btn btn-gold btn-block" href="https://beta.akalynth.com/play/" rel="noopener">
+                Play in your browser ▶
+              </a>
+              <p class="muted small">
+                Create an <a href="account.html">account character</a> first to keep your
+                progress across sessions and devices.
+              </p>
+            </article>
+          </div>
+
+          <h2 class="section-title" id="get">Android options (separate channels)</h2>
+          <div class="dl-options">
+            <article class="parchment dl-card" id="fdroid">
+              <h3 class="news-title">Install via F-Droid</h3>
+              <p>
+                <strong>Note:</strong> The F-Droid channel follows a separate signing and publication path and is currently held pending signing authority (older version than direct v12). It is not synchronized with the current beta.
+              </p>
+              <p>
+                Add the Akalynth F-Droid repository once and your device keeps the
+                client up to date automatically via the F-Droid client. Every build is signed by the same
+                key for that channel.
+              </p>
+              <ol class="fdroid-steps">
+                <li>Install the <a href="https://f-droid.org" rel="noopener">F-Droid app</a> (skip if you already have it).</li>
+                <li>Add the Akalynth repo — on your phone tap <strong>Add Akalynth repo</strong> below, or in F-Droid open <em>Settings → Repositories → +</em> and scan the QR or paste the URL.</li>
+                <li>Open the repo and install <strong>Akalynth</strong>. New beta builds arrive as updates.</li>
+              </ol>
+              <div class="fdroid-add">
+                <figure class="qr-frame">
+                  <img src="assets/fdroid/repo-qr.svg" width="200" height="200"
+                       alt="QR code to add the Akalynth F-Droid repository" />
+                  <figcaption>Scan in F-Droid to add the repo</figcaption>
+                </figure>
+                <div class="fdroid-add__body">
+                  <a class="btn btn-gold btn-block"
+                     href="https://fdroid.akalynth.com/fdroid/repo?fingerprint=7517DE35C94C589131E159E72CADDA7F4915B359948CCCE21EE6AC9D21106344"
+                     rel="noopener">Add Akalynth repo to F-Droid</a>
+                  <p class="repo-line">Repository URL<br />
+                    <code>https://fdroid.akalynth.com/fdroid/repo</code>
+                  </p>
+                  <p class="repo-line">Signing fingerprint (SHA-256) — verify this matches in F-Droid<br />
+                    <code class="fp">7517 DE35 C94C 5891 31E1 59E7 2CAD DA7F 4915 B359 948C CCE2 1EE6 AC9D 2110 6344</code>
+                  </p>
+                </div>
+              </div>
+            </article>
+
+            <article class="parchment dl-card" id="download">
+              <h3 class="news-title">Or sideload the APK</h3>
+              <p>
+                <strong>Direct channel (current v12):</strong> Prefer a one-off install? Download the latest signed build directly from the direct beta channel.
+                You may need to allow installs from unknown sources on your device.
+              </p>
+              <a class="btn btn-gold btn-block" href="https://beta.akalynth.com/download/akalynth-beta.apk" rel="noopener" download>
+                Download Android APK ⤓
+              </a>
+              <p class="muted small">
+                Pre-alpha build, debug-signed for sideloading. Minimum Android 8.0 (API 26).
+                <a href="https://beta.akalynth.com/download/akalynth-beta.apk.sha256" rel="noopener">Checksum</a>.
+              </p>
+              <p class="muted small">
+                To verify the file after download, save the checksum beside the APK and run:
+              </p>
+              <code class="verify-command">sha256sum -c akalynth-beta.apk.sha256</code>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <p class="muted small">
+          Akalynth · High City · Pre-alpha beta.
+          <a href="index.html#home">Main site</a>
+        </p>
+      </div>
+    </footer>
+    <script src="js/app.js" defer></script>
+  </body>
+</html>

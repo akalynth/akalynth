@@ -1,0 +1,12 @@
+{
+  "steps": [
+    {
+      "phase": "initial",
+      "bodyText": "AkalynthConnected Position 2,2 Health 10/10 Respect Unproven (0) Standing — Gold 0g Link connected ↖ ↑ ↗ ← ■ → ↙ ↓ ↘ ✕ Objective Step onto the glowing move rune (east plaza, tile 3,2) Fish Rookguard canal Attack No runestone nearby Ritual Guide is nearby Talk ONWARD ROUTES Fish Rookguard canal Chat Log Pack Codex World"
+    },
+    {
+      "phase": "after_moves",
+      "bodyText": "AkalynthConnected Position 3,3 Health 10/10 Respect Unproven (0) Standing — Gold 0g Link connected ↖ ↑ ↗ ← ■ → ↙ ↓ ↘ ✕ Objective Open Chat and send any message in Rookguard Fish Rookguard canal Attack Runestone nearby Ritual Guide is nearby Talk ONWARD ROUTES Fish Rookguard canal Chat Log Pack Codex World synced"
+    }
+  ]
+}

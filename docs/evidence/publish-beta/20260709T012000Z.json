@@ -1,0 +1,12 @@
+{
+  "schema_version": "witnessops.publish_akalynth_beta.v1",
+  "stamp": "20260709T012000Z",
+  "lane": "beta",
+  "mode": "stage_only",
+  "intended_commit": "54c6d37c4cfd5f70bbf3a2e911587dc13f2fb4fc",
+  "dist_build_info_commit": "54c6d37c4cfd5f70bbf3a2e911587dc13f2fb4fc",
+  "live_health_commit": "4aef0a96aed14fa043a43aae5ed980c75a5cb1b3",
+  "status": "FAIL",
+  "failed_gate": "staging_preflight",
+  "gate_only": 0
+}

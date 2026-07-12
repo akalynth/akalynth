@@ -1,0 +1,29 @@
+{
+  "schema_version": "witnessops.clean_build_worktree.v1",
+  "stamp": "20260708T220602Z",
+  "target_commit": "a5530b92c36be8ecb1e060d0ef69719b76188560",
+  "worktree_path": "/tmp/akalynth-clean-build-a5530b9-20260708T220602Z",
+  "backup_root": "/home/sovereign/akalynth-ops/repos/akalynth/.preserve-dist-20260708T220602Z",
+  "node_version": "v24.17.0",
+  "npm_version": "11.13.0",
+  "package_lock_sha256": "43cc25cccfad7a24689e106e4b2100998be181cb43eea31cc4be5479008134bf",
+  "dependency_materialization": {
+    "npm_ci": "worktree only",
+    "codex_graph_stub": "/tmp/akalynth-codex/out/codex-public.graph.json",
+    "codex_graph_sha256": "a2e7b69240085847eb3bdb7c0bfb0f0f6fc3f2e8135584def37159d319795c02",
+    "codex_graph_source": "/home/sovereign/akalynth-ops/repos/akalynth-site/js/codex-public.graph.json"
+  },
+  "build_commands": [
+    "npm ci --ignore-scripts",
+    "npm run build:packages && npm run build",
+    "npm run build:client (after codex graph stub)"
+  ],
+  "promoted_paths": [
+    "dist/",
+    "apps/debug-client/dist/"
+  ],
+  "g3_result": "PASS",
+  "gate_only_failed_at": "G8",
+  "live_beta_commit_unchanged": "4aef0a96aed14fa043a43aae5ed980c75a5cb1b3",
+  "main_wip_preserved": true
+}

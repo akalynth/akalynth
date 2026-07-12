@@ -1,0 +1,13 @@
+{
+  "url": "https://beta-api.akalynth.com/v1/health",
+  "status": 200,
+  "ok": true,
+  "body": {
+    "ok": true,
+    "version": "0.1.0",
+    "tick_ms": 100,
+    "now_iso": "2026-07-11T08:32:44.031Z",
+    "commit": "47690e84c797d5f183b42f2c47a9b19a4ea6e86d",
+    "built_at": "2026-07-09T01:45:08.535Z"
+  }
+}

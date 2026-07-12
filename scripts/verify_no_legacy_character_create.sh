@@ -71,7 +71,7 @@ for android_activity_error_literal in \
 done
 
 for literal in \
-  'onCreate: (name: String, worldId: String, sex: CharacterSex, outfitId: String) -> Unit' \
+  'onCreate: (name: String, worldId: String, sex: CharacterSex, outfitId: String, outfitColors: OutfitColorIndices) -> Unit' \
   'CharacterCreateScreen_WorldSelector' \
   'CharacterCreateScreen_OutfitSelector' \
   'CharacterCreateScreen_World_high_city' \

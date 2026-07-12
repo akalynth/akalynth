@@ -1,0 +1,35 @@
+{
+  "id": "AKALYNTH_MOBILE_PLAYABLE_SMOKE_SCRIPT_V1",
+  "status": "fail",
+  "started_at": "2026-07-11T11:11:16.792Z",
+  "base_url": "http://127.0.0.1:37365/play/",
+  "screenshots": [],
+  "checks": [
+    {
+      "id": "debug_client_url_available",
+      "status": "pass",
+      "details": {
+        "url": "http://127.0.0.1:37365/play/"
+      }
+    },
+    {
+      "id": "app_shell_mounted",
+      "status": "fail",
+      "details": {
+        "selector": ".app-shell",
+        "last": {
+          "visible": false,
+          "reason": "missing"
+        }
+      }
+    }
+  ],
+  "notes": [
+    "Debug-client presentation smoke only.",
+    "Does not change gameplay authority, protocol, server, shared types, Android/native, runtime, or deploy state."
+  ],
+  "chrome": "/snap/chromium/current/usr/lib/chromium-browser/chrome",
+  "devtools_port": 43517,
+  "error": "Timed out waiting for .app-shell",
+  "finished_at": "2026-07-11T11:11:38.415Z"
+}

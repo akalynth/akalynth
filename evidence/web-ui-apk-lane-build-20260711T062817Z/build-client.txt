@@ -1,0 +1,73 @@
+
+> akalynth@0.1.0 build:client
+> cd apps/debug-client && npm run build
+
+
+> akalynth-client@0.0.1 prebuild
+> node scripts/verify-account-character-guard.mjs && node scripts/verify-gather-wire-authority.mjs && node scripts/verify-nine-slice-panel.mjs && node scripts/verify-character-create-preview.mjs && node scripts/verify-death-chronicle-glyphs.mjs && node scripts/verify-builder-panel-v1.mjs
+
+debug-client account character guard ok
+debug-client gather wire authority verifier passed
+PASS  drawNineSlice export
+PASS  NineSlicePanel export
+PASS  panel variant stem
+PASS  registry fetch
+PASS  USE_NINE_SLICE_WEB flag
+PASS  nine-slice default on (PR-026)
+PASS  HudChromePanel export (PR-027)
+PASS  UI built root
+PASS  codex repo path
+PASS  vite @codex alias
+PASS  HudChromePanel wired
+PASS  Codex shelf wired
+PASS  Play shell dock wired
+PASS  verify script wired
+
+OK — NineSlicePanel chrome scaffolding (PR-024/027)
+PASS  outfit preview table
+PASS  female wanderer label
+PASS  bundledSpriteForPreview export
+PASS  south-facing draw
+PASS  sprite id test id
+PASS  CharacterSpritePreview wired
+PASS  resolveOutfitPreview wired
+PASS  verify script wired
+
+OK — character create sprite preview (PR-025)
+PASS  death glyph path
+PASS  event kind mapper
+PASS  ChronicleGlyphIcon export
+PASS  ASCII fallback
+PASS  chronicle rows use glyph icon
+PASS  death toast glyph
+PASS  emoji icons removed from render
+PASS  nine-slice default on
+PASS  verify script wired
+
+OK — death/chronicle glyph sprites + flag flip (PR-026)
+OK — BuilderPanel scaffolding (PR-8 + G1/A1/G2)
+
+> akalynth-client@0.0.1 build
+> tsc -p tsconfig.json && vite build
+
+vite v8.0.11 building client environment for production...
+[2Ktransforming...✓ 256 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                    0.73 kB │ gzip:   0.44 kB
+dist/assets/rat_hunter_01-CLI0ryyj.png             4.20 kB
+dist/assets/castle_guard_red_01-CXcacvr-.png       4.46 kB
+dist/assets/roof_red_small_overlay-Ca7lg0hH.png    4.47 kB
+dist/assets/base_human_male_01-BFUGw8Yk.png        5.49 kB
+dist/assets/skeleton_warrior_01-_P9Qg4BC.png       5.54 kB
+dist/assets/mage_apprentice_01-D4SVhVVl.png        8.05 kB
+dist/assets/ui_dpad_frame-Cw9MnKOU.png             9.12 kB
+dist/assets/guard_city_01-B1zRE0nd.png             9.87 kB
+dist/assets/roof_red_large_overlay-5OlRjan0.png   12.50 kB
+dist/assets/roof_castle_overlay-C7Jl74fa.png      17.07 kB
+dist/assets/rookguard-gate.thumb-DbgxF2A3.webp    47.02 kB
+dist/assets/game-loop-poster-v1-BwSO0pzA.png     470.84 kB
+dist/assets/index-BwCHFmC8.css                   102.88 kB │ gzip:  19.17 kB
+dist/assets/index-jZjR9le3.js                    646.04 kB │ gzip: 250.41 kB
+
+✓ built in 494ms

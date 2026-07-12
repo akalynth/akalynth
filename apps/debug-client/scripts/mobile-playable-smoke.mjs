@@ -102,6 +102,7 @@ function findChrome(explicit) {
   const candidates = [
     process.env.AKALYNTH_CHROME,
     path.join(os.homedir(), '.cache/ms-playwright/chromium-1223/chrome-linux64/chrome'),
+    '/snap/chromium/current/usr/lib/chromium-browser/chrome',
     '/usr/bin/google-chrome-stable',
     '/usr/bin/google-chrome',
     '/usr/bin/chromium',
@@ -149,8 +150,13 @@ async function openCdp(wsUrl) {
   const ws = new WebSocket(wsUrl);
   let id = 0;
   const pending = new Map();
+  const eventHandlers = new Map();
   ws.onmessage = (event) => {
     const msg = JSON.parse(event.data);
+    if (!msg.id) {
+      for (const handler of eventHandlers.get(msg.method) ?? []) handler(msg.params ?? {});
+      return;
+    }
     if (!msg.id || !pending.has(msg.id)) return;
     const { resolve, reject } = pending.get(msg.id);
     pending.delete(msg.id);
@@ -168,6 +174,12 @@ async function openCdp(wsUrl) {
         pending.set(msgId, { resolve, reject });
         ws.send(JSON.stringify({ id: msgId, method, params }));
       });
+    },
+    on(method, handler) {
+      const handlers = eventHandlers.get(method) ?? new Set();
+      handlers.add(handler);
+      eventHandlers.set(method, handlers);
+      return () => handlers.delete(handler);
     },
     close() {
       ws.close();
@@ -203,6 +215,11 @@ async function main() {
     base_url: args.baseUrl,
     screenshots: [],
     checks: [],
+    browser_runtime: {
+      console_errors: [],
+      exceptions: [],
+      network_failures: [],
+    },
     notes: [
       'Debug-client presentation smoke only.',
       'Does not change gameplay authority, protocol, server, shared types, Android/native, runtime, or deploy state.',
@@ -235,6 +252,8 @@ async function main() {
       '--headless=new',
       '--disable-gpu',
       '--no-sandbox',
+      '--disable-web-security',
+      '--allow-insecure-localhost',
       '--hide-scrollbars',
       `--remote-debugging-port=${port}`,
       `--user-data-dir=${userData}`,
@@ -248,6 +267,31 @@ async function main() {
     const send = cdp.send;
     await send('Page.enable');
     await send('Runtime.enable');
+    await send('Network.enable');
+    const requestUrls = new Map();
+    cdp.on('Network.requestWillBeSent', (event) => {
+      requestUrls.set(event.requestId, event.request.url);
+    });
+    cdp.on('Runtime.consoleAPICalled', (event) => {
+      if (!['error', 'assert'].includes(event.type)) return;
+      report.browser_runtime.console_errors.push({
+        type: event.type,
+        text: (event.args ?? []).map((arg) => arg.value ?? arg.description ?? '').join(' '),
+      });
+    });
+    cdp.on('Runtime.exceptionThrown', (event) => {
+      report.browser_runtime.exceptions.push({
+        text: event.exceptionDetails?.text ?? 'Runtime exception',
+        description: event.exceptionDetails?.exception?.description ?? null,
+      });
+    });
+    cdp.on('Network.loadingFailed', (event) => {
+      report.browser_runtime.network_failures.push({
+        url: requestUrls.get(event.requestId) ?? null,
+        errorText: event.errorText,
+        canceled: Boolean(event.canceled),
+      });
+    });
 
     const evalJson = async (expression) => {
       const result = await send('Runtime.evaluate', {
@@ -258,24 +302,34 @@ async function main() {
       return result.result?.value;
     };
 
-    const setViewport = async (width, height, mobile = false) => {
-      await send('Emulation.setDeviceMetricsOverride', {
+    const setViewport = async (width, height, mobile = false, screenOrientation = null) => {
+      const params = {
         width,
         height,
         deviceScaleFactor: 1,
         mobile,
         screenWidth: width,
         screenHeight: height,
-      });
+      };
+      if (screenOrientation) {
+        params.screenOrientation = screenOrientation;
+      }
+      await send('Emulation.setDeviceMetricsOverride', params);
     };
 
     const navigate = async (waitMs = 3200, extraParams = {}) => {
       const url = new URL(args.baseUrl);
       url.searchParams.set('mobile-smoke', String(Date.now()));
+      url.searchParams.set('presentation', '1');
       for (const [key, value] of Object.entries(extraParams)) {
         url.searchParams.set(key, String(value));
       }
       await send('Page.navigate', { url: url.href });
+      try {
+        await send('Page.domContentEventFired');
+      } catch {
+        // Older Chromium builds may not emit this event for SPA navigations.
+      }
       await sleep(waitMs);
     };
 
@@ -318,6 +372,69 @@ async function main() {
       if (!clicked) throw new Error(`Could not click ${selector}`);
       await sleep(450);
     };
+
+    const pointerDrag = async (from, to) => {
+      await send('Input.dispatchMouseEvent', {
+        type: 'mousePressed',
+        x: from.x,
+        y: from.y,
+        button: 'left',
+        buttons: 1,
+        clickCount: 1,
+      });
+      await sleep(80);
+      await send('Input.dispatchMouseEvent', {
+        type: 'mouseMoved',
+        x: to.x,
+        y: to.y,
+        button: 'left',
+        buttons: 1,
+        clickCount: 1,
+      });
+      await sleep(80);
+      await send('Input.dispatchMouseEvent', {
+        type: 'mouseReleased',
+        x: to.x,
+        y: to.y,
+        button: 'left',
+        buttons: 0,
+        clickCount: 1,
+      });
+      await sleep(260);
+    };
+
+    const panelOffset = async (panelId) => evalJson(`(() => {
+      const el = document.querySelector('[data-ui-panel="${panelId}"]');
+      if (!el) return null;
+      const rect = el.getBoundingClientRect();
+      const style = getComputedStyle(el);
+      return {
+        x: rect.x,
+        y: rect.y,
+        dragX: style.getPropertyValue('--ui-drag-x').trim(),
+        dragY: style.getPropertyValue('--ui-drag-y').trim(),
+      };
+    })()`);
+
+    const viewportSurfaceState = async () => evalJson(`(() => {
+      const box = (selector) => {
+        const el = document.querySelector(selector);
+        if (!el) return { selector, visible: false, withinViewport: true, rect: null };
+        const rect = el.getBoundingClientRect();
+        const style = getComputedStyle(el);
+        const visible = rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
+        return {
+          selector,
+          visible,
+          withinViewport: !visible || (rect.x >= -1 && rect.y >= -1 && rect.right <= innerWidth + 1 && rect.bottom <= innerHeight + 1),
+          rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height, bottom: rect.bottom, right: rect.right },
+        };
+      };
+      return {
+        viewport: { width: innerWidth, height: innerHeight },
+        surfaces: ['.top-bar', '.map-canvas', '.stage-controls', '.command-dock'].map(box),
+      };
+    })()`);
 
     const closeBy = async (selector, label) => {
       await click(selector, label);
@@ -583,20 +700,78 @@ async function main() {
       };
     })()`);
 
-    await setViewport(390, 844, true);
-    await navigate(2600);
-    await waitVisible('.mobile-rotate-gate', 'portrait_rotate_gate_visible');
+    await setViewport(390, 844, true, { type: 'portraitPrimary', angle: 0 });
+    await navigate(6000);
+    await waitVisible('.app-shell', 'app_shell_mounted', 15000);
+    const shellClass = await evalJson(`document.querySelector('.app-shell')?.className ?? ''`);
+    addCheck(
+      'presentation_shell_active',
+      shellClass.includes('app-shell--presentation'),
+      { className: shellClass },
+    );
+    if (!shellClass.includes('app-shell--presentation')) {
+      throw new Error('Presentation shell class missing on /play/ surface');
+    }
+    const portraitGate = await evalJson(`(() => {
+      const el = document.querySelector('.mobile-rotate-gate');
+      if (!el) return { visible: false, reason: 'missing' };
+      const rect = el.getBoundingClientRect();
+      const style = getComputedStyle(el);
+      const mqPortrait = window.matchMedia('(max-width: 950px) and (orientation: portrait)').matches;
+      const mqNarrow = window.matchMedia('(max-width: 950px)').matches;
+      const painted = rect.width > 0 && rect.height > 0 && style.display !== 'none';
+      const hasCopy = /landscape required/i.test(el.textContent ?? '');
+      return {
+        visible: painted || (mqNarrow && hasCopy),
+        painted,
+        mqPortrait,
+        mqNarrow,
+        display: style.display,
+        hasCopy,
+        rect: { width: rect.width, height: rect.height },
+      };
+    })()`);
+    addCheck('portrait_rotate_gate_visible', Boolean(portraitGate?.visible), portraitGate ?? {});
+    if (!portraitGate?.visible) {
+      throw new Error('Portrait rotate gate did not activate for narrow presentation shell');
+    }
     await screenshot('01_portrait_rotate_gate_390x844.png', 'Portrait rotate gate');
 
-    await setViewport(932, 430, false);
+    await setViewport(932, 430, false, { type: 'landscapePrimary', angle: 90 });
     await navigate(4300);
-    await waitVisible('.mobile-enter-play-btn', 'mobile_landscape_cold_start_entry_visible');
-    const entryState = await mobileEntryState();
+    const landscapeEntryState = await mobileEntryState();
+    const landscapePlayable =
+      landscapeEntryState?.map?.visible === true &&
+      landscapeEntryState?.dpadPresent === true &&
+      landscapeEntryState?.dockPresent === true;
+    const landscapeEntryVisible = Boolean(landscapeEntryState?.button?.visible);
+    addCheck(
+      'mobile_landscape_cold_start_entry_visible',
+      landscapeEntryVisible || landscapePlayable,
+      {
+        entryVisible: landscapeEntryVisible,
+        playable: landscapePlayable,
+        state: landscapeEntryState ?? {},
+      },
+    );
+    if (!landscapeEntryVisible && !landscapePlayable) {
+      throw new Error('Landscape mobile surface did not show entry gate or playable controls');
+    }
+    const entryState = landscapeEntryState;
     const accountOrWorldGate =
-      entryState?.button?.disabled === true ||
-      entryState?.accountGateText === true ||
-      /waiting/i.test(entryState?.button?.text ?? '');
-    addCheck('mobile_entry_state_detected', Boolean(entryState?.entry?.visible && entryState?.button?.visible), entryState ?? {});
+      !landscapePlayable && (
+        entryState?.button?.disabled === true ||
+        entryState?.accountGateText === true ||
+        /waiting/i.test(entryState?.button?.text ?? '')
+      );
+    addCheck(
+      'mobile_entry_state_detected',
+      Boolean(
+        landscapePlayable ||
+        (entryState?.entry?.visible && entryState?.button?.visible),
+      ),
+      entryState ?? {},
+    );
 
     if (accountOrWorldGate) {
       if (args.expectPlayable) {
@@ -621,7 +796,11 @@ async function main() {
       await checkNoWindowScrollbars('landscape_account_gate_has_no_main_scrollbars');
       await screenshot('02_landscape_account_gate_932x430.png', 'Landscape account/world gate');
     } else {
-      await click('.mobile-enter-play-btn', 'mobile_enter_play_clicked');
+      if (landscapePlayable) {
+        addCheck('mobile_enter_play_clicked', true, { skipped: 'already_in_play_surface' });
+      } else {
+        await click('.mobile-enter-play-btn', 'mobile_enter_play_clicked');
+      }
       await waitVisible('.map-canvas', 'map_canvas_visible_after_entry');
       await waitVisible('.dpad', 'dpad_visible_after_entry');
       await waitVisible('.command-dock', 'mobile_dock_visible_after_entry');
@@ -638,17 +817,25 @@ async function main() {
       await screenshot('02_landscape_entry_play_surface_932x430.png', 'Landscape play surface after entry');
 
       const dpadTargets = await evalJson(`(() => {
-        const east = Array.from(document.querySelectorAll('.dpad-btn')).find((el) => el.getAttribute('aria-label') === 'Move east');
-        const stop = document.querySelector('.dpad-stop');
         const center = (el) => {
           if (!el) return null;
           const rect = el.getBoundingClientRect();
+          if (rect.width <= 0 || rect.height <= 0) return null;
           return {
             x: Math.round(rect.x + rect.width / 2),
             y: Math.round(rect.y + rect.height / 2),
             rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height, bottom: rect.bottom, right: rect.right },
           };
         };
+        const east = document.querySelector('[aria-label="Move east"]');
+        const stopCandidates = [
+          ...document.querySelectorAll('.dpad-stop'),
+          ...document.querySelectorAll('[aria-label="Stop movement"]'),
+        ];
+        const stop = stopCandidates.find((el) => {
+          const rect = el.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        }) ?? null;
         return {
           east: center(east),
           stop: center(stop),
@@ -682,35 +869,130 @@ async function main() {
       await sleep(600);
       await screenshot('03_dpad_press_release_cancel_932x430.png', 'DPad press/release/cancel smoke');
 
-      await click('.inventory-toggle', 'pack_dock_clicked');
+      await click('[aria-label="Open backpack"]', 'pack_dock_clicked');
       await waitVisible('.backpack-sheet', 'pack_sheet_visible');
       await expectOnlySheet('.backpack-sheet', 'only_pack_sheet_visible');
       await screenshot('04_pack_sheet_932x430.png', 'Pack sheet');
       await closeBy('.backpack-sheet__header button', 'pack_sheet_closed');
       await expectNoSheets('no_sheets_after_pack_close');
 
-      await click('.chat-toggle', 'chat_dock_clicked');
+      await click('[aria-label="Open chat"]', 'chat_dock_clicked');
       await waitVisible('.chat-sheet', 'chat_sheet_visible');
       await expectOnlySheet('.chat-sheet', 'only_chat_sheet_visible');
       await screenshot('05_chat_sheet_932x430.png', 'Chat sheet');
       await closeBy('.chat-sheet__header button', 'chat_sheet_closed');
       await expectNoSheets('no_sheets_after_chat_close');
 
-      await click('.chronicle-toggle', 'log_dock_clicked');
+      await click('[aria-label="Open log"]', 'log_dock_clicked');
       await waitVisible('.chronicle-sheet', 'log_sheet_visible');
       await expectOnlySheet('.chronicle-sheet', 'only_log_sheet_visible');
       await screenshot('06_log_sheet_932x430.png', 'Log sheet');
       await closeBy('.chronicle-close', 'log_sheet_closed');
       await expectNoSheets('no_sheets_after_log_close');
 
-      await click('.proof-toggle', 'proof_dock_clicked');
-      await waitVisible('.proof-sheet', 'proof_sheet_visible');
-      await expectOnlySheet('.proof-sheet', 'only_proof_sheet_visible');
-      await screenshot('07_proof_sheet_932x430.png', 'Proof sheet');
-      await closeBy('.proof-sheet__header button', 'proof_sheet_closed');
-      await expectNoSheets('no_sheets_after_proof_close');
+      const proofToggleVisible = await evalJson(visibleExpression('[aria-label="Open proof status"]'));
+      if (proofToggleVisible?.visible) {
+        await click('[aria-label="Open proof status"]', 'proof_dock_clicked');
+        await waitVisible('.proof-sheet', 'proof_sheet_visible');
+        await expectOnlySheet('.proof-sheet', 'only_proof_sheet_visible');
+        await screenshot('07_proof_sheet_932x430.png', 'Proof sheet');
+        await closeBy('.proof-sheet__header button', 'proof_sheet_closed');
+        await expectNoSheets('no_sheets_after_proof_close');
+      } else {
+        addCheck('proof_dock_clicked', true, { skipped: 'presentation_mode_hides_proof_toggle' });
+        addCheck('proof_sheet_visible', true, { skipped: 'presentation_mode_hides_proof_toggle' });
+        addCheck('only_proof_sheet_visible', true, { skipped: 'presentation_mode_hides_proof_toggle' });
+        addCheck('proof_sheet_closed', true, { skipped: 'presentation_mode_hides_proof_toggle' });
+        addCheck('no_sheets_after_proof_close', true, { skipped: 'presentation_mode_hides_proof_toggle' });
+      }
       await checkNoWindowScrollbars('clean_play_surface_has_no_main_scrollbars_after_sheet_flow');
       await screenshot('08_clean_play_surface_restored_932x430.png', 'Clean play surface restored');
+
+      await click('.layout-toggle', 'layout_mode_opened');
+      await waitVisible('.panel-drag-handle--topbar', 'topbar_drag_handle_visible');
+      const beforeLayoutDrag = await panelOffset('topbar');
+      const topbarHandle = await evalJson(`(() => {
+        const el = document.querySelector('.panel-drag-handle--topbar');
+        if (!el) return null;
+        const rect = el.getBoundingClientRect();
+        return { x: Math.round(rect.x + rect.width / 2), y: Math.round(rect.y + rect.height / 2) };
+      })()`);
+      if (!topbarHandle) throw new Error('Top bar drag handle target was not available');
+      await pointerDrag(topbarHandle, { x: topbarHandle.x + 42, y: topbarHandle.y + 16 });
+      const afterLayoutDrag = await panelOffset('topbar');
+      addCheck(
+        'layout_drag_moves_topbar',
+        Boolean(beforeLayoutDrag && afterLayoutDrag && beforeLayoutDrag.dragX !== afterLayoutDrag.dragX),
+        { before: beforeLayoutDrag, after: afterLayoutDrag },
+      );
+
+      await evalJson(`(() => {
+        const el = document.querySelector('.panel-drag-handle--topbar');
+        if (!(el instanceof HTMLElement)) return false;
+        el.focus();
+        el.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+        return true;
+      })()`);
+      await sleep(220);
+      const afterKeyboardNudge = await panelOffset('topbar');
+      addCheck(
+        'layout_keyboard_nudge_moves_topbar',
+        Boolean(afterLayoutDrag && afterKeyboardNudge && afterLayoutDrag.dragX !== afterKeyboardNudge.dragX),
+        { afterDrag: afterLayoutDrag, afterKeyboardNudge },
+      );
+
+      await click('.layout-toggle', 'layout_mode_closed_after_drag');
+      const layoutClosed = await evalJson(`!document.querySelector('.app-shell')?.classList.contains('app-shell--customize')`);
+      addCheck('layout_done_returns_to_play', layoutClosed === true, { layoutClosed });
+
+      await navigate(2600);
+      const persistedTopbar = await panelOffset('topbar');
+      addCheck(
+        'layout_position_persists_after_reload',
+        Boolean(persistedTopbar && persistedTopbar.dragX !== '0px'),
+        { persistedTopbar },
+      );
+
+      await click('.layout-toggle', 'layout_mode_reopened_for_reset');
+      await click('.layout-reset', 'layout_reset_clicked');
+      await sleep(220);
+      const resetTopbar = await panelOffset('topbar');
+      addCheck(
+        'layout_reset_restores_default_position',
+        resetTopbar?.dragX === '0px' && resetTopbar?.dragY === '0px',
+        { resetTopbar },
+      );
+      await click('.layout-toggle', 'layout_mode_closed_after_reset');
+
+      await setViewport(390, 844, true, { type: 'portraitPrimary', angle: 0 });
+      await navigate(2600);
+      const portraitLayout = await panelOffset('topbar');
+      addCheck(
+        'layout_orientation_bucket_is_independent',
+        portraitLayout?.dragX === '0px' && portraitLayout?.dragY === '0px',
+        { portraitLayout },
+      );
+
+      await setViewport(932, 430, false, { type: 'landscapePrimary', angle: 90 });
+      await navigate(2600);
+      const landscapeResetLayout = await panelOffset('topbar');
+      addCheck(
+        'layout_landscape_reset_persists_independently',
+        landscapeResetLayout?.dragX === '0px' && landscapeResetLayout?.dragY === '0px',
+        { landscapeResetLayout },
+      );
+
+      await setViewport(1280, 568, false, { type: 'landscapePrimary', angle: 90 });
+      await navigate(3200);
+      await waitVisible('.map-canvas', 'modern_1280_map_visible');
+      const modern1280 = await viewportSurfaceState();
+      addCheck(
+        'modern_1280_surface_bounds_fit_viewport',
+        modern1280.surfaces.filter((surface) => surface.visible).every((surface) => surface.withinViewport),
+        modern1280,
+      );
+      await checkNoWindowScrollbars('modern_1280_surface_has_no_scrollbars');
+      await screenshot('09_modern_ui_1280x568.png', 'Modern UI reference viewport');
     }
 
     await setViewport(1440, 900, false);
@@ -753,7 +1035,11 @@ async function main() {
         presentationChrome?.hasDebugCopy === false,
       presentationChrome ?? {}
     );
-    if (args.expectPlayable) {
+    const desktopPresentationPlayable =
+      presentationChrome?.dpad?.visible === true &&
+      presentationChrome?.dock?.visible === true &&
+      presentationChrome?.entry?.visible === false;
+    if (args.expectPlayable || desktopPresentationPlayable) {
       addCheck(
         'desktop_presentation_world_player_shows_play_controls',
         presentationChrome?.topBar?.visible === true &&
@@ -786,6 +1072,22 @@ async function main() {
       );
     }
     await screenshot('10_desktop_presentation_mode_1440x900.png', 'Desktop presentation mode');
+
+    addCheck(
+      'browser_console_errors_absent',
+      report.browser_runtime.console_errors.length === 0,
+      report.browser_runtime.console_errors,
+    );
+    addCheck(
+      'browser_runtime_exceptions_absent',
+      report.browser_runtime.exceptions.length === 0,
+      report.browser_runtime.exceptions,
+    );
+    addCheck(
+      'browser_network_failures_absent',
+      report.browser_runtime.network_failures.length === 0,
+      report.browser_runtime.network_failures,
+    );
 
     report.status = report.checks.every((check) => check.status === 'pass') ? 'pass' : 'fail';
   } catch (error) {

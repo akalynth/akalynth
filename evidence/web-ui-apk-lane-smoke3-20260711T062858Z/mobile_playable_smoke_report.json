@@ -1,0 +1,22 @@
+{
+  "id": "AKALYNTH_MOBILE_PLAYABLE_SMOKE_SCRIPT_V1",
+  "status": "fail",
+  "started_at": "2026-07-11T06:28:58.698Z",
+  "base_url": "http://127.0.0.1:4190/play/",
+  "screenshots": [],
+  "checks": [
+    {
+      "id": "debug_client_url_available",
+      "status": "fail",
+      "details": {
+        "url": "http://127.0.0.1:4190/play/"
+      }
+    }
+  ],
+  "notes": [
+    "Debug-client presentation smoke only.",
+    "Does not change gameplay authority, protocol, server, shared types, Android/native, runtime, or deploy state."
+  ],
+  "error": "Debug client is not reachable at http://127.0.0.1:4190/play/",
+  "finished_at": "2026-07-11T06:28:58.708Z"
+}

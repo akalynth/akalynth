@@ -38,9 +38,9 @@ class WebSocketTransportTest {
         transport.send(intent)
 
         val sent = json.parseToJsonElement(connection.lastSent!!).jsonObject
-        assertEquals("attack", sent["type"]?.jsonPrimitive?.content)
+        assertEquals("attack_intent", sent["type"]?.jsonPrimitive?.content)
         assertEquals("test-action-001", sent["action_id"]?.jsonPrimitive?.content)
-        assertEquals("enemy_123", sent["payload"]?.jsonObject?.get("target_id")?.jsonPrimitive?.content)
+        assertEquals("enemy_123", sent["target_id"]?.jsonPrimitive?.content)
     }
 
     @Test
@@ -51,8 +51,8 @@ class WebSocketTransportTest {
         transport.send(intent)
 
         val sent = json.parseToJsonElement(connection.lastSent!!).jsonObject
-        assertEquals("attack", sent["type"]?.jsonPrimitive?.content)
-        assertNull(sent["payload"]?.jsonObject?.get("target_id"))
+        assertEquals("attack_intent", sent["type"]?.jsonPrimitive?.content)
+        assertNull(sent["target_id"])
     }
 
     // =========================================================================
@@ -73,14 +73,10 @@ class WebSocketTransportTest {
         transport.send(intent)
 
         val sent = json.parseToJsonElement(connection.lastSent!!).jsonObject
-        assertEquals("drop_hotbar_slot", sent["type"]?.jsonPrimitive?.content)
+        assertEquals("drop_item", sent["type"]?.jsonPrimitive?.content)
         assertEquals("test-action-003", sent["action_id"]?.jsonPrimitive?.content)
-
-        val payload = sent["payload"]?.jsonObject
-        assertEquals("2", payload?.get("slot_index")?.jsonPrimitive?.content)
-        assertEquals("legendary_sword", payload?.get("item_id")?.jsonPrimitive?.content)
-        assertEquals("Dragon Slayer", payload?.get("item_name")?.jsonPrimitive?.content)
-        assertEquals("legendary", payload?.get("rarity")?.jsonPrimitive?.content)
+        assertEquals("legendary_sword", sent["item_id"]?.jsonPrimitive?.content)
+        assertNull(sent["payload"])
     }
 
     // =========================================================================
@@ -103,12 +99,8 @@ class WebSocketTransportTest {
         val sent = json.parseToJsonElement(connection.lastSent!!).jsonObject
         assertEquals("pickup_item", sent["type"]?.jsonPrimitive?.content)
         assertEquals("test-action-004", sent["action_id"]?.jsonPrimitive?.content)
-
-        val payload = sent["payload"]?.jsonObject
-        assertEquals("gold_pile", payload?.get("item_id")?.jsonPrimitive?.content)
-        assertEquals("Gold Pile", payload?.get("item_name")?.jsonPrimitive?.content)
-        assertEquals("15", payload?.get("x")?.jsonPrimitive?.content)
-        assertEquals("25", payload?.get("y")?.jsonPrimitive?.content)
+        assertEquals("gold_pile", sent["item_id"]?.jsonPrimitive?.content)
+        assertNull(sent["payload"])
     }
 
     // =========================================================================
@@ -127,12 +119,10 @@ class WebSocketTransportTest {
         transport.send(intent)
 
         val sent = json.parseToJsonElement(connection.lastSent!!).jsonObject
-        assertEquals("use_hotbar_slot", sent["type"]?.jsonPrimitive?.content)
+        assertEquals("use_skill", sent["type"]?.jsonPrimitive?.content)
         assertEquals("test-action-005", sent["action_id"]?.jsonPrimitive?.content)
-
-        val payload = sent["payload"]?.jsonObject
-        assertEquals("1", payload?.get("slot_index")?.jsonPrimitive?.content)
-        assertEquals("health_potion", payload?.get("item_id")?.jsonPrimitive?.content)
+        assertEquals("item:use:health_potion", sent["skill_id"]?.jsonPrimitive?.content)
+        assertNull(sent["payload"])
     }
 
     @Test

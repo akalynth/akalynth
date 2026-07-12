@@ -24,6 +24,7 @@ export interface NineSlicePanelProps {
   children?: ReactNode;
   className?: string;
   style?: CSSProperties;
+  dataUiPanel?: string;
   /** Inner padding in CSS pixels (applied around children). */
   padding?: number | string;
   /** Background frame opacity when PNG chrome is active. */
@@ -44,6 +45,7 @@ export function NineSlicePanel({
   children,
   className,
   style,
+  dataUiPanel,
   padding = 12,
   alpha = 0.96,
   scale = 1,
@@ -106,6 +108,7 @@ export function NineSlicePanel({
         .filter(Boolean)
         .join(' ')}
       style={{ position: 'relative', ...style }}
+      data-ui-panel={dataUiPanel}
     >
       {pngActive ? (
         <canvas

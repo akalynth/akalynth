@@ -1,0 +1,2879 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-07-11T09:05:38.926Z",
+  "cases": [
+    {
+      "id": "01-beta-desktop",
+      "url": "https://beta.akalynth.com/play/",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "status": 200,
+      "error": null,
+      "consoleIssues": [],
+      "pageErrors": [],
+      "failedRequests": [],
+      "responses": [
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_panel_frame.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_button_pressed_frame.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_dpad_frame.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_dock_frame.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_button_frame.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_dpad_button_pressed.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_action_ring_pressed.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_dpad_button.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_action_ring_danger.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_hp_fill.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_action_ring.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_bar_track.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_mp_fill.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        }
+      ],
+      "screenshot": "evidence/product-design-audit-20260711T090524Z/01-beta-desktop.png",
+      "data": {
+        "viewport": {
+          "w": 1280,
+          "h": 720
+        },
+        "title": "Akalynth Client v0",
+        "bodyText": "AkalynthConnected Position 2,2 Health 10/10 Respect Unproven (0) Standing — Gold 0g Link connected ↖ ↑ ↗ ← ■ → ↙ ↓ ↘ ✕ Objective Step onto the glowing move rune (east plaza, tile 3,2) Fish Rookguard canal Attack No runestone nearby Ritual Guide is nearby Talk ONWARD ROUTES Fish Rookguard canal Chat Log Pack Codex World synced",
+        "bodyOverflow": "hidden",
+        "scroll": {
+          "w": 1280,
+          "h": 720
+        },
+        "links": [],
+        "buttons": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 0,
+              "h": 0
+            },
+            "text": "Enter landscape",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 48.2,
+              "y": 377,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↖",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move north west"
+          },
+          {
+            "rect": {
+              "x": 111.8,
+              "y": 377,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↑",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move north"
+          },
+          {
+            "rect": {
+              "x": 175.4,
+              "y": 377,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↗",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move north east"
+          },
+          {
+            "rect": {
+              "x": 48.2,
+              "y": 440.6,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "←",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move west"
+          },
+          {
+            "rect": {
+              "x": 111.8,
+              "y": 440.6,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "■",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Stop movement"
+          },
+          {
+            "rect": {
+              "x": 175.4,
+              "y": 440.6,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "→",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move east"
+          },
+          {
+            "rect": {
+              "x": 48.2,
+              "y": 504.2,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↙",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move south west"
+          },
+          {
+            "rect": {
+              "x": 111.8,
+              "y": 504.2,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↓",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move south"
+          },
+          {
+            "rect": {
+              "x": 175.4,
+              "y": 504.2,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↘",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move south east"
+          },
+          {
+            "rect": {
+              "x": 87.4,
+              "y": 573,
+              "w": 48,
+              "h": 48
+            },
+            "text": "✕",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": "Stop movement"
+          },
+          {
+            "rect": {
+              "x": 989.5,
+              "y": 205.3,
+              "w": 176.7,
+              "h": 51
+            },
+            "text": "Fish Rookguard canal",
+            "color": "rgb(240, 200, 60)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "13.6px",
+            "lineHeight": "normal",
+            "outline": "rgb(240, 200, 60) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 980.2,
+              "y": 277.6,
+              "w": 275.6,
+              "h": 55
+            },
+            "text": "Attack",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 980.2,
+              "y": 373.6,
+              "w": 275.6,
+              "h": 55
+            },
+            "text": "Ritual",
+            "color": "rgb(119, 115, 107)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(119, 115, 107) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 980.2,
+              "y": 469.6,
+              "w": 275.6,
+              "h": 55
+            },
+            "text": "Talk",
+            "color": "rgb(41, 145, 255)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(41, 145, 255) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 980.2,
+              "y": 576,
+              "w": 275.6,
+              "h": 51
+            },
+            "text": "Fish Rookguard canal",
+            "color": "rgb(240, 200, 60)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "13.6px",
+            "lineHeight": "normal",
+            "outline": "rgb(240, 200, 60) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 45.6,
+              "y": 525,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "Chat",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "12.48px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Open chat"
+          },
+          {
+            "rect": {
+              "x": 147.2,
+              "y": 525,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "Log",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "12.48px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Open log"
+          },
+          {
+            "rect": {
+              "x": 235.3,
+              "y": 514.6,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "Pack",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "12.48px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Open backpack"
+          },
+          {
+            "rect": {
+              "x": 31,
+              "y": 600.8,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "Codex",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "12.48px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Open Akalynth Codex shelf"
+          }
+        ],
+        "surface": "beta-play",
+        "shell": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 1280,
+            "h": 720
+          },
+          "text": "AkalynthConnected Position 2,2 Health 10/10 Respect Unproven (0) Standing — Gold 0g Link connected ↖ ↑ ↗ ← ■ → ↙ ↓ ↘ ✕ Objective Step onto t",
+          "color": "rgb(222, 219, 210)",
+          "background": "rgb(7, 7, 7)",
+          "fontSize": "16px",
+          "lineHeight": "normal",
+          "outline": "rgb(222, 219, 210) none 3px",
+          "role": null,
+          "ariaLabel": null
+        },
+        "layout": {
+          "map": {
+            "rect": {
+              "x": 128,
+              "y": 155,
+              "w": 1024,
+              "h": 1024
+            },
+            "text": "world-map",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgb(11, 11, 10)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": "world-map"
+          },
+          "hud": {
+            "rect": {
+              "x": 676,
+              "y": 12,
+              "w": 592,
+              "h": 258.3
+            },
+            "text": "Position 2,2 Health 10/10 Respect Unproven (0) Standing — Gold 0g Link connected",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": "play status"
+          },
+          "controls": {
+            "rect": {
+              "x": 12,
+              "y": 126.5,
+              "w": 1256,
+              "h": 512.7
+            },
+            "text": "↖ ↑ ↗ ← ■ → ↙ ↓ ↘ ✕ Objective Step onto the glowing move rune (east plaza, tile 3,2) Fish Rookguard canal Attack No runestone nearby Ritual ",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": "touch controls"
+          },
+          "leftRail": {
+            "rect": {
+              "x": 12,
+              "y": 364,
+              "w": 280,
+              "h": 275.2
+            },
+            "text": "↖ ↑ ↗ ← ■ → ↙ ↓ ↘ ✕",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgb(18, 20, 22)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          "rightRail": {
+            "rect": {
+              "x": 968,
+              "y": 126.5,
+              "w": 300,
+              "h": 512.7
+            },
+            "text": "Objective Step onto the glowing move rune (east plaza, tile 3,2) Fish Rookguard canal Attack No runestone nearby Ritual Guide is nearby Talk",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgb(18, 20, 22)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          "bottomDock": {
+            "rect": {
+              "x": 12,
+              "y": 494.6,
+              "w": 1256,
+              "h": 215
+            },
+            "text": "Chat Log Pack Codex World synced",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgb(18, 20, 22)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          "rotateButton": {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 0,
+              "h": 0
+            },
+            "text": "Enter landscape",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": null
+          }
+        },
+        "actionButtons": [
+          {
+            "rect": {
+              "x": 48.2,
+              "y": 377,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↖",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move north west"
+          },
+          {
+            "rect": {
+              "x": 111.8,
+              "y": 377,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↑",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move north"
+          },
+          {
+            "rect": {
+              "x": 175.4,
+              "y": 377,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↗",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move north east"
+          },
+          {
+            "rect": {
+              "x": 48.2,
+              "y": 440.6,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "←",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move west"
+          },
+          {
+            "rect": {
+              "x": 111.8,
+              "y": 440.6,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "■",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Stop movement"
+          },
+          {
+            "rect": {
+              "x": 175.4,
+              "y": 440.6,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "→",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move east"
+          },
+          {
+            "rect": {
+              "x": 48.2,
+              "y": 504.2,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↙",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move south west"
+          },
+          {
+            "rect": {
+              "x": 111.8,
+              "y": 504.2,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↓",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move south"
+          },
+          {
+            "rect": {
+              "x": 175.4,
+              "y": 504.2,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↘",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move south east"
+          },
+          {
+            "rect": {
+              "x": 989.5,
+              "y": 205.3,
+              "w": 176.7,
+              "h": 51
+            },
+            "text": "Fish Rookguard canal",
+            "color": "rgb(240, 200, 60)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "13.6px",
+            "lineHeight": "normal",
+            "outline": "rgb(240, 200, 60) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 980.2,
+              "y": 277.6,
+              "w": 275.6,
+              "h": 55
+            },
+            "text": "Attack",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 980.2,
+              "y": 373.6,
+              "w": 275.6,
+              "h": 55
+            },
+            "text": "Ritual",
+            "color": "rgb(119, 115, 107)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(119, 115, 107) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 980.2,
+              "y": 469.6,
+              "w": 275.6,
+              "h": 55
+            },
+            "text": "Talk",
+            "color": "rgb(41, 145, 255)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(41, 145, 255) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 980.2,
+              "y": 576,
+              "w": 275.6,
+              "h": 51
+            },
+            "text": "Fish Rookguard canal",
+            "color": "rgb(240, 200, 60)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "13.6px",
+            "lineHeight": "normal",
+            "outline": "rgb(240, 200, 60) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 45.6,
+              "y": 525,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "Chat",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "12.48px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Open chat"
+          },
+          {
+            "rect": {
+              "x": 147.2,
+              "y": 525,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "Log",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "12.48px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Open log"
+          },
+          {
+            "rect": {
+              "x": 235.3,
+              "y": 514.6,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "Pack",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "12.48px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Open backpack"
+          },
+          {
+            "rect": {
+              "x": 31,
+              "y": 600.8,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "Codex",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "12.48px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Open Akalynth Codex shelf"
+          }
+        ],
+        "focusable": 20
+      }
+    },
+    {
+      "id": "02-beta-portrait",
+      "url": "https://beta.akalynth.com/play/",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "error": null,
+      "consoleIssues": [],
+      "pageErrors": [],
+      "failedRequests": [],
+      "responses": [
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_panel_frame.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_button_pressed_frame.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_button_frame.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_dock_frame.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_dpad_frame.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_action_ring.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_dpad_button.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_action_ring_pressed.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_action_ring_danger.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_dpad_button_pressed.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_hp_fill.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_mp_fill.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_bar_track.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        }
+      ],
+      "screenshot": "evidence/product-design-audit-20260711T090524Z/02-beta-portrait.png",
+      "data": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "title": "Akalynth Client v0",
+        "bodyText": "Landscape required Turn the phone sideways for the play surface. Enter landscape AkalynthConnected Akalynth Guest_b06f Rookguard ↖ ↑ ↗ ← ■ → ↙ ↓ ↘ ✕ Objective Step onto the glowing move rune (east plaza, tile 3,2) Fish Rookguard canal Attack Ritual Talk ONWARD ROUTES Fish Rookguard canal Chat Log Pack Codex",
+        "bodyOverflow": "hidden",
+        "scroll": {
+          "w": 390,
+          "h": 844
+        },
+        "links": [],
+        "buttons": [
+          {
+            "rect": {
+              "x": 115.4,
+              "y": 470,
+              "w": 159.2,
+              "h": 44
+            },
+            "text": "Enter landscape",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 14.6,
+              "y": 569.6,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↖",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move north west"
+          },
+          {
+            "rect": {
+              "x": 59.1,
+              "y": 569.6,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↑",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move north"
+          },
+          {
+            "rect": {
+              "x": 103.5,
+              "y": 569.6,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↗",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move north east"
+          },
+          {
+            "rect": {
+              "x": 14.6,
+              "y": 614.1,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "←",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move west"
+          },
+          {
+            "rect": {
+              "x": 59.1,
+              "y": 614.1,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "■",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Stop movement"
+          },
+          {
+            "rect": {
+              "x": 103.5,
+              "y": 614.1,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "→",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move east"
+          },
+          {
+            "rect": {
+              "x": 14.6,
+              "y": 658.5,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↙",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move south west"
+          },
+          {
+            "rect": {
+              "x": 59.1,
+              "y": 658.5,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↓",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move south"
+          },
+          {
+            "rect": {
+              "x": 103.5,
+              "y": 658.5,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↘",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move south east"
+          },
+          {
+            "rect": {
+              "x": 51.8,
+              "y": 710.2,
+              "w": 38,
+              "h": 44
+            },
+            "text": "✕",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": "Stop movement"
+          },
+          {
+            "rect": {
+              "x": 251.3,
+              "y": 387.5,
+              "w": 111.6,
+              "h": 77
+            },
+            "text": "Fish Rookguard canal",
+            "color": "rgb(240, 200, 60)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "13.6px",
+            "lineHeight": "normal",
+            "outline": "rgb(240, 200, 60) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 242,
+              "y": 485.8,
+              "w": 130.2,
+              "h": 47
+            },
+            "text": "Attack",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 242,
+              "y": 544.8,
+              "w": 130.2,
+              "h": 47
+            },
+            "text": "Ritual",
+            "color": "rgb(119, 115, 107)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(119, 115, 107) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 242,
+              "y": 603.8,
+              "w": 130.2,
+              "h": 47
+            },
+            "text": "Talk",
+            "color": "rgb(41, 145, 255)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(41, 145, 255) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 242,
+              "y": 702.2,
+              "w": 130.2,
+              "h": 60
+            },
+            "text": "Fish Rookguard canal",
+            "color": "rgb(240, 200, 60)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "13.6px",
+            "lineHeight": "normal",
+            "outline": "rgb(240, 200, 60) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 35.2,
+              "y": 686,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "Chat",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "12.48px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Open chat"
+          },
+          {
+            "rect": {
+              "x": 149.2,
+              "y": 686,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "Log",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "12.48px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Open log"
+          },
+          {
+            "rect": {
+              "x": 256,
+              "y": 678,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "Pack",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "12.48px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Open backpack"
+          },
+          {
+            "rect": {
+              "x": 27,
+              "y": 759.4,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "Codex",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "12.48px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Open Akalynth Codex shelf"
+          }
+        ],
+        "surface": "beta-play",
+        "shell": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 390,
+            "h": 844
+          },
+          "text": "Landscape required Turn the phone sideways for the play surface. Enter landscape AkalynthConnected Akalynth Guest_b06f Rookguard ↖ ↑ ↗ ← ■ →",
+          "color": "rgb(222, 219, 210)",
+          "background": "rgb(7, 7, 7)",
+          "fontSize": "16px",
+          "lineHeight": "normal",
+          "outline": "rgb(222, 219, 210) none 3px",
+          "role": null,
+          "ariaLabel": null
+        },
+        "layout": {
+          "map": {
+            "rect": {
+              "x": 9.9,
+              "y": 261.7,
+              "w": 370.2,
+              "h": 370.2
+            },
+            "text": "world-map",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgb(11, 11, 10)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": "world-map"
+          },
+          "hud": {
+            "rect": {
+              "x": 8.8,
+              "y": 142.7,
+              "w": 114.4,
+              "h": 86.3
+            },
+            "text": "Akalynth Guest_b06f Rookguard",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": "play status"
+          },
+          "controls": {
+            "rect": {
+              "x": 8.8,
+              "y": 278.7,
+              "w": 372.4,
+              "h": 492.5
+            },
+            "text": "↖ ↑ ↗ ← ■ → ↙ ↓ ↘ ✕ Objective Step onto the glowing move rune (east plaza, tile 3,2) Fish Rookguard canal Attack Ritual Talk ONWARD ROUTES F",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": "touch controls"
+          },
+          "leftRail": {
+            "rect": {
+              "x": 8.8,
+              "y": 559.8,
+              "w": 162.9,
+              "h": 211.4
+            },
+            "text": "↖ ↑ ↗ ← ■ → ↙ ↓ ↘ ✕",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgb(18, 20, 22)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          "rightRail": {
+            "rect": {
+              "x": 233,
+              "y": 278.7,
+              "w": 148.2,
+              "h": 492.5
+            },
+            "text": "Objective Step onto the glowing move rune (east plaza, tile 3,2) Fish Rookguard canal Attack Ritual Talk ONWARD ROUTES Fish Rookguard canal",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgb(18, 20, 22)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          "bottomDock": {
+            "rect": {
+              "x": 8.8,
+              "y": 658.8,
+              "w": 372.4,
+              "h": 177.2
+            },
+            "text": "Chat Log Pack Codex",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgb(18, 20, 22)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          "rotateButton": {
+            "rect": {
+              "x": 115.4,
+              "y": 470,
+              "w": 159.2,
+              "h": 44
+            },
+            "text": "Enter landscape",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": null
+          }
+        },
+        "actionButtons": [
+          {
+            "rect": {
+              "x": 14.6,
+              "y": 569.6,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↖",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move north west"
+          },
+          {
+            "rect": {
+              "x": 59.1,
+              "y": 569.6,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↑",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move north"
+          },
+          {
+            "rect": {
+              "x": 103.5,
+              "y": 569.6,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↗",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move north east"
+          },
+          {
+            "rect": {
+              "x": 14.6,
+              "y": 614.1,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "←",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move west"
+          },
+          {
+            "rect": {
+              "x": 59.1,
+              "y": 614.1,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "■",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Stop movement"
+          },
+          {
+            "rect": {
+              "x": 103.5,
+              "y": 614.1,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "→",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move east"
+          },
+          {
+            "rect": {
+              "x": 14.6,
+              "y": 658.5,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↙",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move south west"
+          },
+          {
+            "rect": {
+              "x": 59.1,
+              "y": 658.5,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↓",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move south"
+          },
+          {
+            "rect": {
+              "x": 103.5,
+              "y": 658.5,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↘",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move south east"
+          },
+          {
+            "rect": {
+              "x": 251.3,
+              "y": 387.5,
+              "w": 111.6,
+              "h": 77
+            },
+            "text": "Fish Rookguard canal",
+            "color": "rgb(240, 200, 60)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "13.6px",
+            "lineHeight": "normal",
+            "outline": "rgb(240, 200, 60) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 242,
+              "y": 485.8,
+              "w": 130.2,
+              "h": 47
+            },
+            "text": "Attack",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 242,
+              "y": 544.8,
+              "w": 130.2,
+              "h": 47
+            },
+            "text": "Ritual",
+            "color": "rgb(119, 115, 107)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(119, 115, 107) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 242,
+              "y": 603.8,
+              "w": 130.2,
+              "h": 47
+            },
+            "text": "Talk",
+            "color": "rgb(41, 145, 255)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(41, 145, 255) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 242,
+              "y": 702.2,
+              "w": 130.2,
+              "h": 60
+            },
+            "text": "Fish Rookguard canal",
+            "color": "rgb(240, 200, 60)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "13.6px",
+            "lineHeight": "normal",
+            "outline": "rgb(240, 200, 60) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 35.2,
+              "y": 686,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "Chat",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "12.48px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Open chat"
+          },
+          {
+            "rect": {
+              "x": 149.2,
+              "y": 686,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "Log",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "12.48px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Open log"
+          },
+          {
+            "rect": {
+              "x": 256,
+              "y": 678,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "Pack",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "12.48px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Open backpack"
+          },
+          {
+            "rect": {
+              "x": 27,
+              "y": 759.4,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "Codex",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "12.48px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Open Akalynth Codex shelf"
+          }
+        ],
+        "focusable": 20
+      }
+    },
+    {
+      "id": "03-beta-landscape",
+      "url": "https://beta.akalynth.com/play/",
+      "viewport": {
+        "width": 932,
+        "height": 430
+      },
+      "status": 200,
+      "error": null,
+      "consoleIssues": [],
+      "pageErrors": [],
+      "failedRequests": [],
+      "responses": [
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_panel_frame.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_button_frame.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_button_pressed_frame.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_dock_frame.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_dpad_frame.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_action_ring_pressed.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_action_ring.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_action_ring_danger.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_dpad_button.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_dpad_button_pressed.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_hp_fill.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_mp_fill.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/ui/ui_bar_track.png",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        },
+        {
+          "url": "https://beta.akalynth.com/play/atlas/registry.json",
+          "status": 200
+        }
+      ],
+      "screenshot": "evidence/product-design-audit-20260711T090524Z/03-beta-landscape.png",
+      "data": {
+        "viewport": {
+          "w": 932,
+          "h": 430
+        },
+        "title": "Akalynth Client v0",
+        "bodyText": "AkalynthConnected Guest_448e Health 10/10 2,2connected OBJECTIVE Step onto the glowing move rune (east plaza, tile 3,2) ↖ ↑ ↗ ← ■ → ↙ ↓ ↘ ACTIONS Fish Rookguard canal FISH Fish Atk Talk Chat Log Pack Codex",
+        "bodyOverflow": "hidden",
+        "scroll": {
+          "w": 932,
+          "h": 430
+        },
+        "links": [],
+        "buttons": [
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 0,
+              "h": 0
+            },
+            "text": "Enter landscape",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 15.3,
+              "y": 220.4,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↖",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move north west"
+          },
+          {
+            "rect": {
+              "x": 59.3,
+              "y": 220.4,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↑",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move north"
+          },
+          {
+            "rect": {
+              "x": 103.3,
+              "y": 220.4,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↗",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move north east"
+          },
+          {
+            "rect": {
+              "x": 15.3,
+              "y": 264.4,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "←",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move west"
+          },
+          {
+            "rect": {
+              "x": 59.3,
+              "y": 264.4,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "■",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Stop movement"
+          },
+          {
+            "rect": {
+              "x": 103.3,
+              "y": 264.4,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "→",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move east"
+          },
+          {
+            "rect": {
+              "x": 15.3,
+              "y": 308.4,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↙",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move south west"
+          },
+          {
+            "rect": {
+              "x": 59.3,
+              "y": 308.4,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↓",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move south"
+          },
+          {
+            "rect": {
+              "x": 103.3,
+              "y": 308.4,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↘",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move south east"
+          },
+          {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 0,
+              "h": 0
+            },
+            "text": "✕",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": "Stop movement"
+          },
+          {
+            "rect": {
+              "x": 750.9,
+              "y": 326.6,
+              "w": 79.8,
+              "h": 42
+            },
+            "text": "Fish",
+            "color": "rgb(242, 207, 51)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "10.88px",
+            "lineHeight": "11.3152px",
+            "outline": "rgb(242, 207, 51) none 3px",
+            "role": null,
+            "ariaLabel": "Fish Rookguard canal"
+          },
+          {
+            "rect": {
+              "x": 835.3,
+              "y": 326.6,
+              "w": 79.8,
+              "h": 42
+            },
+            "text": "Atk",
+            "color": "rgb(255, 98, 98)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "10.88px",
+            "lineHeight": "11.3152px",
+            "outline": "rgb(255, 98, 98) none 3px",
+            "role": null,
+            "ariaLabel": "Attack nearest available target"
+          },
+          {
+            "rect": {
+              "x": 750.9,
+              "y": 373.1,
+              "w": 79.8,
+              "h": 42
+            },
+            "text": "Talk",
+            "color": "rgb(103, 184, 255)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "10.88px",
+            "lineHeight": "11.3152px",
+            "outline": "rgb(103, 184, 255) none 3px",
+            "role": null,
+            "ariaLabel": "Talk to Guide"
+          },
+          {
+            "rect": {
+              "x": 336.9,
+              "y": 342.9,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "Chat",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "12.48px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Open chat"
+          },
+          {
+            "rect": {
+              "x": 391.5,
+              "y": 342.9,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "Log",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "12.48px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Open log"
+          },
+          {
+            "rect": {
+              "x": 446,
+              "y": 342.9,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "Pack",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "12.48px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Open backpack"
+          },
+          {
+            "rect": {
+              "x": 495.7,
+              "y": 337.4,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "Codex",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "12.48px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Open Akalynth Codex shelf"
+          }
+        ],
+        "surface": "beta-play",
+        "shell": {
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "w": 932,
+            "h": 430
+          },
+          "text": "AkalynthConnected Guest_448e Health 10/10 2,2connected OBJECTIVE Step onto the glowing move rune (east plaza, tile 3,2) ↖ ↑ ↗ ← ■ → ↙ ↓ ↘ AC",
+          "color": "rgb(222, 219, 210)",
+          "background": "rgb(7, 7, 7)",
+          "fontSize": "16px",
+          "lineHeight": "normal",
+          "outline": "rgb(222, 219, 210) none 3px",
+          "role": null,
+          "ariaLabel": null
+        },
+        "layout": {
+          "map": {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 932,
+              "h": 430
+            },
+            "text": "world-map",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgb(11, 11, 10)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": "world-map"
+          },
+          "hud": null,
+          "controls": {
+            "rect": {
+              "x": 7.2,
+              "y": 208.3,
+              "w": 917.6,
+              "h": 214.5
+            },
+            "text": "↖ ↑ ↗ ← ■ → ↙ ↓ ↘ ACTIONS Fish Rookguard canal FISH Fish Atk Talk",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": "touch controls"
+          },
+          "leftRail": {
+            "rect": {
+              "x": 7.2,
+              "y": 208.3,
+              "w": 170.5,
+              "h": 214.5
+            },
+            "text": "↖ ↑ ↗ ← ■ → ↙ ↓ ↘",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgb(18, 20, 22)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          "rightRail": {
+            "rect": {
+              "x": 743.2,
+              "y": 269.8,
+              "w": 181.6,
+              "h": 153
+            },
+            "text": "ACTIONS Fish Rookguard canal FISH Fish Atk Talk",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          "bottomDock": {
+            "rect": {
+              "x": 316,
+              "y": 321.3,
+              "w": 300,
+              "h": 101.5
+            },
+            "text": "Chat Log Pack Codex",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgb(18, 20, 22)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          "rotateButton": {
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "w": 0,
+              "h": 0
+            },
+            "text": "Enter landscape",
+            "color": "rgb(222, 219, 210)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(222, 219, 210) none 3px",
+            "role": null,
+            "ariaLabel": null
+          }
+        },
+        "actionButtons": [
+          {
+            "rect": {
+              "x": 15.3,
+              "y": 220.4,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↖",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move north west"
+          },
+          {
+            "rect": {
+              "x": 59.3,
+              "y": 220.4,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↑",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move north"
+          },
+          {
+            "rect": {
+              "x": 103.3,
+              "y": 220.4,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↗",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move north east"
+          },
+          {
+            "rect": {
+              "x": 15.3,
+              "y": 264.4,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "←",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move west"
+          },
+          {
+            "rect": {
+              "x": 59.3,
+              "y": 264.4,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "■",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Stop movement"
+          },
+          {
+            "rect": {
+              "x": 103.3,
+              "y": 264.4,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "→",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move east"
+          },
+          {
+            "rect": {
+              "x": 15.3,
+              "y": 308.4,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↙",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move south west"
+          },
+          {
+            "rect": {
+              "x": 59.3,
+              "y": 308.4,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↓",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move south"
+          },
+          {
+            "rect": {
+              "x": 103.3,
+              "y": 308.4,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "↘",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "16px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Move south east"
+          },
+          {
+            "rect": {
+              "x": 750.9,
+              "y": 326.6,
+              "w": 79.8,
+              "h": 42
+            },
+            "text": "Fish",
+            "color": "rgb(242, 207, 51)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "10.88px",
+            "lineHeight": "11.3152px",
+            "outline": "rgb(242, 207, 51) none 3px",
+            "role": null,
+            "ariaLabel": "Fish Rookguard canal"
+          },
+          {
+            "rect": {
+              "x": 835.3,
+              "y": 326.6,
+              "w": 79.8,
+              "h": 42
+            },
+            "text": "Atk",
+            "color": "rgb(255, 98, 98)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "10.88px",
+            "lineHeight": "11.3152px",
+            "outline": "rgb(255, 98, 98) none 3px",
+            "role": null,
+            "ariaLabel": "Attack nearest available target"
+          },
+          {
+            "rect": {
+              "x": 750.9,
+              "y": 373.1,
+              "w": 79.8,
+              "h": 42
+            },
+            "text": "Talk",
+            "color": "rgb(103, 184, 255)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "10.88px",
+            "lineHeight": "11.3152px",
+            "outline": "rgb(103, 184, 255) none 3px",
+            "role": null,
+            "ariaLabel": "Talk to Guide"
+          },
+          {
+            "rect": {
+              "x": 336.9,
+              "y": 342.9,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "Chat",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "12.48px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Open chat"
+          },
+          {
+            "rect": {
+              "x": 391.5,
+              "y": 342.9,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "Log",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "12.48px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Open log"
+          },
+          {
+            "rect": {
+              "x": 446,
+              "y": 342.9,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "Pack",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "12.48px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Open backpack"
+          },
+          {
+            "rect": {
+              "x": 495.7,
+              "y": 337.4,
+              "w": 66.4,
+              "h": 58.4
+            },
+            "text": "Codex",
+            "color": "rgb(214, 178, 76)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "12.48px",
+            "lineHeight": "normal",
+            "outline": "rgb(214, 178, 76) none 3px",
+            "role": null,
+            "ariaLabel": "Open Akalynth Codex shelf"
+          }
+        ],
+        "focusable": 18
+      }
+    },
+    {
+      "id": "04-atlas-desktop",
+      "url": "https://codex.akalynth.com/atlas",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "status": 200,
+      "error": null,
+      "consoleIssues": [
+        "error: Failed to load resource: the server responded with a status of 404 ()"
+      ],
+      "pageErrors": [],
+      "failedRequests": [],
+      "responses": [
+        {
+          "url": "https://codex.akalynth.com/atlas/ui.png",
+          "status": 200
+        },
+        {
+          "url": "https://codex.akalynth.com/atlas/items.png",
+          "status": 200
+        },
+        {
+          "url": "https://codex.akalynth.com/atlas/world.png",
+          "status": 200
+        },
+        {
+          "url": "https://codex.akalynth.com/atlas/chronicle.png",
+          "status": 200
+        }
+      ],
+      "screenshot": "evidence/product-design-audit-20260711T090524Z/04-atlas-desktop.png",
+      "data": {
+        "viewport": {
+          "w": 1280,
+          "h": 720
+        },
+        "title": "",
+        "bodyText": "AKALYNTH Index World Codex Play Outfits Atlas Behavior Agent Gaps Chronicle Files Stage Beta Prod ⌕ ✥ PACKING · PLACEMENT · GENERATION Atlas & World Sprites pack into atlas sheets; the map-compiler then assembles worlds from placement overlays. Every tile on the map traces back to a registered source asset — generation you can audit. Atlas sheets ui.png 13 sprites · 452×68 · 33.6 KB items.png 20 sprites · 682×36 · 0.8 KB chronicle.png 9 sprites · 308×36 · 0.5 KB world.png 64 sprites · 2018×488 · 57.6 KB World Generator · Rookguard (overlays) Generate a structure from registered assets, then click the map to drop it. The base map is the compiled Rookguard overlay — scrub to replay it. ▶ Replay base 492 / 492 PREFAB GENERATOR Generate a structure from registered assets, then click the map to",
+        "bodyOverflow": "visible",
+        "scroll": {
+          "w": 1280,
+          "h": 1896
+        },
+        "links": [
+          {
+            "rect": {
+              "x": 273.4,
+              "y": 24,
+              "w": 38.9,
+              "h": 17
+            },
+            "text": "World",
+            "color": "rgb(154, 163, 173)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "14px",
+            "lineHeight": "normal",
+            "outline": "rgb(154, 163, 173) none 3px",
+            "role": null,
+            "ariaLabel": null
+          }
+        ],
+        "buttons": [],
+        "surface": "codex-atlas",
+        "headings": [
+          {
+            "rect": {
+              "x": 22,
+              "y": 131,
+              "w": 1236,
+              "h": 57
+            },
+            "text": "Atlas & World",
+            "color": "rgb(246, 240, 230)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "60px",
+            "lineHeight": "57px",
+            "outline": "rgb(246, 240, 230) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 22,
+              "y": 270.8,
+              "w": 1236,
+              "h": 29
+            },
+            "text": "Atlas sheets",
+            "color": "rgb(246, 240, 230)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "22px",
+            "lineHeight": "normal",
+            "outline": "rgb(246, 240, 230) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 22,
+              "y": 820.8,
+              "w": 1236,
+              "h": 29
+            },
+            "text": "World Generator · Rookguard (overlays)",
+            "color": "rgb(246, 240, 230)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "22px",
+            "lineHeight": "normal",
+            "outline": "rgb(246, 240, 230) none 3px",
+            "role": null,
+            "ariaLabel": null
+          }
+        ],
+        "assets": [],
+        "atlasCards": [],
+        "focusable": 2
+      }
+    },
+    {
+      "id": "05-atlas-mobile",
+      "url": "https://codex.akalynth.com/atlas",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "status": 200,
+      "error": null,
+      "consoleIssues": [],
+      "pageErrors": [],
+      "failedRequests": [],
+      "responses": [
+        {
+          "url": "https://codex.akalynth.com/atlas/ui.png",
+          "status": 200
+        },
+        {
+          "url": "https://codex.akalynth.com/atlas/items.png",
+          "status": 200
+        },
+        {
+          "url": "https://codex.akalynth.com/atlas/world.png",
+          "status": 200
+        },
+        {
+          "url": "https://codex.akalynth.com/atlas/chronicle.png",
+          "status": 200
+        }
+      ],
+      "screenshot": "evidence/product-design-audit-20260711T090524Z/05-atlas-mobile.png",
+      "data": {
+        "viewport": {
+          "w": 978,
+          "h": 2117
+        },
+        "title": "",
+        "bodyText": "AKALYNTH Index World Codex Play Outfits Atlas Behavior Agent Gaps Chronicle Files Stage Beta Prod ⌕ ✥ PACKING · PLACEMENT · GENERATION Atlas & World Sprites pack into atlas sheets; the map-compiler then assembles worlds from placement overlays. Every tile on the map traces back to a registered source asset — generation you can audit. Atlas sheets ui.png 13 sprites · 452×68 · 33.6 KB items.png 20 sprites · 682×36 · 0.8 KB chronicle.png 9 sprites · 308×36 · 0.5 KB world.png 64 sprites · 2018×488 · 57.6 KB World Generator · Rookguard (overlays) Generate a structure from registered assets, then click the map to drop it. The base map is the compiled Rookguard overlay — scrub to replay it. ▶ Replay base 492 / 492 PREFAB GENERATOR Generate a structure from registered assets, then click the map to",
+        "bodyOverflow": "visible",
+        "scroll": {
+          "w": 978,
+          "h": 2959
+        },
+        "links": [
+          {
+            "rect": {
+              "x": 72.6,
+              "y": 102.5,
+              "w": 38.9,
+              "h": 17
+            },
+            "text": "World",
+            "color": "rgb(154, 163, 173)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "14px",
+            "lineHeight": "normal",
+            "outline": "rgb(154, 163, 173) none 3px",
+            "role": null,
+            "ariaLabel": null
+          }
+        ],
+        "buttons": [],
+        "surface": "codex-atlas",
+        "headings": [
+          {
+            "rect": {
+              "x": 28,
+              "y": 206,
+              "w": 334,
+              "h": 38
+            },
+            "text": "Atlas & World",
+            "color": "rgb(246, 240, 230)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "40px",
+            "lineHeight": "38px",
+            "outline": "rgb(246, 240, 230) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 28,
+              "y": 371.6,
+              "w": 334,
+              "h": 29
+            },
+            "text": "Atlas sheets",
+            "color": "rgb(246, 240, 230)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "22px",
+            "lineHeight": "normal",
+            "outline": "rgb(246, 240, 230) none 3px",
+            "role": null,
+            "ariaLabel": null
+          },
+          {
+            "rect": {
+              "x": 28,
+              "y": 1260.6,
+              "w": 334,
+              "h": 58
+            },
+            "text": "World Generator · Rookguard (overlays)",
+            "color": "rgb(246, 240, 230)",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "22px",
+            "lineHeight": "normal",
+            "outline": "rgb(246, 240, 230) none 3px",
+            "role": null,
+            "ariaLabel": null
+          }
+        ],
+        "assets": [],
+        "atlasCards": [],
+        "focusable": 2
+      }
+    }
+  ]
+}

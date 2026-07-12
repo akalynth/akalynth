@@ -1,5 +1,8 @@
 import { useMemo } from 'react';
-import codexPublicGraph from '@codex/out/codex-public.graph.json';
+
+// Codex graph is an optional generated artifact from the sibling akalynth-codex repo.
+// If absent, the hook degrades gracefully to empty (no codex shelf).
+// See BUILD_HEALTH_REPAIR_PLAN_V1 for details on codex-public.graph.json.
 
 export interface CodexPublicNode {
   id: string;
@@ -18,7 +21,18 @@ export interface CodexPublicNode {
   };
 }
 
-const NODES = codexPublicGraph as CodexPublicNode[];
+let NODES: CodexPublicNode[] = [];
+
+try {
+  // Use variable to avoid static analysis / pre-resolution by bundler for optional artifact
+  const spec = '@' + 'codex/out/codex-public.graph.json';
+  // @ts-ignore - may not exist at build time in this checkout
+  const mod = await import(spec);
+  NODES = (mod.default || mod) as CodexPublicNode[];
+} catch {
+  // graceful degradation - codex features disabled when artifact absent
+  NODES = [];
+}
 
 export function useCodexGraph(): {
   nodes: CodexPublicNode[];

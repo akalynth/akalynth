@@ -23,7 +23,13 @@ function check(name: string, cond: boolean): void {
   if (!cond) failed++;
 }
 
-const DEFAULTS = ['https://akalynth.com', 'https://www.akalynth.com', 'https://beta.akalynth.com'] as const;
+const DEFAULTS = [
+  'https://akalynth.com',
+  'https://www.akalynth.com',
+  'https://beta.akalynth.com',
+  'https://sim.akalynth.com',
+  'https://codex.akalynth.com',
+] as const;
 
 // ---------------------------------------------------------------- normalizeOrigin
 check('normalize drops default https port', normalizeOrigin('https://akalynth.com:443') === 'https://akalynth.com');
@@ -45,6 +51,7 @@ check('invalid env entries dropped', !parseCorsOrigins('nonsense,https://akalynt
 const prod: CorsPolicy = { allow: parseCorsOrigins(undefined, DEFAULTS), allowLocalDev: false };
 check('prod allows akalynth.com', corsOriginAllowed('https://akalynth.com', prod));
 check('prod allows beta.akalynth.com', corsOriginAllowed('https://beta.akalynth.com', prod));
+check('prod allows codex.akalynth.com', corsOriginAllowed('https://codex.akalynth.com', prod));
 check('prod allows case-variant origin', corsOriginAllowed('https://Akalynth.com', prod));
 check('prod rejects evil.example', !corsOriginAllowed('https://evil.example', prod));
 check('prod rejects look-alike suffix', !corsOriginAllowed('https://akalynth.com.evil.example', prod));

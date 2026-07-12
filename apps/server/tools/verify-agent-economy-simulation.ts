@@ -85,7 +85,8 @@ function verifyMaterializedProjection(result: AgentEconomySimulationResult): Rec
   }
 }
 
-const result = runAgentEconomySimulation({
+async function main(): Promise<void> {
+const result = await runAgentEconomySimulation({
   seed: 42,
   days: 3,
   maps: {
@@ -103,3 +104,9 @@ console.log('[verify-agent-economy-simulation] materialized');
 console.log(JSON.stringify(materialized, null, 2));
 console.log(`[verify-agent-economy-simulation] training_steps=${result.steps.length}`);
 console.log('[verify-agent-economy-simulation] all checks passed');
+}
+
+main().catch((error: unknown) => {
+  console.error(error);
+  process.exitCode = 1;
+});

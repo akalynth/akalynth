@@ -1,0 +1,83 @@
+ M apps/android/app/src/androidTest/java/com/akalynth/client/ui/regression/CharacterCreateScreenTest.kt
+ M apps/android/app/src/beta/AndroidManifest.xml
+ M apps/android/app/src/main/java/com/akalynth/client/network/IdentityApi.kt
+ M apps/android/app/src/main/java/com/akalynth/client/network/WebSocketActionTransport.kt
+ M apps/android/app/src/main/java/com/akalynth/client/network/WsClientActionTransport.kt
+ M apps/android/app/src/main/java/com/akalynth/client/protocol/PlayerPublic.kt
+ M apps/android/app/src/main/java/com/akalynth/client/ui/components/GameCanvas.kt
+ M apps/android/app/src/main/java/com/akalynth/client/ui/components/character/CharacterCreateScreen.kt
+ M apps/android/app/src/test/java/com/akalynth/client/game/WorldPlacementRepositoryTest.kt
+ M apps/android/app/src/test/java/com/akalynth/client/network/IdentityApiAccountCharacterTest.kt
+ M apps/android/app/src/test/java/com/akalynth/client/network/ReceiptIngestionTest.kt
+ M apps/android/app/src/test/java/com/akalynth/client/network/WebSocketTransportTest.kt
+ M apps/android/app/src/test/java/com/akalynth/client/protocol/ProtocolParityTest.kt
+ M apps/debug-client/scripts/mobile-playable-smoke.mjs
+ M apps/debug-client/src/components/CharacterBar.tsx
+ M apps/debug-client/src/data/highCityVisualLandmarks.ts
+ M apps/debug-client/src/hooks/useCodexGraph.ts
+ M apps/debug-client/src/types.ts
+ M apps/server/package.json
+ M apps/server/src/simulation/agentEconomySimulation.ts
+ M apps/server/tools/run-agent-economy-simulation.ts
+ M apps/server/tools/verify-agent-economy-simulation.ts
+ M apps/server/tools/verify-cors.test.ts
+ M data/assets-built/placements/rookguard-overlays.json
+ M docs/asset-decisions/AKALYNTH_MOBILE_PLAYABLE_SMOKE_SCRIPT_V1/screenshots/01_portrait_rotate_gate_390x844.png
+ M docs/asset-decisions/AKALYNTH_MOBILE_PLAYABLE_SMOKE_SCRIPT_V1/screenshots/02_landscape_entry_play_surface_932x430.png
+ M docs/asset-decisions/AKALYNTH_MOBILE_PLAYABLE_SMOKE_SCRIPT_V1/screenshots/03_dpad_press_release_cancel_932x430.png
+ M docs/asset-decisions/AKALYNTH_MOBILE_PLAYABLE_SMOKE_SCRIPT_V1/screenshots/04_pack_sheet_932x430.png
+ M docs/asset-decisions/AKALYNTH_MOBILE_PLAYABLE_SMOKE_SCRIPT_V1/screenshots/05_chat_sheet_932x430.png
+ M docs/asset-decisions/AKALYNTH_MOBILE_PLAYABLE_SMOKE_SCRIPT_V1/screenshots/06_log_sheet_932x430.png
+ M docs/asset-decisions/AKALYNTH_MOBILE_PLAYABLE_SMOKE_SCRIPT_V1/screenshots/08_clean_play_surface_restored_932x430.png
+ M docs/asset-decisions/AKALYNTH_MOBILE_PLAYABLE_SMOKE_SCRIPT_V1/screenshots/09_desktop_debug_mode_1440x900.png
+ M docs/asset-decisions/AKALYNTH_MOBILE_PLAYABLE_SMOKE_SCRIPT_V1/validation/mobile_playable_smoke_report.json
+ M infra/caddy/Caddyfile.ops-dev-01
+ M packages/shared/builderDraft.ts
+ M packages/shared/http.ts
+?? .preserve-dist-20260708T220602Z/
+?? apps/android/app/src/main/assets/outfits/
+?? apps/android/app/src/main/java/com/akalynth/client/ui/components/character/OutfitColorIndices.kt
+?? apps/android/app/src/main/java/com/akalynth/client/ui/components/character/OutfitColorPicker.kt
+?? apps/android/app/src/main/java/com/akalynth/client/ui/render/OutfitRecolorCache.kt
+?? apps/android/app/src/main/java/com/akalynth/client/ui/render/OutfitRecolorEngine.kt
+?? apps/android/app/src/test/java/com/akalynth/client/ui/render/OutfitRecolorEngineTest.kt
+?? apps/debug-client/public/outfits/
+?? apps/debug-client/src/components/FairPlaySheet.tsx
+?? apps/debug-client/src/components/OutfitColorPicker.tsx
+?? apps/debug-client/src/components/OutfitRecolorPreview.tsx
+?? apps/debug-client/src/data/outfitPalette.ts
+?? apps/debug-client/src/data/outfitRecolorEngine.ts
+?? apps/server/src/simulation/agentEconomySimulation.ts.bak
+?? apps/server/src/simulation/agentEconomySimulation.ts.bak-knowledge
+?? apps/server/src/simulation/agentEconomySimulation.ts.bak-real
+?? apps/server/src/simulation/agentEconomySimulation.ts.bak2
+?? apps/server/src/simulation/agentEconomySimulation.ts.pre-ai
+?? apps/server/src/tools/
+?? apps/server/tools/aiDecider.mjs
+?? apps/server/tools/aiDecider.mjs.bak
+?? apps/server/tools/aiDecider.mjs.bak6
+?? apps/server/tools/pure-logic.mjs
+?? apps/server/tools/run-agent-economy-simulation.ts.bak
+?? apps/server/tools/run-agent-economy-simulation.ts.bak3
+?? apps/server/tools/run-agent-economy-simulation.ts.bak4
+?? apps/server/tools/run-agent-economy-simulation.ts.pre-fix3
+?? data/assets-src/emblem/
+?? data/assets-src/sprites/world/walls/wall_stone_east.json
+?? dist.pre-v6-backup-1783559543/
+?? docs/AKALYNTH_BUILD_HEALTH_REPAIR_PLAN_V1.md
+?? docs/asset-decisions/AKALYNTH_MOBILE_PLAYABLE_SMOKE_SCRIPT_V1/screenshots/10_desktop_presentation_mode_1440x900.png
+?? docs/evidence/LOCAL_NODE_PROOF.json
+?? docs/evidence/goal0-ui-inspect-20260623T120333Z/
+?? docs/evidence/goal0-ui-inspect-debug-local-20260623T121418Z/
+?? docs/evidence/public-projection-deploy/
+?? docs/evidence/publish-beta/20260709T002301Z.json
+?? docs/evidence/publish-beta/20260709T003336Z.json
+?? docs/evidence/publish-beta/20260709T003838Z-V3-apply.json
+?? docs/evidence/publish-beta/20260709T010000Z.json
+?? docs/evidence/publish-beta/20260709T010100Z.json
+?? docs/evidence/publish-beta/20260709T011500Z.json
+?? docs/evidence/publish-beta/20260709T012000Z.json
+?? docs/evidence/publish-beta/20260709T014000Z.json
+?? docs/evidence/publish-beta/preflight-test-20260709T014439.json
+?? evidence/
+?? scripts/capture_akalynth_continue_gating.sh

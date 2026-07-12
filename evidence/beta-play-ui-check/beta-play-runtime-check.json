@@ -1,0 +1,30 @@
+{
+  "page": {
+    "finalUrl": "https://beta.akalynth.com/play/"
+  },
+  "before": {
+    "title": "Akalynth Client v0",
+    "textPreview": "AkalynthConnected Position 2,2 Health 10/10 Respect Unproven (0) Standing — Gold 0g Link connected ↖ ↑ ↗ ← ■ → ↙ ↓ ↘ ✕ Objective Step onto the glowing move rune (east plaza, tile 3,2) Fish Rookguard canal Attack No runestone nearby Ritual Guide is nearby Talk ONWARD ROUTES Fish Rookguard canal Chat Log Pack Codex World synced",
+    "pos": [
+      "Position 2,2",
+      "2,2"
+    ],
+    "hasRoot": true,
+    "wsApi": true
+  },
+  "after": {
+    "textPreview": "AkalynthConnected Position 3,3 Health 10/10 Respect Unproven (0) Standing — Gold 0g Link connected ↖ ↑ ↗ ← ■ → ↙ ↓ ↘ ✕ Objective Open Chat and send any message in Rookguard Fish Rookguard canal Attack Runestone nearby Ritual Guide is nearby Talk ONWARD ROUTES Fish Rookguard canal Chat Log Pack Codex World synced",
+    "pos": [
+      "Position 3,3",
+      "3,3"
+    ],
+    "objective": "Objective ",
+    "movementText": "3,3",
+    "bodyLen": 313
+  },
+  "consoleErrors": [],
+  "warnings": [],
+  "network": [],
+  "responseCount": 0,
+  "hasMajorResponseFailures": false
+}

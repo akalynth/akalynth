@@ -1,0 +1,8 @@
+{
+  "ok": false,
+  "head": "9506bc521498900c1d96dfebc7357cb38c62e557",
+  "worktree_clean": false,
+  "verify_exit_code": 1,
+  "verify_error": null,
+  "existing_gate": "verify:quick plus clean worktree required before deployment"
+}

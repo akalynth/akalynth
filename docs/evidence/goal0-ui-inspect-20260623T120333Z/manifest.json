@@ -1,0 +1,20 @@
+{
+  "run_id": "20260623T120333Z",
+  "serial": "emulator-5576",
+  "package": "com.akalynth.client",
+  "scenarios": "login,world",
+  "artifacts": ["gather_logcat.txt","inspect.log","login.png","login_ui.xml","manifest.json",".ui_dump.xml","world_connected.png","world_ui.xml"],
+  "agent_read_order": ["login.png","world_connected.png"],
+  "inspect_checklist": [
+    "mvp: rookguard registry overlays visible (162 placements loaded on map)",
+    "mvp: hotbar slots render ItemIcon PNGs for MVP item_type keys (not emoji)",
+    "mvp: chronicle sheet rows show ChronicleGlyph sprites (testTag ChronicleIcon_*)",
+    "top_bar: map chip centered, no overlap with Issue/DBG/TILES",
+    "dpad: dark scrim behind frame, readable over playfield",
+    "action_dock: textured rings (Chat/Chronicle/ATK), vocation chips use action ring",
+    "gather: Gthr/Deliv visible when adjacent to node/station (Azura chill zone)",
+    "textures: nine-slice panels/buttons/dock — no full-screen overlay bleed",
+    "azura_gather: High City map, pos (34,32) on azura_ley_mote_e, Gather section shows Gthr"
+  ],
+  "mvp_proof_receipt": "docs/evidence/UI_REFRESH_MVP_PROOF.json"
+}

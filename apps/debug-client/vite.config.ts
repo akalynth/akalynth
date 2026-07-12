@@ -25,7 +25,10 @@ const codexRoot = resolveCodexRoot();
 
 export default defineConfig({
   base: process.env.AKALYNTH_CLIENT_BASE ?? '/play/',
-  plugins: [react()],
+  // The CDP smoke lane is a fixed browser surface rather than an HMR session.
+  // Omit the React HMR plugin there so its refresh helper cannot run before the
+  // Vite preamble on the absolute /play/ entry path.
+  plugins: process.env.AKALYNTH_BROWSER_SMOKE === '1' ? [] : [react()],
   resolve: {
     alias: {
       '@shared': path.resolve(__dirname, '../../packages/shared'),

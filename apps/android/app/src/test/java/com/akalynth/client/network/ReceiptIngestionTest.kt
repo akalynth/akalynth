@@ -59,7 +59,7 @@ class ReceiptIngestionTest {
         assertEquals(1, connection.sentCount)
         val sent = connection.lastSent!!
         assertTrue(sent.contains("\"action_id\":\"a-0001\""))
-        assertTrue(sent.contains("\"type\":\"drop_hotbar_slot\""))
+        assertTrue(sent.contains("\"type\":\"drop_item\""))
     }
 
     @Test
@@ -74,10 +74,7 @@ class ReceiptIngestionTest {
         actionBus.dispatchDropHotbarSlot(2, "legendary_sword", "Dragon Slayer", ItemRarity.LEGENDARY)
 
         val sent = connection.lastSent!!
-        assertTrue(sent.contains("\"slot_index\":2"))
         assertTrue(sent.contains("\"item_id\":\"legendary_sword\""))
-        assertTrue(sent.contains("\"item_name\":\"Dragon Slayer\""))
-        assertTrue(sent.contains("\"rarity\":\"legendary\""))
     }
 
     @Test

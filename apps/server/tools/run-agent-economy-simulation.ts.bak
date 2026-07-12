@@ -1,0 +1,52 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import type { MapData } from "../../../packages/shared/types.js";
+import { toJsonlLine } from "../src/persist/index.js";
+import { runAgentEconomySimulation } from "../src/simulation/agentEconomySimulation.js";
+
+function argValue(name: string, fallback: string): string {
+  const prefix = `${name}=`;
+  return process.argv.find((arg) => arg.startsWith(prefix))?.slice(prefix.length) ?? fallback;
+}
+
+function loadMap(name: string): MapData {
+  return JSON.parse(readFileSync(resolve(process.cwd(), "../../packages/shared/maps", name), "utf8")) as MapData;
+}
+
+const seed = Number.parseInt(argValue("--seed", "42"), 10);
+const days = Number.parseInt(argValue("--days", "3"), 10);
+const format = argValue("--format", "json");
+const useAI = process.argv.includes("--ai") || argValue("--ai", "false") === "true" || process.env.AKALYNTH_AI_MODE === "1";
+
+const result = runAgentEconomySimulation({
+  seed: Number.isFinite(seed) ? seed : 42,
+  days: Number.isFinite(days) ? days : 3,
+  maps: {
+    Rookguard: loadMap("rookguard.json"),
+    Azura: loadMap("azura.json"),
+  },
+  aiMode: useAI,
+  aiMode: useAI,
+});
+
+if (format === "jsonl") {
+  for (const step of result.steps) {
+    console.log(JSON.stringify(step));
+  }
+} else if (format === "receipts-jsonl") {
+  for (const receipt of result.receipts) {
+    process.stdout.write(toJsonlLine(receipt));
+  }
+} else if (format === "training-jsonl") {
+  for (const step of result.steps) {
+    console.log(JSON.stringify({ record_type: "agent_step", ...step }));
+  }
+  for (const dialogue of result.npc_dialogues) {
+    console.log(JSON.stringify({ record_type: "npc_dialogue", ...dialogue }));
+  }
+  console.log(JSON.stringify({ record_type: "simulation_summary", ...result.summary }));
+} else if (format === "summary") {
+  console.log(JSON.stringify(result.summary, null, 2));
+} else {
+  console.log(JSON.stringify(result, null, 2));
+}

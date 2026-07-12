@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Akalynth — High City Awaits</title>
+    <meta
+      name="description"
+      content="Akalynth is a server-authoritative, anti-bot-first MMO world where every journey begins in Rookguard and opens into High City. Play the current pre-alpha beta instantly in your browser — no install needed. The direct Android beta APK (v12) is available separately. F-Droid follows a separate path and is currently held."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%231f1a13'/%3E%3Cpath d='M16 5l7 11-7 11-7-11z' fill='%23d9b25a'/%3E%3C/svg%3E"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Akalynth" />
+    <meta property="og:title" content="Akalynth — High City Awaits" />
+    <meta
+      property="og:description"
+      content="Step into Akalynth — a top-down, server-authoritative MMO with Rookguard, High City, and receipt-backed actions. Play the current pre-alpha beta in your browser. The direct Android beta APK (v12) is available separately through the direct channel. F-Droid is held at an older version on a separate signing path."
+    />
+    <meta property="og:image" content="assets/akalynth/visuals/og/01-high-city-dawn.og-1200x630.webp" />
+    <meta
+      property="og:image:alt"
+      content="High City at dawn, with a luminous civic plaza and towers rising over Akalynth."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="assets/akalynth/visuals/og/01-high-city-dawn.og-1200x630.webp" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/fonts.css" />
+    <link rel="stylesheet" href="css/theme-dark.css" />
+  </head>
+  <body class="theme-dark">
+    <!--
+      Akalynth marketing + shop site.
+      The classic-MMO look (stone backdrop, parchment content, gold-on-brown
+      sidebar) is recreated with original CSS and Akalynth branding. No third-party
+      logos, artwork, or copy are used.
+    -->
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header" role="banner">
+      <div class="header-inner">
+        <a class="brand" href="index.html#home" data-nav="home">
+          <span class="brand-mark" aria-hidden="true">⚔</span>
+          <span class="brand-text">
+            <span class="brand-name">Akalynth</span>
+            <span class="brand-tag">High City awaits</span>
+          </span>
+        </a>
+        <input class="nav-toggle" type="checkbox" id="nav-toggle" aria-label="Toggle navigation menu" />
+        <label class="nav-burger" for="nav-toggle" aria-hidden="true"><span></span><span></span><span></span></label>
+        <nav class="top-nav" aria-label="Primary">
+          <ul>
+            <li><a class="tab-btn is-active" href="index.html#home" data-nav="home" aria-current="page">Home</a></li>
+            <li><a class="tab-btn" href="index.html#world" data-nav="world">High City</a></li>
+            <li><a class="tab-btn" href="library.html" data-nav="library">Library</a></li>
+            <li><a class="tab-btn" href="wallpapers.html" data-nav="wallpapers">Wallpapers</a></li>
+            <li class="requires-account"><a class="tab-btn" href="houses.html" data-nav="houses">Houses</a></li>
+            <li class="requires-account"><a class="tab-btn" href="shop.html" data-nav="shop">Shop</a></li>
+            <li><a class="tab-btn" href="forum.html" data-nav="forum">Forum</a></li>
+            <li><a class="tab-btn" href="account.html" data-nav="account">Account</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <div class="layout">
+      <!-- Ornate sidebar -->
+      <input class="aside-toggle" type="checkbox" id="aside-toggle" aria-label="Toggle realm status panels" />
+      <label class="aside-bar" for="aside-toggle" aria-hidden="true"><span class="aside-bar__label">Realm Status</span><span class="aside-bar__chev" aria-hidden="true">&#9662;</span></label>
+      <aside class="sidebar" aria-label="Sidebar">
+        <section class="panel">
+          <h2 class="panel-title">Realm Status</h2>
+          <div class="panel-body">
+            <ul class="status-list">
+              <li><span class="dot dot-amber"></span> Stage: <strong>Pre-alpha</strong></li>
+              <li><span class="dot dot-green"></span> City: <strong>High City</strong></li>
+              <li><span class="dot dot-green"></span> Authority model: <strong>Server-side</strong></li>
+              <li><span class="dot dot-blue"></span> Guardian: <strong>Tem (anti-bot)</strong></li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2 class="panel-title">Adventurers</h2>
+          <div class="panel-body">
+            <p class="muted">Online now</p>
+            <p class="big-number" id="online-count">—</p>
+            <p class="muted small">Static preview; live counts are not connected.</p>
+          </div>
+        </section>
+
+        <section class="panel" id="holdings-panel">
+          <h2 class="panel-title">Your Holdings</h2>
+          <div class="panel-body">
+            <div id="holdings-empty">
+              <p class="muted small">No character yet.</p>
+              <a class="btn btn-ghost btn-block" href="account.html">Create character</a>
+            </div>
+            <div id="holdings-body" hidden>
+              <p class="holdings-name"><strong id="holdings-name">—</strong></p>
+              <p class="muted small">City: <span id="holdings-world">—</span></p>
+              <p class="holdings-gold">
+                <span class="gold" id="holdings-gold">-</span> gold
+              </p>
+              <p class="muted small">Premium: <strong id="holdings-premium">—</strong></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2 class="panel-title">Your Pack</h2>
+          <div class="panel-body">
+            <p class="cart-summary">
+              <span id="cart-count">0</span> item(s) ·
+              <span id="cart-total">0</span> coins
+            </p>
+            <a class="btn btn-ghost btn-block" href="shop.html">Open Shop</a>
+          </div>
+        </section>
+      </aside>
+
+      <!-- Parchment content column -->
+      <main class="content" id="main" role="main" tabindex="-1">
+        <!-- HOME -->
+        <section class="tab-panel is-active" id="home" role="tabpanel">
+          <section class="marketing-hero" aria-labelledby="home-title">
+            <div class="marketing-hero__shade">
+              <p class="hero-kicker">Pre-alpha beta — play in your browser</p>
+              <h1 class="page-title marketing-hero__title" id="home-title">Akalynth</h1>
+              <p class="marketing-hero__lede">
+                High City wakes at dawn above the VaultCore. Begin in Rookguard,
+                meet Tem's human check, and step toward a server-authoritative
+                MMO world where meaningful actions are designed to be witnessed
+                and receipt-backed. Play instantly in your browser — no install needed.
+              </p>
+              <div class="hero-actions" aria-label="Primary actions">
+                <a class="btn btn-gold" href="https://beta.akalynth.com/play/">Play in browser ▶</a>
+                <a class="btn btn-gold" href="account.html">Create character</a>
+                <a class="btn btn-ghost" href="beta.html">Ways to play</a>
+                <a class="btn btn-ghost" href="index.html#world" data-nav="world">Explore High City</a>
+              </div>
+              <p class="hero-note">Account and character creation use the Akalynth API. Real-money payments and external entitlements are not part of this public preview.</p>
+            </div>
+          </section>
+
+          <article class="parchment proof-strip">
+            <div>
+              <h2 class="news-title">Server Authority</h2>
+              <p>The server resolves movement, actions, and world state. The client is never the source of truth.</p>
+            </div>
+            <div>
+              <h2 class="news-title">Receipt Trail</h2>
+              <p>Meaningful server actions are designed to land in a verifiable chronicle instead of disappearing into a black box.</p>
+            </div>
+            <div>
+              <h2 class="news-title">Tem Watches</h2>
+              <p>The anti-bot design keeps the realm for human players without exposing enforcement internals on the public site.</p>
+            </div>
+          </article>
+
+          <h2 class="section-title">Latest Tidings</h2>
+          <article class="parchment news">
+            <h3 class="news-title">High City Becomes the First City</h3>
+            <p class="news-meta">Posted by the Chroniclers · World notes</p>
+            <p>
+              Akalynth is the world. High City is the first major civic place
+              beyond the Rookguard gate: Sky Spires above, Archive Vaults below,
+              a Market District at street level, and a Ley Core deep beneath the
+              stones. Read the public preview in
+              <a href="index.html#world" data-nav="world">High City</a>.
+            </p>
+          </article>
+          <article class="parchment news">
+            <h3 class="news-title">Play in Your Browser</h3>
+            <p class="news-meta">Posted by the Chroniclers · Pre-alpha dispatch</p>
+            <p>
+              The beta now opens straight in your browser — no install needed. The
+              <a href="beta.html">beta page</a> leads with the web client and keeps the
+              Android build as an alternative. This website stays static and public-safe;
+              account and character actions are delegated to the Akalynth API, while the
+              site still does not process payments or expose private runtime state.
+            </p>
+          </article>
+          <article class="parchment news">
+            <h3 class="news-title">Tem Stands Watch</h3>
+            <p class="news-meta">Posted by the Wardens · Anti-cheat notes</p>
+            <p>
+              Tem is the anti-bot design spine for Akalynth. The public site describes
+              that direction without exposing enforcement internals or live runtime state.
+            </p>
+          </article>
+        </section>
+
+        <!-- WORLD -->
+        <section class="tab-panel" id="world" role="tabpanel" hidden>
+          <h1 class="page-title">High City</h1>
+          <article class="parchment">
+            <p class="lede">
+              High City is the canonical first city of Akalynth: the first major
+              civic place after the Rookguard onboarding gate. It is built as a
+              readable top-down city with quiet gathering places, service lanes,
+              deep archives, and room for players to leave a mark.
+            </p>
+            <p class="muted small">
+              Static pre-alpha visual preview. These cards introduce public art
+              and lore framing only; they are not runtime quests, map access, or
+              live service state.
+            </p>
+          </article>
+
+          <h2 class="section-title">High City And The Wider World</h2>
+          <section class="visual-card-grid" aria-label="Akalynth visual region cards">
+            <article class="visual-card">
+              <a href="assets/akalynth/visuals/cards/01-high-city-dawn.card-800x1000.webp">
+                <img src="assets/akalynth/visuals/cards/01-high-city-dawn.card-800x1000.webp" alt="High City at dawn with a luminous civic plaza and tall spires." loading="lazy" decoding="async" width="800" height="1000" />
+                <span class="visual-card__shade"></span>
+                <span class="visual-card__body">
+                  <strong>High City At Dawn</strong>
+                  <span>The first city rises around a blue civic nexus.</span>
+                </span>
+              </a>
+            </article>
+            <article class="visual-card">
+              <a href="assets/akalynth/visuals/cards/02-rookguard-gate.card-800x1000.webp">
+                <img src="assets/akalynth/visuals/cards/02-rookguard-gate.card-800x1000.webp" alt="Rookguard gate with a glowing runestone table and an open path." loading="lazy" decoding="async" width="800" height="1000" />
+                <span class="visual-card__shade"></span>
+                <span class="visual-card__body">
+                  <strong>Rookguard Gate</strong>
+                  <span>The bounded threshold for first movement, speech, and Tem.</span>
+                </span>
+              </a>
+            </article>
+            <article class="visual-card">
+              <a href="assets/akalynth/visuals/cards/03-forgehold.card-800x1000.webp">
+                <img src="assets/akalynth/visuals/cards/03-forgehold.card-800x1000.webp" alt="Forgehold, a volcanic forge fortress with lava channels and bridges." loading="lazy" decoding="async" width="800" height="1000" />
+                <span class="visual-card__shade"></span>
+                <span class="visual-card__body">
+                  <strong>Forgehold</strong>
+                  <span>Molten craft, pressure, and the Flamebound silhouette.</span>
+                </span>
+              </a>
+            </article>
+            <article class="visual-card">
+              <a href="assets/akalynth/visuals/cards/04-liminal-web.card-800x1000.webp">
+                <img src="assets/akalynth/visuals/cards/04-liminal-web.card-800x1000.webp" alt="The Liminal Web with astral bridges and blue memory gates." loading="lazy" decoding="async" width="800" height="1000" />
+                <span class="visual-card__shade"></span>
+                <span class="visual-card__body">
+                  <strong>The Liminal Web</strong>
+                  <span>Dream bridges and symbolic gates between waking paths.</span>
+                </span>
+              </a>
+            </article>
+            <article class="visual-card">
+              <a href="assets/akalynth/visuals/cards/05-witness-moth.card-800x1000.webp">
+                <img src="assets/akalynth/visuals/cards/05-witness-moth.card-800x1000.webp" alt="A luminous Witness Moth above ancient ruins." loading="lazy" decoding="async" width="800" height="1000" />
+                <span class="visual-card__shade"></span>
+                <span class="visual-card__body">
+                  <strong>Witness Moth</strong>
+                  <span>Memory, evidence, omen, and sacred continuity.</span>
+                </span>
+              </a>
+            </article>
+            <article class="visual-card">
+              <a href="assets/akalynth/visuals/cards/06-trinity-convergence.card-800x1000.webp">
+                <img src="assets/akalynth/visuals/cards/06-trinity-convergence.card-800x1000.webp" alt="A crystalline nexus where blue, fire-red, and golden streams converge." loading="lazy" decoding="async" width="800" height="1000" />
+                <span class="visual-card__shade"></span>
+                <span class="visual-card__body">
+                  <strong>Trinity Convergence</strong>
+                  <span>Dream, flame, and codex gathered into civic myth.</span>
+                </span>
+              </a>
+            </article>
+            <article class="visual-card">
+              <a href="assets/akalynth/visuals/cards/07-memory-fracture.card-800x1000.webp">
+                <img src="assets/akalynth/visuals/cards/07-memory-fracture.card-800x1000.webp" alt="A shattered sky city with floating ruins and a distant whale-like shape." loading="lazy" decoding="async" width="800" height="1000" />
+                <span class="visual-card__shade"></span>
+                <span class="visual-card__body">
+                  <strong>Memory Fracture</strong>
+                  <span>Broken histories, unstable archives, and lost horizons.</span>
+                </span>
+              </a>
+            </article>
+            <article class="visual-card">
+              <a href="assets/akalynth/visuals/cards/08-silent-century.card-800x1000.webp">
+                <img src="assets/akalynth/visuals/cards/08-silent-century.card-800x1000.webp" alt="A moonlit abandoned city with fog, ruins, and bioluminescent plants." loading="lazy" decoding="async" width="800" height="1000" />
+                <span class="visual-card__shade"></span>
+                <span class="visual-card__body">
+                  <strong>The Silent Century</strong>
+                  <span>Forgotten technology and abandoned city memory.</span>
+                </span>
+              </a>
+            </article>
+            <article class="visual-card">
+              <a href="assets/akalynth/visuals/cards/09-cinderwatch-frontier.card-800x1000.webp">
+                <img src="assets/akalynth/visuals/cards/09-cinderwatch-frontier.card-800x1000.webp" alt="A rugged cliffside watchtower overlooking a dark volcanic frontier." loading="lazy" decoding="async" width="800" height="1000" />
+                <span class="visual-card__shade"></span>
+                <span class="visual-card__body">
+                  <strong>Cinderwatch Frontier</strong>
+                  <span>An ash-border outpost watching distant danger.</span>
+                </span>
+              </a>
+            </article>
+            <article class="visual-card">
+              <a href="assets/akalynth/visuals/cards/10-vaultcore-prime.card-800x1000.webp">
+                <img src="assets/akalynth/visuals/cards/10-vaultcore-prime.card-800x1000.webp" alt="VaultCore Prime beneath cosmic machinery and a vast world-mind presence." loading="lazy" decoding="async" width="800" height="1000" />
+                <span class="visual-card__shade"></span>
+                <span class="visual-card__body">
+                  <strong>VaultCore Prime</strong>
+                  <span>The mythic world-heart behind Akalynth's signature image.</span>
+                </span>
+              </a>
+            </article>
+          </section>
+
+          <div class="media-pair" aria-label="High City concept plates">
+            <figure class="codex-plate">
+              <a href="assets/codex/high-city-cross-section.png" target="_blank" rel="noopener">
+                <img
+                  src="assets/codex/high-city-cross-section.png"
+                  alt="High City cross-section from Sky Spires to the Ley Core."
+                />
+              </a>
+              <figcaption>High City Cross-Section</figcaption>
+            </figure>
+            <figure class="codex-plate">
+              <a href="assets/codex/witness-moth.png" target="_blank" rel="noopener">
+                <img
+                  src="assets/codex/witness-moth.png"
+                  alt="Witness Moth archive creature with luminous memory wings."
+                />
+              </a>
+              <figcaption>Witness Moth</figcaption>
+            </figure>
+          </div>
+
+          <h2 class="section-title">The Route</h2>
+          <article class="parchment">
+            <h3 class="news-title">Rookguard — the Threshold</h3>
+            <p>
+              Rookguard is the stone antechamber every newcomer crosses before
+              the world will admit them. Deliberately small and quiet, it is
+              where each guest first wakes and warms up on the core of Akalynth:
+              how to move, how to speak, and how to answer the guardian Tem.
+              Beside the corridor stand two old stones — the
+              <strong>Runestone Table</strong> and the
+              <strong>Legend Stone</strong>. When a traveller has shown a living
+              hand is at the keyboard, the gate to <strong>High City</strong> opens.
+            </p>
+          </article>
+          <article class="parchment">
+            <h3 class="news-title">High City — the First City</h3>
+            <p>
+              Beyond the gate, the world widens. After the closed quiet of the
+              keep, walls give way to open ground and the city receives newcomers
+              at its center. High City is intentionally unfinished — its empty plots
+              and silent hall are not gaps to apologize for, but room left for
+              players to become the reason a hall has a guild and a plot has a
+              name.
+            </p>
+          </article>
+
+          <h2 class="section-title">Districts and Landmarks</h2>
+          <article class="parchment">
+            <div class="feature-grid">
+              <div class="feature">
+                <h3>Trinity Nexus</h3>
+                <p>The civic center where the city's orders meet and players gather between danger and errands.</p>
+              </div>
+              <div class="feature">
+                <h3>Market District</h3>
+                <p>The service lane for trade, stalls, house plots, and player-facing city life.</p>
+              </div>
+              <div class="feature">
+                <h3>Archive Vaults</h3>
+                <p>The lower record halls where law, memory, oath, and chronicle work gather.</p>
+              </div>
+              <div class="feature">
+                <h3>Sky Spires</h3>
+                <p>High towers and upper routes that give the city its first visible silhouette.</p>
+              </div>
+              <div class="feature">
+                <h3>Dream Sanctums</h3>
+                <p>A quiet quarter for memory, dream, echo, and sigil traditions.</p>
+              </div>
+              <div class="feature">
+                <h3>Ley Core</h3>
+                <p>The deep power and memory heart beneath the city; lore only until promoted by a later lane.</p>
+              </div>
+            </div>
+          </article>
+
+          <h2 class="section-title">The Guardian</h2>
+          <article class="parchment">
+            <h3 class="news-title">Tem Stands Watch</h3>
+            <p>
+              Tem is the warden of Akalynth — the anti-bot spine that keeps the
+              realm for humans. Newcomers meet Tem in Rookguard with a friendly
+              challenge, so that human adventurers, not bots, earn the spoils.
+            </p>
+          </article>
+
+          <h2 class="section-title">How the Realm Holds Together</h2>
+          <article class="parchment">
+            <div class="feature-grid">
+              <div class="feature">
+                <h3>Server-Authoritative</h3>
+                <p>The world resolves on the server. What you see is what truly happened.</p>
+              </div>
+              <div class="feature">
+                <h3>Receipts &amp; Chronicle</h3>
+                <p>The server design records meaningful actions in a verifiable hash chain.</p>
+              </div>
+              <div class="feature">
+                <h3>Anti-Bot First</h3>
+                <p>Tem keeps the realm for humans, with deterministic enforcement.</p>
+              </div>
+              <div class="feature">
+                <h3>Browser &amp; Android</h3>
+                <p>Play the current pre-alpha beta instantly in the browser. The direct Android beta APK (v12) is available separately through the direct channel. F-Droid follows a separate signing path and is currently held (older version).</p>
+              </div>
+            </div>
+          </article>
+
+          <h2 class="section-title">Media</h2>
+          <article class="parchment asset-gallery">
+            <a href="wallpapers.html">
+              <img src="assets/akalynth/visuals/thumbs/01-high-city-dawn.thumb-480x720.webp" alt="High City Dawn wallpaper archive thumbnail." loading="lazy" decoding="async" />
+              <span>Wallpaper Archive</span>
+            </a>
+            <a href="assets/codex/high-city-charter.png">
+              <img src="assets/codex/high-city-charter.png" alt="High City charter plate." />
+              <span>High City Charter</span>
+            </a>
+            <a href="assets/codex/chronicle-of-ages.png">
+              <img src="assets/codex/chronicle-of-ages.png" alt="Chronicle of Ages codex plate." />
+              <span>Chronicle of Ages</span>
+            </a>
+          </article>
+        </section>
+
+      </main>
+    </div>
+
+    <footer class="site-footer" role="contentinfo">
+      <div class="footer-inner">
+        <p>© <span id="year"></span> Akalynth · High City — a pre-alpha, proof-native MMO.</p>
+        <p class="small muted">
+          Linux server + separate Android channels (direct v12 APK or F-Droid held). Classic-MMO aesthetic recreated with original art and copy.
+        </p>
+      </div>
+    </footer>
+
+    <script src="js/app.js" defer></script>
+  </body>
+</html>

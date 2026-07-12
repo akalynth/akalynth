@@ -1,0 +1,60 @@
+OpenJDK 64-Bit Server VM warning: Insufficient space for shared memory file:
+   877349
+Try using the -Djava.io.tmpdir= option to select an alternate temp location.
+
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.9/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :app:clean
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preBetaBuild UP-TO-DATE
+> Task :app:mergeBetaNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:generateBetaBuildConfig
+> Task :app:generateBetaResValues
+> Task :app:checkBetaAarMetadata
+> Task :app:mapBetaSourceSetPaths
+> Task :app:generateBetaResources
+> Task :app:packageBetaResources
+> Task :app:createBetaCompatibleScreenManifests
+> Task :app:extractDeepLinksBeta
+> Task :app:mergeBetaResources
+> Task :app:parseBetaLocalResources
+> Task :app:processBetaMainManifest
+> Task :app:processBetaManifest
+> Task :app:javaPreCompileBeta
+> Task :app:mergeBetaShaders
+> Task :app:compileBetaShaders NO-SOURCE
+> Task :app:generateBetaAssets UP-TO-DATE
+> Task :app:mergeBetaAssets
+> Task :app:compressBetaAssets
+> Task :app:desugarBetaFileDependencies
+> Task :app:mergeBetaJniLibFolders
+> Task :app:checkBetaDuplicateClasses
+> Task :app:mergeBetaNativeLibs
+> Task :app:mergeLibDexBeta
+> Task :app:validateSigningBeta
+> Task :app:writeBetaAppMetadata
+> Task :app:processBetaManifestForPackage
+
+> Task :app:stripBetaDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so, libdatastore_shared_counter.so.
+
+> Task :app:writeBetaSigningConfigVersions
+> Task :app:processBetaResources
+> Task :app:mergeExtDexBeta
+> Task :app:compileBetaKotlin
+w: file:///home/sovereign/akalynth-ops/repos/akalynth/apps/android/app/src/main/java/com/akalynth/client/ui/components/DPad.kt:58:38 'val Icons.Filled.KeyboardArrowLeft: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.KeyboardArrowLeft.
+w: file:///home/sovereign/akalynth-ops/repos/akalynth/apps/android/app/src/main/java/com/akalynth/client/ui/components/DPad.kt:65:38 'val Icons.Filled.KeyboardArrowRight: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.KeyboardArrowRight.
+
+> Task :app:compileBetaJavaWithJavac
+> Task :app:dexBuilderBeta
+> Task :app:mergeBetaGlobalSynthetics
+> Task :app:processBetaJavaRes
+> Task :app:mergeProjectDexBeta
+> Task :app:mergeBetaJavaResource
+> Task :app:packageBeta
+> Task :app:createBetaApkListingFileRedirect
+> Task :app:assembleBeta
+
+BUILD SUCCESSFUL in 1m 39s
+38 actionable tasks: 38 executed

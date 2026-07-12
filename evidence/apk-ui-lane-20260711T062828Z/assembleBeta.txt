@@ -1,0 +1,22 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.9/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preBetaBuild UP-TO-DATE
+> Task :app:mergeBetaNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:generateBetaBuildConfig UP-TO-DATE
+> Task :app:checkBetaAarMetadata UP-TO-DATE
+> Task :app:generateBetaResValues UP-TO-DATE
+> Task :app:mapBetaSourceSetPaths UP-TO-DATE
+> Task :app:generateBetaResources UP-TO-DATE
+> Task :app:mergeBetaResources UP-TO-DATE
+> Task :app:packageBetaResources UP-TO-DATE
+> Task :app:parseBetaLocalResources UP-TO-DATE
+> Task :app:createBetaCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksBeta UP-TO-DATE
+
+> Task :app:processBetaMainManifest FAILED
+
+See https://developer.android.com/r/studio-ui/build/manifest-merger for more information about the manifest merger.
+
+11 actionable tasks: 1 executed, 10 up-to-date

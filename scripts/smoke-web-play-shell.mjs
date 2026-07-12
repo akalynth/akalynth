@@ -399,13 +399,16 @@ async function main() {
 
   try {
     fakeServer = args.fakePlayable ? await startFakePlayableServer(args.host) : null;
-    const childEnv = fakeServer
-      ? {
-          ...process.env,
-          VITE_HTTP_BASE: fakeServer.httpBase,
-          VITE_WS_BASE: fakeServer.wsBase,
-        }
-      : process.env;
+    const childEnv = {
+      ...process.env,
+      AKALYNTH_BROWSER_SMOKE: '1',
+      ...(fakeServer
+        ? {
+            VITE_HTTP_BASE: fakeServer.httpBase,
+            VITE_WS_BASE: fakeServer.wsBase,
+          }
+        : {}),
+    };
     vite = spawnLogged(
       'npm',
       ['-w', 'apps/debug-client', 'run', 'dev', '--', '--host', args.host, '--port', String(port), '--strictPort'],

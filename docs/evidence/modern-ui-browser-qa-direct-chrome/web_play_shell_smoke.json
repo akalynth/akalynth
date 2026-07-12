@@ -1,0 +1,62 @@
+{
+  "id": "AKALYNTH_WEB_PLAY_SHELL_SMOKE_V1",
+  "status": "fail",
+  "started_at": "2026-07-11T11:11:15.860Z",
+  "finished_at": "2026-07-11T11:11:41.941Z",
+  "base_url": "http://127.0.0.1:37365/play/",
+  "report": "docs/evidence/modern-ui-browser-qa-direct-chrome/mobile_playable_smoke_report.json",
+  "screenshots": "docs/evidence/modern-ui-browser-qa-direct-chrome/screenshots",
+  "fake_playable": true,
+  "fake_server": {
+    "http_base": "http://127.0.0.1:42205",
+    "ws_base": "ws://127.0.0.1:42205",
+    "received_count": 0,
+    "received_types": [],
+    "received_move_intent": false,
+    "received_enter_world": false,
+    "received_login": false,
+    "latest_player": {
+      "id": "smoke-player",
+      "name": "Smoke Runner",
+      "x": 2,
+      "y": 2,
+      "status": "alive",
+      "hp": 10,
+      "max_hp": 10,
+      "reputation": 0,
+      "sprite_id": "base_human_male_01",
+      "title": null,
+      "badges": [],
+      "mark": null,
+      "loop": {
+        "move": true,
+        "chat": true,
+        "tem": false,
+        "gate": false,
+        "gateOpen": false,
+        "objective": "Step onto the glowing move rune (east plaza, tile 3,2)",
+        "rookguardQuest": {
+          "started": true,
+          "fishDelivered": false,
+          "branch": null,
+          "completed": false
+        }
+      }
+    }
+  },
+  "logs": {
+    "vite": "docs/evidence/modern-ui-browser-qa-direct-chrome/vite.log",
+    "smoke": "docs/evidence/modern-ui-browser-qa-direct-chrome/mobile-smoke.log"
+  },
+  "smoke_exit": {
+    "code": 1,
+    "signal": null
+  },
+  "smoke_status": "fail",
+  "checks_total": 2,
+  "checks_failed": [
+    "app_shell_mounted"
+  ],
+  "boundary": "Local source preview only; no API/server runtime, /opt sync, deploy, restart, Caddy, or key/config mutation.",
+  "error": "mobile-playable-smoke exited with 1"
+}

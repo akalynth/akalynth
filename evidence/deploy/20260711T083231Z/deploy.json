@@ -1,0 +1,7 @@
+{
+  "attempted": false,
+  "ok": false,
+  "reason": "Deployment not attempted because preflight failed; no publish attempted.",
+  "target_script": "/opt/akalynth/infra/deploy_dev.sh main",
+  "target_checkout_available": false
+}

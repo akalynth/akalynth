@@ -76,4 +76,5 @@ object ChronicleSnapshotMapper {
         (this[name] as? JsonArray)
             ?.mapNotNull { (it as? JsonPrimitive)?.contentOrNull }
             ?.takeIf { it.isNotEmpty() }
+
 }
