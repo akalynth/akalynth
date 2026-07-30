@@ -180,9 +180,14 @@ reconcile the strict receipt plus evidence-directory fsync first.
 The publisher has no default mode. Preserve one explicit input set across these
 separate operator decisions:
 
-1. run `--gate-only` against clean normal clones at the named full commits;
+1. run `--gate-only` against clean normal clones at the named full commits.
+   This is a pre-stage source/admission gate: it verifies source custody, the
+   accepted Android input and current live Android/API baseline, deployment
+   environment parity, receipt-chain custody, and competing-publisher health.
+   It does not require generated target build output and does not claim that
+   live health already serves the undeployed target commit;
 2. set a unique `AKALYNTH_RELEASE_ID` and immutable `AKALYNTH_BUILD_REF`, then
-   run `--stage-only`;
+   run `--stage-only`. This is the first target build/provenance boundary;
 3. retain the emitted candidate at
    `/var/lib/akalynth-beta-release-candidates/<release-id>` and its
    `.akalynth-artifact-seal.v1.json`;
@@ -198,6 +203,10 @@ separate operator decisions:
    `/etc/akalynth-beta/release.env` and start the manual-only
    `akalynth-beta-publish.service`; the unit is not a boot or push-triggered
    publisher.
+
+Target-commit health is proved by the closed-upstream and public postflight
+inside `--apply`, then by the durable `PASS` publish receipt. It is never
+preclaimed by the pre-stage `--gate-only` receipt.
 
 `--stage-only` and `--dry-run` do not authorize live mutation. A dry-run pass is
 not transferable to a changed intent, helper, candidate, source commit, APK, or

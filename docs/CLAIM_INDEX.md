@@ -95,7 +95,7 @@ Grouped by role. `L` = line count at last review. Entries marked **(non-binding)
 | Doc | L | Role |
 | --- | --- | --- |
 | [SHOWCASE_RUNBOOK.md](./SHOWCASE_RUNBOOK.md) | 142 | Local pre-alpha proof showcase runbook. |
-| [runbooks/beta-player-readiness-runbook-v1.md](./runbooks/beta-player-readiness-runbook-v1.md) | 329 | Source-recovery, repaired release preflight, and separately authorized controlled-cohort operations. |
+| [runbooks/beta-player-readiness-runbook-v1.md](./runbooks/beta-player-readiness-runbook-v1.md) | 338 | Source-recovery, repaired release preflight, and separately authorized controlled-cohort operations. |
 | [NEW_BOX_PROVISIONING.md](./NEW_BOX_PROVISIONING.md) | 237 | New-box provisioning runbook. |
 | [archive/APK_DISTRIBUTION_CHECKLIST.md](./archive/APK_DISTRIBUTION_CHECKLIST.md) | 220 | **Archived** — Android ship-and-observe checklist. |
 | [archive/MMO_SITE_AND_LOOT_RUNBOOK.md](./archive/MMO_SITE_AND_LOOT_RUNBOOK.md) | 126 | **Archived** — completed-work log (mmo-site PR #75, mob-loot fix PR #81). |
