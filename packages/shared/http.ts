@@ -101,6 +101,73 @@ export interface AccountVerifyResendResponse {
 }
 
 // ============================================================================
+// Beta Player Readiness and Measurement v1 (additive HTTP surface)
+// ============================================================================
+
+export type BetaPlatform = 'web' | 'android' | 'mixed';
+export type BetaSeverity = 'P0' | 'P1' | 'P2' | 'P3';
+export type BetaFeedbackCategory = 'onboarding' | 'stability' | 'gameplay' | 'accessibility' | 'other';
+export type BetaFeedbackStatus = 'open' | 'triaged' | 'in_progress' | 'fixed' | 'closed';
+export type BetaReadinessEvent =
+  | 'browser_mount'
+  | 'browser_error'
+  | 'ws_connected'
+  | 'ws_disconnected'
+  | 'world_state_reached'
+  | 'play_session_started'
+  | 'play_session_ended'
+  | 'onboarding_started'
+  | 'onboarding_completed';
+
+export interface BetaCohortStatus {
+  cohort_id: string;
+  release_commit: string;
+  platform: BetaPlatform;
+  invite_cap: number;
+  invite_status: 'redeemed';
+  joined_at: string;
+  rollback_commit: string | null;
+}
+
+export interface BetaMeResponse {
+  ok: true;
+  enabled: boolean;
+  cohort: BetaCohortStatus | null;
+}
+
+export interface BetaReadinessEventRequest {
+  event: BetaReadinessEvent;
+  client_session_id: string;
+  map?: MapName;
+  tutorial_step?: string;
+  reason?: string;
+  duration_ms?: number;
+}
+
+export interface BetaReadinessEventResponse {
+  ok: true;
+  event_id: string;
+  server_recorded_at: string;
+}
+
+export interface BetaFeedbackRequest {
+  severity: BetaSeverity;
+  category: BetaFeedbackCategory;
+  title: string;
+  body: string;
+  reproduction_steps?: string;
+  client_session_id?: string;
+  map?: MapName;
+  tutorial_step?: string;
+}
+
+export interface BetaFeedbackResponse {
+  ok: true;
+  feedback_id: string;
+  status: 'open';
+}
+
+// ============================================================================
 // Account Character API (account-gated create/select; public catalogs)
 // ============================================================================
 

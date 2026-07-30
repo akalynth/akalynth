@@ -16,6 +16,9 @@ function run(command, args) {
 }
 
 run('npx', ['tsx', 'tools/verify-guarantees.ts', ...process.argv.slice(2)]);
+run('npm', ['run', 'verify:schema-v26-recovery']);
+run('npm', ['run', 'verify:beta-player-readiness']);
+run('npm', ['run', 'test:beta-router']);
 run('npm', ['run', 'test:character-v2']);
 run('npm', ['run', 'test:web-economy']);
 run('npm', ['run', 'test:account-roles']);

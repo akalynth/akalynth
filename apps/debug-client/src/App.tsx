@@ -5,6 +5,7 @@ import type { ChronicleEvent } from '@shared/protocol';
 import type { MapData, PlayerPublic, RookguardQuestProgress } from '@shared/types';
 import { respectRankForReputation } from '@shared/types';
 import { useGameClient } from './hooks/useGameClient';
+import { nextBetaTutorialStep, useBetaTelemetry } from './hooks/useBetaTelemetry';
 import { useExistenceMode } from './hooks/useExistenceMode';
 import { usePresentationMode } from './hooks/usePresentationMode';
 import { MapCanvas, type MapDebugOverlay } from './components/MapCanvas';
@@ -33,6 +34,7 @@ import { TemChallengeModal } from './components/TemChallengeModal';
 import { TemWitnessDialog } from './components/TemWitnessDialog';
 import { PropertyLedgerModal } from './components/PropertyLedgerModal';
 import { AdventurerSealSheet } from './components/AdventurerSealSheet';
+import { BetaFeedbackSheet } from './components/BetaFeedbackSheet';
 import { loadConfig } from './config';
 import { highCityVisualLandmarksForMap } from './data/highCityVisualLandmarks';
 import { gatherMapOverlays } from './data/gatherMapOverlays';
@@ -434,6 +436,7 @@ function DebugApp() {
       ? 'compact-desktop'
       : 'desktop';
   const [state, api] = useGameClient(initialMap);
+  useBetaTelemetry(config.httpBase, state);
   const [chatOpen, setChatOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [proofSheetOpen, setProofSheetOpen] = useState(false);
@@ -441,6 +444,7 @@ function DebugApp() {
   const [codexSheetOpen, setCodexSheetOpen] = useState(false);
   const [builderDisplay, setBuilderDisplay] = useState<BuilderPreviewDisplay | null>(null);
   const [sealOpen, setSealOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [proof, setProof] = useState<StudioProofState | null>(null);
   const [proofRunning, setProofRunning] = useState(false);
   const [proofError, setProofError] = useState<string | null>(null);
@@ -452,6 +456,7 @@ function DebugApp() {
   const currentMapDisplayName = displayMapName(currentMapName);
   const objectiveLabel =
     state.loop?.objective ?? (currentMapDisplayName === 'High City' ? 'Arrive in High City' : 'Enter Rookguard');
+  const feedbackTutorialStep = nextBetaTutorialStep(state);
   const meHp = state.world.me?.hp;
   const meMaxHp = state.world.me?.max_hp;
   const healthLabel =
@@ -1119,6 +1124,22 @@ function DebugApp() {
               smokeState={smokeState}
               buttons={[
                 {
+                  key: 'feedback',
+                  label: 'Report',
+                  ariaLabel: 'Send beta feedback',
+                  className: 'feedback-toggle',
+                  onClick: () => {
+                    setChatOpen(false);
+                    setInventoryOpen(false);
+                    setProofSheetOpen(false);
+                    setBuilderSheetOpen(false);
+                    setCodexSheetOpen(false);
+                    api.closeChronicle();
+                    setSealOpen(false);
+                    setFeedbackOpen(true);
+                  },
+                },
+                {
                   key: 'chat',
                   label: 'Chat',
                   ariaLabel: 'Open chat',
@@ -1329,6 +1350,14 @@ function DebugApp() {
         open={sealOpen}
         httpBase={config.httpBase}
         onClose={() => setSealOpen(false)}
+      />
+      <BetaFeedbackSheet
+        open={feedbackOpen}
+        httpBase={config.httpBase}
+        accountSession={api.accountSession}
+        map={state.world.map.name as MapName}
+        tutorialStep={feedbackTutorialStep}
+        onClose={() => setFeedbackOpen(false)}
       />
     </div>
   );

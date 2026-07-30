@@ -83,6 +83,11 @@
     "test:account-email": "tsx tools/verify-account-email.test.ts",
     "test:account-roles": "tsx tools/verify-account-roles.test.ts",
     "test:account-handle": "tsx tools/verify-account-handle.test.ts",
+    "verify:schema-v26-recovery": "tsx tools/verify-schema-v26-recovery.ts",
+    "beta:cohort": "tsx tools/beta-cohort.ts",
+    "report:beta-player-readiness": "tsx tools/beta-player-readiness-report.ts",
+    "verify:beta-player-readiness": "tsx tools/verify-beta-player-readiness.ts",
+    "test:beta-router": "tsx tools/verify-beta-router.test.ts",
     "grant:account-role": "tsx tools/grant-account-role.ts",
     "test:principal-seal": "tsx tools/verify-principal-identity-seal.test.ts"
   },

@@ -65,6 +65,23 @@ WebSocket message type. Resend/logout are account-session gated and require
 double-submit CSRF; verification and reset tokens are plaintext only in transit
 and hashed at rest.
 
+### Controlled beta readiness HTTP surface
+
+Controlled-beta readiness endpoints live under `/v1/beta`: authenticated
+`GET /v1/beta/me`, bounded `POST /v1/beta/events`, authenticated and
+double-submit-CSRF-protected `POST /v1/beta/feedback`, and authenticated and
+double-submit-CSRF-protected `POST /v1/beta/invites/redeem`. Account
+registration may also carry an optional `invite_code`; whether it is required
+is server configuration, never client authority.
+
+This surface is additive and introduces no WebSocket message or protocol-version
+bump. Older clients may ignore it. Readiness events are allow-listed browser,
+connection, session, and onboarding observations only. They cannot assert
+movement, combat, inventory, quest, economy, position, retention, or world
+truth. Gameplay metrics remain derived from server receipts. Invite codes are
+hashed at rest, and public/reporting projections must omit credentials, session
+tokens, raw account identifiers, and player-authored feedback bodies.
+
 Web economy portal endpoints live on the HTTP control plane under
 `/v1/shop/catalog`, `/v1/shop/purchase`, `/v1/wallet`, `/v1/property/buy`,
 `/v1/property/list`, `/v1/property/unlist`, `/v1/work/start`, and

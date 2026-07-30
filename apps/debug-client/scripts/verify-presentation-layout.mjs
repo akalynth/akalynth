@@ -18,7 +18,7 @@ const required = [
   '.hud-card--stats > .nine-slice-panel__content',
   '.app-shell--presentation .thumb-zone.right',
   '.app-shell--presentation .stage-bottom',
-  'grid-template-columns: repeat(4, minmax(0, 1fr))',
+  'grid-template-columns: repeat(5, minmax(0, 1fr))',
   "type PresentationViewport = 'mobile-landscape' | 'compact-desktop' | 'desktop'",
   'app-shell--presentation-${presentationViewport}',
   'role="status" aria-label="Current objective"',
