@@ -1,0 +1,67 @@
+{
+  "$schema": "./receipt-key-exception.v1.schema.json",
+  "schema_version": "akalynth.receipt_key_exception.v1",
+  "exception_id": "beta.receipts.historical-key-gap.seq-1-48.v1",
+  "status": "approved_bounded_exception",
+  "authority": {
+    "kind": "project_owner",
+    "evidence": "Active Codex thread approval on 2026-07-30: Approve Release Repair v1 and a bounded historical receipt-key exception"
+  },
+  "lane": "beta",
+  "canonical_chain": "/var/lib/akalynth-beta/audit/receipts.jsonl",
+  "scope": {
+    "signature_not_verifiable": {
+      "from_sequence": 1,
+      "to_sequence": 48
+    },
+    "current_key_required": {
+      "from_sequence": 49,
+      "through": "chain_head"
+    },
+    "allowed_failure": "historical_signature_key_unavailable",
+    "hash_link_sequence_exceptions": 0
+  },
+  "historical_prefix_custody": {
+    "through_sequence": 48,
+    "byte_length": 33195,
+    "sha256": "9b82d24a1d6113779a6e070b101d7fe138c4f2748f582f132e61f222464ec030",
+    "framing": "exact_jsonl_bytes_including_signatures"
+  },
+  "boundary": {
+    "before": {
+      "sequence": 48,
+      "timestamp": "2026-06-23T18:19:40.527Z",
+      "actor_id": "server",
+      "action": "server_shutdown",
+      "prev_hash": "blake3:b93f7ba21778bde53e54d6a909fbe051a2a4bb4fd4ddf8444910229a5a1150c9",
+      "event_hash": "blake3:534ecfc3fbc1fe48faef77ef29be5892fa2fa76c591d46a8b9474470ca1cb1d3"
+    },
+    "after": {
+      "sequence": 49,
+      "timestamp": "2026-06-23T18:19:42.576Z",
+      "actor_id": "server",
+      "action": "server_boot",
+      "prev_hash": "blake3:534ecfc3fbc1fe48faef77ef29be5892fa2fa76c591d46a8b9474470ca1cb1d3",
+      "event_hash": "blake3:f63e74982cd5898ed483f8e118a2177eeacf8a3457873f48097ead520e111ba9"
+    },
+    "link_matches": true
+  },
+  "current_verifying_key": {
+    "fingerprint_algorithm": "sha256(raw_ed25519_public_key_32_bytes)",
+    "fingerprint": "sha256:16b9c6a3d97f86d9cc244958f684153d575a7d7e4d053a327a78d0106498f428",
+    "required_from_sequence": 49
+  },
+  "observations": {
+    "current_key_mtime_utc": "2026-06-23T18:19:38.546699Z",
+    "prior_key_available": false,
+    "rotation_receipt_found": false,
+    "cause_status": "unknown_historical_key_transition"
+  },
+  "nonclaims": [
+    "Signatures in the exception range are not authenticated.",
+    "Receipts in the exception range may not be rewritten, re-signed, removed, or reordered.",
+    "No hash, link, sequence, or JSONL framing failure is excused.",
+    "No signature failure after the exception range is excused.",
+    "The exception cannot expand to future sequences or other lanes."
+  ]
+}

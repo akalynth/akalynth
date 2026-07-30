@@ -72,6 +72,16 @@ function checkLiteral(report, id, file, literal) {
   return pass;
 }
 
+function checkAbsent(report, id, file, literal) {
+  const pass = !files[file].includes(literal);
+  report.checks.push({
+    id,
+    status: pass ? 'pass' : 'fail',
+    evidence: { file, forbidden_literal: literal },
+  });
+  return pass;
+}
+
 function checkRegex(report, id, file, regex, evidence) {
   const pass = regex.test(files[file]);
   report.checks.push({
@@ -120,6 +130,7 @@ async function main() {
   };
 
   const requireLiteral = (id, file, literal) => checkLiteral(report, id, file, literal);
+  const forbidLiteral = (id, file, literal) => checkAbsent(report, id, file, literal);
   const requireRegex = (id, file, regex, evidence = {}) => checkRegex(report, id, file, regex, evidence);
 
   requireLiteral('account_page_targets_beta_api', 'accountHtml', "const API = 'https://beta-api.akalynth.com';");
@@ -129,7 +140,9 @@ async function main() {
   requireLiteral('account_page_links_register_support_page', 'accountHtml', 'href="/register.html"');
   requireLiteral('account_page_links_forgot_support_page', 'accountHtml', 'href="/forgot.html"');
   requireLiteral('account_page_handles_verify_query_token', 'accountHtml', "params.get('verify')");
-  requireLiteral('account_page_redirects_reset_query_to_forgot_page', 'accountHtml', "window.location.replace(`/forgot.html?reset=${encodeURIComponent(reset)}`);");
+  requireLiteral('account_page_reads_reset_fragment', 'accountHtml', "const reset = fragment.get('reset');");
+  requireLiteral('account_page_redirects_reset_fragment_to_forgot_page', 'accountHtml', "window.location.replace(`/forgot.html#reset=${encodeURIComponent(reset)}`);");
+  forbidLiteral('account_page_rejects_reset_query', 'accountHtml', "params.get('reset')");
   requireLiteral('login_uses_account_api', 'accountHtml', "api('POST', '/v1/accounts/login'");
   requireLiteral('account_page_keeps_login_csrf_token_for_subsequent_posts', 'accountHtml', "if (typeof data.csrf_token === 'string' && data.csrf_token) sessionCsrfToken = data.csrf_token;");
   requireLiteral('account_page_keeps_me_csrf_token_for_subsequent_posts', 'accountHtml', 'if (typeof data.csrf_token === \'string\' && data.csrf_token) sessionCsrfToken = data.csrf_token;');
@@ -156,6 +169,8 @@ async function main() {
   requireLiteral('register_page_can_verify_dev_token', 'registerHtml', "post('/v1/accounts/verify-email'");
   requireLiteral('forgot_page_uses_reset_request_api', 'forgotHtml', "post('/v1/accounts/password-reset/request'");
   requireLiteral('forgot_page_uses_reset_confirm_api', 'forgotHtml', "post('/v1/accounts/password-reset/confirm'");
+  requireLiteral('forgot_page_reads_reset_fragment', 'forgotHtml', "resetFragment.get('reset')");
+  forbidLiteral('forgot_page_rejects_reset_query', 'forgotHtml', "window.location.search).get('reset')");
   requireLiteral('debug_client_prefers_stored_unexpired_identity', 'debugIdentity', 'export function hasValidToken(identity: StoredIdentity | null, nowMs: number = Date.now()): boolean {');
   requireLiteral('debug_client_production_uses_same_origin_http', 'debugConfig', 'return window.location.origin;');
   requireLiteral('debug_client_production_uses_same_origin_ws', 'debugConfig', 'return `${wsProto}//${url.host}`;');

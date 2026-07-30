@@ -1,0 +1,259 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://akalynth.com/schemas/receipt-key-exception.v1.schema.json",
+  "title": "Akalynth bounded historical receipt-key exception v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schema_version",
+    "exception_id",
+    "status",
+    "authority",
+    "lane",
+    "canonical_chain",
+    "scope",
+    "historical_prefix_custody",
+    "boundary",
+    "current_verifying_key",
+    "observations",
+    "nonclaims"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "./receipt-key-exception.v1.schema.json"
+    },
+    "schema_version": {
+      "const": "akalynth.receipt_key_exception.v1"
+    },
+    "exception_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "const": "approved_bounded_exception"
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "evidence"],
+      "properties": {
+        "kind": {
+          "const": "project_owner"
+        },
+        "evidence": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "lane": {
+      "const": "beta"
+    },
+    "canonical_chain": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "signature_not_verifiable",
+        "current_key_required",
+        "allowed_failure",
+        "hash_link_sequence_exceptions"
+      ],
+      "properties": {
+        "signature_not_verifiable": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["from_sequence", "to_sequence"],
+          "properties": {
+            "from_sequence": {
+              "const": 1
+            },
+            "to_sequence": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "current_key_required": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["from_sequence", "through"],
+          "properties": {
+            "from_sequence": {
+              "type": "integer",
+              "minimum": 2
+            },
+            "through": {
+              "const": "chain_head"
+            }
+          }
+        },
+        "allowed_failure": {
+          "const": "historical_signature_key_unavailable"
+        },
+        "hash_link_sequence_exceptions": {
+          "const": 0
+        }
+      }
+    },
+    "historical_prefix_custody": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["through_sequence", "byte_length", "sha256", "framing"],
+      "properties": {
+        "through_sequence": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "byte_length": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "framing": {
+          "const": "exact_jsonl_bytes_including_signatures"
+        }
+      }
+    },
+    "boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["before", "after", "link_matches"],
+      "properties": {
+        "before": {
+          "$ref": "#/$defs/boundaryReceipt"
+        },
+        "after": {
+          "$ref": "#/$defs/boundaryReceipt"
+        },
+        "link_matches": {
+          "const": true
+        }
+      }
+    },
+    "current_verifying_key": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fingerprint_algorithm",
+        "fingerprint",
+        "required_from_sequence"
+      ],
+      "properties": {
+        "fingerprint_algorithm": {
+          "const": "sha256(raw_ed25519_public_key_32_bytes)"
+        },
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "required_from_sequence": {
+          "type": "integer",
+          "minimum": 2
+        }
+      }
+    },
+    "observations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "current_key_mtime_utc",
+        "prior_key_available",
+        "rotation_receipt_found",
+        "cause_status"
+      ],
+      "properties": {
+        "current_key_mtime_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "prior_key_available": {
+          "const": false
+        },
+        "rotation_receipt_found": {
+          "const": false
+        },
+        "cause_status": {
+          "const": "unknown_historical_key_transition"
+        }
+      }
+    },
+    "nonclaims": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "prefixItems": [
+        {
+          "const": "Signatures in the exception range are not authenticated."
+        },
+        {
+          "const": "Receipts in the exception range may not be rewritten, re-signed, removed, or reordered."
+        },
+        {
+          "const": "No hash, link, sequence, or JSONL framing failure is excused."
+        },
+        {
+          "const": "No signature failure after the exception range is excused."
+        },
+        {
+          "const": "The exception cannot expand to future sequences or other lanes."
+        }
+      ],
+      "items": false
+    }
+  },
+  "$defs": {
+    "boundaryReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "timestamp",
+        "actor_id",
+        "action",
+        "prev_hash",
+        "event_hash"
+      ],
+      "properties": {
+        "sequence": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "actor_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "action": {
+          "type": "string",
+          "minLength": 1
+        },
+        "prev_hash": {
+          "type": "string",
+          "anyOf": [
+            {
+              "const": "genesis"
+            },
+            {
+              "pattern": "^blake3:[0-9a-f]{64}$"
+            }
+          ]
+        },
+        "event_hash": {
+          "type": "string",
+          "pattern": "^blake3:[0-9a-f]{64}$"
+        }
+      }
+    }
+  }
+}

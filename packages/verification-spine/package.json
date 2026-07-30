@@ -1,7 +1,7 @@
 {
   "name": "@akalynth/verification-spine",
   "version": "1.0.0",
-  "description": "Unified verification system for Akalynth (18 verifiers, fail-closed)",
+  "description": "Unified verification system for Akalynth (36 verifiers, fail-closed)",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
