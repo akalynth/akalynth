@@ -305,12 +305,12 @@ async function main() {
     });
   }
 
-  const desktopHasObjective = /Step onto the glowing move rune|Open Chat/.test(desktop.idle1.bodyText);
-  const desktopFish = findVisibleButton(desktop.idle1, 'Fish Rookguard canal', desktop.viewport);
+  const desktopHasObjective = /The Gate Remembers|Wake the silver road-rune/.test(desktop.idle1.bodyText);
+  const desktopTalk = findVisibleButton(desktop.idle1, 'Talk', desktop.viewport);
   const desktopAccountPanelHidden = !/ACCOUNT SESSION REQUIRED/i.test(desktop.idle1.bodyText);
-  addCheck(report, 'desktop_presentation_objective_and_action_readable', Boolean(desktopHasObjective && desktopFish), {
+  addCheck(report, 'desktop_presentation_objective_and_action_readable', Boolean(desktopHasObjective && desktopTalk), {
     hasObjective: desktopHasObjective,
-    fishButton: desktopFish,
+    talkButton: desktopTalk,
     text: desktop.idle1.bodyText.slice(0, 700),
   });
   addCheck(report, 'desktop_presentation_hides_guest_account_blocker', desktopAccountPanelHidden, {
@@ -321,18 +321,18 @@ async function main() {
   const mobileMotionRail = mobile.moved.boxes.motionObjectiveRail;
   const mobileCompactCard = mobile.moved.boxes.compactObjectiveCard;
   const mobileActionCard = mobile.moved.boxes.compactActionCard;
-  const mobileFish = findVisibleButton(mobile.moved, 'Fish', mobile.viewport);
+  const mobileTalk = findVisibleButton(mobile.moved, 'Talk', mobile.viewport);
   addCheck(report, 'mobile_landscape_objective_and_action_readable_while_moving', (
     visibleBox(mobileMotionRail, mobile.viewport) &&
     !visibleBox(mobileCompactCard, mobile.viewport) &&
     visibleBox(mobileActionCard, mobile.viewport) &&
     Boolean(mobileActionCard?.text) &&
-    Boolean(mobileFish)
+    Boolean(mobileTalk)
   ), {
     motionObjectiveRail: mobileMotionRail,
     compactObjectiveCard: mobileCompactCard,
     compactActionCard: mobileActionCard,
-    fishButton: mobileFish,
+    talkButton: mobileTalk,
     text: mobile.moved.bodyText.slice(0, 700),
   });
 

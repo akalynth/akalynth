@@ -638,8 +638,8 @@ async function main() {
       await screenshot('02_landscape_entry_play_surface_932x430.png', 'Landscape play surface after entry');
 
       const dpadTargets = await evalJson(`(() => {
-        const east = Array.from(document.querySelectorAll('.dpad-btn')).find((el) => el.getAttribute('aria-label') === 'Move east');
-        const stop = document.querySelector('.dpad-stop');
+        const east = document.querySelector('.dpad-btn__hit[aria-label="Move east"]');
+        const stop = document.querySelector('.dpad-btn__hit[aria-label="Stop movement"]');
         const center = (el) => {
           if (!el) return null;
           const rect = el.getBoundingClientRect();
@@ -682,28 +682,28 @@ async function main() {
       await sleep(600);
       await screenshot('03_dpad_press_release_cancel_932x430.png', 'DPad press/release/cancel smoke');
 
-      await click('.inventory-toggle', 'pack_dock_clicked');
+      await click('.inventory-toggle .dock-chip__hit', 'pack_dock_clicked');
       await waitVisible('.backpack-sheet', 'pack_sheet_visible');
       await expectOnlySheet('.backpack-sheet', 'only_pack_sheet_visible');
       await screenshot('04_pack_sheet_932x430.png', 'Pack sheet');
       await closeBy('.backpack-sheet__header button', 'pack_sheet_closed');
       await expectNoSheets('no_sheets_after_pack_close');
 
-      await click('.chat-toggle', 'chat_dock_clicked');
+      await click('.chat-toggle .dock-chip__hit', 'chat_dock_clicked');
       await waitVisible('.chat-sheet', 'chat_sheet_visible');
       await expectOnlySheet('.chat-sheet', 'only_chat_sheet_visible');
       await screenshot('05_chat_sheet_932x430.png', 'Chat sheet');
       await closeBy('.chat-sheet__header button', 'chat_sheet_closed');
       await expectNoSheets('no_sheets_after_chat_close');
 
-      await click('.chronicle-toggle', 'log_dock_clicked');
+      await click('.chronicle-toggle .dock-chip__hit', 'log_dock_clicked');
       await waitVisible('.chronicle-sheet', 'log_sheet_visible');
       await expectOnlySheet('.chronicle-sheet', 'only_log_sheet_visible');
       await screenshot('06_log_sheet_932x430.png', 'Log sheet');
       await closeBy('.chronicle-close', 'log_sheet_closed');
       await expectNoSheets('no_sheets_after_log_close');
 
-      await click('.proof-toggle', 'proof_dock_clicked');
+      await click('.proof-toggle .dock-chip__hit', 'proof_dock_clicked');
       await waitVisible('.proof-sheet', 'proof_sheet_visible');
       await expectOnlySheet('.proof-sheet', 'only_proof_sheet_visible');
       await screenshot('07_proof_sheet_932x430.png', 'Proof sheet');

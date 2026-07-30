@@ -394,6 +394,20 @@ async function verifyRookguardCodexPath(): Promise<void> {
     assert(player.x === map.spawn.x && player.y === map.spawn.y, `spawn mismatch: ${player.x},${player.y}`);
     const initialQuest = (player.loop as { rookguardQuest?: { phase?: string } } | undefined)?.rookguardQuest;
     assert(initialQuest?.phase === 'tutorial', `initial world_state should include tutorial quest phase, got ${JSON.stringify(initialQuest)}`);
+    assert(
+      (initialQuest as { title?: string } | undefined)?.title === 'The Gate Remembers',
+      `initial world_state should name the focused adventure, got ${JSON.stringify(initialQuest)}`
+    );
+
+    client.send({ type: 'use_skill', skill_id: 'activity:fishing:rookguard' });
+    const remoteFishing = await client.waitFor(
+      (msg) => msg.type === 'skill_result' && msg.skill_id === 'activity:fishing:rookguard',
+      'skill_result:fishing_remote'
+    );
+    assert(
+      remoteFishing.success === false && remoteFishing.reason === 'invalid_target',
+      `remote fishing must be rejected: ${JSON.stringify(remoteFishing)}`
+    );
 
     let current: Point = { x: player.x, y: player.y };
     const moveRune = findTile(map, TileCode.TutorialMove);
@@ -411,6 +425,22 @@ async function verifyRookguardCodexPath(): Promise<void> {
     await client.waitFor((msg) => msg.type === 'tem_challenge', 'tem_challenge');
     client.send({ type: 'tem_response', response: TEM_CHALLENGE_RESPONSE });
     assertQuestPhase(await client.waitFor((msg) => msg.type === 'loop_update' && msg.event === 'rookguard_tem_complete', 'loop_update:tem'), 'training');
+
+    const canal = centerOfLandmark(map, 'canal');
+    await walkPath(client, pathTo(map, current, canal));
+    current = canal;
+    client.send({ type: 'use_skill', skill_id: 'activity:fishing:rookguard' });
+    const canalFishing = await client.waitFor(
+      (msg) => msg.type === 'skill_result' && msg.skill_id === 'activity:fishing:rookguard',
+      'skill_result:fishing_canal'
+    );
+    const canalPayload = canalFishing.payload as Record<string, unknown> | undefined;
+    assert(canalFishing.success === true, `canal fishing should resolve: ${JSON.stringify(canalFishing)}`);
+    assert(
+      typeof canalPayload?.line === 'string' && canalPayload.line.includes('Nothing tradeable bites'),
+      `canal fishing should return honest atmosphere: ${JSON.stringify(canalPayload)}`
+    );
+    assert(canalPayload?.economy_impact === 'none', 'canal fishing must remain zero-economy');
 
     const trainingSlime = { x: 14, y: 14 };
     const combatTile = adjacentWalkableTo(map, trainingSlime);
@@ -448,15 +478,44 @@ async function verifyRookguardCodexPath(): Promise<void> {
     assertQuestCompleted(completedLoop);
     const azura = await client.waitFor((msg) => msg.type === 'world_state' && msg.map === 'Azura', 'world_state:Azura');
     const azuraPlayer = azura.player as PlayerPublic;
-    assert(azuraPlayer.loop?.rookguardQuest?.completed === true, 'Azura world_state should retain completed Rookguard quest projection');
+    assert(
+      azuraPlayer.loop?.rookguardQuest === undefined,
+      'Azura world_state must not present the completed Rookguard quest as the current objective'
+    );
 
-    const actions = fs.readFileSync(chainPaths.receiptsPath, 'utf8').trim().split('\n').map((line) => (JSON.parse(line) as { action: string }).action);
-    for (const action of ['tutorial_step_complete', 'mob_kill', 'item_minted', 'vocation_declared', 'gate_unlock', 'tutorial_completed']) {
+    client.send({ type: 'get_chronicle', limit: 20 });
+    const chronicle = await client.waitFor((msg) => msg.type === 'chronicle_snapshot', 'chronicle_snapshot:post_gate');
+    const chronicleEvents = Array.isArray(chronicle.events) ? chronicle.events as Array<Record<string, unknown>> : [];
+    const completionMemory = chronicleEvents.find((event) => event.kind === 'tutorial_complete');
+    assert(completionMemory, `Chronicle should remember Rookguard completion: ${JSON.stringify(chronicleEvents)}`);
+    assert(
+      (completionMemory.details as Record<string, unknown> | undefined)?.title === 'The Gate Remembers',
+      `completion memory should retain adventure title: ${JSON.stringify(completionMemory)}`
+    );
+    assert(
+      (completionMemory.details as Record<string, unknown> | undefined)?.vocation === 'hexer',
+      `completion memory should derive the server-committed oath: ${JSON.stringify(completionMemory)}`
+    );
+
+    const receipts = fs.readFileSync(chainPaths.receiptsPath, 'utf8').trim().split('\n').map((line) => JSON.parse(line) as {
+      action: string;
+      inputs?: Record<string, unknown>;
+    });
+    const actions = receipts.map((receipt) => receipt.action);
+    for (const action of ['tutorial_step_complete', 'rookguard_canal_fished', 'mob_kill', 'item_minted', 'vocation_declared', 'gate_unlock', 'tutorial_completed']) {
       assert(actions.includes(action), `receipt chain missing ${action}`);
     }
+    assert(actions.filter((action) => action === 'rookguard_canal_fished').length === 1, 'only the in-place canal cast should resolve');
     assert(actions.filter((action) => action === 'item_minted').length >= 2, 'training slime should mint goo and slime receipts');
+    const completionReceipt = receipts.find((receipt) => receipt.action === 'tutorial_completed');
+    assert(completionReceipt?.inputs?.vocation === 'hexer', 'tutorial completion must commit the selected oath');
+    assert(
+      Array.isArray(completionReceipt?.inputs?.completed_marks) &&
+        completionReceipt.inputs.completed_marks.join(',') === 'move,chat,tem,training,profession,gate',
+      'tutorial completion must commit all six required marks'
+    );
 
-    ok(`${TARGET_STATUS}: movement/chat/Tem/training/profession/gate verified over WebSocket`);
+    ok(`${TARGET_STATUS}: movement/chat/Tem/canal/training/profession/gate/Chronicle verified over WebSocket`);
   } finally {
     client?.close();
     await stopServer(child);

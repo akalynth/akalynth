@@ -1727,6 +1727,32 @@ export function materializeChronicle(
       break;
     }
 
+    // Rookguard completion is already canonical as `tutorial_completed`.
+    // Chronicle is only its rebuildable, player-facing memory projection.
+    case 'tutorial_completed': {
+      if (receipt.result !== 'ok' || !playerId) break;
+      insertChronicleEvent(
+        db,
+        playerId,
+        'tutorial_complete',
+        timestamp,
+        originalAction,
+        receiptHash,
+        'Rookguard',
+        null,
+        null,
+        'rookguard:golden_gate',
+        {
+          adventure_id: inputs.adventure_id,
+          title: 'The Gate Remembers',
+          outcome: 'high_city_gate_opened',
+          vocation: inputs.vocation,
+          completed_marks: inputs.completed_marks,
+        },
+      );
+      break;
+    }
+
     // World event prototype: each accepted server-side event transition becomes
     // a player Chronicle row. The event receipt stays canonical; SQLite is only
     // the derived read model.

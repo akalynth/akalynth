@@ -131,16 +131,27 @@ function readJsonFile(file) {
 
 function loopProgress(objective) {
   return {
-    move: true,
-    chat: true,
+    move: false,
+    chat: false,
     tem: false,
     gate: false,
+    complete: false,
     gateOpen: false,
     objective,
     rookguardQuest: {
-      started: true,
-      fishDelivered: false,
-      branch: null,
+      quest_id: 'rookguard_city_codex_path_v1',
+      title: 'The Gate Remembers',
+      phase: 'tutorial',
+      steps: [
+        { step_id: 'move', label: 'Wake the road-rune', complete: false, receipt_actions: ['tutorial_step_complete'] },
+        { step_id: 'chat', label: 'Raise a signal', complete: false, receipt_actions: ['tutorial_step_complete'] },
+        { step_id: 'tem', label: 'Answer Tem', complete: false, receipt_actions: ['tem_challenge_passed', 'tutorial_step_complete'] },
+        { step_id: 'training', label: 'Earn the yard-mark', complete: false, receipt_actions: ['mob_kill', 'item_minted'] },
+        { step_id: 'profession', label: 'Choose an oath', complete: false, receipt_actions: ['vocation_declared'] },
+        { step_id: 'gate', label: 'Cross the gate', complete: false, receipt_actions: ['gate_unlock', 'tutorial_completed'] },
+      ],
+      codexShelves: [],
+      codexProfession: null,
       completed: false,
     },
   };
@@ -190,7 +201,7 @@ async function startFakePlayableServer(host) {
       title: null,
       badges: [],
       mark: null,
-      loop: loopProgress('Step onto the glowing move rune (east plaza, tile 3,2)'),
+      loop: loopProgress('Wake the silver road-rune just east of the arrival square'),
     },
   };
   const nearby = [
@@ -407,9 +418,16 @@ async function main() {
         }
       : process.env;
     vite = spawnLogged(
-      'npm',
-      ['-w', 'apps/debug-client', 'run', 'dev', '--', '--host', args.host, '--port', String(port), '--strictPort'],
-      { cwd: repoRoot, env: childEnv },
+      process.execPath,
+      [
+        path.join(repoRoot, 'apps/debug-client/node_modules/vite/bin/vite.js'),
+        '--host',
+        args.host,
+        '--port',
+        String(port),
+        '--strictPort',
+      ],
+      { cwd: path.join(repoRoot, 'apps/debug-client'), env: childEnv },
       viteLog
     );
     await waitForUrl(baseUrl);

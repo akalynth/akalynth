@@ -23,8 +23,8 @@ export const WORLDS: WorldOption[] = [
   {
     world_id: 'high_city',
     name: 'High City',
-    tagline: 'First planned city',
-    description: 'The city of plazas, halls, and landmarks beyond the gate.',
+    tagline: 'Destination beyond the gate',
+    description: 'Choose High City as your destination; every new journey still begins in Rookguard.',
     districts: ['Market Spine', 'Temple Steps', 'Craft Quarter', 'House Rows'],
   },
 ];

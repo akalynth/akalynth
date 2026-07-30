@@ -1,11 +1,11 @@
-// Verify Rookguard Codex Path quest derivation.
+// Verify The Gate Remembers adventure derivation.
 //
 // This test keeps quest truth server-owned: the projection is derived from
 // tutorial state plus server-marked training/vocation completion, with receipt
 // action names recorded for each step.
 
 import type { AuditReceipt, TutorialProgress } from '../../../packages/shared/types.js';
-import { VOCATION_DECLARED_ACTION } from '../../../packages/shared/types.js';
+import { TEM_CHALLENGE_RESPONSE, VOCATION_DECLARED_ACTION } from '../../../packages/shared/types.js';
 import {
   computeEventHash,
   computeInputsHash,
@@ -117,7 +117,11 @@ test('initial quest starts at the move objective', () => {
   const quest = buildRookguardQuestProgress(state);
   const routes = buildOnwardRouteProgress(state);
   assert(quest.phase === 'tutorial', `expected tutorial phase, got ${quest.phase}`);
-  assert(rookguardQuestObjective(state) === 'Step onto the glowing move rune (east plaza, tile 3,2)', 'initial objective mismatch');
+  assert(quest.title === 'The Gate Remembers', `adventure title mismatch: ${quest.title}`);
+  assert(
+    rookguardQuestObjective(state) === 'Wake the silver road-rune just east of the arrival square',
+    'initial objective mismatch'
+  );
   assert(!rookguardGateOpen(state), 'gate must not open before tutorial/training/profession');
   assert(routes.every((route) => route.status === 'locked'), 'onward routes must start locked');
   assert(
@@ -130,11 +134,43 @@ test('initial quest starts at the move objective', () => {
   );
 });
 
+test('focused adventure copy stays diegetic across all six marks', () => {
+  const states = [
+    input(),
+    input({ tutorial: tutorial({ move: true }) }),
+    input({ tutorial: tutorial({ move: true, chat: true }) }),
+    input({ tutorial: tutorial({ move: true, chat: true, tem: true }) }),
+    input({ tutorial: tutorial({ move: true, chat: true, tem: true }), trainingComplete: true }),
+    input({
+      tutorial: tutorial({ move: true, chat: true, tem: true }),
+      trainingComplete: true,
+      vocation: 'warden',
+    }),
+  ];
+  const objectives = states.map(rookguardQuestObjective);
+  for (const objective of objectives) {
+    assert(!/\b(tile|receipt|coordinate|debug)\b/i.test(objective), `player copy leaked implementation language: ${objective}`);
+  }
+  assert(objectives[1].includes('voice to remember'), 'chat mark should carry the keep-memory premise');
+  assert(objectives[2].includes(TEM_CHALLENGE_RESPONSE), 'Tem mark should retain the exact server-owned answer');
+  assert(objectives[5].includes('marks you earned'), 'gate mark should pay off the earned-mark premise');
+
+  const labels = buildRookguardQuestProgress(input()).steps.map((step) => step.label);
+  assertEquals(
+    labels,
+    ['Wake the road-rune', 'Raise a signal', 'Answer Tem', 'Earn the yard-mark', 'Choose an oath', 'Cross the gate'],
+    'adventure mark labels mismatch'
+  );
+});
+
 test('move chat and Tem lead to training, not the gate', () => {
   const state = input({ tutorial: tutorial({ move: true, chat: true, tem: true }) });
   const quest = buildRookguardQuestProgress(state);
   assert(quest.phase === 'training', `expected training phase, got ${quest.phase}`);
-  assert(rookguardQuestObjective(state) === 'Walk southeast to the training slime (tile 14,14) and tap Attack', 'training objective mismatch');
+  assert(
+    rookguardQuestObjective(state) === 'Find the training yard southeast and earn its mark from the slime',
+    'training objective mismatch'
+  );
   assert(!rookguardGateOpen(state), 'gate must wait for training and vocation');
 });
 
@@ -146,7 +182,7 @@ test('training slime completion points to Codex vocation choice', () => {
   const quest = buildRookguardQuestProgress(state);
   assert(quest.phase === 'profession', `expected profession phase, got ${quest.phase}`);
   assert(
-    rookguardQuestObjective(state) === 'Enter the guild hall and choose a Codex vocation',
+    rookguardQuestObjective(state) === 'Enter the guild hall and choose the oath you will carry',
     'profession objective mismatch'
   );
   assert(!rookguardGateOpen(state), 'gate must wait for vocation');

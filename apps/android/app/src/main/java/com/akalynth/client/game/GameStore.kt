@@ -20,6 +20,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
 
 private const val PREFS_NAME = "akalynth_prefs"
 private const val KEY_GUEST_TOKEN = "guest_token"
@@ -821,7 +824,12 @@ class GameStore(
         }
         val line = if (msg.success) {
             when (msg.skillId) {
-                "activity:fishing:rookguard" -> "Rookguard fishing reflected by server."
+                "activity:fishing:rookguard" ->
+                    (msg.payload as? JsonObject)
+                        ?.get("line")
+                        ?.jsonPrimitive
+                        ?.contentOrNull
+                        ?: "The old canal accepts the cast without promising a catch."
                 "route:safety:forgehold", "route:safety:moonspire" -> "$title boundary reviewed by server."
                 "route:quest:shipment" -> "$title investigation recorded by server."
                 "route:economy:forgehold" -> "$title quote recorded by server."
@@ -839,7 +847,11 @@ class GameStore(
                 else -> "$title survey recorded by server."
             }
         } else {
-            "$title action unavailable: ${msg.reason ?: "rejected"}"
+            if (msg.skillId == "activity:fishing:rookguard" && msg.reason == "invalid_target") {
+                "Stand beside the old canal fishing post to cast."
+            } else {
+                "$title action unavailable: ${msg.reason ?: "rejected"}"
+            }
         }
         _state.update {
             it.copy(
