@@ -7,7 +7,7 @@ import type Database from 'better-sqlite3';
 // Schema Version
 // ============================================================================
 
-export const SCHEMA_VERSION = 24;
+export const SCHEMA_VERSION = 26;
 
 // ============================================================================
 // DDL Statements
@@ -368,16 +368,56 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_acct_pw_resets_token ON account_password_r
 // chosen world / sex / outfit. Additive — it does not modify the players table.
 const DDL_ACCOUNT_CHARACTERS = `
 CREATE TABLE IF NOT EXISTS account_characters (
-  character_id    TEXT PRIMARY KEY,
-  account_id      TEXT NOT NULL,
-  name            TEXT NOT NULL,
-  world_id        TEXT NOT NULL,
-  sex             TEXT NOT NULL,
-  outfit_id       TEXT NOT NULL,
-  created_at      TEXT NOT NULL,
-  created_receipt TEXT DEFAULT NULL
+  character_id        TEXT PRIMARY KEY,
+  account_id          TEXT NOT NULL,
+  name                TEXT NOT NULL,
+  world_id            TEXT NOT NULL,
+  sex                 TEXT NOT NULL,
+  outfit_id           TEXT NOT NULL,
+  created_at          TEXT NOT NULL,
+  created_receipt     TEXT DEFAULT NULL,
+  outfit_color_head   INTEGER NOT NULL DEFAULT 5,
+  outfit_color_body   INTEGER NOT NULL DEFAULT 24,
+  outfit_color_legs   INTEGER NOT NULL DEFAULT 36,
+  outfit_color_feet   INTEGER NOT NULL DEFAULT 38
 );
 CREATE INDEX IF NOT EXISTS idx_account_characters_account ON account_characters(account_id);
+`;
+
+// Controlled beta operations v1. Invite codes are stored only as hashes; raw
+// codes exist only in the operator delivery channel and the player's request.
+// This is operational cohort state, not gameplay or world truth.
+const DDL_BETA_COHORTS = `
+CREATE TABLE IF NOT EXISTS beta_cohorts (
+  cohort_id       TEXT PRIMARY KEY,
+  release_commit  TEXT NOT NULL,
+  platform        TEXT NOT NULL DEFAULT 'web',
+  invite_cap      INTEGER NOT NULL CHECK (invite_cap > 0),
+  status          TEXT NOT NULL DEFAULT 'open',
+  rollback_commit TEXT DEFAULT NULL,
+  created_at      TEXT NOT NULL,
+  opens_at        TEXT DEFAULT NULL,
+  closes_at       TEXT DEFAULT NULL,
+  created_by      TEXT DEFAULT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_beta_cohorts_status ON beta_cohorts(status);
+`;
+
+const DDL_BETA_INVITES = `
+CREATE TABLE IF NOT EXISTS beta_invites (
+  invite_id       TEXT PRIMARY KEY,
+  cohort_id       TEXT NOT NULL,
+  token_hash      TEXT NOT NULL UNIQUE,
+  token_hint      TEXT NOT NULL,
+  status          TEXT NOT NULL DEFAULT 'issued',
+  issued_at       TEXT NOT NULL,
+  expires_at      TEXT DEFAULT NULL,
+  redeemed_at     TEXT DEFAULT NULL,
+  account_id      TEXT DEFAULT NULL,
+  FOREIGN KEY (cohort_id) REFERENCES beta_cohorts(cohort_id)
+);
+CREATE INDEX IF NOT EXISTS idx_beta_invites_cohort_status ON beta_invites(cohort_id, status);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_beta_invites_account ON beta_invites(account_id) WHERE account_id IS NOT NULL;
 `;
 
 // Identity Seal v1: accountless principal registry. This is additive beside the
@@ -517,6 +557,8 @@ export function initSchema(db: Database.Database): void {
     migrateSchema(db, currentVersion, SCHEMA_VERSION);
   }
 
+  assertSchemaV26Shape(db);
+
   // Patch A: Force version alignment after all migrations
   // Ensures _meta.schema_version always equals SCHEMA_VERSION, even if
   // structural changes were applied earlier (e.g., indexes created in V5 DDL).
@@ -558,6 +600,9 @@ function migrateSchema(
   db.transaction(() => {
     for (let v = fromVersion + 1; v <= toVersion; v++) {
       runMigration(db, v);
+    }
+    if (toVersion >= 26) {
+      assertSchemaV26Shape(db);
     }
   })();
 }
@@ -635,6 +680,12 @@ function runMigration(db: Database.Database, version: number): void {
       break;
     case 24:
       migrateToV24(db);
+      break;
+    case 25:
+      migrateToV25(db);
+      break;
+    case 26:
+      migrateToV26(db);
       break;
     default:
       throw new Error(`Unknown schema version: ${version}`);
@@ -1035,6 +1086,160 @@ function migrateToV24(db: Database.Database): void {
   insertMeta.run('schema_version', '24');
 }
 
+function migrateToV25(db: Database.Database): void {
+  // Historical canonical v25: Tibia-style head/body/legs/feet palette indices
+  // on account_characters.
+  ensureAccountCharacterOutfitColorColumns(db);
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', '25');
+}
+
+function migrateToV26(db: Database.Database): void {
+  // A divergent beta lineage also used the number 25 for cohort tables. Repair
+  // either v25 shape in one idempotent transaction before establishing v26.
+  ensureAccountCharacterOutfitColorColumns(db);
+  db.exec(DDL_BETA_COHORTS);
+  db.exec(DDL_BETA_INVITES);
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', '26');
+}
+
+function ensureAccountCharacterOutfitColorColumns(db: Database.Database): void {
+  const columns = db.prepare(`PRAGMA table_info(account_characters)`).all() as Array<{ name: string }>;
+  const names = new Set(columns.map((column) => column.name));
+  const additions: [string, number][] = [
+    ['outfit_color_head', 5],
+    ['outfit_color_body', 24],
+    ['outfit_color_legs', 36],
+    ['outfit_color_feet', 38],
+  ];
+  for (const [column, defaultValue] of additions) {
+    if (!names.has(column)) {
+      db.exec(`ALTER TABLE account_characters ADD COLUMN ${column} INTEGER NOT NULL DEFAULT ${defaultValue};`);
+    }
+  }
+}
+
+function assertSchemaV26Shape(db: Database.Database): void {
+  const indexColumns = (indexName: string): string[] => {
+    const quoted = `"${indexName.replaceAll('"', '""')}"`;
+    return (db.prepare(`PRAGMA index_info(${quoted})`).all() as Array<{ name: string }>)
+      .map((row) => row.name);
+  };
+  const requiredColumns: Record<string, string[]> = {
+    account_characters: ['outfit_color_head', 'outfit_color_body', 'outfit_color_legs', 'outfit_color_feet'],
+    beta_cohorts: [
+      'cohort_id',
+      'release_commit',
+      'platform',
+      'invite_cap',
+      'status',
+      'rollback_commit',
+      'created_at',
+      'opens_at',
+      'closes_at',
+      'created_by',
+    ],
+    beta_invites: [
+      'invite_id',
+      'cohort_id',
+      'token_hash',
+      'token_hint',
+      'status',
+      'issued_at',
+      'expires_at',
+      'redeemed_at',
+      'account_id',
+    ],
+  };
+  const missingArtifacts: string[] = [];
+  for (const [table, required] of Object.entries(requiredColumns)) {
+    const columns = new Set(
+      (db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>)
+        .map((column) => column.name),
+    );
+    for (const column of required) {
+      if (!columns.has(column)) missingArtifacts.push(`${table}.${column}`);
+    }
+  }
+
+  const requiredIndexes: Array<{
+    table: string;
+    name: string;
+    columns: string[];
+    unique: number;
+    partial: number;
+  }> = [
+    { table: 'beta_cohorts', name: 'idx_beta_cohorts_status', columns: ['status'], unique: 0, partial: 0 },
+    { table: 'beta_invites', name: 'idx_beta_invites_cohort_status', columns: ['cohort_id', 'status'], unique: 0, partial: 0 },
+    { table: 'beta_invites', name: 'idx_beta_invites_account', columns: ['account_id'], unique: 1, partial: 1 },
+  ];
+  for (const required of requiredIndexes) {
+    const index = (db.prepare(`PRAGMA index_list(${required.table})`).all() as Array<{
+      name: string;
+      unique: number;
+      partial: number;
+    }>).find((candidate) => candidate.name === required.name);
+    const columns = index ? indexColumns(required.name) : [];
+    if (
+      !index
+      || index.unique !== required.unique
+      || index.partial !== required.partial
+      || columns.join(',') !== required.columns.join(',')
+    ) {
+      missingArtifacts.push(`index:${required.name}`);
+    }
+  }
+
+  const hasUniqueTokenHash = (
+    db.prepare(`PRAGMA index_list(beta_invites)`).all() as Array<{ name: string; unique: number; partial: number }>
+  ).some((index) => {
+    if (index.unique !== 1 || index.partial !== 0) return false;
+    const columns = indexColumns(index.name);
+    return columns.length === 1 && columns[0] === 'token_hash';
+  });
+  if (!hasUniqueTokenHash) {
+    missingArtifacts.push('unique:beta_invites.token_hash');
+  }
+  const accountIndexSql = db.prepare(
+    `SELECT sql FROM sqlite_master WHERE type = 'index' AND name = 'idx_beta_invites_account'`
+  ).get() as { sql: string | null } | undefined;
+  const normalizedAccountIndexSql = accountIndexSql?.sql
+    ?.replace(/\s+/g, ' ')
+    .trim()
+    .replace(/;$/, '')
+    .toLowerCase();
+  if (
+    normalizedAccountIndexSql
+    !== 'create unique index idx_beta_invites_account on beta_invites(account_id) where account_id is not null'
+  ) {
+    missingArtifacts.push('predicate:idx_beta_invites_account');
+  }
+
+  const inviteForeignKeys = db.prepare(`PRAGMA foreign_key_list(beta_invites)`).all() as Array<{
+    table: string;
+    from: string;
+    to: string;
+  }>;
+  if (!inviteForeignKeys.some((key) =>
+    key.table === 'beta_cohorts' && key.from === 'cohort_id' && key.to === 'cohort_id'
+  )) {
+    missingArtifacts.push('foreign_key:beta_invites.cohort_id');
+  }
+  const inviteForeignKeyViolations = db.prepare(`PRAGMA foreign_key_check(beta_invites)`).all();
+  if (inviteForeignKeyViolations.length) {
+    missingArtifacts.push('foreign_key_violation:beta_invites');
+  }
+
+  if (missingArtifacts.length) {
+    throw new Error(`Schema v26 shape invalid: missing=[${missingArtifacts.join(',')}]`);
+  }
+}
+
 function ensureWorldEventEvidenceColumns(db: Database.Database): void {
   const columns = db.prepare(`PRAGMA table_info(world_events)`).all() as Array<{ name: string }>;
   const names = new Set(columns.map((column) => column.name));
@@ -1054,6 +1259,8 @@ function ensureWorldEventEvidenceColumns(db: Database.Database): void {
 export function resetSchema(db: Database.Database): void {
   // Drop all tables and recreate (for testing/recovery)
   db.exec('DROP TABLE IF EXISTS world_events');
+  db.exec('DROP TABLE IF EXISTS beta_invites');
+  db.exec('DROP TABLE IF EXISTS beta_cohorts');
   db.exec('DROP TABLE IF EXISTS principal_reports');
   db.exec('DROP TABLE IF EXISTS principal_blocks');
   db.exec('DROP TABLE IF EXISTS principal_terms_acceptances');
@@ -1087,7 +1294,7 @@ export function resetSchema(db: Database.Database): void {
 export function getTableCounts(
   db: Database.Database
 ): Record<string, number> {
-  const tables = ['players', 'reputation_events', 'deaths', 'world_objects', 'items', 'inventory_items', 'legendary_heat', 'player_heat', 'player_anticheat_enforcement', 'chronicle_events', 'moderation_reports', 'npc_talk_events', 'world_events', 'properties'];
+  const tables = ['players', 'reputation_events', 'deaths', 'world_objects', 'items', 'inventory_items', 'legendary_heat', 'player_heat', 'player_anticheat_enforcement', 'chronicle_events', 'moderation_reports', 'npc_talk_events', 'world_events', 'properties', 'beta_cohorts', 'beta_invites'];
   const counts: Record<string, number> = {};
 
   for (const table of tables) {
