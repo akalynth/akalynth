@@ -343,6 +343,36 @@ export interface AccountCharacterRow {
   created_receipt: string | null;
 }
 
+// Controlled beta operations v1. Invite codes are never represented here in
+// plaintext; token_hash is the only persisted credential form.
+export type BetaCohortStatus = 'open' | 'paused' | 'closed';
+export type BetaInviteStatus = 'issued' | 'redeemed' | 'revoked';
+
+export interface BetaCohortRow {
+  cohort_id: string;
+  release_commit: string;
+  platform: 'web' | 'android' | 'mixed';
+  invite_cap: number;
+  status: BetaCohortStatus;
+  rollback_commit: string | null;
+  created_at: string;
+  opens_at: string | null;
+  closes_at: string | null;
+  created_by: string | null;
+}
+
+export interface BetaInviteRow {
+  invite_id: string;
+  cohort_id: string;
+  token_hash: string;
+  token_hint: string;
+  status: BetaInviteStatus;
+  issued_at: string;
+  expires_at: string | null;
+  redeemed_at: string | null;
+  account_id: string | null;
+}
+
 // ============================================================================
 // Receipt Taxonomy (Phase 1 + Phase 2)
 // ============================================================================
@@ -435,6 +465,15 @@ export const RECEIPT_ACTIONS = {
   ACCOUNT_PASSWORD_RESET_COMPLETED: 'account_password_reset_completed',
   ACCOUNT_SESSION_ISSUED: 'account_session_issued',
   ACCOUNT_SESSION_REVOKED: 'account_session_revoked',
+
+  // Beta Player Readiness v1: operational cohort and player feedback events.
+  // Inputs are privacy-bounded: cohort/invite ids, opaque account ids, safe
+  // readiness fields, and player-authored feedback text only.
+  BETA_INVITE_ISSUED: 'beta_invite_issued',
+  BETA_INVITE_REDEEMED: 'beta_invite_redeemed',
+  BETA_EVENT_RECORDED: 'beta_event_recorded',
+  BETA_FEEDBACK_SUBMITTED: 'beta_feedback_submitted',
+  BETA_FEEDBACK_TRIAGED: 'beta_feedback_triaged',
 
   // Account Platform v1 (E4): character-under-account lifecycle. Privacy-bounded:
   // carry account_id + character_id + world_id + outfit_id + sex only.

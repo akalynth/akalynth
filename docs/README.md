@@ -151,7 +151,9 @@ Verification, governance, and proof docs:
 
 - [Verification Spine API v1](./VERIFICATION_SPINE_API.md) - the mandatory pre-merge verification system contract
 - [Spine Lock v1](./SPINE_V1.md) - locked spine surface and verifier registration rules
+- [Beta Player Readiness and Measurement Decision v1](./decisions/AKALYNTH_BETA_PLAYER_READINESS_AND_MEASUREMENT_V1/DECISION.md) - accepted source-recovery boundary for controlled cohorts, schema v26, and non-release claims
 - [Simulation Lane Runbook](./SIM_LANE_RUNBOOK.md) - `sim-api.akalynth.com` / `sim.akalynth.com` lane contract, state custody, and verification steps
+- [Beta Player Readiness Runbook v1](./runbooks/beta-player-readiness-runbook-v1.md) - source-recovery gates and separately authorized cohort operations
 - [Sim Life Viewer v1](./SIM_LIFE_VIEWER_V1.md) - visible-agent dashboard, Rookguard 0-30 gameplan, and `/v1/sim/snapshot` contract
 - [Governance Invariants](./GOVERNANCE_INVARIANTS.md) - civil guarantees and auditability constraints
 - [Repo Hygiene Architecture](./REPO_HYGIENE_ARCHITECTURE.md) - root/doc/archive/drop cleanup rules

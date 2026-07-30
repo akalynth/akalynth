@@ -154,6 +154,7 @@
       </div>
 
       <div id="char-notice" class="notice notice-info" style="display:none"></div>
+      <div id="beta-status" class="notice notice-info" style="display:none"></div>
       <div id="char-list" class="char-list"></div>
 
       <button id="add-char-btn" class="btn btn-ghost" style="width:100%">+ New character</button>
@@ -319,6 +320,23 @@ async function renderCharacters() {
   });
 }
 
+async function renderBetaStatus() {
+  const notice = document.getElementById('beta-status');
+  try {
+    const { ok, data } = await api('GET', '/v1/beta/me');
+    if (!ok || !data?.cohort) {
+      notice.style.display = 'none';
+      return;
+    }
+    const cohort = data.cohort;
+    notice.textContent = `Controlled beta · ${cohort.cohort_id} · release ${String(cohort.release_commit).slice(0, 12)}`;
+    notice.className = 'notice notice-ok';
+    notice.style.display = '';
+  } catch {
+    notice.style.display = 'none';
+  }
+}
+
 async function playCharacter(characterId, btnEl) {
   if (btnEl) { btnEl.disabled = true; btnEl.textContent = '…'; }
   const { ok, data } = await api('POST', '/v1/characters/select', { character_id: characterId });
@@ -416,6 +434,7 @@ async function boot() {
 
   show('view-characters');
   await renderCharacters();
+  void renderBetaStatus();
 }
 
 // ── util ─────────────────────────────────────────────────────────────────────

@@ -61,6 +61,13 @@ export interface AccountServiceDeps {
    * oracle) and MUST swallow its own errors. The email is PII — never receipted.
    */
   deliverEmail?: (msg: { kind: 'verify' | 'reset'; accountId: string; email: string; token: string }) => void;
+  /** Optional controlled-beta invite gate and cohort binding. */
+    beta?: {
+      requireInvite: boolean;
+      claimInvite: (code: unknown, accountId: string, commitAccount?: () => void) =>
+        | { ok: true; cohort: unknown }
+        | { ok: false; status: 400 | 403 | 409; error: string };
+    };
 }
 
 export interface RequestCtx {
@@ -155,7 +162,7 @@ export class AccountService {
    * no-enumeration response and is only attached if free. Backward-compatible:
    * `{ email, password }` (no handle) still works for existing clients.
    */
-  async register(input: { handle?: unknown; email?: unknown; password?: unknown }): Promise<AccountResponse> {
+  async register(input: { handle?: unknown; email?: unknown; password?: unknown; invite_code?: unknown }): Promise<AccountResponse> {
     const now = this.d.now();
     if (!validPassword(input.password as string)) {
       return { status: 400, body: { ok: false, error: 'invalid_input', message: `Provide a password of at least ${MIN_PASSWORD_LEN} characters.` } };
@@ -205,7 +212,7 @@ export class AccountService {
 
     const accountId = newId('acc');
     const passwordHash = await this.d.hashPassword(input.password as string);
-    this.d.store.insertAccount({
+    const insertAccount = () => this.d.store.insertAccount({
       account_id: accountId,
       email,
       email_lower: emailLower,
@@ -216,6 +223,24 @@ export class AccountService {
       created_at: iso(now),
       created_receipt: null,
     });
+    let betaCohort: Record<string, unknown> | null = null;
+    const inviteCode = typeof input.invite_code === 'string' ? input.invite_code.trim() : '';
+    if (this.d.beta && (this.d.beta.requireInvite || inviteCode)) {
+      const claim = this.d.beta.claimInvite(inviteCode, accountId, insertAccount);
+      if (!claim.ok) {
+        const message = claim.error === 'beta_invite_required'
+          ? 'This beta is invite-only. Paste your invite code to continue.'
+          : claim.error === 'beta_invite_invalid'
+            ? 'That beta invite is invalid, expired, or already used.'
+            : 'This beta cohort is not accepting new players.';
+        return { status: claim.status, body: { ok: false, error: claim.error, message } };
+      }
+      betaCohort = claim.cohort && typeof claim.cohort === 'object'
+        ? claim.cohort as Record<string, unknown>
+        : null;
+    } else {
+      insertAccount();
+    }
     this.d.emitReceipt({ action: RECEIPT_ACTIONS.ACCOUNT_CREATED, accountId, result: 'ok' });
 
     let devToken: string | undefined;
@@ -236,7 +261,7 @@ export class AccountService {
     }
 
     const account = { account_id: accountId, handle, email_verified: false, status: email ? 'registered_unverified' : 'active' };
-    const body: Record<string, unknown> = { ok: true, account };
+    const body: Record<string, unknown> = { ok: true, account, ...(betaCohort ? { beta_cohort: betaCohort } : {}) };
     // Recovery posture: nickname-only accounts have no email-based reset.
     if (!email) {
       body.recovery = 'none';

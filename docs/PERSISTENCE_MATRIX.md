@@ -43,6 +43,8 @@ No runtime behavior, schema, verifier, protocol, Android behavior, deployment be
 | Audit receipts | Server audit logger | `D1_file_receipted` | JSONL receipt chain | Evidence chain exists when generated and verified | Expand release proof bundle around receipt path and verifier output. |
 | Public receipt feed | Server presentation layer | Derived from private receipts | redacted/delayed feed | Public presentation only; not canonical truth | Add feed fixture proving delay/redaction boundaries. |
 | Chronicle events | Server chronicle adapter | `D1_file_receipted` / fixture-backed in CI | chronicle log, chronicle-chain verifier | Fixture-backed where CI passes | Define rebuild guarantees from chronicle log. |
+| Controlled-beta cohort and invite ledger | Server/operator beta service | `D2_sqlite_local` (`beta_cohorts`, `beta_invites`, schema v26) operational state | hashed invite rows; beta invite issue/redeem receipts where emitted | Controlled-cohort operations only; no gameplay, world-truth, retention, or release claim | Receipt every cohort lifecycle mutation or define backup/restore proof before claiming full reconstructibility. |
+| Beta readiness observations and feedback | Server receipt boundary accepting bounded client observations | `D1_file_receipted` | `beta_event_recorded`, `beta_feedback_submitted`, and `beta_feedback_triaged` receipts | Observability evidence only; client observations cannot prove gameplay or voluntary return | Add named-cohort proof runs and keep gameplay measures derived from server receipts. |
 | Property ownership (houses) | Server / persistence layer | `D2_sqlite_local` (`properties` table, schema v13) + receipt-sourced | `property_*` receipts; in-memory projection (`world/property.ts`); `verify:property` (incl. projection==DB) | Ownership/sale_count/owner_history rebuilt from receipts; durable across restart via SQLite + replay | Add production restart proof run before release-claiming durability. |
 | Heat score | Server runtime / persistence layer | `D2_sqlite_local` (`player_heat` table) + receipt-sourced | `heat_changed` / `heat_tem_escalation` / `heat_penalty_applied` receipts; `player_heat` projection; `verify:anticheat-persistence` | Score, active penalty window, and Tem cooldown survive restart (hydrated on reconnect, rebuilt from receipts on replay); windows expire by wall-clock | Add production restart proof run before release-claiming durability. |
 | Tem enforcement state | Server anti-bot runtime / persistence layer | Mixed: throttle/kick/warn counts + `throttle_until` are `D2_sqlite_local` (`player_anticheat_enforcement`); the active in-flight challenge is `D0_in_memory` | tem_challenge_failed / throttle / kick / warn receipts; `player_anticheat_enforcement` projection; `verify:anticheat-persistence` | Enforcement counters and active throttle window survive restart; only the live challenge prompt is ephemeral | Add a boundary test for re-issuing a challenge after restart if intended. |
@@ -66,6 +68,21 @@ No runtime behavior, schema, verifier, protocol, Android behavior, deployment be
 | Android local identity/token store | Android client | Device-local | app prefs / identity store | Client convenience only | Add Android build/run proof before release claim. |
 | Debug web client UI state | Browser runtime | `D0_in_memory` | local UI behavior | Debug convenience only | Keep outside release claims. |
 | Load-test runs | Harness output | Run artifact directory | RUN/RESULTS/METRICS/AUDIT_HASHES/ROOT when generated | Local/staging harness only | Add one committed example or CI artifact inspection path. |
+
+### Controlled-beta ledger boundary
+
+The cohort and invite tables are an operational admission ledger, not a world
+projection. Invite issue/redeem and readiness/feedback actions have receipt
+evidence, but the recovered v1 design does not make every cohort
+create/pause/open/close/revoke mutation reconstructible from the receipt chain.
+Therefore:
+
+- do not describe the tables as receipt-derived gameplay state;
+- do not infer character power, progression, or world outcomes from them;
+- do not infer voluntary return from a client readiness event;
+- preserve the SQLite ledger and receipt chain independently during recovery;
+- require a separate receipt/materialization decision before claiming complete
+  rebuildability.
 
 ## Release Claim Rules
 

@@ -80,6 +80,11 @@
     <div id="notice" class="notice" style="display:none"></div>
 
     <div class="field">
+      <label for="invite">Beta invite code <span style="color:var(--ink-dim)">(if provided)</span></label>
+      <input id="invite" type="text" autocomplete="off" spellcheck="false" placeholder="Paste your invite code" />
+    </div>
+
+    <div class="field">
       <label for="handle">Nickname</label>
       <input id="handle" type="text" autocomplete="username" maxlength="32" placeholder="AkalynthName" />
     </div>
@@ -145,6 +150,7 @@ async function verifyNow(token) {
 }
 
 async function createAccount() {
+  const invite = document.getElementById('invite').value.trim();
   const handle = document.getElementById('handle').value.trim();
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
@@ -154,7 +160,7 @@ async function createAccount() {
   if (password !== confirm) { setNotice('error', 'Passwords do not match.'); return; }
 
   setButton(true);
-  const { ok, data } = await post('/v1/accounts/register', { handle, email, password });
+  const { ok, data } = await post('/v1/accounts/register', { handle, email, password, ...(invite ? { invite_code: invite } : {}) });
   setButton(false);
   if (!ok) { setNotice('error', data?.message ?? data?.error ?? 'Could not create account.'); return; }
 
@@ -166,7 +172,7 @@ async function createAccount() {
 }
 
 document.getElementById('create-btn').addEventListener('click', createAccount);
-for (const id of ['handle', 'email', 'password', 'confirm']) {
+for (const id of ['invite', 'handle', 'email', 'password', 'confirm']) {
   document.getElementById(id).addEventListener('keydown', (event) => {
     if (event.key === 'Enter') document.getElementById('create-btn').click();
   });

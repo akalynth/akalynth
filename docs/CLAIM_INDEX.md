@@ -39,10 +39,10 @@ Grouped by role. `L` = line count at last review. Entries marked **(non-binding)
 | Doc | L | Role |
 | --- | --- | --- |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | 257 | System architecture. |
-| [PROTOCOL.md](./PROTOCOL.md) | 536 | WebSocket/HTTP protocol surface. |
+| [PROTOCOL.md](./PROTOCOL.md) | 718 | WebSocket/HTTP protocol surface. |
 | [CLIENT_CONTRACT_V0_1.md](./CLIENT_CONTRACT_V0_1.md) | 219 | **Frozen** client contract v0.1. |
 | [SPINE_V1.md](./SPINE_V1.md) | 126 | Spine Lock v1. |
-| [PERSISTENCE_MATRIX.md](./PERSISTENCE_MATRIX.md) | 107 | Durable-state classification (documentation only; not a restore guarantee). |
+| [PERSISTENCE_MATRIX.md](./PERSISTENCE_MATRIX.md) | 126 | Durable-state classification (documentation only; not a restore guarantee). |
 
 ### Verification, proofs & reports
 | Doc | L | Role |
@@ -81,6 +81,7 @@ Grouped by role. `L` = line count at last review. Entries marked **(non-binding)
 | Doc | L | Role |
 | --- | --- | --- |
 | [CONSTITUTIONAL_AMENDMENTS.md](./CONSTITUTIONAL_AMENDMENTS.md) | 126 | Amendment process for constitutional surfaces. |
+| [decisions/AKALYNTH_BETA_PLAYER_READINESS_AND_MEASUREMENT_V1/DECISION.md](./decisions/AKALYNTH_BETA_PLAYER_READINESS_AND_MEASUREMENT_V1/DECISION.md) | 176 | Accepted source-recovery boundary for controlled beta readiness; no deployment or release claim. |
 | [HIGH_LEVERAGE_DECISION_CHECKLIST.md](./HIGH_LEVERAGE_DECISION_CHECKLIST.md) | 288 | Decision checklist for high-leverage tasks. |
 | [LEVERAGE_TIER_MAPPING.md](./LEVERAGE_TIER_MAPPING.md) | 266 | Leverage-tier mapping of current state. |
 | [REPO_HYGIENE_ARCHITECTURE.md](./REPO_HYGIENE_ARCHITECTURE.md) | 96 | Cleanup policy: root/doc/archive/drop custody and guardrails. |
@@ -90,12 +91,13 @@ Grouped by role. `L` = line count at last review. Entries marked **(non-binding)
 | Doc | L | Role |
 | --- | --- | --- |
 | [SHOWCASE_RUNBOOK.md](./SHOWCASE_RUNBOOK.md) | 142 | Local pre-alpha proof showcase runbook. |
+| [runbooks/beta-player-readiness-runbook-v1.md](./runbooks/beta-player-readiness-runbook-v1.md) | 209 | Source-recovery verification and separately authorized controlled-cohort operations. |
 | [NEW_BOX_PROVISIONING.md](./NEW_BOX_PROVISIONING.md) | 237 | New-box provisioning runbook. |
 | [archive/APK_DISTRIBUTION_CHECKLIST.md](./archive/APK_DISTRIBUTION_CHECKLIST.md) | 220 | **Archived** — Android ship-and-observe checklist. |
 | [archive/MMO_SITE_AND_LOOT_RUNBOOK.md](./archive/MMO_SITE_AND_LOOT_RUNBOOK.md) | 126 | **Archived** — completed-work log (mmo-site PR #75, mob-loot fix PR #81). |
 | [archive/DRIVER_BRIEF.md](./archive/DRIVER_BRIEF.md) | 69 | **Archived** — technical driver brief. |
 | [archive/DRIVER_30_DAY_PLAN.md](./archive/DRIVER_30_DAY_PLAN.md) | 97 | **Archived** — 30-day driver plan. |
-| [README.md](./README.md) | 202 | Docs index / single source of truth pointer. |
+| [README.md](./README.md) | 226 | Docs index / single source of truth pointer. |
 
 ### Archived reference — Witness-Ledger architecture
 | Doc | L | Role |
@@ -166,12 +168,12 @@ Backed by a verifier/CI job for a specific commit (`CURRENT_STAGE.md` §Mechanic
 ### B. Implemented but NOT release-claimed
 Code exists; existence is not a production/release claim (`CURRENT_STAGE.md` §Implemented But Not Release-Claimed). Release-claim requires: listed as release-claimed + named verifier + passing proof run + run artifact.
 
-Combat · Death/respawn · Item drop/pickup · Protected slots · Chronicle evidence · Treasury/gold · Work contracts · NPC recognition · Android observe/play client · Load-test harness · Public/private receipt & rumor surfaces.
+Combat · Death/respawn · Item drop/pickup · Protected slots · Chronicle evidence · Treasury/gold · Work contracts · NPC recognition · Android observe/play client · Load-test harness · Public/private receipt & rumor surfaces · Controlled-beta cohort, readiness-observation, and feedback surfaces.
 
 ### C. Debug-only / environment-gated
 Must not be presented as production behavior (`CURRENT_STAGE.md` §Debug-Only Or Environment-Gated).
 
-Runestone debug behavior · Sovereign debug grants · Test death triggers · Dev minting · Local insecure transport · Debug-only raw/public inspection routes · Local/staging-only load testing.
+Runestone debug behavior · Sovereign debug grants · Test death triggers · Dev minting · Local insecure transport · Debug-only raw/public inspection routes · Local/staging-only load testing · Controlled-beta measurement and invite enforcement.
 
 ### D. In-memory / restart-reset (not durable without a persistence proof)
 `CURRENT_STAGE.md` §In-Memory/Restart-Reset; classified in `PERSISTENCE_MATRIX.md` (documentation only).
