@@ -449,7 +449,13 @@ function validateMobilePlayShellContract() {
 
   const webShellSmokeRel = 'scripts/smoke-web-play-shell.mjs';
   const webShellSmoke = read(webShellSmokeRel);
-  assertContains(webShellSmokeRel, webShellSmoke, "['-w', 'apps/debug-client', 'run', 'dev'", 'root web smoke starts debug-client Vite');
+  assertContains(webShellSmokeRel, webShellSmoke, 'process.execPath', 'root web smoke starts Vite through the current Node runtime');
+  assertContains(
+    webShellSmokeRel,
+    webShellSmoke,
+    "path.join(repoRoot, 'apps/debug-client/node_modules/vite/bin/vite.js')",
+    'root web smoke starts the debug-client Vite binary directly',
+  );
   assertContains(webShellSmokeRel, webShellSmoke, 'apps/debug-client/scripts/mobile-playable-smoke.mjs', 'root web smoke runs mobile playable smoke');
   assertContains(webShellSmokeRel, webShellSmoke, 'AKALYNTH_WEB_PLAY_SHELL_SMOKE_V1', 'root web smoke writes stable report id');
   assertContains(webShellSmokeRel, webShellSmoke, '--fake-playable', 'root web smoke supports source-only fake playable peer');
