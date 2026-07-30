@@ -37,7 +37,8 @@ check('verify link present in html too', verify.html.includes('account.html?veri
 
 const reset = buildAccountEmail('reset', 'player@example.com', 'tok/xyz 1', LINKS);
 check('reset subject', reset.subject === 'Reset your Akalynth password');
-check('reset link uses account.html ?reset= and url-encodes token', reset.text.includes('account.html?reset=tok%2Fxyz%201'));
+check('reset link uses a fragment and url-encodes token', reset.text.includes('account.html#reset=tok%2Fxyz%201'));
+check('reset bearer token never appears in a query', !reset.text.includes('?reset='));
 check('reset copy reassures on no-op', reset.text.includes('password stays unchanged'));
 
 // ------------------------------------------------------------- console transport

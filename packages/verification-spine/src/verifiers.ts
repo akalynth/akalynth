@@ -101,7 +101,7 @@ function runReceiptBackedLegacyVerifier(
 }
 
 /**
- * Create the default verifier registry with all 25 verifiers
+ * Create the default verifier registry with all 36 verifiers
  */
 export function createDefaultRegistry(): VerifierRegistry {
   const registry = new VerifierRegistry();
@@ -225,7 +225,7 @@ export function createDefaultRegistry(): VerifierRegistry {
   };
 
   // ============================================================================
-  // Phase 1: Core Guarantees (5 verifiers)
+  // Phase 1: Core Guarantees and release contracts (12 verifiers)
   // ============================================================================
 
   const guaranteesVerifier: VerifierSpec = {
@@ -276,8 +276,185 @@ export function createDefaultRegistry(): VerifierRegistry {
     },
   };
 
+  const receiptKeyEpochContractVerifier: VerifierSpec = {
+    id: 'receipt-key-epoch-contract',
+    title: 'Bounded Receipt Key-Epoch Contract',
+    description:
+      'Executes the fail-closed fixture suite for bounded historical signature exceptions, including structural, boundary, current-key, and authority-artifact checks',
+    phase: 1,
+    dependsOn: ['build', 'receipts-chain', 'coordination-kernel-hash'],
+    auditSafe: false,
+    async run(ctx) {
+      const startedAt = new Date().toISOString();
+      ctx.log('[adapter] Running: npm -w apps/server run test:receipt-key-epoch');
+      const result = spawnSync(
+        'npm',
+        ['-w', 'apps/server', 'run', 'test:receipt-key-epoch'],
+        {
+          cwd: ctx.repoRoot,
+          encoding: 'utf-8',
+          stdio: ctx.verbose ? 'inherit' : 'pipe',
+          env: ctx.env,
+        },
+      );
+      const finishedAt = new Date().toISOString();
+      if (result.status === 0) {
+        return {
+          ok: true,
+          verifierId: 'receipt-key-epoch-contract',
+          startedAt,
+          finishedAt,
+          findings: [],
+        };
+      }
+      const output = result.stderr || result.stdout || 'Unknown error';
+      return {
+        ok: false,
+        verifierId: 'receipt-key-epoch-contract',
+        startedAt,
+        finishedAt,
+        findings: [
+          {
+            code: 'RECEIPT_KEY_EPOCH_CONTRACT_FAILED',
+            severity: 'error',
+            message: `Bounded receipt key-epoch fixture suite failed with exit code ${result.status}`,
+            hint: 'Run manually: npm -w apps/server run test:receipt-key-epoch',
+            data: {
+              exitCode: result.status,
+              output: output.slice(0, 500),
+            },
+          },
+        ],
+      };
+    },
+  };
+
+  const betaAndroidDistributionContractVerifier: VerifierSpec = {
+    id: 'beta-android-distribution-contract',
+    title: 'Beta Android Distribution Contract',
+    description:
+      'Verifies the direct Android manifest against accepted v12 authority and executes fail-closed malformed-identity fixtures',
+    phase: 1,
+    dependsOn: ['build'],
+    auditSafe: false,
+    async run(ctx) {
+      const startedAt = new Date().toISOString();
+      ctx.log('[adapter] Running: bash scripts/verify-beta-android-distribution.test.sh');
+      const distributionResult = spawnSync(
+        'bash',
+        ['scripts/verify-beta-android-distribution.test.sh'],
+        {
+          cwd: ctx.repoRoot,
+          encoding: 'utf-8',
+          stdio: ctx.verbose ? 'inherit' : 'pipe',
+          env: ctx.env,
+        },
+      );
+      const runtimeResult =
+        distributionResult.status === 0
+          ? spawnSync(
+              'npm',
+              ['-w', 'apps/server', 'run', 'test:android-client-update'],
+              {
+                cwd: ctx.repoRoot,
+                encoding: 'utf-8',
+                stdio: ctx.verbose ? 'inherit' : 'pipe',
+                env: ctx.env,
+              },
+            )
+          : null;
+      const finishedAt = new Date().toISOString();
+      if (distributionResult.status === 0 && runtimeResult?.status === 0) {
+        return {
+          ok: true,
+          verifierId: 'beta-android-distribution-contract',
+          startedAt,
+          finishedAt,
+          findings: [],
+        };
+      }
+      const failedResult =
+        distributionResult.status === 0 && runtimeResult
+          ? runtimeResult
+          : distributionResult;
+      const output = failedResult.stderr || failedResult.stdout || 'Unknown error';
+      return {
+        ok: false,
+        verifierId: 'beta-android-distribution-contract',
+        startedAt,
+        finishedAt,
+        findings: [
+          {
+            code: 'BETA_ANDROID_DISTRIBUTION_CONTRACT_FAILED',
+            severity: 'error',
+            message: `Beta Android distribution contract failed with exit code ${failedResult.status}`,
+            hint:
+              'Run manually: bash scripts/verify-beta-android-distribution.test.sh && npm -w apps/server run test:android-client-update',
+            data: {
+              exitCode: failedResult.status,
+              output: output.slice(0, 500),
+            },
+          },
+        ],
+      };
+    },
+  };
+
+  const accountResetLinkContractVerifier: VerifierSpec = {
+    id: 'account-reset-link-contract',
+    title: 'Account Reset Link Contract',
+    description:
+      'Verifies that password-reset bearer tokens are emitted only in URL fragments and never in query strings',
+    phase: 1,
+    dependsOn: ['build'],
+    auditSafe: false,
+    async run(ctx) {
+      const startedAt = new Date().toISOString();
+      ctx.log('[adapter] Running: npm -w apps/server run test:account-email');
+      const result = spawnSync(
+        'npm',
+        ['-w', 'apps/server', 'run', 'test:account-email'],
+        {
+          cwd: ctx.repoRoot,
+          encoding: 'utf-8',
+          stdio: ctx.verbose ? 'inherit' : 'pipe',
+          env: ctx.env,
+        },
+      );
+      const finishedAt = new Date().toISOString();
+      if (result.status === 0) {
+        return {
+          ok: true,
+          verifierId: 'account-reset-link-contract',
+          startedAt,
+          finishedAt,
+          findings: [],
+        };
+      }
+      const output = result.stderr || result.stdout || 'Unknown error';
+      return {
+        ok: false,
+        verifierId: 'account-reset-link-contract',
+        startedAt,
+        finishedAt,
+        findings: [
+          {
+            code: 'ACCOUNT_RESET_LINK_CONTRACT_FAILED',
+            severity: 'error',
+            message: `Account reset-link contract failed with exit code ${result.status}`,
+            hint: 'Run manually: npm -w apps/server run test:account-email',
+            data: {
+              exitCode: result.status,
+              output: output.slice(0, 500),
+            },
+          },
+        ],
+      };
+    },
+  };
+
   // ============================================================================
-  // Phase 2: Domain Checks (14 verifiers)
+  // Phase 2: Domain Checks (18 verifiers)
   // ============================================================================
 
   const chronicleVerifier: VerifierSpec = {
@@ -502,7 +679,7 @@ export function createDefaultRegistry(): VerifierRegistry {
   };
 
   // ============================================================================
-  // Phase 3: Integration Tests (1 verifier)
+  // Phase 3: Integration Tests (2 verifiers)
   // ============================================================================
 
   const opsVerifier: VerifierSpec = {
@@ -717,6 +894,9 @@ export function createDefaultRegistry(): VerifierRegistry {
   registry.register(protocolDriftVerifier);
   registry.register(identityVerifier);
   registry.register(receiptsChainVerifier);
+  registry.register(receiptKeyEpochContractVerifier);
+  registry.register(betaAndroidDistributionContractVerifier);
+  registry.register(accountResetLinkContractVerifier);
   registry.register(mapgenVerifier);
   registry.register(assetsVerifier);
   registry.register(webRustCleanupVerifier);

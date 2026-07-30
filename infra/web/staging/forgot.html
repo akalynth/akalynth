@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="no-referrer" />
   <title>Akalynth — Password Reset</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%231f1a13'/%3E%3Cpath d='M16 5l7 11-7 11-7-11z' fill='%23d9b25a'/%3E%3C/svg%3E" />
   <style>
@@ -113,7 +114,11 @@
 
 <script>
 const API = 'https://staging-api.akalynth.com';
-let resetToken = new URLSearchParams(window.location.search).get('reset') ?? '';
+const resetFragment = new URLSearchParams(window.location.hash.slice(1));
+let resetToken = resetFragment.get('reset') ?? '';
+if (resetToken) {
+  window.history.replaceState({}, document.title, window.location.pathname);
+}
 
 function show(id) {
   document.querySelectorAll('.view').forEach((view) => view.classList.remove('active'));

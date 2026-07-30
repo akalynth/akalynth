@@ -34,9 +34,11 @@ export interface EmailLinks {
 
 function linkFor(kind: EmailKind, token: string, base: string): string {
   const root = base.replace(/\/+$/, '');
-  // The E5 portal reads ?verify=<token>; ?reset=<token> is the reset target.
+  // Verification remains a query action. Reset tokens are bearer secrets and
+  // travel only in the fragment so they do not enter origin/CDN request logs.
+  const separator = kind === 'verify' ? '?' : '#';
   const param = kind === 'verify' ? 'verify' : 'reset';
-  return `${root}/account.html?${param}=${encodeURIComponent(token)}`;
+  return `${root}/account.html${separator}${param}=${encodeURIComponent(token)}`;
 }
 
 function escapeHtml(s: string): string {

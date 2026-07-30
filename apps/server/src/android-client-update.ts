@@ -7,45 +7,65 @@ export type AndroidClientUpdateResult =
   | AndroidClientUpdateResponse
   | { error: string; status: number };
 
-const DEFAULT_BETA: AndroidClientUpdateResponse = {
-  ok: true,
-  lane: 'beta',
-  version_code: 2,
-  version_name: '0.1.0-observe',
-  apk_url: 'https://beta.akalynth.com/download/akalynth-beta.apk',
-  apk_sha256: 'd9a9fc0fcfb2b5da51192d4eab933f345e92eb8b4b306c1c83168cb640ec9704',
-  size_bytes: 12762978,
-  required: false,
-  published_at: '2026-06-06T09:31:45.000Z',
-};
-
-const DEFAULT_STAGING: AndroidClientUpdateResponse = {
-  ok: true,
-  lane: 'staging',
-  version_code: 1,
-  version_name: '0.1.0-staging',
-  apk_url: 'https://staging.akalynth.com/download/akalynth-staging.apk',
-  apk_sha256: '',
-  size_bytes: 0,
-  required: false,
-  published_at: '2026-01-01T00:00:00.000Z',
-};
-
 let cachedManifests: Partial<Record<Lane, AndroidClientUpdateResponse>> | null = null;
-
-function laneDefault(lane: Lane): AndroidClientUpdateResponse {
-  return lane === 'beta' ? { ...DEFAULT_BETA } : { ...DEFAULT_STAGING };
-}
 
 function parseManifest(raw: string, lane: Lane): AndroidClientUpdateResponse | null {
   try {
     const parsed = JSON.parse(raw) as Partial<AndroidClientUpdateResponse>;
+    if (parsed.ok !== true) return null;
     if (parsed.lane !== lane) return null;
-    if (typeof parsed.version_code !== 'number' || parsed.version_code < 1) return null;
+    if (
+      typeof parsed.version_code !== 'number' ||
+      !Number.isSafeInteger(parsed.version_code) ||
+      parsed.version_code < 1
+    ) {
+      return null;
+    }
     if (typeof parsed.version_name !== 'string' || parsed.version_name.length === 0) return null;
-    if (typeof parsed.apk_url !== 'string' || !parsed.apk_url.startsWith('https://')) return null;
+    if (typeof parsed.apk_url !== 'string') return null;
+    const apkUrl = new URL(parsed.apk_url);
+    if (
+      apkUrl.protocol !== 'https:' ||
+      apkUrl.username ||
+      apkUrl.password ||
+      apkUrl.port ||
+      apkUrl.search ||
+      apkUrl.hash
+    ) {
+      return null;
+    }
+    if (
+      lane === 'beta' &&
+      apkUrl.hostname !== 'beta.akalynth.com'
+    ) {
+      return null;
+    }
+    const betaApkMatch =
+      lane === 'beta'
+        ? /^\/download\/akalynth-beta-v([1-9][0-9]*)\.apk$/.exec(apkUrl.pathname)
+        : null;
+    if (
+      lane === 'beta' &&
+      (betaApkMatch === null || Number(betaApkMatch[1]) !== parsed.version_code)
+    ) {
+      return null;
+    }
     if (typeof parsed.apk_sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(parsed.apk_sha256)) return null;
-    if (typeof parsed.size_bytes !== 'number' || parsed.size_bytes < 1) return null;
+    if (
+      typeof parsed.size_bytes !== 'number' ||
+      !Number.isSafeInteger(parsed.size_bytes) ||
+      parsed.size_bytes < 1
+    ) {
+      return null;
+    }
+    if (
+      typeof parsed.published_at !== 'string' ||
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/.test(parsed.published_at) ||
+      Number.isNaN(Date.parse(parsed.published_at))
+    ) {
+      return null;
+    }
+    if (typeof parsed.required !== 'boolean') return null;
     return {
       ok: true,
       lane,
@@ -54,11 +74,8 @@ function parseManifest(raw: string, lane: Lane): AndroidClientUpdateResponse | n
       apk_url: parsed.apk_url,
       apk_sha256: parsed.apk_sha256,
       size_bytes: parsed.size_bytes,
-      required: parsed.required === true,
-      published_at:
-        typeof parsed.published_at === 'string' && parsed.published_at.length > 0
-          ? parsed.published_at
-          : new Date().toISOString(),
+      required: parsed.required,
+      published_at: parsed.published_at,
     };
   } catch {
     return null;
@@ -80,8 +97,10 @@ function loadManifests(): Partial<Record<Lane, AndroidClientUpdateResponse>> {
   const stagingPath = process.env.AKALYNTH_ANDROID_STAGING_UPDATE_JSON?.trim();
 
   cachedManifests = {
-    beta: (betaPath && loadManifestFile(betaPath, 'beta')) || laneDefault('beta'),
-    staging: (stagingPath && loadManifestFile(stagingPath, 'staging')) || laneDefault('staging'),
+    beta: betaPath ? loadManifestFile(betaPath, 'beta') ?? undefined : undefined,
+    staging: stagingPath
+      ? loadManifestFile(stagingPath, 'staging') ?? undefined
+      : undefined,
   };
   return cachedManifests;
 }

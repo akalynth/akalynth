@@ -82,6 +82,10 @@ Grouped by role. `L` = line count at last review. Entries marked **(non-binding)
 | --- | --- | --- |
 | [CONSTITUTIONAL_AMENDMENTS.md](./CONSTITUTIONAL_AMENDMENTS.md) | 126 | Amendment process for constitutional surfaces. |
 | [decisions/AKALYNTH_BETA_PLAYER_READINESS_AND_MEASUREMENT_V1/DECISION.md](./decisions/AKALYNTH_BETA_PLAYER_READINESS_AND_MEASUREMENT_V1/DECISION.md) | 176 | Accepted source-recovery boundary for controlled beta readiness; no deployment or release claim. |
+| [decisions/AKALYNTH_BETA_RELEASE_REPAIR_V1/DECISION.md](./decisions/AKALYNTH_BETA_RELEASE_REPAIR_V1/DECISION.md) | 278 | Accepted live-beta repair and bounded historical receipt-key exception boundary. |
+| [decisions/AKALYNTH_BETA_RELEASE_REPAIR_V1/android-distribution-identity.v12.json](./decisions/AKALYNTH_BETA_RELEASE_REPAIR_V1/android-distribution-identity.v12.json) | 12 | Machine-readable accepted Android v12 distribution identity. |
+| [decisions/AKALYNTH_BETA_RELEASE_REPAIR_V1/receipt-key-exception.v1.json](./decisions/AKALYNTH_BETA_RELEASE_REPAIR_V1/receipt-key-exception.v1.json) | 67 | Machine-readable approved receipt-key exception, exact boundary, and nonclaims. |
+| [decisions/AKALYNTH_BETA_RELEASE_REPAIR_V1/receipt-key-exception.v1.schema.json](./decisions/AKALYNTH_BETA_RELEASE_REPAIR_V1/receipt-key-exception.v1.schema.json) | 259 | Closed JSON Schema for the bounded receipt-key exception record. |
 | [HIGH_LEVERAGE_DECISION_CHECKLIST.md](./HIGH_LEVERAGE_DECISION_CHECKLIST.md) | 288 | Decision checklist for high-leverage tasks. |
 | [LEVERAGE_TIER_MAPPING.md](./LEVERAGE_TIER_MAPPING.md) | 266 | Leverage-tier mapping of current state. |
 | [REPO_HYGIENE_ARCHITECTURE.md](./REPO_HYGIENE_ARCHITECTURE.md) | 96 | Cleanup policy: root/doc/archive/drop custody and guardrails. |
@@ -91,13 +95,13 @@ Grouped by role. `L` = line count at last review. Entries marked **(non-binding)
 | Doc | L | Role |
 | --- | --- | --- |
 | [SHOWCASE_RUNBOOK.md](./SHOWCASE_RUNBOOK.md) | 142 | Local pre-alpha proof showcase runbook. |
-| [runbooks/beta-player-readiness-runbook-v1.md](./runbooks/beta-player-readiness-runbook-v1.md) | 209 | Source-recovery verification and separately authorized controlled-cohort operations. |
+| [runbooks/beta-player-readiness-runbook-v1.md](./runbooks/beta-player-readiness-runbook-v1.md) | 329 | Source-recovery, repaired release preflight, and separately authorized controlled-cohort operations. |
 | [NEW_BOX_PROVISIONING.md](./NEW_BOX_PROVISIONING.md) | 237 | New-box provisioning runbook. |
 | [archive/APK_DISTRIBUTION_CHECKLIST.md](./archive/APK_DISTRIBUTION_CHECKLIST.md) | 220 | **Archived** — Android ship-and-observe checklist. |
 | [archive/MMO_SITE_AND_LOOT_RUNBOOK.md](./archive/MMO_SITE_AND_LOOT_RUNBOOK.md) | 126 | **Archived** — completed-work log (mmo-site PR #75, mob-loot fix PR #81). |
 | [archive/DRIVER_BRIEF.md](./archive/DRIVER_BRIEF.md) | 69 | **Archived** — technical driver brief. |
 | [archive/DRIVER_30_DAY_PLAN.md](./archive/DRIVER_30_DAY_PLAN.md) | 97 | **Archived** — 30-day driver plan. |
-| [README.md](./README.md) | 226 | Docs index / single source of truth pointer. |
+| [README.md](./README.md) | 228 | Docs index / single source of truth pointer. |
 
 ### Archived reference — Witness-Ledger architecture
 | Doc | L | Role |

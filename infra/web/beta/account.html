@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="no-referrer" />
   <title>Akalynth — Account</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%231f1a13'/%3E%3Cpath d='M16 5l7 11-7 11-7-11z' fill='%23d9b25a'/%3E%3C/svg%3E" />
   <style>
@@ -397,9 +398,11 @@ async function resendVerification() {
 
 async function handleQueryAction() {
   const params = new URLSearchParams(window.location.search);
-  const reset = params.get('reset');
+  const fragment = new URLSearchParams(window.location.hash.slice(1));
+  const reset = fragment.get('reset');
   if (reset) {
-    window.location.replace(`/forgot.html?reset=${encodeURIComponent(reset)}`);
+    window.history.replaceState({}, document.title, window.location.pathname);
+    window.location.replace(`/forgot.html#reset=${encodeURIComponent(reset)}`);
     return { redirected: true };
   }
 

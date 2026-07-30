@@ -6,9 +6,46 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ANDROID_DIR="$ROOT/apps/android"
 APK_OUT="$ANDROID_DIR/app/build/outputs/apk/beta/app-beta.apk"
 MANIFEST_PATH="$ROOT/infra/android/beta-client-update.json"
-PUBLIC_APK_NAME="${AKALYNTH_BETA_APK_NAME:-akalynth-beta.apk}"
 
 log() { printf '[beta-apk] %s\n' "$1"; }
+
+"$ROOT/scripts/verify_beta_android_distribution.sh"
+
+source_version_code="$(python3 - "$ANDROID_DIR/app/build.gradle.kts" <<'PY'
+import re, pathlib
+import sys
+text = pathlib.Path(sys.argv[1]).read_text()
+match = re.search(r'versionCode\s*=\s*(\d+)', text)
+print(match.group(1) if match else "0")
+PY
+)"
+published_version_code="$(python3 - "$MANIFEST_PATH" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+value = json.loads(path.read_text())["version_code"]
+if type(value) is not int or value < 1:
+    raise SystemExit("published Android version_code must be a positive integer")
+print(value)
+PY
+)"
+
+if [[ "$source_version_code" -le "$published_version_code" ]]; then
+  printf 'Refusing Android identity reuse/regression: source versionCode=%s, published version_code=%s.\n' \
+    "$source_version_code" "$published_version_code" >&2
+  printf 'Advance the Android version under a separately authorized direct-client release before publishing.\n' >&2
+  exit 1
+fi
+
+EXPECTED_PUBLIC_APK_NAME="akalynth-beta-v${source_version_code}.apk"
+PUBLIC_APK_NAME="${AKALYNTH_BETA_APK_NAME:-${EXPECTED_PUBLIC_APK_NAME}}"
+if [[ "$PUBLIC_APK_NAME" != "$EXPECTED_PUBLIC_APK_NAME" ]]; then
+  printf 'Refusing mutable or mismatched Android artifact name: got=%s expected=%s.\n' \
+    "$PUBLIC_APK_NAME" "$EXPECTED_PUBLIC_APK_NAME" >&2
+  exit 1
+fi
 
 cd "$ANDROID_DIR"
 log "Running unit tests..."
@@ -30,6 +67,11 @@ match = re.search(r'versionCode\s*=\s*(\d+)', text)
 print(match.group(1) if match else "0")
 PY
 )"
+if [[ "$version_code" != "$source_version_code" ]]; then
+  printf 'Android version changed during build: preflight=%s built=%s.\n' \
+    "$source_version_code" "$version_code" >&2
+  exit 1
+fi
 version_name="$(python3 - <<'PY'
 import re, pathlib
 text = pathlib.Path("app/build.gradle.kts").read_text()
@@ -56,6 +98,9 @@ JSON
 
 sha_sidecar="${APK_OUT}.sha256"
 printf '%s  %s\n' "$sha256" "$PUBLIC_APK_NAME" > "$sha_sidecar"
+
+AKALYNTH_ANDROID_APK_FILE="$APK_OUT" \
+  "$ROOT/scripts/verify_beta_android_distribution.sh"
 
 log "Built: $APK_OUT"
 log "SHA-256: $sha256"
