@@ -149,6 +149,9 @@ Core docs:
 
 Verification, governance, and proof docs:
 
+- [Design-Provenance Governance Contract](./AKALYNTH_DECISION_RECORD_V1.md) - federated authority, decision records, conformance, conflict resolution, and the World Architect mandate
+- [Design-Provenance Adoption Decision](./decisions/AKALYNTH_DESIGN_PROVENANCE_ADOPTION_V1/ADOPTION_DECISION.md) - accepted scope relationship among civil governance, design provenance, and narrative canon
+- [Risk & Consequence Spine Decision](./decisions/AKALYNTH_RISK_CONSEQUENCE_AND_COMMITMENT_V1/DECISION.md) - accepted design decision for durable risk, recovery, standing contexts, ECE/RCE/MCE, CRB, coupled outcomes, and receipt evidence; implementation remains unauthorized
 - [Verification Spine API v1](./VERIFICATION_SPINE_API.md) - the mandatory pre-merge verification system contract
 - [Spine Lock v1](./SPINE_V1.md) - locked spine surface and verifier registration rules
 - [Simulation Lane Runbook](./SIM_LANE_RUNBOOK.md) - `sim-api.akalynth.com` / `sim.akalynth.com` lane contract, state custody, and verification steps

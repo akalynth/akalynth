@@ -80,6 +80,9 @@ Grouped by role. `L` = line count at last review. Entries marked **(non-binding)
 ### Governance & process
 | Doc | L | Role |
 | --- | --- | --- |
+| [AKALYNTH_DECISION_RECORD_V1.md](./AKALYNTH_DECISION_RECORD_V1.md) | 297 | Design-provenance governance contract: decision lineage, conformance, conflict resolution, and World Architect mandate. |
+| [decisions/AKALYNTH_DESIGN_PROVENANCE_ADOPTION_V1/ADOPTION_DECISION.md](./decisions/AKALYNTH_DESIGN_PROVENANCE_ADOPTION_V1/ADOPTION_DECISION.md) | 90 | Adoption decision establishing the federated scope of civil governance, design provenance, and narrative canon. |
+| [decisions/AKALYNTH_RISK_CONSEQUENCE_AND_COMMITMENT_V1/DECISION.md](./decisions/AKALYNTH_RISK_CONSEQUENCE_AND_COMMITMENT_V1/DECISION.md) | 240 | Accepted design decision for the Risk & Consequence Spine and its standing-context, ECE/RCE/MCE, CRB, recovery, remediation, and coupled-commit machinery; not an implementation or release claim. |
 | [CONSTITUTIONAL_AMENDMENTS.md](./CONSTITUTIONAL_AMENDMENTS.md) | 126 | Amendment process for constitutional surfaces. |
 | [HIGH_LEVERAGE_DECISION_CHECKLIST.md](./HIGH_LEVERAGE_DECISION_CHECKLIST.md) | 288 | Decision checklist for high-leverage tasks. |
 | [LEVERAGE_TIER_MAPPING.md](./LEVERAGE_TIER_MAPPING.md) | 266 | Leverage-tier mapping of current state. |
@@ -190,6 +193,14 @@ Design intent, not current capability. Treat as future-facing.
 - **Imported source material:** `drop/` packages are source inputs for future canon/gameplay/assets, not current runtime claims until promoted through a reviewed lane.
 - **Non-binding specs (per `V1_SCOPE.md`):** `docs/archive/MONETIZATION_BLUEPRINT.md`, `WORLD_EVOLUTION.md`, `docs/archive/speculative/AKALYNTH_MAIL_MMO.v1.md`, `packages/coordination-kernel/CONSTITUTIONAL_API_FREEZE.md`, plus `apps/server/docs/PHASE6_WITNESS_INTERFACE.md`, `EVIDENCE_UI_SPEC.md`, `PHASE7_MODERATION.md`.
 - **Frozen contracts (shape locked, not a maturity claim):** `CLIENT_CONTRACT_V0_1.md`, `SPINE_V1.md`, `UI_PROPOSAL.md`.
+
+### F.1 Accepted design decisions — not implementation claims
+
+- **Risk & Consequence Spine and commitment machinery:**
+  [`AKALYNTH_RISK_CONSEQUENCE_AND_COMMITMENT_V1`](./decisions/AKALYNTH_RISK_CONSEQUENCE_AND_COMMITMENT_V1/DECISION.md)
+  accepts the gameplay-design spine and the Standing Contexts + ECE/RCE/MCE +
+  CRB architecture. It creates no current-runtime, V1, canon, conformance, or
+  release claim.
 
 ### G. Open gaps / release blockers
 `KNOWN_GAPS.md` §Release Blockers — no documented two-green-`main` proof run in this packet · no production-deployment proof · Android release path unproved · some runtime state resets on restart · scope docs need ongoing alignment · some verifier coverage depends on fixtures, not full live-world execution.
