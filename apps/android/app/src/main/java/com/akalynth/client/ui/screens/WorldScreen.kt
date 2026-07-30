@@ -62,7 +62,13 @@ fun WorldScreen(
             mapData?.landmarks?.get("guild_hall")?.contains(me.x, me.y)
         } == true
     )
-    val routeActionSkillIds = routeActionSkillIdsFor(state.progression.loop?.onwardRoutes ?: emptyList())
+    val canFishRookguardCanal =
+        state.world.currentMap == MapName.ROOKGUARD &&
+            state.world.me?.let { me -> mapData?.landmarks?.get("canal")?.contains(me.x, me.y) } == true
+    val routeActionSkillIds = routeActionSkillIdsFor(
+        state.progression.loop?.onwardRoutes ?: emptyList(),
+        canFishRookguardCanal,
+    )
     val showRouteActions = routeActionSkillIds.isNotEmpty()
     val loop = state.progression.loop
     val objective = loop?.objective.orEmpty()
@@ -180,6 +186,7 @@ fun WorldScreen(
             }
             if (objective.isNotBlank()) {
                 ObjectiveBanner(
+                    title = loop?.rookguardQuest?.title ?: "Objective",
                     objective = objective,
                     accent = when {
                         showTrainingAttack && trainingSlime != null ->
@@ -364,8 +371,12 @@ fun WorldScreen(
     }
 }
 
-private fun routeActionSkillIdsFor(routes: List<OnwardRouteProgress>): List<String> {
-    return listOf("activity:fishing:rookguard") + routes.flatMap { route ->
+private fun routeActionSkillIdsFor(
+    routes: List<OnwardRouteProgress>,
+    canFishRookguardCanal: Boolean,
+): List<String> {
+    val localActions = if (canFishRookguardCanal) listOf("activity:fishing:rookguard") else emptyList()
+    return localActions + routes.flatMap { route ->
         if (route.status != "available") return@flatMap emptyList()
         val completed = route.completedObjectiveIds.toSet()
         when (route.routeId) {

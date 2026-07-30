@@ -156,6 +156,7 @@ export type ChronicleEventKind =
   | 'legendary_obtained'
   | 'legendary_lost'
   | 'origin_sealed'
+  | 'tutorial_complete'
   | 'world_event'
   | 'property_acquired';
 

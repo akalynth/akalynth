@@ -92,6 +92,7 @@ const ACCOUNT_CHARACTER_OUTFIT_IDS = new Set([
   'female_mage',
 ]);
 const ROUTE_ACTION_SKILL_IDS = new Set([
+  'activity:fishing:rookguard',
   'route:survey:forgehold',
   'route:survey:moonspire',
   'route:safety:forgehold',
@@ -1334,6 +1335,16 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
                     ? 'Not enough gold to gift'
                     : 'Gift failed';
                 return pushToast(s, 'npc', line, 'GIFT');
+              }
+              if (skillId === 'activity:fishing:rookguard') {
+                const line = success
+                  ? typeof payload?.line === 'string'
+                    ? payload.line
+                    : 'The old canal accepts the cast without promising a catch.'
+                  : data.reason === 'invalid_target'
+                    ? 'Stand beside the old canal fishing post to cast.'
+                    : `The canal is unavailable: ${String(data.reason ?? 'rejected')}`;
+                return pushToast(s, 'objective', line, success ? 'CANAL' : 'NOT HERE');
               }
               if (ROUTE_ACTION_SKILL_IDS.has(skillId)) {
                 const title = typeof payload?.title === 'string' ? payload.title : 'Route';

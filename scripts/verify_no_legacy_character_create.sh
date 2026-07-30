@@ -364,7 +364,7 @@ for server_literal in \
   "HTTP POST /v1/characters/select allows unverified account session" \
   "HTTP POST /v1/characters returns client character + play token" \
   "login projection: rookguard character enters Rookguard" \
-  "login projection: high_city character enters Azura runtime map" \
+  "login projection: incomplete high_city character still enters Rookguard" \
   "login projection: outfit sprite follows catalog" \
   "login projection: missing account row falls back guest-safe"; do
   if ! grep -Fq "$server_literal" "$ROOT_DIR/apps/server/tools/verify-character-v2.test.ts"; then

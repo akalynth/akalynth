@@ -258,7 +258,7 @@ async function main(): Promise<void> {
     http.status === 201 && isClientCharacterShape(http.body.character) && typeof http.body.token === 'string' && typeof http.body.expires_at === 'number'
   );
   const highCityProjection = accountCharacterLoginProjection(characterStore.findById('p_RouterHigh'));
-  check('login projection: high_city character enters Azura runtime map', highCityProjection.map === 'Azura');
+  check('login projection: incomplete high_city character still enters Rookguard', highCityProjection.map === 'Rookguard');
   check('login projection: outfit sprite follows catalog', highCityProjection.sprite_id === 'guard_city_01');
   const missingProjection = accountCharacterLoginProjection(undefined);
   check('login projection: missing account row falls back guest-safe', missingProjection.map === 'Rookguard' && missingProjection.sprite_id === null);

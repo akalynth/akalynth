@@ -10,7 +10,10 @@ export interface AccountCharacterLoginProjection {
 
 export function accountCharacterLoginProjection(row: AccountCharacterRow | undefined): AccountCharacterLoginProjection {
   return {
-    map: row?.world_id === 'high_city' ? 'Azura' : 'Rookguard',
+    // world_id is a destination affinity, not permission to bypass the
+    // receipt-backed Rookguard opening. index.ts promotes a returning
+    // character to Azura only after tutorial completion has been replayed.
+    map: 'Rookguard',
     sprite_id: row ? outfitById(row.outfit_id)?.sprite_id ?? null : null,
   };
 }

@@ -53,6 +53,12 @@ export interface SkillContext {
   ws: WebSocket;
   antiState: AntiCheatState;
   skillCooldowns: Map<string, number>;
+  // Optional for older isolated skill verifiers. Location-bound live skills
+  // must reject unless the server supplies and validates this context.
+  inWorld?: boolean;
+  currentMap?: 'Rookguard' | 'Azura';
+  playerPosition?: { x: number; y: number };
+  isAtLandmark?: (landmarkId: string) => boolean;
   onwardRoutesAvailable?: boolean;
   getOnwardRouteProgress?: () => OnwardRouteReceiptProgress;
   // Audit write function

@@ -55,8 +55,11 @@ const ROUTE_ACTION_BY_ID = new Map<RouteActionId, typeof ROUTE_ACTIONS[number]>(
   ROUTE_ACTIONS.map((action) => [action.skill_id, action]),
 );
 
-function routeActionIdsFor(onwardRoutes: NonNullable<PlayLoopProgress['onwardRoutes']>): RouteActionId[] {
-  const ids: RouteActionId[] = ['activity:fishing:rookguard'];
+function routeActionIdsFor(
+  onwardRoutes: NonNullable<PlayLoopProgress['onwardRoutes']>,
+  canFishRookguardCanal: boolean,
+): RouteActionId[] {
+  const ids: RouteActionId[] = canFishRookguardCanal ? ['activity:fishing:rookguard'] : [];
   for (const route of onwardRoutes) {
     if (route.status !== 'available') continue;
     const completed = new Set(route.completed_objective_ids);
@@ -116,6 +119,7 @@ interface ActionsPanelProps {
   ritualReady: boolean;
   ritualHint: string;
   nearLegendStone: boolean;
+  canFishRookguardCanal: boolean;
   nearbyNpc: NpcRef | null;
   groundItemHere: GroundItem | null;
   workContract: WorkContractRef | null;
@@ -151,6 +155,7 @@ export function ActionsPanel({
   ritualReady,
   ritualHint,
   nearLegendStone,
+  canFishRookguardCanal,
   nearbyNpc,
   groundItemHere,
   workContract,
@@ -167,7 +172,7 @@ export function ActionsPanel({
   const rookguardQuest = loop?.rookguardQuest ?? null;
   const codexProfession = rookguardQuest?.codexProfession ?? null;
   const onwardRoutes = loop?.onwardRoutes ?? [];
-  const routeActionIds = routeActionIdsFor(onwardRoutes);
+  const routeActionIds = routeActionIdsFor(onwardRoutes, canFishRookguardCanal);
   const routeActions = routeActionIds.flatMap((skillId) => {
     const action = ROUTE_ACTION_BY_ID.get(skillId);
     return action ? [action] : [];
@@ -365,7 +370,7 @@ export function ActionsPanel({
       <div className={`mission-card${presentationMode ? ' mission-card--presentation' : ''}`}>
         {!presentationMode && (
           <>
-            <span>Objective</span>
+            <span>{rookguardQuest?.title ?? 'Objective'}</span>
             <strong>{objectiveLabel}</strong>
             <div className="mission-flags" aria-label="objective progress">
               <i className={loop?.move ? 'done' : ''}>Move</i>

@@ -2899,7 +2899,9 @@ function playLoopFor(s: Session) {
     ...s.tutorial,
     gateOpen,
     objective,
-    rookguardQuest: buildRookguardQuestProgress(rookguardQuestInput),
+    ...(s.currentMap === 'Rookguard'
+      ? { rookguardQuest: buildRookguardQuestProgress(rookguardQuestInput) }
+      : {}),
     onwardRoutes: buildOnwardRouteProgress(
       rookguardQuestInput,
       s.player ? getOnwardRouteReceiptProgress(s.player.id) : undefined
@@ -4335,18 +4337,25 @@ function processSessionQueue(s: Session, now: number) {
 
             if (tile === TileCode.GateToAzura && !s.tutorial.complete) {
               if (rookguardGateOpen(rookguardQuestInputFor(s))) {
+                const completionEvidence = {
+                  adventure_id: 'rookguard_city_codex_path_v1',
+                  gate_id: 'rookguard:golden_gate',
+                  destination_map: 'Azura',
+                  completed_marks: ['move', 'chat', 'tem', 'training', 'profession', 'gate'],
+                  vocation: s.rookguardQuest.vocation,
+                };
                 s.tutorial.gate = true;
                 s.tutorial.complete = true;
                 audit.write({
                   player_id: s.player!.id,
                   action: 'gate_unlock',
-                  inputs: {},
+                  inputs: completionEvidence,
                   result: 'ok',
                 });
                 audit.write({
                   player_id: s.player!.id,
                   action: 'tutorial_completed',
-                  inputs: {},
+                  inputs: completionEvidence,
                   result: 'ok',
                 });
                 sendLoopUpdate(s, 'rookguard_codex_path_complete');
@@ -6478,6 +6487,16 @@ function processSessionQueue(s: Session, now: number) {
           ws: s.ws,
           antiState: s.anti.state,
           skillCooldowns: s.skillCooldowns,
+          inWorld: s.inWorld,
+          currentMap: s.currentMap,
+          playerPosition: { x: s.player.x, y: s.player.y },
+          isAtLandmark: (landmarkId) => {
+            const raw = (worlds[s.currentMap].map.landmarks as Record<string, unknown>)[landmarkId];
+            const landmark = asLandmarkBox(raw);
+            return landmark
+              ? landmarkContains({ x: s.player!.x, y: s.player!.y }, landmark)
+              : false;
+          },
           onwardRoutesAvailable: buildRookguardQuestProgress(rookguardQuestInputFor(s)).completed,
           getOnwardRouteProgress: () => getOnwardRouteReceiptProgress(s.player!.id),
           audit: (receipt) => audit.write(receipt),

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { MapName } from '@shared/http';
 import { displayMapName } from '@shared/http';
 import type { ChronicleEvent } from '@shared/protocol';
-import type { MapData, PlayerPublic } from '@shared/types';
+import type { MapData, PlayerPublic, RookguardQuestProgress } from '@shared/types';
 import { respectRankForReputation } from '@shared/types';
 import { useGameClient } from './hooks/useGameClient';
 import { useExistenceMode } from './hooks/useExistenceMode';
@@ -152,7 +152,7 @@ function renderChronicleEvent(ev: ChronicleEvent): ChronicleRender {
         text: `Killed ${String(details.target_name ?? details.target_id ?? 'target')}`,
       };
     case 'tutorial_complete':
-      return { text: 'Completed tutorial' };
+      return { text: 'Rookguard ended at the golden gate. High City opened beyond it.' };
     case 'character_created':
       return { text: 'Character created' };
     case 'item_lost':
@@ -349,13 +349,34 @@ function MobileStatusRail({
 
 interface MotionObjectiveRailProps {
   objectiveLabel: string;
+  quest: RookguardQuestProgress | null;
 }
 
-function MotionObjectiveRail({ objectiveLabel }: MotionObjectiveRailProps) {
+function MotionObjectiveRail({ objectiveLabel, quest }: MotionObjectiveRailProps) {
+  const steps = quest?.steps ?? [];
+  const completeCount = steps.filter((step) => step.complete).length;
+  const currentStepId = steps.find((step) => !step.complete)?.step_id ?? null;
   return (
-    <div className="motion-objective-rail" role="status" aria-label="Current objective">
-      <span>Objective</span>
+    <div
+      className={`motion-objective-rail${quest?.completed ? ' motion-objective-rail--complete' : ''}`}
+      role="status" aria-label="Current objective"
+      data-progress={quest ? `${completeCount}/${steps.length}` : undefined}
+    >
+      <div className="motion-objective-kicker">
+        <span>{quest?.title ?? 'Objective'}</span>
+        {quest && <em>{quest.completed ? 'Oath complete' : `${completeCount}/${steps.length} marks`}</em>}
+      </div>
       <strong>{objectiveLabel}</strong>
+      {steps.length > 0 && (
+        <div className="motion-objective-marks" aria-hidden="true">
+          {steps.map((step) => (
+            <i
+              key={step.step_id}
+              className={step.complete ? 'done' : step.step_id === currentStepId ? 'current' : ''}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -556,6 +577,9 @@ function DebugApp() {
   const ritualReady = isNearLandmark(state.world.me, state.world.map, 'runestone_table');
   const ritualHint = ritualReady ? 'Runestone nearby' : 'No runestone nearby';
   const nearLegendStone = isNearLandmark(state.world.me, state.world.map, 'legend_stone', 2);
+  const canFishRookguardCanal =
+    currentMapName === 'Rookguard' &&
+    isNearLandmark(state.world.me, state.world.map, 'canal', 0);
   const nearbyNpc = NPC_DEFS.find(n =>
     isInPlace(state.world.me, state.world.map, currentMapName, n.place_id)
   ) ?? null;
@@ -989,7 +1013,10 @@ function DebugApp() {
             />
           )}
           {presentationMode && showPlayShell && (
-            <MotionObjectiveRail objectiveLabel={objectiveLabel} />
+            <MotionObjectiveRail
+              objectiveLabel={objectiveLabel}
+              quest={state.loop?.rookguardQuest ?? null}
+            />
           )}
           {!presentationMode && (
             <div className="hud hud-proof" aria-label="studio proof">
@@ -1071,6 +1098,7 @@ function DebugApp() {
                 ritualReady={ritualReady}
                 ritualHint={ritualHint}
                 nearLegendStone={nearLegendStone}
+                canFishRookguardCanal={canFishRookguardCanal}
                 nearbyNpc={nearbyNpc}
                 groundItemHere={groundItemHere}
                 workContract={state.workContract}

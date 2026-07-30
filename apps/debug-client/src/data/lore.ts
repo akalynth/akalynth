@@ -27,6 +27,12 @@ export const LANDMARK_LORE: Record<string, LoreEntry> = {
       'A weathered marker for the names and deeds the keep remembers — the ' +
       "first hint of the Origin Act, each player's first sealed consequence.",
   },
+  canal: {
+    title: 'Old Canal',
+    body:
+      'A quiet edge of the keep where patience matters more than profit. Stand ' +
+      'beside the fishing post to cast; the water promises no tradeable catch.',
+  },
   guild_hall: {
     title: 'Guild Hall',
     body:

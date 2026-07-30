@@ -1039,6 +1039,12 @@
       "width": 10,
       "height": 6
     },
+    "canal": {
+      "x": 9,
+      "y": 5,
+      "width": 3,
+      "height": 3
+    },
     "guild_hall": {
       "x": 11,
       "y": 1,

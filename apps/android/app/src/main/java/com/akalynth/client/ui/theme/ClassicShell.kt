@@ -125,6 +125,7 @@ fun ClassicDock(
 @Composable
 fun ClassicActionDock(
     modifier: Modifier = Modifier,
+    maxWidth: Dp = 108.dp,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val textures = rememberUiTextures()
@@ -134,7 +135,7 @@ fun ClassicActionDock(
         NineSliceBox(
             frame = textures.dockFrame,
             slicePx = textures.dockSlice,
-            modifier = modifier.widthIn(max = 108.dp),
+            modifier = modifier.widthIn(max = maxWidth),
             contentPadding = dockPadding,
             cornerRadius = 10.dp,
             backgroundAlpha = 0.9f,
@@ -148,7 +149,7 @@ fun ClassicActionDock(
     } else {
         Column(
             modifier = modifier
-                .widthIn(max = 108.dp)
+                .widthIn(max = maxWidth)
                 .clip(shape)
                 .background(ClassicShellColors.PanelDeep.copy(alpha = 0.92f))
                 .border(1.dp, ClassicShellColors.IronBright.copy(alpha = 0.48f), shape)

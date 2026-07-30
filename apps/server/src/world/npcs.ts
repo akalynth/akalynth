@@ -71,19 +71,20 @@ const NPC_REGISTRY: NpcDef[] = [
         must_convey: [
           {
             fact_id: 'gate_steps',
-            text: 'Move rune (3,2), chat signal, Tem rune (7,2), training slime (14,14), guild-hall vocation, then the gate.',
+            text: 'The old way has six marks: wake the silver road-rune, raise your voice, answer Tem, earn the yard-mark, choose an oath, then face the golden gate.',
           },
-          { fact_id: 'gate_opens', text: 'The gate opens only after move, chat, Tem, slime practice, and Codex vocation receipts.' },
+          { fact_id: 'gate_opens', text: 'The keep judges deeds, not claims. The gate opens only when every mark is truly yours.' },
         ],
         may_convey: [
-          { fact_id: 'no_rush', text: 'Many pass through here; none need rush it.' },
+          { fact_id: 'no_rush', text: 'The first rune waits just east of us. Rookguard is older than hurry.' },
+          { fact_id: 'canal', text: 'If the road feels too straight, the old canal still rewards patience with quiet.' },
         ],
       },
       seen: {
         intent_id: 'guide_gate_reminder',
         openers: ['Still finding your way?', 'Need another pass?', 'Back at the gate?'],
         must_convey: [
-          { fact_id: 'gate_steps_short', text: 'Move, chat, Tem, then attack the training slime at (14,14) before vocation and gate.' },
+          { fact_id: 'gate_steps_short', text: 'One mark at a time: road-rune, signal, Tem, training yard, oath, gate. The keep will show you what remains.' },
         ],
         may_convey: [],
       },
@@ -137,7 +138,7 @@ const NPC_REGISTRY: NpcDef[] = [
         must_convey: [
           {
             fact_id: 'profession_choice',
-            text: 'At the end of Rookguard, choose a vocation: Warden, Cantor, Hexer, or Reaver.',
+            text: 'Four old oaths wait here: Warden, Cantor, Hexer, and Reaver. Choose the one you are willing to carry beyond the gate.',
           },
           {
             fact_id: 'codex_record',
@@ -145,7 +146,7 @@ const NPC_REGISTRY: NpcDef[] = [
           },
           {
             fact_id: 'codex_not_power',
-            text: 'The Codex arch records the choice as identity proof, not as a power grant.',
+            text: 'The Codex arch remembers what you choose. It grants no strength you did not earn.',
           },
         ],
         may_convey: [
@@ -159,7 +160,7 @@ const NPC_REGISTRY: NpcDef[] = [
         must_convey: [
           {
             fact_id: 'vocation_receipt',
-            text: 'Your vocation declaration writes a receipt, changes your visible badge, and binds a Heroes Codex role.',
+            text: 'Choose with care: your oath, visible mark, and Heroes Codex role will follow you.',
           },
         ],
         may_convey: [

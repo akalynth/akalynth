@@ -5838,6 +5838,22 @@ body {
   text-transform: uppercase;
 }
 
+.motion-objective-kicker {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.motion-objective-kicker em {
+  color: var(--classic-muted);
+  font-size: 0.55rem;
+  font-style: normal;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
 .motion-objective-rail strong {
   display: -webkit-box;
   overflow: hidden;
@@ -5847,6 +5863,35 @@ body {
   text-shadow: 0 1px #050505;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+}
+
+.motion-objective-marks {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.2rem;
+}
+
+.motion-objective-marks i {
+  height: 0.18rem;
+  border: 1px solid rgba(111, 108, 98, 0.55);
+  border-radius: 999px;
+  background: rgba(5, 5, 5, 0.72);
+}
+
+.motion-objective-marks i.current {
+  border-color: rgba(240, 200, 60, 0.88);
+  background: rgba(240, 200, 60, 0.34);
+  box-shadow: 0 0 0.32rem rgba(240, 200, 60, 0.28);
+}
+
+.motion-objective-marks i.done {
+  border-color: rgba(120, 188, 118, 0.9);
+  background: var(--classic-green);
+}
+
+.motion-objective-rail--complete strong,
+.motion-objective-rail--complete .motion-objective-kicker em {
+  color: var(--classic-green);
 }
 
 @media (min-width: 951px) {
@@ -6564,6 +6609,13 @@ body {
    the available desktop geometry so the rails never cover the playfield.
 */
 @media (min-width: 951px) {
+  .app-shell--presentation .play-shell-top-bar {
+    width: auto;
+    max-width: min(16rem, 24vw);
+    grid-template-columns: auto auto;
+    gap: 0.4rem;
+  }
+
   .app-shell--presentation .stage-map {
     place-items: start center;
     padding: 4rem 1rem 5.5rem;

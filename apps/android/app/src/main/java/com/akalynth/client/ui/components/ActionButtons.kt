@@ -93,7 +93,7 @@ fun ActionButtons(
         ROUTE_ACTION_LABELS[skillId]?.let { label -> skillId to label }
     }
 
-    ClassicActionDock(modifier = modifier) {
+    ClassicActionDock(modifier = modifier, maxWidth = 220.dp) {
             ClassicActionRingButton(
                 onClick = onChat,
                 modifier = Modifier.size(62.dp),

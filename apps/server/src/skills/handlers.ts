@@ -216,10 +216,19 @@ export function handleGiftGold(ctx: SkillContext, targetId: string): SkillResult
 // ============================================================================
 
 export function handleRookguardCanalFishing(ctx: SkillContext): SkillResult {
+  if (
+    ctx.inWorld !== true ||
+    ctx.currentMap !== 'Rookguard' ||
+    !ctx.playerPosition ||
+    ctx.isAtLandmark?.('canal') !== true
+  ) {
+    return { success: false, reason: 'invalid_target' };
+  }
+
   const fishedAt = new Date().toISOString();
   const activityId = 'rookguard_canal_fishing_v1';
   const catchState = 'nothing_tradeable';
-  const respectDelta = 1;
+  const respectDelta = 0;
   const activityGuard = {
     wallet_debit_gold: 0,
     wallet_credit_gold: 0,
@@ -237,6 +246,8 @@ export function handleRookguardCanalFishing(ctx: SkillContext): SkillResult {
     inputs: {
       activity_id: activityId,
       place_id: 'rookguard_canal',
+      map: ctx.currentMap,
+      position: ctx.playerPosition,
       fished_at: fishedAt,
       catch_state: catchState,
       respect_delta: respectDelta,
@@ -255,8 +266,8 @@ export function handleRookguardCanalFishing(ctx: SkillContext): SkillResult {
       place_id: 'rookguard_canal',
       catch_state: catchState,
       respect_delta: respectDelta,
-      line: 'You fish beside the Rookguard canal. Nothing worth selling bites, but the town notices patience.',
-      next_objective: 'Repeat quiet activities for social texture; economy rewards stay locked behind explicit receipts.',
+      line: 'You cast into the old canal. Nothing tradeable bites; the water closes quietly over the line.',
+      next_objective: 'The yard-mark waits southeast, but the canal will still be here if you return.',
       receipt_action: ROOKGUARD_CANAL_FISHED_ACTION,
       activity_guard: activityGuard,
       economy_impact: 'none',

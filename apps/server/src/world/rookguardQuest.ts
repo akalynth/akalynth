@@ -209,50 +209,50 @@ export function rookguardGateOpen(input: RookguardQuestInput): boolean {
 }
 
 export function rookguardQuestObjective(input: RookguardQuestInput): string {
-  if (!input.tutorial.move) return 'Step onto the glowing move rune (east plaza, tile 3,2)';
-  if (!input.tutorial.chat) return 'Open Chat and send any message in Rookguard';
-  if (!input.tutorial.tem) return `Walk to the Tem rune (tile 7,2) and answer ${TEM_CHALLENGE_RESPONSE}`;
-  if (!input.trainingComplete) return 'Walk southeast to the training slime (tile 14,14) and tap Attack';
-  if (!input.vocation) return 'Enter the guild hall and choose a Codex vocation';
-  if (!input.tutorial.gate) return 'Walk onto the golden High City gate when it opens';
-  return 'Rookguard Codex path complete';
+  if (!input.tutorial.move) return 'Wake the silver road-rune just east of the arrival square';
+  if (!input.tutorial.chat) return 'Give the keep a voice to remember — send one local message';
+  if (!input.tutorial.tem) return `Face Tem at the violet rune and answer ${TEM_CHALLENGE_RESPONSE}`;
+  if (!input.trainingComplete) return 'Find the training yard southeast and earn its mark from the slime';
+  if (!input.vocation) return 'Enter the guild hall and choose the oath you will carry';
+  if (!input.tutorial.gate) return 'Return to the golden gate; let Rookguard judge the marks you earned';
+  return 'The gate remembers you';
 }
 
 export function buildRookguardQuestProgress(input: RookguardQuestInput): RookguardQuestProgress {
   const steps = [
     {
       step_id: 'move' as const,
-      label: 'Move rune',
+      label: 'Wake the road-rune',
       complete: input.tutorial.move,
       receipt_actions: ['tutorial_step_complete'],
     },
     {
       step_id: 'chat' as const,
-      label: 'Chat signal',
+      label: 'Raise a signal',
       complete: input.tutorial.chat,
       receipt_actions: ['tutorial_step_complete'],
     },
     {
       step_id: 'tem' as const,
-      label: 'Tem response',
+      label: 'Answer Tem',
       complete: input.tutorial.tem,
       receipt_actions: ['tem_challenge_passed', 'tutorial_step_complete'],
     },
     {
       step_id: 'training' as const,
-      label: 'Training slime',
+      label: 'Earn the yard-mark',
       complete: input.trainingComplete,
       receipt_actions: ['mob_kill', 'item_minted'],
     },
     {
       step_id: 'profession' as const,
-      label: 'Codex vocation',
+      label: 'Choose an oath',
       complete: input.vocation !== null,
       receipt_actions: ['vocation_declared'],
     },
     {
       step_id: 'gate' as const,
-      label: 'High City gate',
+      label: 'Cross the gate',
       complete: input.tutorial.gate,
       receipt_actions: ['gate_unlock', 'tutorial_completed'],
     },
@@ -271,7 +271,7 @@ export function buildRookguardQuestProgress(input: RookguardQuestInput): Rookgua
 
   return {
     quest_id: 'rookguard_city_codex_path_v1',
-    title: 'Rookguard Codex Path',
+    title: 'The Gate Remembers',
     phase,
     steps,
     codexShelves: ROOKGUARD_CODEX_SHELVES,

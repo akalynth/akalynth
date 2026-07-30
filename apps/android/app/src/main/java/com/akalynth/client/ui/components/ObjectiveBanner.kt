@@ -16,6 +16,7 @@ import com.akalynth.client.ui.theme.ClassicShellColors
 
 @Composable
 fun ObjectiveBanner(
+    title: String = "Objective",
     objective: String,
     modifier: Modifier = Modifier,
     accent: String? = null
@@ -30,7 +31,7 @@ fun ObjectiveBanner(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "Objective",
+            text = title,
             style = MaterialTheme.typography.labelSmall,
             color = ClassicShellColors.Brass,
             fontWeight = FontWeight.Bold
