@@ -11,7 +11,7 @@ import org.junit.Test
 
 /**
  * Protocol parity coverage for the Android client vs `packages/shared/protocol.ts`
- * (PROTOCOL_VERSION 2.1.0).
+ * (PROTOCOL_VERSION 2.2.0).
  *
  * Asserts that:
  *  - every ClientMessage subtype encodes to a frame with the correct `type` discriminator,
@@ -36,14 +36,14 @@ class ProtocolParityTest {
 
     @Test
     fun protocolVersionMatchesContract() {
-        assertEquals("2.1.0", Protocol.PROTOCOL_VERSION)
+        assertEquals("2.2.0", Protocol.PROTOCOL_VERSION)
     }
 
     @Test
     fun versionExactMatchIsCompatible() {
         assertEquals(
             Protocol.VersionCompatibility.MATCH,
-            Protocol.versionCompatibility("2.1.0")
+            Protocol.versionCompatibility("2.2.0")
         )
     }
 
@@ -51,11 +51,11 @@ class ProtocolParityTest {
     fun minorOrPatchSkewIsTolerated() {
         assertEquals(
             Protocol.VersionCompatibility.MINOR_MISMATCH,
-            Protocol.versionCompatibility("2.2.0")
+            Protocol.versionCompatibility("2.3.0")
         )
         assertEquals(
             Protocol.VersionCompatibility.MINOR_MISMATCH,
-            Protocol.versionCompatibility("2.1.5")
+            Protocol.versionCompatibility("2.2.5")
         )
     }
 
@@ -242,7 +242,7 @@ class ProtocolParityTest {
     @Test
     fun everyServerMessageTypeDecodesToConcreteClass() {
         val frames: List<Pair<String, Class<out ServerMessage>>> = listOf(
-            """{"type":"welcome","version":"2.1.0"}""" to WelcomeMessage::class.java,
+            """{"type":"welcome","version":"2.2.0"}""" to WelcomeMessage::class.java,
             """{"type":"login_ack","player_id":"p","name":"n","ok":true}""" to LoginAckMessage::class.java,
             """{"type":"world_state","map":"Rookguard","player":{"id":"p","name":"n","x":1,"y":1},"nearby_players":[]}""" to WorldStateMessage::class.java,
             """{"type":"move_result","ok":true,"x":1,"y":2,"reason":null}""" to MoveResultMessage::class.java,
@@ -324,9 +324,9 @@ class ProtocolParityTest {
 
     @Test
     fun welcomeDecodesVersion() {
-        val decoded = MessageSerializer.decodeServer("""{"type":"welcome","version":"2.1.0"}""")
+        val decoded = MessageSerializer.decodeServer("""{"type":"welcome","version":"2.2.0"}""")
         assertTrue(decoded is WelcomeMessage)
-        assertEquals("2.1.0", (decoded as WelcomeMessage).version)
+        assertEquals("2.2.0", (decoded as WelcomeMessage).version)
     }
 
     @Test
@@ -357,7 +357,7 @@ class ProtocolParityTest {
 
     @Test
     fun missingTypeDecodesToUnknownMessage() {
-        val decoded = MessageSerializer.decodeServer("""{"version":"2.1.0"}""")
+        val decoded = MessageSerializer.decodeServer("""{"version":"2.2.0"}""")
         assertTrue(decoded is UnknownMessage)
         assertNull((decoded as UnknownMessage).type)
     }

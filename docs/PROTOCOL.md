@@ -11,7 +11,7 @@ The protocol authority is:
 - `packages/shared/protocol.golden.json`
 - `scripts/verify_protocol_sync.sh`
 
-`packages/shared/protocol.ts` exports `PROTOCOL_VERSION = '2.1.0'`. v2.1.0 is additive over v2.0.0 and records `loop_update` as a first-class server progression message. v2.0.0 accepts the house-auction protocol surface: auction open/bid/cancel client intents, auction state and settlement server broadcasts, and widened `property_result` action/reason values. Clients with exhaustive `property_result.action` or `property_result.reason` handling must tolerate the auction values listed here.
+`packages/shared/protocol.ts` exports `PROTOCOL_VERSION = '2.2.0'`. v2.2.0 is additive over v2.1.0 and records the already-implemented gather/refine/deliver message family, optional `world_state.builder_preview` and `inventory_snapshot.houseStorage` fields, the gather state/rejection/station aliases, and the public gather node/station shapes. Existing 2.x clients remain wire-compatible: unknown additive fields and message types may be ignored. v2.1.0 records `loop_update` as a first-class server progression message. v2.0.0 accepts the house-auction protocol surface: auction open/bid/cancel client intents, auction state and settlement server broadcasts, and widened `property_result` action/reason values. Clients with exhaustive `property_result.action` or `property_result.reason` handling must tolerate the auction values listed here.
 
 This document is documentation only. It does not change shared types, runtime handlers, generated artifacts, clients, deployment state, or live service behavior.
 
@@ -157,7 +157,7 @@ interface BaseMessage {
 | --- | --- |
 | `welcome` | Server accepts the connection and returns a protocol/application version string. |
 | `login_ack` | Returns login result, player identity, token fields, and optional failure reason. |
-| `world_state` | Initial world snapshot containing `map`, the current player, and nearby players. |
+| `world_state` | Initial world snapshot containing `map`, the current player, nearby players, and optional server-authored `builder_preview`. |
 | `move_result` | Result of a move intent. The server returns authoritative coordinates and optional `map`. |
 | `loop_update` | Objective/progression update. The loop payload may include Rookguard quest, Codex profession state, and read-only onward route projections. |
 | `player_moved` | Broadcast that another player moved. |
@@ -172,7 +172,7 @@ interface BaseMessage {
 | `tem_witness_request` | Witness request for a heat penalty. |
 | `drop_item_result` | Drop request result. |
 | `pickup_item_result` | Pickup request result. |
-| `inventory_snapshot` | Full inventory snapshot. |
+| `inventory_snapshot` | Full inventory snapshot with optional server-authored `houseStorage`. |
 | `world_item_added` | Broadcast that an item appeared in the world. |
 | `world_item_removed` | Broadcast that an item was removed from the world. |
 | `combat_resolved` | Broadcast resolved combat kill outcome. |
@@ -443,7 +443,7 @@ Returns login result, player identity, token fields, expiry where present, and o
 
 #### `world_state`
 
-Initial world snapshot containing `map`, current player, and nearby players.
+Initial world snapshot containing `map`, current player, nearby players, and optional server-authored `builder_preview`. The preview is a read-only projection and does not grant client authority.
 
 #### `move_result`
 
@@ -500,7 +500,7 @@ Pickup request result.
 
 #### `inventory_snapshot`
 
-Full inventory snapshot.
+Full inventory snapshot. Optional `houseStorage` contains items stored in a house the player owns; omission remains valid for older servers and clients.
 
 #### `world_item_added`
 

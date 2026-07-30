@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import codexPublicGraph from '@codex/out/codex-public.graph.json';
+import codexPublicGraph from '../data/codexPublicGraph.json';
 
 export interface CodexPublicNode {
   id: string;

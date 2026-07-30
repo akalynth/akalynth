@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 /**
  * Client -> Server messages.
  *
- * Mirrors `packages/shared/protocol.ts` (PROTOCOL_VERSION 2.1.0). protocol.ts is the
+ * Mirrors `packages/shared/protocol.ts` (PROTOCOL_VERSION 2.2.0). protocol.ts is the
  * authoritative contract; this file follows it and must not diverge from it.
  *
  * Encoding is hand-rolled in [MessageSerializer.encodeClient] (the client never relies on

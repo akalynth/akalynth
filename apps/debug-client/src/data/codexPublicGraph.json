@@ -1,0 +1,629 @@
+[
+  {
+    "id": "artifacts-codex",
+    "type": "lore",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "Artifacts Codex",
+    "category": "Codices",
+    "summary": "Relics of Power.",
+    "body": "Heroes change history, villains corrupt it, artifacts preserve it. Volume I gathers the eight Relics of Power, beginning with the First Codex — the oldest written record, said to update itself whenever the world changes.",
+    "assets": [
+      "assets/codex/artifacts-codex.png"
+    ],
+    "related": [
+      "heroes-codex",
+      "chronicle-of-ages"
+    ],
+    "source_ref": "artifacts-codex",
+    "proof": {
+      "object_id": "artifacts-codex",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH_ARTIFACTS_CODEX_V1",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
+  },
+  {
+    "id": "chronicle-of-ages",
+    "type": "lore",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "Chronicle of Ages",
+    "category": "Codices",
+    "summary": "Events That Changed The World.",
+    "body": "Cities rise, heroes die, kingdoms vanish; what remains are the moments that changed everything. Volume I opens with the First Binding — the dawn of remembered civilization.",
+    "assets": [
+      "assets/codex/chronicle-of-ages.png"
+    ],
+    "related": [
+      "high-city",
+      "heroes-codex"
+    ],
+    "source_ref": "chronicle-of-ages",
+    "proof": {
+      "object_id": "chronicle-of-ages",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH_CHRONICLE_OF_AGES_V1",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
+  },
+  {
+    "id": "chronoshell-turtle",
+    "type": "creature",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "The Chronoshell Turtle",
+    "category": "Creatures",
+    "summary": "Keeper of Ages · Shell of Millennia · Threat: Unknown",
+    "body": "An ancient turtle whose shell is said to hold millennia; time moves differently in its wake.",
+    "assets": [
+      "assets/codex/chronoshell-turtle.png"
+    ],
+    "related": [],
+    "source_ref": "chronoshell-turtle",
+    "proof": {
+      "object_id": "chronoshell-turtle",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "codex.html creature codex",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
+  },
+  {
+    "id": "cindervale",
+    "type": "place",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "Cindervale",
+    "category": "Cities",
+    "summary": "Frontier of Ash — a harsh stronghold at the edge of the Emberwilds.",
+    "body": "Cindervale protects trade routes and stands against volcanic threats. Known for the Watch Bastions, the Frontier Markets, the Ashwardens, the Expedition Guilds, and the Ember Gates.",
+    "assets": [
+      "assets/akalynth/visuals/cards/09-cinderwatch-frontier.card-800x1000.webp"
+    ],
+    "related": [
+      "forgehold",
+      "high-city"
+    ],
+    "source_ref": "cindervale",
+    "proof": {
+      "object_id": "cindervale",
+      "status": "accepted",
+      "status_label": "has-route-slice",
+      "source_ref": "AKALYNTH_CITIES_SUMMARY_V1",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
+  },
+  {
+    "id": "dreamweaver",
+    "type": "creature",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "The Dreamweaver",
+    "category": "Creatures",
+    "summary": "Architect of Dreams · Weaver of Possibilities · Threat: High (Indirect)",
+    "body": "An architect of dreams that weaves possibility itself; its threat is subtle and indirect.",
+    "assets": [
+      "assets/codex/dreamweaver.png"
+    ],
+    "related": [
+      "moonspire"
+    ],
+    "source_ref": "dreamweaver",
+    "proof": {
+      "object_id": "dreamweaver",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "codex.html creature codex",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
+  },
+  {
+    "id": "dungeon-codex",
+    "type": "lore",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "Dungeon Codex",
+    "category": "Codices",
+    "summary": "Places Where History Still Breathes.",
+    "body": "A dungeon is a wound in history that has not yet closed. Volume I begins with the First Archive — the vault beneath High City that preserves the earliest laws, treaties, maps, and forbidden memory records.",
+    "assets": [
+      "assets/codex/dungeon-codex.png"
+    ],
+    "related": [
+      "high-city"
+    ],
+    "source_ref": "dungeon-codex",
+    "proof": {
+      "object_id": "dungeon-codex",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH_DUNGEON_CODEX_V1",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
+  },
+  {
+    "id": "echo-stalker",
+    "type": "creature",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "The Echo Stalker",
+    "category": "Creatures",
+    "summary": "Shadow Hunter of Forgotten Sounds · Threat: Extreme",
+    "body": "A shadow that hunts by forgotten sounds; it stalks the spaces between what was heard and what was meant.",
+    "assets": [
+      "assets/codex/echo-stalker.png"
+    ],
+    "related": [],
+    "source_ref": "echo-stalker",
+    "proof": {
+      "object_id": "echo-stalker",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "codex.html creature codex",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
+  },
+  {
+    "id": "ember-road",
+    "type": "route",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "The Ember Road",
+    "category": "Places",
+    "summary": "High City to the Forgehold Outer Gate.",
+    "body": "The first route expansion of Akalynth: regional travel from High City through the Emberwilds to the Forgehold Outer Gate.",
+    "assets": [],
+    "related": [
+      "high-city",
+      "forgehold",
+      "emberwilds"
+    ],
+    "source_ref": "ember-road",
+    "proof": {
+      "object_id": "ember-road",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
+  },
+  {
+    "id": "emberwilds-atlas",
+    "type": "lore",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "Emberwilds Atlas",
+    "category": "Codices",
+    "summary": "The volcanic frontier, mapped.",
+    "body": "A regional atlas of the Emberwilds — the living-volcano frontier anchored by Forgehold Citadel and watched from the ash-edge by Cindervale.",
+    "assets": [
+      "assets/codex/emberwilds-atlas.png"
+    ],
+    "related": [
+      "forgehold",
+      "cindervale"
+    ],
+    "source_ref": "emberwilds-atlas",
+    "proof": {
+      "object_id": "emberwilds-atlas",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH world atlas",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
+  },
+  {
+    "id": "emberwilds",
+    "type": "region",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "The Emberwilds",
+    "category": "Places",
+    "summary": "The living-volcano frontier.",
+    "body": "A volcanic frontier region anchored by Forgehold Citadel and watched from the ash-edge by Cindervale. Crossed by the Ember Road.",
+    "assets": [],
+    "related": [
+      "forgehold",
+      "cindervale",
+      "ember-road"
+    ],
+    "source_ref": "emberwilds",
+    "proof": {
+      "object_id": "emberwilds",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
+  },
+  {
+    "id": "factions-codex",
+    "type": "lore",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "Factions Codex",
+    "category": "Codices",
+    "summary": "Powers That Shape the World.",
+    "body": "The institutions whose laws and beliefs shape Akalynth. Volume I opens with the Codexborn — keepers of order and guardians of recorded truth, founded by the First Archivist after the Great Accord.",
+    "assets": [
+      "assets/codex/factions-codex.png"
+    ],
+    "related": [
+      "high-city"
+    ],
+    "source_ref": "factions-codex",
+    "proof": {
+      "object_id": "factions-codex",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH_FACTIONS_CODEX_V1",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
+  },
+  {
+    "id": "flamebound",
+    "type": "faction",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "The Flamebound",
+    "category": "Factions",
+    "summary": "Forge-sworn of the Emberwilds.",
+    "body": "The faction of Forgehold — forge-sworn keepers of Soulsteel and the Heartforge. Their domain is Strength; their origin role is the Flamekeeper.",
+    "assets": [],
+    "related": [
+      "forgehold",
+      "soulsteel",
+      "heartforge"
+    ],
+    "source_ref": "flamebound",
+    "proof": {
+      "object_id": "flamebound",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH_FACTIONS_CODEX_V1",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
+  },
+  {
+    "id": "forgehold",
+    "type": "place",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "Forgehold Citadel",
+    "category": "Cities",
+    "summary": "Heart of the Emberwilds - an industrial fortress carved into a living volcano.",
+    "body": "Forgehold Citadel is carved into a living volcano at the heart of the Emberwilds. Home of the Flamebound, it is where Soulsteel is forged and the Heartforge burns. Its civic virtue is Strength.",
+    "assets": [
+      "assets/akalynth/visuals/cards/03-forgehold.card-800x1000.webp"
+    ],
+    "related": [
+      "high-city",
+      "ember-road",
+      "emberwilds",
+      "flamebound",
+      "soulsteel",
+      "heartforge"
+    ],
+    "source_ref": "forgehold",
+    "proof": {
+      "object_id": "forgehold",
+      "status": "accepted",
+      "status_label": "has-route-slice",
+      "source_ref": "AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
+  },
+  {
+    "id": "heartforge",
+    "type": "place",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "The Heartforge",
+    "category": "Places",
+    "summary": "The great forge at the heart of Forgehold.",
+    "body": "The Heartforge burns at the centre of Forgehold Citadel — where Soulsteel is made. (Its Trial Chamber is a separate, unreleased dungeon.)",
+    "assets": [],
+    "related": [
+      "forgehold",
+      "soulsteel"
+    ],
+    "source_ref": "heartforge",
+    "proof": {
+      "object_id": "heartforge",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
+  },
+  {
+    "id": "heroes-codex",
+    "type": "lore",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "Heroes Codex",
+    "category": "Codices",
+    "summary": "The First Legends.",
+    "body": "Civilizations are forged by those who dared leave their mark upon eternity. Volume I begins with the First Archivist — the One Who Refused Forgetting — whose recording of the Great Accord kept civilization from falling into ignorance.",
+    "assets": [
+      "assets/codex/heroes-codex.png"
+    ],
+    "related": [
+      "factions-codex",
+      "chronicle-of-ages"
+    ],
+    "source_ref": "heroes-codex",
+    "proof": {
+      "object_id": "heroes-codex",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH_HEROES_CODEX_V1",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
+  },
+  {
+    "id": "high-city",
+    "type": "place",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "High City",
+    "category": "Cities",
+    "summary": "Crown of Convergence — capital of Akalynth and birthplace of the Great Accord.",
+    "body": "High City rises atop converging ley currents as the political, cultural, and intellectual heart of Akalynth. Known for the Trinity Nexus, the Great Archive Vaults, the Sky Spires, the Accord Chambers, and the Conclave Citadel.",
+    "assets": [
+      "assets/akalynth/visuals/cards/01-high-city-dawn.card-800x1000.webp"
+    ],
+    "related": [
+      "forgehold",
+      "veridium-port",
+      "moonspire",
+      "cindervale"
+    ],
+    "source_ref": "high-city",
+    "proof": {
+      "object_id": "high-city",
+      "status": "accepted",
+      "status_label": "has-route-slice",
+      "source_ref": "AKALYNTH_CITIES_SUMMARY_V1",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
+  },
+  {
+    "id": "memory-serpent",
+    "type": "creature",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "The Memory Serpent",
+    "category": "Creatures",
+    "summary": "Guardian of Forgotten Truths · Warden of the Deep Mind · Threat: Extreme",
+    "body": "A serpent that guards forgotten truths in the deep mind — warden of what the world tried to forget.",
+    "assets": [
+      "assets/codex/memory-serpent.png"
+    ],
+    "related": [],
+    "source_ref": "memory-serpent",
+    "proof": {
+      "object_id": "memory-serpent",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "codex.html creature codex",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
+  },
+  {
+    "id": "moonspire",
+    "type": "place",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "Moonspire",
+    "category": "Cities",
+    "summary": "City of Dreams — spiritual capital built around a great Dream Sanctum.",
+    "body": "Pilgrims come to Moonspire seeking visions, memory exploration, and dream rites. Known for the Dream Sanctums, the Reflection Pools, the Memory Gardens, the Moon Archives, and the Silent Observatory.",
+    "assets": [],
+    "related": [
+      "high-city",
+      "dreamweaver"
+    ],
+    "source_ref": "moonspire",
+    "proof": {
+      "object_id": "moonspire",
+      "status": "accepted",
+      "status_label": "has-route-slice",
+      "source_ref": "AKALYNTH_CITIES_SUMMARY_V1",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
+  },
+  {
+    "id": "origins-codex",
+    "type": "lore",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "Origins Codex",
+    "category": "Civilization Codices",
+    "summary": "Volume I — Before the First Binding.",
+    "body": "Six origins define how you enter Akalynth: where you start, which faction notices you first, and which profession path feels natural. Rookguard vocations are the tutorial mark; Origins Codex is the long road — Flamekeeper at Forgehold, Archivist at High City, and the rest of the lane.",
+    "assets": [],
+    "related": [
+      "heroes-codex",
+      "factions-codex",
+      "rookguard",
+      "forgehold"
+    ],
+    "source_ref": "origins-codex",
+    "proof": {
+      "object_id": "origins-codex",
+      "status": "accepted",
+      "status_label": "has-route-slice",
+      "source_ref": "AKALYNTH_GAMEPLAY_LANE_V1",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
+  },
+  {
+    "id": "play-build-govern-surface",
+    "type": "system",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "Play, Build, Govern",
+    "category": "Systems",
+    "summary": "Akalynth as a persistent MMO world with creator tools and proof-backed operations.",
+    "body": "Players explore the world. Builders create maps, quests, homes, NPCs, and events. Operators promote changes through explicit review, receipts, and replayable evidence.",
+    "assets": [],
+    "related": [
+      "rookguard",
+      "high-city",
+      "game-loop-bible"
+    ],
+    "source_ref": "play-build-govern-surface",
+    "proof": {
+      "object_id": "play-build-govern-surface",
+      "status": "accepted",
+      "status_label": "has-route-slice",
+      "source_ref": "goal-objective:1c560753-7476-45d5-9b6e-02b0e10561f7",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
+  },
+  {
+    "id": "rookguard",
+    "type": "place",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "Rookguard",
+    "category": "World Foundation",
+    "summary": "Threshold keep — where the Codex Path begins.",
+    "body": "Rookguard is the bounded onboarding keep: move rune, chat signal, Tem challenge, training slime, Heroes Codex vocation, and the gate to High City. Every step is receipt-backed; vocation is identity proof, not power.",
+    "assets": [],
+    "related": [
+      "high-city",
+      "heroes-codex",
+      "forgehold"
+    ],
+    "source_ref": "rookguard",
+    "proof": {
+      "object_id": "rookguard",
+      "status": "accepted",
+      "status_label": "has-route-slice",
+      "source_ref": "AKALYNTH_ROOKGUARD_CITY_EXPANSION_V1",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
+  },
+  {
+    "id": "soulsteel",
+    "type": "material",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "Soulsteel",
+    "category": "Materials",
+    "summary": "The signature alloy of Forgehold.",
+    "body": "A material forged and stabilized at the Heartforge of Forgehold; the core of the Forgehold crafting systems.",
+    "assets": [],
+    "related": [
+      "forgehold",
+      "flamebound",
+      "heartforge"
+    ],
+    "source_ref": "soulsteel",
+    "proof": {
+      "object_id": "soulsteel",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH_SOULSTEEL_STABILIZATION_V1",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
+  },
+  {
+    "id": "veridium-port",
+    "type": "place",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "Veridium Port",
+    "category": "Cities",
+    "summary": "Gateway of the Western Sea — the largest harbor in Akalynth.",
+    "body": "Veridium Port connects the great civilizations through trade, exploration, and information. Known for the Grand Harbor, the Merchant Guilds, the Sea Archives, the Explorer Houses, and the Crystal Lighthouse.",
+    "assets": [],
+    "related": [
+      "high-city"
+    ],
+    "source_ref": "veridium-port",
+    "proof": {
+      "object_id": "veridium-port",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH_CITIES_SUMMARY_V1",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
+  },
+  {
+    "id": "void-whale",
+    "type": "creature",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "The Void Whale",
+    "category": "Creatures",
+    "summary": "Skybound Leviathan · Herald of the Gap · Threat: Catastrophic",
+    "body": "Not a creature of the stars but of absence — a vast leviathan that drifts where the world thins.",
+    "assets": [
+      "assets/codex/void-whale.png"
+    ],
+    "related": [],
+    "source_ref": "void-whale",
+    "proof": {
+      "object_id": "void-whale",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "codex.html creature codex",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
+  },
+  {
+    "id": "witness-moth",
+    "type": "creature",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "The Witness Moth",
+    "category": "Creatures",
+    "summary": "Keeper of Seen Truths · Recorder of All That Is · Threat: High",
+    "body": "A luminous moth said to record everything it witnesses — memory, evidence, and omen made flesh.",
+    "assets": [
+      "assets/codex/witness-moth.png"
+    ],
+    "related": [
+      "high-city"
+    ],
+    "source_ref": "witness-moth",
+    "proof": {
+      "object_id": "witness-moth",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "codex.html creature codex",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
+  }
+]
