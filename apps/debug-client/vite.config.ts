@@ -9,14 +9,17 @@ const monorepoReposRoot = path.resolve(__dirname, '../../../..');
 
 function resolveCodexRoot(): string {
   const envRoot = process.env.AKALYNTH_CODEX_ROOT;
-  if (envRoot && existsSync(envRoot)) return envRoot;
+  const hasPublicGraph = (candidate: string) =>
+    existsSync(path.join(candidate, 'out', 'codex-public.graph.json'));
+  if (envRoot && hasPublicGraph(envRoot)) return envRoot;
   const candidates = [
     path.resolve(monorepoReposRoot, 'akalynth-codex'),
     path.resolve(__dirname, '../../../akalynth-codex'),
     '/home/sovereign/akalynth-ops/repos/akalynth-codex',
+    path.resolve(__dirname, 'codex-fallback'),
   ];
   for (const candidate of candidates) {
-    if (existsSync(candidate)) return candidate;
+    if (hasPublicGraph(candidate)) return candidate;
   }
   return candidates[0];
 }

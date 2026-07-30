@@ -90,3 +90,69 @@ Local documentation closure requires:
 - no packet files are staged without commit authority; and
 - final custody reports local file, commit, push, and deployment status
   separately.
+
+## Subsequent implementation and publication custody
+
+The non-claims above bound the accepted design decision and its original
+documentation-only recording lane. Separately authorized
+[`IMPLEMENTATION_SLICE_01.md`](./IMPLEMENTATION_SLICE_01.md) records a partial,
+server-private, non-activating implementation.
+
+The later authority for exactly two scoped commits and an `origin`
+feature-branch push does not authorize deployment, release, gameplay
+activation, merge to a canonical branch, or a conformance claim. Those
+boundaries remain separately governed.
+
+## Subsequent publication-gate repair boundary
+
+Project direction separately authorized closure of every finding surfaced by
+the required publication gates before the feature-branch push. That maintenance
+adjunct is limited to:
+
+- `packages/shared/protocol.ts`;
+- `packages/shared/protocol.golden.json`;
+- `packages/shared/scripts/generate-protocol-golden.ts`;
+- `packages/shared/builderDraft.ts`;
+- `docs/PROTOCOL.md`;
+- Android protocol-version mirrors, comments, and parity tests;
+- `apps/server/tools/verify-rate-limits.ts`;
+- `scripts/verify-web-visual-assets.mjs`;
+- `scripts/smoke-web-play-shell.mjs`;
+- `scripts/verify_mvp.sh`; and
+- append-only authority, compatibility, verification, and custody evidence in
+  this decision packet.
+
+The repair records the already-present additive surface at protocol v2.2.0. It
+also makes the default rate-limit verifier avoid exhausting its own shared IP
+budget before its dedicated flood scenario, aligns a visual guard with the
+already-implemented presentation layout, replaces a Node-only checksum import
+with a browser-safe byte-equivalent implementation, and gives the Web smoke
+harness direct custody of its Vite child process. The MVP verifier likewise
+owns its direct server child, detects occupied ports without requiring `lsof`,
+and only clears stale Akalynth listeners from this worktree. Runtime rate
+limits, anti-cheat heat, Tem policy, gameplay behavior, and checksum output are
+unchanged.
+
+The repair does not add message or handler semantics, expose the consequence
+kernel on a wire protocol, activate ECE/RCE/MCE/CRB gameplay behavior,
+establish package conformance, merge the branch, or authorize deployment or
+release.
+
+## Remote PR-gate repair boundary
+
+Project direction separately approved a lease-protected amendment of the
+second commit after PR #407 exposed a clean-runner debug-client dependency on
+an absent generated public Codex graph. That repair is limited to:
+
+- `apps/debug-client/vite.config.ts`;
+- `apps/debug-client/tsconfig.json`;
+- `apps/debug-client/scripts/verify-nine-slice-panel.mjs`;
+- `apps/debug-client/codex-fallback/**`; and
+- append-only authority, compatibility, verification, and custody evidence in
+  this decision packet.
+
+The fallback is an empty public graph and is selected only when no configured
+Codex root contains `out/codex-public.graph.json`. A real generated public
+graph retains precedence. The fallback does not publish, duplicate, or invent
+Codex content and creates no canon, gameplay, protocol, merge, release, or
+deployment claim.

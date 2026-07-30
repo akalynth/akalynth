@@ -115,14 +115,24 @@ function runLogged(command, args, options, logFile) {
   });
 }
 
-async function stopProcess(child) {
-  if (!child || child.killed) return;
-  child.kill('SIGTERM');
-  const stopped = await Promise.race([
+function processExited(child) {
+  return child.exitCode !== null || child.signalCode !== null;
+}
+
+async function waitForProcessExit(child, timeoutMs) {
+  if (processExited(child)) return true;
+  return Promise.race([
     new Promise((resolve) => child.once('close', () => resolve(true))),
-    sleep(3500).then(() => false),
+    sleep(timeoutMs).then(() => false),
   ]);
-  if (!stopped && !child.killed) child.kill('SIGKILL');
+}
+
+async function stopProcess(child) {
+  if (!child || processExited(child)) return;
+  child.kill('SIGTERM');
+  if (await waitForProcessExit(child, 3500)) return;
+  child.kill('SIGKILL');
+  await waitForProcessExit(child, 3500);
 }
 
 function readJsonFile(file) {
@@ -399,17 +409,22 @@ async function main() {
 
   try {
     fakeServer = args.fakePlayable ? await startFakePlayableServer(args.host) : null;
-    const childEnv = fakeServer
-      ? {
-          ...process.env,
-          VITE_HTTP_BASE: fakeServer.httpBase,
-          VITE_WS_BASE: fakeServer.wsBase,
-        }
-      : process.env;
+    const childEnv = {
+      ...process.env,
+      NODE_ENV: 'development',
+      ...(fakeServer
+        ? {
+            VITE_HTTP_BASE: fakeServer.httpBase,
+            VITE_WS_BASE: fakeServer.wsBase,
+          }
+        : {}),
+    };
+    const debugClientRoot = path.join(repoRoot, 'apps/debug-client');
+    const viteCli = path.join(debugClientRoot, 'node_modules/vite/bin/vite.js');
     vite = spawnLogged(
-      'npm',
-      ['-w', 'apps/debug-client', 'run', 'dev', '--', '--host', args.host, '--port', String(port), '--strictPort'],
-      { cwd: repoRoot, env: childEnv },
+      process.execPath,
+      [viteCli, '--host', args.host, '--port', String(port), '--strictPort'],
+      { cwd: debugClientRoot, env: childEnv },
       viteLog
     );
     await waitForUrl(baseUrl);

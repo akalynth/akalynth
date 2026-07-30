@@ -218,6 +218,48 @@ The record is durable in the local workspace. Shared repository adoption
 remains incomplete until a separately authorized commit records this packet and
 its navigation updates.
 
+### Subsequent implementation and publication authority
+
+The authority and custody fields above preserve the state when this
+documentation-only record was created. Project direction later issued five
+separate directives in the same Codex thread:
+
+1. `Approve implementation`
+2. `execute the two commits and feature push to origin; no deployment.`
+3. `Approve option 1 — recommended: retain exactly two commits by folding the
+   previously accepted design-provenance contract and adoption packet into the
+   first governance commit.`
+4. `Plan to fix all findings and pump version then apply and Authorize the
+   feature-branch push`
+5. In response to the explicit request to preserve exactly two commits by
+   amending commit 2 and updating the feature branch with
+   `--force-with-lease` after PR #407 exposed a remote-only CI dependency,
+   project direction replied `Approved`.
+
+The first directive authorizes only the bounded, server-private
+[`IMPLEMENTATION_SLICE_01.md`](./IMPLEMENTATION_SLICE_01.md). The second
+authorizes exactly two scoped commits—the governance/decision record and that
+implementation slice—and a feature-branch push to `origin`.
+
+The third directive authorizes the prerequisite design-provenance contract and
+adoption packet to be folded into the first governance commit rather than
+creating a third prerequisite commit.
+
+The fourth directive authorizes bounded repair of every finding surfaced by
+the required publication gates, the additive protocol bump to v2.2.0, amendment
+of the unpublished second commit while retaining exactly two commits, and the
+feature-branch push. It does not grant deployment, merge, release, gameplay
+activation, or new protocol-semantic authority.
+
+The fifth directive authorizes the bounded PR-gate repair, amendment of the
+second commit, and lease-protected feature-branch update. It does not authorize
+merge, deployment, release, gameplay activation, or public Codex publication.
+
+These later directives do not amend either hashed normative attachment,
+G1–G15, V1 scope, canon, or this decision's design-only claim. They do not
+authorize deployment, release, gameplay activation, merge to a canonical
+branch, or a conformance claim.
+
 ## Change control and supersession
 
 This decision may be changed only by:

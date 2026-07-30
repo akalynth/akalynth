@@ -88,3 +88,65 @@ runtime_change: NONE
 implementation_authority: NONE
 conformance_result: NOT_RUN
 ```
+
+## Subsequent implementation custody note
+
+The later-authorized
+[`IMPLEMENTATION_SLICE_01.md`](./IMPLEMENTATION_SLICE_01.md) is server-private
+and non-activating. It does not change this design-compatibility conclusion,
+current runtime behavior, G1–G15, V1 scope, or canon.
+
+Focused contract-kernel verification is implementation evidence, not full
+package conformance. Runtime conformance and release readiness remain not run
+and unclaimed.
+
+## Subsequent Protocol Guardian compatibility note
+
+Contract touched: the shared WebSocket protocol source, canonical golden
+snapshot, protocol documentation, and Android version mirror and parity tests.
+
+Compatibility impact: additive, non-breaking minor-version movement from
+v2.1.0 to v2.2.0 under the existing major-version compatibility rule. The
+already-present gather, refine, delivery, optional inventory/storage, and
+builder-preview shapes are now recorded by the golden snapshot. This
+publication lane adds no new wire-message or handler semantics.
+
+Client action required: the Android mirror and parity tests now declare v2.2.0,
+including backward and forward minor-skew coverage. The debug client requires
+only a normal rebuild; existing v2.x clients continue to tolerate minor and
+patch skew. A server emits v2.2.0 only from a build containing the shared
+version change.
+
+The same gate-closure pass reorders only the default rate-limit verifier
+scenarios, corrects a stale visual-verifier expectation, replaces the draft
+checksum's Node-only import with a browser-safe byte-equivalent implementation,
+gives the smoke harness direct process custody, and gives the MVP verifier
+direct custody of its server process with a no-`lsof` port-detection fallback.
+These changes do not alter runtime rate limits, anti-cheat heat, Tem policy,
+gameplay behavior, or checksum output.
+
+Verification:
+
+- `env -u NODE_ENV npm run verify -- --only protocol-drift --format json`:
+  pass, 2/2;
+- `bash scripts/verify_protocol_sync.sh`: pass;
+- Android `ProtocolParityTest`: pass;
+- shared typecheck/build and debug-client production build: pass;
+- builder-draft checksum regression: pass, 2/2;
+- focused rate-limit verifier: pass with runtime settings unchanged; and
+- `env -u NODE_ENV npm run verify`: pass, 33/33, against an isolated local
+  server and a temporary generated Codex projection.
+
+## Subsequent public-Codex build-fallback note
+
+PR #407 exposed that the clean GitHub Actions checkout did not contain the
+separately generated `akalynth-codex/out/codex-public.graph.json` artifact.
+The approved repair adds an empty, tracked build fallback and requires Vite to
+select candidate roots by the presence of that exact artifact rather than by
+directory existence alone. TypeScript follows the same real-first,
+fallback-last order.
+
+The empty graph contains no accepted object, lore, evidence, or private
+projection. It does not change public-Codex authority, publish content, create
+canon, or alter server/gameplay/protocol behavior. A valid external generated
+public graph always takes precedence.

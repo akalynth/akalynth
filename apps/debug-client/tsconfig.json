@@ -16,7 +16,7 @@
     "baseUrl": ".",
     "paths": {
       "@shared/*": ["../../packages/shared/*"],
-      "@codex/*": ["../../../akalynth-codex/*"]
+      "@codex/*": ["../../../akalynth-codex/*", "codex-fallback/*"]
     }
   },
   "include": ["src", "vite.config.ts"]

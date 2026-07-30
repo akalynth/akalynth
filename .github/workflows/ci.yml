@@ -366,6 +366,10 @@ jobs:
         if: needs.changes.outputs.server_changed == 'true' || needs.changes.outputs.shared_changed == 'true' || needs.changes.outputs.protocol_changed == 'true'
         run: npm -w apps/server run verify:quick
 
+      - name: Verify consequence contract kernel
+        if: needs.changes.outputs.server_changed == 'true' || needs.changes.outputs.shared_changed == 'true' || needs.changes.outputs.packages_changed == 'true'
+        run: npm -w apps/server run test:consequence-contracts
+
       - name: Build debug client
         if: needs.changes.outputs.debug_client_changed == 'true' || needs.changes.outputs.shared_changed == 'true' || needs.changes.outputs.protocol_changed == 'true'
         run: npm -w apps/debug-client run build
@@ -521,6 +525,7 @@ jobs:
         # rate-limits verifier are intentionally excluded here.
         run: |
           cd apps/server
+          npm run test:consequence-contracts
           npm run verify:npc-recognition
           npm run verify:npc-dialogue
           npm run verify:presence

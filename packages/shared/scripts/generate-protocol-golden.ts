@@ -35,6 +35,9 @@ function main(): void {
     process.exit(1);
   }
 
+  // Golden metadata must be stable across worktrees and machines.
+  golden.source.path = path.relative(REPO_ROOT, PROTOCOL_PATH).split(path.sep).join('/');
+
   // Write golden snapshot
   fs.writeFileSync(GOLDEN_PATH, JSON.stringify(golden, null, 2) + '\n', 'utf-8');
 

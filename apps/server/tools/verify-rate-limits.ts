@@ -273,10 +273,14 @@ async function main() {
   const scenarioArg = args.find((a) => a.startsWith('--scenario='))?.split('=')[1];
 
   const scenarios = {
-    ip_flood: testIpFlood,
     move_spam: testMoveSpam,
     chat_spam: testChatSpam,
     attack_spam: testAttackSpam,
+    // The flood case intentionally exhausts the per-IP connection budget.
+    // Keep it last for the default all-scenarios run so the verifier does not
+    // deny its own move/chat/attack setup connections. CI's named scenarios
+    // remain isolated on fresh servers and are unaffected by this ordering.
+    ip_flood: testIpFlood,
   };
 
   const results: TestResult[] = [];

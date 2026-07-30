@@ -41,6 +41,8 @@ const files = [
   'src/components/UiStatBar.tsx',
   'src/components/PlayShellDock.tsx',
   'src/components/CodexShelfPanel.tsx',
+  'codex-fallback/README.md',
+  'codex-fallback/out/codex-public.graph.json',
 ];
 
 for (const rel of files) requireFile(rel);
@@ -70,6 +72,43 @@ requirePattern('codex repo path', /akalynth-codex/, codexPaths, 'src/lib/codexPa
 
 const vite = readFileSync(resolve(root, 'vite.config.ts'), 'utf8');
 requirePattern('vite @codex alias', /akalynth-codex/, vite, 'vite.config.ts');
+requirePattern('vite validates Codex graph artifact', /hasPublicGraph/, vite, 'vite.config.ts');
+requirePattern('vite Codex fallback', /codex-fallback/, vite, 'vite.config.ts');
+const viteFallback = "path.resolve(__dirname, 'codex-fallback')";
+const viteFallbackIndex = vite.indexOf(viteFallback);
+const viteExternalCandidates = [
+  "path.resolve(monorepoReposRoot, 'akalynth-codex')",
+  "path.resolve(__dirname, '../../../akalynth-codex')",
+  "'/home/sovereign/akalynth-ops/repos/akalynth-codex'",
+];
+if (
+  viteFallbackIndex < 0
+  || viteExternalCandidates.some((candidate) => {
+    const candidateIndex = vite.indexOf(candidate);
+    return candidateIndex < 0 || candidateIndex >= viteFallbackIndex;
+  })
+) {
+  console.error('FAIL  real Codex candidates must precede the build fallback');
+  process.exit(1);
+}
+console.log('PASS  real Codex candidates precede fallback');
+
+const tsconfig = read('tsconfig.json');
+const tsconfigJson = JSON.parse(tsconfig);
+const tsCodexPaths = tsconfigJson?.compilerOptions?.paths?.['@codex/*'];
+const expectedTsCodexPaths = ['../../../akalynth-codex/*', 'codex-fallback/*'];
+if (JSON.stringify(tsCodexPaths) !== JSON.stringify(expectedTsCodexPaths)) {
+  console.error('FAIL  TypeScript Codex paths must keep the real source before the fallback');
+  process.exit(1);
+}
+console.log('PASS  TypeScript Codex source precedes fallback');
+
+const fallbackGraph = JSON.parse(read('codex-fallback/out/codex-public.graph.json'));
+if (!Array.isArray(fallbackGraph) || fallbackGraph.length !== 0) {
+  console.error('FAIL  Codex fallback must be an empty public graph');
+  process.exit(1);
+}
+console.log('PASS  empty Codex public graph fallback');
 
 const app = read('src/App.tsx');
 requirePattern('HudChromePanel wired', /HudChromePanel/, app, 'src/App.tsx');

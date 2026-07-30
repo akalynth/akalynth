@@ -397,7 +397,7 @@ function validateMobilePlayShellContract() {
   assertNotContains(appRel, app, '(state.ui.stage < 1 || !hasWorldPlayer || accountPanelMode)', 'mobile play entry held open by account panel mode after play starts');
   assertContains(appRel, app, '{showPlayEntry && (', 'account/world entry render branch');
   assertContains(appRel, app, '!presentationEntryMode && !phoneLandscape', 'desktop HUD stays out of mobile landscape play surface');
-  assertContains(appRel, app, '{presentationMode && phoneLandscape && showPlayShell && (', 'presentation motion rail waits for world player');
+  assertContains(appRel, app, '{presentationMode && showPlayShell && (', 'presentation objective rail waits for world player');
   assertContains(appRel, app, '<DPad onMove={api.sendMove} onRelease={api.releaseMove} onStopAll={api.stopMoves} />', 'DPad remains intent-only movement control');
   assertContains(appRel, app, '<ActionsPanel', 'primary action panel remains wired');
 
@@ -449,7 +449,8 @@ function validateMobilePlayShellContract() {
 
   const webShellSmokeRel = 'scripts/smoke-web-play-shell.mjs';
   const webShellSmoke = read(webShellSmokeRel);
-  assertContains(webShellSmokeRel, webShellSmoke, "['-w', 'apps/debug-client', 'run', 'dev'", 'root web smoke starts debug-client Vite');
+  assertContains(webShellSmokeRel, webShellSmoke, "const viteCli = path.join(debugClientRoot, 'node_modules/vite/bin/vite.js');", 'root web smoke resolves debug-client Vite directly');
+  assertContains(webShellSmokeRel, webShellSmoke, "process.execPath", 'root web smoke launches Vite without an orphaning package-manager wrapper');
   assertContains(webShellSmokeRel, webShellSmoke, 'apps/debug-client/scripts/mobile-playable-smoke.mjs', 'root web smoke runs mobile playable smoke');
   assertContains(webShellSmokeRel, webShellSmoke, 'AKALYNTH_WEB_PLAY_SHELL_SMOKE_V1', 'root web smoke writes stable report id');
   assertContains(webShellSmokeRel, webShellSmoke, '--fake-playable', 'root web smoke supports source-only fake playable peer');

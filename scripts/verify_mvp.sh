@@ -5,6 +5,7 @@ set -euo pipefail
 set -o monitor
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SERVER_DIR="$ROOT_DIR/apps/server"
+SERVER_ENTRYPOINT="$ROOT_DIR/dist/server/apps/server/src/index.js"
 LOG_DIR="${TMPDIR:-/tmp}/akalynth-verify"
 RECEIPTS_ENV_SET=0
 if [[ -n "${AKALYNTH_RECEIPT_CHAIN_PATH:-}" || -n "${AKALYNTH_RECEIPTS_PATH:-}" || -n "${RECEIPTS:-}" ]]; then
@@ -71,12 +72,12 @@ cleanup() {
   cleanup_bg
   if [[ -n "${SERVER_PID:-}" ]] && kill -0 "$SERVER_PID" 2>/dev/null; then
     log "Stopping server (pid=$SERVER_PID)…"
-    if command -v pkill >/dev/null 2>&1; then pkill -P "$SERVER_PID" 2>/dev/null || true; fi
     kill "$SERVER_PID" 2>/dev/null || true
     sleep 1
-    if command -v pkill >/dev/null 2>&1; then pkill -P "$SERVER_PID" 2>/dev/null || true; fi
     kill -9 "$SERVER_PID" 2>/dev/null || true
+    wait "$SERVER_PID" 2>/dev/null || true
   fi
+  SERVER_PID=""
 }
 cleanup_all() {
   cleanup
@@ -85,18 +86,42 @@ cleanup_all() {
   fi
 }
 trap cleanup_all EXIT
-port_in_use() { command -v lsof >/dev/null 2>&1 && lsof -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; }
-port_in_use_port() { local p="$1"; command -v lsof >/dev/null 2>&1 && lsof -iTCP:"$p" -sTCP:LISTEN >/dev/null 2>&1; }
-kill_port() {
+port_in_use() { port_in_use_port "$PORT"; }
+port_in_use_port() {
   local p="$1"
   if command -v lsof >/dev/null 2>&1; then
-    local pids
-    pids="$(lsof -ti:"$p" 2>/dev/null || true)"
-    if [[ -n "$pids" ]]; then
-      echo "$pids" | xargs kill -9 2>/dev/null || true
-      sleep 1
-    fi
+    lsof -iTCP:"$p" -sTCP:LISTEN >/dev/null 2>&1
+  elif command -v ss >/dev/null 2>&1; then
+    [[ -n "$(ss -H -ltn "sport = :$p" 2>/dev/null)" ]]
+  else
+    return 1
   fi
+}
+port_listener_pids() {
+  local p="$1"
+  if command -v lsof >/dev/null 2>&1; then
+    lsof -tiTCP:"$p" -sTCP:LISTEN 2>/dev/null || true
+  elif command -v ss >/dev/null 2>&1; then
+    ss -H -ltnp "sport = :$p" 2>/dev/null \
+      | grep -oE 'pid=[0-9]+' \
+      | cut -d= -f2 \
+      | sort -u
+  fi
+}
+kill_port() {
+  local p="$1"
+  local pid
+  while read -r pid; do
+    [[ -n "$pid" && -d "/proc/$pid" ]] || continue
+    local cwd cmdline
+    cwd="$(readlink -f "/proc/$pid/cwd" 2>/dev/null || true)"
+    cmdline="$(tr '\0' ' ' <"/proc/$pid/cmdline" 2>/dev/null || true)"
+    if [[ "$cwd" == "$SERVER_DIR" && "$cmdline" == *"dist/server/apps/server/src/index.js"* ]]; then
+      kill "$pid" 2>/dev/null || true
+      sleep 1
+      kill -9 "$pid" 2>/dev/null || true
+    fi
+  done < <(port_listener_pids "$p")
 }
 pick_free_port() {
   local p="$1"
@@ -323,7 +348,7 @@ TRUST_PROXY=0 \
 ALLOW_INSECURE_LOCAL=0 \
 AKALYNTH_LIFECYCLE_VERIFY=0 \
 PORT="$PORT" \
-npm run start >"$LOG_DIR/akalynth_verify_server_tls_spoof.log" 2>&1 &
+node "$SERVER_ENTRYPOINT" >"$LOG_DIR/akalynth_verify_server_tls_spoof.log" 2>&1 &
 SERVER_PID=$!
 wait_for_http_code "$HTTP_URL/v1/health" "403" 20
 SPOOF_HTTP_CODE="$(curl -s -o /dev/null -w "%{http_code}" -H "x-forwarded-proto: https" "$HTTP_URL/v1/maps")"
@@ -376,7 +401,7 @@ TRUST_PROXY_LOOPBACK_ONLY=1 \
 ALLOW_INSECURE_LOCAL=0 \
 AKALYNTH_LIFECYCLE_VERIFY=0 \
 PORT="$PORT" \
-npm run start >"$LOG_DIR/akalynth_verify_server_tls_trust.log" 2>&1 &
+node "$SERVER_ENTRYPOINT" >"$LOG_DIR/akalynth_verify_server_tls_trust.log" 2>&1 &
 SERVER_PID=$!
 wait_for_http_code "$HTTP_URL/v1/health" "403" 20
 NOHDR_CODE="$(curl -s -o /dev/null -w "%{http_code}" "$HTTP_URL/v1/maps")"
@@ -444,7 +469,7 @@ SOVEREIGN_ALLOW_NAME_MATCH=1 \
 CAPS_ENABLED=1 \
 CAPS_DEBUG_GRANT_SOVEREIGN=1 \
 PORT="$PORT" \
-npm run start >"$LOG_DIR/akalynth_verify_server.log" 2>&1 &
+node "$SERVER_ENTRYPOINT" >"$LOG_DIR/akalynth_verify_server.log" 2>&1 &
 SERVER_PID=$!
 wait_for_health
 curl -sf "$HTTP_URL/v1/maps" | grep -q 'Rookguard' || die "HTTP /v1/maps missing Rookguard"
@@ -554,7 +579,7 @@ AKALYNTH_LIFECYCLE_VERIFY=0 \
 HEAT_PENALTY_THRESHOLD=30 \
 WITNESS_COUNT=1 \
 PORT="$PORT" \
-npm run start >"$LOG_DIR/akalynth_verify_server_witness.log" 2>&1 &
+node "$SERVER_ENTRYPOINT" >"$LOG_DIR/akalynth_verify_server_witness.log" 2>&1 &
 SERVER_PID=$!
 wait_for_health
 
@@ -615,7 +640,7 @@ SOVEREIGN_ALLOW_NAME_MATCH=1 \
 CAPS_ENABLED=1 \
 CAPS_DEBUG_GRANT_SOVEREIGN=1 \
 PORT="$PORT" \
-npm run start >"$LOG_DIR/akalynth_verify_server.log" 2>&1 &
+node "$SERVER_ENTRYPOINT" >"$LOG_DIR/akalynth_verify_server.log" 2>&1 &
 SERVER_PID=$!
 wait_for_health
 log "Sovereign presence flow..."
@@ -682,7 +707,7 @@ PUBLIC_RECEIPTS_DELAY_PROFILE=default \
 PUBLIC_RECEIPTS_JITTER_MS=0 \
 RUNESTONE_TEST_FORCE_FACE=shadow \
 PORT="$PORT" \
-npm run start >"$LOG_DIR/akalynth_verify_server_trinity.log" 2>&1 &
+node "$SERVER_ENTRYPOINT" >"$LOG_DIR/akalynth_verify_server_trinity.log" 2>&1 &
 SERVER_PID=$!
 wait_for_health
 read -r TRINITY_PLAYER_ID TRINITY_GUEST_TOKEN <<<"$(mint_guest)"
