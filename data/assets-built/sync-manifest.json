@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "mode": "loose_png+atlas",
-  "generated_at": "2026-06-23T13:48:09.654Z",
+  "generated_at": "2026-07-30T05:50:12.310Z",
   "files": [
     {
       "path": "atlas/chronicle.png",
@@ -13,11 +13,11 @@
     },
     {
       "path": "atlas/manifest.json",
-      "sha256": "1f3fbcc9446b5ba162618f64033129d7302ae2a879da6c818db7cb810f421e78"
+      "sha256": "8aaad22adb476a86acdb6f277d80d6d7dabe57c91d720c3c7073ae59d94991d9"
     },
     {
       "path": "atlas/ui.png",
-      "sha256": "d98c9a2860ac86d3fae32ca480923d8f8c256c678acd7a151bce24adcd8d7b76"
+      "sha256": "2ef6678e4f8c58d45ba677ea81ae66dd8634fd9f84751913cad89660c1194580"
     },
     {
       "path": "atlas/world.png",
@@ -289,55 +289,55 @@
     },
     {
       "path": "ui/ui_action_ring_danger.png",
-      "sha256": "6979c7b64b89649053514ace69350553840cb4b91d49e5054886ffc02dd12c0e"
+      "sha256": "9e459caec2e413730a509830acd08c6493e53e33d6d0e7a75c75b8008381baae"
     },
     {
       "path": "ui/ui_action_ring_pressed.png",
-      "sha256": "4541a70d69513b1b0cc6211d97095ff42e7e80b026ee68e89365e149cb87eef0"
+      "sha256": "53d9b9d2d4af97a858e5b140db1b43cf0617391d7f760dc25cf74875ce7fecf1"
     },
     {
       "path": "ui/ui_action_ring.png",
-      "sha256": "5494e0d4bd3c7f72a7db4fd61622918dbb2c4e33e7048d27bb0f4f4c69e2e018"
+      "sha256": "5727d8b9f6dd2188d75986158ab45772ca9748a2da9f4b8c2651b012d441ceec"
     },
     {
       "path": "ui/ui_bar_track.png",
-      "sha256": "5edc78efb266d325ab34295c8e6f73d09651c5f82c74ca33d36bfb491a876652"
+      "sha256": "7ed8f22561388ef974057e09261f3348e90c1da2cb3e6cb61ad65b09a6b251eb"
     },
     {
       "path": "ui/ui_button_frame.png",
-      "sha256": "a65a32b3eb06909ea1a26f949c96cff6df791c76b02f4542e6b6ac7b82befcb1"
+      "sha256": "5824a294640e8f97ceb5fca87bcd0e4a5b3e1ef3aa5a86728a31a88aa22b021e"
     },
     {
       "path": "ui/ui_button_pressed_frame.png",
-      "sha256": "8c15a9e49731bb6372939bbb4d07b69d9815398ae15a625c9b4560325b58d061"
+      "sha256": "7fa46eb7496ffb0fb582d460cace9aee7b2ee39cc2c23ee691b1e25324127981"
     },
     {
       "path": "ui/ui_dock_frame.png",
-      "sha256": "e158c0390d6f962eb07389fcbd4188f1399e8758cf769e6cfa677fe3d04c3859"
+      "sha256": "356727cbbfaac53d99e40c404cdbfe059903dd02eab90cafdc6dac8e2c215bd5"
     },
     {
       "path": "ui/ui_dpad_button_pressed.png",
-      "sha256": "e75662705a93a33ca9e9e35b2b86845fc52c8c3c3f6bada6aee8c8b68932dd75"
+      "sha256": "662462a6861d9a4c6cee255eb91b3ecefca721df2852d3bf3524b0e26bd2e431"
     },
     {
       "path": "ui/ui_dpad_button.png",
-      "sha256": "044798e77168fd70eda7cd3496f4925536515064c730ca66c58f32389b66474f"
+      "sha256": "a248b0a97187935e95e9c4eb8c8e03c9cdcf72b04536a0b4f3f81566713d7d60"
     },
     {
       "path": "ui/ui_dpad_frame.png",
-      "sha256": "d1fd7dddfbfd11220d81a4694580590bf049c40b7280dde6a1eb7e2031e7235d"
+      "sha256": "1faae598235374cd5e0634c024c8c90e85351f07a506a263fe55a6b666b2aed9"
     },
     {
       "path": "ui/ui_hp_fill.png",
-      "sha256": "226e370f6bbb251a61dea872ffa787094f478e2e37a72d943011a12d1549c742"
+      "sha256": "620cbc0b3fd1ca6308c769771121a5b1ed4c86df5204bedcebb35390fb9a7c8b"
     },
     {
       "path": "ui/ui_mp_fill.png",
-      "sha256": "d39391230ab5df18f1925ee80d3839e198b23bde81dfcf00d1b8d051aad1c526"
+      "sha256": "692f317cd67954c8fabff0006b772534c99641483dc1906573384cd8709ce9f4"
     },
     {
       "path": "ui/ui_panel_frame.png",
-      "sha256": "2c40638d27d13b00da6ebd73cc3725d4f912b058f85df14525ee163c48761613"
+      "sha256": "6d9c9d32ebf119d7ce25974f12309630ea28a37e407fa1f9a8e2cd3edfd10d74"
     },
     {
       "path": "world/castle/prison_bars.png",
@@ -596,5 +596,5 @@
       "sha256": "38a1a46cb41267f20a4543655be006522bb11f6df4ab18cbbbc8ccab699a514e"
     }
   ],
-  "atlas_generated_at": "2026-06-23T13:48:09.938Z"
+  "atlas_generated_at": "2026-07-30T05:50:13.102Z"
 }
