@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,7 +21,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.akalynth.client.protocol.Direction
 import com.akalynth.client.ui.theme.ClassicShellColors
 import com.akalynth.client.ui.theme.TextureCircleBox
@@ -32,52 +38,98 @@ import kotlinx.coroutines.isActive
 
 private const val MOVE_REPEAT_MS = 130L
 
+/**
+ * 4-direction play HUD D-pad with center stop (parity with web center ■ stop).
+ *
+ * Hold a direction to repeat move intents. Center stop clears any held direction
+ * so movement does not stick when the player lifts off mid-pad.
+ */
 @Composable
 fun DPad(
     onMove: (Direction) -> Unit,
     modifier: Modifier = Modifier,
     scrimAlpha: Float = 0.42f,
+    onStop: (() -> Unit)? = null,
 ) {
     val textures = rememberUiTextures()
+    // Single held direction so the center stop can cancel repeat immediately.
+    var activeDirection by remember { mutableStateOf<Direction?>(null) }
+
+    LaunchedEffect(activeDirection) {
+        val dir = activeDirection ?: return@LaunchedEffect
+        onMove(dir)
+        while (isActive && activeDirection == dir) {
+            delay(MOVE_REPEAT_MS)
+            if (activeDirection == dir) onMove(dir)
+        }
+    }
+
+    val clearHold: () -> Unit = {
+        if (activeDirection != null) {
+            activeDirection = null
+            onStop?.invoke()
+        } else {
+            onStop?.invoke()
+        }
+    }
+
     val inner: @Composable () -> Unit = {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-        // North
-        DirectionButton(
-            icon = Icons.Default.KeyboardArrowUp,
-            direction = Direction.NORTH,
-            onMove = onMove
-        )
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(44.dp)
-        ) {
-            // West
             DirectionButton(
-                icon = Icons.Default.KeyboardArrowLeft,
-                direction = Direction.WEST,
-                onMove = onMove
+                icon = Icons.Default.KeyboardArrowUp,
+                direction = Direction.NORTH,
+                isActive = activeDirection == Direction.NORTH,
+                onPress = { activeDirection = Direction.NORTH },
+                onRelease = {
+                    if (activeDirection == Direction.NORTH) activeDirection = null
+                },
             )
 
-            // East
-            DirectionButton(
-                icon = Icons.Default.KeyboardArrowRight,
-                direction = Direction.EAST,
-                onMove = onMove
-            )
-        }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                DirectionButton(
+                    icon = Icons.Default.KeyboardArrowLeft,
+                    direction = Direction.WEST,
+                    isActive = activeDirection == Direction.WEST,
+                    onPress = { activeDirection = Direction.WEST },
+                    onRelease = {
+                        if (activeDirection == Direction.WEST) activeDirection = null
+                    },
+                )
 
-        // South
-        DirectionButton(
-            icon = Icons.Default.KeyboardArrowDown,
-            direction = Direction.SOUTH,
-            onMove = onMove,
-        )
+                StopButton(
+                    isActive = activeDirection == null,
+                    onStop = clearHold,
+                )
+
+                DirectionButton(
+                    icon = Icons.Default.KeyboardArrowRight,
+                    direction = Direction.EAST,
+                    isActive = activeDirection == Direction.EAST,
+                    onPress = { activeDirection = Direction.EAST },
+                    onRelease = {
+                        if (activeDirection == Direction.EAST) activeDirection = null
+                    },
+                )
+            }
+
+            DirectionButton(
+                icon = Icons.Default.KeyboardArrowDown,
+                direction = Direction.SOUTH,
+                isActive = activeDirection == Direction.SOUTH,
+                onPress = { activeDirection = Direction.SOUTH },
+                onRelease = {
+                    if (activeDirection == Direction.SOUTH) activeDirection = null
+                },
+            )
         }
     }
 
-    Box(modifier = modifier.wrapContentSize()) {
+    Box(modifier = modifier.wrapContentSize().testTag("DPad")) {
         if (scrimAlpha > 0f) {
             Box(
                 modifier = Modifier
@@ -115,35 +167,30 @@ fun DPad(
 private fun DirectionButton(
     icon: ImageVector,
     direction: Direction,
-    onMove: (Direction) -> Unit,
+    isActive: Boolean,
+    onPress: () -> Unit,
+    onRelease: () -> Unit,
 ) {
     val textures = rememberUiTextures()
-    var isPressed by remember { mutableStateOf(false) }
-
-    LaunchedEffect(isPressed) {
-        if (isPressed) {
-            onMove(direction)
-            while (isActive && isPressed) {
-                delay(MOVE_REPEAT_MS)
-                onMove(direction)
-            }
-        }
-    }
 
     val texture = when {
-        isPressed && textures.dpadButtonPressed != null -> textures.dpadButtonPressed
+        isActive && textures.dpadButtonPressed != null -> textures.dpadButtonPressed
         textures.dpadButton != null -> textures.dpadButton
         else -> null
     }
 
     val pressModifier = Modifier
         .size(60.dp)
-        .pointerInput(Unit) {
+        .semantics { contentDescription = "Move ${direction.name.lowercase()}" }
+        .pointerInput(direction) {
             detectTapGestures(
                 onPress = {
-                    isPressed = true
-                    tryAwaitRelease()
-                    isPressed = false
+                    onPress()
+                    try {
+                        tryAwaitRelease()
+                    } finally {
+                        onRelease()
+                    }
                 },
             )
         }
@@ -153,7 +200,7 @@ private fun DirectionButton(
             Icon(
                 imageVector = icon,
                 contentDescription = direction.name,
-                tint = if (isPressed) ClassicShellColors.Iron else Color.White,
+                tint = if (isActive) ClassicShellColors.Iron else Color.White,
                 modifier = Modifier.size(34.dp),
             )
         }
@@ -162,12 +209,12 @@ private fun DirectionButton(
             modifier = pressModifier
                 .clip(CircleShape)
                 .background(
-                    if (isPressed) ClassicShellColors.Brass.copy(alpha = 0.72f)
+                    if (isActive) ClassicShellColors.Brass.copy(alpha = 0.72f)
                     else ClassicShellColors.Iron.copy(alpha = 0.72f),
                 )
                 .border(
                     1.dp,
-                    if (isPressed) ClassicShellColors.Warning else ClassicShellColors.IronBright.copy(alpha = 0.72f),
+                    if (isActive) ClassicShellColors.Warning else ClassicShellColors.IronBright.copy(alpha = 0.72f),
                     CircleShape,
                 ),
             contentAlignment = Alignment.Center,
@@ -175,8 +222,74 @@ private fun DirectionButton(
             Icon(
                 imageVector = icon,
                 contentDescription = direction.name,
-                tint = if (isPressed) ClassicShellColors.Iron else Color.White,
+                tint = if (isActive) ClassicShellColors.Iron else Color.White,
                 modifier = Modifier.size(34.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun StopButton(
+    isActive: Boolean,
+    onStop: () -> Unit,
+) {
+    val textures = rememberUiTextures()
+    var pressed by remember { mutableStateOf(false) }
+
+    val texture = when {
+        pressed && textures.dpadButtonPressed != null -> textures.dpadButtonPressed
+        textures.dpadButton != null -> textures.dpadButton
+        else -> null
+    }
+
+    val pressModifier = Modifier
+        .size(60.dp)
+        .testTag("DPad_Stop")
+        .semantics { contentDescription = "Stop movement" }
+        .pointerInput(Unit) {
+            detectTapGestures(
+                onPress = {
+                    pressed = true
+                    onStop()
+                    try {
+                        tryAwaitRelease()
+                    } finally {
+                        pressed = false
+                    }
+                },
+            )
+        }
+
+    if (texture != null) {
+        TextureCircleBox(texture = texture, modifier = pressModifier) {
+            Text(
+                text = "■",
+                color = if (pressed || !isActive) ClassicShellColors.Warning else Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+    } else {
+        Box(
+            modifier = pressModifier
+                .clip(CircleShape)
+                .background(
+                    if (pressed) ClassicShellColors.Warning.copy(alpha = 0.55f)
+                    else ClassicShellColors.Iron.copy(alpha = 0.85f),
+                )
+                .border(
+                    1.dp,
+                    if (pressed) ClassicShellColors.Warning else ClassicShellColors.IronBright.copy(alpha = 0.72f),
+                    CircleShape,
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = "■",
+                color = if (pressed) ClassicShellColors.Iron else Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
             )
         }
     }

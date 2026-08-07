@@ -278,6 +278,7 @@ class GameStore(
             is GameEvent.DismissError -> clearError()
             is GameEvent.DismissTemChallenge -> dismissTemChallenge()
             is GameEvent.DismissWitnessRequest -> dismissWitnessRequest()
+            is GameEvent.DismissDeathNotice -> clearPendingDeathNotice()
             is GameEvent.ToggleChronicle -> toggleChronicle()
             is GameEvent.SetServerUrl -> setServerUrl(event.url)
             is GameEvent.ToggleDebugDrawer -> toggleDebugDrawer()
@@ -981,6 +982,21 @@ class GameStore(
 
     private fun handleDeath(msg: DeathNoticeMessage) {
         val me = _state.value.world.me ?: return
+        val notice = com.akalynth.client.ui.state.DeathNotice(
+            killerName = msg.killerName,
+            zone = msg.zone ?: msg.map.displayName,
+            x = msg.x ?: msg.spawn.x,
+            y = msg.y ?: msg.spawn.y,
+            timestamp = msg.time ?: java.time.Instant.now().toString(),
+            itemsLost = msg.lostItems.orEmpty().map { item ->
+                buildString {
+                    append(item.kind)
+                    item.qty?.let { append(" ×$it") }
+                }
+            },
+            chronicleEventId = msg.chronicleEventId?.toString(),
+            reason = msg.reason,
+        )
         _state.update {
             it.copy(
                 world = it.world.copy(
@@ -988,9 +1004,14 @@ class GameStore(
                         status = PlayerStatus.DEAD,
                         deadUntilMs = System.currentTimeMillis() + msg.respawnInMs
                     )
-                )
+                ),
+                ui = it.ui.copy(pendingDeathNotice = notice),
             )
         }
+    }
+
+    private fun clearPendingDeathNotice() {
+        _state.update { it.copy(ui = it.ui.copy(pendingDeathNotice = null)) }
     }
 
     private fun handleCombatResolved(msg: CombatResolvedMessage) {
