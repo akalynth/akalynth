@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.akalynth.client.actions.WorldEventSkillIds
+import com.akalynth.client.game.GatherLoopPresentation
 import com.akalynth.client.protocol.SovereignVocation
 import com.akalynth.client.ui.theme.ClassicActionDock
 import com.akalynth.client.ui.theme.ClassicActionRingButton
@@ -84,6 +85,7 @@ fun ActionButtons(
     gatherRefining: Boolean = false,
     gatherProgressPct: Float = 0f,
     gatherHeldItem: String? = null,
+    gatherStatus: String? = null,
     onGather: (String) -> Unit = {},
     onDeliver: (String) -> Unit = {},
     onRefine: (String) -> Unit = {},
@@ -204,10 +206,22 @@ fun ActionButtons(
 
             if (showGather) {
                 Text(
-                    text = "Gather",
+                    text = "Ley Mote",
                     style = MaterialTheme.typography.labelSmall,
                     color = ClassicShellColors.Brass,
                     modifier = Modifier.testTag("ActionButtons_GatherSection")
+                )
+                val loopCompleteHint =
+                    gatherHeldItem == null &&
+                        (gatherStatus?.startsWith("Delivered") == true)
+                Text(
+                    text = GatherLoopPresentation.compactSummary(
+                        heldItemType = gatherHeldItem,
+                        loopCompleteHint = loopCompleteHint,
+                    ),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = ClassicShellColors.Text,
+                    modifier = Modifier.testTag("ActionButtons_GatherLoopSteps")
                 )
                 if (gatherBusy) {
                     Text(
@@ -217,12 +231,18 @@ fun ActionButtons(
                         modifier = Modifier.testTag("ActionButtons_GatherProgress")
                     )
                 }
-                gatherHeldItem?.let { held ->
+                Text(
+                    text = "Held: ${GatherLoopPresentation.heldItemLabel(gatherHeldItem)}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = ClassicShellColors.Text,
+                    modifier = Modifier.testTag("ActionButtons_GatherHeld")
+                )
+                gatherStatus?.takeIf { it.isNotBlank() }?.let { status ->
                     Text(
-                        text = "Held: $held",
+                        text = status,
                         style = MaterialTheme.typography.labelSmall,
-                        color = ClassicShellColors.Text,
-                        modifier = Modifier.testTag("ActionButtons_GatherHeld")
+                        color = ClassicShellColors.MutedText,
+                        modifier = Modifier.testTag("ActionButtons_GatherStatus")
                     )
                 }
                 gatherNodeId?.let { nodeId ->
