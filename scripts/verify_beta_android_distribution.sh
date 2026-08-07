@@ -4,8 +4,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MANIFEST="${AKALYNTH_ANDROID_MANIFEST:-${ROOT}/infra/android/beta-client-update.json}"
 APK_FILE="${AKALYNTH_ANDROID_APK_FILE:-}"
-ACCEPTED_IDENTITY="${ROOT}/docs/decisions/AKALYNTH_ANDROID_BETA_V17_ITEM_ICONS/android-distribution-identity.v17.json"
-ACCEPTED_IDENTITY_SHA256="6101e3591d9f105972aa07296ab22962a27dda46c2e45e3334bb7240928981b3"
+ACCEPTED_IDENTITY="${ROOT}/docs/decisions/AKALYNTH_ANDROID_BETA_LONG_VERSION_V1/android-distribution-identity.json"
+ACCEPTED_IDENTITY_SHA256="2f7b9308e7f47b6d435baa7ae29bf8a358b5fc7672af2ee787aaaa74dd6da4d2"
 
 if [[ -n "${AKALYNTH_ANDROID_ACCEPTED_IDENTITY:-}" ]]; then
   echo "AKALYNTH_ANDROID_ACCEPTED_IDENTITY override is forbidden" >&2
@@ -110,6 +110,7 @@ if accepted["decision_id"] not in (
     "AKALYNTH_ANDROID_BETA_V15_LAYOUT_STABILIZE",
     "AKALYNTH_ANDROID_BETA_V16_CHROME_CLEAN",
     "AKALYNTH_ANDROID_BETA_V17_ITEM_ICONS",
+    "AKALYNTH_ANDROID_BETA_LONG_VERSION_V1",
 ):
     raise SystemExit("accepted Android identity decision_id is not release authority")
 for field in (

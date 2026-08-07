@@ -15,8 +15,8 @@ android {
         applicationId = "com.akalynth.client"
         minSdk = 26
         targetSdk = 35
-        versionCode = 17
-        versionName = "0.1.15-beta-rookguard-v1.4.1-item-icons"
+        versionCode = 2026080701
+        versionName = "0.1.15-beta.2026080701-item-icons"
     }
 
     buildTypes {
