@@ -1,11 +1,12 @@
 {
   "ok": true,
   "lane": "beta",
-  "version_code": 2026080701,
-  "version_name": "0.1.15-beta.2026080701-item-icons",
-  "apk_url": "https://beta.akalynth.com/download/akalynth-beta-v2026080701.apk",
-  "apk_sha256": "8e97b7da60f5083f5470343abd6b6b2c3e449e3c8dca1d0d6e4fe8a3f2beffee",
-  "size_bytes": 41714667,
+  "version_code": 2026080702,
+  "version_name": "0.1.16-beta.2026080702-p0-stop-death",
+  "apk_url": "https://beta.akalynth.com/download/akalynth-beta-v2026080702.apk",
+  "apk_sha256": "066120e2b121b24ef501f1d300ef1ff9cd2a4b694286eef8778ce1b9f4931c32",
+  "size_bytes": 41714051,
   "required": false,
-  "published_at": "2026-08-07T19:25:04.000Z"
+  "published_at": "2026-08-07T20:38:31.000Z",
+  "releaseNotes": "P0 parity: center D-pad stop + death toast/recap (web/APK mirror)"
 }
