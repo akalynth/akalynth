@@ -89,6 +89,9 @@ if (
 ) {
   fail('GatherLoopSteps must be display-only');
 }
-requireLiteral('deliver_result uses deliverStatusLine', 'deliverStatusLine({ ok: true', clientSource);
+requireLiteral('deliver_result uses deliverStatusLine', 'deliverStatusLine({', clientSource);
+requireLiteral('first-keystone uses prior count', 'priorKeystoneTokens', clientSource);
+requireLiteral('first-keystone copy from server reward only', 'keystone_token', labelsSource);
+requireLiteral('isKeystoneDeliverStatus helper', 'export function isKeystoneDeliverStatus', labelsSource);
 
 console.log('debug-client gather wire authority verifier passed');

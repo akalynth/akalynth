@@ -38,22 +38,45 @@ object GatherLoopPresentation {
         reward: String? = null,
         refined: Boolean = false,
         reason: String? = null,
+        /** Keystone count before applying this deliver (first-keystone closure). */
+        priorKeystoneTokens: Int = 0,
     ): String {
         if (!ok) return "Deliver rejected: ${reason ?: "rejected"}"
         val item = heldItemLabel(itemType ?: "item")
         val rewardLabel = reward?.let { REWARD_LABELS[it] ?: it.replace('_', ' ') }
-        return if (rewardLabel != null) {
+        val base = if (rewardLabel != null) {
             "Delivered $item → +1 $rewardLabel"
         } else {
             "Delivered $item"
         }
+        if (refined && reward == "keystone_token" && priorKeystoneTokens == 0) {
+            return "$base. The curation post accepts your first keystone — Azura remembers."
+        }
+        if (refined && rewardLabel != null) {
+            return "$base. The chill loop is complete — tend another mote when you are ready."
+        }
+        return base
     }
 
+    fun isKeystoneDeliverStatus(status: String?): Boolean =
+        status != null && status.startsWith("Delivered") && status.contains("keystone")
+
     /** Compact single-line summary for tight HUD: "2/3 Attune · Held: Ley mote" */
-    fun compactSummary(heldItemType: String?, loopCompleteHint: Boolean = false): String {
+    fun compactSummary(
+        heldItemType: String?,
+        loopCompleteHint: Boolean = false,
+        keystoneTokens: Int = 0,
+    ): String {
         val step = loopStep(heldItemType)
-        if (loopCompleteHint) return "Loop complete · Held: —"
+        if (loopCompleteHint) {
+            return if (keystoneTokens > 0) {
+                "Loop complete · Keystone $keystoneTokens"
+            } else {
+                "Loop complete · Held: —"
+            }
+        }
         val label = STEP_LABELS[step - 1]
-        return "$step/3 $label · Held: ${heldItemLabel(heldItemType)}"
+        val key = if (keystoneTokens > 0) " · Keystone $keystoneTokens" else ""
+        return "$step/3 $label · Held: ${heldItemLabel(heldItemType)}$key"
     }
 }

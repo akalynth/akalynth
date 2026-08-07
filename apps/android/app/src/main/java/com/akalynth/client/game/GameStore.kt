@@ -1162,6 +1162,7 @@ class GameStore(
                             itemType = msg.itemType,
                             reward = reward,
                             refined = refined,
+                            priorKeystoneTokens = state.gather.keystoneTokens,
                         ),
                     )
                 )
