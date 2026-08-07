@@ -206,7 +206,7 @@ export function rookguardGateBlockedHint(input: RookguardQuestInput): string {
   if (!input.tutorial.tem) missing.push("Tem answer");
   if (!input.trainingComplete) missing.push("training slime");
   if (!input.vocation) missing.push("Codex vocation");
-  if (missing.length === 0) return "Gate open — walk onto the golden arch at (10,2).";
+  if (missing.length === 0) return "Gate open — walk onto the golden arch.";
   return `Gate locked — still need: ${missing.join(", ")}.`;
 }
 
@@ -221,13 +221,13 @@ export function rookguardGateOpen(input: RookguardQuestInput): boolean {
 }
 
 export function rookguardQuestObjective(input: RookguardQuestInput): string {
-  if (!input.tutorial.move) return 'Step onto the glowing move rune (east plaza, tile 3,2)';
-  if (!input.tutorial.chat) return 'Open Chat and send any message in Rookguard';
-  if (!input.tutorial.tem) return `Walk to the Tem rune (tile 7,2) and answer ${TEM_CHALLENGE_RESPONSE}`;
-  if (!input.trainingComplete) return 'Walk southeast to the training slime (tile 14,14) and tap Attack';
+  if (!input.tutorial.move) return 'Walk onto the glowing rune to begin';
+  if (!input.tutorial.chat) return 'Open Chat and send any message';
+  if (!input.tutorial.tem) return `Walk to the Tem rune and answer ${TEM_CHALLENGE_RESPONSE}`;
+  if (!input.trainingComplete) return 'Find and tap Attack on the nearby training creature';
   if (!input.vocation) return 'Enter the guild hall and choose a Codex vocation';
-  if (!input.tutorial.gate) return 'Walk onto the golden High City gate when it opens';
-  return 'Rookguard Codex path complete';
+  if (!input.tutorial.gate) return 'Walk onto the golden gate when it opens';
+  return 'Explore Rookguard';
 }
 
 export function buildRookguardQuestProgress(input: RookguardQuestInput): RookguardQuestProgress {
@@ -327,6 +327,7 @@ export function buildOnwardRouteProgress(
       route_safety: 'unsecured',
       merchant_access: 'closed',
       merchant_stock: 0,
+      merchant_travel_due_at_ms: null,
       bandit_pressure: 0,
       player_trust: 0,
     },

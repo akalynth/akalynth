@@ -14,6 +14,7 @@ import {
   type CoordinationReceipt,
 } from '@akalynth/coordination-kernel';
 import type { AuditReceipt } from '../../../packages/shared/types.js';
+import { SHARED_WORLD_IDS } from '../../../packages/shared/causalParity.js';
 import { ROOKGUARD_CANAL_FISHED_ACTION } from '../../../packages/shared/skills.js';
 import {
   parseClientMessage,
@@ -22,6 +23,7 @@ import {
 import { createAuditLogger } from '../src/audit/logger.js';
 import { createPersistenceLayer, computeReceiptHash, generateItemId } from '../src/persist/index.js';
 import { handleUseSkill, type SkillContext } from '../src/skills/index.js';
+import { sharedWorldObservationFromRows } from '../src/chronicle/sharedWorldObservation.js';
 import {
   ROOKGUARD_FISHING_MERCHANT_REACTED_ACTION,
   ROOKGUARD_FISHING_RECOVERY_MS,
@@ -231,6 +233,38 @@ async function main(): Promise<void> {
   assert.equal(beforeRecoveryResult.cooldown_until_ms, BASE_NOW_MS + ROOKGUARD_FISHING_RECOVERY_MS);
 
   const secondNowMs = BASE_NOW_MS + ROOKGUARD_FISHING_RECOVERY_MS;
+  const receiptsWhileAIsAway = readReceipts(receiptsPath);
+  const firstFishingReceipt = receiptsWhileAIsAway.find((receipt) => receipt.action === ROOKGUARD_CANAL_FISHED_ACTION);
+  assert.ok(firstFishingReceipt, 'Actor A has a persisted canonical Fish receipt before going away');
+  const observerPlayerId = 'p:fish-observer';
+  const sharedRowsWhileAIsAway = live.getSharedWorldEvents(SHARED_WORLD_IDS.rookguardCanal, 50);
+  const observerBeforeDeadline = sharedWorldObservationFromRows(
+    observerPlayerId,
+    SHARED_WORLD_IDS.rookguardCanal,
+    sharedRowsWhileAIsAway,
+    BASE_NOW_MS + 1_000,
+  );
+  assert.equal(observerBeforeDeadline.state?.canal_state, 'disturbed', 'Actor B sees the pending world consequence before its deadline');
+  assert.equal(observerBeforeDeadline.state?.phase, 'recovering');
+  const observerView = sharedWorldObservationFromRows(
+    observerPlayerId,
+    SHARED_WORLD_IDS.rookguardCanal,
+    sharedRowsWhileAIsAway,
+    secondNowMs,
+  );
+  assert.equal(observerView.observer_player_id, observerPlayerId, 'Actor B observes with its own identity');
+  assert.equal(observerView.state?.canal_state, 'calm', 'elapsed world time resolves the canal for Actor B');
+  assert.equal(observerView.state?.phase, 'ready', 'Actor B sees the recovered public activity state');
+  assert.equal(observerView.state?.merchant_behavior, 'noticing_patience');
+  assert.ok(
+    observerView.events.some((event) => event.causal?.receipt.hash === computeReceiptHash(firstFishingReceipt)),
+    'Actor B receives the canonical originating receipt in the shared causal chain',
+  );
+  assert.equal(
+    live.getChronicleForPlayer(PLAYER_ID, 50).filter((row) => row.kind === 'world_event').length,
+    2,
+    'Actor A returns to the same persisted history after the offline interval',
+  );
   const afterRecoverySent: unknown[] = [];
   await handleUseSkill(
     makeSkillContext({
@@ -336,7 +370,7 @@ async function main(): Promise<void> {
   rebuilt.close();
 
   fs.rmSync(tmpDir, { recursive: true, force: true });
-  console.log('[verify-rookguard-fishing] Android intent contract -> authority -> receipts -> world state -> merchant -> Chronicle -> recovery -> reconnect -> replay: PASS');
+  console.log('[verify-rookguard-fishing] Android intent contract -> authority -> receipts -> world state -> merchant -> Chronicle -> offline shared observation -> recovery -> replay: PASS');
 }
 
 main().catch((error) => {

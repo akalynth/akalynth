@@ -190,7 +190,7 @@ async function startFakePlayableServer(host) {
       title: null,
       badges: [],
       mark: null,
-      loop: loopProgress('Step onto the glowing move rune (east plaza, tile 3,2)'),
+      loop: loopProgress('Walk onto the glowing rune to begin'),
     },
   };
   const nearby = [

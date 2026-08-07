@@ -9,6 +9,7 @@ import type {
   PropertyAuctionKind,
   PropertyStatus,
 } from '../../../../packages/shared/types.js';
+import type { PropertyPublic } from '../../../../packages/shared/protocol.js';
 import {
   PROPERTY_CREATED_ACTION,
   PROPERTY_LISTED_ACTION,
@@ -33,6 +34,7 @@ export interface OwnerHistoryEntry {
   price: number;
   action: 'purchased' | 'transferred';
   timestamp: string;   // ISO8601 (receipt timestamp)
+  receipt_hash: string; // canonical receipt that established this ownership
 }
 
 export interface PropertyProjection {
@@ -128,6 +130,32 @@ export function getAuction(propertyId: string): AuctionProjection | null {
 
 export function getOpenAuctions(): AuctionProjection[] {
   return [...auctionByPropertyId.values()].filter((a) => a.status === 'open');
+}
+
+/**
+ * Public observer projection. Deliberately omits owner_player_id and exposes
+ * only the current owner's display name plus a canonical receipt reference.
+ */
+export function propertyPublicFromProjection(
+  property: PropertyProjection,
+  resolveOwnerName: (playerId: string | null) => string | null,
+): PropertyPublic {
+  return {
+    property_id: property.property_id,
+    zone: property.zone,
+    plot_id: property.plot_id,
+    x: property.x,
+    y: property.y,
+    width: property.width,
+    height: property.height,
+    district: property.district,
+    status: property.status,
+    owner_name: resolveOwnerName(property.owner_player_id),
+    provenance_receipt_hash: property.owner_history.at(-1)?.receipt_hash ?? null,
+    primary_price_gold: property.primary_price_gold,
+    listed_price_gold: property.listed_price_gold,
+    sale_count: property.sale_count,
+  };
 }
 
 /** Minimum acceptable next bid for an auction (first bid: min_bid). */
@@ -314,6 +342,7 @@ export function applyReceiptToProperty(receipt: AuditReceipt): void {
         price: typeof price === 'number' ? price : prop.primary_price_gold,
         action: 'purchased',
         timestamp: receipt.timestamp,
+        receipt_hash: eventHash,
       });
       prop.last_receipt = eventHash;
       break;
@@ -342,6 +371,7 @@ export function applyReceiptToProperty(receipt: AuditReceipt): void {
         price: typeof price === 'number' ? price : 0,
         action: 'transferred',
         timestamp: receipt.timestamp,
+        receipt_hash: eventHash,
       });
       prop.last_receipt = eventHash;
       break;
@@ -472,6 +502,7 @@ export function applyReceiptToProperty(receipt: AuditReceipt): void {
           price: typeof price === 'number' ? price : 0,
           action: auction.kind === 'primary' ? 'purchased' : 'transferred',
           timestamp: receipt.timestamp,
+          receipt_hash: eventHash,
         });
         prop.last_receipt = eventHash;
       } else {

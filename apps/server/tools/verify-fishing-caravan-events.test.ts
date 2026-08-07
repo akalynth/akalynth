@@ -21,6 +21,9 @@ import {
   FORGEHOLD_CARAVAN_EVENT_ID,
   FORGEHOLD_CARAVAN_EVIDENCE_RECOVERED_ACTION,
   FORGEHOLD_CARAVAN_GUARD_DECISION_ACTION,
+  FORGEHOLD_CARAVAN_MERCHANT_ARRIVED_ACTION,
+  FORGEHOLD_CARAVAN_MERCHANT_ID,
+  FORGEHOLD_CARAVAN_MERCHANT_TRAVEL_MS,
   ROOKGUARD_CANAL_FISHED_ACTION,
 } from '../../../packages/shared/skills.js';
 import { ROOKGUARD_FISHING_RECOVERY_MS } from '../src/world/rookguardFishing.js';
@@ -29,6 +32,7 @@ import { createAuditLogger } from '../src/audit/logger.js';
 import { createPersistenceLayer, computeReceiptHash, generateItemId } from '../src/persist/index.js';
 import { handleUseSkill, type SkillContext } from '../src/skills/index.js';
 import { sharedWorldObservationFromRows } from '../src/chronicle/sharedWorldObservation.js';
+import { advanceForgeholdCaravanActor } from '../src/world/autonomousCaravan.js';
 import {
   applyReceiptToOnwardRoutes,
   clearOnwardRouteProjection,
@@ -223,21 +227,46 @@ async function main(): Promise<void> {
     assert.equal(skillResult(sent).success, true, `${skillId} resolves through the shared use_skill path`);
   }
 
+  const routeStateBeforeMerchant = getOnwardRouteReceiptProgress(PLAYER_ID);
+  assert.equal(routeStateBeforeMerchant.forgeholdSurveyed, true, 'survey state is receipt-derived');
+  assert.equal(routeStateBeforeMerchant.forgeholdMilepostEvidenceRecovered, true, 'milepost state is receipt-derived');
+  assert.equal(routeStateBeforeMerchant.forgeholdCaravanEvidenceRecovered, true, 'caravan state is receipt-derived');
+  assert.equal(routeStateBeforeMerchant.forgeholdCaravanProtection.route_safety, 'monitored', 'caravan protection state includes NPC monitoring');
+  assert.equal(routeStateBeforeMerchant.forgeholdCaravanProtection.merchant_access, 'open', 'caravan action keeps route access open');
+  assert.equal(routeStateBeforeMerchant.forgeholdCaravanProtection.merchant_stock, 0, 'caravan guard updates stock reserve');
+  assert.equal(routeStateBeforeMerchant.forgeholdCaravanProtection.bandit_pressure, 1, 'caravan guard lowers bandit pressure');
+  assert.equal(routeStateBeforeMerchant.forgeholdCaravanProtection.player_trust, 2, 'player trust advances after NPC decision');
+  const merchantDueAtMs = routeStateBeforeMerchant.forgeholdCaravanProtection.merchant_travel_due_at_ms;
+  assert.equal(merchantDueAtMs, BASE_NOW_MS + FORGEHOLD_CARAVAN_MERCHANT_TRAVEL_MS, 'guard receipt schedules Merchant Lora from the world clock');
+  const beforeMerchantAdvance = advanceForgeholdCaravanActor(
+    live.getSharedWorldEvents(SHARED_WORLD_IDS.forgeholdCaravanRoute, 50),
+    merchantDueAtMs - 1,
+    (receipt) => logger.write(receipt),
+  );
+  assert.equal(beforeMerchantAdvance.emitted, false, 'Merchant Lora does not arrive before the deadline');
+  const merchantAdvance = advanceForgeholdCaravanActor(
+    live.getSharedWorldEvents(SHARED_WORLD_IDS.forgeholdCaravanRoute, 50),
+    merchantDueAtMs,
+    (receipt) => logger.write(receipt),
+  );
+  assert.equal(merchantAdvance.emitted, true, 'world time advances Merchant Lora autonomously');
+  assert.equal(merchantAdvance.event_instance_id, `${FORGEHOLD_CARAVAN_EVENT_ID}:1:guard:merchant_arrived`);
+  const repeatedMerchantAdvance = advanceForgeholdCaravanActor(
+    live.getSharedWorldEvents(SHARED_WORLD_IDS.forgeholdCaravanRoute, 50),
+    merchantDueAtMs,
+    (receipt) => logger.write(receipt),
+  );
+  assert.equal(repeatedMerchantAdvance.emitted, false, 'repeated world scans do not emit a second arrival');
   const liveRouteState = getOnwardRouteReceiptProgress(PLAYER_ID);
-  assert.equal(liveRouteState.forgeholdSurveyed, true, 'survey state is receipt-derived');
-  assert.equal(liveRouteState.forgeholdMilepostEvidenceRecovered, true, 'milepost state is receipt-derived');
-  assert.equal(liveRouteState.forgeholdCaravanEvidenceRecovered, true, 'caravan state is receipt-derived');
-  assert.equal(liveRouteState.forgeholdCaravanProtection.route_safety, 'monitored', 'caravan protection state includes NPC monitoring');
-  assert.equal(liveRouteState.forgeholdCaravanProtection.merchant_access, 'open', 'caravan action keeps route access open');
-  assert.equal(liveRouteState.forgeholdCaravanProtection.merchant_stock, 0, 'caravan guard updates stock reserve');
-  assert.equal(liveRouteState.forgeholdCaravanProtection.bandit_pressure, 1, 'caravan guard lowers bandit pressure');
-  assert.equal(liveRouteState.forgeholdCaravanProtection.player_trust, 2, 'player trust advances after NPC decision');
+  assert.equal(liveRouteState.forgeholdCaravanProtection.merchant_stock, 1, 'autonomous arrival restocks the route');
+  assert.equal(liveRouteState.forgeholdCaravanProtection.merchant_travel_due_at_ms, null, 'arrival consumes the pending travel consequence');
+  assert.equal(liveRouteState.forgeholdCaravanProtection.last_actor, FORGEHOLD_CARAVAN_MERCHANT_ID, 'route projection records the autonomous actor');
   const liveFishingState = getRookguardFishingState();
   assert.equal(liveFishingState.cast_count, 1, 'fishing state is receipt-derived');
 
   const liveWorldEvents = live.getChronicleForPlayer(PLAYER_ID, 50)
     .filter((row) => row.kind === 'world_event');
-  assert.equal(liveWorldEvents.length, 4, 'fishing, merchant reaction, caravan evidence, and guard decision share world_event rows');
+  assert.equal(liveWorldEvents.length, 5, 'fishing, merchant reaction, caravan evidence, guard decision, and autonomous arrival share world_event rows');
   const liveDetails = liveWorldEvents.map((row) => JSON.parse(row.details_json) as Record<string, unknown>);
   const receiptsForProof = readReceipts(receiptsPath);
   const causalEvents = liveWorldEvents.map((row) => {
@@ -286,11 +315,21 @@ async function main(): Promise<void> {
   const merchantCausal = causalEvents.find((event) => event.event_id === merchantDetails.event_instance_id);
   const caravanCausal = causalEvents.find((event) => event.event_id === caravanDetails.event_instance_id);
   const guardCausal = causalEvents.find((event) => event.event_id === guardDetails.event_instance_id);
+  const arrivalDetails = liveDetails.find((details) => details.event_type === 'caravan_merchant_arrived');
+  assert.ok(arrivalDetails, 'autonomous merchant arrival writes the same world_event lane');
+  assert.equal(arrivalDetails.parent_event_id, guardDetails.event_instance_id);
+  assert.equal(arrivalDetails.actor_id, undefined, 'actor identity remains in the normalized receipt, not duplicated in details');
+  assert.equal(arrivalDetails.world_state?.merchant_stock, 1);
+  assert.equal(arrivalDetails.world_state?.merchant_travel_due_at_ms, null);
+  const arrivalCausal = causalEvents.find((event) => event.event_id === arrivalDetails.event_instance_id);
+  assert.equal(arrivalCausal?.actor_id, FORGEHOLD_CARAVAN_MERCHANT_ID);
+  assert.deepEqual(arrivalCausal?.parent_event_ids, [guardDetails.event_instance_id]);
   assert.deepEqual(fishingCausal?.downstream_event_ids, [merchantDetails.event_instance_id]);
   assert.deepEqual(merchantCausal?.parent_event_ids, [fishingDetails.event_instance_id]);
   assert.equal(caravanCausal?.intent.verb, 'recover_caravan_evidence');
   assert.deepEqual(caravanCausal?.downstream_event_ids, [guardDetails.event_instance_id]);
   assert.deepEqual(guardCausal?.parent_event_ids, [`${FORGEHOLD_CARAVAN_EVENT_ID}:1`]);
+  assert.deepEqual(guardCausal?.downstream_event_ids, [arrivalDetails.event_instance_id]);
 
   const parityPacketPath = path.join(tmpDir, 'causal-parity-packet.json');
   fs.writeFileSync(parityPacketPath, JSON.stringify({
@@ -328,7 +367,7 @@ async function main(): Promise<void> {
     limit: undefined,
   }, 'second observer uses the explicit shared-world read lane');
   const sharedRows = live.getSharedWorldEvents(SHARED_WORLD_IDS.forgeholdCaravanRoute, 50);
-  assert.equal(sharedRows.length, 2, 'shared-world query returns the caravan evidence and guard chain');
+  assert.equal(sharedRows.length, 3, 'shared-world query returns the caravan evidence, guard, and autonomous arrival chain');
   assert.ok(sharedRows.every((row) => row.player_id === PLAYER_ID), 'shared rows retain the originating actor custody');
   assert.equal(
     live.getChronicleForPlayer(observerPlayerId, 50).length,
@@ -342,9 +381,9 @@ async function main(): Promise<void> {
   );
   assert.equal(sharedObservation.observer_player_id, observerPlayerId);
   assert.equal(sharedObservation.world_id, SHARED_WORLD_IDS.forgeholdCaravanRoute);
-  assert.equal(sharedObservation.latest_event_id, guardCausal?.event_id);
-  assert.equal(sharedObservation.latest_receipt_hash, guardCausal?.receipt.hash);
-  assert.deepEqual(sharedObservation.state, guardCausal?.state_transition.after, 'observer receives the canonical latest route state');
+  assert.equal(sharedObservation.latest_event_id, arrivalCausal?.event_id);
+  assert.equal(sharedObservation.latest_receipt_hash, arrivalCausal?.receipt.hash);
+  assert.deepEqual(sharedObservation.state, arrivalCausal?.state_transition.after, 'observer receives the canonical latest route state');
   const observedCausal = sharedObservation.events
     .map((event) => event.causal)
     .filter((event): event is CausalParityEvent => event !== null && event !== undefined);
@@ -382,6 +421,11 @@ async function main(): Promise<void> {
     receipts.filter((receipt) => receipt.action === FORGEHOLD_CARAVAN_GUARD_DECISION_ACTION).length,
     1,
     'accepted caravan triggers one guard-decision follow-up',
+  );
+  assert.equal(
+    receipts.filter((receipt) => receipt.action === FORGEHOLD_CARAVAN_MERCHANT_ARRIVED_ACTION).length,
+    1,
+    'the due-time scan emits one autonomous merchant-arrival receipt',
   );
   const caravanReceipt = receipts.find((receipt) => receipt.action === FORGEHOLD_CARAVAN_EVIDENCE_RECOVERED_ACTION);
   const guardReceipt = receipts.find((receipt) => receipt.action === FORGEHOLD_CARAVAN_GUARD_DECISION_ACTION);
@@ -424,12 +468,12 @@ async function main(): Promise<void> {
   assert.deepEqual(getRookguardFishingState(), liveFishingState, 'full SQLite restart replay restores fishing memory');
   const rebuiltWorldEvents = rebuilt.getChronicleForPlayer(PLAYER_ID, 50)
     .filter((row) => row.kind === 'world_event');
-  assert.equal(rebuiltWorldEvents.length, 4, 'SQLite Chronicle rebuild preserves both activities and guard follow-up');
+  assert.equal(rebuiltWorldEvents.length, 5, 'SQLite Chronicle rebuild preserves both activities, guard follow-up, and autonomous arrival');
 
   rebuilt.startup();
   assert.equal(
     rebuilt.getChronicleForPlayer(PLAYER_ID, 50).filter((row) => row.kind === 'world_event').length,
-    4,
+    5,
     'replay is idempotent and does not duplicate shared world_event rows',
   );
   rebuilt.close();

@@ -10,6 +10,7 @@ import {
   FORGEHOLD_CARAVAN_EVIDENCE_RECOVERED_ACTION,
   FORGEHOLD_CARAVAN_GUARD_DECISION_ACTION,
   FORGEHOLD_CARAVAN_GUARD_ID,
+  FORGEHOLD_CARAVAN_MERCHANT_ARRIVED_ACTION,
   ROOKGUARD_CANAL_FISHED_ACTION,
 } from '../../../../packages/shared/skills.js';
 import { ACTION_ALIASES, RECEIPT_ACTIONS } from './types.js';
@@ -446,6 +447,7 @@ interface PropertyOwnerHistoryRow {
   price: number;
   action: 'purchased' | 'transferred';
   timestamp: string;
+  receipt_hash: string;
 }
 
 function readPropertyOwnerHistory(
@@ -545,7 +547,7 @@ function handlePropertyPurchased(
 
   const price = typeof inputs.price === 'number' ? (inputs.price as number) : 0;
   const history = readPropertyOwnerHistory(db, propertyId);
-  history.push({ from: null, to: buyer, price, action: 'purchased', timestamp: receipt.timestamp });
+  history.push({ from: null, to: buyer, price, action: 'purchased', timestamp: receipt.timestamp, receipt_hash: receiptHash });
 
   // owner IS NULL predicate prevents sale_count double-increment on re-materialize
   // and blocks any second primary sale.
@@ -571,7 +573,7 @@ function handlePropertyTransferred(
 
   const price = typeof inputs.price === 'number' ? (inputs.price as number) : 0;
   const history = readPropertyOwnerHistory(db, propertyId);
-  history.push({ from: sellerId, to: buyer, price, action: 'transferred', timestamp: receipt.timestamp });
+  history.push({ from: sellerId, to: buyer, price, action: 'transferred', timestamp: receipt.timestamp, receipt_hash: receiptHash });
 
   // seller predicate: resale only fires when the named seller still owns it
   // (blocks double-sell and double-increment on replay).
@@ -676,7 +678,7 @@ function handlePropertyAuctionSettled(
   if (winnerId) {
     const history = readPropertyOwnerHistory(db, propertyId);
     if (kind === 'primary') {
-      history.push({ from: null, to: winnerId, price, action: 'purchased', timestamp: receipt.timestamp });
+      history.push({ from: null, to: winnerId, price, action: 'purchased', timestamp: receipt.timestamp, receipt_hash: receiptHash });
       // owner IS NULL predicate prevents sale_count double-increment on re-materialize.
       db.prepare(`
         UPDATE properties
@@ -685,7 +687,7 @@ function handlePropertyAuctionSettled(
         WHERE property_id = ? AND owner_player_id IS NULL
       `).run(winnerId, receipt.timestamp, JSON.stringify(history), receiptHash, propertyId);
     } else {
-      history.push({ from: sellerId, to: winnerId, price, action: 'transferred', timestamp: receipt.timestamp });
+      history.push({ from: sellerId, to: winnerId, price, action: 'transferred', timestamp: receipt.timestamp, receipt_hash: receiptHash });
       // seller predicate prevents double-sell / double-increment on re-materialize.
       db.prepare(`
         UPDATE properties
@@ -1552,10 +1554,11 @@ function insertCausalChronicleEvent(
   zone: string | null,
   entityId: string,
   details: Record<string, unknown>,
+  chroniclePlayerId: string = receipt.actor_id,
 ): void {
   const eventId = insertChronicleEvent(
     db,
-    receipt.actor_id,
+    chroniclePlayerId,
     'world_event',
     receipt.timestamp,
     receipt.action,
@@ -1571,7 +1574,7 @@ function insertCausalChronicleEvent(
     SELECT id FROM chronicle_events
     WHERE player_id = ? AND receipt_hash = ? AND kind = 'world_event' AND entity_id = ?
     LIMIT 1
-  `).get(receipt.actor_id, receiptHash, entityId) as { id: number } | undefined)?.id;
+  `).get(chroniclePlayerId, receiptHash, entityId) as { id: number } | undefined)?.id;
   if (persistedEventId === undefined) return;
 
   const causal = buildCausalParityEvent({
@@ -1972,6 +1975,45 @@ export function materializeChronicle(
         memory: inputs.memory ?? null,
         economy_impact: inputs.economy_impact ?? 'none',
       });
+      break;
+    }
+
+    case FORGEHOLD_CARAVAN_MERCHANT_ARRIVED_ACTION: {
+      if (receipt.result !== 'ok' || !inputs.chronicle_player_id) break;
+      const routeId = inputs.route_id as string | undefined;
+      const instanceId = inputs.event_instance_id as string | undefined;
+      if (!routeId || !instanceId) break;
+      const after = inputs.state_after !== null && typeof inputs.state_after === 'object'
+        ? inputs.state_after as Record<string, unknown>
+        : {};
+      insertCausalChronicleEvent(db, receipt, receiptHash, 'Rookguard', instanceId, {
+        world_id: SHARED_WORLD_IDS.forgeholdCaravanRoute,
+        event_id: (inputs.event_id as string) ?? FORGEHOLD_CARAVAN_EVENT_ID,
+        event_instance_id: instanceId,
+        event_type: inputs.event_type ?? 'caravan_merchant_arrived',
+        phase: 'merchant_arrived',
+        outcome: 'restocked',
+        route_id: routeId,
+        act_id: inputs.act_id ?? null,
+        location_id: inputs.location_id ?? 'forgehold_route_slice_v1',
+        parent_event_id: inputs.parent_event_id ?? null,
+        agent_id: inputs.agent_id ?? null,
+        state_before: inputs.state_before ?? null,
+        state_after: inputs.state_after ?? null,
+        world_state: {
+          route_safety: after.route_safety ?? 'monitored',
+          merchant_access: after.merchant_access ?? 'open',
+          merchant_stock: after.merchant_stock ?? 1,
+          bandit_pressure: after.bandit_pressure ?? null,
+          player_trust: after.player_trust ?? null,
+          merchant_travel_due_at_ms: after.merchant_travel_due_at_ms ?? null,
+        },
+        next_objective: inputs.next_objective ?? null,
+        effects: inputs.effects ?? null,
+        downstream_event_ids: inputs.downstream_event_ids ?? [],
+        memory: inputs.memory ?? null,
+        economy_impact: inputs.economy_impact ?? 'restocked',
+      }, inputs.chronicle_player_id as string);
       break;
     }
 

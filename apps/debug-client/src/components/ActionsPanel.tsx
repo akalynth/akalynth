@@ -23,6 +23,22 @@ const SHOP_DEFS = [
   { skill_id: 'shop:healing_herb', label: 'Healing Herb', price: 5 },
 ] as const;
 
+/**
+ * ActionsPanel = "Available intents" derived from the current world state.
+ *
+ * This is NOT a fixed hotbar of player abilities.
+ * It is the right-hand context surface: what the world (location + nearby entities + active consequences)
+ * is offering the player right now.
+ *
+ * Examples:
+ * - Near water/fishing spot → Fish, Inspect
+ * - Merchant with active strategy → context trade/protect actions
+ * - Witness event active → Verify, Craft, Defend
+ *
+ * The ring / panel should feel like "asking the world what I can do here".
+ * All actions should be traceable back to receipts/chronicle.
+ */
+
 const WITNESS_MOTH_ACTIONS = [
   { skill_id: 'event:witness_moth_bloom:verify_testimony', label: 'Verify testimony', short: 'Read' },
   { skill_id: 'event:witness_moth_bloom:craft_lantern_frame', label: 'Frame lantern', short: 'Frame' },
@@ -30,7 +46,7 @@ const WITNESS_MOTH_ACTIONS = [
 ] as const;
 
 const ROUTE_ACTIONS = [
-  { skill_id: 'activity:fishing:rookguard', label: 'Fish Rookguard canal', short: 'Fish' },
+  { skill_id: 'activity:fishing:rookguard', label: 'Fish', short: 'Fish' },
   { skill_id: 'route:survey:forgehold', label: 'Survey Forgehold', short: 'Forge' },
   { skill_id: 'route:survey:moonspire', label: 'Survey Dream Gate', short: 'Dream' },
   { skill_id: 'route:safety:forgehold', label: 'Review Forgehold Safety', short: 'FSafe' },
@@ -214,6 +230,9 @@ export function ActionsPanel({
             <span>Actions</span>
             <strong>{compactActionLabel}</strong>
             {primaryRouteAction && <em>{primaryRouteAction.short}</em>}
+            {primaryRouteAction?.skill_id === 'activity:fishing:rookguard' && (
+              <div className="action-hint">The canal has recently recovered. Walk to it and tap Fish.</div>
+            )}
           </div>
         ) : (
           <div className="compact-objective-card" aria-label="Current objective">
@@ -253,7 +272,7 @@ export function ActionsPanel({
             {(!presentationMode || attackReady) && (
               <button
                 className={`action-btn mobile-hotbar-btn attack-btn ${attackReady ? '' : 'cooling'}`}
-                onClick={() => attackReady && onAttack()}
+                onClick={() => { if (import.meta.env.DEV) console.log('[STRANGER-TEST] action clicked: Attack'); attackReady && onAttack(); }}
                 disabled={!attackReady}
                 aria-label={targetName ? `Attack ${targetName}` : 'Attack nearest available target'}
               >
@@ -354,6 +373,7 @@ export function ActionsPanel({
                 {action.short}
               </button>
             ))}
+
             {stage >= 2 && hotbarItems.map((item) => {
               const usable = isUsableItemType(item.item_type);
               const label = itemLabel(item.item_type);
@@ -483,7 +503,7 @@ export function ActionsPanel({
               <button
                 key={action.skill_id}
                 className="action-btn shop-btn"
-                onClick={() => onWorldEventAction(action.skill_id)}
+                onClick={() => { if (import.meta.env.DEV) console.log('[STRANGER-TEST] action clicked:', action.label); onWorldEventAction(action.skill_id); }}
               >
                 {action.label}
               </button>

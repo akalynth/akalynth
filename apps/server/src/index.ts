@@ -6,7 +6,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { createHash, randomUUID } from 'node:crypto';
 
 import type { ClientMessage, LostItemSummary, ServerMessage, PropertyPublic, PropertyOwnerHistoryEntry, GatherRejectReason, GatherNodePublic, GatherStationPublic } from '../../../packages/shared/protocol.js';
-import type { CausalParityEvent } from '../../../packages/shared/causalParity.js';
+import { SHARED_WORLD_IDS, type CausalParityEvent } from '../../../packages/shared/causalParity.js';
 import { PROTOCOL_VERSION, ServerMessages, parseClientMessage } from '../../../packages/shared/protocol.js';
 import {
   computeCapsHash,
@@ -234,10 +234,12 @@ import {
   minNextBid,
   isValidPrice,
   makePropertyId,
+  propertyPublicFromProjection,
   type PropertyProjection,
   type AuctionProjection,
 } from './world/property.js';
 import { settleDueAuctions, clampAuctionDurationS } from './world/auction-loop.js';
+import { advanceForgeholdCaravanActor } from './world/autonomousCaravan.js';
 import { maybeSealOriginFromReceipt } from './world/origin.js';
 import {
   startContract,
@@ -2072,21 +2074,7 @@ function resolvePlayerName(playerId: string | null): string | null {
 
 // Project a property to its anonymized public wire form (owner_name, never id).
 function propertyToPublic(p: PropertyProjection): PropertyPublic {
-  return {
-    property_id: p.property_id,
-    zone: p.zone,
-    plot_id: p.plot_id,
-    x: p.x,
-    y: p.y,
-    width: p.width,
-    height: p.height,
-    district: p.district,
-    status: p.status,
-    owner_name: resolvePlayerName(p.owner_player_id),
-    primary_price_gold: p.primary_price_gold,
-    listed_price_gold: p.listed_price_gold,
-    sale_count: p.sale_count,
-  };
+  return propertyPublicFromProjection(p, resolvePlayerName);
 }
 
 function ownerHistoryToPublic(p: PropertyProjection): PropertyOwnerHistoryEntry[] {
@@ -2784,6 +2772,7 @@ const httpServer = http.createServer((req, res) => {
         district: p.district,
         status: p.status,
         owner_name: resolvePlayerName(p.owner_player_id),
+        provenance_receipt_hash: p.owner_history.at(-1)?.receipt_hash ?? null,
         primary_price_gold: p.primary_price_gold,
         listed_price_gold: p.listed_price_gold,
       }));
@@ -2800,6 +2789,7 @@ const httpServer = http.createServer((req, res) => {
         property_id: p.property_id,
         district: p.district,
         owner_name: resolvePlayerName(p.owner_player_id),
+        provenance_receipt_hash: p.owner_history.at(-1)?.receipt_hash ?? null,
         sale_count: p.sale_count,
         owner_count: owners.size,
         last_sale: last
@@ -6659,6 +6649,8 @@ function processSessionQueue(s: Session, now: number) {
 // itself), and replay never runs this path.
 const AUCTION_SCAN_INTERVAL_MS = 1000;
 let lastAuctionScanMs = 0;
+const AUTONOMOUS_WORLD_SCAN_INTERVAL_MS = 1000;
+let lastAutonomousWorldScanMs = 0;
 
 setInterval(() => {
   const now = Date.now();
@@ -6732,6 +6724,14 @@ setInterval(() => {
         )
       );
     }
+  }
+  if (now - lastAutonomousWorldScanMs >= AUTONOMOUS_WORLD_SCAN_INTERVAL_MS) {
+    lastAutonomousWorldScanMs = now;
+    advanceForgeholdCaravanActor(
+      persist.getSharedWorldEvents(SHARED_WORLD_IDS.forgeholdCaravanRoute, 200),
+      now,
+      (receipt) => audit.write(receipt),
+    );
   }
 }, TICK_MS);
 

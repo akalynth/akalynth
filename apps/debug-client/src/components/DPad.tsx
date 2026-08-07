@@ -53,6 +53,8 @@ export function DPad({ onMove, onRelease, onStopAll }: DPadProps) {
     activePointerDirs.current.clear();
   }, [onRelease]);
 
+  // Immediate visual feedback class helper (used in render)
+
   useEffect(() => {
     const downHandler = (ev: KeyboardEvent) => {
       const dir = KEY_BINDINGS[ev.key];

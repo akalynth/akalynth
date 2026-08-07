@@ -1,9 +1,24 @@
 import type { AccountCharacterOutfitColors } from '@shared/http';
 import { outfitPaletteHex } from './outfitPalette';
 
-const RECOLOR_OUTFIT_IDS = new Set(['male_guard', 'female_guard']);
-const GUARD_ASSET_ROOT = 'outfits/guard_city_01';
+const RECOLOR_OUTFIT_IDS = new Set([
+  'male_guard', 'female_guard',
+  'male_cloth_tunic', 'female_cloth_tunic',
+  'male_wool_traveler', 'female_wool_traveler',
+  'male_leather_cowl', 'female_leather_cowl',
+]);
 const FRAME = 64;
+
+const OUTFIT_ASSET_ROOTS: Record<string, string> = {
+  'male_guard': 'outfits/guard_city_01',
+  'female_guard': 'outfits/guard_city_01',
+  'male_cloth_tunic': 'outfits/cloth_tunic_01',
+  'female_cloth_tunic': 'outfits/cloth_tunic_01',
+  'male_wool_traveler': 'outfits/wool_traveler_01',
+  'female_wool_traveler': 'outfits/wool_traveler_01',
+  'male_leather_cowl': 'outfits/leather_cowl_01',
+  'female_leather_cowl': 'outfits/leather_cowl_01',
+};
 
 const SLOT_MASKS: Array<{ key: keyof AccountCharacterOutfitColors; mask: string }> = [
   { key: 'head', mask: 'hair' },
@@ -81,10 +96,16 @@ export function supportsOutfitRecolorPreview(outfitId: string): boolean {
   return RECOLOR_OUTFIT_IDS.has(outfitId);
 }
 
-export async function renderGuardRecolorPreview(
+export async function renderOutfitRecolorPreview(
   canvas: HTMLCanvasElement,
+  outfitId: string,
   colors: AccountCharacterOutfitColors,
 ): Promise<boolean> {
+  const root = OUTFIT_ASSET_ROOTS[outfitId] || 'outfits/guard_city_01';
+  let baseName = 'guard_city_01';
+  if (outfitId.includes('cloth_tunic')) baseName = 'cloth_tunic_01';
+  else if (outfitId.includes('wool_traveler')) baseName = 'wool_traveler_01';
+  else if (outfitId.includes('leather_cowl')) baseName = 'leather_cowl_01';
   const w = FRAME;
   const h = FRAME;
   canvas.width = w;
@@ -94,7 +115,7 @@ export async function renderGuardRecolorPreview(
   ctx.imageSmoothingEnabled = false;
 
   try {
-    const base = await loadImage(assetUrl(`${GUARD_ASSET_ROOT}/native_64/guard_city_01_front.png`));
+    const base = await loadImage(assetUrl(`${root}/native_64/${baseName}_front.png`));
     const off = document.createElement('canvas');
     off.width = w;
     off.height = h;
@@ -103,7 +124,7 @@ export async function renderGuardRecolorPreview(
     const data = getImageData(octx, base, w, h);
 
     for (const slot of SLOT_MASKS) {
-      const maskPath = `${GUARD_ASSET_ROOT}/masks/front/${slot.mask}.png`;
+      const maskPath = `${root}/masks/front/${slot.mask}.png`;
       let maskImg: HTMLImageElement;
       try {
         maskImg = await loadImage(assetUrl(maskPath));

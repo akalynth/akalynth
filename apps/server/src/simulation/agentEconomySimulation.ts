@@ -1,5 +1,7 @@
 // @ts-ignore - experimental .mjs without declarations (see BUILD_HEALTH_REPAIR_PLAN_V1)
 import { proposeWithLocalAI, buildContextFromSim } from "../tools/aiDecider.mjs";
+// AI decisions now default to SpaceXAI (XAI_API_KEY + grok-4.5) per /build-with-ai guidance.
+// Falls back to Ollama (LOCAL_LLM_MODEL) then pure-logic. Set AKALYNTH_AI_PROVIDER=xai|local to force.
 import {
   computeEventHash,
   computeInputsHash,
@@ -120,7 +122,10 @@ export interface AgentTrainingStep {
     market_listing_count: number;
     inventory_count: number;
     loot_event_count: number;
+    fish_stock?: number;
+    current_strategy?: any;
   };
+  strategy_influence?: string;
   action: string;
   reward_gold_delta: number;
   accepted: boolean;
@@ -167,6 +172,9 @@ export interface AgentEconomySimulationResult {
     owned_properties_by_agent: Record<string, string[]>;
     inventory_by_agent: Record<string, string[]>;
     full_world_maps_touched: string[];
+    strategy_driven_actions: number;
+    strategy_influenced_merchants: string[];
+    fish_acquired_via_strategy: number;
   };
 }
 
@@ -204,6 +212,12 @@ export async function runAgentEconomySimulation(input: AgentSimulationInput): Pr
   const worldLoot: MobLootSpawn[] = [];
   const worldItems = new Map<'Rookguard' | 'Azura', Map<string, WorldItem>>();
   const reputationByAgent = new Map<string, number>();
+
+  // Light commodity tracking for strategy consequence demo (fish as example domain).
+  // When a verified aggressive trade/fish strategy is active, merchants will perform
+  // additional acquisition actions. This changes gold + stock, which produces receipts
+  // and becomes visible in future observations.
+  const fishStockByAgent = new Map<string, number>();
   let stepNo = 0;
   let nowMs = Date.UTC(2026, 0, 1, 0, 0, 0);
 
@@ -251,6 +265,14 @@ export async function runAgentEconomySimulation(input: AgentSimulationInput): Pr
     if (startingGold > 0) {
       emit(agent.id, WALLET_CREDIT_ACTION, { amount: startingGold, reason: 'debug_grant' satisfies WalletCreditReason }, nowMs);
     }
+    if (agent.role === 'merchant') {
+      fishStockByAgent.set(agent.id, 0);
+    }
+  }
+
+  function getVerifiedStrategy(agentId: string) {
+    const k = knowledgeByAgent.get(agentId) as any;
+    return k?.economy?.current_strategy || null;
   }
 
   for (let day = 0; day < days; day += 1) {
@@ -266,6 +288,14 @@ export async function runAgentEconomySimulation(input: AgentSimulationInput): Pr
       onPresenceTick(agent.id, nowMs + PRESENCE_LINGER_THRESHOLD_MS + 2_000, (r) => emit(r.actor_id, r.action, r.inputs, nowMs + PRESENCE_LINGER_THRESHOLD_MS + 2_000));
     }
 
+    // Seed a verified strategy for one merchant to demonstrate the consequence loop
+    // (in real usage this would come from a prior successful declare_strategy proposal + verifier).
+    if (aiMode && day === 0 && stepNo === 0) {
+      const demoStrategy = { domain: 'fish', stance: 'aggressive', horizon_steps: 8, declared_at_step: 0 };
+      const k = { economy: { current_strategy: demoStrategy }, world: {}, rules: {} };
+      knowledgeByAgent.set('sim:merchant:2', k);
+    }
+
     for (const agent of agents) {
       const beforeGold = getGoldBalance(agent.id);
       let action = 'idle';
@@ -273,9 +303,11 @@ export async function runAgentEconomySimulation(input: AgentSimulationInput): Pr
       let loot: MobLootSpawn | null = null;
       let leverageUsed = "";
       let decisionMeta = null;
+      let strategyInfluence: string | undefined = undefined;
 
       if (aiMode) {
-        // AI-assisted decision with leverage analysis + contract gate + knowledge update
+        // AI-assisted decision (SpaceXAI / local / fallback) with leverage analysis + contract gate + knowledge update
+        // Provider selection happens inside proposeWithLocalAI / proposeDecision.
         const observation = {
           x: agent.player.x,
           y: agent.player.y,
@@ -285,6 +317,10 @@ export async function runAgentEconomySimulation(input: AgentSimulationInput): Pr
           market_listing_count: getMarketListings().length,
           inventory_count: inventoryByAgent.get(agent.id)?.length ?? 0,
           loot_event_count: worldLoot.length,
+          // AI advisors can see their own previously declared (and verified) strategies.
+          // This closes the loop: AI proposal → verifier → receipted knowledge → future proposals.
+          current_strategy: (knowledgeByAgent.get(agent.id) as any)?.economy?.current_strategy || null,
+          fish_stock: fishStockByAgent.get(agent.id) ?? 0,
         };
         const agentReceipts = receipts.filter((r: any) => r.actor_id === agent.id);
         const receiptWindow = agentReceipts.slice(-5);
@@ -309,6 +345,46 @@ export async function runAgentEconomySimulation(input: AgentSimulationInput): Pr
               }
               leverageUsed = decision.leverage || v.leverage || "";
               decisionMeta = { rationale: decision.rationale, leverage: leverageUsed, confidence: decision.confidence };
+
+              // Higher-order strategy declarations become explicit recorded signals.
+              // This is the "AI proposal → verified world event" pattern inside the training sim.
+              // The receipt-like step data + knowledge update makes the strategy observable
+              // to subsequent decision windows for this agent (and could be projected outward later).
+              if (at.type === 'declare_strategy') {
+                action = 'declare_strategy';
+                // Record it as a first-class event in the training trace.
+                // In a fuller system this would go through emit(...) as a real receipt type.
+                const strat = {
+                  domain: at.params?.domain,
+                  stance: at.params?.stance,
+                  horizon_steps: at.params?.horizon_steps ?? 8,
+                  declared_at_step: stepNo
+                };
+                // Make the strategy visible in this agent's knowledge for future proposals.
+                const k = knowledgeByAgent.get(agent.id) || { economy: {}, world: {}, rules: {} };
+                k.economy = k.economy || {};
+                k.economy.current_strategy = strat;
+                k.economy.strategy_declared_step = stepNo;
+                knowledgeByAgent.set(agent.id, k);
+
+                decisionMeta = {
+                  ...decisionMeta,
+                  strategy: strat
+                };
+
+                // Synthesize a receipt-like object for the training trace.
+                // Future receiptWindow slices will include it, so the AI can "remember"
+                // its own verified strategy declarations — exactly the advisor → world event → observable loop.
+                const stratReceipt = {
+                  actor_id: agent.id,
+                  action: 'agent_strategy_declared',
+                  summary: `strategy:${at.params?.domain}:${at.params?.stance || ''}`,
+                  inputs: at.params,
+                  step: stepNo,
+                  leverage: leverageUsed
+                };
+                receipts.push(stratReceipt as any);
+              }
             } else {
               action = "observe";
               leverageUsed = "gated-fallback";
@@ -337,9 +413,14 @@ export async function runAgentEconomySimulation(input: AgentSimulationInput): Pr
         action = buyFirstAffordableProperty(agent.id, emit, nowMs) ? "buy_property" : completeWorkLoop(agent.id, "temple_sweep", nowMs, emit);
         accepted = action !== "idle";
       } else {
-        const marketResult = runMerchantAction(agent.id, emit, nowMs);
+        const strategy = getVerifiedStrategy(agent.id);
+        const marketResult = runMerchantAction(agent.id, emit, nowMs, fishStockByAgent, strategy);
         action = marketResult.action;
         accepted = marketResult.accepted;
+        strategyInfluence = marketResult.strategy_influence;
+        if (strategyInfluence) {
+          action = `${action}+strategy:${strategyInfluence}`;
+        }
         if (agent.id.endsWith(":2")) {
           loot = mintAndPickupLoot(agent, "city_rat_goo", nowMs + 2, emit, worldLoot, inventoryByAgent, itemById);
         }
@@ -348,6 +429,36 @@ export async function runAgentEconomySimulation(input: AgentSimulationInput): Pr
       const inspect = debitForAction(agent.id, "inspect_player", (r) => emit(r.actor_id, r.action, r.inputs, nowMs + 1));
       if (inspect.ok) action = `${action}+inspect_player`;
       if (loot) action = `${action}+loot_pickup`;
+
+      // Apply effects of previously verified strategies.
+      // This is the crucial step: accepted AI intent changes observable world behavior.
+      // Strategy does not directly mutate state; it triggers normal receipt-emitting actions.
+      if (agent.role === 'merchant') {
+        const strat = getVerifiedStrategy(agent.id);
+        const isAggressiveFishTrade = strat &&
+          (String(strat.domain || '').includes('trade') || String(strat.domain || '').includes('fish')) &&
+          (strat.stance === 'aggressive' || strat.stance === 'aggressive_buy');
+        if (isAggressiveFishTrade) {
+          const fishCost = 110;
+          if (canAfford(agent.id, fishCost)) {
+            emit(agent.id, WALLET_DEBIT_ACTION, {
+              amount: fishCost,
+              reason: 'commodity_fish_acquisition' as any,
+            }, nowMs + 5);
+            const cur = fishStockByAgent.get(agent.id) ?? 0;
+            fishStockByAgent.set(agent.id, cur + 2);
+            emit(agent.id, 'agent_commodity_acquired', {
+              commodity: 'fish',
+              quantity: 2,
+              cost: fishCost,
+              via_verified_strategy: true,
+              strategy_domain: strat.domain
+            }, nowMs + 6);
+            action = `${action}+strategy_fish_buy`;
+            strategyInfluence = strat.domain;
+          }
+        }
+      }
 
       steps.push({
         step: stepNo,
@@ -364,6 +475,7 @@ export async function runAgentEconomySimulation(input: AgentSimulationInput): Pr
           market_listing_count: getMarketListings().length,
           inventory_count: inventoryByAgent.get(agent.id)?.length ?? 0,
           loot_event_count: worldLoot.length,
+          fish_stock: fishStockByAgent.get(agent.id) ?? 0,
         },
         action,
         reward_gold_delta: getGoldBalance(agent.id) - beforeGold,
@@ -371,6 +483,7 @@ export async function runAgentEconomySimulation(input: AgentSimulationInput): Pr
         loot_item_id: loot?.itemId ?? null,
         leverage: leverageUsed || undefined,
         decision: decisionMeta || undefined,
+        strategy_influence: strategyInfluence,
       });
       stepNo += 1;
       nowMs += WORK_CONTRACT_SCHEDULE.temple_sweep.cooldown_ms + 60_000;
@@ -697,37 +810,102 @@ function buyFirstAffordableProperty(
 function runMerchantAction(
   agentId: string,
   emit: ReturnType<typeof makeReceiptEmitter>,
-  nowMs: number
-): { action: string; accepted: boolean } {
+  nowMs: number,
+  fishStockByAgent: Map<string, number>,
+  strategy: any = null
+): { action: string; accepted: boolean; strategy_influence?: string } {
+  const isAggressiveTrade =
+    strategy &&
+    (String(strategy.domain || '').includes('trade') || String(strategy.domain || '').includes('fish')) &&
+    (strategy.stance === 'aggressive' || strategy.stance === 'aggressive_buy');
+
+  const influence = isAggressiveTrade ? (strategy?.domain || 'trade') : undefined;
+
+  // Aggressive strategy changes behavior: more willing to transact, and acquires "fish" (commodity)
+  // as a concrete world outcome. This produces additional receipts and stock changes.
+  if (isAggressiveTrade) {
+    // Try to buy fish (simulated commodity acquisition) — this is the measurable consequence.
+    // Costs gold, increases fish stock. Different from normal property trading.
+    const fishCost = 120;
+    if (canAfford(agentId, fishCost)) {
+      emit(agentId, WALLET_DEBIT_ACTION, {
+        amount: fishCost,
+        reason: 'commodity_fish_acquisition' as WalletDebitReason,
+      }, nowMs);
+
+      const currentFish = fishStockByAgent.get(agentId) ?? 0;
+      fishStockByAgent.set(agentId, currentFish + 3);
+
+      emit(agentId, 'agent_commodity_acquired', {
+        commodity: 'fish',
+        quantity: 3,
+        cost: fishCost,
+        strategy: strategy?.domain,
+      }, nowMs + 1);
+
+      // Still do a normal aggressive market action on top.
+      const listing = getMarketListings()
+        .filter((p) => p.status === 'listed' && p.owner_player_id !== agentId && p.listed_price_gold !== null)
+        .sort((a, b) => (a.listed_price_gold ?? 0) - (b.listed_price_gold ?? 0))[0];
+
+      // Aggressive: willing to pay a premium
+      const premiumPrice = listing ? (listing.listed_price_gold ?? 0) * 1.15 : 0;
+      const sellerId = listing?.owner_player_id;
+      if (listing && typeof sellerId === 'string' && premiumPrice > 0 && canAfford(agentId, premiumPrice)) {
+        emit(agentId, WALLET_DEBIT_ACTION, {
+          amount: Math.floor(premiumPrice),
+          reason: `property_transfer:${listing.property_id}` satisfies WalletDebitReason,
+        }, nowMs + 10);
+        emit(sellerId, WALLET_CREDIT_ACTION, {
+          amount: Math.floor(premiumPrice),
+          reason: `property_sale:${listing.property_id}` satisfies WalletCreditReason,
+        }, nowMs + 11);
+        emit(agentId, PROPERTY_TRANSFERRED_ACTION, {
+          property_id: listing.property_id,
+          seller_id: sellerId,
+          price: Math.floor(premiumPrice),
+          strategy_influenced: true,
+        }, nowMs + 12);
+        return { action: 'aggressive_buy_fish_and_property', accepted: true, strategy_influence: influence };
+      }
+
+      return { action: 'aggressive_fish_acquisition', accepted: true, strategy_influence: influence };
+    }
+  }
+
   const listing = getMarketListings()
     .filter((p) => p.status === 'listed' && p.owner_player_id !== agentId && p.listed_price_gold !== null)
     .sort((a, b) => (a.listed_price_gold ?? 0) - (b.listed_price_gold ?? 0))[0];
-  if (listing?.listed_price_gold !== null && listing?.owner_player_id && canAfford(agentId, listing.listed_price_gold)) {
+  const listedPrice = listing?.listed_price_gold;
+  const sellerId = listing?.owner_player_id;
+  if (typeof listedPrice === 'number' && sellerId && canAfford(agentId, listedPrice)) {
     emit(agentId, WALLET_DEBIT_ACTION, {
-      amount: listing.listed_price_gold,
+      amount: listedPrice,
       reason: `property_transfer:${listing.property_id}` satisfies WalletDebitReason,
     }, nowMs);
-    emit(listing.owner_player_id, WALLET_CREDIT_ACTION, {
-      amount: listing.listed_price_gold,
+    emit(sellerId, WALLET_CREDIT_ACTION, {
+      amount: listedPrice,
       reason: `property_sale:${listing.property_id}` satisfies WalletCreditReason,
     }, nowMs + 1);
     emit(agentId, PROPERTY_TRANSFERRED_ACTION, {
       property_id: listing.property_id,
-      seller_id: listing.owner_player_id,
-      price: listing.listed_price_gold,
+      seller_id: sellerId,
+      price: listedPrice,
     }, nowMs + 2);
-    return { action: 'buy_listed_property', accepted: true };
+    return { action: 'buy_listed_property', accepted: true, strategy_influence: influence };
   }
 
   const owned = getAllProperties().find((p) => p.owner_player_id === agentId);
-  if (!owned && buyFirstAffordableProperty(agentId, emit, nowMs)) return { action: 'buy_property', accepted: true };
+  if (!owned && buyFirstAffordableProperty(agentId, emit, nowMs)) return { action: 'buy_property', accepted: true, strategy_influence: influence };
   if (owned && owned.status === 'owned') {
-    const price = Math.max(owned.primary_price_gold + 100, 700);
-    emit(agentId, PROPERTY_LISTED_ACTION, { property_id: owned.property_id, price }, nowMs);
-    return { action: 'list_property', accepted: true };
+    // Aggressive strategy lists more competitively (faster turnover)
+    const markup = isAggressiveTrade ? 60 : 100;
+    const price = Math.max(owned.primary_price_gold + markup, 650);
+    emit(agentId, PROPERTY_LISTED_ACTION, { property_id: owned.property_id, price, strategy_influenced: !!isAggressiveTrade }, nowMs);
+    return { action: isAggressiveTrade ? 'list_property_aggressive' : 'list_property', accepted: true, strategy_influence: influence };
   }
 
-  return { action: 'scan_market', accepted: true };
+  return { action: 'scan_market', accepted: true, strategy_influence: influence };
 }
 
 function mintAndPickupLoot(
@@ -823,6 +1001,13 @@ function summarizeSimulation(
     owned_properties_by_agent: owned,
     inventory_by_agent: inventory,
     full_world_maps_touched: [...new Set(steps.map((s) => s.map))].sort(),
+
+    // Strategy consequence metrics (AI advisor influencing the world via verified path)
+    strategy_driven_actions: steps.filter((s) => !!s.strategy_influence).length,
+    strategy_influenced_merchants: [...new Set(steps.filter((s) => !!s.strategy_influence).map((s) => s.agent_id))],
+    fish_acquired_via_strategy: receipts
+      .filter((r: any) => r.action === 'agent_commodity_acquired' && r.inputs?.commodity === 'fish')
+      .reduce((sum, r: any) => sum + (r.inputs?.quantity || 0), 0),
   };
 }
 

@@ -334,7 +334,7 @@ async function main() {
     });
   }
 
-  const desktopHasObjective = /Step onto the glowing move rune|Open Chat/.test(desktop.idle1.bodyText);
+  const desktopHasObjective = /Walk onto the glowing rune to begin|Open Chat/.test(desktop.idle1.bodyText);
   const desktopFish = findVisibleButton(desktop.idle1, 'Fish Rookguard canal', desktop.viewport);
   const desktopAccountPanelHidden = !/ACCOUNT SESSION REQUIRED/i.test(desktop.idle1.bodyText);
   addCheck(report, 'desktop_presentation_objective_and_action_readable', Boolean(desktopHasObjective && desktopFish), {

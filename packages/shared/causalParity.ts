@@ -159,14 +159,13 @@ export function causalPlayerViewForDetails(
 
   if (eventId === 'rookguard_canal_merchant') {
     const worldState = record(details.world_state);
-    const behavior = text(worldState.merchant_behavior) ?? 'noticing patience';
     const respect = number(worldState.merchant_respect);
     return {
       action: 'Fish the Rookguard canal with patience.',
       result: 'The canal merchant noticed your patience.',
-      world: respect === null
-        ? `The merchant now remembers you as ${behavior.replace(/_/g, ' ')}.`
-        : `The merchant now remembers you as ${behavior.replace(/_/g, ' ')} (respect ${respect}).`,
+      world: respect !== null && respect > 1
+        ? `The canal merchant nods when you approach. "The patience you showed is still talked about at the stalls."`
+        : `Mara's family reopened their fish stall. The canal merchant told them a patient fisher helped the waters settle.`,
     };
   }
 
@@ -181,6 +180,17 @@ export function causalPlayerViewForDetails(
       world: banditPressure === null
         ? `The route is ${routeSafety}; merchant access is ${merchantAccess}.`
         : `The route is ${routeSafety}; merchant access is ${merchantAccess}, with bandit pressure at ${banditPressure}.`,
+    };
+    const future = text(details.next_objective);
+    if (future) summary.future = future;
+    return summary;
+  }
+
+  if (eventId === 'forgehold_caravan_evidence' && details.event_type === 'caravan_merchant_arrived') {
+    const summary: CausalPlayerView = {
+      action: 'Protect the Forgehold caravan route.',
+      result: 'Merchant Lora completed the route and arrived with new stock.',
+      world: `Merchant Lora has set up a small stall on the eastern road. She mentions the guard you helped post made the first run possible. A child asked if the "road protector" would be back.`,
     };
     const future = text(details.next_objective);
     if (future) summary.future = future;

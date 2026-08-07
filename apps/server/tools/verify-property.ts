@@ -14,6 +14,7 @@ import {
   getProperty,
   getAllProperties,
   isValidPrice,
+  propertyPublicFromProjection,
 } from '../src/world/property.js';
 import {
   clearTreasuryProjection,
@@ -294,6 +295,37 @@ test('P-H3 + P-H5: state is receipt-derived and replay-deterministic', () => {
   assertEquals(getGoldBalance('b'), balB, 'balance b identical after replay');
 });
 
+test('P-H7: shared observer sees owner and provenance without raw owner id', () => {
+  resetState();
+  seedProperty('Azura:H1', 500);
+  fund('player-a', 1000);
+  assertEquals(simPrimaryBuy('player-a', 'Azura:H1').ok, true, 'purchase should succeed');
+
+  const purchaseReceipt = receipts.findLast((r) => r.action === PROPERTY_PURCHASED_ACTION)!;
+  const publicView = propertyPublicFromProjection(getProperty('Azura:H1')!, (playerId) =>
+    playerId === 'player-a' ? 'Sovereign' : null
+  );
+
+  assertEquals(publicView.status, 'owned');
+  assertEquals(publicView.owner_name, 'Sovereign');
+  assertEquals(publicView.provenance_receipt_hash, purchaseReceipt.event_hash);
+  assert(!('owner_player_id' in publicView), 'public view must not expose raw owner id');
+  assert(!JSON.stringify(publicView).includes('player-a'), 'public view must not leak raw owner id');
+
+  const captured = receipts.slice();
+  clearPropertyProjection();
+  clearTreasuryProjection();
+  for (const r of captured) {
+    applyReceiptToProperty(r);
+    applyReceiptToTreasury(r);
+  }
+  const replayedView = propertyPublicFromProjection(getProperty('Azura:H1')!, (playerId) =>
+    playerId === 'player-a' ? 'Sovereign' : null
+  );
+  assertEquals(replayedView.owner_name, publicView.owner_name, 'replay preserves public owner');
+  assertEquals(replayedView.provenance_receipt_hash, publicView.provenance_receipt_hash, 'replay preserves provenance');
+});
+
 test('P-H6: durable DB materialization equals in-memory projection (incl. no double sale_count on re-materialize)', () => {
   resetState();
   seedProperty('Azura:H1', 500);
@@ -331,11 +363,16 @@ test('P-H6: durable DB materialization equals in-memory projection (incl. no dou
   assertEquals(row.sale_count, proj.sale_count, 'sale_count matches (no double-count on re-materialize)');
   assertEquals(row.sale_count, 2, 'sale_count is exactly 2 (primary + resale)');
   assertEquals(row.listed_price_gold, proj.listed_price_gold, 'listed price matches');
-  const dbHistory = JSON.parse(row.owner_history) as Array<{ from: string | null; to: string; action: string }>;
+  const dbHistory = JSON.parse(row.owner_history) as Array<{ from: string | null; to: string; action: string; receipt_hash: string }>;
   assertEquals(
     dbHistory.map((h) => `${h.from}->${h.to}:${h.action}`),
     proj.owner_history.map((h) => `${h.from}->${h.to}:${h.action}`),
     'owner_history matches'
+  );
+  assertEquals(
+    dbHistory.map((h) => h.receipt_hash),
+    proj.owner_history.map((h) => h.receipt_hash),
+    'owner_history provenance matches'
   );
   db.close();
 });

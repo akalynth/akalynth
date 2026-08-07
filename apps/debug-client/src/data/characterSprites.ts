@@ -15,6 +15,7 @@ import ratLargeSheet from '../../../../data/assets-src/sprites/creatures/rat_lar
 import diseasedRatSheet from '../../../../data/assets-src/sprites/creatures/diseased_rat_01.png?url';
 import dogSheet from '../../../../data/assets-src/sprites/creatures/dog_01.png?url';
 import catSheet from '../../../../data/assets-src/sprites/creatures/cat_01.png?url';
+import clothTunicSheet from '../../../../data/assets-src/sprites/characters/cloth_tunic_01.png?url';
 
 export type Direction = 'south' | 'north' | 'east' | 'west';
 
@@ -22,7 +23,8 @@ export type SmokeTestCharacterId =
   'base_human_male_01'
   | 'guard_city_01'
   | 'mage_apprentice_01'
-  | 'skeleton_warrior_01';
+  | 'skeleton_warrior_01'
+  | 'cloth_tunic_01';
 
 export type NpcVisualPresetId =
   'castle_guard_red_01'
@@ -66,6 +68,7 @@ export const SMOKE_TEST_CHARACTER_IDS: SmokeTestCharacterId[] = [
   'guard_city_01',
   'mage_apprentice_01',
   'skeleton_warrior_01',
+  'cloth_tunic_01',
 ];
 
 export const NPC_VISUAL_PRESET_IDS: NpcVisualPresetId[] = [
@@ -111,6 +114,7 @@ export const CHARACTER_SPRITES: Record<CharacterSpriteId, CharacterSpriteDef> = 
   diseased_rat_01: { id: 'diseased_rat_01', assetType: 'creature', src: diseasedRatSheet, displayOnly: true },
   dog_01: { id: 'dog_01', assetType: 'creature', src: dogSheet, displayOnly: true },
   cat_01: { id: 'cat_01', assetType: 'creature', src: catSheet, displayOnly: true },
+  cloth_tunic_01: { id: 'cloth_tunic_01', assetType: 'character', src: clothTunicSheet, displayOnly: true },
 };
 
 export function characterSpriteById(id: CharacterSpriteId): CharacterSpriteDef {

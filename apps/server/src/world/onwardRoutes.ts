@@ -10,6 +10,7 @@ import {
   FORGEHOLD_CARAVAN_EVIDENCE_RECOVERED_ACTION,
   FORGEHOLD_CARAVAN_ACTIVITY_ID,
   FORGEHOLD_CARAVAN_GUARD_DECISION_ACTION,
+  FORGEHOLD_CARAVAN_MERCHANT_ARRIVED_ACTION,
   FORGEHOLD_COMPONENT_PAYOUT_CREDITED_ACTION,
   FORGEHOLD_COMPONENT_SETTLED_ACTION,
   FORGEHOLD_ECONOMY_QUOTED_ACTION,
@@ -57,6 +58,7 @@ export interface OnwardRouteReceiptProgress {
     route_safety: 'unsecured' | 'sealed' | 'monitored';
     merchant_access: 'closed' | 'open';
     merchant_stock: number;
+    merchant_travel_due_at_ms: number | null;
     bandit_pressure: number;
     player_trust: number;
   };
@@ -96,6 +98,7 @@ function defaultProgress(): OnwardRouteReceiptProgress {
       route_safety: 'unsecured',
       merchant_access: 'closed',
       merchant_stock: 0,
+      merchant_travel_due_at_ms: null,
       bandit_pressure: 0,
       player_trust: 0,
     },
@@ -159,6 +162,9 @@ function nextCaravanProtectionState(
     route_safety: safeRouteSafety(state.route_safety),
     merchant_access: safeMerchantAccess(state.merchant_access),
     merchant_stock: nonNegativeNumber(state.merchant_stock, base.merchant_stock),
+    merchant_travel_due_at_ms: state.merchant_travel_due_at_ms === null
+      ? null
+      : parsedTime(state.merchant_travel_due_at_ms, base.merchant_travel_due_at_ms),
     bandit_pressure: nonNegativeNumber(state.bandit_pressure, base.bandit_pressure),
     player_trust: nonNegativeNumber(state.player_trust, base.player_trust),
   };
@@ -177,7 +183,9 @@ function setProgress(playerId: string, next: OnwardRouteReceiptProgress): void {
 }
 
 export function applyReceiptToOnwardRoutes(receipt: AuditReceipt): void {
-  const playerId = receipt.actor_id;
+  const playerId = typeof receipt.inputs?.chronicle_player_id === 'string'
+    ? receipt.inputs.chronicle_player_id
+    : receipt.actor_id;
   if (!playerId || receipt.result === 'rejected') return;
 
   const current = getOnwardRouteReceiptProgress(playerId);
@@ -239,6 +247,29 @@ export function applyReceiptToOnwardRoutes(receipt: AuditReceipt): void {
         merchant_stock: nonNegativeNumber(stateAfter?.merchant_stock, Math.max(current.forgeholdCaravanProtection.merchant_stock - 1, 0)),
         bandit_pressure: nonNegativeNumber(stateAfter?.bandit_pressure, Math.max(current.forgeholdCaravanProtection.bandit_pressure - 1, 0)),
         player_trust: nonNegativeNumber(stateAfter?.player_trust, current.forgeholdCaravanProtection.player_trust + 1),
+        ...stateAfter,
+      },
+    );
+    next = {
+      ...current,
+      forgeholdCaravanProtection: computedState,
+    };
+  } else if (receipt.action === FORGEHOLD_CARAVAN_MERCHANT_ARRIVED_ACTION) {
+    const nowMs = parsedTime(receipt.inputs?.arrived_at_ms, parsedTime(receipt.timestamp, null));
+    const stateAfter = receipt.inputs?.state_after as Record<string, unknown> | undefined;
+    const computedState = nextCaravanProtectionState(
+      current,
+      nonEmptyString(
+        receipt.inputs?.event_instance_id,
+        `${FORGEHOLD_CARAVAN_EVENT_ID}:${current.forgeholdCaravanProtection.event_sequence + 1}:merchant_arrived`,
+      ),
+      typeof receipt.inputs?.agent_id === 'string' ? receipt.inputs.agent_id : receipt.actor_id,
+      nowMs,
+      {
+        ...current.forgeholdCaravanProtection,
+        merchant_access: 'open',
+        merchant_stock: 1,
+        merchant_travel_due_at_ms: null,
         ...stateAfter,
       },
     );

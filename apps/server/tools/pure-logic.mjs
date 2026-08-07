@@ -1,8 +1,22 @@
 // Pure logic for AKALYNTH_AGENT_LEARNING_CONTRACT_V1
-// SINGLE SOURCE: JSON decision contract + verifier + deterministic fallback.
-// Receipts from sim snapshot (or runtime) are the experience source.
-// AI (optional) proposes; verifier + deterministic policy gate everything.
-// No direct execution. Always produces or rejects with receiptable outcome.
+//
+// THE VERIFIER IS THE BOUNDARY.
+//
+// AI may propose actions (low-level moves or higher-order intents/strategies).
+// This module is the ONLY place that decides whether a proposal is allowed
+// to influence the simulated world.
+//
+//   AI proposal
+//        ↓  (this file)
+//   Contract validation + policy gates + confidence/leverage rules
+//        ↓
+//   Approved / Rejected
+//
+// Approved proposals may then cause normal world code to emit receipts.
+// The receipts (not the AI output) become the new ground truth.
+//
+// Deterministic fallback always exists so the world does not depend on AI availability.
+// This is essential for replay, tests, and offline development.
 
 export const CONTRACT_VERSION = '1.0.0';
 
@@ -40,7 +54,12 @@ export function validateDecisionContract(decision) {
   if (!action.type || typeof action.type !== 'string') {
     errors.push('proposedAction.type required');
   }
-  const allowed = ['noop', 'move', 'bid', 'interact', 'observe', 'work', 'buy_property', 'list_property', 'explore', 'complete_work_contract'];
+  const allowed = [
+    'noop', 'move', 'bid', 'interact', 'observe', 'work',
+    'buy_property', 'list_property', 'explore', 'complete_work_contract',
+    // Higher-order proposals (AI as advisor, still fully verified)
+    'declare_strategy'
+  ];
   if (action.type && !allowed.includes(action.type)) {
     errors.push('proposedAction.type not in allowed policy space');
   }
@@ -61,10 +80,26 @@ export function deterministicFallbackPolicy(context, receipts, opts = {}) {
   // Extended for AC2: seed/step-driven variety so action sequences differ across runs.
   const { seed = 0, step = 0 } = opts || {};
   const recent = Array.isArray(receipts) ? receipts.slice(-5) : [];
-  const hasEconomy = recent.some(r => r && (r.type === 'economy-event' || (r.summary || '').includes('bid') || (r.summary || '').includes('auction')));
+  const hasEconomy = recent.some(r => r && (r.type === 'economy-event' || (r.summary || '').includes('bid') || (r.summary || '').includes('auction') || (r.action || '').includes('bid')));
   const s = (Number(seed) || 0) % 4;
   const t = Number(step) || 0;
-  const idx = (s + t) % 3;  // 42%4=2 vs 99%4=3 => different idx even at step 0; sequences differ across seeds
+  const idx = (s + t) % 3;
+
+  // Occasionally (but reliably for training) propose a higher-order strategy.
+  // This enables the full "AI proposal → verifier → behavior change → world outcome → receipt" loop
+  // even when using pure deterministic fallback. The verifier still enforces the rules.
+  if (hasEconomy && step > 0 && (t % 3 === 0)) {
+    return {
+      type: 'declare_strategy',
+      params: {
+        domain: 'trade',
+        stance: 'aggressive',
+        horizon_steps: 6,
+        reason: 'recent-economy-signals'
+      }
+    };
+  }
+
   if (hasEconomy) {
     const actions = ['observe', 'bid', 'work'];
     return { type: actions[idx], params: { reason: 'recent-economy', seed, step } };
@@ -99,6 +134,22 @@ export function verifyDecision(decision, context, receipts) {
         fallback,
         proposed: decision.proposedAction
       };
+    }
+  }
+
+  // Special handling for higher-order strategy declarations.
+  // These are AI-proposed world signals (e.g. "I will bias toward fish buying").
+  // They must carry clear leverage and should not be low-confidence spam.
+  if (proposedType === 'declare_strategy') {
+    const params = decision.proposedAction.params || {};
+    if (!params.domain || typeof params.domain !== 'string') {
+      return { approved: false, reason: 'strategy-missing-domain', proposed: decision.proposedAction };
+    }
+    if ((decision.confidence || 0) < 0.65) {
+      return { approved: false, reason: 'strategy-confidence-too-low', proposed: decision.proposedAction };
+    }
+    if (!decision.leverage || decision.leverage.length < 8) {
+      return { approved: false, reason: 'strategy-requires-strong-leverage', proposed: decision.proposedAction };
     }
   }
 

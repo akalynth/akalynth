@@ -520,6 +520,7 @@ data class PropertyPublic(
     val district: String? = null,
     val status: String,
     @SerialName("owner_name") val ownerName: String? = null,
+    @SerialName("provenance_receipt_hash") val provenanceReceiptHash: String? = null,
     @SerialName("primary_price_gold") val primaryPriceGold: Int,
     @SerialName("listed_price_gold") val listedPriceGold: Int? = null,
     @SerialName("sale_count") val saleCount: Int

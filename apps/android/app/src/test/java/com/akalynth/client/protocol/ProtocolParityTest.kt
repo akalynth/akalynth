@@ -301,7 +301,7 @@ class ProtocolParityTest {
             """{"type":"mod_reports_snapshot","reports":[],"has_more":false}""" to ModReportsSnapshotMessage::class.java,
             """{"type":"mod_resolve_result","success":true,"case_id":"c"}""" to ModResolveResultMessage::class.java,
             """{"type":"property_snapshot","properties":[]}""" to PropertySnapshotMessage::class.java,
-            """{"type":"property_state","property":{"property_id":"pr","zone":"z","plot_id":"pl","x":1,"y":1,"width":2,"height":2,"district":null,"status":"unowned","owner_name":null,"primary_price_gold":100,"listed_price_gold":null,"sale_count":0}}""" to PropertyStateMessage::class.java,
+            """{"type":"property_state","property":{"property_id":"pr","zone":"z","plot_id":"pl","x":1,"y":1,"width":2,"height":2,"district":null,"status":"owned","owner_name":"Sovereign","provenance_receipt_hash":"receipt-abc123","primary_price_gold":100,"listed_price_gold":null,"sale_count":1}}""" to PropertyStateMessage::class.java,
             """{"type":"house_sold","property_id":"pr","plot_id":"pl","zone":"z","buyer_name":"b","seller_name":null,"price":100,"sale_count":1}""" to HouseSoldMessage::class.java,
             """{"type":"property_result","action":"buy_house","success":true,"property_id":"pr"}""" to PropertyResultMessage::class.java,
             """{"type":"property_ledger","property_id":"pr","owner_history":[],"sale_count":0}""" to PropertyLedgerMessage::class.java,

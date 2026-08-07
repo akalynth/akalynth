@@ -129,6 +129,8 @@ Packages build (`npm run build:packages`) succeeds because it does not include t
 **High confidence**:
 - `apps/server/src/simulation/agentEconomySimulation.ts`
 - `apps/server/src/tools/aiDecider.mjs` + `pure-logic.mjs` (and .d.ts or conversion)
+
+**Update (build-with-ai):** aiDecider now supports SpaceXAI (XAI_API_KEY → grok-4.5 at api.x.ai/v1) as the preferred LLM. Local Ollama and pure fallback remain. No change to the experimental typing surface.
 - `packages/shared/http.ts`
 - `apps/debug-client/src/hooks/useCodexGraph.ts`
 - `apps/debug-client/src/components/OutfitColorPicker.tsx` + related (OutfitRecolorPreview, outfitRecolorEngine.ts, types.ts, CharacterBar.tsx)

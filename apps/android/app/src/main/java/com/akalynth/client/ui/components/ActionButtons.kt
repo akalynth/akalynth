@@ -93,10 +93,14 @@ fun ActionButtons(
         ROUTE_ACTION_LABELS[skillId]?.let { label -> skillId to label }
     }
 
-    ClassicActionDock(modifier = modifier) {
+    ClassicActionDock(
+        modifier = modifier,
+        maxWidth = if (showRookguardVocations) 220.dp else 132.dp,
+    ) {
             ClassicActionRingButton(
                 onClick = onChat,
                 modifier = Modifier.size(62.dp),
+                contentDescription = "Open chat",
             ) {
                 Icon(
                     imageVector = Icons.Default.Email,
@@ -117,6 +121,7 @@ fun ActionButtons(
                 modifier = Modifier
                     .size(54.dp)
                     .testTag("ActionButtons_Chronicle"),
+                contentDescription = "Open Chronicle",
             ) {
                 Text(
                     text = "C",
@@ -144,6 +149,7 @@ fun ActionButtons(
                     modifier = Modifier
                         .size(62.dp)
                         .testTag("ActionButtons_AttackTrainingSlime"),
+                    contentDescription = "Attack training creature",
                 ) {
                     Text(
                         text = "ATK",

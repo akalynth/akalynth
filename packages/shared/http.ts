@@ -635,6 +635,7 @@ export interface PropertyMarketListing {
   district: string | null;
   status: PropertyStatus;
   owner_name: string | null; // anonymized display name; never a raw player id
+  provenance_receipt_hash: string | null; // public receipt reference for current ownership
   primary_price_gold: number;
   listed_price_gold: number | null;
 }
@@ -656,6 +657,7 @@ export interface PropertyLedgerResponse {
   property_id: string;
   district: string | null;
   owner_name: string | null;
+  provenance_receipt_hash: string | null;
   sale_count: number;
   owner_count: number; // distinct owners over the property's history
   last_sale: { from_name: string | null; to_name: string; price: number; timestamp: string } | null;

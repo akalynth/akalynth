@@ -118,7 +118,7 @@ test('initial quest starts at the move objective', () => {
   const quest = buildRookguardQuestProgress(state);
   const routes = buildOnwardRouteProgress(state);
   assert(quest.phase === 'tutorial', `expected tutorial phase, got ${quest.phase}`);
-  assert(rookguardQuestObjective(state) === 'Step onto the glowing move rune (east plaza, tile 3,2)', 'initial objective mismatch');
+  assert(rookguardQuestObjective(state) === 'Walk onto the glowing rune to begin', 'initial objective mismatch');
   assert(!rookguardGateOpen(state), 'gate must not open before tutorial/training/profession');
   assert(
     rookguardGateBlockedHint(state).includes('move rune'),

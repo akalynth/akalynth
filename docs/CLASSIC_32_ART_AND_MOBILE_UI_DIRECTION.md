@@ -510,6 +510,121 @@ Rules:
 - Use long-press or onboarding hints for unfamiliar icons.
 - Keep lower-middle playfield mostly clear.
 
+## UI Philosophy: World Remembers, UI Serves (2026 refinement)
+
+This section supersedes earlier mobile notes where they conflict. It is derived from research into permanent-feeling old-school MMOs (Tibia pre-2005 client, TibiaME, OSRS classic era) and Akalynth's own receipt/chronicle architecture.
+
+**Core principle**: The world is the product. The UI is the instrument.
+
+Akalynth does not aim to look modern. It aims to **feel permanent**.
+
+Players should open the phone, enter a pixel world, act, leave, and return to find that **history happened** without them.
+
+### World-First Layout (highest priority)
+
+The player must spend the overwhelming majority of screen time looking at the world (Rookguard, Azura, etc.), not at chrome or menus.
+
+Recommended mobile layout priority:
+
+```
++--------------------------------+
+|                                |
+|          WORLD VIEW            |
+|          (MapCanvas)           |
+|                                |
+|                                |
+| HP        ACTION RING     MAP  |
+| INVENTORY / STATUS / CHAT      |
++--------------------------------+
+```
+
+- World view always wins on real estate.
+- All other elements are secondary instruments that serve context from the world.
+- On phone: large clear playfield; drawers/sheets for deep views.
+
+### Mobile Controls: Two Hands, World Context
+
+Phone is not a tiny PC.
+
+- **Left hand**: Movement (D-pad, swipe-to-move, or optional joystick). Consistent, always available.
+- **Right hand**: Context actions. Dynamic. Not a fixed 20-button hotbar.
+
+Actions are **intents offered by the current world state**:
+
+- Near river or fishing spot → [Fish] [Inspect] [Gather]
+- Near caravan or merchant → [Trade] [Protect] [Follow] [Quote]
+- Near NPC with active event → [Talk] [Witness] [Help]
+
+The world (position, nearby entities, recent receipts, active strategies) determines what appears in the action surface.
+
+### Action Ring (keep and strengthen)
+
+The action ring is stronger than old F-key hotbars.
+
+Old model: "Buttons for my abilities."
+
+Akalynth model: **"What can I meaningfully do here, right now?"**
+
+Ring = available intents derived from:
+- Current location and tile state
+- Nearby actors / items / routes
+- Verified world events and consequences (e.g. a merchant's accepted strategy)
+
+Long-press or secondary gesture on ring can surface more (full intent list).
+
+Icons preferred over text for speed. Tooltips / chronicle links for depth.
+
+### Chronicle as Primary "While You Were Away" Feed
+
+Chat is secondary communication.
+
+The **World Chronicle** is primary persistent memory.
+
+Examples of what should surface:
+
+- "Merchant Lora adopted aggressive fish purchasing strategy."
+- "Eastern Road restored by adventurers. Trade returning."
+- "Caravan reached Azura. Supply of X increased."
+
+Players open the client and immediately see **consequences** of actions (theirs and others').
+
+This is the "world that remembers" differentiator.
+
+Tabs or filters: World (global consequences), Nearby (local), Personal (your receipts), Guild/Party.
+
+### Inventory
+
+Classic grid. Physical objects.
+
+4–6 column grid on phone.
+
+Items are things you can hold, drop, trade, use in context.
+
+Avoid card-game or modern list UIs.
+
+Equipment as strip or paper-doll.
+
+### Status
+
+Simple and non-competitive:
+
+HP ████████░░ 80/100
+MP █████░░░░░ 50/100
+
+Instant communication. Do not add fancy animations or compete visually with the world.
+
+### Consequence Surfacing (the Akalynth difference)
+
+Where old games said "you are in a dangerous world", Akalynth says "you are in a world that remembers."
+
+UI must make consequences legible:
+
+- Location labels can append state: "Eastern Road ✓ Restored • Merchant activity increasing"
+- Map overlays or glyphs for recent durable changes (tied to chronicle glyphs).
+- Action ring and nearby lists can reflect current strategy/economy state.
+
+Never let AI (or any system) mutate the world directly. All changes flow through receipts → chronicle → UI presentation.
+
 ## Inventory And Chat
 
 Inventory should be a drawer or bottom sheet, not a permanent panel.
@@ -584,6 +699,18 @@ Minimum target: 44 CSS px
 Preferred action target: 52-64 CSS px
 UI icons: 32x32 source, displayed larger with nearest-neighbor scaling
 ```
+
+## Priority Order (Android / Mobile Client)
+
+1. World view + movement feel (MapCanvas dominant, D-pad/swipe reliable, no accidental occlusion)
+2. Action ring refinement (world-context "intents", dynamic, right-hand)
+3. Inventory / equipment (classic grid, physical feel)
+4. Chronicle / "while you were away" feed (durable consequences, history, strategy outcomes)
+5. Chat / communication (secondary to chronicle)
+6. Minimap polish
+7. Cosmetic UI improvements (last)
+
+This order exists because the unique advantage is not buttons. The advantage is a persistent world that players can leave and return to find changed.
 
 ## Mobile MVP UI Scope
 

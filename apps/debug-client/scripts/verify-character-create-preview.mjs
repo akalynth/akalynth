@@ -36,7 +36,12 @@ for (const rel of files) requireFile(rel);
 
 const previewData = read('src/data/characterCreatePreview.ts');
 requirePattern('outfit preview table', /OUTFIT_PREVIEW/, previewData, 'src/data/characterCreatePreview.ts');
-requirePattern('female wanderer label', /base_human_female_01/, previewData, 'src/data/characterCreatePreview.ts');
+requirePattern(
+  'female wanderer preview',
+  /female_wanderer[\s\S]*?(?:base_human_female_01|Rookguard traveler)/,
+  previewData,
+  'src/data/characterCreatePreview.ts',
+);
 requirePattern('bundledSpriteForPreview export', /export function bundledSpriteForPreview/, previewData, 'src/data/characterCreatePreview.ts');
 
 const preview = read('src/components/CharacterSpritePreview.tsx');

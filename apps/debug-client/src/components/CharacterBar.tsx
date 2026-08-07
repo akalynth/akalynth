@@ -60,7 +60,7 @@ export function CharacterBar({
   const [error, setError] = useState<string | null>(null);
   const [worldId, setWorldId] = useState<CharacterCreateInput['world_id'] | ''>('');
   const [sex, setSex] = useState<CharacterSex>('male');
-  const [outfitId, setOutfitId] = useState<CharacterCreateInput['outfit_id'] | ''>('');
+  const [outfitId, setOutfitId] = useState<any>('');
   const [outfitColors, setOutfitColors] = useState<OutfitColorIndices>({
     head: 5,
     body: 24,
@@ -68,10 +68,18 @@ export function CharacterBar({
     feet: 38,
   });
   const [selectedCharacterId, setSelectedCharacterId] = useState('');
-  const outfitOptions = useMemo(
-    () => catalog.outfits.filter((entry) => entry.sex === sex),
-    [catalog.outfits, sex]
-  );
+  const outfitOptions = useMemo(() => {
+    const fromCatalog = catalog.outfits.filter((entry) => entry.sex === sex);
+    // Local starter variants for tiny choice in debug client (recolor preview wired)
+    const localStarters = [
+      { outfit_id: 'male_wool_traveler' as any, name: 'Wool traveler', sex: 'male' as const },
+      { outfit_id: 'male_leather_cowl' as any, name: 'Canal leathers', sex: 'male' as const },
+      { outfit_id: 'female_wool_traveler' as any, name: 'Wool traveler', sex: 'female' as const },
+      { outfit_id: 'female_leather_cowl' as any, name: 'Canal leathers', sex: 'female' as const },
+    ].filter(o => o.sex === sex);
+    const ids = new Set(fromCatalog.map(o => o.outfit_id));
+    return [...fromCatalog, ...localStarters.filter(o => !ids.has(o.outfit_id))];
+  }, [catalog.outfits, sex]);
   const outfitPreview = useMemo(
     () => resolveOutfitPreview(outfitId || outfitOptions[0]?.outfit_id || 'male_wanderer', sex),
     [outfitId, outfitOptions, sex]
@@ -94,7 +102,7 @@ export function CharacterBar({
       return;
     }
     if (outfitOptions.some((outfit) => outfit.outfit_id === outfitId)) return;
-    setOutfitId(outfitOptions[0].outfit_id);
+    setOutfitId(outfitOptions[0].outfit_id as any);
   }, [outfitOptions, outfitId]);
 
   useEffect(() => {
@@ -174,7 +182,7 @@ export function CharacterBar({
     if (result.ok) {
       setName('');
       if (outfitOptions[0]?.outfit_id) {
-        setOutfitId(outfitOptions[0].outfit_id);
+        setOutfitId(outfitOptions[0].outfit_id as any);
       }
     } else {
       setError(result.error ?? 'Could not create character');
@@ -289,6 +297,12 @@ export function CharacterBar({
           spriteLabel={outfitPreview.spriteLabel}
         />
       )}
+      <div className="character-bar-helper" style={{ fontSize: '0.65rem', marginTop: '-4px', marginBottom: '4px', opacity: 0.85 }}>
+        {outfitPreview.spriteLabel === 'Rookguard traveler' ? 'Practical kit for the roads and canals around Rookguard.' :
+         outfitPreview.spriteLabel === 'Wool traveler' ? 'Warm layered wool for journeys along the old routes.' :
+         outfitPreview.spriteLabel === 'Canal leathers' ? 'Tough leathers suited to work by the water.' :
+         'A simple starting kit for someone new to the district.'}
+      </div>
       <input
         className="character-bar-input"
         type="text"
@@ -330,7 +344,7 @@ export function CharacterBar({
       <select
         className="character-bar-input"
         value={outfitId}
-        onChange={(e) => setOutfitId(e.target.value as CharacterCreateInput['outfit_id'])}
+        onChange={(e) => setOutfitId(e.target.value as any)}
         disabled={createFieldsDisabled || !catalog.loaded || catalog.loading || !outfitOptions.length}
         aria-label="character outfit"
       >

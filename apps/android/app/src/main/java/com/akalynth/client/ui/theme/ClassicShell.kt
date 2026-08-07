@@ -24,6 +24,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -125,6 +128,7 @@ fun ClassicDock(
 @Composable
 fun ClassicActionDock(
     modifier: Modifier = Modifier,
+    maxWidth: Dp = 132.dp,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val textures = rememberUiTextures()
@@ -134,7 +138,7 @@ fun ClassicActionDock(
         NineSliceBox(
             frame = textures.dockFrame,
             slicePx = textures.dockSlice,
-            modifier = modifier.widthIn(max = 108.dp),
+            modifier = modifier.widthIn(max = maxWidth),
             contentPadding = dockPadding,
             cornerRadius = 10.dp,
             backgroundAlpha = 0.9f,
@@ -148,7 +152,7 @@ fun ClassicActionDock(
     } else {
         Column(
             modifier = modifier
-                .widthIn(max = 108.dp)
+                .widthIn(max = maxWidth)
                 .clip(shape)
                 .background(ClassicShellColors.PanelDeep.copy(alpha = 0.92f))
                 .border(1.dp, ClassicShellColors.IronBright.copy(alpha = 0.48f), shape)
@@ -231,6 +235,7 @@ fun ClassicActionRingButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     danger: Boolean = false,
+    contentDescription: String? = null,
     content: @Composable BoxScope.() -> Unit,
 ) {
     val textures = rememberUiTextures()
@@ -239,7 +244,13 @@ fun ClassicActionRingButton(
         textures.actionRing != null -> textures.actionRing
         else -> null
     }
-    val clickModifier = modifier.clickable(onClick = onClick)
+    val clickModifier = modifier
+        .clickable(role = Role.Button, onClick = onClick)
+        .let { clickableModifier ->
+            if (contentDescription == null) clickableModifier else clickableModifier.semantics {
+                this.contentDescription = contentDescription
+            }
+        }
     if (texture != null) {
         TextureCircleBox(texture = texture, modifier = clickModifier, content = content)
     } else {

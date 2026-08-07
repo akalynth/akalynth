@@ -18,6 +18,8 @@ import {
   type LoreEntry,
 } from '../data/lore';
 import rookguardTrainingSlimeSprite from '../../../../data/assets-src/sprites/creature__rookguard_training_slime.png?url';
+import { chronicleGlyphKindFromEvent, chronicleGlyphUrl } from '../chronicle/chronicleGlyphs';
+import { ChronicleGlyphIcon } from './ChronicleGlyphIcon';
 
 interface GroundItem { item_id: string; item_type: string; x: number; y: number }
 
@@ -54,6 +56,9 @@ interface MapCanvasProps {
   characterSpriteOverrides?: Map<string, CharacterSpriteId>;
   worldVisualObjects?: RegistryWorldVisualPlacement[];
   debugOverlays?: MapDebugOverlay[];
+  // Chronicle glyph memory layer on the map itself.
+  // Small glyphs keep the world readable. Meaning on hover/approach.
+  memoryGlyphs?: Array<{ x: number; y: number; glyphKind: string; tooltip: string }>;
 }
 
 const TILE_SIZE = 32;
@@ -168,7 +173,7 @@ function getWalkColumn(isMoving: boolean, tick: number): number {
   return tick % 4;
 }
 
-export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixels, nowMs, targetId, fx, onSelectTarget, groundItems, propertyByPlot, characterFrameOverrides, characterSpriteOverrides, worldVisualObjects = EMPTY_WORLD_OBJECTS, debugOverlays = EMPTY_DEBUG_OVERLAYS }: MapCanvasProps) {
+export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixels, nowMs, targetId, fx, onSelectTarget, groundItems, propertyByPlot, characterFrameOverrides, characterSpriteOverrides, worldVisualObjects = EMPTY_WORLD_OBJECTS, debugOverlays = EMPTY_DEBUG_OVERLAYS, memoryGlyphs = [] }: MapCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const cameraRef = useRef({ x: 0, y: 0 });
   const { images: tileSprites, ready: spritesReady } = useTileSprites();
@@ -177,6 +182,10 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
   const { images: worldVisualImages, ready: worldVisualsReady } = useWorldVisualAssets();
   const characterMotionRef = useRef<Map<string, CharacterMotion>>(new Map());
   const [tooltip, setTooltip] = useState<{ lore: LoreEntry; x: number; y: number } | null>(null);
+
+  // Glyph images for map memory layer (lazy load per needed kind)
+  const glyphImagesRef = useRef<Map<string, HTMLImageElement>>(new Map());
+  const [glyphsReady, setGlyphsReady] = useState(false);
   const othersById = useMemo(() => {
     const m = new Map<string, PlayerPublic>();
     for (const p of others) m.set(p.id, p);
@@ -522,8 +531,47 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
       ctx.fillText(f.text, f.x * TILE_SIZE + 2, f.y * TILE_SIZE - lift);
       ctx.restore();
     }
+
+    // Chronicle glyph memory layer on the map canvas (PLAYER_LOOP_CONTRACT_V2.md).
+    // The map itself is the Chronicle. Small symbols of history (not text spam).
+    // Glyphs are rare. Player learns the language of the world by presence and return.
+    // Glyph = view only. Truth is in the receipt/chronicle.
+    const glyphMems = memoryGlyphs ?? [];
+    if (glyphMems.length) {
+      ctx.save();
+      ctx.imageSmoothingEnabled = false;
+      for (const m of glyphMems) {
+        const kind = chronicleGlyphKindFromEvent(m.glyphKind);
+        const url = chronicleGlyphUrl(kind);
+        let img = glyphImagesRef.current.get(url);
+        if (!img) {
+          img = new Image();
+          img.src = url;
+          img.onload = () => setGlyphsReady(true);
+          glyphImagesRef.current.set(url, img);
+        }
+        // Very small glyph in top-right of tile, subtle to not fight the art.
+        // Position chosen for visual "mark on the land" without obscuring gameplay elements.
+        const px = m.x * TILE_SIZE + TILE_SIZE - 11;
+        const py = m.y * TILE_SIZE + 1;
+        ctx.globalAlpha = 0.75;  // subtle so world art stays primary
+        if (img.complete && img.naturalWidth > 0) {
+          ctx.drawImage(img, px, py, 10, 10);
+        } else {
+          // Minimal fallback dot — will be replaced once glyph loads
+          ctx.fillStyle = 'rgba(74, 222, 128, 0.6)';
+          ctx.fillRect(px + 2, py + 2, 6, 6);
+        }
+      }
+      ctx.restore();
+
+      if (import.meta.env.DEV) {
+        console.log('[STRANGER-TEST] memory glyphs rendered on canvas', glyphMems.map(g => ({x:g.x, y:g.y, tooltip:g.tooltip})));
+      }
+    }
+
     ctx.restore();
-  }, [map, me, others, viewMode, viewportPixels?.height, viewportPixels?.width, nowMs, targetId, fx, othersById, groundItems, propertyByPlot, characterFrameOverrides, characterSpriteOverrides, worldVisualObjects, debugOverlays, tileSprites, spritesReady, characterSprites, charactersReady, creatureSprites, creaturesReady, worldVisualImages, worldVisualsReady]);
+  }, [map, me, others, viewMode, viewportPixels?.height, viewportPixels?.width, nowMs, targetId, fx, othersById, groundItems, propertyByPlot, characterFrameOverrides, characterSpriteOverrides, worldVisualObjects, debugOverlays, memoryGlyphs, tileSprites, spritesReady, characterSprites, charactersReady, creatureSprites, creaturesReady, worldVisualImages, worldVisualsReady, glyphsReady]);
 
   return (
     <>
@@ -539,13 +587,38 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
         }}
         onMouseMove={(e) => {
           const t = tileAtEvent(e);
-          const lore = t ? loreAt(map, hitBoxes, t.tx, t.ty) : null;
-          setTooltip(lore ? { lore, x: e.clientX, y: e.clientY } : null);
+          if (!t) {
+            setTooltip(null);
+            return;
+          }
+          const lore = loreAt(map, hitBoxes, t.tx, t.ty);
+          if (lore) {
+            setTooltip({ lore, x: e.clientX, y: e.clientY });
+            return;
+          }
+          // Memory glyph tooltip: player "approaches" or hovers the symbol on the map to discover the history.
+          // This is how the world teaches its own language — symbols first, meaning on inquiry.
+          const mem = (memoryGlyphs ?? []).find((m) => m.x === t.tx && m.y === t.ty);
+          if (mem) {
+            if (import.meta.env.DEV) console.log('[STRANGER-TEST] memory tooltip shown', mem.tooltip);
+            setTooltip({
+              lore: { title: 'This place remembers', body: mem.tooltip },
+              x: e.clientX,
+              y: e.clientY,
+            });
+          } else {
+            setTooltip(null);
+          }
         }}
         onMouseLeave={() => setTooltip(null)}
       />
       {tooltip && (
         <div className="map-tooltip" role="tooltip" style={{ left: tooltip.x + 14, top: tooltip.y + 14 }}>
+          {tooltip.lore.title === 'This place remembers' && (
+            <div style={{ marginBottom: '2px' }}>
+              <ChronicleGlyphIcon eventKind="world_event" size={14} />
+            </div>
+          )}
           <div className="map-tooltip-title">{tooltip.lore.title}</div>
           <div className="map-tooltip-body">{tooltip.lore.body}</div>
         </div>

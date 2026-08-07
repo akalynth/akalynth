@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { AccountCharacterOutfitColors } from '@shared/http';
 import {
-  renderGuardRecolorPreview,
+  renderOutfitRecolorPreview,
   supportsOutfitRecolorPreview,
 } from '../data/outfitRecolorEngine';
 
@@ -16,7 +16,7 @@ interface OutfitRecolorPreviewProps {
   className?: string;
 }
 
-/** Tibia-style mask recolor preview for guard outfits (guard_city_01). */
+/** Tibia-style mask recolor preview for supported outfits. */
 export function OutfitRecolorPreview({
   outfitId,
   colors,
@@ -29,7 +29,7 @@ export function OutfitRecolorPreview({
     const canvas = canvasRef.current;
     if (!canvas || !supportsOutfitRecolorPreview(outfitId)) return;
     let cancelled = false;
-    void renderGuardRecolorPreview(canvas, colors).then((ok) => {
+    void renderOutfitRecolorPreview(canvas, outfitId, colors).then((ok) => {
       if (cancelled || ok || !canvasRef.current) return;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;

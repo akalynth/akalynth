@@ -1,9 +1,9 @@
 {
   "version": "2.1.0",
-  "generatedAt": "2026-06-13T23:43:24.932Z",
+  "generatedAt": "2026-08-07T11:50:08.742Z",
   "source": {
-    "path": "/home/g0admin/.config/superpowers/worktrees/akalynth/codex-goal0-lane-pr-cleanup/packages/shared/protocol.ts",
-    "hash": "sha256:01fb3e7d873ced32e3fc9f7a7275584f87c869748677bb1eda1ef4112db04d79"
+    "path": "/home/sovereign/akalynth-ops/repos/akalynth/packages/shared/protocol.ts",
+    "hash": "sha256:4d509a50bf12fe21114ee9ad9c3ce697b0fdf6d013ef431877538f9c9493f3f1"
   },
   "surface": {
     "version": "2.1.0",
@@ -94,6 +94,21 @@
             }
           }
         },
+        "DeliverIntentMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "station_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'deliver_intent'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
         "DropItemMessage": {
           "extends": "BaseMessage",
           "fields": {
@@ -114,6 +129,21 @@
           "fields": {
             "type": {
               "type": "'enter_world'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "GatherIntentMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "node_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'gather_intent'",
               "optional": false,
               "readonly": false
             }
@@ -219,6 +249,26 @@
             },
             "type": {
               "type": "'get_property_ledger'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "GetSharedWorldObservationMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "limit": {
+              "type": "number",
+              "optional": true,
+              "readonly": false
+            },
+            "type": {
+              "type": "'get_shared_world_observation'",
+              "optional": false,
+              "readonly": false
+            },
+            "world_id": {
+              "type": "SharedWorldId",
               "optional": false,
               "readonly": false
             }
@@ -479,6 +529,21 @@
             },
             "type": {
               "type": "'place_house_bid'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "RefineIntentMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "station_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'refine_intent'",
               "optional": false,
               "readonly": false
             }
@@ -776,6 +841,51 @@
             }
           }
         },
+        "DeliverResultMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "item_type": {
+              "type": "string",
+              "optional": true,
+              "readonly": false
+            },
+            "ok": {
+              "type": "boolean",
+              "optional": false,
+              "readonly": false
+            },
+            "reason": {
+              "type": "GatherRejectReason",
+              "optional": true,
+              "readonly": false
+            },
+            "refined": {
+              "type": "boolean",
+              "optional": true,
+              "readonly": false
+            },
+            "reward": {
+              "type": "string",
+              "optional": true,
+              "readonly": false
+            },
+            "source_node_id": {
+              "type": "string",
+              "optional": true,
+              "readonly": false
+            },
+            "station_id": {
+              "type": "string",
+              "optional": true,
+              "readonly": false
+            },
+            "type": {
+              "type": "'deliver_result'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
         "DropItemResultMessage": {
           "extends": "BaseMessage",
           "fields": {
@@ -866,6 +976,111 @@
             },
             "type": {
               "type": "'evidence_snapshot'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "GatherCompletedMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "item_type": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "node_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'gather_completed'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "GatherNodeUpdateMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "node": {
+              "type": "GatherNodePublic",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'gather_node_update'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "GatherProgressMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "node_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "progress_pct": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'gather_progress'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "GatherResultMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "complete_at_ms": {
+              "type": "number",
+              "optional": true,
+              "readonly": false
+            },
+            "node_id": {
+              "type": "string",
+              "optional": true,
+              "readonly": false
+            },
+            "ok": {
+              "type": "boolean",
+              "optional": false,
+              "readonly": false
+            },
+            "reason": {
+              "type": "GatherRejectReason",
+              "optional": true,
+              "readonly": false
+            },
+            "type": {
+              "type": "'gather_result'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "GatherSnapshotMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "nodes": {
+              "type": "GatherNodePublic[]",
+              "optional": false,
+              "readonly": false
+            },
+            "stations": {
+              "type": "GatherStationPublic[]",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'gather_snapshot'",
               "optional": false,
               "readonly": false
             }
@@ -964,6 +1179,11 @@
         "InventorySnapshotMessage": {
           "extends": "BaseMessage",
           "fields": {
+            "houseStorage": {
+              "type": "ItemInfo[]",
+              "optional": true,
+              "readonly": false
+            },
             "items": {
               "type": "ItemInfo[]",
               "optional": false,
@@ -1486,6 +1706,76 @@
             }
           }
         },
+        "RefineCompletedMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "item_type": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "station_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'refine_completed'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "RefineProgressMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "progress_pct": {
+              "type": "number",
+              "optional": false,
+              "readonly": false
+            },
+            "station_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'refine_progress'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "RefineResultMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "complete_at_ms": {
+              "type": "number",
+              "optional": true,
+              "readonly": false
+            },
+            "ok": {
+              "type": "boolean",
+              "optional": false,
+              "readonly": false
+            },
+            "reason": {
+              "type": "GatherRejectReason",
+              "optional": true,
+              "readonly": false
+            },
+            "station_id": {
+              "type": "string",
+              "optional": true,
+              "readonly": false
+            },
+            "type": {
+              "type": "'refine_result'",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
         "RunestoneDeniedMessage": {
           "extends": "BaseMessage",
           "fields": {
@@ -1526,6 +1816,46 @@
             },
             "whisper": {
               "type": "string",
+              "optional": false,
+              "readonly": false
+            }
+          }
+        },
+        "SharedWorldObservationMessage": {
+          "extends": "BaseMessage",
+          "fields": {
+            "events": {
+              "type": "ChronicleEvent[]",
+              "optional": false,
+              "readonly": false
+            },
+            "latest_event_id": {
+              "type": "null | string",
+              "optional": false,
+              "readonly": false
+            },
+            "latest_receipt_hash": {
+              "type": "null | string",
+              "optional": false,
+              "readonly": false
+            },
+            "observer_player_id": {
+              "type": "string",
+              "optional": false,
+              "readonly": false
+            },
+            "state": {
+              "type": "Record<string, unknown> | null",
+              "optional": false,
+              "readonly": false
+            },
+            "type": {
+              "type": "'shared_world_observation'",
+              "optional": false,
+              "readonly": false
+            },
+            "world_id": {
+              "type": "SharedWorldId",
               "optional": false,
               "readonly": false
             }
@@ -1829,6 +2159,11 @@
         "WorldStateMessage": {
           "extends": "BaseMessage",
           "fields": {
+            "builder_preview": {
+              "type": "BuilderPreviewWorldFork",
+              "optional": true,
+              "readonly": false
+            },
             "map": {
               "type": "MapName",
               "optional": false,
@@ -1890,6 +2225,36 @@
           "'not_applicable'",
           "'not_found'",
           "'ok'"
+        ]
+      },
+      "GatherNodeState": {
+        "kind": "union",
+        "members": [
+          "'available'",
+          "'depleted'",
+          "'depleting'"
+        ]
+      },
+      "GatherRejectReason": {
+        "kind": "union",
+        "members": [
+          "'already_gathering'",
+          "'already_refining'",
+          "'held_slot_empty'",
+          "'held_slot_full'",
+          "'node_not_available'",
+          "'node_not_found'",
+          "'not_refinable'",
+          "'out_of_range'",
+          "'station_not_found'",
+          "'unknown_zone'"
+        ]
+      },
+      "GatherStationKind": {
+        "kind": "union",
+        "members": [
+          "'curation'",
+          "'refinery'"
         ]
       },
       "ModResolveError": {
@@ -1962,6 +2327,11 @@
     "sharedTypes": {
       "ChronicleEvent": {
         "fields": {
+          "causal": {
+            "type": "CausalParityEvent | null",
+            "optional": true,
+            "readonly": false
+          },
           "details": {
             "type": "Record<string, unknown>",
             "optional": false,
@@ -2043,8 +2413,76 @@
           }
         }
       },
+      "GatherNodePublic": {
+        "fields": {
+          "node_id": {
+            "type": "string",
+            "optional": false,
+            "readonly": false
+          },
+          "respawn_at_ms": {
+            "type": "null | number",
+            "optional": false,
+            "readonly": false
+          },
+          "state": {
+            "type": "GatherNodeState",
+            "optional": false,
+            "readonly": false
+          },
+          "x": {
+            "type": "number",
+            "optional": false,
+            "readonly": false
+          },
+          "y": {
+            "type": "number",
+            "optional": false,
+            "readonly": false
+          },
+          "zone": {
+            "type": "string",
+            "optional": false,
+            "readonly": false
+          }
+        }
+      },
+      "GatherStationPublic": {
+        "fields": {
+          "kind": {
+            "type": "GatherStationKind",
+            "optional": false,
+            "readonly": false
+          },
+          "station_id": {
+            "type": "string",
+            "optional": false,
+            "readonly": false
+          },
+          "x": {
+            "type": "number",
+            "optional": false,
+            "readonly": false
+          },
+          "y": {
+            "type": "number",
+            "optional": false,
+            "readonly": false
+          },
+          "zone": {
+            "type": "string",
+            "optional": false,
+            "readonly": false
+          }
+        }
+      },
       "ItemInfo": {
         "fields": {
+          "icon_sprite_id": {
+            "type": "string",
+            "optional": true,
+            "readonly": false
+          },
           "item_id": {
             "type": "string",
             "optional": false,
@@ -2053,11 +2491,6 @@
           "item_type": {
             "type": "string",
             "optional": false,
-            "readonly": false
-          },
-          "icon_sprite_id": {
-            "type": "string",
-            "optional": true,
             "readonly": false
           },
           "slot": {
@@ -2258,6 +2691,11 @@
           },
           "property_id": {
             "type": "string",
+            "optional": false,
+            "readonly": false
+          },
+          "provenance_receipt_hash": {
+            "type": "null | string",
             "optional": false,
             "readonly": false
           },

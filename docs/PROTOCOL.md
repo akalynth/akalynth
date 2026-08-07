@@ -622,11 +622,11 @@ Moderation resolution result.
 
 #### `property_snapshot`
 
-Full property/house state sent on `enter_world`. Owners are exposed as `owner_name` only — never raw player ids.
+Full property/house state sent on `enter_world`. Owners are exposed as `owner_name` only — never raw player ids. Owned properties also expose `provenance_receipt_hash`, a public reference to the receipt that established the current ownership.
 
 #### `property_state`
 
-Single property's updated public state, sent to the actor after buy/list/unlist and broadcast to the zone on changes.
+Single property's updated public state, sent to the actor after buy/list/unlist and broadcast to the zone on changes. The public projection includes the current `owner_name` and its `provenance_receipt_hash`, never the raw owner id.
 
 #### `house_sold`
 

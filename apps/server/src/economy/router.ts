@@ -125,6 +125,7 @@ function propertyBody(p: PropertyProjection, characterId: string): Record<string
     district: p.district,
     status: p.status,
     owned_by_character: p.owner_player_id === characterId,
+    provenance_receipt_hash: p.owner_history.at(-1)?.receipt_hash ?? null,
     primary_price_gold: p.primary_price_gold,
     listed_price_gold: p.listed_price_gold,
     sale_count: p.sale_count,

@@ -14,6 +14,10 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -180,19 +184,27 @@ private fun DPadButton(
     onRelease: () -> Unit
 ) {
     val haptics = LocalHapticFeedback.current
+    var pressed by remember { mutableStateOf(false) }
+    val surfaceColor = if (pressed) {
+        backgroundColor.copy(alpha = 0.72f)
+    } else {
+        backgroundColor
+    }
 
     Box(
         modifier = Modifier
             .sizeIn(minWidth = minSize, minHeight = minSize)
             .size(minSize)
             .clip(RoundedCornerShape(8.dp))
-            .background(backgroundColor)
+            .background(surfaceColor)
             .pointerInput(direction) {
                 awaitEachGesture {
                     awaitFirstDown(requireUnconsumed = false)
+                    pressed = true
                     haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onDirection(direction)
                     waitForUpOrCancellation()
+                    pressed = false
                     onRelease()
                 }
             }

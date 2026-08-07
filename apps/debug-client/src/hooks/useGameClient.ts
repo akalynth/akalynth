@@ -1350,11 +1350,9 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
               const payload = data.payload as Record<string, unknown> | undefined;
               if (skillId === 'activity:fishing:rookguard') {
                 const line = success
-                  ? typeof payload?.line === 'string'
-                    ? payload.line
-                    : 'The canal merchant notices your patience.'
+                  ? 'You caught a Rookguard trout. The canal now has one fewer fish. Leave and return later to see what becomes of the canal.'
                   : data.reason === 'cooldown'
-                    ? 'The canal is still settling.'
+                    ? 'The canal is still settling from recent casts.'
                     : 'Fishing is unavailable here.';
                 return pushToast(s, 'objective', line, 'FISH');
               }

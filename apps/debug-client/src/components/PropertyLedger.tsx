@@ -96,6 +96,11 @@ export function PropertyLedger({
                     Next bid: {auction.min_next}g{auction.high_bidder_name ? ` · High: ${auction.high_bidder_name}` : ''}
                   </span>
                 )}
+                {p.provenance_receipt_hash && (
+                  <span className="property-provenance">
+                    Receipt: {p.provenance_receipt_hash.slice(0, 12)}…
+                  </span>
+                )}
                 <span className="property-sales">Sales: {p.sale_count}</span>
               </div>
               <div className="property-ledger-row-actions">

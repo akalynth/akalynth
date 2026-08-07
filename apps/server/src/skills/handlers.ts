@@ -24,6 +24,7 @@ import {
   FORGEHOLD_CARAVAN_EVENT_ID,
   FORGEHOLD_CARAVAN_GUARD_DECISION_ACTION,
   FORGEHOLD_CARAVAN_GUARD_ID,
+  FORGEHOLD_CARAVAN_MERCHANT_TRAVEL_MS,
   FORGEHOLD_MILEPOST_EVIDENCE_RECOVERED_ACTION,
   FORGEHOLD_SHIPMENT_INVESTIGATED_ACTION,
 } from '../../../../packages/shared/skills.js';
@@ -1092,15 +1093,17 @@ export function handleForgeholdCaravanEvidence(ctx: SkillContext): SkillResult {
     bandit_pressure: 2,
     player_trust: beforeState.player_trust + 1,
   };
+  const resolvedAtMs = ctx.nowMs?.() ?? Date.now();
   const guardAfter = {
     route_safety: 'monitored' as const,
     merchant_access: 'open' as const,
     merchant_stock: Math.max(evidenceAfter.merchant_stock - 1, 0),
     bandit_pressure: Math.max(evidenceAfter.bandit_pressure - 1, 0),
     player_trust: evidenceAfter.player_trust + 1,
+    merchant_travel_due_at_ms: resolvedAtMs + FORGEHOLD_CARAVAN_MERCHANT_TRAVEL_MS,
   };
 
-  const recoveredAt = new Date().toISOString();
+  const recoveredAt = new Date(resolvedAtMs).toISOString();
   const authorityGuard = actIIEvidenceGuard();
   const eventId = `${FORGEHOLD_CARAVAN_EVENT_ID}:${beforeState.event_sequence + 1}`;
   const guardEventId = `${eventId}:guard`;
@@ -1145,7 +1148,7 @@ export function handleForgeholdCaravanEvidence(ctx: SkillContext): SkillResult {
       place_id: 'forgehold_route_slice_v1',
       state_before: evidenceAfter,
       state_after: guardAfter,
-      downstream_event_ids: [],
+      downstream_event_ids: [`${guardEventId}:merchant_arrived`],
       effects: {
         route_safety: guardAfter.route_safety,
         merchant_access: guardAfter.merchant_access,
@@ -1153,7 +1156,7 @@ export function handleForgeholdCaravanEvidence(ctx: SkillContext): SkillResult {
         bandit_pressure_delta: -1,
         trust_delta: +1,
       },
-      reacted_at_ms: ctx.nowMs?.() ?? Date.now(),
+      reacted_at_ms: resolvedAtMs,
       authority_guard: authorityGuard,
       next_objective: 'Recover the Ashglass Shard at Ashglass Ravine.',
       economy_impact: 'none',

@@ -132,6 +132,7 @@ Core docs:
 
 - [V1 Scope Fence](./V1_SCOPE.md) - what v1 includes and explicitly defers
 - [Architecture](./ARCHITECTURE.md) - server loop, world state, anti-cheat pipeline
+- [Runtime Architecture v1](./RUNTIME_ARCHITECTURE_V1.md) - proposed world-time, scheduler, autonomous-actor, replay, projection, and Android/server contracts
 - [Protocol](./PROTOCOL.md) - message types and examples
 - [Client Contract v0.1 (Frozen)](./CLIENT_CONTRACT_V0_1.md) - frozen Android/client wire compatibility contract
 - [Anti-Cheat](./ANTICHEAT.md) - detection signals, Tem challenge, enforcement
@@ -151,6 +152,7 @@ Verification, governance, and proof docs:
 
 - [Design-Provenance Governance Contract](./AKALYNTH_DECISION_RECORD_V1.md) - federated authority, decision records, conformance, conflict resolution, and the World Architect mandate
 - [Design-Provenance Adoption Decision](./decisions/AKALYNTH_DESIGN_PROVENANCE_ADOPTION_V1/ADOPTION_DECISION.md) - accepted scope relationship among civil governance, design provenance, and narrative canon
+- [Risk & Consequence Spine Decision](./decisions/AKALYNTH_RISK_CONSEQUENCE_AND_COMMITMENT_V1/DECISION.md) - accepted design decision for durable risk, recovery, standing contexts, ECE/RCE/MCE, CRB, coupled outcomes, and receipt evidence; implementation remains unauthorized
 - [Verification Spine API v1](./VERIFICATION_SPINE_API.md) - the mandatory pre-merge verification system contract
 - [Spine Lock v1](./SPINE_V1.md) - locked spine surface and verifier registration rules
 - [Simulation Lane Runbook](./SIM_LANE_RUNBOOK.md) - `sim-api.akalynth.com` / `sim.akalynth.com` lane contract, state custody, and verification steps

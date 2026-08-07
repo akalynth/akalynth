@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, PointerEvent as ReactPointerEvent } from 'react';
 import type { MapName } from '@shared/http';
 import { displayMapName } from '@shared/http';
@@ -41,6 +41,7 @@ import { BetaFeedbackSheet } from './components/BetaFeedbackSheet';
 import { loadConfig } from './config';
 import { highCityVisualLandmarksForMap } from './data/highCityVisualLandmarks';
 import { gatherMapOverlays } from './data/gatherMapOverlays';
+import { canonicalMemoryForEvent, FIRST_PLAYABLE_MEMORY } from './data/canonicalMemory';
 import type {
   AccountSessionStatus,
   AccountCharacter,
@@ -92,6 +93,77 @@ function groupChronicleByDay(events: ChronicleEvent[]): ChronicleGroup[] {
 }
 
 type ChronicleRender = { text: string; causal?: CausalVisibilitySummary };
+
+/**
+ * While You Were Away v0
+ * Small reconnect summary using *existing* causal records.
+ * Rule: Never say "X changed". Say what it *means* in the world.
+ */
+function computeWhileAwaySummaries(events: ChronicleEvent[]): string[] {
+  const worldEvents = events
+    .filter(e => e.kind === 'world_event')
+    .slice(-8);
+
+  const summaries: string[] = [];
+
+  for (const ev of worldEvents) {
+    const details = (ev.details ?? {}) as Record<string, unknown>;
+    const causal = causalVisibilityForEvent(ev);
+    const canonical = canonicalMemoryForEvent(details);
+    const render = renderChronicleEvent(ev);
+    const line = canonical?.whileAway || causal?.world || render.causal?.world || render.text || '';
+
+    if (line && line.length > 8 && !summaries.includes(line)) {
+      summaries.push(line);
+    }
+    if (summaries.length >= 3) break;
+  }
+
+  if (summaries.length === 0) {
+    summaries.push(`${FIRST_PLAYABLE_MEMORY.region}: ${FIRST_PLAYABLE_MEMORY.minuteOne}`);
+    summaries.push(FIRST_PLAYABLE_MEMORY.hourOne);
+  }
+
+  return summaries;
+}
+
+/**
+ * Dynamic location memory: WHERE I AM + WHAT HAPPENED HERE
+ * Pulls from the same causal source. "You helped" only when the record shows player involvement.
+ */
+function getLocationMemory(
+  mapName: string,
+  player: PlayerPublic | null,
+  events: ChronicleEvent[]
+): { place: string; memories: string[] } {
+  const place = displayMapName(mapName);
+  const relevant: string[] = [];
+
+  const playerId = player?.id;
+
+  for (const ev of events.slice(-5)) {
+    if (ev.kind !== 'world_event') continue;
+    const details = (ev.details ?? {}) as Record<string, unknown>;
+    const causal = causalVisibilityForEvent(ev);
+    const actor = (ev as any).actor_id || (details as any).actor_id;
+    const canonical = canonicalMemoryForEvent(details);
+    let mem = canonical?.location || causal?.world || '';
+    if (canonical && playerId && actor === playerId) {
+      mem = `You are recorded in this thread. ${canonical.location}`;
+    }
+
+    if (mem && mem.length > 10 && !relevant.includes(mem)) {
+      relevant.push(mem);
+    }
+    if (relevant.length >= 2) break;
+  }
+
+  if (relevant.length === 0) {
+    relevant.push(`${place}: ${FIRST_PLAYABLE_MEMORY.minuteOne}`);
+  }
+
+  return { place, memories: relevant };
+}
 
 type LandmarkBox = { x: number; y: number; width: number; height: number };
 
@@ -284,6 +356,7 @@ interface MobilePlayEntryProps {
 
 function displayConnectionLabel(conn: ConnectionState): string {
   if (conn.phase === 'error') return 'offline';
+  if (conn.phase === 'disconnected') return 'reconnecting...';
   return conn.phase.replace(/_/g, ' ');
 }
 
@@ -307,6 +380,8 @@ function MobilePlayEntry({
     stage < 1 ? 'Ready to enter' :
     'Ready';
   const connLabel = displayConnectionLabel(conn);
+  const isDisconnected = conn.phase === 'disconnected' || conn.phase === 'error';
+  const showEnter = stage < 1 || isDisconnected;
 
   return (
     <div className="mobile-play-entry" role="region" aria-label="Mobile play entry">
@@ -326,16 +401,19 @@ function MobilePlayEntry({
         onLoadAccountCharacters={onLoadAccountCharacters}
         onSignOut={onSignOut}
       />
-      {stage < 1 && (
+      {showEnter && (
         <button
           type="button"
           className="mobile-enter-play-btn"
           onClick={onEnterPlay}
-          disabled={!hasWorldPlayer}
-          aria-label={hasWorldPlayer ? 'Enter play mode' : 'Waiting for world before entering play'}
+          disabled={isDisconnected && !hasWorldPlayer}
+          aria-label={isDisconnected ? 'Reconnect and enter world' : (hasWorldPlayer ? 'Enter play mode' : 'Waiting for world before entering play')}
         >
-          {hasWorldPlayer ? 'Enter play' : 'Waiting'}
+          {isDisconnected ? 'Reconnect to World' : (hasWorldPlayer ? 'Enter World' : 'Waiting')}
         </button>
+      )}
+      {isDisconnected && (
+        <div className="mobile-play-entry__hint">Tap to connect and begin.</div>
       )}
     </div>
   );
@@ -486,6 +564,11 @@ function DebugApp() {
       ? 'compact-desktop'
       : 'desktop';
   const [state, api] = useGameClient(initialMap);
+
+  // While You Were Away v0 — appears after reconnect using existing chronicle
+  const [showWhileAway, setShowWhileAway] = useState(false);
+  const hasShownWhileAwayRef = useRef(false);
+  const wasDisconnectedRef = useRef(false);
   useBetaTelemetry(config.httpBase, state);
   const [chatOpen, setChatOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
@@ -704,11 +787,71 @@ function DebugApp() {
     const visible = events.filter((ev) => ev.kind !== 'item_lost');
     return groupChronicleByDay(visible);
   }, [state.chronicle?.events]);
+
   const sharedLatestCausal = useMemo(() => {
     const observation = state.sharedWorldObservation;
     if (!observation) return null;
     return observation.events.find((event) => event.causal?.event_id === observation.latest_event_id)?.causal ?? null;
   }, [state.sharedWorldObservation]);
+
+  // Memory layer using Chronicle glyphs on the map canvas.
+  // Small glyphs keep the pixel world readable. Meaning revealed on hover/approach via tooltip.
+  // Rare and meaningful only — the map carries history without visual noise.
+  const mapMemoryGlyphs = useMemo(() => {
+    const glyphs: Array<{ x: number; y: number; glyphKind: string; tooltip: string }> = [];
+    const events = state.chronicle?.events ?? [];
+    for (const ev of events.slice(-5)) {
+      if (ev.kind !== 'world_event') continue;
+      const details = (ev.details ?? {}) as any;
+      const x = typeof ev.x === 'number' ? ev.x : typeof details.x === 'number' ? details.x : null;
+      const y = typeof ev.y === 'number' ? ev.y : typeof details.y === 'number' ? details.y : null;
+      if (x == null || y == null) continue;
+
+      const causal = causalVisibilityForEvent(ev);
+      const canonical = canonicalMemoryForEvent(details);
+      const eid = String(details.event_id || '');
+      const glyphKind = 'world_event';
+      const tooltip = canonical?.glyph || causal?.world || causal?.result || String(eid);
+
+      // Strictly rare: only high-impact world memories that would make a player return to see the consequence.
+      const isHighImpact = !!canonical || (causal?.world && causal.world.length > 20);
+      if (isHighImpact) {
+        glyphs.push({ x, y, glyphKind, tooltip });
+        if (import.meta.env.DEV) {
+          console.log('[STRANGER-TEST] glyph surfaced', { x, y, tooltip: tooltip.slice(0, 60) });
+        }
+      }
+    }
+    return glyphs;
+  }, [state.chronicle?.events]);
+
+  // "While You Were Away" v0 trigger — only after an actual absence (using existing chronicle)
+  useEffect(() => {
+    if (
+      showPlayShell &&
+      state.conn.phase === 'connected' &&
+      wasDisconnectedRef.current &&
+      (state.chronicle?.events?.length ?? 0) > 0 &&
+      !hasShownWhileAwayRef.current
+    ) {
+      const hasInteresting = (state.chronicle?.events ?? []).some(e => e.kind === 'world_event');
+      if (hasInteresting) {
+        wasDisconnectedRef.current = false;
+        hasShownWhileAwayRef.current = true;
+        setShowWhileAway(true);
+        if (import.meta.env.DEV) {
+          console.log('[STRANGER-TEST] While You Were Away card shown');
+        }
+      }
+    }
+  }, [state.conn.phase, state.chronicle?.events?.length, showPlayShell]);
+
+  // Passive logging for stranger test (dev only)
+  useEffect(() => {
+    if (import.meta.env.DEV && state.world.me) {
+      console.log('[STRANGER-TEST] player position', { x: state.world.me.x, y: state.world.me.y, map: state.world.map.name });
+    }
+  }, [state.world.me?.x, state.world.me?.y, state.world.map.name]);
 
   const recap = state.deathRecap;
   const recapEvent = recap?.deathEvent;
@@ -994,6 +1137,48 @@ function DebugApp() {
       <main className="main">
         {!(phoneLandscape && showPlayEntry) && (
           <section className="stage stage-map">
+            {/* Always-visible very small memory hint (hierarchy: subtle, always on).
+                 The map canvas carries the rare glyph layer.
+                 Human test target: player should understand "what happened here" just by looking at the map + glyph. */}
+            {(() => {
+              const mem = getLocationMemory(state.world.map.name, state.world.me, state.chronicle?.events ?? []);
+              return (
+                <div className="world-location-hint" aria-live="polite">
+                  <strong>{mem.place}</strong>
+                  {mem.memories.length > 0 && (
+                    <span className="consequence"> · {mem.memories[0]}</span>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* "While You Were Away" v0 — appears on return using *existing* chronicle causal data.
+                 Human summaries of what the world continued doing. */}
+            {showWhileAway && (
+              <HudChromePanel className="while-away-card" variant="panel" padding={10}>
+                <div className="while-away-header">
+                  <ChronicleGlyphIcon eventKind="world_event" size={18} />
+                  <strong>WHILE YOU WERE AWAY</strong>
+                  <button
+                    type="button"
+                    className="while-away-close"
+                    onClick={() => setShowWhileAway(false)}
+                    aria-label="Close"
+                  >
+                    ×
+                  </button>
+                </div>
+                <div className="while-away-list">
+                  {computeWhileAwaySummaries(state.chronicle?.events ?? []).map((line, idx) => (
+                    <div key={idx} className="while-away-item">✓ {line}</div>
+                  ))}
+                  {computeWhileAwaySummaries(state.chronicle?.events ?? []).length < 2 && (
+                    <div className="while-away-item">The world kept turning.</div>
+                  )}
+                </div>
+              </HudChromePanel>
+            )}
+
             <MapCanvas
               map={state.world.map}
               me={state.world.me}
@@ -1008,6 +1193,7 @@ function DebugApp() {
             propertyByPlot={propertyByPlot}
             worldVisualObjects={worldVisualObjects}
             debugOverlays={mapDebugOverlays}
+            memoryGlyphs={mapMemoryGlyphs}
           />
           <div className="scene-vignette" />
           {!isDead && healthPct <= 30 && (
@@ -1152,7 +1338,7 @@ function DebugApp() {
           {phoneLandscape && showPlayShell && (
             <MobileStatusRail
               name={playerDisplayName}
-              position={playerPositionLabel}
+              position={uiLayout.customizeMode ? playerPositionLabel : ''}
               health={healthLabel}
               healthPct={state.world.me?.status === 'dead' ? 0 : healthPct}
               conn={state.conn}

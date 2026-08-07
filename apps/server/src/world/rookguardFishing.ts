@@ -167,7 +167,9 @@ export function rookguardFishingPublicState(nowMs: number): RookguardFishingProg
       ? 'The canal is settling; the merchant remembers the patience shown here.'
       : state.cast_count === 0
         ? 'Fish the Rookguard canal; the server will resolve what the town remembers.'
-        : 'The canal is calm enough to fish again; the merchant still remembers prior patience.',
+        : state.merchant_respect > 1
+          ? `The canal merchant nods when you approach. "The patience you showed is still talked about at the stalls."`
+          : `Mara's family reopened their fish stall. The canal merchant told them a patient fisher helped the waters settle.`,
   };
 }
 

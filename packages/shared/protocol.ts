@@ -253,6 +253,7 @@ export interface PropertyPublic {
   district: string | null;
   status: PropertyStatus;
   owner_name: string | null;        // resolved display name (null = unowned/treasury)
+  provenance_receipt_hash: string | null; // public receipt reference for current ownership
   primary_price_gold: number;
   listed_price_gold: number | null; // set when status = 'listed'
   sale_count: number;
