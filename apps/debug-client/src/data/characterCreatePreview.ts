@@ -1,5 +1,14 @@
+/**
+ * Character create preview — thin adapter over outfitIdentity (single mapping table).
+ * Keeps PR-025 export surface stable for verifiers.
+ */
 import type { CharacterSex } from '../types';
 import { type CharacterSpriteId, isCharacterSpriteId } from './characterSprites';
+import {
+  defaultOutfitIdForSex,
+  resolveOutfitIdentity,
+  type OutfitIdentity,
+} from './outfitIdentity';
 
 export interface CharacterOutfitPreview {
   outfitId: string;
@@ -10,35 +19,38 @@ export interface CharacterOutfitPreview {
   bundledSpriteId: CharacterSpriteId;
 }
 
-const OUTFIT_PREVIEW: CharacterOutfitPreview[] = [
-  { outfitId: 'male_wanderer', sex: 'male', spriteLabel: 'base_human_male_01', bundledSpriteId: 'base_human_male_01' },
-  { outfitId: 'male_guard', sex: 'male', spriteLabel: 'guard_city_01', bundledSpriteId: 'guard_city_01' },
-  { outfitId: 'male_mage', sex: 'male', spriteLabel: 'mage_apprentice_01', bundledSpriteId: 'mage_apprentice_01' },
-  { outfitId: 'female_wanderer', sex: 'female', spriteLabel: 'base_human_female_01', bundledSpriteId: 'base_human_male_01' },
-  { outfitId: 'female_guard', sex: 'female', spriteLabel: 'guard_city_female_01', bundledSpriteId: 'guard_city_01' },
-  { outfitId: 'female_mage', sex: 'female', spriteLabel: 'mage_apprentice_female_01', bundledSpriteId: 'mage_apprentice_01' },
-];
-
-const DEFAULT_OUTFIT: Record<CharacterSex, string> = {
-  male: 'male_wanderer',
-  female: 'female_wanderer',
-};
-
-export function defaultOutfitIdForSex(sex: CharacterSex): string {
-  return DEFAULT_OUTFIT[sex];
+function toPreview(entry: OutfitIdentity): CharacterOutfitPreview {
+  return {
+    outfitId: entry.outfitId,
+    sex: entry.sex,
+    // Prefer protocol id when set; else the pending female art label used historically.
+    spriteLabel:
+      entry.protocolSpriteId ??
+      (entry.sex === 'female' && entry.outfitId.includes('wanderer')
+        ? 'base_human_female_01'
+        : entry.sex === 'female' && entry.outfitId.includes('guard')
+          ? 'guard_city_female_01'
+          : entry.sex === 'female'
+            ? 'mage_apprentice_female_01'
+            : entry.bundledSpriteId),
+    bundledSpriteId: entry.bundledSpriteId,
+  };
 }
 
+/** @deprecated Prefer OUTFIT_IDENTITY_TABLE — retained for verify-character-create-preview. */
+export const OUTFIT_PREVIEW: CharacterOutfitPreview[] = [
+  toPreview(resolveOutfitIdentity('male_wanderer', 'male')),
+  toPreview(resolveOutfitIdentity('male_guard', 'male')),
+  toPreview(resolveOutfitIdentity('male_mage', 'male')),
+  toPreview(resolveOutfitIdentity('female_wanderer', 'female')),
+  toPreview(resolveOutfitIdentity('female_guard', 'female')),
+  toPreview(resolveOutfitIdentity('female_mage', 'female')),
+];
+
+export { defaultOutfitIdForSex };
+
 export function resolveOutfitPreview(outfitId: string, sex: CharacterSex): CharacterOutfitPreview {
-  const match =
-    OUTFIT_PREVIEW.find((entry) => entry.outfitId === outfitId) ??
-    OUTFIT_PREVIEW.find((entry) => entry.outfitId === defaultOutfitIdForSex(sex));
-  if (match) return match;
-  return {
-    outfitId,
-    sex,
-    spriteLabel: 'base_human_male_01',
-    bundledSpriteId: 'base_human_male_01',
-  };
+  return toPreview(resolveOutfitIdentity(outfitId, sex));
 }
 
 export function isKnownCreateOutfitId(id: string): boolean {

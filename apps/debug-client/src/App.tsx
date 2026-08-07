@@ -30,6 +30,7 @@ import { CodexShelfPanel } from './components/CodexShelfPanel';
 import { PlayShellDock } from './components/PlayShellDock';
 import { PlayHotbar } from './components/PlayHotbar';
 import { OnwardRoutesChip } from './components/OnwardRoutesChip';
+import { IdentityStrip } from './components/IdentityStrip';
 import { UiStatBar } from './components/UiStatBar';
 import { builderPreviewOverlays } from './utils/builderPreviewOverlay';
 import { TemChallengeModal } from './components/TemChallengeModal';
@@ -1017,6 +1018,13 @@ function DebugApp() {
               health={healthLabel}
               healthPct={state.world.me?.status === 'dead' ? 0 : healthPct}
               conn={state.conn}
+            />
+          )}
+          {showPlayShell && (
+            <IdentityStrip
+              className="identity-strip--play"
+              name={state.world.me?.name ?? playerDisplayName}
+              spriteId={state.world.me?.sprite_id ?? null}
             />
           )}
           {presentationMode && showPlayShell && (

@@ -5819,6 +5819,42 @@ body {
   font-weight: 900;
 }
 
+/* Identity strip — play surface only (no outfit picker). Contract §2.6 */
+.identity-strip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  max-width: min(16rem, 46vw);
+  padding: 0.28rem 0.5rem;
+  border-radius: 0.4rem;
+  border: 1px solid rgba(226, 183, 20, 0.35);
+  background: rgba(8, 12, 20, 0.82);
+  color: #e8e0c8;
+  pointer-events: none;
+}
+.identity-strip__kicker {
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #d9b25a;
+}
+.identity-strip__label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.identity-strip--play {
+  position: fixed;
+  z-index: 34;
+  left: max(0.65rem, env(safe-area-inset-left));
+  top: max(0.55rem, calc(env(safe-area-inset-top) + 0.35rem));
+}
+.app-shell--presentation .identity-strip--play {
+  top: max(0.55rem, calc(env(safe-area-inset-top) + 0.35rem));
+}
+
 .motion-objective-rail {
   position: fixed;
   z-index: 33;
