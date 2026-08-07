@@ -7,6 +7,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -20,9 +22,15 @@ sealed class ClientUpdateState {
     data object UpToDate : ClientUpdateState()
     data class Downloading(val progressPercent: Int, val versionName: String) : ClientUpdateState()
     data class ReadyToInstall(val versionName: String) : ClientUpdateState()
+    /** APK is ready but the OS blocked install until the player grants unknown-app permission. */
+    data class NeedsInstallPermission(val versionName: String) : ClientUpdateState()
     data class Failed(val message: String) : ClientUpdateState()
 }
 
+/**
+ * Beta/staging self-update: on every app start (and resume after permission settings),
+ * fetch the lane update manifest, download a newer APK if present, verify SHA-256, install.
+ */
 class ClientUpdateController(
     private val context: Context,
     private val api: ClientUpdateApi = ClientUpdateApi(),
@@ -31,38 +39,96 @@ class ClientUpdateController(
     private val _state = MutableStateFlow<ClientUpdateState>(ClientUpdateState.Idle)
     val state: StateFlow<ClientUpdateState> = _state.asStateFlow()
 
-    val blocksLogin: Boolean
-        get() = _state.value is ClientUpdateState.Checking ||
-            _state.value is ClientUpdateState.Downloading ||
-            _state.value is ClientUpdateState.ReadyToInstall
+    private val checkMutex = Mutex()
+    private var pendingApk: File? = null
+    private var pendingVersionName: String? = null
 
+    val blocksLogin: Boolean
+        get() = when (_state.value) {
+            is ClientUpdateState.Checking,
+            is ClientUpdateState.Downloading,
+            is ClientUpdateState.ReadyToInstall,
+            is ClientUpdateState.NeedsInstallPermission -> true
+            else -> false
+        }
+
+    /**
+     * Safe to call on every cold start and every resume.
+     * Concurrent calls coalesce; in-flight download is not restarted.
+     */
     suspend fun checkAndUpdate() {
         if (BuildConfig.BUILD_TYPE != "beta" && BuildConfig.BUILD_TYPE != "staging") {
             _state.value = ClientUpdateState.Skipped
             return
         }
 
-        _state.value = ClientUpdateState.Checking
-        val manifest = withContext(Dispatchers.IO) { api.fetchManifest() }
-        if (manifest == null) {
-            _state.value = ClientUpdateState.UpToDate
-            return
+        // Already downloading / about to install — do not re-enter.
+        when (val current = _state.value) {
+            is ClientUpdateState.Downloading,
+            is ClientUpdateState.ReadyToInstall -> return
+            is ClientUpdateState.NeedsInstallPermission -> {
+                // Player may have granted permission in Settings; resume install.
+                resumePendingInstall()
+                return
+            }
+            else -> Unit
         }
 
-        val installedCode = BuildConfig.VERSION_CODE
-        if (manifest.versionCode <= installedCode) {
-            _state.value = ClientUpdateState.UpToDate
+        if (!checkMutex.tryLock()) return
+        try {
+            _state.value = ClientUpdateState.Checking
+            val manifest = withContext(Dispatchers.IO) { api.fetchManifest() }
+            if (manifest == null) {
+                // Manifest missing or network blip: do not block play.
+                _state.value = ClientUpdateState.UpToDate
+                return
+            }
+
+            val installedCode = BuildConfig.VERSION_CODE
+            if (manifest.versionCode <= installedCode) {
+                pendingApk = null
+                pendingVersionName = null
+                _state.value = ClientUpdateState.UpToDate
+                return
+            }
+
+            val apkFile = downloadApk(manifest) ?: return
+            if (!verifySha256(apkFile, manifest.apkSha256)) {
+                apkFile.delete()
+                pendingApk = null
+                pendingVersionName = null
+                _state.value = ClientUpdateState.Failed("Download checksum mismatch")
+                return
+            }
+
+            pendingApk = apkFile
+            pendingVersionName = manifest.versionName
+            launchInstall(apkFile, manifest.versionName)
+        } finally {
+            checkMutex.unlock()
+        }
+    }
+
+    fun openInstallPermissionSettings() {
+        ApkInstaller.openInstallPermissionSettings(context)
+    }
+
+    private suspend fun resumePendingInstall() {
+        val apk = pendingApk
+        val name = pendingVersionName
+        if (apk == null || name == null || !apk.exists()) {
+            _state.value = ClientUpdateState.Failed("Update file missing; will retry next launch")
             return
         }
+        launchInstall(apk, name)
+    }
 
-        val apkFile = downloadApk(manifest) ?: return
-        if (!verifySha256(apkFile, manifest.apkSha256)) {
-            apkFile.delete()
-            _state.value = ClientUpdateState.Failed("Download checksum mismatch")
+    private suspend fun launchInstall(apkFile: File, versionName: String) {
+        if (!ApkInstaller.canInstallPackages(context)) {
+            _state.value = ClientUpdateState.NeedsInstallPermission(versionName)
             return
         }
-
-        _state.value = ClientUpdateState.ReadyToInstall(manifest.versionName)
+        _state.value = ClientUpdateState.ReadyToInstall(versionName)
         withContext(Dispatchers.Main) {
             ApkInstaller.install(context, apkFile)
         }
