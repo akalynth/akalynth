@@ -1,0 +1,23 @@
+{
+  "id": "AKALYNTH_BETA_CLIENT_PUBLISH_V2026080704",
+  "status": "LIVE",
+  "at": "2026-08-07T22:47:41Z",
+  "base_main_sha": "7e5102a6ae509c6ea3c2cc8c5d8ce4683fa19a3a",
+  "version_code": 2026080704,
+  "version_name": "0.1.18-beta.2026080704-first-session",
+  "apk_url": "https://beta.akalynth.com/download/akalynth-beta-v2026080704.apk",
+  "apk_sha256": "1e7c3b158ba24696058ae27ade85bf2fb8530a623012b40c997db6e96f717a0e",
+  "size_bytes": 41746815,
+  "published_at": "2026-08-07T22:46:42.000Z",
+  "play_assets": [
+    "assets/index-CmfRZE6L.js",
+    "assets/index-CuC6XZ7w.css"
+  ],
+  "play_url": "https://beta.akalynth.com/play/",
+  "verify": {
+    "android_update_api": "version_code=2026080704",
+    "apk_download_sha256_match": true,
+    "play_live": true
+  },
+  "notes": "Also restored missing OutfitColorIndices/OutfitColorPicker + IdentityApi outfitColors for beta assemble (compile break on main)."
+}

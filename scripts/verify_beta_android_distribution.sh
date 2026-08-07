@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MANIFEST="${AKALYNTH_ANDROID_MANIFEST:-${ROOT}/infra/android/beta-client-update.json}"
 APK_FILE="${AKALYNTH_ANDROID_APK_FILE:-}"
 ACCEPTED_IDENTITY="${ROOT}/docs/decisions/AKALYNTH_ANDROID_BETA_LONG_VERSION_V1/android-distribution-identity.json"
-ACCEPTED_IDENTITY_SHA256="2f7b9308e7f47b6d435baa7ae29bf8a358b5fc7672af2ee787aaaa74dd6da4d2"
+ACCEPTED_IDENTITY_SHA256="109ff486c2e89b303d104f22fa913c61e4176cca1e69e2824725f95863af793e"
 
 if [[ -n "${AKALYNTH_ANDROID_ACCEPTED_IDENTITY:-}" ]]; then
   echo "AKALYNTH_ANDROID_ACCEPTED_IDENTITY override is forbidden" >&2
