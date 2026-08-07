@@ -1,0 +1,16 @@
+{
+  "folders": [
+    {
+      "name": "Akalynth",
+      "path": "."
+    },
+    {
+      "name": "Web",
+      "path": "../akalynth-site"
+    },
+    {
+      "name": "Codex",
+      "path": "../akalynth-codex"
+    }
+  ]
+}
