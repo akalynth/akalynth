@@ -86,6 +86,7 @@ fun ActionButtons(
     gatherProgressPct: Float = 0f,
     gatherHeldItem: String? = null,
     gatherStatus: String? = null,
+    gatherKeystoneTokens: Int = 0,
     onGather: (String) -> Unit = {},
     onDeliver: (String) -> Unit = {},
     onRefine: (String) -> Unit = {},
@@ -218,6 +219,7 @@ fun ActionButtons(
                     text = GatherLoopPresentation.compactSummary(
                         heldItemType = gatherHeldItem,
                         loopCompleteHint = loopCompleteHint,
+                        keystoneTokens = gatherKeystoneTokens,
                     ),
                     style = MaterialTheme.typography.labelSmall,
                     color = ClassicShellColors.Text,

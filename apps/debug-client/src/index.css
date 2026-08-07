@@ -1049,6 +1049,24 @@ body {
   text-transform: uppercase;
   color: #93c5fd;
 }
+.gather-tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 0.2rem 0 0.45rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.gather-tokens strong {
+  color: #e2e8f0;
+  font-weight: 700;
+}
+.gather-tokens__keystone {
+  color: #fde68a;
+}
+.gather-tokens__keystone strong {
+  color: #fbbf24;
+}
 .gather-status {
   margin-top: 0.35rem;
   padding: 0.35rem 0.45rem;
@@ -1058,6 +1076,12 @@ body {
   color: #a7f3d0;
   font-size: 0.75rem;
   line-height: 1.35;
+}
+.gather-status--keystone {
+  border-color: rgba(251, 191, 36, 0.55);
+  background: rgba(120, 53, 15, 0.35);
+  color: #fde68a;
+  font-weight: 600;
 }
 .gather-list { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 0.4rem; }
 .gather-row { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; }

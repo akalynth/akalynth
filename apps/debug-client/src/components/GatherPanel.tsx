@@ -5,6 +5,7 @@ import {
   GATHER_PANEL_TITLE,
   gatherLoopStep,
   heldItemLabel,
+  isKeystoneDeliverStatus,
   isRefinedItemType,
   nodeLabel,
   stationLabel,
@@ -52,9 +53,6 @@ export function GatherPanel({ gather, me, onGather, onDeliver, onRefine }: Gathe
       <div className="gather-held gather-held-chip" aria-label="held-item">
         <span className="gather-held-kicker">Held</span>
         <strong>{heldItemLabel(heldType)}</strong>
-      </div>
-      <div className="gather-held">
-        Tending: {gather.tendingTokens} · Keystone: {gather.keystoneTokens}
       </div>
 
       {busy && (
@@ -118,8 +116,20 @@ export function GatherPanel({ gather, me, onGather, onDeliver, onRefine }: Gathe
         })}
       </div>
 
+      <div className="gather-tokens" aria-label="chill-loop tokens">
+        <span>
+          Tending <strong>{gather.tendingTokens}</strong>
+        </span>
+        <span className={gather.keystoneTokens > 0 ? 'gather-tokens__keystone' : undefined}>
+          Keystone <strong>{gather.keystoneTokens}</strong>
+        </span>
+      </div>
+
       {gather.status && (
-        <div className="gather-status" role="status">
+        <div
+          className={`gather-status${isKeystoneDeliverStatus(gather.status) ? ' gather-status--keystone' : ''}`}
+          role="status"
+        >
           {gather.status}
         </div>
       )}

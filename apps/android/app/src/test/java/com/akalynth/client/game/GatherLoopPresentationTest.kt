@@ -46,12 +46,30 @@ class GatherLoopPresentationTest {
             itemType = "refined_ley_mote",
             reward = "keystone_token",
             refined = true,
+            priorKeystoneTokens = 1,
         )
         assertTrue(ok.contains("keystone"))
         assertTrue(ok.startsWith("Delivered"))
+        assertTrue(ok.contains("chill loop is complete"))
 
         val reject = GatherLoopPresentation.deliverStatusLine(ok = false, reason = "out_of_range")
         assertTrue(reject.contains("out_of_range"))
+    }
+
+    @Test
+    fun deliverStatusLine_firstKeystoneIsNonSilent() {
+        val first = GatherLoopPresentation.deliverStatusLine(
+            ok = true,
+            itemType = "refined_ley_mote",
+            reward = "keystone_token",
+            refined = true,
+            priorKeystoneTokens = 0,
+        )
+        assertTrue(first.contains("first keystone"))
+        assertTrue(first.contains("Azura remembers"))
+        // Line still includes server-derived reward language
+        assertTrue(first.contains("keystone"))
+        assertTrue(GatherLoopPresentation.isKeystoneDeliverStatus(first))
     }
 
     @Test
@@ -60,5 +78,11 @@ class GatherLoopPresentationTest {
         assertTrue(s.contains("2/3"))
         assertTrue(s.contains("Attune"))
         assertTrue(s.contains("Ley mote"))
+    }
+
+    @Test
+    fun compactSummary_showsKeystoneCountWhenPresent() {
+        val s = GatherLoopPresentation.compactSummary(null, loopCompleteHint = true, keystoneTokens = 2)
+        assertTrue(s.contains("Keystone 2"))
     }
 }

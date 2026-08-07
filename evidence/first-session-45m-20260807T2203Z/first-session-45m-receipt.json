@@ -1,0 +1,43 @@
+{
+  "id": "AKALYNTH_FIRST_SESSION_45M_GAME_V1",
+  "status": "PASS",
+  "at": "2026-08-07T22:05:18Z",
+  "monorepo_sha": "ef4e979b12842c2715df9e10b756c21137bf3280",
+  "beta_health_commit": "86bcf0fb0af204e715600a5ec59f4c9a2b8524b8",
+  "flags": {
+    "CHILL_ZONE_GATHER_ENABLED": "1",
+    "CHILL_ZONE_REFINE_ENABLED": "1"
+  },
+  "interpretation": "45-50 minute first-session vertical slice = Rookguard live onboarding + Azura chill loop (not wall-clock CI)",
+  "commands": {
+    "verify_gather": "PASS",
+    "verify_gather_loop_ws": "PASS",
+    "smoke_beta_azura_loop": "PASS",
+    "verify_gather_wire": "PASS",
+    "verify_character_create_preview_identity": "PASS",
+    "GatherLoopPresentationTest": "PASS",
+    "deliverStatusLine_real_helper": "PASS first keystone + chill loop complete branches"
+  },
+  "loop_proof": {
+    "node_id": "azura_ley_mote_e",
+    "refinery_id": "azura_refinery_stand",
+    "curation_id": "azura_curation_stand",
+    "deliver_result": {
+      "ok": true,
+      "reward": "keystone_token",
+      "refined": true,
+      "item_type": "refined_ley_mote"
+    }
+  },
+  "first_session_checklist": {
+    "rookguard_live_gates_in_server": true,
+    "smoke_rookguard_to_azura": true,
+    "azura_gather_refine_deliver_keystone": true,
+    "web_gather_steps_and_held": true,
+    "android_gthr_refn_deliv_and_steps": true,
+    "identity_strip_no_outfit_picker_on_play": true,
+    "deliver_closure_non_silent_from_server_fields": true,
+    "first_keystone_line_includes_server_reward": true
+  },
+  "ship_note": "Client presentation for first-keystone closure; spine smoke green pre-merge"
+}

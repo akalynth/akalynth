@@ -1607,6 +1607,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
                 const itemType = typeof data.item_type === 'string' ? data.item_type : 'item';
                 const reward = typeof data.reward === 'string' ? data.reward : null;
                 const refined = data.refined === true;
+                const priorKeystone = s.gather.keystoneTokens;
                 return {
                   ...s,
                   conn,
@@ -1615,7 +1616,13 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
                     held: null,
                     tendingTokens: s.gather.tendingTokens + (reward && !refined ? 1 : 0),
                     keystoneTokens: s.gather.keystoneTokens + (reward && refined ? 1 : 0),
-                    status: deliverStatusLine({ ok: true, item_type: itemType, reward, refined }),
+                    status: deliverStatusLine({
+                      ok: true,
+                      item_type: itemType,
+                      reward,
+                      refined,
+                      priorKeystoneTokens: priorKeystone,
+                    }),
                   },
                 };
               }

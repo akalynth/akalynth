@@ -66,16 +66,34 @@ export function deliverStatusLine(input: {
   reward?: string | null;
   refined?: boolean;
   reason?: string | null;
+  /** Keystone count *before* applying this deliver (for first-keystone closure). */
+  priorKeystoneTokens?: number | null;
 }): string {
   if (!input.ok) {
     return `Deliver rejected: ${input.reason ?? 'rejected'}`;
   }
   const item = heldItemLabel(input.item_type ?? 'item');
   const reward = input.reward ? REWARD_LABELS[input.reward] ?? input.reward.replace(/_/g, ' ') : null;
-  if (reward) {
-    return input.refined
+  const base =
+    reward != null
       ? `Delivered ${item} → +1 ${reward}`
-      : `Delivered ${item} → +1 ${reward}`;
+      : `Delivered ${item}`;
+  // First-session emotional beat: first keystone is non-silent (still from server fields only).
+  if (
+    input.refined === true &&
+    input.reward === 'keystone_token' &&
+    (input.priorKeystoneTokens ?? 0) === 0
+  ) {
+    return `${base}. The curation post accepts your first keystone — Azura remembers.`;
   }
-  return `Delivered ${item}`;
+  if (input.refined === true && reward != null) {
+    return `${base}. The chill loop is complete — tend another mote when you are ready.`;
+  }
+  return base;
+}
+
+/** True when status is a successful refined keystone deliver (display helpers). */
+export function isKeystoneDeliverStatus(status: string | null | undefined): boolean {
+  if (!status) return false;
+  return status.startsWith('Delivered') && status.includes('keystone');
 }

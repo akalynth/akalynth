@@ -1,0 +1,88 @@
+{
+  "receipt": "AKALYNTH_BETA_AZURA_LOOP_ALIVE_V1",
+  "ticket": "AZURA_LOOP_ALIVE_V1",
+  "status": "pass",
+  "started_at": "2026-08-07T22:05:18.273Z",
+  "finished_at": "2026-08-07T22:05:45.003Z",
+  "live_targets": {
+    "api_base": "https://beta-api.akalynth.com",
+    "web_base": "https://beta.akalynth.com",
+    "ws_url": "wss://beta-api.akalynth.com"
+  },
+  "character": {
+    "name": "Az22051862a068",
+    "character_id_prefix": "p_cddf5619..."
+  },
+  "loop_proof": {
+    "node_id": "azura_ley_mote_e",
+    "refinery_id": "azura_refinery_stand",
+    "curation_id": "azura_curation_stand",
+    "deliver_result": {
+      "ok": true,
+      "reward": "keystone_token",
+      "refined": true,
+      "item_type": "refined_ley_mote"
+    }
+  },
+  "browser": {
+    "status": "skipped"
+  },
+  "checks": [
+    {
+      "name": "beta_health_200",
+      "ok": true,
+      "status": 200
+    },
+    {
+      "name": "register_201",
+      "ok": true
+    },
+    {
+      "name": "login_200",
+      "ok": true
+    },
+    {
+      "name": "outfits_200",
+      "ok": true
+    },
+    {
+      "name": "character_create_201",
+      "ok": true
+    },
+    {
+      "name": "character_select_200",
+      "ok": true
+    },
+    {
+      "name": "play_token_issued",
+      "ok": true
+    },
+    {
+      "name": "ws_login_ack",
+      "ok": true
+    },
+    {
+      "name": "rookguard_onboarding_start",
+      "ok": true,
+      "map": "Rookguard"
+    },
+    {
+      "name": "rookguard_onboarding_complete",
+      "ok": true,
+      "map": "Azura"
+    },
+    {
+      "name": "gather_refine_deliver_keystone",
+      "ok": true,
+      "node_id": "azura_ley_mote_e",
+      "refinery_id": "azura_refinery_stand",
+      "curation_id": "azura_curation_stand",
+      "deliver_result": {
+        "ok": true,
+        "reward": "keystone_token",
+        "refined": true,
+        "item_type": "refined_ley_mote"
+      }
+    }
+  ]
+}
