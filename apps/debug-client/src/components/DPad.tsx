@@ -127,20 +127,6 @@ export function DPad({ onMove, onRelease, onStopAll }: DPadProps) {
         </button>
         </TextureCircle>
       ))}
-      <TextureCircle variant="dpad-button-pressed" size={44} className="dpad-stop-wrap">
-      <button
-        type="button"
-        className="dpad-stop"
-        aria-label="Stop movement"
-        onPointerDown={(e) => {
-          e.preventDefault();
-          releaseAllPointerDirs();
-          onStopAll();
-        }}
-      >
-        ✕
-      </button>
-      </TextureCircle>
     </div>
     </HudChromePanel>
   );
