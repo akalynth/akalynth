@@ -1,8 +1,8 @@
 {
   "id": "AKALYNTH_FIRST_SESSION_45M_GAME_V1",
   "status": "PASS",
-  "at": "2026-08-07T22:05:18Z",
-  "monorepo_sha": "ef4e979b12842c2715df9e10b756c21137bf3280",
+  "at": "2026-08-07T22:11:33Z",
+  "monorepo_sha": "2dca7bedb27c9f1537d426032e28e4b167fbc3ef",
   "beta_health_commit": "86bcf0fb0af204e715600a5ec59f4c9a2b8524b8",
   "flags": {
     "CHILL_ZONE_GATHER_ENABLED": "1",
@@ -16,7 +16,8 @@
     "verify_gather_wire": "PASS",
     "verify_character_create_preview_identity": "PASS",
     "GatherLoopPresentationTest": "PASS",
-    "deliverStatusLine_real_helper": "PASS first keystone + chill loop complete branches"
+    "deliverStatusLine_real_helper": "PASS first keystone + chill loop complete branches",
+    "live_deliver_to_first_keystone_line": "PASS"
   },
   "loop_proof": {
     "node_id": "azura_ley_mote_e",
@@ -39,5 +40,18 @@
     "deliver_closure_non_silent_from_server_fields": true,
     "first_keystone_line_includes_server_reward": true
   },
-  "ship_note": "Client presentation for first-keystone closure; spine smoke green pre-merge"
+  "ship_note": "Client presentation for first-keystone closure; spine smoke green pre-merge",
+  "merged_pr": 423,
+  "publish": {
+    "play_assets": [
+      "assets/index-CmfRZE6L.js",
+      "assets/index-CuC6XZ7w.css"
+    ],
+    "published_at": "2026-08-07T22:11:01Z",
+    "status": "LIVE",
+    "play_url": "https://beta.akalynth.com/play/",
+    "first_keystone_string_in_live_js": true,
+    "apk_note": "Android presentation on main (PR#423); live APK still v2026080703 until next ladder publish"
+  },
+  "live_first_keystone_ui_line": "Delivered Refined ley mote \u2192 +1 keystone. The curation post accepts your first keystone \u2014 Azura remembers."
 }
