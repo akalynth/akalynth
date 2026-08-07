@@ -19,8 +19,17 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.Spinner
 import android.widget.TextView
+import androidx.compose.ui.platform.ComposeView
 import com.akalynth.client.network.IdentityApi
 import com.akalynth.client.network.IdentityStore
+import com.akalynth.client.ui.components.character.OutfitColorIndices
+import com.akalynth.client.ui.components.character.OutfitColorPicker
+import com.akalynth.client.ui.components.character.OutfitEngineMeta
+import com.akalynth.client.update.ClientUpdateController
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -44,6 +53,7 @@ class CharacterCreateActivity : Activity() {
     private lateinit var worldSpinner: Spinner
     private lateinit var sexSpinner: Spinner
     private lateinit var outfitSpinner: Spinner
+    private lateinit var outfitColorPickerView: ComposeView
 
     private lateinit var worldAdapter: ArrayAdapter<String>
     private lateinit var characterAdapter: ArrayAdapter<String>
@@ -63,6 +73,7 @@ class CharacterCreateActivity : Activity() {
     private var selectedWorldId: String? = null
     private var selectedSex: String = "male"
     private var selectedOutfitId: String? = null
+    private var outfitColors = OutfitColorIndices.DEFAULT
     private var accountEmailVerified = false
     private var busy = false
 
@@ -71,10 +82,24 @@ class CharacterCreateActivity : Activity() {
         .readTimeout(0, TimeUnit.MILLISECONDS)
         .build()
 
+    // Entry-point hook for install-source-aware self-update (AKALYNTH_ANDROID_SELF_UPDATE_APPLY_V1 + policy)
+    private val updateScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         store = IdentityStore(this)
+
+        // Install-source-aware self-update entry point hook.
+        // Respects F-Droid vs direct branches, signer mismatch rules, and no-silent policy.
+        // Does not block UI creation path.
+        updateScope.launch {
+            try {
+                ClientUpdateController(this@CharacterCreateActivity).checkAndUpdate()
+            } catch (_: Exception) {
+                // Non-fatal; update UX is advisory in this legacy entry point.
+            }
+        }
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -83,7 +108,7 @@ class CharacterCreateActivity : Activity() {
         }
 
         val title = TextView(this).apply {
-            text = "Create Character"
+            text = "Akalynth"
             textSize = 22f
         }
 
@@ -251,6 +276,9 @@ class CharacterCreateActivity : Activity() {
         root.addView(TextView(this).apply { text = "Outfit"; textSize = 12f },
             LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
         root.addView(outfitSpinner, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+        outfitColorPickerView = ComposeView(this)
+        refreshOutfitColorPicker()
+        root.addView(outfitColorPickerView, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
         root.addView(changeOutfitButton, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
         root.addView(createButton, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
         root.addView(progress, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
@@ -338,6 +366,7 @@ class CharacterCreateActivity : Activity() {
             worldId = worldId,
             sex = selectedSex,
             outfitId = outfitId,
+            outfitColors = outfitColors,
             callback = object : IdentityApi.CreateCallback {
                 override fun onResult(result: IdentityApi.CharacterCreateResult) {
                     mainHandler.post {
@@ -480,6 +509,8 @@ class CharacterCreateActivity : Activity() {
                     outfits.clear()
                     outfits.addAll(items)
                     refreshOutfitSpinner()
+                    identityApi.lastOutfitEngine?.defaultColors?.let { outfitColors = it }
+                    refreshOutfitColorPicker()
                     outfitSpinner.isEnabled = identityApi.hasAccountSession()
                     setStatus("Outfit catalog loaded.")
                     refreshCreateEnabled()
@@ -544,6 +575,18 @@ class CharacterCreateActivity : Activity() {
                 }
             }
         })
+    }
+
+    private fun refreshOutfitColorPicker() {
+        val engine = identityApi.lastOutfitEngine ?: OutfitEngineMeta.FALLBACK
+        outfitColorPickerView.setContent {
+            OutfitColorPicker(
+                engine = engine,
+                value = outfitColors,
+                onChange = { outfitColors = it },
+                enabled = identityApi.hasAccountSession() && !busy,
+            )
+        }
     }
 
     private fun refreshOutfitSpinner(selectedOutfitOverride: String? = null) {
@@ -693,6 +736,9 @@ class CharacterCreateActivity : Activity() {
             progress.visibility = View.VISIBLE
         } else {
             progress.visibility = View.GONE
+        }
+        if (::outfitColorPickerView.isInitialized) {
+            refreshOutfitColorPicker()
         }
     }
 

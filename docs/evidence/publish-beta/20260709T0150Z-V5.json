@@ -1,0 +1,18 @@
+{
+  "schema_version": "witnessops.publish_akalynth_beta.v1",
+  "stamp": "20260709T015050Z",
+  "lane": "beta",
+  "mode": "refresh_v5",
+  "intended_commit": "47690e84c797d5f183b42f2c47a9b19a4ea6e86d",
+  "container_image_id": "25c9b6e0d7c2",
+  "stage_path": "/tmp/akalynth-schema25-v3-dist",
+  "build_log": "/tmp/schema25-v3-build.log",
+  "rollback_backup": "/opt/akalynth-beta.pre-refresh-20260709T015050Z",
+  "dist_build_info_commit": "47690e84c797d5f183b42f2c47a9b19a4ea6e86d",
+  "live_health_commit": "47690e84c797d5f183b42f2c47a9b19a4ea6e86d",
+  "android_version_code": 12,
+  "apk_url": "https://beta.akalynth.com/download/akalynth-beta-v12.apk",
+  "status": "PASS",
+  "pod_status": "1/1 Running",
+  "notes": "V3 schema25 artifact deployed, rollout successful, gates passed, live updated from 4aef0a96"
+}

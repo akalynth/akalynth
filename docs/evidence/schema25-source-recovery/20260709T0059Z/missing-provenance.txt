@@ -1,0 +1,4 @@
+- Original source tree that produced the 25 dist (V25 migration + Outfits columns)
+- Exact build command / tsc config used for the 2026-06-23 build
+- Sourcemap for schema.js (none present)
+- Commit or branch containing the V25 change

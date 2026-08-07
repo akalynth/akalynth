@@ -1,0 +1,24 @@
+name: Ship Beta
+on:
+  push:
+    branches: [main, beta]
+
+jobs:
+  publish-beta:
+    runs-on: ship-akalynth
+    steps:
+      - name: Publish beta lane
+        run: sudo /usr/bin/systemctl start akalynth-beta-publish.service
+      - name: Wait for publish
+        run: |
+          for _ in $(seq 1 60); do
+            state=$(sudo /usr/bin/systemctl show -p ActiveState --value akalynth-beta-publish.service)
+            result=$(sudo /usr/bin/systemctl show -p Result --value akalynth-beta-publish.service)
+            if [ "$state" = "inactive" ]; then
+              [ "$result" = "success" ] && exit 0
+              sudo /usr/bin/journalctl -u akalynth-beta-publish.service -n 40 --no-pager
+              exit 1
+            fi
+            sleep 5
+          done
+          exit 1
