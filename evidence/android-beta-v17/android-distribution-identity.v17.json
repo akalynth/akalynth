@@ -1,5 +1,6 @@
 {
-  "ok": true,
+  "schema_version": "akalynth.accepted_android_distribution_identity.v1",
+  "decision_id": "AKALYNTH_ANDROID_BETA_V17_ITEM_ICONS",
   "lane": "beta",
   "version_code": 17,
   "version_name": "0.1.15-beta-rookguard-v1.4.1-item-icons",

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "mode": "loose_png",
-  "generated_at": "2026-08-07T12:07:56.550Z",
+  "generated_at": "2026-08-07T19:15:04.478Z",
   "files": [
     {
       "path": "sprites/characters/base_human_male_01.png",
@@ -121,83 +121,83 @@
     },
     {
       "path": "sprites/item__ashglass_shard.png",
-      "sha256": "92f10404febd16378d15a12d31cd8423cdd25cac2c3d4c3fb9ea9b41a69a5e3e"
+      "sha256": "220d3abaf3e72ea29231a2891d18a30932b37111c36be441adb475c60eabf72b"
     },
     {
       "path": "sprites/item__charred_shipment_plate.png",
-      "sha256": "581ba7ad70ca9d2deafe620ec2cc63b3cf25336cdab3892afa1076f5871929d4"
+      "sha256": "d710f59354eef672fd944867e3d7280e3ba0128b35ea1344474d201aa92f405e"
     },
     {
       "path": "sprites/item__city_rat_goo.png",
-      "sha256": "7ae194406a683d8675dc62a02d4ffe201cd1237463b47bae5510d853a384593a"
+      "sha256": "9a2b3030fa8c667d038d4117634f63632ca8224016bf53099d134a2b4dda58f2"
     },
     {
       "path": "sprites/item__healing_herb.png",
-      "sha256": "ddc6d3dae3f73484435cf9c756c8b4c7ed4d5bbd14f8336de2ab95b4db703902"
+      "sha256": "1cb8066c52e7df3fa856bd540591769cb1a14c4ebb20ad3290c4b58e05f7d341"
     },
     {
       "path": "sprites/item__keystone_token.png",
-      "sha256": "f7ee6782379589e9070de34ea998b9bfbf771bf548113db91b472a54663d19d7"
+      "sha256": "623fba687441ebfcd18f5d31a2431e009f93f59c9177680e5044199e7d03653e"
     },
     {
       "path": "sprites/item__ley_mote.png",
-      "sha256": "5bb9e135e6faea7072414e4c844427bdc2dd6b9be59953d8c1299768d352a778"
+      "sha256": "de5619d90b85cc043d335fb5aa90631a44d7119aa11249d55232a87d9f5bcc8a"
     },
     {
       "path": "sprites/item__mark_token.png",
-      "sha256": "63e44c4b16c409b29511f6229b625f2b2d6de91e0f541eadd044915dbbdf957a"
+      "sha256": "02149f478055b4f282cf0d08a7dc6bdf9543ed1698690e9b60be51369d3bd5eb"
     },
     {
       "path": "sprites/item__pilgrim_mark.png",
-      "sha256": "e44268cdde677e810abf18bfdb322d2e91144e5ad10232713eb9c8aaff24c606"
+      "sha256": "0340d1afcc41bd53103fc3b253769c807244f3fcc8381cd36ca028b20ecee72a"
     },
     {
       "path": "sprites/item__ration.png",
-      "sha256": "4607f34c404b09b06a07d8754dfdf30244ab87de5d98d3d2caefd8668a436774"
+      "sha256": "14891c9d1efc848d603c20dc54626f070fc6d89040a23978ef28d7567475cc0c"
     },
     {
       "path": "sprites/item__refined_ley_mote.png",
-      "sha256": "4165e39bd7bf45a7840b7de44afd01e5c01745328b9033a9f7f15bc3410ba3d5"
+      "sha256": "8f2dde644d0b2a7f76f2558b3502c9d439e5381fe7538ba7a99175f6ea6c0efd"
     },
     {
       "path": "sprites/item__refined_soulsteel_component.png",
-      "sha256": "be9eed7df179959e0cce40c68a3c7084beae35cb41ae7a3fe33a0e9e94d500d9"
+      "sha256": "523d85bd7eee4f5584e915b80fa32b881c2a91c0b2d0a8729267f2e823e94a9f"
     },
     {
       "path": "sprites/item__rookguard_patience_charm.png",
-      "sha256": "9bd6941f2fdbcb357f86106103a7d154baf3d8773d71c39d22630e4cb43ec98a"
+      "sha256": "55fa64adadf7fdadcd95c10ce947d13b8191e845e45489a9a52713966f82aa77"
     },
     {
       "path": "sprites/item__rookguard_threadbare_cloak.png",
-      "sha256": "e554191a72a65024382a26ddaa027cfbe8d336462a2a14644ac041986ae04681"
+      "sha256": "64fc81e89807f5703981ca3a262427babb9b897f6d60a9158291ee12afcf78e8"
     },
     {
       "path": "sprites/item__rookguard_training_blade.png",
-      "sha256": "0dfdf84a3818dabf44376674fe8f7e00d58233772ad79970c06597136aa0d124"
+      "sha256": "32b9f78a2a5c04abd160c269669f0c9f0dcc776291faff7b72cffd9c74e0f518"
     },
     {
       "path": "sprites/item__slime.png",
-      "sha256": "94716840902b767f6889ebe6cf0692eedd21f57dc8ea218116346e77e0ece315"
+      "sha256": "fb97334dcb366ecf7f6ed42934dd1af2108805ea0981227eca7e5fbe2dd6caeb"
     },
     {
       "path": "sprites/item__soulsteel_frame.png",
-      "sha256": "65e8de7f10df5292ba462d9ecff320ab83386993f6911bbbadcad7ee43ed47e0"
+      "sha256": "657936c6074ebeb8b335c7e38692902f5fcf98a0e7ebb986ecb7c7a0728bb5d7"
     },
     {
       "path": "sprites/item__stabilized_soulsteel_component.png",
-      "sha256": "1d362c551406c691dcc6aab397588179f7baa865cc2968fe5ab80dffcb3e947a"
+      "sha256": "5cbcd226bdca7271f447fcf938b26b56b632f8d4a654e8a30d9f04104cd9476d"
     },
     {
       "path": "sprites/item__tending_token.png",
-      "sha256": "38baca890774b9a41c44ac3867766043be8bb2467cb6965ae75b3bc31426d232"
+      "sha256": "11ca40604b46aff622270ddc68d3bac03a96968bd966dcda73243e841f73fed7"
     },
     {
       "path": "sprites/item__torch.png",
-      "sha256": "c2fc87cf10ed7a93bf77067a0dacee93125373763d7ac897e5441a1fb95f2c4f"
+      "sha256": "73b59254655c97876eb506ebfd3fbfef916c8985032d0a664dc65d5913eaeb0e"
     },
     {
       "path": "sprites/item__training_slime_goo.png",
-      "sha256": "5d07c6d89cef403d061827610ad2f74f357fdd29c63f7d684557e4e26585e863"
+      "sha256": "6be2d954bb465ab969c3e81cb80dcb5172c6306030f744a7285c875a8245aeab"
     },
     {
       "path": "sprites/props__tree.png",

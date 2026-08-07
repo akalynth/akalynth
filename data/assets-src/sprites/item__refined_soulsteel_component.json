@@ -21,10 +21,10 @@
   "review_status": "approved",
   "tile_code": null,
   "mechanics": null,
-  "copyright_boundary": "original hand-authored placeholder asset; no copied third-party sprite, UI, logo, or map layout",
+  "copyright_boundary": "original hand-authored item icon; no copied third-party sprite, UI, logo, or map layout",
   "asset_id": "akalynth_item_refined_soulsteel_component_001",
   "item_type": "refined_soulsteel_component",
   "cleaned_file": "data/assets-src/sprites/item__refined_soulsteel_component.png",
-  "sha256": "be9eed7df179959e0cce40c68a3c7084beae35cb41ae7a3fe33a0e9e94d500d9",
-  "notes": "P1 placeholder: steel-blue refined soulsteel square; replace with readable craft icon before final art pass."
+  "sha256": "523d85bd7eee4f5584e915b80fa32b881c2a91c0b2d0a8729267f2e823e94a9f",
+  "notes": "Readable 32px item icon (refined_soulsteel_component); solid-color placeholder replaced (v17 hotbar fix)."
 }

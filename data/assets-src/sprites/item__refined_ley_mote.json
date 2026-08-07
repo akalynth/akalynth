@@ -21,10 +21,10 @@
   "review_status": "approved",
   "tile_code": null,
   "mechanics": null,
-  "copyright_boundary": "original hand-authored placeholder asset; no copied third-party sprite, UI, logo, or map layout",
+  "copyright_boundary": "original hand-authored item icon; no copied third-party sprite, UI, logo, or map layout",
   "asset_id": "akalynth_item_refined_ley_mote_001",
   "item_type": "refined_ley_mote",
   "cleaned_file": "data/assets-src/sprites/item__refined_ley_mote.png",
-  "sha256": "4165e39bd7bf45a7840b7de44afd01e5c01745328b9033a9f7f15bc3410ba3d5",
-  "notes": "P1 placeholder: refined violet ley mote square; replace with readable refine icon before final art pass."
+  "sha256": "8f2dde644d0b2a7f76f2558b3502c9d439e5381fe7538ba7a99175f6ea6c0efd",
+  "notes": "Readable 32px item icon (refined_ley_mote); solid-color placeholder replaced (v17 hotbar fix)."
 }

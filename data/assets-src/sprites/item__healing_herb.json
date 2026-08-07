@@ -21,10 +21,10 @@
   "review_status": "approved",
   "tile_code": null,
   "mechanics": null,
-  "copyright_boundary": "original hand-authored placeholder asset; no copied third-party sprite, UI, logo, or map layout",
+  "copyright_boundary": "original hand-authored item icon; no copied third-party sprite, UI, logo, or map layout",
   "asset_id": "akalynth_item_healing_herb_001",
   "item_type": "healing_herb",
   "cleaned_file": "data/assets-src/sprites/item__healing_herb.png",
-  "sha256": "ddc6d3dae3f73484435cf9c756c8b4c7ed4d5bbd14f8336de2ab95b4db703902",
-  "notes": "P1 placeholder: green healing herb square; replace with readable consumable icon before final art pass."
+  "sha256": "1cb8066c52e7df3fa856bd540591769cb1a14c4ebb20ad3290c4b58e05f7d341",
+  "notes": "Readable 32px item icon (healing_herb); solid-color placeholder replaced (v17 hotbar fix)."
 }

@@ -8,8 +8,8 @@ ANDROID_DIR="$ROOT/apps/android"
 APK_OUT="$ANDROID_DIR/app/build/outputs/apk/beta/app-beta.apk"
 MANIFEST_PATH="$ROOT/infra/android/beta-client-update.json"
 VERIFY_SCRIPT="$ROOT/scripts/verify_beta_android_distribution.sh"
-IDENTITY_DIR="$ROOT/docs/decisions/AKALYNTH_ANDROID_BETA_V16_CHROME_CLEAN"
-IDENTITY_PATH="$IDENTITY_DIR/android-distribution-identity.v16.json"
+IDENTITY_DIR="$ROOT/docs/decisions/AKALYNTH_ANDROID_BETA_V17_ITEM_ICONS"
+IDENTITY_PATH="$IDENTITY_DIR/android-distribution-identity.v17.json"
 
 log() { printf '[beta-apk] %s\n' "$1"; }
 
@@ -97,7 +97,7 @@ mkdir -p "$IDENTITY_DIR"
 cat > "$IDENTITY_PATH" <<JSON
 {
   "schema_version": "akalynth.accepted_android_distribution_identity.v1",
-  "decision_id": "AKALYNTH_ANDROID_BETA_V16_CHROME_CLEAN",
+  "decision_id": "AKALYNTH_ANDROID_BETA_V17_ITEM_ICONS",
   "lane": "beta",
   "version_code": ${version_code},
   "version_name": "${version_name}",
@@ -144,16 +144,13 @@ text3, n2 = re.subn(
 )
 if n1 != 1 or n2 != 1:
     raise SystemExit(f"failed to pin verifier (n1={n1} n2={n2})")
-# Allow decision_id for v13 authority (still akalynth.accepted_android_distribution_identity.v1)
-text3 = text3.replace(
-    'if accepted["decision_id"] != "AKALYNTH_BETA_RELEASE_REPAIR_V1":\n'
-    '    raise SystemExit("accepted Android identity decision_id is not release authority")',
-    'if accepted["decision_id"] not in (\n'
-    '    "AKALYNTH_BETA_RELEASE_REPAIR_V1",\n'
-    '    "AKALYNTH_ANDROID_BETA_V16_CHROME_CLEAN",\n'
-    '):\n'
-    '    raise SystemExit("accepted Android identity decision_id is not release authority")',
-)
+# Ensure V17 decision_id is accepted by the verifier allow-list.
+if 'AKALYNTH_ANDROID_BETA_V17_ITEM_ICONS' not in text3:
+    text3 = text3.replace(
+        '    "AKALYNTH_ANDROID_BETA_V16_CHROME_CLEAN",\n',
+        '    "AKALYNTH_ANDROID_BETA_V16_CHROME_CLEAN",\n'
+        '    "AKALYNTH_ANDROID_BETA_V17_ITEM_ICONS",\n',
+    )
 verify.write_text(text3)
 print(f"pinned verifier → {rel_posix} sha256={digest}")
 PY

@@ -21,10 +21,10 @@
   "review_status": "approved",
   "tile_code": null,
   "mechanics": null,
-  "copyright_boundary": "original hand-authored placeholder asset; no copied third-party sprite, UI, logo, or map layout",
+  "copyright_boundary": "original hand-authored item icon; no copied third-party sprite, UI, logo, or map layout",
   "asset_id": "akalynth_item_pilgrim_mark_001",
   "item_type": "pilgrim_mark",
   "cleaned_file": "data/assets-src/sprites/item__pilgrim_mark.png",
-  "sha256": "e44268cdde677e810abf18bfdb322d2e91144e5ad10232713eb9c8aaff24c606",
-  "notes": "P1 placeholder: silver pilgrim mark square; replace with readable cosmetic icon before final art pass."
+  "sha256": "0340d1afcc41bd53103fc3b253769c807244f3fcc8381cd36ca028b20ecee72a",
+  "notes": "Readable 32px item icon (pilgrim_mark); solid-color placeholder replaced (v17 hotbar fix)."
 }
