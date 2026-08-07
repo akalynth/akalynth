@@ -6,6 +6,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '..');
 const clientSource = readFileSync(resolve(root, 'src/hooks/useGameClient.ts'), 'utf8');
 const panelSource = readFileSync(resolve(root, 'src/components/GatherPanel.tsx'), 'utf8');
+const labelsSource = readFileSync(resolve(root, 'src/data/gatherLabels.ts'), 'utf8');
+const stepsSource = readFileSync(resolve(root, 'src/components/GatherLoopSteps.tsx'), 'utf8');
 
 function fail(message) {
   console.error(`debug-client gather wire authority verifier failed: ${message}`);
@@ -71,5 +73,22 @@ requireLiteral('GatherPanel uses deliver callbacks only', 'onDeliver(st.station_
 requireLiteral('GatherPanel uses refine callbacks only', 'onRefine(st.station_id)', panelSource);
 requireLiteral('GatherPanel player-facing title', 'GATHER_PANEL_TITLE', panelSource);
 requireLiteral('GatherPanel onboarding hint', 'GATHER_PANEL_HINT', panelSource);
+requireLiteral('GatherPanel ritual steps', 'GatherLoopSteps', panelSource);
+requireLiteral('GatherPanel held chip labels', 'heldItemLabel', panelSource);
+
+// Pure presentation helpers must not invent protocol authority.
+requireLiteral('gatherLoopStep pure helper', 'export function gatherLoopStep', labelsSource);
+requireLiteral('deliverStatusLine pure helper', 'export function deliverStatusLine', labelsSource);
+if (labelsSource.includes('WebSocket') || labelsSource.includes('gather_intent')) {
+  fail('gatherLabels must not send wire messages');
+}
+if (
+  stepsSource.includes('WebSocket') ||
+  stepsSource.includes('gather_intent') ||
+  stepsSource.includes('onGather')
+) {
+  fail('GatherLoopSteps must be display-only');
+}
+requireLiteral('deliver_result uses deliverStatusLine', 'deliverStatusLine({ ok: true', clientSource);
 
 console.log('debug-client gather wire authority verifier passed');

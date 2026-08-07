@@ -47,6 +47,7 @@ import {
   type SovereignVocation,
 } from '@shared/types';
 import { getMap } from '../data/maps';
+import { deliverStatusLine } from '../data/gatherLabels';
 import type {
   ActionCooldown,
   ChatMessageEntry,
@@ -1601,6 +1602,7 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
             }
 
             case 'deliver_result': {
+              // Status line is display-only from server fields (gatherLabels.deliverStatusLine).
               if (data.ok === true) {
                 const itemType = typeof data.item_type === 'string' ? data.item_type : 'item';
                 const reward = typeof data.reward === 'string' ? data.reward : null;
@@ -1613,12 +1615,19 @@ export function useGameClient(mapName: MapName): [GameClientState, GameClientApi
                     held: null,
                     tendingTokens: s.gather.tendingTokens + (reward && !refined ? 1 : 0),
                     keystoneTokens: s.gather.keystoneTokens + (reward && refined ? 1 : 0),
-                    status: reward ? `Delivered ${itemType} → +1 ${reward}` : `Delivered ${itemType}`,
+                    status: deliverStatusLine({ ok: true, item_type: itemType, reward, refined }),
                   },
                 };
               }
               const reason = typeof data.reason === 'string' ? data.reason : 'rejected';
-              return { ...s, conn, gather: { ...s.gather, status: `Deliver rejected: ${reason}` } };
+              return {
+                ...s,
+                conn,
+                gather: {
+                  ...s.gather,
+                  status: deliverStatusLine({ ok: false, reason }),
+                },
+              };
             }
 
             // Chill-Zone Refine (Step 3): mirror the gather result/progress/completed trio.

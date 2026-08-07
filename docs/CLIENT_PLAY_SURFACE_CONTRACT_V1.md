@@ -53,6 +53,33 @@ web ↔ APK is not a different game. It does not establish world canon or change
 | Map markers | **Web may show M/R/C overlays**; Android may use nearest-only buttons. Both must complete the same loop. Full marker parity is **P1**, not blocking this contract |
 | Forbidden | Client-side “success” without server result messages |
 
+#### 2.3.1 Presentation (Azura chill loop ritual)
+
+When gather content is enabled (nodes/stations present), both clients SHOULD show a
+**legible ritual**, not only raw protocol state:
+
+| Beat | Requirement |
+|------|-------------|
+| Before | Compact **3-step objective**: **Gather → Attune → Deliver** derived from server-backed held item only (see step model below) |
+| During | **Held-item chip** with player-facing name (copy table); progress while gathering/refining |
+| After | Short **status line** on successful `deliver_result` built only from message fields (`item_type`, `reward`, `refined`) |
+
+**Step derivation (display only — no new authority):**
+
+```text
+if no nodes/stations → hide gather loop UI
+else if held is null → step 1 Gather
+else if held item_type does not start with "refined_" → step 2 Attune
+else → step 3 Deliver
+```
+
+Completion feedback is the last server `deliver_result` status string / token counts —
+clients must not invent keystone or clear held without server ack.
+
+**Shared player copy source:** `apps/debug-client/src/data/gatherLabels.ts`
+(title, hint, node/station labels, held/reward display helpers). Android SHOULD
+mirror the same strings (duplicate constants allowed until a shared package exists).
+
 ### 2.4 Chrome / inventory (player primary)
 
 | Item | Contract |
@@ -61,6 +88,25 @@ web ↔ APK is not a different game. It does not establish world canon or change
 | Drop confirm | Long-press / confirm tiers for drop (Android tiers; web pack sheet equivalent for drop) |
 | Web-only operator tools | Builder, Proof, FairPlay (if unwired), presentation customize — **must not** be required to finish core loops |
 
+#### 2.4.1 HUD zones (placement)
+
+Play layout must keep controls predictable (orientation may reflow but not mix roles):
+
+```text
+[ identity strip ]              [ objective / loop steps ]
+[ map — world only ]
+[ hotbar ]          [ actions: Gthr / Refn / Deliv (+ gather card on web) ]
+[ dpad + stop ]     [ dock: chat / chronicle ]
+```
+
+| Zone | Allowed | Forbidden |
+|------|---------|-----------|
+| World / map | Tiles, entities, gather markers | Character create, outfit picker, recolor |
+| Play controls | D-pad, stop, gather/refine/deliver, hotbar | Outfit / wardrobe editors |
+| Sheets / modals | Outfit, pack, chronicle, death recap, Tem | Required path for core chill loop |
+
+**Outfit / recolor** live only in character-create and a dismissible **You / Character** sheet — never as floating chrome next to the d-pad or hotbar.
+
 ### 2.5 Chat, Tem, chronicle
 
 | Item | Contract |
@@ -68,6 +114,15 @@ web ↔ APK is not a different game. It does not establish world canon or change
 | Chat | Send/receive chat intents; sheets/overlays must not block movement permanently |
 | Tem / witness | Modal challenge + respond; do not drop the session silently |
 | Chronicle | Openable sheet; death row may deep-link to recap when id present |
+
+### 2.6 Identity (avatar lock)
+
+| Item | Contract |
+|------|----------|
+| Create → world | Catalog `outfit_id` maps to the same world `sprite_id` used for self on the map |
+| Surfaces | Create preview, world self sprite, and identity strip (name + sprite or outfit label) MUST agree for catalog outfits |
+| Missing art | Labeled fallback (e.g. outfit name) — **never** a different outfit’s sprite |
+| Forbidden | Play-surface outfit pickers; silent outfit swap after enter world |
 
 ---
 
@@ -123,3 +178,6 @@ Never publish a lower `versionCode` than live. Never leave `main` at an ancient 
 ## 7. Amendment
 
 Bump to **v1.1** only with an explicit decision note. Do not silently reintroduce dual stop controls, versionCode regression, or a second client branch as the ship source.
+
+**v1.1 (2026-08-07):** §2.3.1 presentation ritual, §2.4.1 HUD placement, §2.6 identity lock — see
+`docs/decisions/AKALYNTH_AZURA_LOOP_PRESENTATION_V1/DECISION.md`.

@@ -991,7 +991,74 @@ body {
   line-height: 1.35;
   margin-bottom: 0.45rem;
 }
+/* Gather → Attune → Deliver ritual (display-only; contract §2.3.1) */
+.gather-loop-steps {
+  list-style: none;
+  margin: 0 0 0.5rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.gather-loop-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(15, 23, 42, 0.55);
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+.gather-loop-step--current {
+  border-color: rgba(247, 233, 167, 0.55);
+  color: #f7e9a7;
+  background: rgba(247, 233, 167, 0.08);
+  font-weight: 700;
+}
+.gather-loop-step--done {
+  border-color: rgba(52, 211, 153, 0.4);
+  color: #6ee7b7;
+}
+.gather-loop-step__num {
+  font-variant-numeric: tabular-nums;
+  min-width: 0.85rem;
+  text-align: center;
+}
 .gather-held { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.4rem; }
+.gather-held-chip {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.3rem 0.45rem;
+  border-radius: 0.45rem;
+  border: 1px solid rgba(96, 165, 250, 0.35);
+  background: rgba(30, 58, 138, 0.22);
+  color: #e2e8f0;
+  margin-bottom: 0.35rem;
+}
+.gather-held-chip strong {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+.gather-held-kicker {
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #93c5fd;
+}
+.gather-status {
+  margin-top: 0.35rem;
+  padding: 0.35rem 0.45rem;
+  border-radius: 0.4rem;
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  background: rgba(6, 78, 59, 0.28);
+  color: #a7f3d0;
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
 .gather-list { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 0.4rem; }
 .gather-row { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; }
 .gather-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
