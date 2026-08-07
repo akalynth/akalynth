@@ -55,6 +55,7 @@ sealed class GameEvent {
     data object DismissError : GameEvent()
     data object DismissTemChallenge : GameEvent()
     data object DismissWitnessRequest : GameEvent()
+    data object DismissDeathNotice : GameEvent()
     data object ToggleChronicle : GameEvent()
 
     // Settings

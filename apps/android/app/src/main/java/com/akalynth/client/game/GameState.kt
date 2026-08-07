@@ -10,6 +10,7 @@ import com.akalynth.client.protocol.PlayerPublic
 import com.akalynth.client.progression.UnlockState
 import com.akalynth.client.protocol.PropertyPublic
 import com.akalynth.client.ui.state.ChronicleEvent
+import com.akalynth.client.ui.state.DeathNotice
 
 data class GameState(
     val connection: ConnectionState = ConnectionState.Idle,
@@ -107,7 +108,9 @@ data class UiState(
     val debugLog: List<DebugLogEntry> = emptyList(),
     val showDebugDrawer: Boolean = false,
     val connectionDiagnostics: ConnectionDiagnostics = ConnectionDiagnostics(),
-    val healthCheck: HealthCheckState = HealthCheckState.Unknown
+    val healthCheck: HealthCheckState = HealthCheckState.Unknown,
+    /** Latest death_notice for toast/recap; cleared when player dismisses. */
+    val pendingDeathNotice: DeathNotice? = null,
 )
 
 data class DebugLogEntry(

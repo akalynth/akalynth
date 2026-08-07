@@ -20,6 +20,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -35,10 +36,13 @@ import com.akalynth.client.protocol.PlayerPublic
 import com.akalynth.client.ui.diagnostics.DiagnosticsFormatter
 import com.akalynth.client.ui.components.*
 import com.akalynth.client.ui.components.chronicle.ChronicleSheet
+import com.akalynth.client.ui.components.death.DeathRecapSheet
+import com.akalynth.client.ui.components.death.DeathToast
 import com.akalynth.client.ui.components.hotbar.DropConfirmationOverlay
 import com.akalynth.client.ui.components.hotbar.Hotbar
 import com.akalynth.client.ui.components.hud.GameHUD
 import com.akalynth.client.ui.state.UiOverlayState
+import com.akalynth.client.ui.state.toChronicleEvent
 import com.akalynth.client.ui.theme.ClassicButton
 import com.akalynth.client.ui.theme.ClassicPanel
 import com.akalynth.client.ui.theme.ClassicShellColors
@@ -89,6 +93,15 @@ fun WorldScreen(
     var overlayState by remember { mutableStateOf<UiOverlayState>(UiOverlayState.None) }
     val unlockStage = state.unlock.stage
     val hotbarBottomPadding = if (state.ui.chatOpen) 292.dp else 0.dp
+
+    // Open death toast when server emits death_notice (stored on UiState).
+    LaunchedEffect(state.ui.pendingDeathNotice) {
+        val notice = state.ui.pendingDeathNotice ?: return@LaunchedEffect
+        // Do not clobber a higher-priority drop confirm; toast will re-show after clear.
+        if (overlayState is UiOverlayState.ConfirmDrop) return@LaunchedEffect
+        overlayState = UiOverlayState.Toast(notice)
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -230,6 +243,7 @@ fun WorldScreen(
                 dpad = { modifier ->
                     DPad(
                         onMove = { dir -> onEvent(GameEvent.Move(dir)) },
+                        onStop = { /* client-side hold cancel only; no wire stop message */ },
                         modifier = modifier
                     )
                 },
@@ -373,6 +387,45 @@ fun WorldScreen(
                     onCancel = { overlayState = UiOverlayState.None },
                     modifier = Modifier.fillMaxSize()
                 )
+            }
+            is UiOverlayState.Toast -> {
+                DeathToast(
+                    notice = overlay.notice,
+                    visible = true,
+                    onTap = {
+                        overlayState = UiOverlayState.Recap(overlay.notice.toChronicleEvent())
+                    },
+                    onDismiss = {
+                        overlayState = UiOverlayState.None
+                        onEvent(GameEvent.DismissDeathNotice)
+                    },
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .statusBarsPadding()
+                        .padding(top = 56.dp)
+                )
+            }
+            is UiOverlayState.Recap -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.55f)),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    DeathRecapSheet(
+                        event = overlay.event,
+                        onCopyEventId = { eventId ->
+                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            clipboard.setPrimaryClip(ClipData.newPlainText("death_event_id", eventId))
+                            Toast.makeText(context, "Copied event id", Toast.LENGTH_SHORT).show()
+                        },
+                        onDismiss = {
+                            overlayState = UiOverlayState.None
+                            onEvent(GameEvent.DismissDeathNotice)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
             else -> Unit
         }
