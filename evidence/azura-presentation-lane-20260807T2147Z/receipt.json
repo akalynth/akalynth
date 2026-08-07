@@ -1,0 +1,66 @@
+{
+  "id": "AKALYNTH_AZURA_PRESENTATION_LANE_CLOSE_V1",
+  "status": "PASS",
+  "at": "2026-08-07T21:47:23Z",
+  "monorepo_sha": "6b215da62fbde22624859dc6f4d3efa46fa4f574",
+  "merged_prs": {
+    "PR_A_B": "#419",
+    "PR_C": "#420",
+    "PR_D": "#421"
+  },
+  "beta_health_commit": "86bcf0fb0af204e715600a5ec59f4c9a2b8524b8",
+  "live_apk_before_publish": {
+    "version_code": 2026080702,
+    "version_name": "0.1.16-beta.2026080702-p0-stop-death"
+  },
+  "commands": {
+    "verify_gather_wire": "PASS",
+    "verify_character_create_preview_identity": "PASS",
+    "smoke_beta_azura_loop": "PASS"
+  },
+  "loop_proof": {
+    "node_id": "azura_ley_mote_e",
+    "refinery_id": "azura_refinery_stand",
+    "curation_id": "azura_curation_stand",
+    "deliver_result": {
+      "ok": true,
+      "reward": "keystone_token",
+      "refined": true,
+      "item_type": "refined_ley_mote"
+    }
+  },
+  "contract_checklist": {
+    "CLIENT_PLAY_SURFACE_V1_2_3_presentation": {
+      "three_step_objective": "web GatherLoopSteps + android compactSummary",
+      "held_chip": true,
+      "deliver_status_from_server_fields": true
+    },
+    "CLIENT_PLAY_SURFACE_V1_2_4_1_hud_zones": {
+      "outfit_picker_on_play_surface": false,
+      "identity_strip_display_only": true
+    },
+    "CLIENT_PLAY_SURFACE_V1_2_6_identity": {
+      "outfit_identity_table": true,
+      "create_preview_uses_table": true,
+      "world_sprite_authoritative": true,
+      "female_protocol_sprite_null_fallback_labeled": true
+    },
+    "CLIENT_PLAY_SURFACE_V1_2_3_intents": {
+      "no_client_success_invention": true,
+      "smoke_keystone_refined_deliver": true
+    }
+  },
+  "publish": {
+    "version_code": 2026080703,
+    "version_name": "0.1.17-beta.2026080703-azura-presentation",
+    "apk_sha256": "23250594fbc9e4219a10a3b3f5960f6327c9e7291f083244e1ea70f171a5fe24",
+    "apk_url": "https://beta.akalynth.com/download/akalynth-beta-v2026080703.apk",
+    "play_assets": [
+      "assets/index-By8I4Vog.js",
+      "assets/index-DK3ZBOep.css"
+    ],
+    "published_at": "2026-08-07T21:49:09Z",
+    "status": "LIVE"
+  },
+  "monorepo_sha_at_publish": "6b215da62fbde22624859dc6f4d3efa46fa4f574"
+}
