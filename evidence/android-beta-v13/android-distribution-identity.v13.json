@@ -1,5 +1,6 @@
 {
-  "ok": true,
+  "schema_version": "akalynth.accepted_android_distribution_identity.v1",
+  "decision_id": "AKALYNTH_ANDROID_BETA_V13_UI_CHROME",
   "lane": "beta",
   "version_code": 13,
   "version_name": "0.1.11-beta-ui-chrome-self-update",
