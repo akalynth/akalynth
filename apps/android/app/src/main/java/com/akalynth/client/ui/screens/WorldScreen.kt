@@ -5,6 +5,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Snackbar
@@ -15,6 +16,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -416,6 +418,19 @@ private fun OnwardRoutesPanel(
 ) {
     if (routes.isEmpty()) return
 
+    // Phone landscape default: collapsed chip so the board does not dominate play.
+    // Expanded state preserves the full existing route/objective list.
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    val summary = routes.firstOrNull()?.let { route ->
+        val open = route.status == "available"
+        val completed = route.completedObjectiveIds.toSet()
+        val routeStepObjectives = route.objectives.filter { objective ->
+            objective.system != "ui" && objective.system != "android"
+        }
+        val routeStepCompleted = routeStepObjectives.count { objective -> completed.contains(objective.id) }
+        "${if (open) "Open" else "Locked"}: ${route.title} ($routeStepCompleted/${routeStepObjectives.size})"
+    } ?: "Next routes"
+
     ClassicPanel(
         modifier = modifier
             .widthIn(max = 260.dp)
@@ -423,12 +438,39 @@ private fun OnwardRoutesPanel(
         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        Text(
-            text = "Next routes",
-            style = MaterialTheme.typography.labelMedium,
-            color = ClassicShellColors.Brass,
-            fontWeight = FontWeight.Bold
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { expanded = !expanded }
+                .testTag("WorldScreen_OnwardRoutes_Toggle"),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Next routes",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = ClassicShellColors.Brass,
+                    fontWeight = FontWeight.Bold
+                )
+                if (!expanded) {
+                    Text(
+                        text = summary,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = ClassicShellColors.MutedText,
+                        modifier = Modifier.testTag("WorldScreen_OnwardRoutes_Summary")
+                    )
+                }
+            }
+            Text(
+                text = if (expanded) "Hide" else "Show",
+                style = MaterialTheme.typography.labelSmall,
+                color = ClassicShellColors.Rune,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        if (!expanded) return@ClassicPanel
+
         routes.forEach { route ->
             val open = route.status == "available"
             val completed = route.completedObjectiveIds.toSet()
