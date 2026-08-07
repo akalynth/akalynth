@@ -14,8 +14,26 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..
 const ROOKGUARD_MAP_PATH = path.join(REPO_ROOT, 'packages/shared/maps/rookguard.json');
 const LANE = 'AKALYNTH_BETA_AZURA_LOOP_ALIVE_V1';
 const TEM_CHALLENGE_RESPONSE = 'AKALYNTH';
-const WALKABLE = new Set([0, 3, 4, 5, 6, 7, 8]);
-const TILE = { Wall: 1, TutorialMove: 4, TutorialChat: 5, TutorialTem: 6, GateToAzura: 8 };
+// Must match packages/shared/types.ts TileCode + WALKABLE_TILES (smoke previously used stale codes).
+const TILE = {
+  Grass: 0,
+  Stone: 1,
+  Wall: 2,
+  Water: 3,
+  Door: 4,
+  TutorialMove: 5,
+  TutorialChat: 6,
+  TutorialTem: 7,
+  GateToAzura: 8,
+};
+const WALKABLE = new Set([
+  TILE.Grass,
+  TILE.Stone,
+  TILE.TutorialMove,
+  TILE.TutorialChat,
+  TILE.TutorialTem,
+  TILE.GateToAzura,
+]);
 
 function stamp() {
   return new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
@@ -243,11 +261,24 @@ class WsHarness {
 }
 
 async function sendMove(client, direction, timeoutMs) {
-  client.send({ type: 'move_intent', direction });
-  const result = await client.waitFor((m) => m.type === 'move_result', `move:${direction}`, timeoutMs);
-  if (result.ok !== true) throw new Error(`move ${direction} failed: ${JSON.stringify(result)}`);
-  await sleep(140);
-  return result;
+  // Beta IP move limit defaults to 5/s (IP_MOVE_RATE_LIMIT); stay under it with margin.
+  const MOVE_GAP_MS = 240;
+  let lastErr = null;
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    client.send({ type: 'move_intent', direction });
+    const result = await client.waitFor((m) => m.type === 'move_result', `move:${direction}`, timeoutMs);
+    if (result.ok === true) {
+      await sleep(MOVE_GAP_MS);
+      return result;
+    }
+    lastErr = result;
+    if (result.reason === 'rate_limited') {
+      await sleep(MOVE_GAP_MS * 2);
+      continue;
+    }
+    throw new Error(`move ${direction} failed: ${JSON.stringify(result)}`);
+  }
+  throw new Error(`move ${direction} failed: ${JSON.stringify(lastErr)}`);
 }
 
 async function walkPath(client, dirs, timeoutMs) {
@@ -271,13 +302,20 @@ async function moveToward(client, from, target, stopManhattan, timeoutMs) {
   return cur;
 }
 
+function posFromMoveResult(result, fallback) {
+  if (result && Number.isFinite(result.x) && Number.isFinite(result.y)) {
+    return { x: result.x, y: result.y };
+  }
+  return { ...fallback };
+}
+
 async function onboardToAzura(client, map, startWorld, timeoutMs) {
   if (startWorld.map !== 'Rookguard') throw new Error(`onboard expects Rookguard, got ${startWorld.map}`);
   let current = { x: startWorld.player.x, y: startWorld.player.y };
 
   const moveRune = findTile(map, TILE.TutorialMove);
-  await walkPath(client, pathTo(map, current, moveRune), timeoutMs);
-  current = moveRune;
+  let last = await walkPath(client, pathTo(map, current, moveRune), timeoutMs);
+  current = posFromMoveResult(last, moveRune);
   await client.waitFor((m) => m.type === 'loop_update' && m.event === 'rookguard_move_complete', 'loop:move', timeoutMs);
 
   client.send({ type: 'chat', message: 'azura loop smoke' });
@@ -285,16 +323,16 @@ async function onboardToAzura(client, map, startWorld, timeoutMs) {
   await client.waitFor((m) => m.type === 'loop_update' && m.event === 'rookguard_chat_complete', 'loop:chat', timeoutMs);
 
   const temRune = findTile(map, TILE.TutorialTem);
-  await walkPath(client, pathTo(map, current, temRune), timeoutMs);
-  current = temRune;
+  last = await walkPath(client, pathTo(map, current, temRune), timeoutMs);
+  current = posFromMoveResult(last, temRune);
   await client.waitFor((m) => m.type === 'tem_challenge', 'tem', timeoutMs);
   client.send({ type: 'tem_response', response: TEM_CHALLENGE_RESPONSE });
   await client.waitFor((m) => m.type === 'loop_update' && m.event === 'rookguard_tem_complete', 'loop:tem', timeoutMs);
 
   const trainingSlime = { x: 14, y: 14 };
   const combatTile = adjacentWalkableTo(map, trainingSlime);
-  await walkPath(client, pathTo(map, current, combatTile), timeoutMs);
-  current = combatTile;
+  last = await walkPath(client, pathTo(map, current, combatTile), timeoutMs);
+  current = posFromMoveResult(last, combatTile);
   for (let i = 0; i < 3; i += 1) {
     client.send({ type: 'attack_intent', target_id: 'mob:training_slime' });
     if (i < 2) await sleep(2100);
@@ -313,17 +351,32 @@ async function onboardToAzura(client, map, startWorld, timeoutMs) {
       if (WALKABLE.has(tileAt(map, next))) { guildTile = next; break; }
     }
   }
-  await walkPath(client, pathTo(map, current, guildTile), timeoutMs);
+  last = await walkPath(client, pathTo(map, current, guildTile), timeoutMs);
+  current = posFromMoveResult(last, guildTile);
   client.send({ type: 'declare_vocation', vocation: 'hexer' });
   await client.waitFor((m) => m.type === 'loop_update' && m.event === 'rookguard_profession_declared', 'loop:profession', timeoutMs);
 
   const gate = findTile(map, TILE.GateToAzura);
-  const gateMove = await walkPath(client, pathTo(map, current, gate), timeoutMs);
-  if (gateMove?.map !== 'Azura') throw new Error(`gate did not transfer to Azura: ${JSON.stringify(gateMove)}`);
+  // Walk adjacent to gate if standing on it is one step; transfer is server-side on gate tile.
+  last = await walkPath(client, pathTo(map, current, gate), timeoutMs);
+  current = posFromMoveResult(last, gate);
+  // move_result does not always carry map; wait for Azura world_state after stepping the gate.
+  const azuraTransfer = await client.waitFor(
+    (m) => m.type === 'world_state' && m.map === 'Azura',
+    'world:Azura:gate',
+    timeoutMs,
+  );
+  if (!azuraTransfer || azuraTransfer.map !== 'Azura') {
+    throw new Error(`gate did not transfer to Azura: lastMove=${JSON.stringify(last)}`);
+  }
+  return azuraTransfer;
 }
 
-async function runAzuraLoop(client, timeoutMs) {
-  const azura = await client.waitFor((m) => m.type === 'world_state' && m.map === 'Azura', 'world:Azura', timeoutMs);
+async function runAzuraLoop(client, timeoutMs, azuraWorld = null) {
+  const azura =
+    azuraWorld?.map === 'Azura'
+      ? azuraWorld
+      : await client.waitFor((m) => m.type === 'world_state' && m.map === 'Azura', 'world:Azura', timeoutMs);
   let cur = { x: azura.player.x, y: azura.player.y };
 
   const snapshot = await client.waitFor((m) => m.type === 'gather_snapshot', 'gather_snapshot', timeoutMs);
@@ -511,15 +564,16 @@ async function main() {
 
       client.send({ type: 'enter_world' });
       const entered = await client.waitFor((m) => m.type === 'world_state', 'world_state:enter', args.timeoutMs);
+      let azuraWorld = entered.map === 'Azura' ? entered : null;
       if (entered.map === 'Azura') {
         addCheck('rookguard_skipped_tutorial_complete', true, { map: entered.map });
       } else {
         addCheck('rookguard_onboarding_start', entered.map === 'Rookguard', { map: entered.map });
-        await onboardToAzura(client, rookguardMap, entered, args.timeoutMs);
-        addCheck('rookguard_onboarding_complete', true);
+        azuraWorld = await onboardToAzura(client, rookguardMap, entered, args.timeoutMs);
+        addCheck('rookguard_onboarding_complete', true, { map: azuraWorld?.map });
       }
 
-      loopProof = await runAzuraLoop(client, args.timeoutMs);
+      loopProof = await runAzuraLoop(client, args.timeoutMs, azuraWorld);
       addCheck('gather_refine_deliver_keystone', loopProof.deliver_result.reward === 'keystone_token', loopProof);
     } finally {
       client.close();
