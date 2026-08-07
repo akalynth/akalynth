@@ -1,0 +1,45 @@
+{
+  "id": "AKALYNTH_AZURA_LOOP_ALIVE_FINISH_20260807",
+  "status": "PASS",
+  "at": "2026-08-07T21:02:18Z",
+  "monorepo_sha": "97b4c8ab9d0583a65a7baf8ce90c7102eb9e0381",
+  "beta_health": {
+    "ok": true,
+    "version": "0.1.0",
+    "tick_ms": 100,
+    "now_iso": "2026-08-07T21:02:18.029Z",
+    "commit": "86bcf0fb0af204e715600a5ec59f4c9a2b8524b8",
+    "built_at": "2026-07-30T20:05:04.317Z"
+  },
+  "flags": {
+    "CHILL_ZONE_GATHER_ENABLED": "1",
+    "CHILL_ZONE_REFINE_ENABLED": "1",
+    "source": "k8s deploy akalynth-game-beta env"
+  },
+  "commands": {
+    "verify_gather_unit": "npx tsx apps/server/tools/verify-gather.test.ts \u2192 PASS (gather+refine+deliver paths)",
+    "verify_gather_loop": "npx tsx apps/server/tools/verify-gather-loop.test.ts \u2192 PASS WS E2E gather+refine+deliver keystone",
+    "verify_gather_wire": "node apps/debug-client/scripts/verify-gather-wire-authority.mjs \u2192 PASS",
+    "smoke_beta_azura_loop": "npm run smoke:beta-azura-loop \u2192 PASS keystone refined deliver"
+  },
+  "loop_proof": {
+    "node_id": "azura_ley_mote_e",
+    "refinery_id": "azura_refinery_stand",
+    "curation_id": "azura_curation_stand",
+    "deliver_result": {
+      "ok": true,
+      "reward": "keystone_token",
+      "refined": true,
+      "item_type": "refined_ley_mote"
+    }
+  },
+  "contract_CLIENT_PLAY_SURFACE_V1_section_2_3": {
+    "intents_gather_refine_deliver": true,
+    "buttons_web_GatherPanel_in_range": true,
+    "buttons_android_Gthr_Refn_Deliv_nearest": true,
+    "no_client_side_success_invention": true,
+    "map_markers_full_parity_not_required": true,
+    "notes": "Web GatherPanel + Android ActionButtons; outcomes only from server result/progress/completed messages."
+  },
+  "smoke_fix": "scripts/smoke-beta-azura-loop.mjs: TileCode aligned to packages/shared/types.ts; move rate-limit retries; gate waits world_state Azura; path current pos updated after walks"
+}
