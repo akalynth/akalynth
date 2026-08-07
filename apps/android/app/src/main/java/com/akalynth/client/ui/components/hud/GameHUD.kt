@@ -89,10 +89,12 @@ fun GameHUD(
                 }
         )
 
-        // Actions: anchored to spacer end (guarantees >= deadZone from D-pad)
+        // Actions: bottom-end only. Do not pin start→spacer or the action column is
+        // stretched across the map center (mid-screen chrome over the world).
+        // Dead-zone spacer remains for M4 measurement; landscape already separates
+        // bottom-start dpad from bottom-end actions by more than deadZone.
         actions(
             Modifier.constrainAs(actionsRef) {
-                start.linkTo(spacerRef.end)
                 end.linkTo(parent.end, margin = 16.dp)
                 bottom.linkTo(parent.bottom, margin = 32.dp)
             }
@@ -143,13 +145,13 @@ fun GameHUD(
             }
         }
 
-        // Hotbar: visible at stage >= 2 with slide animation
+        // Hotbar sits immediately above the dpad (bottom control band), not map-center.
         Box(
             modifier = Modifier
                 .constrainAs(hotbarRef) {
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
-                    bottom.linkTo(dpadRef.top, margin = 16.dp)
+                    bottom.linkTo(dpadRef.top, margin = 10.dp)
                 }
         ) {
             AnimatedVisibility(

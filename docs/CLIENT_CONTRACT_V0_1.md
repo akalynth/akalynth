@@ -3,6 +3,10 @@
 This contract is frozen for Android/client wire compatibility.
 Server may evolve internally, but MUST remain backward compatible with this contract until a new contract is minted.
 
+**Player-facing play UX (movement, death, chrome, publish ladder)** is frozen separately in
+[`CLIENT_PLAY_SURFACE_CONTRACT_V1.md`](./CLIENT_PLAY_SURFACE_CONTRACT_V1.md).
+Wire shapes below remain authoritative for HTTP/WS.
+
 ## Environments
 
 | Environment | HTTP Base | WS Base |

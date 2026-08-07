@@ -1,0 +1,12 @@
+{
+  "schema_version": "akalynth.accepted_android_distribution_identity.v1",
+  "decision_id": "AKALYNTH_ANDROID_BETA_LONG_VERSION_V1",
+  "lane": "beta",
+  "version_code": 2026080701,
+  "version_name": "0.1.15-beta.2026080701-item-icons",
+  "apk_url": "https://beta.akalynth.com/download/akalynth-beta-v2026080701.apk",
+  "apk_sha256": "8e97b7da60f5083f5470343abd6b6b2c3e449e3c8dca1d0d6e4fe8a3f2beffee",
+  "size_bytes": 41714667,
+  "required": false,
+  "published_at": "2026-08-07T19:25:04.000Z"
+}

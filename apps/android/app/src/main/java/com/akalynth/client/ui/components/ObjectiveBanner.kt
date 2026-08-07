@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.akalynth.client.ui.theme.ClassicPanel
 import com.akalynth.client.ui.theme.ClassicShellColors
@@ -23,24 +24,29 @@ fun ObjectiveBanner(
 ) {
     if (objective.isBlank()) return
 
+    // Compact top rail: keep quest readable without covering the world interaction band.
     ClassicPanel(
         modifier = modifier
-            .widthIn(max = 360.dp)
+            .widthIn(max = 280.dp)
             .testTag("ObjectiveBanner"),
-        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = title,
             style = MaterialTheme.typography.labelSmall,
             color = ClassicShellColors.Brass,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
         Text(
             text = objective,
             style = MaterialTheme.typography.bodySmall,
             color = ClassicShellColors.Text,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
         )
         accent?.let {
             Text(
@@ -48,7 +54,9 @@ fun ObjectiveBanner(
                 style = MaterialTheme.typography.labelSmall,
                 color = ClassicShellColors.Good,
                 fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

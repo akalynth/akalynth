@@ -21,10 +21,10 @@
   "review_status": "approved",
   "tile_code": null,
   "mechanics": null,
-  "copyright_boundary": "original hand-authored placeholder asset; no copied third-party sprite, UI, logo, or map layout",
+  "copyright_boundary": "original hand-authored item icon; no copied third-party sprite, UI, logo, or map layout",
   "asset_id": "akalynth_item_rookguard_threadbare_cloak_001",
   "item_type": "rookguard_threadbare_cloak",
   "cleaned_file": "data/assets-src/sprites/item__rookguard_threadbare_cloak.png",
-  "sha256": "e554191a72a65024382a26ddaa027cfbe8d336462a2a14644ac041986ae04681",
-  "notes": "P1 placeholder: brown threadbare cloak square; replace with readable armor icon before final art pass."
+  "sha256": "64fc81e89807f5703981ca3a262427babb9b897f6d60a9158291ee12afcf78e8",
+  "notes": "Readable 32px item icon (rookguard_threadbare_cloak); solid-color placeholder replaced (v17 hotbar fix)."
 }

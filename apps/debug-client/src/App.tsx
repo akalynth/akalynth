@@ -28,6 +28,8 @@ import { ProofSheet } from './components/ProofSheet';
 import { BuilderPanel, type BuilderPreviewDisplay } from './components/BuilderPanel';
 import { CodexShelfPanel } from './components/CodexShelfPanel';
 import { PlayShellDock } from './components/PlayShellDock';
+import { PlayHotbar } from './components/PlayHotbar';
+import { OnwardRoutesChip } from './components/OnwardRoutesChip';
 import { UiStatBar } from './components/UiStatBar';
 import { builderPreviewOverlays } from './utils/builderPreviewOverlay';
 import { TemChallengeModal } from './components/TemChallengeModal';
@@ -1023,6 +1025,12 @@ function DebugApp() {
               quest={state.loop?.rookguardQuest ?? null}
             />
           )}
+          {presentationMode && showPlayShell && (state.loop?.onwardRoutes?.length ?? 0) > 0 && (
+            <OnwardRoutesChip
+              routes={state.loop?.onwardRoutes ?? []}
+              className="onward-routes-chip--overlay"
+            />
+          )}
           {!presentationMode && (
             <div className="hud hud-proof" aria-label="studio proof">
               <div className={`proof-chip objective-chip ${state.loop?.complete ? 'proof-chip--pass' : ''}`}>
@@ -1077,11 +1085,19 @@ function DebugApp() {
           <section className="stage stage-controls" aria-label="touch controls">
             <div className="thumb-zone left">
               <DPad onMove={api.sendMove} onRelease={api.releaseMove} onStopAll={api.stopMoves} />
+              {/* APK parity: hotbar sits above the dpad (bottom control band), not map-center. */}
+              {state.ui.stage >= 2 && (
+                <PlayHotbar
+                  inventory={state.inventory}
+                  onUseItem={(itemId) => api.useSkill('item:use:' + itemId)}
+                  className="play-hotbar--above-dpad"
+                />
+              )}
             </div>
             <div className="thumb-zone right">
               <ActionsPanel
                 stage={state.ui.stage}
-                compact={phoneLandscape || (presentationMode && presentationViewport === 'compact-desktop')}
+                compact={phoneLandscape || presentationMode}
                 presentationMode={presentationMode}
                 onAttack={api.sendAttack}
                 onRitual={api.castRunestone}

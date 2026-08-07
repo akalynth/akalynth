@@ -21,10 +21,10 @@
   "review_status": "approved",
   "tile_code": null,
   "mechanics": null,
-  "copyright_boundary": "original hand-authored placeholder asset; no copied third-party sprite, UI, logo, or map layout",
+  "copyright_boundary": "original hand-authored item icon; no copied third-party sprite, UI, logo, or map layout",
   "asset_id": "akalynth_item_stabilized_soulsteel_component_001",
   "item_type": "stabilized_soulsteel_component",
   "cleaned_file": "data/assets-src/sprites/item__stabilized_soulsteel_component.png",
-  "sha256": "1d362c551406c691dcc6aab397588179f7baa865cc2968fe5ab80dffcb3e947a",
-  "notes": "P1 placeholder: deep steel stabilized soulsteel square; replace with readable craft icon before final art pass."
+  "sha256": "5cbcd226bdca7271f447fcf938b26b56b632f8d4a654e8a30d9f04104cd9476d",
+  "notes": "Readable 32px item icon (stabilized_soulsteel_component); solid-color placeholder replaced (v17 hotbar fix)."
 }

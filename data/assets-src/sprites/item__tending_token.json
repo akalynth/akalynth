@@ -21,10 +21,10 @@
   "review_status": "approved",
   "tile_code": null,
   "mechanics": null,
-  "copyright_boundary": "original hand-authored placeholder asset; no copied third-party sprite, UI, logo, or map layout",
+  "copyright_boundary": "original hand-authored item icon; no copied third-party sprite, UI, logo, or map layout",
   "asset_id": "akalynth_item_tending_token_001",
   "item_type": "tending_token",
   "cleaned_file": "data/assets-src/sprites/item__tending_token.png",
-  "sha256": "38baca890774b9a41c44ac3867766043be8bb2467cb6965ae75b3bc31426d232",
-  "notes": "P1 placeholder: teal tending token square; replace with readable gather-reward icon before final art pass."
+  "sha256": "11ca40604b46aff622270ddc68d3bac03a96968bd966dcda73243e841f73fed7",
+  "notes": "Readable 32px item icon (tending_token); solid-color placeholder replaced (v17 hotbar fix)."
 }

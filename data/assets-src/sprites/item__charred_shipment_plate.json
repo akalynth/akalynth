@@ -21,10 +21,10 @@
   "review_status": "approved",
   "tile_code": null,
   "mechanics": null,
-  "copyright_boundary": "original hand-authored placeholder asset; no copied third-party sprite, UI, logo, or map layout",
+  "copyright_boundary": "original hand-authored item icon; no copied third-party sprite, UI, logo, or map layout",
   "asset_id": "akalynth_item_charred_shipment_plate_001",
   "item_type": "charred_shipment_plate",
   "cleaned_file": "data/assets-src/sprites/item__charred_shipment_plate.png",
-  "sha256": "581ba7ad70ca9d2deafe620ec2cc63b3cf25336cdab3892afa1076f5871929d4",
-  "notes": "P1 placeholder: charred shipment plate square; replace with readable salvage icon before final art pass."
+  "sha256": "d710f59354eef672fd944867e3d7280e3ba0128b35ea1344474d201aa92f405e",
+  "notes": "Readable 32px item icon (charred_shipment_plate); solid-color placeholder replaced (v17 hotbar fix)."
 }

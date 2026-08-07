@@ -8,8 +8,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
 class WorldPlacementRepositoryTest {
     private val context = ApplicationProvider.getApplicationContext<android.content.Context>()
 
@@ -45,7 +47,7 @@ class WorldPlacementRepositoryTest {
         assertEquals(azura.size, highCity.size)
         assertTrue(
             azura.any {
-                it.assetId == "fountain" && it.x == 32 && it.y == 33
+                it.assetId == "high_city_crystal_fountain" && it.x == 32 && it.y == 33
             },
         )
         assertTrue(

@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-30T05:50:13.089Z",
+  "generated_at": "2026-06-23T02:22:22.203Z",
   "max_sheet_size": 2048,
   "padding_px": 2,
   "filtering": "nearest",
   "sheets": [
     {
       "sheet": "ui.png",
-      "bytes": 3549,
+      "bytes": 34408,
       "sprites": 13,
       "width": 452,
       "height": 68

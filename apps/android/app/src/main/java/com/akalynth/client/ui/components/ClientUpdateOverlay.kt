@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -22,11 +23,16 @@ import com.akalynth.client.ui.theme.ClassicShellColors
 import com.akalynth.client.update.ClientUpdateState
 
 @Composable
-fun ClientUpdateOverlay(state: ClientUpdateState) {
+fun ClientUpdateOverlay(
+    state: ClientUpdateState,
+    onOpenInstallPermission: (() -> Unit)? = null,
+) {
     val message = when (state) {
         is ClientUpdateState.Checking -> "Checking beta server for client updates..."
         is ClientUpdateState.Downloading -> "Downloading ${state.versionName} (${state.progressPercent}%)"
         is ClientUpdateState.ReadyToInstall -> "Installing ${state.versionName}..."
+        is ClientUpdateState.NeedsInstallPermission ->
+            "Allow Akalynth to install updates, then return to the app. (${state.versionName})"
         is ClientUpdateState.Failed -> "Update failed: ${state.message}"
         else -> return
     }
@@ -60,8 +66,16 @@ fun ClientUpdateOverlay(state: ClientUpdateState) {
                     progress = { state.progressPercent / 100f },
                     modifier = Modifier.fillMaxWidth()
                 )
-            } else if (state !is ClientUpdateState.Failed) {
+            } else if (
+                state !is ClientUpdateState.Failed &&
+                state !is ClientUpdateState.NeedsInstallPermission
+            ) {
                 CircularProgressIndicator(color = ClassicShellColors.Brass)
+            }
+            if (state is ClientUpdateState.NeedsInstallPermission && onOpenInstallPermission != null) {
+                Button(onClick = onOpenInstallPermission) {
+                    Text("Open install permission")
+                }
             }
         }
     }

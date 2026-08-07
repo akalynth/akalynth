@@ -21,10 +21,10 @@
   "review_status": "approved",
   "tile_code": null,
   "mechanics": null,
-  "copyright_boundary": "original hand-authored placeholder asset; no copied third-party sprite, UI, logo, or map layout",
+  "copyright_boundary": "original hand-authored item icon; no copied third-party sprite, UI, logo, or map layout",
   "asset_id": "akalynth_item_ashglass_shard_001",
   "item_type": "ashglass_shard",
   "cleaned_file": "data/assets-src/sprites/item__ashglass_shard.png",
-  "sha256": "92f10404febd16378d15a12d31cd8423cdd25cac2c3d4c3fb9ea9b41a69a5e3e",
-  "notes": "P1 placeholder: pale ashglass shard square; replace with readable material icon before final art pass."
+  "sha256": "220d3abaf3e72ea29231a2891d18a30932b37111c36be441adb475c60eabf72b",
+  "notes": "Readable 32px item icon (ashglass_shard); solid-color placeholder replaced (v17 hotbar fix)."
 }

@@ -4,8 +4,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MANIFEST="${AKALYNTH_ANDROID_MANIFEST:-${ROOT}/infra/android/beta-client-update.json}"
 APK_FILE="${AKALYNTH_ANDROID_APK_FILE:-}"
-ACCEPTED_IDENTITY="${ROOT}/docs/decisions/AKALYNTH_BETA_RELEASE_REPAIR_V1/android-distribution-identity.v12.json"
-ACCEPTED_IDENTITY_SHA256="3268182442792b2b627b2ba741f0a3cd6c93ebbd0211c431dc40e6dde7a10db5"
+ACCEPTED_IDENTITY="${ROOT}/docs/decisions/AKALYNTH_ANDROID_BETA_LONG_VERSION_V1/android-distribution-identity.json"
+ACCEPTED_IDENTITY_SHA256="2f7b9308e7f47b6d435baa7ae29bf8a358b5fc7672af2ee787aaaa74dd6da4d2"
 
 if [[ -n "${AKALYNTH_ANDROID_ACCEPTED_IDENTITY:-}" ]]; then
   echo "AKALYNTH_ANDROID_ACCEPTED_IDENTITY override is forbidden" >&2
@@ -103,7 +103,15 @@ if set(accepted) != accepted_required:
     raise SystemExit("accepted Android identity has unexpected or missing fields")
 if accepted["schema_version"] != "akalynth.accepted_android_distribution_identity.v1":
     raise SystemExit("accepted Android identity schema_version is unsupported")
-if accepted["decision_id"] != "AKALYNTH_BETA_RELEASE_REPAIR_V1":
+if accepted["decision_id"] not in (
+    "AKALYNTH_BETA_RELEASE_REPAIR_V1",
+    "AKALYNTH_ANDROID_BETA_V13_UI_CHROME",
+    "AKALYNTH_ANDROID_BETA_V14_ASSETS_FIX",
+    "AKALYNTH_ANDROID_BETA_V15_LAYOUT_STABILIZE",
+    "AKALYNTH_ANDROID_BETA_V16_CHROME_CLEAN",
+    "AKALYNTH_ANDROID_BETA_V17_ITEM_ICONS",
+    "AKALYNTH_ANDROID_BETA_LONG_VERSION_V1",
+):
     raise SystemExit("accepted Android identity decision_id is not release authority")
 for field in (
     "lane",

@@ -21,10 +21,10 @@
   "review_status": "approved",
   "tile_code": null,
   "mechanics": null,
-  "copyright_boundary": "original hand-authored placeholder asset; no copied third-party sprite, UI, logo, or map layout",
+  "copyright_boundary": "original hand-authored item icon; no copied third-party sprite, UI, logo, or map layout",
   "asset_id": "akalynth_item_slime_001",
   "item_type": "slime",
   "cleaned_file": "data/assets-src/sprites/item__slime.png",
-  "sha256": "94716840902b767f6889ebe6cf0692eedd21f57dc8ea218116346e77e0ece315",
-  "notes": "P1 placeholder: bright slime trophy square; replace with readable loot icon before final art pass."
+  "sha256": "fb97334dcb366ecf7f6ed42934dd1af2108805ea0981227eca7e5fbe2dd6caeb",
+  "notes": "Readable 32px item icon (slime); solid-color placeholder replaced (v17 hotbar fix)."
 }
