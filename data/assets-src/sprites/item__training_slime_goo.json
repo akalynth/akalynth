@@ -21,10 +21,10 @@
   "review_status": "approved",
   "tile_code": null,
   "mechanics": null,
-  "copyright_boundary": "original hand-authored placeholder asset; no copied third-party sprite, UI, logo, or map layout",
+  "copyright_boundary": "original hand-authored item icon; no copied third-party sprite, UI, logo, or map layout",
   "asset_id": "akalynth_item_training_slime_goo_001",
   "item_type": "training_slime_goo",
   "cleaned_file": "data/assets-src/sprites/item__training_slime_goo.png",
-  "sha256": "5d07c6d89cef403d061827610ad2f74f357fdd29c63f7d684557e4e26585e863",
-  "notes": "P0 placeholder: green goo square; replace with readable slime residue icon before final art pass."
+  "sha256": "6be2d954bb465ab969c3e81cb80dcb5172c6306030f744a7285c875a8245aeab",
+  "notes": "Readable 32px item icon (training_slime_goo); solid-color placeholder replaced (v17 hotbar fix)."
 }

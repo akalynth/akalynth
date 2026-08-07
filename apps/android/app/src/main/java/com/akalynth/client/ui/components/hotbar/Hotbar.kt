@@ -128,23 +128,19 @@ fun HotbarSlot(
     var pressJob by remember { mutableStateOf<Job?>(null) }
     var isPressed by remember { mutableStateOf(false) }
 
-    val backgroundColor = if (item != null) {
-        Color(item.rarity.colorHex).copy(alpha = 0.2f)
-    } else {
-        Color(0xFF2A2A4A)
-    }
-
+    // Dark iron slot chrome — not rarity color swatches (those read as "outfit palette").
+    val backgroundColor = Color(0xE6101218)
     val borderColor = if (item != null) {
-        Color(item.rarity.colorHex)
+        Color(item.rarity.colorHex).copy(alpha = 0.85f)
     } else {
-        Color(0xFF3A3A5A)
+        Color(0xFF4A4A52)
     }
 
     Box(
         modifier = modifier
             .size(HOTBAR_SLOT_SIZE)
-            .background(backgroundColor, RoundedCornerShape(8.dp))
-            .border(2.dp, borderColor, RoundedCornerShape(8.dp))
+            .background(backgroundColor, RoundedCornerShape(6.dp))
+            .border(1.5.dp, borderColor, RoundedCornerShape(6.dp))
             .pointerInput(item) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
@@ -175,33 +171,31 @@ fun HotbarSlot(
         contentAlignment = Alignment.Center
     ) {
         if (item != null) {
-            // Item display
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxSize().padding(4.dp)
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxSize().padding(3.dp)
             ) {
                 ItemIcon(
                     item = item,
+                    size = 22.dp,
                     testTag = "Hotbar_Slot_${index}_Icon",
                 )
-
-                // Stack count (if stackable)
-                if (item.isStackable) {
-                    Text(
-                        text = "${item.stackCount}",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        modifier = Modifier.testTag("Hotbar_Slot_${index}_Count")
-                    )
-                }
+                Text(
+                    text = if (item.isStackable) "${item.stackCount}" else item.name.take(6),
+                    fontSize = 8.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFFD8D4C8),
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    modifier = Modifier.testTag("Hotbar_Slot_${index}_Count")
+                )
             }
         } else {
-            // Empty slot indicator
             Text(
                 text = "${index + 1}",
-                fontSize = 12.sp,
-                color = Color.Gray.copy(alpha = 0.5f),
+                fontSize = 11.sp,
+                color = Color(0xFF6A6A72),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.testTag("Hotbar_Slot_${index}_Empty")
             )

@@ -21,10 +21,10 @@
   "review_status": "approved",
   "tile_code": null,
   "mechanics": null,
-  "copyright_boundary": "original hand-authored placeholder asset; no copied third-party sprite, UI, logo, or map layout",
+  "copyright_boundary": "original hand-authored item icon; no copied third-party sprite, UI, logo, or map layout",
   "asset_id": "akalynth_item_keystone_token_001",
   "item_type": "keystone_token",
   "cleaned_file": "data/assets-src/sprites/item__keystone_token.png",
-  "sha256": "f7ee6782379589e9070de34ea998b9bfbf771bf548113db91b472a54663d19d7",
-  "notes": "P1 placeholder: gold keystone token square; replace with readable token icon before final art pass."
+  "sha256": "623fba687441ebfcd18f5d31a2431e009f93f59c9177680e5044199e7d03653e",
+  "notes": "Readable 32px item icon (keystone_token); solid-color placeholder replaced (v17 hotbar fix)."
 }

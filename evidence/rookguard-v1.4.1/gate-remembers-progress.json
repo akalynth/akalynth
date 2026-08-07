@@ -1,0 +1,74 @@
+{
+  "character": "GrokAdminHero",
+  "player_id": "p_9268305437cb418a966ed0795e348f6e",
+  "after_chat": {
+    "objective": "Give the keep a voice to remember — send one local message",
+    "steps": [
+      {
+        "step_id": "move",
+        "label": "Wake the road-rune",
+        "complete": true,
+        "receipt_actions": [
+          "tutorial_step_complete"
+        ]
+      },
+      {
+        "step_id": "chat",
+        "label": "Raise a signal",
+        "complete": false,
+        "receipt_actions": [
+          "tutorial_step_complete"
+        ]
+      },
+      {
+        "step_id": "tem",
+        "label": "Answer Tem",
+        "complete": true,
+        "receipt_actions": [
+          "tem_challenge_passed",
+          "tutorial_step_complete"
+        ]
+      },
+      {
+        "step_id": "training",
+        "label": "Earn the yard-mark",
+        "complete": false,
+        "receipt_actions": [
+          "mob_kill",
+          "item_minted"
+        ]
+      },
+      {
+        "step_id": "profession",
+        "label": "Choose an oath",
+        "complete": false,
+        "receipt_actions": [
+          "vocation_declared"
+        ]
+      },
+      {
+        "step_id": "gate",
+        "label": "Cross the gate",
+        "complete": false,
+        "receipt_actions": [
+          "gate_unlock",
+          "tutorial_completed"
+        ]
+      }
+    ],
+    "flags": {
+      "move": true,
+      "chat": false,
+      "tem": true,
+      "gate": false
+    },
+    "codex_pct": 33.33333333333333
+  },
+  "loop_updates": [
+    {
+      "event": "rookguard_chat_complete",
+      "objective": "Find the training yard southeast and earn its mark from the slime"
+    }
+  ],
+  "notes": "move step previously advanced by move_intent onto TutorialMove tile (3,2); chat advanced by chat message"
+}

@@ -1,5 +1,6 @@
 {
   "pack": "ui_gameplay_v1",
+  "revision": "v2_art_first",
   "assets": [
     {
       "asset_id": "akalynth_ui_ui_panel_frame",
@@ -11,6 +12,7 @@
       "slice_px": 8,
       "kind": "nine_slice",
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "pack_revision": "ui_gameplay_v2_art_first",
       "mechanics": null,
       "copyright_boundary": "original procedural pixel art; display-only UI chrome"
     },
@@ -24,6 +26,7 @@
       "slice_px": 6,
       "kind": "nine_slice",
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "pack_revision": "ui_gameplay_v2_art_first",
       "mechanics": null,
       "copyright_boundary": "original procedural pixel art; display-only UI chrome"
     },
@@ -37,6 +40,7 @@
       "slice_px": 6,
       "kind": "nine_slice",
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "pack_revision": "ui_gameplay_v2_art_first",
       "mechanics": null,
       "copyright_boundary": "original procedural pixel art; display-only UI chrome"
     },
@@ -50,6 +54,7 @@
       "slice_px": 8,
       "kind": "nine_slice",
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "pack_revision": "ui_gameplay_v2_art_first",
       "mechanics": null,
       "copyright_boundary": "original procedural pixel art; display-only UI chrome"
     },
@@ -63,6 +68,7 @@
       "slice_px": 10,
       "kind": "nine_slice",
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "pack_revision": "ui_gameplay_v2_art_first",
       "mechanics": null,
       "copyright_boundary": "original procedural pixel art; display-only UI chrome"
     },
@@ -76,6 +82,7 @@
       "slice_px": 0,
       "kind": "circle",
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "pack_revision": "ui_gameplay_v2_art_first",
       "mechanics": null,
       "copyright_boundary": "original procedural pixel art; display-only UI chrome"
     },
@@ -89,6 +96,7 @@
       "slice_px": 0,
       "kind": "circle",
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "pack_revision": "ui_gameplay_v2_art_first",
       "mechanics": null,
       "copyright_boundary": "original procedural pixel art; display-only UI chrome"
     },
@@ -102,6 +110,7 @@
       "slice_px": 0,
       "kind": "circle",
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "pack_revision": "ui_gameplay_v2_art_first",
       "mechanics": null,
       "copyright_boundary": "original procedural pixel art; display-only UI chrome"
     },
@@ -115,6 +124,7 @@
       "slice_px": 0,
       "kind": "circle",
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "pack_revision": "ui_gameplay_v2_art_first",
       "mechanics": null,
       "copyright_boundary": "original procedural pixel art; display-only UI chrome"
     },
@@ -128,6 +138,7 @@
       "slice_px": 0,
       "kind": "circle",
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "pack_revision": "ui_gameplay_v2_art_first",
       "mechanics": null,
       "copyright_boundary": "original procedural pixel art; display-only UI chrome"
     },
@@ -141,6 +152,7 @@
       "slice_px": 2,
       "kind": "bar",
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "pack_revision": "ui_gameplay_v2_art_first",
       "mechanics": null,
       "copyright_boundary": "original procedural pixel art; display-only UI chrome"
     },
@@ -154,6 +166,7 @@
       "slice_px": 2,
       "kind": "bar",
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "pack_revision": "ui_gameplay_v2_art_first",
       "mechanics": null,
       "copyright_boundary": "original procedural pixel art; display-only UI chrome"
     },
@@ -167,6 +180,7 @@
       "slice_px": 2,
       "kind": "bar",
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
+      "pack_revision": "ui_gameplay_v2_art_first",
       "mechanics": null,
       "copyright_boundary": "original procedural pixel art; display-only UI chrome"
     }

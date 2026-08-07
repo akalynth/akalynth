@@ -1,0 +1,12 @@
+{
+  "schema_version": "akalynth.accepted_android_distribution_identity.v1",
+  "decision_id": "AKALYNTH_ANDROID_BETA_V16_CHROME_CLEAN",
+  "lane": "beta",
+  "version_code": 16,
+  "version_name": "0.1.14-beta-rookguard-v1.4.1-chrome",
+  "apk_url": "https://beta.akalynth.com/download/akalynth-beta-v16.apk",
+  "apk_sha256": "e810eb278f4a4c0a50454c3755e9a8a687a613cfa30a34d81ed25a6e80dac818",
+  "size_bytes": 41711279,
+  "required": false,
+  "published_at": "2026-08-07T19:08:20.000Z"
+}

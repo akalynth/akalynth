@@ -1,0 +1,12 @@
+{
+  "schema_version": "akalynth.accepted_android_distribution_identity.v1",
+  "decision_id": "AKALYNTH_ANDROID_BETA_V14_ASSETS_FIX",
+  "lane": "beta",
+  "version_code": 14,
+  "version_name": "0.1.12-beta-ui-chrome-assets-fix",
+  "apk_url": "https://beta.akalynth.com/download/akalynth-beta-v14.apk",
+  "apk_sha256": "cdcffed438e61a61aa0d4c61be52ba51287adb4e2a7d0cb3e2877c1509ceb635",
+  "size_bytes": 42259821,
+  "required": false,
+  "published_at": "2026-08-07T13:06:10.000Z"
+}

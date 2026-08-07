@@ -21,10 +21,10 @@
   "review_status": "approved",
   "tile_code": null,
   "mechanics": null,
-  "copyright_boundary": "original hand-authored placeholder asset; no copied third-party sprite, UI, logo, or map layout",
+  "copyright_boundary": "original hand-authored item icon; no copied third-party sprite, UI, logo, or map layout",
   "asset_id": "akalynth_item_rookguard_training_blade_001",
   "item_type": "rookguard_training_blade",
   "cleaned_file": "data/assets-src/sprites/item__rookguard_training_blade.png",
-  "sha256": "0dfdf84a3818dabf44376674fe8f7e00d58233772ad79970c06597136aa0d124",
-  "notes": "P1 placeholder: iron-gray training blade square; replace with readable weapon icon before final art pass."
+  "sha256": "32b9f78a2a5c04abd160c269669f0c9f0dcc776291faff7b72cffd9c74e0f518",
+  "notes": "Readable 32px item icon (rookguard_training_blade); solid-color placeholder replaced (v17 hotbar fix)."
 }

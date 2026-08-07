@@ -21,10 +21,10 @@
   "review_status": "approved",
   "tile_code": null,
   "mechanics": null,
-  "copyright_boundary": "original hand-authored placeholder asset; no copied third-party sprite, UI, logo, or map layout",
+  "copyright_boundary": "original hand-authored item icon; no copied third-party sprite, UI, logo, or map layout",
   "asset_id": "akalynth_item_torch_001",
   "item_type": "torch",
   "cleaned_file": "data/assets-src/sprites/item__torch.png",
-  "sha256": "c2fc87cf10ed7a93bf77067a0dacee93125373763d7ac897e5441a1fb95f2c4f",
-  "notes": "P0 placeholder: warm orange square; replace with readable torch icon before final art pass."
+  "sha256": "73b59254655c97876eb506ebfd3fbfef916c8985032d0a664dc65d5913eaeb0e",
+  "notes": "Readable 32px item icon (torch); solid-color placeholder replaced (v17 hotbar fix)."
 }

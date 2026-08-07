@@ -1,11 +1,10 @@
 import type { PlayLoopProgress, SovereignVocation } from '@shared/types';
 import { respectRankForReputation } from '@shared/types';
 import {
-  isUsableItemType,
   itemLabel,
-  shortItemLabel,
   type InventoryItemRef,
 } from '../data/inventoryPresentation';
+import { PlayHotbar } from './PlayHotbar';
 
 interface NpcRef { npc_id: string; label: string }
 interface GroundItem { item_id: string; item_type: string; x: number; y: number }
@@ -184,7 +183,6 @@ export function ActionsPanel({
     !!loop?.lastEvent?.startsWith('witness_moth_bloom_') &&
     loop.lastEvent !== 'witness_moth_bloom_resolved';
   const sweepRemainSec = workContract ? Math.ceil(workContract.remaining_ms / 1000) : 0;
-  const hotbarItems = inventory.slice(0, 3);
   const compactActionLabel =
     primaryRouteAction?.label ??
     (nearbyNpc ? `Talk to ${nearbyNpc.label}` :
@@ -197,13 +195,8 @@ export function ActionsPanel({
   if (compact) {
     return (
       <div className={`actions-panel actions-panel--compact${presentationMode ? ' actions-panel--presentation' : ''}`} aria-label="Quick actions">
-        {presentationMode ? (
-          <div className="compact-action-card" aria-label="Action dock">
-            <span>Actions</span>
-            <strong>{compactActionLabel}</strong>
-            {primaryRouteAction && <em>{primaryRouteAction.short}</em>}
-          </div>
-        ) : (
+        {/* APK parity: no mid-map "Actions" card; objective lives in MotionObjectiveRail. */}
+        {!presentationMode && (
           <div className="compact-objective-card" aria-label="Current objective">
             <span>Objective</span>
             <strong>{objectiveLabel}</strong>
@@ -217,7 +210,11 @@ export function ActionsPanel({
           </div>
         )}
         {stage >= 1 && (
-          <div className="mobile-hotbar" role="group" aria-label="Primary actions">
+          <div
+            className={`mobile-hotbar${presentationMode ? ' mobile-hotbar--action-rail' : ''}`}
+            role="group"
+            aria-label="Primary actions"
+          >
             {routeActionsOpen && routeActions.map((action) => (
               <button
                 key={action.skill_id}
@@ -235,7 +232,7 @@ export function ActionsPanel({
                 disabled={!attackReady}
                 aria-label={targetName ? `Attack ${targetName}` : 'Attack nearest available target'}
               >
-                Attack
+                {presentationMode ? 'ATK' : 'Attack'}
               </button>
             )}
             {(!presentationMode || ritualReady) && (
@@ -331,34 +328,7 @@ export function ActionsPanel({
                 {action.short}
               </button>
             ))}
-            {stage >= 2 && hotbarItems.map((item) => {
-              const usable = isUsableItemType(item.item_type);
-              const label = itemLabel(item.item_type);
-              if (usable) {
-                return (
-                  <button
-                    key={item.item_id}
-                    className={`hotbar-slot mobile-hotbar-btn active usable${item.slot === 'protected' ? ' protected' : ''}`}
-                    title={`Use ${label}`}
-                    onClick={() => onUseItem(item.item_id)}
-                    aria-label={`Use ${label}`}
-                  >
-                    {shortItemLabel(item.item_type)}
-                  </button>
-                );
-              }
-              return (
-                <div
-                  key={item.item_id}
-                  className={`hotbar-slot mobile-hotbar-btn active${item.slot === 'protected' ? ' protected' : ''}`}
-                  title={label}
-                  aria-label={label}
-                  role="img"
-                >
-                  {shortItemLabel(item.item_type)}
-                </div>
-              );
-            })}
+            {/* Item slots live in PlayHotbar (APK parity) — not mixed into the action rail. */}
           </div>
         )}
       </div>
@@ -642,36 +612,8 @@ export function ActionsPanel({
           )}
         </>
       )}
-      {stage >= 2 && (
-        <div className="hotbar">
-          {hotbarItems.length > 0
-            ? hotbarItems.map(item => {
-                const usable = isUsableItemType(item.item_type);
-                return usable ? (
-                  <button
-                    key={item.item_id}
-                    className={`hotbar-slot active usable${item.slot === 'protected' ? ' protected' : ''}`}
-                    title={`Use ${itemLabel(item.item_type)}`}
-                    onClick={() => onUseItem(item.item_id)}
-                  >
-                    {itemLabel(item.item_type)}
-                    <span className="use-hint">tap to use</span>
-                  </button>
-                ) : (
-                  <div
-                    key={item.item_id}
-                    className={`hotbar-slot active${item.slot === 'protected' ? ' protected' : ''}`}
-                    title={itemLabel(item.item_type)}
-                  >
-                    {itemLabel(item.item_type)}
-                  </div>
-                );
-              })
-            : null}
-          {Array.from({ length: Math.max(0, 3 - hotbarItems.length) }).map((_, i) => (
-            <div key={`empty-${i}`} className="hotbar-slot disabled">Empty</div>
-          ))}
-        </div>
+      {stage >= 2 && !presentationMode && (
+        <PlayHotbar inventory={inventory} onUseItem={onUseItem} />
       )}
     </div>
   );

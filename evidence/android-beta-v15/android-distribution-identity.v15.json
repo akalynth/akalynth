@@ -1,0 +1,12 @@
+{
+  "schema_version": "akalynth.accepted_android_distribution_identity.v1",
+  "decision_id": "AKALYNTH_ANDROID_BETA_V15_LAYOUT_STABILIZE",
+  "lane": "beta",
+  "version_code": 15,
+  "version_name": "0.1.13-beta-rookguard-v1.4.1-layout",
+  "apk_url": "https://beta.akalynth.com/download/akalynth-beta-v15.apk",
+  "apk_sha256": "a569938524dadfb2493464fcbb9726d3b25033bc8cb1cf4b13b5da6519ab4c7b",
+  "size_bytes": 41711283,
+  "required": false,
+  "published_at": "2026-08-07T15:55:05.000Z"
+}

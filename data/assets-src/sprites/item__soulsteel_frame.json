@@ -21,10 +21,10 @@
   "review_status": "approved",
   "tile_code": null,
   "mechanics": null,
-  "copyright_boundary": "original hand-authored placeholder asset; no copied third-party sprite, UI, logo, or map layout",
+  "copyright_boundary": "original hand-authored item icon; no copied third-party sprite, UI, logo, or map layout",
   "asset_id": "akalynth_item_soulsteel_frame_001",
   "item_type": "soulsteel_frame",
   "cleaned_file": "data/assets-src/sprites/item__soulsteel_frame.png",
-  "sha256": "65e8de7f10df5292ba462d9ecff320ab83386993f6911bbbadcad7ee43ed47e0",
-  "notes": "P1 placeholder: dark soulsteel frame square; replace with readable frame icon before final art pass."
+  "sha256": "657936c6074ebeb8b335c7e38692902f5fcf98a0e7ebb986ecb7c7a0728bb5d7",
+  "notes": "Readable 32px item icon (soulsteel_frame); solid-color placeholder replaced (v17 hotbar fix)."
 }

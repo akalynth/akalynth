@@ -21,10 +21,10 @@
   "review_status": "approved",
   "tile_code": null,
   "mechanics": null,
-  "copyright_boundary": "original hand-authored placeholder asset; no copied third-party sprite, UI, logo, or map layout",
+  "copyright_boundary": "original hand-authored item icon; no copied third-party sprite, UI, logo, or map layout",
   "asset_id": "akalynth_item_ration_001",
   "item_type": "ration",
   "cleaned_file": "data/assets-src/sprites/item__ration.png",
-  "sha256": "4607f34c404b09b06a07d8754dfdf30244ab87de5d98d3d2caefd8668a436774",
-  "notes": "P0 placeholder: tan ration bundle square; replace with readable consumable icon before final art pass."
+  "sha256": "14891c9d1efc848d603c20dc54626f070fc6d89040a23978ef28d7567475cc0c",
+  "notes": "Readable 32px item icon (ration); solid-color placeholder replaced (v17 hotbar fix)."
 }

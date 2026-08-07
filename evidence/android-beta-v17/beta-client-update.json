@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "lane": "beta",
+  "version_code": 17,
+  "version_name": "0.1.15-beta-rookguard-v1.4.1-item-icons",
+  "apk_url": "https://beta.akalynth.com/download/akalynth-beta-v17.apk",
+  "apk_sha256": "e21330f8b84709017dd80e5325579c430644035cbc6ee1bf0c29e3ea178050a0",
+  "size_bytes": 41714667,
+  "required": false,
+  "published_at": "2026-08-07T19:16:30.000Z"
+}

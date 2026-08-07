@@ -21,10 +21,10 @@
   "review_status": "approved",
   "tile_code": null,
   "mechanics": null,
-  "copyright_boundary": "original hand-authored placeholder asset; no copied third-party sprite, UI, logo, or map layout",
+  "copyright_boundary": "original hand-authored item icon; no copied third-party sprite, UI, logo, or map layout",
   "asset_id": "akalynth_item_mark_token_001",
   "item_type": "mark_token",
   "cleaned_file": "data/assets-src/sprites/item__mark_token.png",
-  "sha256": "63e44c4b16c409b29511f6229b625f2b2d6de91e0f541eadd044915dbbdf957a",
-  "notes": "P0 placeholder: gold token square; replace with readable mark icon before final art pass."
+  "sha256": "02149f478055b4f282cf0d08a7dc6bdf9543ed1698690e9b60be51369d3bd5eb",
+  "notes": "Readable 32px item icon (mark_token); solid-color placeholder replaced (v17 hotbar fix)."
 }
