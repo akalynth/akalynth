@@ -154,8 +154,10 @@ fun WorldScreen(
                         modifier = Modifier.testTag("WorldScreen_ConnectionLine")
                     )
                 }
+                // Play chrome: Issue + compact DBG. Hide TILES showcase from default play
+                // (it only adds top-right clutter next to the action rail).
                 Row(
-                    modifier = Modifier.widthIn(min = 172.dp),
+                    modifier = Modifier.widthIn(min = 120.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
                     verticalAlignment = Alignment.Top,
                 ) {
@@ -178,12 +180,14 @@ fun WorldScreen(
                         compact = true,
                         modifier = Modifier.testTag("WorldScreen_Debug")
                     )
-                    ClassicButton(
-                        text = if (showcaseMap) "MAP" else "TILES",
-                        onClick = { showcaseMap = !showcaseMap },
-                        compact = true,
-                        modifier = Modifier.testTag("WorldScreen_TileShowcase")
-                    )
+                    if (state.ui.showDebugDrawer) {
+                        ClassicButton(
+                            text = if (showcaseMap) "MAP" else "TILES",
+                            onClick = { showcaseMap = !showcaseMap },
+                            compact = true,
+                            modifier = Modifier.testTag("WorldScreen_TileShowcase")
+                        )
+                    }
                 }
             }
             if (objective.isNotBlank()) {
@@ -208,11 +212,13 @@ fun WorldScreen(
             }
         }
 
+        // Top-end, inset from the right action dock so the chip does not collide.
         OnwardRoutesPanel(
             routes = state.progression.loop?.onwardRoutes ?: emptyList(),
             modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .padding(end = 12.dp)
+                .align(Alignment.TopEnd)
+                .statusBarsPadding()
+                .padding(top = 52.dp, end = 88.dp)
         )
 
         if (!state.ui.showDebugDrawer) {

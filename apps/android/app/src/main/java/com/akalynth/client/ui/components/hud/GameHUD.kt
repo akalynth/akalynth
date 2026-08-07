@@ -145,15 +145,13 @@ fun GameHUD(
             }
         }
 
-        // Hotbar: bottom-center above the control row (dpad/actions), never map-center.
-        // Pin to parent.bottom with a fixed lift so landscape cannot float the strip
-        // into the interaction band when action height changes.
+        // Hotbar sits immediately above the dpad (bottom control band), not map-center.
         Box(
             modifier = Modifier
                 .constrainAs(hotbarRef) {
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
-                    bottom.linkTo(parent.bottom, margin = 112.dp)
+                    bottom.linkTo(dpadRef.top, margin = 10.dp)
                 }
         ) {
             AnimatedVisibility(
