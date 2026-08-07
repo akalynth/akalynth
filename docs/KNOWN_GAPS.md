@@ -12,7 +12,9 @@ A gap is not a failure by itself. A hidden or overstated gap is a failure of pre
 
 - No documented two-green-main proof run is recorded in this repo packet.
 - No production deployment proof is included.
-- Android release path is not proved.
+- Android **direct beta** publish path is documented and ladder-unified on main
+  (`docs/runbooks/beta-client-publish-ladder-v1.md`, live `version_code` long-date ladder);
+  F-Droid / production Android release paths remain unproved.
 - Some runtime state resets on process restart. Anti-cheat enforcement (heat score, penalty window, Tem cooldown, throttle/kick/warn counts) is the exception: it is receipt-backed, materialized to SQLite, restored on reconnect, and gated by `verify:anticheat-persistence` in CI. Remaining resets (witness pending requests/cooldowns) are intentionally ephemeral given their 12s/60s lifetimes; caps and sovereign session remain in-memory but are debug-gated, not release features.
 - Scope docs require ongoing alignment with implemented systems.
 - Some verifier coverage depends on fixture state rather than full live-world execution.
