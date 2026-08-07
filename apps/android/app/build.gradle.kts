@@ -15,8 +15,8 @@ android {
         applicationId = "com.akalynth.client"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2026080703
-        versionName = "0.1.17-beta.2026080703-azura-presentation"
+        versionCode = 2026080704
+        versionName = "0.1.18-beta.2026080704-first-session"
     }
 
     buildTypes {

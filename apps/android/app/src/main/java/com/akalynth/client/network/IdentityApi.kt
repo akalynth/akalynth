@@ -1,6 +1,8 @@
 package com.akalynth.client.network
 
 import com.akalynth.client.BuildConfig
+import com.akalynth.client.ui.components.character.OutfitColorIndices
+import com.akalynth.client.ui.components.character.OutfitEngineMeta
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
@@ -67,8 +69,12 @@ class IdentityApi(
         val name: String,
         val worldId: String,
         val sex: String,
-        val outfitId: String
+        val outfitId: String,
+        val outfitColors: OutfitColorIndices = OutfitColorIndices.DEFAULT,
     )
+
+    var lastOutfitEngine: OutfitEngineMeta? = null
+        private set
 
     data class Account(
         val accountId: String,
@@ -159,7 +165,14 @@ class IdentityApi(
         fun onResult(result: PrincipalResult)
     }
 
-    fun createCharacter(name: String, worldId: String, sex: String, outfitId: String, callback: CreateCallback) {
+    fun createCharacter(
+        name: String,
+        worldId: String,
+        sex: String,
+        outfitId: String,
+        outfitColors: OutfitColorIndices? = null,
+        callback: CreateCallback,
+    ) {
         val sessionError = accountSessionError("creation")
         if (sessionError != null) {
             callback.onResult(sessionError)
@@ -188,6 +201,8 @@ class IdentityApi(
             put("world_id", worldId)
             put("sex", sex)
             put("outfit_id", outfitId)
+            val colors = outfitColors ?: lastOutfitEngine?.defaultColors ?: OutfitColorIndices.DEFAULT
+            put("outfit_colors", colors.toJson())
         }
         postJson(
             path = ACCOUNT_CREATE_PATH,
@@ -291,7 +306,9 @@ class IdentityApi(
             name = obj.optString("name"),
             worldId = worldId,
             sex = sex,
-            outfitId = outfitId
+            outfitId = outfitId,
+            outfitColors = OutfitColorIndices.fromJson(obj.optJSONObject("outfit_colors"))
+                ?: OutfitColorIndices.DEFAULT,
         )
     }
 
@@ -394,6 +411,7 @@ class IdentityApi(
         fetchCatalog(
             path = OUTFITS_PATH,
             parser = { obj ->
+                lastOutfitEngine = OutfitEngineMeta.fromJson(obj.optJSONObject("outfit_engine"))
                 val arr = obj.optJSONArray("outfits") ?: return@fetchCatalog emptyList<Outfit>()
                 val out = ArrayList<Outfit>(arr.length())
                 for (i in 0 until arr.length()) {
@@ -434,7 +452,9 @@ class IdentityApi(
                                 name = entry.optString("name"),
                                 worldId = worldId,
                                 sex = sex,
-                                outfitId = outfitId
+                                outfitId = outfitId,
+                                outfitColors = OutfitColorIndices.fromJson(entry.optJSONObject("outfit_colors"))
+                                    ?: OutfitColorIndices.DEFAULT,
                             )
                         )
                     }
