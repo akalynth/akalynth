@@ -280,6 +280,7 @@ fun WorldScreen(
                         gatherRefining = state.gather.activeRefineStationId != null,
                         gatherProgressPct = state.gather.progressPct,
                         gatherHeldItem = state.gather.heldItemType,
+                        gatherStatus = state.gather.status,
                         onGather = { nodeId -> onEvent(GameEvent.Gather(nodeId)) },
                         onDeliver = { stationId -> onEvent(GameEvent.Deliver(stationId)) },
                         onRefine = { stationId -> onEvent(GameEvent.Refine(stationId)) },

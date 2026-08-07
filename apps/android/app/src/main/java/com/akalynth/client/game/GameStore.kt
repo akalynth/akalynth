@@ -1157,17 +1157,21 @@ class GameStore(
                         heldItemType = null,
                         tendingTokens = state.gather.tendingTokens + if (reward != null && !refined) 1 else 0,
                         keystoneTokens = state.gather.keystoneTokens + if (reward != null && refined) 1 else 0,
-                        status = if (reward != null) {
-                            "Delivered ${msg.itemType} → +1 $reward"
-                        } else {
-                            "Delivered ${msg.itemType}"
-                        },
+                        status = GatherLoopPresentation.deliverStatusLine(
+                            ok = true,
+                            itemType = msg.itemType,
+                            reward = reward,
+                            refined = refined,
+                        ),
                     )
                 )
             } else {
                 state.copy(
                     gather = state.gather.copy(
-                        status = "Deliver rejected: ${msg.reason ?: "rejected"}",
+                        status = GatherLoopPresentation.deliverStatusLine(
+                            ok = false,
+                            reason = msg.reason,
+                        ),
                     )
                 )
             }
