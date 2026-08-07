@@ -8,8 +8,8 @@ ANDROID_DIR="$ROOT/apps/android"
 APK_OUT="$ANDROID_DIR/app/build/outputs/apk/beta/app-beta.apk"
 MANIFEST_PATH="$ROOT/infra/android/beta-client-update.json"
 VERIFY_SCRIPT="$ROOT/scripts/verify_beta_android_distribution.sh"
-IDENTITY_DIR="$ROOT/docs/decisions/AKALYNTH_ANDROID_BETA_V13_UI_CHROME"
-IDENTITY_PATH="$IDENTITY_DIR/android-distribution-identity.v13.json"
+IDENTITY_DIR="$ROOT/docs/decisions/AKALYNTH_ANDROID_BETA_V14_ASSETS_FIX"
+IDENTITY_PATH="$IDENTITY_DIR/android-distribution-identity.v14.json"
 
 log() { printf '[beta-apk] %s\n' "$1"; }
 
@@ -97,7 +97,7 @@ mkdir -p "$IDENTITY_DIR"
 cat > "$IDENTITY_PATH" <<JSON
 {
   "schema_version": "akalynth.accepted_android_distribution_identity.v1",
-  "decision_id": "AKALYNTH_ANDROID_BETA_V13_UI_CHROME",
+  "decision_id": "AKALYNTH_ANDROID_BETA_V14_ASSETS_FIX",
   "lane": "beta",
   "version_code": ${version_code},
   "version_name": "${version_name}",
@@ -150,7 +150,7 @@ text3 = text3.replace(
     '    raise SystemExit("accepted Android identity decision_id is not release authority")',
     'if accepted["decision_id"] not in (\n'
     '    "AKALYNTH_BETA_RELEASE_REPAIR_V1",\n'
-    '    "AKALYNTH_ANDROID_BETA_V13_UI_CHROME",\n'
+    '    "AKALYNTH_ANDROID_BETA_V14_ASSETS_FIX",\n'
     '):\n'
     '    raise SystemExit("accepted Android identity decision_id is not release authority")',
 )

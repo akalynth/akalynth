@@ -1,8 +1,28 @@
 {
   "schema_version": 1,
-  "mode": "loose_png",
-  "generated_at": "2026-08-07T12:07:56.550Z",
+  "mode": "loose_png+atlas",
+  "generated_at": "2026-06-23T02:22:21.898Z",
   "files": [
+    {
+      "path": "atlas/chronicle.png",
+      "sha256": "a86fd7beb7f3a015d55de612c202570cd51a916b7008e31bd81b63bf43f9f1de"
+    },
+    {
+      "path": "atlas/items.png",
+      "sha256": "a28116854d2bff108bffd547d709d633b595c8fbb6116eb3f27250b043082cd5"
+    },
+    {
+      "path": "atlas/manifest.json",
+      "sha256": "cd2d5397f775ed086d5342c56e7978f74ba8c1a21d850f6b4aa27421b8ab502d"
+    },
+    {
+      "path": "atlas/ui.png",
+      "sha256": "d98c9a2860ac86d3fae32ca480923d8f8c256c678acd7a151bce24adcd8d7b76"
+    },
+    {
+      "path": "atlas/world.png",
+      "sha256": "bbfe8265cce4bcbe78f5316819f5d406be8f69dacaef737752327cc2abd2ac91"
+    },
     {
       "path": "sprites/characters/base_human_male_01.png",
       "sha256": "f6c294b2108eedb5fe7fa27613059bb9f49ba5902a9074c3fd29777d713540ce"
@@ -269,55 +289,55 @@
     },
     {
       "path": "ui/ui_action_ring_danger.png",
-      "sha256": "afb83c251880f86b3f5fe9b964096f1e4d05a1899913bc650ca991844b71f19a"
+      "sha256": "6979c7b64b89649053514ace69350553840cb4b91d49e5054886ffc02dd12c0e"
     },
     {
       "path": "ui/ui_action_ring_pressed.png",
-      "sha256": "4dbd6c99c13c51132313dc2f74042512841a3e2bfd89909e1d727dc0ac2d5d4e"
+      "sha256": "4541a70d69513b1b0cc6211d97095ff42e7e80b026ee68e89365e149cb87eef0"
     },
     {
       "path": "ui/ui_action_ring.png",
-      "sha256": "7722df97b1603376742d06403ec1f01e63a1ec5f2436d397957945af6cac22ad"
+      "sha256": "5494e0d4bd3c7f72a7db4fd61622918dbb2c4e33e7048d27bb0f4f4c69e2e018"
     },
     {
       "path": "ui/ui_bar_track.png",
-      "sha256": "79ea8827064e6a4873c8826add508e65db99d4830b20b38d40bdc1df69269a1b"
+      "sha256": "5edc78efb266d325ab34295c8e6f73d09651c5f82c74ca33d36bfb491a876652"
     },
     {
       "path": "ui/ui_button_frame.png",
-      "sha256": "f207a2fb71626e3f3726e1bb9620cde55d847705317c21c1059f5db51182e4bb"
+      "sha256": "a65a32b3eb06909ea1a26f949c96cff6df791c76b02f4542e6b6ac7b82befcb1"
     },
     {
       "path": "ui/ui_button_pressed_frame.png",
-      "sha256": "45b30199e3dd5e7d7bb16810a61e2840a3633fab5a99651da1d00635fdffe681"
+      "sha256": "8c15a9e49731bb6372939bbb4d07b69d9815398ae15a625c9b4560325b58d061"
     },
     {
       "path": "ui/ui_dock_frame.png",
-      "sha256": "ca105e28312046737c7ce1fd55521369f5a9a09358b6437c14e44b8647b69878"
+      "sha256": "e158c0390d6f962eb07389fcbd4188f1399e8758cf769e6cfa677fe3d04c3859"
     },
     {
       "path": "ui/ui_dpad_button_pressed.png",
-      "sha256": "1eb6d333b284037721c8702aad6083629c0dc1ba9432713bd8e6de699cd56c7e"
+      "sha256": "e75662705a93a33ca9e9e35b2b86845fc52c8c3c3f6bada6aee8c8b68932dd75"
     },
     {
       "path": "ui/ui_dpad_button.png",
-      "sha256": "4d3f5b40445eb8d6d4dbc9a137c4c67cb04be31ab70175a4b92706efab150f47"
+      "sha256": "044798e77168fd70eda7cd3496f4925536515064c730ca66c58f32389b66474f"
     },
     {
       "path": "ui/ui_dpad_frame.png",
-      "sha256": "5d7ae70461fc8e82b76549d3bbd24bbc31b08f58b5017583e166be3cad9c3d1a"
+      "sha256": "d1fd7dddfbfd11220d81a4694580590bf049c40b7280dde6a1eb7e2031e7235d"
     },
     {
       "path": "ui/ui_hp_fill.png",
-      "sha256": "24113bec04d82f2a3999c836b2312e771136b42705209976011d643087cb180a"
+      "sha256": "226e370f6bbb251a61dea872ffa787094f478e2e37a72d943011a12d1549c742"
     },
     {
       "path": "ui/ui_mp_fill.png",
-      "sha256": "1c5bf15dcf825aeb9d7018c6b7c417753feff67cf5760593794bc2b1e7d60c9c"
+      "sha256": "d39391230ab5df18f1925ee80d3839e198b23bde81dfcf00d1b8d051aad1c526"
     },
     {
       "path": "ui/ui_panel_frame.png",
-      "sha256": "df1c9ae3b784129bb0998d941c1dda6f6bf73993ed10b4b7cd7aee704797c86a"
+      "sha256": "2c40638d27d13b00da6ebd73cc3725d4f912b058f85df14525ee163c48761613"
     },
     {
       "path": "world/castle/prison_bars.png",
@@ -575,5 +595,6 @@
       "path": "world/walls/wall_stone_south.png",
       "sha256": "38a1a46cb41267f20a4543655be006522bb11f6df4ab18cbbbc8ccab699a514e"
     }
-  ]
+  ],
+  "atlas_generated_at": "2026-06-23T02:22:22.207Z"
 }

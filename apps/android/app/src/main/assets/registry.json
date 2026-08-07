@@ -60,7 +60,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "chronicle_kind": "combat_kill"
+      "chronicle_kind": "combat_kill",
+      "atlas": {
+        "sheet": "chronicle.png",
+        "x": 2,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_effect_chronicle_create_001",
@@ -73,7 +80,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "chronicle_kind": "character_created"
+      "chronicle_kind": "character_created",
+      "atlas": {
+        "sheet": "chronicle.png",
+        "x": 36,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_effect_chronicle_death_001",
@@ -86,7 +100,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "chronicle_kind": "death"
+      "chronicle_kind": "death",
+      "atlas": {
+        "sheet": "chronicle.png",
+        "x": 70,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_effect_chronicle_drop_001",
@@ -99,7 +120,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "chronicle_kind": "item_drop"
+      "chronicle_kind": "item_drop",
+      "atlas": {
+        "sheet": "chronicle.png",
+        "x": 104,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_effect_chronicle_pickup_001",
@@ -112,7 +140,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "chronicle_kind": "item_pickup"
+      "chronicle_kind": "item_pickup",
+      "atlas": {
+        "sheet": "chronicle.png",
+        "x": 138,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_effect_chronicle_tutorial_001",
@@ -125,7 +160,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "chronicle_kind": "tutorial_complete"
+      "chronicle_kind": "tutorial_complete",
+      "atlas": {
+        "sheet": "chronicle.png",
+        "x": 172,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_effect_chronicle_unknown_001",
@@ -138,7 +180,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "chronicle_kind": "unknown"
+      "chronicle_kind": "unknown",
+      "atlas": {
+        "sheet": "chronicle.png",
+        "x": 206,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_effect_chronicle_world_001",
@@ -151,7 +200,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "chronicle_kind": "world_event"
+      "chronicle_kind": "world_event",
+      "atlas": {
+        "sheet": "chronicle.png",
+        "x": 240,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_effect_chronicle_zone_001",
@@ -164,7 +220,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "chronicle_kind": "zone_enter"
+      "chronicle_kind": "zone_enter",
+      "atlas": {
+        "sheet": "chronicle.png",
+        "x": 274,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_ground_bog_water_001",
@@ -213,7 +276,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "item_type": "ashglass_shard"
+      "item_type": "ashglass_shard",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 2,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_item_charred_shipment_plate_001",
@@ -226,7 +296,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "item_type": "charred_shipment_plate"
+      "item_type": "charred_shipment_plate",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 36,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_item_city_rat_goo_001",
@@ -239,7 +316,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "item_type": "city_rat_goo"
+      "item_type": "city_rat_goo",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 70,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_item_healing_herb_001",
@@ -252,7 +336,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "item_type": "healing_herb"
+      "item_type": "healing_herb",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 104,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_item_keystone_token_001",
@@ -265,7 +356,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "item_type": "keystone_token"
+      "item_type": "keystone_token",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 138,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_item_ley_mote_001",
@@ -278,7 +376,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "item_type": "ley_mote"
+      "item_type": "ley_mote",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 172,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_item_mark_token_001",
@@ -291,7 +396,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "item_type": "mark_token"
+      "item_type": "mark_token",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 206,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_item_pilgrim_mark_001",
@@ -304,7 +416,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "item_type": "pilgrim_mark"
+      "item_type": "pilgrim_mark",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 240,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_item_ration_001",
@@ -317,7 +436,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "item_type": "ration"
+      "item_type": "ration",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 274,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_item_refined_ley_mote_001",
@@ -330,7 +456,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "item_type": "refined_ley_mote"
+      "item_type": "refined_ley_mote",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 308,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_item_refined_soulsteel_component_001",
@@ -343,7 +476,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "item_type": "refined_soulsteel_component"
+      "item_type": "refined_soulsteel_component",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 342,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_item_rookguard_patience_charm_001",
@@ -356,7 +496,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "item_type": "rookguard_patience_charm"
+      "item_type": "rookguard_patience_charm",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 376,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_item_rookguard_threadbare_cloak_001",
@@ -369,7 +516,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "item_type": "rookguard_threadbare_cloak"
+      "item_type": "rookguard_threadbare_cloak",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 410,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_item_rookguard_training_blade_001",
@@ -382,7 +536,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "item_type": "rookguard_training_blade"
+      "item_type": "rookguard_training_blade",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 444,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_item_slime_001",
@@ -395,7 +556,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "item_type": "slime"
+      "item_type": "slime",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 478,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_item_soulsteel_frame_001",
@@ -408,7 +576,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "item_type": "soulsteel_frame"
+      "item_type": "soulsteel_frame",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 512,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_item_stabilized_soulsteel_component_001",
@@ -421,7 +596,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "item_type": "stabilized_soulsteel_component"
+      "item_type": "stabilized_soulsteel_component",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 546,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_item_tending_token_001",
@@ -434,7 +616,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "item_type": "tending_token"
+      "item_type": "tending_token",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 580,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_item_torch_001",
@@ -447,7 +636,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "item_type": "torch"
+      "item_type": "torch",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 614,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_item_training_slime_goo_001",
@@ -460,7 +656,14 @@
       },
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
       "mechanics": null,
-      "item_type": "training_slime_goo"
+      "item_type": "training_slime_goo",
+      "atlas": {
+        "sheet": "items.png",
+        "x": 648,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_prop_dead_tree_001",
@@ -630,7 +833,14 @@
       "kind": "circle",
       "slice_px": 0,
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
-      "mechanics": null
+      "mechanics": null,
+      "atlas": {
+        "sheet": "ui.png",
+        "x": 160,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_ui_ui_action_ring_danger",
@@ -644,7 +854,14 @@
       "kind": "circle",
       "slice_px": 0,
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
-      "mechanics": null
+      "mechanics": null,
+      "atlas": {
+        "sheet": "ui.png",
+        "x": 194,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_ui_ui_action_ring_pressed",
@@ -658,7 +875,14 @@
       "kind": "circle",
       "slice_px": 0,
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
-      "mechanics": null
+      "mechanics": null,
+      "atlas": {
+        "sheet": "ui.png",
+        "x": 228,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_ui_ui_bar_track",
@@ -672,7 +896,14 @@
       "kind": "bar",
       "slice_px": 2,
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
-      "mechanics": null
+      "mechanics": null,
+      "atlas": {
+        "sheet": "ui.png",
+        "x": 398,
+        "y": 2,
+        "w": 16,
+        "h": 6
+      }
     },
     {
       "asset_id": "akalynth_ui_ui_button_frame",
@@ -686,7 +917,14 @@
       "kind": "nine_slice",
       "slice_px": 6,
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
-      "mechanics": null
+      "mechanics": null,
+      "atlas": {
+        "sheet": "ui.png",
+        "x": 262,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_ui_ui_button_pressed_frame",
@@ -700,7 +938,14 @@
       "kind": "nine_slice",
       "slice_px": 6,
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
-      "mechanics": null
+      "mechanics": null,
+      "atlas": {
+        "sheet": "ui.png",
+        "x": 296,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_ui_ui_dock_frame",
@@ -714,7 +959,14 @@
       "kind": "nine_slice",
       "slice_px": 8,
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
-      "mechanics": null
+      "mechanics": null,
+      "atlas": {
+        "sheet": "ui.png",
+        "x": 118,
+        "y": 2,
+        "w": 40,
+        "h": 40
+      }
     },
     {
       "asset_id": "akalynth_ui_ui_dpad_button",
@@ -728,7 +980,14 @@
       "kind": "circle",
       "slice_px": 0,
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
-      "mechanics": null
+      "mechanics": null,
+      "atlas": {
+        "sheet": "ui.png",
+        "x": 330,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_ui_ui_dpad_button_pressed",
@@ -742,7 +1001,14 @@
       "kind": "circle",
       "slice_px": 0,
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
-      "mechanics": null
+      "mechanics": null,
+      "atlas": {
+        "sheet": "ui.png",
+        "x": 364,
+        "y": 2,
+        "w": 32,
+        "h": 32
+      }
     },
     {
       "asset_id": "akalynth_ui_ui_dpad_frame",
@@ -756,7 +1022,14 @@
       "kind": "nine_slice",
       "slice_px": 10,
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
-      "mechanics": null
+      "mechanics": null,
+      "atlas": {
+        "sheet": "ui.png",
+        "x": 2,
+        "y": 2,
+        "w": 64,
+        "h": 64
+      }
     },
     {
       "asset_id": "akalynth_ui_ui_hp_fill",
@@ -770,7 +1043,14 @@
       "kind": "bar",
       "slice_px": 2,
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
-      "mechanics": null
+      "mechanics": null,
+      "atlas": {
+        "sheet": "ui.png",
+        "x": 416,
+        "y": 2,
+        "w": 16,
+        "h": 4
+      }
     },
     {
       "asset_id": "akalynth_ui_ui_mp_fill",
@@ -784,7 +1064,14 @@
       "kind": "bar",
       "slice_px": 2,
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
-      "mechanics": null
+      "mechanics": null,
+      "atlas": {
+        "sheet": "ui.png",
+        "x": 434,
+        "y": 2,
+        "w": 16,
+        "h": 4
+      }
     },
     {
       "asset_id": "akalynth_ui_ui_panel_frame",
@@ -798,7 +1085,14 @@
       "kind": "nine_slice",
       "slice_px": 8,
       "style_contract": "nostalgic_top_down_mmo_readability_original_akalynth_assets_v1",
-      "mechanics": null
+      "mechanics": null,
+      "atlas": {
+        "sheet": "ui.png",
+        "x": 68,
+        "y": 2,
+        "w": 48,
+        "h": 48
+      }
     },
     {
       "asset_id": "akalynth_world_banner_blue",
@@ -824,6 +1118,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 132,
+        "y": 324,
+        "w": 64,
+        "h": 96
       }
     },
     {
@@ -850,6 +1151,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 198,
+        "y": 324,
+        "w": 64,
+        "h": 96
       }
     },
     {
@@ -876,6 +1184,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 330,
+        "y": 324,
+        "w": 64,
+        "h": 64
       }
     },
     {
@@ -902,6 +1217,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 274,
+        "y": 422,
+        "w": 96,
+        "h": 48
       }
     },
     {
@@ -928,6 +1250,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 396,
+        "y": 324,
+        "w": 64,
+        "h": 64
       }
     },
     {
@@ -954,6 +1283,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 462,
+        "y": 324,
+        "w": 64,
+        "h": 64
       }
     },
     {
@@ -980,6 +1316,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 528,
+        "y": 324,
+        "w": 64,
+        "h": 64
       }
     },
     {
@@ -1006,6 +1349,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 594,
+        "y": 324,
+        "w": 64,
+        "h": 64
       }
     },
     {
@@ -1032,6 +1382,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 660,
+        "y": 324,
+        "w": 64,
+        "h": 64
       }
     },
     {
@@ -1058,6 +1415,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 726,
+        "y": 324,
+        "w": 64,
+        "h": 64
       }
     },
     {
@@ -1084,6 +1448,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 792,
+        "y": 324,
+        "w": 64,
+        "h": 64
       }
     },
     {
@@ -1110,6 +1481,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 858,
+        "y": 324,
+        "w": 64,
+        "h": 64
       }
     },
     {
@@ -1136,6 +1514,13 @@
         },
         "z_policy": "fixed_layer",
         "layer": "terrain"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 924,
+        "y": 324,
+        "w": 64,
+        "h": 64
       }
     },
     {
@@ -1162,6 +1547,13 @@
         },
         "z_policy": "fixed_layer",
         "layer": "terrain"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 990,
+        "y": 324,
+        "w": 64,
+        "h": 64
       }
     },
     {
@@ -1188,6 +1580,13 @@
         },
         "z_policy": "fixed_layer",
         "layer": "terrain"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1056,
+        "y": 324,
+        "w": 64,
+        "h": 64
       }
     },
     {
@@ -1214,6 +1613,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1870,
+        "y": 2,
+        "w": 128,
+        "h": 128
       }
     },
     {
@@ -1240,6 +1646,13 @@
         },
         "z_policy": "fixed_layer",
         "layer": "terrain"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 372,
+        "y": 422,
+        "w": 32,
+        "h": 32
       }
     },
     {
@@ -1266,6 +1679,13 @@
         },
         "z_policy": "fixed_above_building",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 406,
+        "y": 422,
+        "w": 32,
+        "h": 32
       }
     },
     {
@@ -1292,6 +1712,13 @@
         },
         "z_policy": "fixed_layer",
         "layer": "floor_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 440,
+        "y": 422,
+        "w": 32,
+        "h": 32
       }
     },
     {
@@ -1318,6 +1745,13 @@
         },
         "z_policy": "fixed_layer",
         "layer": "floor_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 474,
+        "y": 422,
+        "w": 32,
+        "h": 32
       }
     },
     {
@@ -1344,6 +1778,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1848,
+        "y": 324,
+        "w": 32,
+        "h": 64
       }
     },
     {
@@ -1370,6 +1811,13 @@
         },
         "z_policy": "fixed_layer",
         "layer": "terrain"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 508,
+        "y": 422,
+        "w": 32,
+        "h": 32
       }
     },
     {
@@ -1396,6 +1844,13 @@
         },
         "z_policy": "fixed_layer",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 542,
+        "y": 422,
+        "w": 32,
+        "h": 32
       }
     },
     {
@@ -1422,6 +1877,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1882,
+        "y": 324,
+        "w": 32,
+        "h": 64
       }
     },
     {
@@ -1448,6 +1910,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 576,
+        "y": 422,
+        "w": 32,
+        "h": 32
       }
     },
     {
@@ -1474,6 +1943,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 610,
+        "y": 422,
+        "w": 32,
+        "h": 32
       }
     },
     {
@@ -1500,6 +1976,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1916,
+        "y": 324,
+        "w": 32,
+        "h": 64
       }
     },
     {
@@ -1526,6 +2009,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1950,
+        "y": 324,
+        "w": 32,
+        "h": 64
       }
     },
     {
@@ -1552,6 +2042,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1984,
+        "y": 324,
+        "w": 32,
+        "h": 64
       }
     },
     {
@@ -1578,6 +2075,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 2,
+        "y": 422,
+        "w": 32,
+        "h": 64
       }
     },
     {
@@ -1609,6 +2113,13 @@
           "faded",
           "hidden"
         ]
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 902,
+        "y": 2,
+        "w": 384,
+        "h": 160
       }
     },
     {
@@ -1635,6 +2146,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1546,
+        "y": 2,
+        "w": 160,
+        "h": 128
       }
     },
     {
@@ -1661,6 +2179,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1708,
+        "y": 2,
+        "w": 160,
+        "h": 128
       }
     },
     {
@@ -1687,6 +2212,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 2,
+        "y": 324,
+        "w": 128,
+        "h": 96
       }
     },
     {
@@ -1713,6 +2245,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1122,
+        "y": 324,
+        "w": 64,
+        "h": 64
       }
     },
     {
@@ -1739,6 +2278,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 36,
+        "y": 422,
+        "w": 32,
+        "h": 64
       }
     },
     {
@@ -1770,6 +2316,13 @@
           "faded",
           "hidden"
         ]
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 2,
+        "y": 2,
+        "w": 512,
+        "h": 320
       }
     },
     {
@@ -1801,6 +2354,13 @@
           "faded",
           "hidden"
         ]
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 516,
+        "y": 2,
+        "w": 384,
+        "h": 224
       }
     },
     {
@@ -1832,6 +2392,13 @@
           "faded",
           "hidden"
         ]
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1288,
+        "y": 2,
+        "w": 256,
+        "h": 160
       }
     },
     {
@@ -1858,6 +2425,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 70,
+        "y": 422,
+        "w": 32,
+        "h": 64
       }
     },
     {
@@ -1884,6 +2458,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 644,
+        "y": 422,
+        "w": 32,
+        "h": 32
       }
     },
     {
@@ -1910,6 +2491,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 104,
+        "y": 422,
+        "w": 32,
+        "h": 64
       }
     },
     {
@@ -1936,6 +2524,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 138,
+        "y": 422,
+        "w": 32,
+        "h": 64
       }
     },
     {
@@ -1962,6 +2557,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 678,
+        "y": 422,
+        "w": 32,
+        "h": 32
       }
     },
     {
@@ -1988,6 +2590,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 172,
+        "y": 422,
+        "w": 32,
+        "h": 64
       }
     },
     {
@@ -2014,6 +2623,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1188,
+        "y": 324,
+        "w": 64,
+        "h": 64
       }
     },
     {
@@ -2040,6 +2656,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1254,
+        "y": 324,
+        "w": 64,
+        "h": 64
       }
     },
     {
@@ -2066,6 +2689,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1320,
+        "y": 324,
+        "w": 64,
+        "h": 64
       }
     },
     {
@@ -2092,6 +2722,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1386,
+        "y": 324,
+        "w": 64,
+        "h": 64
       }
     },
     {
@@ -2118,6 +2755,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 712,
+        "y": 422,
+        "w": 32,
+        "h": 32
       }
     },
     {
@@ -2144,6 +2788,13 @@
         },
         "z_policy": "fixed_layer",
         "layer": "terrain"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 746,
+        "y": 422,
+        "w": 32,
+        "h": 32
       }
     },
     {
@@ -2170,6 +2821,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 206,
+        "y": 422,
+        "w": 32,
+        "h": 64
       }
     },
     {
@@ -2196,6 +2854,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 780,
+        "y": 422,
+        "w": 32,
+        "h": 32
       }
     },
     {
@@ -2222,6 +2887,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 814,
+        "y": 422,
+        "w": 32,
+        "h": 32
       }
     },
     {
@@ -2248,6 +2920,13 @@
         },
         "z_policy": "fixed_layer",
         "layer": "terrain"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 848,
+        "y": 422,
+        "w": 32,
+        "h": 32
       }
     },
     {
@@ -2274,6 +2953,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 882,
+        "y": 422,
+        "w": 32,
+        "h": 32
       }
     },
     {
@@ -2300,6 +2986,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 240,
+        "y": 422,
+        "w": 32,
+        "h": 64
       }
     },
     {
@@ -2326,6 +3019,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1452,
+        "y": 324,
+        "w": 64,
+        "h": 64
       }
     },
     {
@@ -2352,6 +3052,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 264,
+        "y": 324,
+        "w": 64,
+        "h": 96
       }
     },
     {
@@ -2378,6 +3085,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1518,
+        "y": 324,
+        "w": 64,
+        "h": 64
       }
     },
     {
@@ -2404,6 +3118,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1584,
+        "y": 324,
+        "w": 64,
+        "h": 64
       }
     },
     {
@@ -2430,6 +3151,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1650,
+        "y": 324,
+        "w": 64,
+        "h": 64
       }
     },
     {
@@ -2456,6 +3184,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1716,
+        "y": 324,
+        "w": 64,
+        "h": 64
       }
     },
     {
@@ -2482,6 +3217,13 @@
         },
         "z_policy": "sort_by_anchor_y",
         "layer": "object_overlay"
+      },
+      "atlas": {
+        "sheet": "world.png",
+        "x": 1782,
+        "y": 324,
+        "w": 64,
+        "h": 64
       }
     }
   ]
