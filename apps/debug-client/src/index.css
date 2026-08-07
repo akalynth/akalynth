@@ -199,8 +199,7 @@ body {
   position: relative;
 }
 
-.dpad-btn,
-.dpad-stop {
+.dpad-btn {
   background: #1b2235;
   border: 1px solid #263047;
   color: var(--text);
@@ -209,19 +208,8 @@ body {
   cursor: pointer;
 }
 
-.dpad-btn:hover,
-.dpad-stop:hover {
+.dpad-btn:hover {
   border-color: var(--accent);
-}
-
-.dpad-stop {
-  position: absolute;
-  right: -2.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 48px;
-  height: 48px;
-  font-size: 1rem;
 }
 
 .actions-panel {
@@ -1446,7 +1434,6 @@ body,
 }
 
 .dpad-btn,
-.dpad-stop,
 .action-btn,
 .chat-toggle,
 .chronicle-toggle,
@@ -1458,16 +1445,11 @@ body,
 }
 
 .dpad-btn:hover,
-.dpad-stop:hover,
 .action-btn:hover,
 .chat-toggle:hover,
 .chronicle-toggle:hover,
 .proof-toggle:hover {
   border-color: var(--accent);
-}
-
-.dpad-stop {
-  right: -2rem;
 }
 
 .actions-panel {
@@ -1618,12 +1600,6 @@ body,
   .dpad {
     grid-template-columns: repeat(3, 46px);
     grid-template-rows: repeat(3, 46px);
-  }
-
-  .dpad-stop {
-    right: -1.45rem;
-    width: 40px;
-    height: 40px;
   }
 
   .action-btn {
@@ -1809,7 +1785,6 @@ button {
 .chronicle-toggle,
 .proof-toggle,
 .dpad-btn,
-.dpad-stop,
 .action-btn {
   border-radius: 10px;
   box-shadow:
@@ -1940,7 +1915,6 @@ button {
 }
 
 .dpad-btn,
-.dpad-stop,
 .action-btn,
 .chat-toggle,
 .chronicle-toggle,
@@ -1952,19 +1926,12 @@ button {
 }
 
 .dpad-btn:active,
-.dpad-stop:active,
 .chat-toggle:active,
 .chronicle-toggle:active,
 .proof-toggle:active {
   transform: translateY(1px) scale(0.98);
   border-color: var(--accent);
   background: linear-gradient(145deg, rgba(240, 200, 60, 0.2), rgba(10, 16, 28, 0.96));
-}
-
-.dpad-stop {
-  background:
-    linear-gradient(145deg, rgba(45, 24, 36, 0.96), rgba(12, 15, 25, 0.94)),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent);
 }
 
 .command-dock {
@@ -2095,12 +2062,6 @@ button {
     grid-template-columns: repeat(3, 43px);
     grid-template-rows: repeat(3, 43px);
     gap: 0.28rem;
-  }
-
-  .dpad-stop {
-    right: -1.25rem;
-    width: 38px;
-    height: 38px;
   }
 
   .action-locked {
@@ -2451,10 +2412,6 @@ button {
     font-size: 1.05rem;
   }
 
-  .dpad-stop {
-    display: none;
-  }
-
   .stage-bottom {
     left: 50% !important;
     right: auto !important;
@@ -2655,7 +2612,6 @@ body {
 .chronicle-toggle,
 .proof-toggle,
 .dpad-btn,
-.dpad-stop,
 .action-btn,
 .chronicle-more,
 .chronicle-close,
@@ -2699,7 +2655,6 @@ body {
 
 .stage-chip:hover,
 .dpad-btn:hover,
-.dpad-stop:hover,
 .action-btn:hover,
 .chat-toggle:hover,
 .chronicle-toggle:hover,
@@ -2710,7 +2665,6 @@ body {
 }
 
 .dpad-btn:active,
-.dpad-stop:active,
 .action-btn:active,
 .chat-toggle:active,
 .chronicle-toggle:active,
@@ -4064,10 +4018,6 @@ body {
     min-height: 46px;
     border-radius: 1px;
     font-size: 0.92rem;
-  }
-
-  .dpad-stop {
-    display: none;
   }
 
   .actions-panel--compact {
@@ -6491,8 +6441,7 @@ body {
   cursor: not-allowed;
 }
 
-.dpad-btn,
-.dpad-stop-wrap {
+.dpad-btn {
   display: contents;
 }
 
@@ -6500,6 +6449,13 @@ body {
   width: 100%;
   height: 100%;
   font-size: 1rem;
+}
+
+/* World-first movement: immediate tactile response */
+.dpad-btn__hit:active {
+  transform: scale(0.88);
+  background: rgba(226, 183, 20, 0.35);
+  color: #f4e9c8;
 }
 
 .codex-shelf-overlay {
