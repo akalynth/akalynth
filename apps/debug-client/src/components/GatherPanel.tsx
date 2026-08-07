@@ -3,9 +3,13 @@ import type { GameClientState } from '../types';
 import {
   GATHER_PANEL_HINT,
   GATHER_PANEL_TITLE,
+  gatherLoopStep,
+  heldItemLabel,
+  isRefinedItemType,
   nodeLabel,
   stationLabel,
 } from '../data/gatherLabels';
+import { GatherLoopSteps } from './GatherLoopSteps';
 
 interface GatherPanelProps {
   gather: GameClientState['gather'];
@@ -17,11 +21,6 @@ interface GatherPanelProps {
 
 function manhattan(ax: number, ay: number, bx: number, by: number): number {
   return Math.abs(ax - bx) + Math.abs(ay - by);
-}
-
-/** A held item is refinable while it is still raw (refined types are prefixed `refined_`). */
-function isRefinable(itemType: string): boolean {
-  return !itemType.startsWith('refined_');
 }
 
 // Chill-Zone Gather v0 (Step 2) + Refine (Step 3). Client renders the server-authoritative
@@ -36,13 +35,27 @@ export function GatherPanel({ gather, me, onGather, onDeliver, onRefine }: Gathe
   const inRange = (x: number, y: number) => me != null && manhattan(me.x, me.y, x, y) <= 1;
   const busy = gather.activeNodeId != null || gather.activeRefineStationId != null;
   const refining = gather.activeRefineStationId != null;
+  const heldType = gather.held?.item_type ?? null;
+  const step = gatherLoopStep(heldType);
+  const deliveredHint =
+    gather.status != null &&
+    gather.status.startsWith('Delivered') &&
+    heldType == null;
 
   return (
     <div className="gather-card">
       <div className="gather-title">{GATHER_PANEL_TITLE}</div>
       <div className="gather-hint">{GATHER_PANEL_HINT}</div>
-      <div className="gather-held">Held: {gather.held ? gather.held.item_type : '—'}</div>
-      <div className="gather-held">Tending: {gather.tendingTokens} · Keystone: {gather.keystoneTokens}</div>
+
+      <GatherLoopSteps step={step} loopCompleteHint={deliveredHint} />
+
+      <div className="gather-held gather-held-chip" aria-label="held-item">
+        <span className="gather-held-kicker">Held</span>
+        <strong>{heldItemLabel(heldType)}</strong>
+      </div>
+      <div className="gather-held">
+        Tending: {gather.tendingTokens} · Keystone: {gather.keystoneTokens}
+      </div>
 
       {busy && (
         <div className="gather-progress" aria-label="gather-progress">
@@ -74,7 +87,8 @@ export function GatherPanel({ gather, me, onGather, onDeliver, onRefine }: Gathe
         {stations.map((st) => {
           const here = inRange(st.x, st.y);
           if (st.kind === 'refinery') {
-            const canRefine = here && !busy && gather.held != null && isRefinable(gather.held.item_type);
+            const canRefine =
+              here && !busy && gather.held != null && !isRefinedItemType(gather.held.item_type);
             const refiningHere = gather.activeRefineStationId === st.station_id;
             return (
               <div key={st.station_id} className="gather-row" aria-label={`station-${st.station_id}`}>
@@ -104,7 +118,11 @@ export function GatherPanel({ gather, me, onGather, onDeliver, onRefine }: Gathe
         })}
       </div>
 
-      {gather.status && <div className="gather-status">{gather.status}</div>}
+      {gather.status && (
+        <div className="gather-status" role="status">
+          {gather.status}
+        </div>
+      )}
     </div>
   );
 }
