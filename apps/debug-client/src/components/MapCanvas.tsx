@@ -171,6 +171,9 @@ function getWalkColumn(isMoving: boolean, tick: number): number {
 export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixels, nowMs, targetId, fx, onSelectTarget, groundItems, propertyByPlot, characterFrameOverrides, characterSpriteOverrides, worldVisualObjects = EMPTY_WORLD_OBJECTS, debugOverlays = EMPTY_DEBUG_OVERLAYS }: MapCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const cameraRef = useRef({ x: 0, y: 0 });
+  // Static world layer (tiles/terrain/landmarks) — rebuilt only when map art changes.
+  // Dynamic actors/FX composite on top each animation tick without re-blitting every tile.
+  const staticLayerRef = useRef<HTMLCanvasElement | null>(null);
   const { images: tileSprites, ready: spritesReady } = useTileSprites();
   const { images: characterSprites, ready: charactersReady } = useCharacterSprites();
   const { images: creatureSprites, ready: creaturesReady } = useImagePreloader<string>(CREATURE_SPRITE_ENTRIES);
@@ -184,6 +187,14 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
   }, [others]);
   const hitBoxes = useMemo(() => loreHitBoxes(map.landmarks), [map.landmarks]);
 
+  const resolvedWorldObjects = useMemo(
+    () =>
+      worldVisualObjects
+        .map((placement) => ({ placement, def: REGISTRY_WORLD_VISUAL_ASSETS[placement.assetId] }))
+        .filter((entry): entry is { placement: RegistryWorldVisualPlacement; def: WorldVisualAssetDef } => Boolean(entry.def)),
+    [worldVisualObjects],
+  );
+
   const tileAtEvent = (e: { clientX: number; clientY: number }) => {
     const canvas = canvasRef.current;
     if (!canvas) return null;
@@ -194,37 +205,27 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
     return { tx: Math.floor((px + camera.x) / TILE_SIZE), ty: Math.floor((py + camera.y) / TILE_SIZE) };
   };
 
+  // --- Static layer: tiles, landmark markers, property labels, terrain visuals ---
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
     const worldWidth = map.width * TILE_SIZE;
     const worldHeight = map.height * TILE_SIZE;
-    const followWidth = viewportPixels?.width ?? FOLLOW_VIEWPORT_FALLBACK.width;
-    const followHeight = viewportPixels?.height ?? FOLLOW_VIEWPORT_FALLBACK.height;
-    canvas.width = viewMode === 'follow-player' ? followWidth : worldWidth;
-    canvas.height = viewMode === 'follow-player' ? followHeight : worldHeight;
-    const centerX = me ? me.x * TILE_SIZE + TILE_SIZE / 2 : map.spawn.x * TILE_SIZE + TILE_SIZE / 2;
-    const centerY = me ? me.y * TILE_SIZE + TILE_SIZE / 2 : map.spawn.y * TILE_SIZE + TILE_SIZE / 2;
-    const cameraX = viewMode === 'follow-player'
-      ? clamp(centerX - canvas.width / 2, 0, Math.max(0, worldWidth - canvas.width))
-      : 0;
-    const cameraY = viewMode === 'follow-player'
-      ? clamp(centerY - canvas.height / 2, 0, Math.max(0, worldHeight - canvas.height))
-      : 0;
-    cameraRef.current = { x: cameraX, y: cameraY };
-    const ctx = canvas.getContext('2d');
+    if (!staticLayerRef.current) {
+      staticLayerRef.current = document.createElement('canvas');
+    }
+    const layer = staticLayerRef.current;
+    if (layer.width !== worldWidth || layer.height !== worldHeight) {
+      layer.width = worldWidth;
+      layer.height = worldHeight;
+    }
+    const ctx = layer.getContext('2d');
     if (!ctx) return;
-    // Pixel-art tiles: keep hard edges when scaling 32px sprites to TILE_SIZE.
     ctx.imageSmoothingEnabled = false;
-
+    ctx.clearRect(0, 0, worldWidth, worldHeight);
     ctx.fillStyle = '#0d1117';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.save();
-    ctx.translate(-cameraX, -cameraY);
-    const followPlayerView = viewMode === 'follow-player';
-    const tileGlyphFontPx = followPlayerView ? 11 : 9;
-    const markerFontPx = followPlayerView ? 10 : 9;
-    const nameFontPx = followPlayerView ? 11 : 10;
+    ctx.fillRect(0, 0, worldWidth, worldHeight);
+
+    const tileGlyphFontPx = 9;
+    const markerFontPx = 9;
 
     for (let y = 0; y < map.height; y++) {
       for (let x = 0; x < map.width; x++) {
@@ -235,7 +236,6 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
         if (sprite) {
           ctx.drawImage(sprite, x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
         } else {
-          // No committed art for this code yet: flat color keeps maps readable.
           ctx.fillStyle = TILE_COLOR[code] || '#121820';
           ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
         }
@@ -253,7 +253,7 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
       const cy = (box.y + box.height / 2) * TILE_SIZE;
       ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.arc(cx, cy, TILE_SIZE * (followPlayerView ? 0.5 : 0.45), 0, Math.PI * 2);
+      ctx.arc(cx, cy, TILE_SIZE * 0.45, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = '#081018';
       ctx.font = `bold ${markerFontPx}px "Space Grotesk", sans-serif`;
@@ -288,8 +288,6 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
       SPAWN_MARKER.color,
     );
 
-    // Property Ownership v0: neighborhood ownership labels above house plots.
-    // Drives screenshot 3 (Neighborhood view).
     const housePlots = map.landmarks.house_plots;
     if (propertyByPlot && Array.isArray(housePlots)) {
       ctx.textAlign = 'center';
@@ -318,6 +316,92 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
       }
       ctx.textAlign = 'left';
     }
+
+    const worldVisualAnchor = (placement: RegistryWorldVisualPlacement, def: WorldVisualAssetDef) => {
+      const tileLeft = placement.x * TILE_SIZE;
+      const tileTop = placement.y * TILE_SIZE;
+      if (def.rendering.anchor.type === 'tile_top_left') return { x: tileLeft, y: tileTop };
+      if (def.rendering.anchor.type === 'bottom_left') return { x: tileLeft, y: tileTop + TILE_SIZE };
+      if (def.rendering.anchor.type === 'center') return { x: tileLeft + TILE_SIZE / 2, y: tileTop + TILE_SIZE / 2 };
+      return { x: tileLeft + TILE_SIZE / 2, y: tileTop + TILE_SIZE };
+    };
+
+    const drawWorldVisualObject = (placement: RegistryWorldVisualPlacement, def: WorldVisualAssetDef) => {
+      if (placement.visibility === 'hidden') return;
+      const image = worldVisualImages.get(def.id);
+      if (!image) return;
+      const anchor = worldVisualAnchor(placement, def);
+      const [sourceAnchorX, sourceAnchorY] = def.rendering.anchor.sourcePixels;
+      const scale = def.rendering.drawScale;
+      const dx = Math.round(anchor.x - sourceAnchorX * scale);
+      const dy = Math.round(anchor.y - sourceAnchorY * scale);
+      ctx.save();
+      ctx.globalAlpha = OVERLAY_ALPHA[placement.visibility ?? 'visible'];
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(
+        image,
+        0,
+        0,
+        def.frame.width,
+        def.frame.height,
+        dx,
+        dy,
+        def.frame.width * scale,
+        def.frame.height * scale,
+      );
+      ctx.restore();
+    };
+
+    for (const { placement, def } of resolvedWorldObjects) {
+      if (def.rendering.layer === 'terrain') drawWorldVisualObject(placement, def);
+    }
+  }, [map, propertyByPlot, tileSprites, spritesReady, worldVisualImages, worldVisualsReady, resolvedWorldObjects]);
+
+  // --- Dynamic composite: camera, static blit, actors, overlays, FX ---
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const worldWidth = map.width * TILE_SIZE;
+    const worldHeight = map.height * TILE_SIZE;
+    const followWidth = viewportPixels?.width ?? FOLLOW_VIEWPORT_FALLBACK.width;
+    const followHeight = viewportPixels?.height ?? FOLLOW_VIEWPORT_FALLBACK.height;
+    canvas.width = viewMode === 'follow-player' ? followWidth : worldWidth;
+    canvas.height = viewMode === 'follow-player' ? followHeight : worldHeight;
+    const centerX = me ? me.x * TILE_SIZE + TILE_SIZE / 2 : map.spawn.x * TILE_SIZE + TILE_SIZE / 2;
+    const centerY = me ? me.y * TILE_SIZE + TILE_SIZE / 2 : map.spawn.y * TILE_SIZE + TILE_SIZE / 2;
+    const cameraX = viewMode === 'follow-player'
+      ? clamp(centerX - canvas.width / 2, 0, Math.max(0, worldWidth - canvas.width))
+      : 0;
+    const cameraY = viewMode === 'follow-player'
+      ? clamp(centerY - canvas.height / 2, 0, Math.max(0, worldHeight - canvas.height))
+      : 0;
+    cameraRef.current = { x: cameraX, y: cameraY };
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.imageSmoothingEnabled = false;
+
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const staticLayer = staticLayerRef.current;
+    if (staticLayer && staticLayer.width > 0 && staticLayer.height > 0) {
+      ctx.drawImage(
+        staticLayer,
+        cameraX,
+        cameraY,
+        canvas.width,
+        canvas.height,
+        0,
+        0,
+        canvas.width,
+        canvas.height,
+      );
+    }
+
+    ctx.save();
+    ctx.translate(-cameraX, -cameraY);
+    const followPlayerView = viewMode === 'follow-player';
+    const nameFontPx = followPlayerView ? 11 : 10;
 
     if (groundItems) {
       for (const item of groundItems.values()) {
@@ -366,16 +450,6 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
       );
       ctx.restore();
     };
-
-    // Resolve each placement's def once, dropping any unknown assetId so a bad id
-    // skips that object instead of throwing and aborting the whole canvas render.
-    const resolvedWorldObjects = worldVisualObjects
-      .map((placement) => ({ placement, def: REGISTRY_WORLD_VISUAL_ASSETS[placement.assetId] }))
-      .filter((entry): entry is { placement: RegistryWorldVisualPlacement; def: WorldVisualAssetDef } => Boolean(entry.def));
-
-    for (const { placement, def } of resolvedWorldObjects) {
-      if (def.rendering.layer === 'terrain') drawWorldVisualObject(placement, def);
-    }
 
     const drawPlayerFallback = (p: PlayerPublic, color: string) => {
       const dead = p.status === 'dead';
@@ -507,7 +581,6 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
       ctx.strokeRect(target.x * TILE_SIZE + 1, target.y * TILE_SIZE + 1, TILE_SIZE - 2, TILE_SIZE - 2);
     }
 
-    // Floating combat text
     for (const f of fx) {
       const age = nowMs - f.at;
       if (age < 0 || age > f.ttlMs) continue;
@@ -516,14 +589,13 @@ export function MapCanvas({ map, me, others, viewMode = 'full-map', viewportPixe
       const lift = 10 + t * 14;
       ctx.save();
       ctx.globalAlpha = alpha;
-      // Damage numbers (start with '-') read red; everything else white
       ctx.fillStyle = f.text.startsWith('-') ? '#ef4444' : '#ffffff';
       ctx.font = 'bold 12px "Space Grotesk", sans-serif';
       ctx.fillText(f.text, f.x * TILE_SIZE + 2, f.y * TILE_SIZE - lift);
       ctx.restore();
     }
     ctx.restore();
-  }, [map, me, others, viewMode, viewportPixels?.height, viewportPixels?.width, nowMs, targetId, fx, othersById, groundItems, propertyByPlot, characterFrameOverrides, characterSpriteOverrides, worldVisualObjects, debugOverlays, tileSprites, spritesReady, characterSprites, charactersReady, creatureSprites, creaturesReady, worldVisualImages, worldVisualsReady]);
+  }, [map, me, others, viewMode, viewportPixels?.height, viewportPixels?.width, nowMs, targetId, fx, othersById, groundItems, characterFrameOverrides, characterSpriteOverrides, resolvedWorldObjects, debugOverlays, characterSprites, charactersReady, creatureSprites, creaturesReady, worldVisualImages, worldVisualsReady, spritesReady, tileSprites, propertyByPlot]);
 
   return (
     <>
