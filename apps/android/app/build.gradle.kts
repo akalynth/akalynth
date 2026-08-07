@@ -15,8 +15,8 @@ android {
         applicationId = "com.akalynth.client"
         minSdk = 26
         targetSdk = 35
-        versionCode = 14
-        versionName = "0.1.12-beta-ui-chrome-assets-fix"
+        versionCode = 15
+        versionName = "0.1.13-beta-rookguard-v1.4.1-layout"
     }
 
     buildTypes {

@@ -34,3 +34,14 @@ Nearby HUD: `playerCount = state.world.otherPlayers.size` only.
 | Hotbar pinned bottom-center (`margin=112.dp`) | `GameHUD.kt` |
 | Objective compact max 2 lines / 280dp | `ObjectiveBanner.kt` |
 | Next routes collapsed by default; Show/Hide | `WorldScreen.kt` `OnwardRoutesPanel` |
+
+## v15 live publish (layout slice)
+
+| Field | Value |
+|---|---|
+| version_code | 15 |
+| version_name | `0.1.13-beta-rookguard-v1.4.1-layout` |
+| sha256 | `a569938524dadfb2493464fcbb9726d3b25033bc8cb1cf4b13b5da6519ab4c7b` |
+| size | 41711283 |
+| published | host download + beta-api restart verified |
+| backup | `/var/backups/akalynth-beta-android-v15-*` |
