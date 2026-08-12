@@ -7,7 +7,7 @@ import { randomBytes } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { WebSocket } from 'ws';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -199,7 +199,7 @@ function adjacentWalkableTo(map, target) {
   throw new Error(`no adjacent walkable near ${target.x},${target.y}`);
 }
 
-class WsHarness {
+export class WsHarness {
   constructor(ws) {
     this.ws = ws;
     this.queue = [];
@@ -309,7 +309,7 @@ function posFromMoveResult(result, fallback) {
   return { ...fallback };
 }
 
-async function onboardToAzura(client, map, startWorld, timeoutMs) {
+export async function onboardToAzura(client, map, startWorld, timeoutMs) {
   if (startWorld.map !== 'Rookguard') throw new Error(`onboard expects Rookguard, got ${startWorld.map}`);
   let current = { x: startWorld.player.x, y: startWorld.player.y };
 
@@ -372,7 +372,7 @@ async function onboardToAzura(client, map, startWorld, timeoutMs) {
   return azuraTransfer;
 }
 
-async function runAzuraLoop(client, timeoutMs, azuraWorld = null) {
+export async function runAzuraLoop(client, timeoutMs, azuraWorld = null) {
   const azura =
     azuraWorld?.map === 'Azura'
       ? azuraWorld
@@ -630,7 +630,11 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+const invokedAsScript = process.argv[1]
+  && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
+if (invokedAsScript) {
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}
