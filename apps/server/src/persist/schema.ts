@@ -7,7 +7,7 @@ import type Database from 'better-sqlite3';
 // Schema Version
 // ============================================================================
 
-export const SCHEMA_VERSION = 26;
+export const SCHEMA_VERSION = 27;
 
 // ============================================================================
 // DDL Statements
@@ -389,16 +389,18 @@ CREATE INDEX IF NOT EXISTS idx_account_characters_account ON account_characters(
 // This is operational cohort state, not gameplay or world truth.
 const DDL_BETA_COHORTS = `
 CREATE TABLE IF NOT EXISTS beta_cohorts (
-  cohort_id       TEXT PRIMARY KEY,
-  release_commit  TEXT NOT NULL,
-  platform        TEXT NOT NULL DEFAULT 'web',
-  invite_cap      INTEGER NOT NULL CHECK (invite_cap > 0),
-  status          TEXT NOT NULL DEFAULT 'open',
-  rollback_commit TEXT DEFAULT NULL,
-  created_at      TEXT NOT NULL,
-  opens_at        TEXT DEFAULT NULL,
-  closes_at       TEXT DEFAULT NULL,
-  created_by      TEXT DEFAULT NULL
+  cohort_id               TEXT PRIMARY KEY,
+  release_commit          TEXT NOT NULL,
+  release_manifest_sha256 TEXT DEFAULT NULL,
+  platform                TEXT NOT NULL DEFAULT 'web',
+  invite_cap              INTEGER NOT NULL CHECK (invite_cap > 0),
+  status                  TEXT NOT NULL DEFAULT 'open',
+  rollback_commit         TEXT DEFAULT NULL,
+  rollback_manifest_sha256 TEXT DEFAULT NULL,
+  created_at              TEXT NOT NULL,
+  opens_at                TEXT DEFAULT NULL,
+  closes_at               TEXT DEFAULT NULL,
+  created_by              TEXT DEFAULT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_beta_cohorts_status ON beta_cohorts(status);
 `;
@@ -557,7 +559,7 @@ export function initSchema(db: Database.Database): void {
     migrateSchema(db, currentVersion, SCHEMA_VERSION);
   }
 
-  assertSchemaV26Shape(db);
+  assertSchemaV27Shape(db);
 
   // Patch A: Force version alignment after all migrations
   // Ensures _meta.schema_version always equals SCHEMA_VERSION, even if
@@ -601,8 +603,8 @@ function migrateSchema(
     for (let v = fromVersion + 1; v <= toVersion; v++) {
       runMigration(db, v);
     }
-    if (toVersion >= 26) {
-      assertSchemaV26Shape(db);
+    if (toVersion >= 27) {
+      assertSchemaV27Shape(db);
     }
   })();
 }
@@ -686,6 +688,9 @@ function runMigration(db: Database.Database, version: number): void {
       break;
     case 26:
       migrateToV26(db);
+      break;
+    case 27:
+      migrateToV27(db);
       break;
     default:
       throw new Error(`Unknown schema version: ${version}`);
@@ -1108,6 +1113,28 @@ function migrateToV26(db: Database.Database): void {
   insertMeta.run('schema_version', '26');
 }
 
+function migrateToV27(db: Database.Database): void {
+  // Bind cohorts to canonical multi-artifact release and rollback identities.
+  // Existing rows remain nullable for lossless migration, but admission paths
+  // reject any row until both digests are explicitly bound.
+  ensureBetaReleaseManifestColumns(db);
+  const insertMeta = db.prepare(
+    'INSERT OR REPLACE INTO _meta (key, value) VALUES (?, ?)'
+  );
+  insertMeta.run('schema_version', '27');
+}
+
+function ensureBetaReleaseManifestColumns(db: Database.Database): void {
+  const columns = db.prepare(`PRAGMA table_info(beta_cohorts)`).all() as Array<{ name: string }>;
+  const names = new Set(columns.map((column) => column.name));
+  if (!names.has('release_manifest_sha256')) {
+    db.exec(`ALTER TABLE beta_cohorts ADD COLUMN release_manifest_sha256 TEXT DEFAULT NULL;`);
+  }
+  if (!names.has('rollback_manifest_sha256')) {
+    db.exec(`ALTER TABLE beta_cohorts ADD COLUMN rollback_manifest_sha256 TEXT DEFAULT NULL;`);
+  }
+}
+
 function ensureAccountCharacterOutfitColorColumns(db: Database.Database): void {
   const columns = db.prepare(`PRAGMA table_info(account_characters)`).all() as Array<{ name: string }>;
   const names = new Set(columns.map((column) => column.name));
@@ -1124,7 +1151,7 @@ function ensureAccountCharacterOutfitColorColumns(db: Database.Database): void {
   }
 }
 
-function assertSchemaV26Shape(db: Database.Database): void {
+function assertSchemaV27Shape(db: Database.Database): void {
   const indexColumns = (indexName: string): string[] => {
     const quoted = `"${indexName.replaceAll('"', '""')}"`;
     return (db.prepare(`PRAGMA index_info(${quoted})`).all() as Array<{ name: string }>)
@@ -1135,10 +1162,12 @@ function assertSchemaV26Shape(db: Database.Database): void {
     beta_cohorts: [
       'cohort_id',
       'release_commit',
+      'release_manifest_sha256',
       'platform',
       'invite_cap',
       'status',
       'rollback_commit',
+      'rollback_manifest_sha256',
       'created_at',
       'opens_at',
       'closes_at',
@@ -1236,7 +1265,7 @@ function assertSchemaV26Shape(db: Database.Database): void {
   }
 
   if (missingArtifacts.length) {
-    throw new Error(`Schema v26 shape invalid: missing=[${missingArtifacts.join(',')}]`);
+    throw new Error(`Schema v27 shape invalid: missing=[${missingArtifacts.join(',')}]`);
   }
 }
 

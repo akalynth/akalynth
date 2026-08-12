@@ -53,6 +53,7 @@ export interface BetaServiceDeps {
   enabled: boolean;
   requireInvite: boolean;
   releaseCommit: string;
+  activeReleaseManifestSha256: string | null;
   now: () => number;
   emitReceipt: (event: { actorId: string; action: string; inputs: Record<string, unknown>; result: string }) => void;
 }
@@ -83,11 +84,13 @@ function cohortStatus(row: ReturnType<BetaStore['cohortForAccount']>): BetaCohor
   return {
     cohort_id: row.cohort.cohort_id,
     release_commit: row.cohort.release_commit,
+    release_manifest_sha256: row.cohort.release_manifest_sha256,
     platform: row.cohort.platform,
     invite_cap: row.cohort.invite_cap,
     invite_status: 'redeemed',
     joined_at: row.redeemed_at ?? row.issued_at,
     rollback_commit: row.cohort.rollback_commit,
+    rollback_manifest_sha256: row.cohort.rollback_manifest_sha256,
   };
 }
 
@@ -107,6 +110,9 @@ export class BetaService {
       commitAccount?.();
       return { ok: true, cohort: null };
     }
+    if (!this.d.activeReleaseManifestSha256) {
+      return { ok: false, status: 409, error: 'beta_invite_unavailable' };
+    }
     if (this.d.store.cohortForAccount(accountId)) {
       return { ok: false, status: 409, error: 'beta_invite_unavailable' };
     }
@@ -114,28 +120,38 @@ export class BetaService {
       hashToken(raw),
       accountId,
       iso(this.d.now()),
+      this.d.activeReleaseManifestSha256,
       commitAccount,
     );
     if (!claimed.ok) {
+      const unavailable = claimed.reason === 'cohort_closed'
+        || claimed.reason === 'cohort_unbound';
       return {
         ok: false,
-        status: claimed.reason === 'cohort_closed' ? 409 : 403,
-        error: claimed.reason === 'cohort_closed' ? 'beta_invite_unavailable' : 'beta_invite_invalid',
+        status: unavailable ? 409 : 403,
+        error: unavailable ? 'beta_invite_unavailable' : 'beta_invite_invalid',
       };
     }
     const cohort = {
       cohort_id: claimed.cohort.cohort_id,
       release_commit: claimed.cohort.release_commit,
+      release_manifest_sha256: claimed.cohort.release_manifest_sha256,
       platform: claimed.cohort.platform,
       invite_cap: claimed.cohort.invite_cap,
       invite_status: 'redeemed' as const,
       joined_at: claimed.invite.redeemed_at ?? iso(this.d.now()),
       rollback_commit: claimed.cohort.rollback_commit,
+      rollback_manifest_sha256: claimed.cohort.rollback_manifest_sha256,
     };
     this.d.emitReceipt({
       actorId: accountId,
       action: RECEIPT_ACTIONS.BETA_INVITE_REDEEMED,
-      inputs: { invite_id: claimed.invite.invite_id, cohort_id: cohort.cohort_id, release_commit: cohort.release_commit },
+      inputs: {
+        invite_id: claimed.invite.invite_id,
+        cohort_id: cohort.cohort_id,
+        release_commit: cohort.release_commit,
+        release_manifest_sha256: cohort.release_manifest_sha256,
+      },
       result: 'ok',
     });
     return { ok: true, cohort };
@@ -170,6 +186,9 @@ export class BetaService {
         : null;
     const eventId = newId('be');
     const recordedAt = iso(this.d.now());
+    const cohort = accountId
+      ? this.d.store.cohortForAccount(accountId)?.cohort
+      : undefined;
     this.d.emitReceipt({
       actorId: accountActor(accountId, clientSessionId),
       action: RECEIPT_ACTIONS.BETA_EVENT_RECORDED,
@@ -177,8 +196,9 @@ export class BetaService {
         event_id: eventId,
         event: input.event,
         client_session_id: clientSessionId,
-        cohort_id: accountId ? (this.d.store.cohortForAccount(accountId)?.cohort.cohort_id ?? null) : null,
+        cohort_id: cohort?.cohort_id ?? null,
         release_commit: this.d.releaseCommit,
+        release_manifest_sha256: cohort?.release_manifest_sha256 ?? null,
         map,
         tutorial_step: tutorialStep,
         reason,
@@ -206,7 +226,7 @@ export class BetaService {
       return { status: 400, error: 'invalid_client_session_id' };
     }
     const feedbackId = newId('bf');
-    const cohort = this.d.store.cohortForAccount(accountId)?.cohort.cohort_id ?? null;
+    const cohort = this.d.store.cohortForAccount(accountId)?.cohort;
     this.d.emitReceipt({
       actorId: accountId,
       action: RECEIPT_ACTIONS.BETA_FEEDBACK_SUBMITTED,
@@ -218,8 +238,9 @@ export class BetaService {
         body,
         reproduction_steps: reproduction || null,
         client_session_id: clientSessionId,
-        cohort_id: cohort,
+        cohort_id: cohort?.cohort_id ?? null,
         release_commit: this.d.releaseCommit,
+        release_manifest_sha256: cohort?.release_manifest_sha256 ?? null,
         map: normalizeMap(input.map),
         tutorial_step: normalizeStep(input.tutorial_step),
       },

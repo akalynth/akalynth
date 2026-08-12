@@ -32,7 +32,8 @@ git diff --check
 Confirm the source contract:
 
 - v25 is the outfit-color migration;
-- v26 owns `beta_cohorts` and `beta_invites`;
+- v26 introduced `beta_cohorts` and `beta_invites`;
+- v27 adds release and rollback manifest digests without rewriting legacy rows;
 - beta DDL and outfit-column repair are idempotent across both historical v25
   layouts;
 - invite values are persisted only as hashes plus bounded hints;
@@ -60,12 +61,13 @@ npm -w apps/debug-client run build
 
 The focused migration verifier must cover:
 
-- fresh database to v26;
-- canonical v24 to v26;
-- outfit-only v25 to v26;
-- beta-only v25 to v26;
-- combined deployed v25 to v26;
-- repeated v26 initialization with no data loss or duplicate effects.
+- fresh database to v27;
+- canonical v24 through v25/v26 to v27;
+- outfit-only v25 to v27;
+- beta-only v25 to v27;
+- combined deployed v25 to v27;
+- canonical v26 to v27 with legacy cohort rows preserved unbound;
+- repeated v27 initialization with no data loss or duplicate effects.
 
 Record each command and outcome against the exact candidate commit. An
 unavailable or failing gate is a gap, not a pass.
@@ -78,7 +80,7 @@ any separately authorized deployment, verify:
 - intended commit equals the checked-out commit;
 - built server provenance equals the intended commit;
 - static client provenance equals the intended commit;
-- target database schema is compatible with code schema v26;
+- target database schema is compatible with code schema v27;
 - backup and rollback paths are recorded;
 - receipt and Chronicle paths will be preserved.
 
@@ -143,7 +145,7 @@ evidence, and destroy the temporary key/tree afterward. The production key may
 extend only the one live receipt JSONL.
 
 Before arming the recovery transaction, the disposable rehearsal must prove
-target schema-v26 migration, old-runtime rejection of the v26 copy, restoration
+target schema-v27 migration, old-runtime rejection of the v27 copy, restoration
 of the captured schema-v25 state, old-runtime replay/health with the synthetic
 lifecycle tail, byte-identical prefix custody, and ephemeral-key verification
 of the complete synthetic suffix. Missing or failed rehearsal evidence is a
@@ -217,32 +219,52 @@ before admitting unrelated inputs for a new release.
 ## Open a cohort
 
 Only after deployment and cohort activation are explicitly authorized, create a
-named cohort bound to the exact served release and rollback commits:
+named cohort bound to canonical release and rollback manifests. The release
+publisher must first install a separately custodied active-state manifest that
+describes the exact served tuple. The create command recomputes canonical
+digests and requires that active file to equal the proposed release manifest:
 
 ```bash
 npm -w apps/server run beta:cohort -- create \
   --cohort beta-YYYY-MM-DD-a \
   --release <served-release-sha> \
   --rollback <last-known-good-sha> \
+  --release-manifest <candidate-release-manifest.json> \
+  --rollback-manifest <candidate-rollback-manifest.json> \
+  --active-manifest <installed-active-release-manifest.json> \
+  --backend-build-info /opt/akalynth-beta/dist/server/BUILD_INFO.json \
+  --portal-root /var/www/akalynth-beta \
+  --play-root /var/www/akalynth-beta/play \
+  --caddy-config /etc/caddy/Caddyfile \
   --cap <authorized-cap> \
   --platform web
 ```
+
+The manifest contract and authority boundary are defined by
+[Stranger Pilot Release Manifest Binding v1](../decisions/AKALYNTH_STRANGER_PILOT_RELEASE_MANIFEST_BINDING_V1/DECISION.md).
+Do not point `--active-manifest` at the candidate file merely to satisfy the
+comparison. It must be the independently installed, operator-custodied live
+state identity. A missing, unbound, or mismatched manifest is a hard stop.
 
 Set invite enforcement only for the authorized controlled cohort:
 
 ```text
 AKALYNTH_BETA_ENABLED=1
 AKALYNTH_BETA_REQUIRE_INVITE=1
+AKALYNTH_BETA_ACTIVE_RELEASE_MANIFEST=/etc/akalynth-beta/active-release-manifest.v1.json
 ```
 
 Do not enable invite enforcement until registration, account recovery, rollback,
-and operator access have been verified on the deployed commit.
+and operator access have been verified on the deployed commit. The server
+refuses invite-enforced startup without the absolute active-manifest path and
+rejects a manifest whose backend commit or policy flags differ from runtime.
 
 ## Issue and deliver invites
 
 ```bash
 npm -w apps/server run beta:cohort -- issue \
   --cohort beta-YYYY-MM-DD-a \
+  --active-manifest <installed-active-release-manifest.json> \
   --count <authorized-count>
 ```
 
@@ -296,7 +318,7 @@ Interpret the report conservatively:
 | Stability | browser observations, WS receipts, API health, receipt-chain health | reproducible P0 or repeated P1 |
 | Engagement | first-session duration and eligible D1/D7 sessions | early exits requiring investigation |
 | Feedback | severity, reproduction present, owner, status | unowned or uninvestigated P0/P1 |
-| Operations | cohort, release, cap, rollback commit | any mismatch with served artifacts |
+| Operations | cohort, release/rollback manifest digests, cap, compatibility commits | any mismatch with served artifacts |
 
 The optional canal observation is not an onboarding-completion gate. D1/D7
 results are valid only after their eligibility windows mature. A report is not
@@ -320,6 +342,9 @@ feedback id without copying sensitive text into public artifacts.
 ```bash
 npm -w apps/server run beta:cohort -- pause --cohort beta-YYYY-MM-DD-a
 npm -w apps/server run beta:cohort -- close --cohort beta-YYYY-MM-DD-a
+npm -w apps/server run beta:cohort -- open \
+  --cohort beta-YYYY-MM-DD-a \
+  --active-manifest <installed-active-release-manifest.json>
 ```
 
 Pause admission on:

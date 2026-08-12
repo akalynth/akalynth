@@ -351,10 +351,12 @@ export type BetaInviteStatus = 'issued' | 'redeemed' | 'revoked';
 export interface BetaCohortRow {
   cohort_id: string;
   release_commit: string;
+  release_manifest_sha256: string | null;
   platform: 'web' | 'android' | 'mixed';
   invite_cap: number;
   status: BetaCohortStatus;
   rollback_commit: string | null;
+  rollback_manifest_sha256: string | null;
   created_at: string;
   opens_at: string | null;
   closes_at: string | null;

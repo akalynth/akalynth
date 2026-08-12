@@ -6,6 +6,7 @@
 // Raw invite codes are printed once for private delivery and are never logged
 // to receipts or persisted.
 import Database from 'better-sqlite3';
+import fs from 'node:fs';
 import path from 'node:path';
 import { createAuditLogger } from '../src/audit/logger.js';
 import { initSchema } from '../src/persist/schema.js';
@@ -13,12 +14,24 @@ import { RECEIPT_ACTIONS } from '../src/persist/types.js';
 import { resolveChainPaths } from '../../../packages/shared/paths.js';
 import { newId, newToken, hashToken } from '../src/account/tokens.js';
 import { BetaStore } from '../src/beta/store.js';
+import {
+  assertActiveReleaseManifest,
+  bindCohortReleaseManifests,
+  verifyBetaReleaseManifestAgainstLiveFiles,
+} from '../src/beta/releaseManifest.js';
 
 const repoRoot = path.resolve(import.meta.dirname, '../../..');
 const paths = resolveChainPaths(repoRoot);
-const db = new Database(paths.dbPath);
-initSchema(db);
-const store = new BetaStore(db);
+let db: Database.Database | null = null;
+let store: BetaStore | null = null;
+
+function cohortStore(): BetaStore {
+  if (store) return store;
+  db = new Database(paths.dbPath);
+  initSchema(db);
+  store = new BetaStore(db);
+  return store;
+}
 
 function arg(name: string): string | null {
   const index = process.argv.indexOf(`--${name}`);
@@ -45,6 +58,26 @@ function isoAfterDays(days: number): string {
   return new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
 }
 
+function manifestPath(name: string): string {
+  return path.resolve(required(name));
+}
+
+function readManifest(name: string): string {
+  return fs.readFileSync(manifestPath(name), 'utf8');
+}
+
+function readActiveManifest(): string {
+  const file = manifestPath('active-manifest');
+  const stat = fs.lstatSync(file);
+  if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1) {
+    throw new Error('active manifest must be a regular single-link file');
+  }
+  if ((stat.mode & 0o022) !== 0) {
+    throw new Error('active manifest must not be group/other writable');
+  }
+  return fs.readFileSync(file, 'utf8');
+}
+
 function audit() {
   return createAuditLogger({
     receiptPath: paths.receiptsPath,
@@ -57,18 +90,41 @@ try {
   if (command === 'create') {
     const cohortId = required('cohort');
     const release = required('release');
-    const rollback = arg('rollback');
+    const rollback = required('rollback');
     const platform = arg('platform') ?? 'web';
     if (platform !== 'web' && platform !== 'android' && platform !== 'mixed') {
       throw new Error('--platform must be web, android, or mixed');
     }
+    if (
+      fs.realpathSync(manifestPath('release-manifest'))
+      === fs.realpathSync(manifestPath('active-manifest'))
+    ) {
+      throw new Error('release and active manifests must be separate files');
+    }
+    const manifests = bindCohortReleaseManifests({
+      release_json: readManifest('release-manifest'),
+      rollback_json: readManifest('rollback-manifest'),
+      active_release_json: readActiveManifest(),
+      release_commit: release,
+      rollback_commit: rollback,
+      platform,
+    });
+    verifyBetaReleaseManifestAgainstLiveFiles(manifests.release, {
+      backend_build_info: required('backend-build-info'),
+      portal_root: required('portal-root'),
+      play_root: required('play-root'),
+      caddy_config: required('caddy-config'),
+      android_apk: arg('android-apk') ?? undefined,
+    });
     const cap = numberArg('cap', 20);
-    store.insertCohort({
+    cohortStore().insertCohort({
       cohort_id: cohortId,
       release_commit: release,
+      release_manifest_sha256: manifests.release.sha256,
       platform,
       invite_cap: cap,
       rollback_commit: rollback,
+      rollback_manifest_sha256: manifests.rollback.sha256,
       created_at: new Date().toISOString(),
       opens_at: new Date().toISOString(),
       closes_at: null,
@@ -78,17 +134,24 @@ try {
       ok: true,
       cohort_id: cohortId,
       release_commit: release,
+      release_manifest_sha256: manifests.release.sha256,
       invite_cap: cap,
       rollback_commit: rollback,
+      rollback_manifest_sha256: manifests.rollback.sha256,
     }, null, 2));
   } else if (command === 'issue') {
+    const store = cohortStore();
     const cohortId = required('cohort');
     const count = numberArg('count', 1);
     const expiresDays = numberArg('expires-days', 14);
+    const cohort = store.findCohort(cohortId);
+    if (!cohort) throw new Error('cohort_not_found');
+    const active = assertActiveReleaseManifest(
+      readActiveManifest(),
+      cohort.release_manifest_sha256 ?? '',
+    );
     const logger = audit();
     try {
-      const cohort = store.findCohort(cohortId);
-      if (!cohort) throw new Error('cohort_not_found');
       const issued: Array<{
         invite_id: string;
         invite_code: string;
@@ -106,7 +169,7 @@ try {
           token_hint: hint,
           issued_at: new Date().toISOString(),
           expires_at: isoAfterDays(expiresDays),
-        });
+        }, active.sha256);
         logger.write({
           actor_id: 'beta_operator',
           action: RECEIPT_ACTIONS.BETA_INVITE_ISSUED,
@@ -115,6 +178,7 @@ try {
             cohort_id: cohortId,
             token_hint: hint,
             release_commit: cohort.release_commit,
+            release_manifest_sha256: cohort.release_manifest_sha256,
           },
           result: 'issued',
         });
@@ -136,16 +200,30 @@ try {
     }
   } else if (command === 'revoke') {
     const inviteId = required('invite');
-    const ok = store.revokeInvite(inviteId);
+    const ok = cohortStore().revokeInvite(inviteId);
     console.log(JSON.stringify({ ok, invite_id: inviteId }));
   } else if (command === 'pause' || command === 'close' || command === 'open') {
     const cohortId = required('cohort');
+    const store = cohortStore();
     const status = command === 'pause'
       ? 'paused'
       : command === 'close'
         ? 'closed'
         : 'open';
-    const ok = store.setCohortStatus(cohortId, status);
+    let activeManifestSha256: string | undefined;
+    if (status === 'open') {
+      const cohort = store.findCohort(cohortId);
+      if (!cohort) throw new Error('cohort_not_found');
+      activeManifestSha256 = assertActiveReleaseManifest(
+        readActiveManifest(),
+        cohort.release_manifest_sha256 ?? '',
+      ).sha256;
+    }
+    const ok = store.setCohortStatus(
+      cohortId,
+      status,
+      activeManifestSha256,
+    );
     console.log(JSON.stringify({ ok, cohort_id: cohortId, status }));
   } else if (command === 'triage') {
     const feedbackId = required('feedback');
@@ -175,10 +253,10 @@ try {
       owner,
     }));
   } else if (command === 'list') {
-    console.log(JSON.stringify(store.listCohorts(), null, 2));
+    console.log(JSON.stringify(cohortStore().listCohorts(), null, 2));
   } else {
     throw new Error(`unknown command: ${command}`);
   }
 } finally {
-  db.close();
+  db?.close();
 }

@@ -9,6 +9,12 @@ Authority: project-owner approval in the active Codex thread on 2026-07-30:
 
 Target lane: controlled live beta only
 
+Additive successor: the accepted
+[`AKALYNTH_STRANGER_PILOT_RELEASE_MANIFEST_BINDING_V1`](../AKALYNTH_STRANGER_PILOT_RELEASE_MANIFEST_BINDING_V1/DECISION.md)
+advances current source to schema v27. The schema-v26 rehearsal language below
+records this decision's historical repair boundary; any new deployment must
+satisfy both decisions and prove the v26-to-v27 migration.
+
 ## Decision effect
 
 This decision authorizes the narrow repair needed to make the beta publication

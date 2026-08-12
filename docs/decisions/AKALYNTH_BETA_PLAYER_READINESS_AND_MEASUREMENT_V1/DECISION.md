@@ -8,6 +8,12 @@ Authority: project-owner authorization in the active Codex thread on
 
 Effective schema target: v26
 
+Current additive successor: schema v27 release/rollback manifest binding is
+governed by
+[`AKALYNTH_STRANGER_PILOT_RELEASE_MANIFEST_BINDING_V1`](../AKALYNTH_STRANGER_PILOT_RELEASE_MANIFEST_BINDING_V1/DECISION.md).
+This v26 decision remains the historical authority for cohort/invite recovery;
+it does not authorize an unbound cohort to admit players under v27.
+
 Stage boundary: controlled playable pre-alpha only
 
 ## Decision effect
@@ -145,7 +151,7 @@ addresses, and player-authored feedback bodies.
 
 ## Health measures
 
-Measure by named cohort and release commit:
+Measure by named cohort, release-manifest digest, and compatibility commit:
 
 - invite issue-to-redemption conversion;
 - first authenticated session and first server-accepted meaningful action;

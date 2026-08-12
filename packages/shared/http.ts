@@ -122,11 +122,15 @@ export type BetaReadinessEvent =
 export interface BetaCohortStatus {
   cohort_id: string;
   release_commit: string;
+  /** Canonical multi-artifact release identity; null only for migrated legacy rows. */
+  release_manifest_sha256: string | null;
   platform: BetaPlatform;
   invite_cap: number;
   invite_status: 'redeemed';
   joined_at: string;
   rollback_commit: string | null;
+  /** Canonical rollback identity; null only for migrated legacy rows. */
+  rollback_manifest_sha256: string | null;
 }
 
 export interface BetaMeResponse {

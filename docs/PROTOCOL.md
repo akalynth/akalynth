@@ -82,6 +82,16 @@ truth. Gameplay metrics remain derived from server receipts. Invite codes are
 hashed at rest, and public/reporting projections must omit credentials, session
 tokens, raw account identifiers, and player-authored feedback bodies.
 
+The `cohort` object returned by `GET /v1/beta/me` additively includes
+`release_manifest_sha256` and `rollback_manifest_sha256`. They bind the cohort
+to canonical multi-artifact release and rollback manifests rather than treating
+one backend commit as the identity of every shipped surface. Both fields are
+nullable only for rows migrated from schema v26; unbound rows cannot be opened,
+issued new invites, or redeemed. A bound cohort whose release digest differs
+from the server's active release manifest is likewise admission-inert. Existing
+clients may ignore the new fields. No WebSocket type, payload, or protocol
+version changes in schema v27.
+
 Web economy portal endpoints live on the HTTP control plane under
 `/v1/shop/catalog`, `/v1/shop/purchase`, `/v1/wallet`, `/v1/property/buy`,
 `/v1/property/list`, `/v1/property/unlist`, `/v1/work/start`, and

@@ -85,6 +85,7 @@ import { RateLimiter } from './account/rateLimit.js';
 import { BetaStore } from './beta/store.js';
 import { BetaService } from './beta/service.js';
 import { makeBetaRouter } from './beta/router.js';
+import { parseBetaReleaseManifest } from './beta/releaseManifest.js';
 import { PrincipalStore } from './principal/store.js';
 import { PrincipalService } from './principal/service.js';
 import { makePrincipalRouter } from './principal/router.js';
@@ -320,6 +321,55 @@ const ALLOW_INSECURE_LOCAL = parseBoolEnv(process.env.ALLOW_INSECURE_LOCAL, fals
 // is opt-in so existing clients remain compatible until an operator enables it.
 const BETA_ENABLED = parseBoolEnv(process.env.AKALYNTH_BETA_ENABLED, true);
 const BETA_REQUIRE_INVITE = parseBoolEnv(process.env.AKALYNTH_BETA_REQUIRE_INVITE, false);
+const BETA_ACTIVE_RELEASE_MANIFEST_PATH =
+  process.env.AKALYNTH_BETA_ACTIVE_RELEASE_MANIFEST?.trim() || null;
+
+function loadActiveBetaReleaseManifest(): { sha256: string } | null {
+  if (!BETA_ACTIVE_RELEASE_MANIFEST_PATH) {
+    if (BETA_REQUIRE_INVITE) {
+      throw new Error(
+        'AKALYNTH_BETA_ACTIVE_RELEASE_MANIFEST is required when invite enforcement is enabled',
+      );
+    }
+    return null;
+  }
+  if (!path.isAbsolute(BETA_ACTIVE_RELEASE_MANIFEST_PATH)) {
+    throw new Error('AKALYNTH_BETA_ACTIVE_RELEASE_MANIFEST must be an absolute path');
+  }
+  const stat = fs.lstatSync(BETA_ACTIVE_RELEASE_MANIFEST_PATH);
+  if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1) {
+    throw new Error('active beta release manifest must be a regular single-link file');
+  }
+  if (isProductionMode()) {
+    if (stat.uid !== 0) {
+      throw new Error('active beta release manifest must be root-owned in production');
+    }
+    if ((stat.mode & 0o022) !== 0) {
+      throw new Error('active beta release manifest must not be group/other writable');
+    }
+  }
+  const bound = parseBetaReleaseManifest(
+    fs.readFileSync(BETA_ACTIVE_RELEASE_MANIFEST_PATH, 'utf8'),
+  );
+  const manifest = bound.manifest;
+  if (manifest.backend.commit !== (BUILD_INFO.commit ?? 'unknown')) {
+    throw new Error('active beta release manifest backend commit does not match BUILD_INFO');
+  }
+  const expectedPolicy = {
+    CHILL_ZONE_GATHER_ENABLED: isGatherEnabled(),
+    CHILL_ZONE_REFINE_ENABLED: isRefineEnabled(),
+    AKALYNTH_BETA_ENABLED: BETA_ENABLED,
+    AKALYNTH_BETA_REQUIRE_INVITE: BETA_REQUIRE_INVITE,
+  };
+  for (const [key, expected] of Object.entries(expectedPolicy)) {
+    if (manifest.policy[key as keyof typeof expectedPolicy] !== expected) {
+      throw new Error(`active beta release manifest policy mismatch: ${key}`);
+    }
+  }
+  return { sha256: bound.sha256 };
+}
+
+const ACTIVE_BETA_RELEASE_MANIFEST = loadActiveBetaReleaseManifest();
 // Account portal CORS (E5 companion): the static website is a separate origin
 // from this API and uses cookie sessions (`credentials: 'include'`), so the API
 // must reflect an explicit allowlisted Origin — never `*`. ACCOUNT_CORS_ORIGINS
@@ -1314,6 +1364,7 @@ const betaService = new BetaService({
   enabled: BETA_ENABLED,
   requireInvite: BETA_REQUIRE_INVITE,
   releaseCommit: BUILD_INFO.commit ?? 'unknown',
+  activeReleaseManifestSha256: ACTIVE_BETA_RELEASE_MANIFEST?.sha256 ?? null,
   now: () => Date.now(),
   emitReceipt: (event) => audit.write({
     player_id: event.actorId,

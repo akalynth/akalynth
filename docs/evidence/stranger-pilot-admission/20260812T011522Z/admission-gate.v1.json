@@ -1,0 +1,223 @@
+{
+  "schema_version": "akalynth.stranger_pilot_admission_gate.v1",
+  "id": "AKALYNTH_STRANGER_PILOT_ADMISSION_GATE_V1",
+  "status": "NO_GO",
+  "observed_at": "2026-08-12T01:15:22Z",
+  "authority": {
+    "authorized_action": "read-only Stranger Pilot Admission Gate and repository evidence packet",
+    "not_authorized": [
+      "deployment",
+      "cohort creation or activation",
+      "invite issuance",
+      "participant recruitment",
+      "live synthetic account or gameplay writes",
+      "retention claims"
+    ]
+  },
+  "source_custody": {
+    "akalynth": {
+      "head": "146527a88593bf7a2f6f21cc59543127f14e2c03",
+      "origin_main": "146527a88593bf7a2f6f21cc59543127f14e2c03",
+      "clean": true,
+      "server_and_shared_diff_from_live_backend": "none"
+    },
+    "akalynth_site_publish_source": {
+      "commit": "121cb9900a4ddff1f01a6c95f02a9f5ec85d2e57",
+      "subject": "Merge pull request #80 from akalynth/feat/beta-release-repair-v1",
+      "branch_in_root_custodied_publish_clone": "main",
+      "clean_detached_publish_clone": true,
+      "live_files_checked": 7,
+      "live_files_matching": 7
+    }
+  },
+  "observed_release_tuple_sha256": "97d41126cad27e1690d202d535a03d4d81861a025687875f771e5c7f8e5d0510",
+  "observed_release_tuple": {
+    "backend": {
+      "health_commit": "86bcf0fb0af204e715600a5ec59f4c9a2b8524b8",
+      "built_at": "2026-07-30T20:05:04.317Z",
+      "build_info_sha256": "3d11f286d8d6326dd9375dfdc5b674e070d8be123f9490703b6f22206ac567e1",
+      "runtime_path": "/opt/akalynth-beta",
+      "state_path": "/var/lib/akalynth-beta",
+      "listen": "127.0.0.1:3010",
+      "kubernetes_deployment": "akalynth-lanes/akalynth-game-beta",
+      "kubernetes_generation": 84,
+      "ready_replicas": 1,
+      "pod_uid": "cc637013-4280-485b-bcba-b83bb76cffe1",
+      "sealed_release_id": "beta-release-repair-v1-20260730t200200z",
+      "publish_receipt_sha256": "3613686ff0dfd1322b214d06d59be2ed5d9af001ca031a75e9194fb783a4e4c0",
+      "candidate_metadata_sha256": "ad0cc0f26b4e56b4a415bce1bfeb26f1049844db5b49bceec9fc0e8fd04ecc00",
+      "runtime_preflight_sha256": "409506185b52e73935f5babc3cd4cb4ebffd77bfaf2febac33f14322ce8b9130"
+    },
+    "portal": {
+      "site_commit": "121cb9900a4ddff1f01a6c95f02a9f5ec85d2e57",
+      "index_sha256": "8648237474db9c624d2096b445d861dd0728c3206ad439a03084bf85428c6269",
+      "account_sha256": "e1eb0ca9a91cacdb1fc6b0094a967a2883342f6f5d2fd1d9ade97431443d0d98",
+      "register_sha256": "8860a3bce7b817d3ae1c6f6f968dd8c78bd40ef61971c85880db3f33b4ab2117",
+      "forgot_sha256": "2ddf4446bfbeaa378076c13d1b2a10ffc9e1a68b58218fcc23330000bf42d0c8",
+      "beta_sha256": "4756987e36ff28b8f593555111d16dff98188fb0fe67bd7ba609472ba821030f",
+      "app_js_sha256": "7c49ce01668d68d163446f35f58efad4a9337f446d518e1b0f1990c72a907fba",
+      "style_css_sha256": "abf26f7da7af11ae6a79252a3d9ff6d63a407cbaa5996d46d503366e9add7f87"
+    },
+    "web_client": {
+      "published_source_commit": "2dca7bedb27c9f1537d426032e28e4b167fbc3ef",
+      "current_main_compatible_commit": "146527a88593bf7a2f6f21cc59543127f14e2c03",
+      "client_source_diff_between_published_and_current": "none",
+      "index_asset": "assets/index-CmfRZE6L.js",
+      "css_asset": "assets/index-CuC6XZ7w.css",
+      "index_html_sha256": "179648b9a9aa3a76cb5bebebc6de3f3b17545d601b1d423ea3f4c1888197f7a5",
+      "javascript_sha256": "bc6c58c68ca018697e652e2fe1cb67561ac7f38d6c48ee60fb2722517bdd1d94",
+      "css_sha256": "5a9b58b09fecc7127208e893eef49fffd42fe62df2e6dd0659d3ec09de9b5cf0",
+      "fresh_build_matches_live": true
+    },
+    "android": {
+      "source_commit": "146527a88593bf7a2f6f21cc59543127f14e2c03",
+      "version_code": 2026080704,
+      "version_name": "0.1.18-beta.2026080704-first-session",
+      "apk_sha256": "1e7c3b158ba24696058ae27ade85bf2fb8530a623012b40c997db6e96f717a0e",
+      "size_bytes": 41746815,
+      "pilot_platform": "web",
+      "admission_role": "recorded but not required for the web-only pilot"
+    },
+    "policy": {
+      "CHILL_ZONE_GATHER_ENABLED": "1",
+      "CHILL_ZONE_REFINE_ENABLED": "1",
+      "AKALYNTH_BETA_ENABLED": "default_true",
+      "AKALYNTH_BETA_REQUIRE_INVITE": "default_false"
+    },
+    "routing": {
+      "caddy_config_sha256": "42c2cd27fc46a85d243b3751c2398d02cb05bfe0478f2815642cadafcdb5e8d7",
+      "beta_static_root": "/var/www/akalynth-beta",
+      "beta_api_upstream": "127.0.0.1:3010",
+      "public_health": "pass"
+    }
+  },
+  "receipt_boundary": {
+    "role": "observed_pre-admission_boundary_not_frozen_cohort_boundary",
+    "canonical_path": "/var/lib/akalynth-beta/audit/receipts.jsonl",
+    "verification_completed_at": "2026-08-12T01:15:30Z",
+    "head_sequence": 27648,
+    "head_event_hash": "blake3:9b654008c660615f1342ce5d2c4d5753a0609e8c5446909e0ffeff7d936ace2d",
+    "structural_range": "1..27648",
+    "current_key_signature_range": "49..27648",
+    "current_key_signatures_verified": 27600,
+    "historical_signature_exception_range": "1..48",
+    "historical_exception_id": "beta.receipts.historical-key-gap.seq-1-48.v1",
+    "status": "PASS_WITH_BOUNDED_HISTORICAL_SIGNATURE_EXCEPTION"
+  },
+  "cohort_ledger": {
+    "schema_version": 26,
+    "cohort_count": 0,
+    "invite_count": 0,
+    "fields": [
+      "cohort_id",
+      "release_commit",
+      "platform",
+      "invite_cap",
+      "status",
+      "rollback_commit",
+      "created_at",
+      "opens_at",
+      "closes_at",
+      "created_by"
+    ],
+    "can_bind_observed_release_tuple": false,
+    "reason": "release_commit and rollback_commit identify only one commit each; they cannot bind the separately shipped backend, portal, web-client, policy, and optional Android identities"
+  },
+  "verification": [
+    {
+      "id": "sealed_backend_publish",
+      "status": "pass",
+      "evidence": "root-custodied publish receipt status PASS; intended, dist, and health commits all 86bcf0fb0af204e715600a5ec59f4c9a2b8524b8"
+    },
+    {
+      "id": "server_build_current_checkout",
+      "status": "blocked_environment",
+      "evidence": "TypeScript ran but the existing partial node_modules omitted declared @types/ws and @types/better-sqlite3 packages",
+      "classification": "workstation dependency state, not source failure; no server/shared source diff exists between the sealed backend commit and current main"
+    },
+    {
+      "id": "beta_player_readiness_focused",
+      "status": "pass",
+      "command": "npm -w apps/server run verify:beta-player-readiness"
+    },
+    {
+      "id": "beta_player_readiness_aggregate",
+      "status": "pass",
+      "command": "npm run verify:beta-player-readiness"
+    },
+    {
+      "id": "beta_account_play_portal",
+      "status": "pass",
+      "checks": 51,
+      "command": "node scripts/verify-beta-account-play-portal.mjs --report <temporary-path>"
+    },
+    {
+      "id": "site_account_character",
+      "status": "pass",
+      "command": "./scripts/verify-account-character-site.sh"
+    },
+    {
+      "id": "android_distribution",
+      "status": "pass",
+      "command": "bash scripts/verify_beta_android_distribution.sh"
+    },
+    {
+      "id": "protocol_sync",
+      "status": "pass",
+      "command": "bash scripts/verify_protocol_sync.sh"
+    },
+    {
+      "id": "receipt_chain_fixtures",
+      "status": "pass",
+      "cases": 6,
+      "command": "npm -w apps/server run test:receipts-chain"
+    },
+    {
+      "id": "live_receipt_key_epoch",
+      "status": "pass_with_approved_historical_exception",
+      "command": "NODE_ENV=production npm -w apps/server run verify:receipt-key-epoch -- --receipts <canonical> --key <host-key> --exception <approved-exception> --json"
+    },
+    {
+      "id": "debug_client_build",
+      "status": "pass",
+      "command": "npm -w apps/debug-client run build"
+    },
+    {
+      "id": "rookguard_first30_presentation",
+      "status": "pass",
+      "command": "bash scripts/verify-rookguard-first30-presentation.sh"
+    },
+    {
+      "id": "fresh_live_account_and_rookguard_smoke",
+      "status": "not_run_requires_separate_live_write_authority",
+      "reason": "the live smoke creates account, character, and gameplay receipts"
+    }
+  ],
+  "hard_blockers": [
+    {
+      "id": "SPAG-001",
+      "summary": "The cohort ledger cannot bind the observed multi-artifact release tuple or its rollback tuple.",
+      "effect": "Do not create or open the stranger cohort."
+    }
+  ],
+  "minimal_repair_proposal": {
+    "status": "proposal_only_not_approved_or_implemented",
+    "schema": "add release_manifest_sha256 and rollback_manifest_sha256 to beta_cohorts in a separately approved migration",
+    "manifest": "canonical JSON binds backend commit and BUILD_INFO hash, site commit and portal hashes, web-client source and asset hashes, policy flags, routing identity, and optional Android identity",
+    "operator_cli": "require --release-manifest and --rollback-manifest when creating a new cohort; recompute canonical hashes and fail closed on live mismatch",
+    "http_and_evidence": "additively expose the manifest digest in beta cohort status, receipts, and readiness reports; no WebSocket protocol change",
+    "compatibility": "retain release_commit and rollback_commit as backend-commit compatibility fields; existing rows may not be opened without an explicit bound manifest"
+  },
+  "go_conditions": [
+    "approve and implement release-manifest binding",
+    "pass its migration, CLI, report, HTTP compatibility, and protocol-sync gates",
+    "produce an immutable release and rollback manifest for one frozen web cohort",
+    "obtain separate authority for a credentialed live account and Rookguard smoke",
+    "capture a new canonical receipt head after the smoke and before the first participant",
+    "obtain separate cohort activation and recruitment authority"
+  ],
+  "decision": {
+    "result": "NO_GO",
+    "action": "preserve the empty cohort ledger; do not issue invites or recruit participants"
+  }
+}

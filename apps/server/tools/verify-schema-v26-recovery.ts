@@ -3,8 +3,9 @@
  * Focused migration matrix for the historical schema-v25 collision.
  *
  * Canonical v25 added account-character outfit colors. A divergent beta
- * lineage reused v25 for beta cohorts/invites. Canonical v26 must reconcile
- * either v25 shape, preserve existing rows, and remain idempotent.
+ * lineage reused v25 for beta cohorts/invites. Canonical v26 reconciled those
+ * shapes; v27 adds nullable release/rollback manifest digests without mutating
+ * historical cohort rows. The complete path must remain idempotent.
  */
 import assert from 'node:assert/strict';
 import Database from 'better-sqlite3';
@@ -235,12 +236,12 @@ function tableColumns(
   }>;
 }
 
-function assertSchemaV26Contract(db: Database.Database): void {
-  assert.equal(SCHEMA_VERSION, 26);
+function assertSchemaV27Contract(db: Database.Database): void {
+  assert.equal(SCHEMA_VERSION, 27);
   const version = db.prepare(
     `SELECT value FROM _meta WHERE key = 'schema_version'`,
   ).get() as { value: string };
-  assert.equal(version.value, '26');
+  assert.equal(version.value, '27');
 
   const characterColumns = new Map(
     tableColumns(db, 'account_characters')
@@ -255,10 +256,12 @@ function assertSchemaV26Contract(db: Database.Database): void {
     beta_cohorts: [
       'cohort_id',
       'release_commit',
+      'release_manifest_sha256',
       'platform',
       'invite_cap',
       'status',
       'rollback_commit',
+      'rollback_manifest_sha256',
       'created_at',
       'opens_at',
       'closes_at',
@@ -337,10 +340,20 @@ function readOutfitColors(db: Database.Database): OutfitColors {
 }
 
 function assertBetaSentinelRowsPreserved(db: Database.Database): void {
+  const cohortColumns = new Set(
+    tableColumns(db, 'beta_cohorts').map((column) => column.name),
+  );
+  const releaseManifestProjection = cohortColumns.has('release_manifest_sha256')
+    ? 'release_manifest_sha256'
+    : 'NULL AS release_manifest_sha256';
+  const rollbackManifestProjection = cohortColumns.has('rollback_manifest_sha256')
+    ? 'rollback_manifest_sha256'
+    : 'NULL AS rollback_manifest_sha256';
   const cohort = db.prepare(`
     SELECT
       cohort_id, release_commit, platform, invite_cap, status,
-      rollback_commit, created_at, opens_at, closes_at, created_by
+      rollback_commit, ${releaseManifestProjection}, ${rollbackManifestProjection},
+      created_at, opens_at, closes_at, created_by
     FROM beta_cohorts
     WHERE cohort_id = 'cohort-sentinel'
   `).get();
@@ -351,6 +364,8 @@ function assertBetaSentinelRowsPreserved(db: Database.Database): void {
     invite_cap: 7,
     status: 'closed',
     rollback_commit: 'rollback-sentinel',
+    release_manifest_sha256: null,
+    rollback_manifest_sha256: null,
     created_at: '2026-07-11T00:00:00.000Z',
     opens_at: '2026-07-11T01:00:00.000Z',
     closes_at: '2026-07-18T01:00:00.000Z',
@@ -408,11 +423,11 @@ function verifyFreshDatabase(): void {
     );
     initSchema(db);
 
-    assertSchemaV26Contract(db);
+    assertSchemaV27Contract(db);
     assert.deepEqual(readOutfitColors(db), OUTFIT_DEFAULTS);
     assertEmptyBetaTables(db);
   });
-  console.log('PASS  fresh database -> schema v26');
+  console.log('PASS  fresh database -> schema v27');
 }
 
 function verifyV24Upgrade(): void {
@@ -423,11 +438,11 @@ function verifyV24Upgrade(): void {
     initSchema(db);
     initSchema(db);
 
-    assertSchemaV26Contract(db);
+    assertSchemaV27Contract(db);
     assert.deepEqual(readOutfitColors(db), OUTFIT_DEFAULTS);
     assertEmptyBetaTables(db);
   });
-  console.log('PASS  v24 -> outfit v25 -> beta v26');
+  console.log('PASS  v24 -> outfit v25 -> beta v26 -> manifests v27');
 }
 
 function verifyOutfitOnlyV25Upgrade(): void {
@@ -438,11 +453,11 @@ function verifyOutfitOnlyV25Upgrade(): void {
     initSchema(db);
     initSchema(db);
 
-    assertSchemaV26Contract(db);
+    assertSchemaV27Contract(db);
     assert.deepEqual(readOutfitColors(db), CUSTOM_OUTFIT_COLORS);
     assertEmptyBetaTables(db);
   });
-  console.log('PASS  outfit-only v25 -> beta v26, custom colors preserved');
+  console.log('PASS  outfit-only v25 -> v27, custom colors preserved');
 }
 
 function verifyBetaOnlyV25Upgrade(): void {
@@ -454,11 +469,11 @@ function verifyBetaOnlyV25Upgrade(): void {
     initSchema(db);
     initSchema(db);
 
-    assertSchemaV26Contract(db);
+    assertSchemaV27Contract(db);
     assert.deepEqual(readOutfitColors(db), OUTFIT_DEFAULTS);
     assertBetaSentinelRowsPreserved(db);
   });
-  console.log('PASS  beta-only v25 -> reconciled v26, beta rows preserved');
+  console.log('PASS  beta-only v25 -> reconciled v27, beta rows preserved');
 }
 
 function verifyCombinedLiveV25Upgrade(): void {
@@ -470,11 +485,27 @@ function verifyCombinedLiveV25Upgrade(): void {
     initSchema(db);
     initSchema(db);
 
-    assertSchemaV26Contract(db);
+    assertSchemaV27Contract(db);
     assert.deepEqual(readOutfitColors(db), CUSTOM_OUTFIT_COLORS);
     assertBetaSentinelRowsPreserved(db);
   });
-  console.log('PASS  combined live-style v25 -> v26 without row mutation');
+  console.log('PASS  combined live-style v25 -> v27 without row loss');
+}
+
+function verifyCanonicalV26Upgrade(): void {
+  withDatabase((db) => {
+    createMeta(db, 26);
+    createAccountCharacters(db, true);
+    createBetaTablesWithSentinelRows(db);
+
+    initSchema(db);
+    initSchema(db);
+
+    assertSchemaV27Contract(db);
+    assert.deepEqual(readOutfitColors(db), CUSTOM_OUTFIT_COLORS);
+    assertBetaSentinelRowsPreserved(db);
+  });
+  console.log('PASS  canonical v26 -> manifest-binding v27, legacy rows preserved unbound');
 }
 
 function verifyFailedUpgradeRollsBack(): void {
@@ -512,7 +543,7 @@ function verifyFailedPostconditionRollsBack(): void {
 
     assert.throws(
       () => initSchema(db),
-      /Schema v26 shape invalid: missing=\[beta_cohorts\.rollback_commit\]/,
+      /Schema v27 shape invalid: missing=\[beta_cohorts\.rollback_commit\]/,
     );
 
     const version = db.prepare(
@@ -533,7 +564,7 @@ function verifyFailedPostconditionRollsBack(): void {
     `).all();
     assert.deepEqual(createdIndexes, []);
   });
-  console.log('PASS  failed v26 postcondition rolls back version and indexes');
+  console.log('PASS  failed v27 postcondition rolls back version and indexes');
 }
 
 function verifyMalformedIndexFailsClosed(): void {
@@ -549,7 +580,7 @@ function verifyMalformedIndexFailsClosed(): void {
 
     assert.throws(
       () => initSchema(db),
-      /Schema v26 shape invalid: missing=\[index:idx_beta_invites_account,predicate:idx_beta_invites_account\]/,
+      /Schema v27 shape invalid: missing=\[index:idx_beta_invites_account,predicate:idx_beta_invites_account\]/,
     );
 
     const version = db.prepare(
@@ -586,7 +617,7 @@ function verifyWrongAccountIndexPredicateFailsClosed(): void {
 
     assert.throws(
       () => initSchema(db),
-      /Schema v26 shape invalid: missing=\[predicate:idx_beta_invites_account\]/,
+      /Schema v27 shape invalid: missing=\[predicate:idx_beta_invites_account\]/,
     );
 
     const version = db.prepare(
@@ -623,7 +654,7 @@ function verifyOrphanInviteFailsClosed(): void {
 
     assert.throws(
       () => initSchema(db),
-      /Schema v26 shape invalid: missing=\[foreign_key_violation:beta_invites\]/,
+      /Schema v27 shape invalid: missing=\[foreign_key_violation:beta_invites\]/,
     );
 
     const version = db.prepare(
@@ -645,10 +676,11 @@ verifyV24Upgrade();
 verifyOutfitOnlyV25Upgrade();
 verifyBetaOnlyV25Upgrade();
 verifyCombinedLiveV25Upgrade();
+verifyCanonicalV26Upgrade();
 verifyFailedUpgradeRollsBack();
 verifyFailedPostconditionRollsBack();
 verifyMalformedIndexFailsClosed();
 verifyWrongAccountIndexPredicateFailsClosed();
 verifyOrphanInviteFailsClosed();
 
-console.log('[verify-schema-v26-recovery] all migration matrix checks passed');
+console.log('[verify-schema-v27-recovery] all migration matrix checks passed');

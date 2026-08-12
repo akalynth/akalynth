@@ -41,10 +41,10 @@ async function main(): Promise<void> {
   });
   const PW = 'correct horse battery';
 
-  // Schema v26 preserves the account path while adding outfit colors at v25 and
-  // the controlled-beta operational ledger at v26.
+  // Schema v27 preserves the account path while adding outfit colors at v25,
+  // the controlled-beta ledger at v26, and manifest binding at v27.
   const ver = db.prepare(`SELECT value FROM _meta WHERE key='schema_version'`).get() as { value: string };
-  check('schema_version is 26', ver.value === '26');
+  check('schema_version is 27', ver.value === '27');
 
   // nickname-only register
   const reg = await svc.register({ handle: 'Brannic', password: PW });

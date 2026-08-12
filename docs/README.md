@@ -151,7 +151,8 @@ Verification, governance, and proof docs:
 
 - [Verification Spine API v1](./VERIFICATION_SPINE_API.md) - the mandatory pre-merge verification system contract
 - [Spine Lock v1](./SPINE_V1.md) - locked spine surface and verifier registration rules
-- [Beta Player Readiness and Measurement Decision v1](./decisions/AKALYNTH_BETA_PLAYER_READINESS_AND_MEASUREMENT_V1/DECISION.md) - accepted source-recovery boundary for controlled cohorts, schema v26, and non-release claims
+- [Beta Player Readiness and Measurement Decision v1](./decisions/AKALYNTH_BETA_PLAYER_READINESS_AND_MEASUREMENT_V1/DECISION.md) - historical source-recovery boundary for controlled cohorts, schema v26, and non-release claims
+- [Stranger Pilot Release Manifest Binding v1](./decisions/AKALYNTH_STRANGER_PILOT_RELEASE_MANIFEST_BINDING_V1/DECISION.md) - accepted schema-v27 multi-artifact release/rollback binding and fail-closed admission repair
 - [Beta Release Repair Decision v1](./decisions/AKALYNTH_BETA_RELEASE_REPAIR_V1/DECISION.md) - fail-closed source, Android, portal, recovery, and bounded receipt-key exception boundary for live beta
 - [Accepted Android Distribution Identity v12](./decisions/AKALYNTH_BETA_RELEASE_REPAIR_V1/android-distribution-identity.v12.json) - machine-readable immutable v12 identity governed by the beta release repair
 - [Simulation Lane Runbook](./SIM_LANE_RUNBOOK.md) - `sim-api.akalynth.com` / `sim.akalynth.com` lane contract, state custody, and verification steps

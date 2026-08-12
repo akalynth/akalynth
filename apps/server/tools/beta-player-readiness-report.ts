@@ -20,10 +20,12 @@ type Receipt = {
 type Cohort = {
   cohort_id: string;
   release_commit: string;
+  release_manifest_sha256: string | null;
   platform: string;
   invite_cap: number;
   status: string;
   rollback_commit: string | null;
+  rollback_manifest_sha256: string | null;
   created_at: string;
   opens_at: string | null;
   closes_at: string | null;
@@ -380,10 +382,12 @@ function buildCohortReport(
     cohort: {
       cohort_id: cohort.cohort_id,
       release_commit: cohort.release_commit,
+      release_manifest_sha256: cohort.release_manifest_sha256,
       platform: cohort.platform,
       invite_cap: cohort.invite_cap,
       status: cohort.status,
       rollback_commit: cohort.rollback_commit,
+      rollback_manifest_sha256: cohort.rollback_manifest_sha256,
     },
     invitations: {
       sent: invites.length,

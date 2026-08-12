@@ -16,6 +16,18 @@ const files = {
     resolve(root, 'apps/server/src/beta/service.ts'),
     'utf8',
   ),
+  releaseManifest: readFileSync(
+    resolve(root, 'apps/server/src/beta/releaseManifest.ts'),
+    'utf8',
+  ),
+  sharedHttp: readFileSync(
+    resolve(root, 'packages/shared/http.ts'),
+    'utf8',
+  ),
+  server: readFileSync(
+    resolve(root, 'apps/server/src/index.ts'),
+    'utf8',
+  ),
   betaRouter: readFileSync(
     resolve(root, 'apps/server/src/beta/router.ts'),
     'utf8',
@@ -87,7 +99,7 @@ function check(id, file, literal) {
   });
 }
 
-check('schema_v26', 'schema', 'export const SCHEMA_VERSION = 26;');
+check('schema_v27', 'schema', 'export const SCHEMA_VERSION = 27;');
 check(
   'cohort_table',
   'schema',
@@ -97,6 +109,51 @@ check(
   'invite_hash_only',
   'schema',
   'token_hash      TEXT NOT NULL UNIQUE',
+);
+check(
+  'release_manifest_column',
+  'schema',
+  'release_manifest_sha256 TEXT DEFAULT NULL',
+);
+check(
+  'rollback_manifest_column',
+  'schema',
+  'rollback_manifest_sha256 TEXT DEFAULT NULL',
+);
+check(
+  'canonical_manifest_schema',
+  'releaseManifest',
+  'akalynth.beta_release_manifest.v1',
+);
+check(
+  'active_manifest_comparison',
+  'releaseManifest',
+  'active_release_manifest_mismatch',
+);
+check(
+  'create_verifies_live_files',
+  'cli',
+  'verifyBetaReleaseManifestAgainstLiveFiles',
+);
+check(
+  'invite_issue_rechecks_active_manifest',
+  'cli',
+  "readActiveManifest()",
+);
+check(
+  'invite_runtime_requires_active_manifest',
+  'server',
+  'AKALYNTH_BETA_ACTIVE_RELEASE_MANIFEST is required when invite enforcement is enabled',
+);
+check(
+  'cohort_create_requires_release_manifest',
+  'cli',
+  "readManifest('release-manifest')",
+);
+check(
+  'cohort_http_exposes_manifest_digest',
+  'sharedHttp',
+  'release_manifest_sha256: string | null',
 );
 check('atomic_invite_claim', 'betaStore', 'UPDATE beta_invites');
 check(
@@ -153,9 +210,9 @@ check(
 check('report_contains_retention', 'report', 'd1:');
 check('operator_can_triage', 'cli', 'BETA_FEEDBACK_TRIAGED');
 check(
-  'service_verifier_targets_v26',
+  'service_verifier_targets_v27',
   'serviceVerifier',
-  'assert.equal(SCHEMA_VERSION, 26)',
+  'assert.equal(SCHEMA_VERSION, 27)',
 );
 check(
   'router_verifier_covers_csrf',
