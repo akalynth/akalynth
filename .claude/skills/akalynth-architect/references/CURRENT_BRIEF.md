@@ -149,45 +149,33 @@ current fact.
 | [#402](https://github.com/akalynth/akalynth/issues/402) HYGIENE-001 | P3 stale Codex refs | Still a skill-hygiene lane; do not mass-edit `.codex/` copies | `release-steward` + `ci-steward` |
 | [#403](https://github.com/akalynth/akalynth/issues/403) ENV-001 | classification | Local `:3000` vs Caddy/staging topology; classify env vs code | `test-runner` + `ci-steward` |
 
-All five remain `state:triage`. Architect next step for those issues is
-**re-verify and retarget**, not blind implementation of the July bodies.
+Re-triage outcome (2026-08-20, on `b624190`): #399, #400, #401 closed with
+evidence (builds, protocol sync, and assets all green); #402 fixed (drift
+copies removed, validator exit 0, folded into PR #430); #403 closed
+`not_planned` at archival after being classified environment-not-code.
+No open issues remain.
 
 ---
 
-## Leverage — what to prefer next
+## Leverage — historical guidance (archived)
 
-From `docs/LEVERAGE_TIER_MAPPING.md` (still the decision engine) plus this
-HEAD:
-
-1. **Keep the proof spine green** — build + protocol sync + `verify:quick`
-   on a named commit. Feature work that cannot build is not architecture.
-2. **Do not expand world/content** until the next local showcase proof
-   (`docs/KNOWN_GAPS.md` Next Closure Target) is recorded.
-3. **Do not collapse channels** (beta runtime, direct APK, F-Droid, site,
-   prod). Each needs its own evidence.
-4. **Update stale claim docs** (`CURRENT_STAGE.md` last reviewed 2026-05-30;
-   continuation last dated 2026-07-09) only with evidence, not narrative
-   catch-up.
-
-P0 items named in the leverage map (receipt CLI, protocol breaking-change
-detector) remain high-leverage **if** still missing after a current audit.
-Confirm with `akalynth-system-audit` before opening new issues.
+The active-development guidance that lived here (`docs/LEVERAGE_TIER_MAPPING.md`
+routing, proof-spine priorities, channel separation) is retained in Git
+history only. Akalynth is archived: no new development is routed through
+this section.
 
 ---
 
 ## Remaining owner-side actions (not this checkout)
 
-1. Merge [PR #430](https://github.com/akalynth/akalynth/pull/430).
-2. Rotate or retire the historical `*.witnessops.com` staging hostname, **or**
-   explicitly accept that historical disclosure.
-3. Before decommissioning: preserve the beta receipt chain and SQLite state
-   if they are materially useful as irreconstructable project evidence.
-4. Decommission `beta.akalynth.com` and remaining Akalynth infrastructure.
-5. Set GitHub description and topics.
-6. Re-run a post-merge full-history + current-tree scan if anything else
-   landed on `main` after #430.
-7. Only then decide private → public.
-8. LinkedIn: **Akalynth — Server-Authoritative MMO Prototype**, January 2026 –
+1. Copy the retire archive off-box and re-verify its manifest at the
+   destination.
+2. Provider console: destroy the two decommissioned VMs; delete the
+   recorded Akalynth DNS records.
+3. Set GitHub description and topics.
+4. Flip the repository private → public (publication gate **passed** by the
+   accepted-disclosure decision).
+5. LinkedIn: **Akalynth — Server-Authoritative MMO Prototype**, January 2026 –
    August 2026, not currently active; repo as primary media once public.
 
 ---
@@ -195,11 +183,10 @@ Confirm with `akalynth-system-audit` before opening new issues.
 ## Forbidden claims (repeat)
 
 - Game launch-ready / content-alpha / production-ready / current venture
-- Repository is PUBLICATION_READY (it is not; the publication gate is closed)
+- An operating company, active roadmap, or maintenance programme exists
 - F-Droid refreshed or aligned with the direct Android channel
 - Schema 27 or play-surface contract implies a live cohort or public launch
-- This charter "resolves" #399–#403
-- Continuation state is a complete picture of current `main`
+- Continuation state is a complete picture of final `main`
 
 ---
 
