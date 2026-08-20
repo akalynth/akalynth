@@ -9,25 +9,49 @@ This brief orients the standing architect. It is **not** a proof artifact and
 
 ---
 
-## Status (2026-08-20)
+## Status (2026-08-20, final)
 
-**`PORTFOLIO_READY_AFTER_PR_MERGE` / `PUBLICATION_GATE_CLOSED`**
+**`PORTFOLIO_READY` / `PUBLICATION_GATE_CLOSED` / `INFRA_DECOMMISSIONED`**
 
-Repository-side cleanup is complete. Akalynth is a completed historical
-engineering project, not an operating company, product, or active roadmap.
-Public visibility is a **separate gate** from portfolio readiness.
+Repository-side cleanup is complete and merged (PR #430, `9cadd35`).
+Akalynth is a completed historical engineering project, not an operating
+company, product, or active roadmap. Public visibility is a **separate
+gate** from portfolio readiness.
 
 | Gate | State |
 |---|---|
-| PR #430 (README, archived banner, cron removed, ops Caddyfile removed, hygiene fold, last tree user@host scrub) | Open, ready to merge |
-| Current-tree credentials | Clean (gitleaks; remaining hits are 8-char false positives) |
+| PR #430 (README, archived banner, cron removed, ops Caddyfile removed, hygiene fold, tree user@host scrub) | **Merged** (`9cadd35`) |
+| Current-tree credentials | Clean (gitleaks full-history; remaining hits are 8-char false positives) |
 | Current-tree user@host pairs | Zero |
 | Historical opaque `*.witnessops.com` hostname | Recoverable from Git history — **publication consideration, not a credential** |
 | Repo visibility | **Private** — do not flip until the WitnessOps hostname is rotated/retired **or** that historical disclosure is explicitly accepted |
-| Live infra | Owner-side: preserve beta receipt chain + SQLite if irreconstructable, then decommission |
 | LinkedIn | After public: title **Akalynth — Server-Authoritative MMO Prototype**, Jan 2026 – Aug 2026, not currently active |
 
-Owner sequence after merge: **merge → preserve → decommission → metadata → public → LinkedIn**.
+### Infrastructure decommission record (2026-08-20)
+
+- **Beta/ops host retired.** All Akalynth services stopped and disabled,
+  k8s lanes scaled to zero, all `*.akalynth.com` vhosts on that host
+  quarantined to inert snippets (post-stop probes: no HTTP/TLS response on
+  every Akalynth name). Non-Akalynth workloads on the shared host verified
+  untouched (config-region hash equal before/after).
+- **Evidence preserved before stop**: 28/28-archive manifest, verified.
+  Retire receipt SHA-256:
+  `19505f638a0d6fe02bd5e814c50cdc7238b05d1327ae0f7deda49397774d7e4b`
+- **Prod host**: inaccessible below SSH (all ports refused/filtered; WG and
+  bastion unreachable). Never meaningfully used — zero prod-lane receipts
+  exist in this repository's evidence corpus, and no archived claim depends
+  on prod runtime data. Recorded decision:
+  **`PROD_CHAIN_UNPRESERVED_UNRECOVERABLE_ACCEPTED`** — the prod signing
+  key dies with the disk, as intended at decommission. Decision addendum
+  SHA-256:
+  `47916904da7f6b6c4fd84ad5327422ddbc5405b789b9e9eed40b35b90d34177d`
+- The retire archives live **outside Git** in operator custody; the hashes
+  above anchor them. No provider, DNS, deletion, GitHub-visibility, or
+  WitnessOps action is recorded here.
+
+Remaining owner sequence: **off-box archive copy → host destroy + DNS
+deletions → WitnessOps hostname rotation (or accepted disclosure) →
+metadata → public → LinkedIn**.
 
 ---
 
