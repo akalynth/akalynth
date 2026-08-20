@@ -1,6 +1,13 @@
 # Akalynth
 
+![Status: Archived](https://img.shields.io/badge/status-archived_portfolio-8a6d3b) ![Timeline](https://img.shields.io/badge/built-Jan_2026–Aug_2026-2E7D5B)
+
 A server-authoritative MMO prototype where every gameplay consequence is provable: signed audit receipts, replayable state, and a verification-first engineering culture.
+
+<p align="center">
+  <img src="docs/asset-decisions/AKALYNTH_CHARACTER_VISUAL_PLACEMENT_REVIEW_V1/screenshots/04_placement_crowd.png" alt="Akalynth world render: player characters and NPCs in the first city" width="440" />
+  <img src="docs/asset-decisions/AKALYNTH_DEBUG_CLIENT_VISUAL_SCALE_TUNING_V1/screenshots/02_tuned_npc_presets_lineup.png" alt="Akalynth NPC preset lineup at tuned world scale" width="440" />
+</p>
 
 ## Overview
 
@@ -18,7 +25,7 @@ The prototype reached a playable pre-alpha vertical slice: account registration 
 - **Signed receipt chain**: hash-chained JSONL audit log with Ed25519 chronicle signing, replay verification, and 27 versioned SQLite schema migrations with fail-closed schema gates (`apps/server/src/persist/`)
 - **Anti-cheat pipeline**: heat scoring, Tem anti-bot challenges, witness quorum mechanics, receipt-backed penalty persistence (`apps/server/src/anticheat/`, `docs/ANTICHEAT.md`)
 - **Two clients**: a React/Vite web play client and a native Kotlin Android client, kept honest by an automated protocol-parity test suite and a frozen client contract (`docs/CLIENT_CONTRACT_V0_1.md`)
-- **Verification spine**: 70+ registered verifiers, mandatory pre-merge, run by CI on self-hosted runners (`packages/verification-spine/`, `docs/VERIFICATION_SPINE_API.md`)
+- **Verification spine**: 76 focused verifier tools across the server workspace, 35 of them registered in the mandatory pre-merge spine registry, run by CI on self-hosted runners (`packages/verification-spine/`, `docs/VERIFICATION_SPINE_API.md`)
 - **End-to-end proof harness**: a credentialed smoke that plays the entire journey (account → tutorial → gather/refine/deliver → reconnect) against a disposable server and verifies the signed receipt chain afterwards (`scripts/smoke-beta-first-playable-proof.mjs`)
 - **Deployment engineering**: Docker container builds pinned to Node 24, Caddy TLS termination, systemd units, staged preflight with schema-regression gates, rollback runbooks, and receipt-logged publishes (`infra/`, `docs/runbooks/`)
 

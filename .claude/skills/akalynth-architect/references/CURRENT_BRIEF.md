@@ -9,25 +9,48 @@ This brief orients the standing architect. It is **not** a proof artifact and
 
 ---
 
-## Status (2026-08-20)
+## Status (2026-08-20, final)
 
-**`PORTFOLIO_READY_AFTER_PR_MERGE` / `PUBLICATION_GATE_CLOSED`**
+**`PORTFOLIO_READY` / `PUBLICATION_GATE_PASSED` / `INFRA_DECOMMISSIONED`**
 
-Repository-side cleanup is complete. Akalynth is a completed historical
-engineering project, not an operating company, product, or active roadmap.
-Public visibility is a **separate gate** from portfolio readiness.
+Repository-side cleanup is complete and merged (PR #430, `9cadd35`).
+Akalynth is a completed historical engineering project, not an operating
+company, product, or active roadmap.
 
 | Gate | State |
 |---|---|
-| PR #430 (README, archived banner, cron removed, ops Caddyfile removed, hygiene fold, last tree user@host scrub) | Open, ready to merge |
-| Current-tree credentials | Clean (gitleaks; remaining hits are 8-char false positives) |
+| PR #430 (README, archived banner, cron removed, ops Caddyfile removed, hygiene fold, tree user@host scrub) | **Merged** (`9cadd35`) |
+| Current-tree credentials | Clean (gitleaks full-history; remaining hits are 8-char false positives) |
 | Current-tree user@host pairs | Zero |
-| Historical opaque `*.witnessops.com` hostname | Recoverable from Git history — **publication consideration, not a credential** |
-| Repo visibility | **Private** — do not flip until the WitnessOps hostname is rotated/retired **or** that historical disclosure is explicitly accepted |
-| Live infra | Owner-side: preserve beta receipt chain + SQLite if irreconstructable, then decommission |
+| Historical opaque `*.witnessops.com` hostname | **`DISCLOSURE_ACCEPTED`** — owner decision 2026-08-20: the historical hostname in Git history is explicitly accepted; no history rewrite, no rotation required. Publication gate satisfied by acceptance. |
+| Repo visibility | **Private** — publication gate passed; the private → public flip is now an unblocked owner action |
 | LinkedIn | After public: title **Akalynth — Server-Authoritative MMO Prototype**, Jan 2026 – Aug 2026, not currently active |
 
-Owner sequence after merge: **merge → preserve → decommission → metadata → public → LinkedIn**.
+### Infrastructure decommission record (2026-08-20)
+
+- **Beta/ops host retired.** All Akalynth services stopped and disabled,
+  k8s lanes scaled to zero, all `*.akalynth.com` vhosts on that host
+  quarantined to inert snippets (post-stop probes: no HTTP/TLS response on
+  every Akalynth name). Non-Akalynth workloads on the shared host verified
+  untouched (config-region hash equal before/after).
+- **Evidence preserved before stop**: 28/28-archive manifest, verified.
+  Retire receipt SHA-256:
+  `19505f638a0d6fe02bd5e814c50cdc7238b05d1327ae0f7deda49397774d7e4b`
+- **Prod host**: inaccessible below SSH (all ports refused/filtered; WG and
+  bastion unreachable). Never meaningfully used — zero prod-lane receipts
+  exist in this repository's evidence corpus, and no archived claim depends
+  on prod runtime data. Recorded decision:
+  **`PROD_CHAIN_UNPRESERVED_UNRECOVERABLE_ACCEPTED`** — the prod signing
+  key dies with the disk, as intended at decommission. Decision addendum
+  SHA-256:
+  `47916904da7f6b6c4fd84ad5327422ddbc5405b789b9e9eed40b35b90d34177d`
+- The retire archives live **outside Git** in operator custody; the hashes
+  above anchor them. No provider, DNS, deletion, GitHub-visibility, or
+  WitnessOps action is recorded here.
+
+Remaining owner sequence: **off-box archive copy → host destroy + DNS
+deletions → metadata → public → LinkedIn**. (The WitnessOps hostname step
+is resolved by the accepted-disclosure decision above.)
 
 ---
 
@@ -126,45 +149,33 @@ current fact.
 | [#402](https://github.com/akalynth/akalynth/issues/402) HYGIENE-001 | P3 stale Codex refs | Still a skill-hygiene lane; do not mass-edit `.codex/` copies | `release-steward` + `ci-steward` |
 | [#403](https://github.com/akalynth/akalynth/issues/403) ENV-001 | classification | Local `:3000` vs Caddy/staging topology; classify env vs code | `test-runner` + `ci-steward` |
 
-All five remain `state:triage`. Architect next step for those issues is
-**re-verify and retarget**, not blind implementation of the July bodies.
+Re-triage outcome (2026-08-20, on `b624190`): #399, #400, #401 closed with
+evidence (builds, protocol sync, and assets all green); #402 fixed (drift
+copies removed, validator exit 0, folded into PR #430); #403 closed
+`not_planned` at archival after being classified environment-not-code.
+No open issues remain.
 
 ---
 
-## Leverage — what to prefer next
+## Leverage — historical guidance (archived)
 
-From `docs/LEVERAGE_TIER_MAPPING.md` (still the decision engine) plus this
-HEAD:
-
-1. **Keep the proof spine green** — build + protocol sync + `verify:quick`
-   on a named commit. Feature work that cannot build is not architecture.
-2. **Do not expand world/content** until the next local showcase proof
-   (`docs/KNOWN_GAPS.md` Next Closure Target) is recorded.
-3. **Do not collapse channels** (beta runtime, direct APK, F-Droid, site,
-   prod). Each needs its own evidence.
-4. **Update stale claim docs** (`CURRENT_STAGE.md` last reviewed 2026-05-30;
-   continuation last dated 2026-07-09) only with evidence, not narrative
-   catch-up.
-
-P0 items named in the leverage map (receipt CLI, protocol breaking-change
-detector) remain high-leverage **if** still missing after a current audit.
-Confirm with `akalynth-system-audit` before opening new issues.
+The active-development guidance that lived here (`docs/LEVERAGE_TIER_MAPPING.md`
+routing, proof-spine priorities, channel separation) is retained in Git
+history only. Akalynth is archived: no new development is routed through
+this section.
 
 ---
 
 ## Remaining owner-side actions (not this checkout)
 
-1. Merge [PR #430](https://github.com/akalynth/akalynth/pull/430).
-2. Rotate or retire the historical `*.witnessops.com` staging hostname, **or**
-   explicitly accept that historical disclosure.
-3. Before decommissioning: preserve the beta receipt chain and SQLite state
-   if they are materially useful as irreconstructable project evidence.
-4. Decommission `beta.akalynth.com` and remaining Akalynth infrastructure.
-5. Set GitHub description and topics.
-6. Re-run a post-merge full-history + current-tree scan if anything else
-   landed on `main` after #430.
-7. Only then decide private → public.
-8. LinkedIn: **Akalynth — Server-Authoritative MMO Prototype**, January 2026 –
+1. Copy the retire archive off-box and re-verify its manifest at the
+   destination.
+2. Provider console: destroy the two decommissioned VMs; delete the
+   recorded Akalynth DNS records.
+3. Set GitHub description and topics.
+4. Flip the repository private → public (publication gate **passed** by the
+   accepted-disclosure decision).
+5. LinkedIn: **Akalynth — Server-Authoritative MMO Prototype**, January 2026 –
    August 2026, not currently active; repo as primary media once public.
 
 ---
@@ -172,11 +183,10 @@ Confirm with `akalynth-system-audit` before opening new issues.
 ## Forbidden claims (repeat)
 
 - Game launch-ready / content-alpha / production-ready / current venture
-- Repository is PUBLICATION_READY (it is not; the publication gate is closed)
+- An operating company, active roadmap, or maintenance programme exists
 - F-Droid refreshed or aligned with the direct Android channel
 - Schema 27 or play-surface contract implies a live cohort or public launch
-- This charter "resolves" #399–#403
-- Continuation state is a complete picture of current `main`
+- Continuation state is a complete picture of final `main`
 
 ---
 
