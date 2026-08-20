@@ -201,6 +201,11 @@ Required sequence:
 
 ## Maintenance Notes
 
+- 2026-08-20: removed duplication-drift copies `.codex/plugins/akalynth-studio/`,
+  `.codex/skills/akalynth-studio/`, and `.codex/skills/goal0-akalynth-integration/`
+  (HYGIENE-001 / issue #402). Canonical versions live in `.claude/skills/`;
+  `.codex/skills/` intentionally keeps only `akalynth-system-audit` plus the
+  tracked `akalynth-skills` vendored tree.
 - 2026-08-20: added canonical meta-skill `akalynth-architect` (not in the
   10-skill Codex plugin pack). Route cross-cutting architecture here; brief
   is `.claude/skills/akalynth-architect/references/CURRENT_BRIEF.md`.
