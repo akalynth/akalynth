@@ -141,6 +141,7 @@ Source: `.codex/config.toml.example`
 
 ## Routing Matrix
 
+- Cross-cutting architecture, claim-boundary, multi-steward decisions: `akalynth-architect`
 - Whole-system evidence audit: `akalynth-system-audit`
 - Host or topology discovery before changes: `server-cartographer`
 - Deploy, rollback, systemd, Caddy, firewall, runtime paths: `deploy-steward`
@@ -200,6 +201,9 @@ Required sequence:
 
 ## Maintenance Notes
 
+- 2026-08-20: added canonical meta-skill `akalynth-architect` (not in the
+  10-skill Codex plugin pack). Route cross-cutting architecture here; brief
+  is `.claude/skills/akalynth-architect/references/CURRENT_BRIEF.md`.
 - 2026-06-14: installed the local `akalynth-private` marketplace from
   `/opt/goal0/sources/akalynth` and enabled `akalynth-studio@akalynth-private`.
 - 2026-06-14: installed `github@openai-curated`; `game-studio@openai-curated`

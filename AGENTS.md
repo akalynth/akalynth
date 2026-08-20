@@ -11,8 +11,13 @@ A social-first, low-grind MMO prototype — a TypeScript monorepo (`apps/`,
 
 ## Skills (single source of truth)
 
-- **Canonical source: `.claude/skills/`** (22 steward skills + meta/handoff skills).
+- **Canonical source: `.claude/skills/`** (steward skills + meta/handoff skills).
   Edit skills **only** here.
+- **Architect:** `akalynth-architect` — cross-cutting claim-boundary decisions,
+  multi-steward routing, and leverage triage. Load
+  `.claude/skills/akalynth-architect/references/CURRENT_BRIEF.md` on
+  "AKALYNTH ARCHITECT" or when work spans protocol, runtime, clients, and
+  deploy. Pointer: `docs/AKALYNTH_ARCHITECT.md`.
 - **Session handoff:** `akalynth-continue` — read
   `.claude/skills/akalynth-continue/references/CONTINUATION_STATE.md` before
   resuming beta Android, gather, or Goal0 UI inspect work. Mirror to Claude Code
@@ -26,7 +31,8 @@ A social-first, low-grind MMO prototype — a TypeScript monorepo (`apps/`,
   protocol / WS / HTTP → `protocol-guardian`; deploy / systemd / Caddy →
   `deploy-steward`; receipts / chronicle → `receipt-chain-steward`; whole-system
   evidence audit → `akalynth-system-audit`; verification commands → `test-runner`;
-  commit / push custody → `git-push-steward`.
+  commit / push custody → `git-push-steward`; cross-cutting architecture →
+  `akalynth-architect`.
 
 ## Operating posture
 

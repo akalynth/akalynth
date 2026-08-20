@@ -9,6 +9,9 @@ lives in `plugins/akalynth-studio/.codex-plugin/plugin.json`. See the
 ## [Unreleased]
 
 ### Added
+- `akalynth-architect` skill for cross-cutting architecture, claim-boundary
+  decisions, multi-steward routing, and leverage triage. Current brief lives
+  in the skill references; human pointer is `docs/AKALYNTH_ARCHITECT.md`.
 - `git-push-steward` skill for Git custody, scoped staging, verification
   evidence, and push-boundary checks.
 - Codex delegation engineering-loop docs covering worktree preflight, domain
