@@ -132,6 +132,7 @@ Core docs:
 
 - [V1 Scope Fence](./V1_SCOPE.md) - what v1 includes and explicitly defers
 - [Architecture](./ARCHITECTURE.md) - server loop, world state, anti-cheat pipeline
+- [Akalynth Architect](./AKALYNTH_ARCHITECT.md) - standing architect skill pointer and current brief
 - [Protocol](./PROTOCOL.md) - message types and examples
 - [Client Contract v0.1 (Frozen)](./CLIENT_CONTRACT_V0_1.md) - frozen Android/client wire compatibility contract
 - [Anti-Cheat](./ANTICHEAT.md) - detection signals, Tem challenge, enforcement

@@ -4,6 +4,11 @@ The cross-tool project guide (skills, operating posture, release process) is in
 [AGENTS.md](AGENTS.md). Claude Code skills live in `.claude/skills/` — the
 canonical source of truth for the whole skill pack.
 
+**Architect:** load the `akalynth-architect` skill and read
+[`.claude/skills/akalynth-architect/references/CURRENT_BRIEF.md`](.claude/skills/akalynth-architect/references/CURRENT_BRIEF.md)
+on "AKALYNTH ARCHITECT" or cross-cutting design. Pointer:
+[`docs/AKALYNTH_ARCHITECT.md`](docs/AKALYNTH_ARCHITECT.md).
+
 **Continuing prior work:** load the `akalynth-continue` skill and read
 [`.claude/skills/akalynth-continue/references/CONTINUATION_STATE.md`](.claude/skills/akalynth-continue/references/CONTINUATION_STATE.md)
 first (beta v9, gather, Goal0 UI inspect, hosts, open items). Sync to

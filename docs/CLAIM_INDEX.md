@@ -39,6 +39,7 @@ Grouped by role. `L` = line count at last review. Entries marked **(non-binding)
 | Doc | L | Role |
 | --- | --- | --- |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | 257 | System architecture. |
+| [AKALYNTH_ARCHITECT.md](./AKALYNTH_ARCHITECT.md) | — | Pointer to the standing architect skill and current brief (non-authoritative). |
 | [PROTOCOL.md](./PROTOCOL.md) | 718 | WebSocket/HTTP protocol surface. |
 | [CLIENT_CONTRACT_V0_1.md](./CLIENT_CONTRACT_V0_1.md) | 219 | **Frozen** client contract v0.1. |
 | [SPINE_V1.md](./SPINE_V1.md) | 126 | Spine Lock v1. |
