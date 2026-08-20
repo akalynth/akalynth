@@ -156,24 +156,21 @@ handoff**, then re-probe before acting. This brief is newer for **source HEAD**.
 
 ---
 
-## Open GitHub issues — re-triage against `b624190`
+## Open GitHub issues — re-triage completed 2026-08-20 on `b624190`
 
-Issues #399–#403 were opened 2026-07-09 from
-`AKALYNTH_TEST_FINDINGS_ISSUE_TRIAGE_PLAN_V1` / ledger `faeb9f4`. **That
-commit is not in this repository.** The triage ledger file is absent on
-this HEAD. Re-verify before implementing; do not treat July priorities as
-current fact.
+Issues #399–#403 were opened 2026-07-09 from ledger `faeb9f4` (not in this
+repository's history). All five were re-verified on `b624190`:
 
-| Issue | July label | Re-probe on this HEAD | Route if still live |
-|---|---|---|---|
-| [#399](https://github.com/akalynth/akalynth/issues/399) BUILD-HEALTH-001 | P0 TS blockers | `AccountCharacterOutfitColors` not in `packages/shared`. Re-run `npm run build:packages && npm -w apps/server run build && npm run build:client` | `package-steward` + `debug-client` + `game-server-steward` |
-| [#400](https://github.com/akalynth/akalynth/issues/400) PARITY-001 | P1 Android `outfitId` literal | Literal **is present** in `CharacterCreateScreen.kt`. Re-run `./scripts/verify_protocol_sync.sh` | `protocol-guardian` + `android-client` |
-| [#401](https://github.com/akalynth/akalynth/issues/401) ASSET-001 | P2 orphan sidecar | `wall_stone_east.json` **absent**. Re-run `npm run verify:assets` | `classic-32-art-pipeline` |
-| [#402](https://github.com/akalynth/akalynth/issues/402) HYGIENE-001 | P3 stale Codex refs | Still a skill-hygiene lane; do not mass-edit `.codex/` copies | `release-steward` + `ci-steward` |
-| [#403](https://github.com/akalynth/akalynth/issues/403) ENV-001 | classification | Local `:3000` vs Caddy/staging topology; classify env vs code | `test-runner` + `ci-steward` |
+| Issue | Outcome |
+|---|---|
+| [#399](https://github.com/akalynth/akalynth/issues/399) BUILD-HEALTH-001 | **CLOSED completed** — all three builds exit 0 on `b624190`; blockers resolved by intervening work (`21e8a72`, `cd738f4`) |
+| [#400](https://github.com/akalynth/akalynth/issues/400) PARITY-001 | **CLOSED completed** — `verify_protocol_sync.sh` passes; literal landed via `df5edcf` |
+| [#401](https://github.com/akalynth/akalynth/issues/401) ASSET-001 | **CLOSED completed** — `verify:assets` clean (143 manifests); orphan sidecar never existed on `main` history |
+| [#402](https://github.com/akalynth/akalynth/issues/402) HYGIENE-001 | **Fix on [PR #429](https://github.com/akalynth/akalynth/pull/429)** — the 8 FAILs were duplication-drift copies under `.codex/plugins/` + `.codex/skills/`; removed, validator exit 0 |
+| [#403](https://github.com/akalynth/akalynth/issues/403) ENV-001 | **OPEN, classified** — code green in a clean env; remaining scope is verifier topology detection on the ops box (use the #427 isolated-loopback pattern) |
 
-All five remain `state:triage`. Architect next step for those issues is
-**re-verify and retarget**, not blind implementation of the July bodies.
+Receipt: `verify:beta-first-playable-proof`, builds, protocol sync, assets,
+and `verify:quick` all green on `b624190` (2026-08-20 re-triage log).
 
 ---
 
@@ -204,15 +201,18 @@ Confirm with `akalynth-system-audit` before opening new issues.
    authority; this checkout cannot reach the hosts.
 2. Grant or withhold **A2** (active-manifest install + beta restart) after
    D2 + Phase 0/1 evidence.
-3. Re-verify #399–#403 on `b624190` and move each to `state:ready` or close
-   with evidence (initial probes: #400 literal present, #401 orphan absent,
-   #399 types missing from `packages/shared`).
+3. ~~Re-verify #399–#403~~ — **done 2026-08-20**: #399/#400/#401 closed
+   with evidence, #402 fixed on PR #429, #403 classified and left open for
+   ops-box verifier topology hardening.
 4. Whether `docs/CURRENT_STAGE.md` should be re-reviewed against current
    `main` (schema 27, play-surface contract, proof tooling) without raising
    the stage label. `CONTINUATION_STATE.md` was refreshed to 2026-08-12 by
    the #427 merge.
 5. F-Droid remains a **human signing-authority** decision, not an agent
    implement lane.
+6. Mirror-drift follow-up: unscanned `.grok/` and `.claude/plugins/` copies
+   are the same drift class removed in #429 — decide delete vs re-symlink
+   in a future hygiene lane.
 
 ---
 
