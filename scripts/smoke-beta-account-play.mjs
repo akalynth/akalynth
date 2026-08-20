@@ -4,6 +4,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { access } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const IDENTITY_KEY = 'akalynth.identity.v1';
 const DEFAULT_PLAY_TOKEN_TTL_MS = 15 * 60 * 1000;
@@ -99,7 +100,7 @@ function hashPrefix(value) {
     : null;
 }
 
-function bodySummary(body) {
+export function bodySummary(body) {
   if (!body || typeof body !== 'object') return { body_type: typeof body };
   const summary = { ok: body.ok ?? null };
   if (typeof body.error === 'string') summary.error = body.error;
@@ -146,7 +147,7 @@ async function executableExists(file) {
   }
 }
 
-async function findChrome(explicit) {
+export async function findChrome(explicit) {
   const candidates = [
     explicit,
     process.env.AKALYNTH_CHROME,
@@ -162,7 +163,7 @@ async function findChrome(explicit) {
   throw new Error('No Chrome/Chromium executable found. Set AKALYNTH_CHROME or pass --chrome.');
 }
 
-function waitFor(predicate, timeoutMs, label) {
+export function waitFor(predicate, timeoutMs, label) {
   const started = Date.now();
   return new Promise((resolve, reject) => {
     const tick = () => {
@@ -174,7 +175,7 @@ function waitFor(predicate, timeoutMs, label) {
   });
 }
 
-function sanitizeFrame(payload, direction) {
+export function sanitizeFrame(payload, direction) {
   try {
     const msg = JSON.parse(String(payload));
     if (!msg || typeof msg.type !== 'string') return null;
@@ -730,7 +731,11 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+const invokedAsScript = process.argv[1]
+  && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
+if (invokedAsScript) {
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}

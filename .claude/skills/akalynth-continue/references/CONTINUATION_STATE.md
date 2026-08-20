@@ -1,6 +1,6 @@
 # Akalynth continuation state
 
-Last updated: **2026-07-09** (Beta Refresh V5 success + F-Droid refresh held pending signing authority; FDROID_REFRESH_HELD_PENDING_SIGNING_AUTHORITY recorded; postmortem + runbook applied; FDROID_SIGNING_AUTHORITY_STILL_BLOCKED confirmed after signer rotation plan).
+Last updated: **2026-08-12** (Frozen First Playable Proof A1 source lane implemented and locally verified; A2–A5 remain closed).
 
 Read this before implementing. For skill routing see `AGENTS.md` and `.codex/CODEX_MAP.md`.
 
@@ -9,6 +9,28 @@ Read this before implementing. For skill routing see `AGENTS.md` and `.codex/COD
 - Runbook: `docs/runbooks/beta-refresh-runbook-v1.md` (preconditions, target rules, build/container, stage/preflight, schema gate, Android separation, F-Droid hold, public claim rule, rollback, receipts, hard stops).
 - Evidence summary: `docs/evidence/beta-refresh-v5-postmortem-summary.json`.
 - All future beta refreshes must follow these + gates + continuation.
+
+---
+
+## 2026-08-12 — Frozen First Playable Proof A1 source lane
+
+**Status:** SOURCE_IMPLEMENTED_AND_LOCALLY_VERIFIED; runtime execution remains
+unauthorized.
+
+- Plan: `docs/FROZEN_FIRST_PLAYABLE_PROOF_PHASE_PLAN_V1.md`.
+- Source branch: `codex/frozen-first-playable-proof-v1`.
+- Added a database-free beta release-manifest preimage materializer/verifier.
+  Proof and invite-enabled pilot policy produce distinct canonical digests.
+- Added one credentialed first-playable harness for account entry, the six
+  Rookguard marks, High City gather/refine/deliver, fresh-token reconnect,
+  Chronicle restoration, and redacted receipt boundaries.
+- The focused verifier runs the whole journey against a fresh loopback server,
+  then verifies the isolated signed receipt chain. It performs no beta writes.
+- Primary gate: `npm run verify:beta-first-playable-proof`.
+- No protocol, receipt schema, economy, combat, anti-cheat, database schema,
+  deployment, active manifest, invite, or cohort behavior changed.
+- Next authority is A2: trusted proof-manifest installation and beta restart.
+  A2 is not granted by this handoff.
 
 ---
 

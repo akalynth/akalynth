@@ -89,10 +89,12 @@
     "verify:schema-v26-recovery": "npm run verify:schema-v27-recovery",
     "verify:schema-v27-recovery": "tsx tools/verify-schema-v26-recovery.ts",
     "beta:cohort": "tsx tools/beta-cohort.ts",
+    "beta:release-manifest": "tsx tools/beta-release-manifest.ts",
     "report:beta-player-readiness": "tsx tools/beta-player-readiness-report.ts",
     "verify:beta-player-readiness": "tsx tools/verify-beta-player-readiness.ts",
     "test:beta-active-release": "tsx tools/verify-beta-active-release.test.ts",
     "test:beta-cohort-cli": "tsx tools/verify-beta-cohort-cli.test.ts",
+    "test:beta-release-manifest-tool": "tsx tools/verify-beta-release-manifest-tool.test.ts",
     "test:beta-router": "tsx tools/verify-beta-router.test.ts",
     "grant:account-role": "tsx tools/grant-account-role.ts",
     "test:principal-seal": "tsx tools/verify-principal-identity-seal.test.ts"
