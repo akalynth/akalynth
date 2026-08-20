@@ -20,7 +20,7 @@ scaffolding is on `origin/main`.
 ## Step 2 — on ops-dev-01, sync + extract + push
 
 ```bash
-ssh sovereign@194.147.221.89          # ops-dev-01
+ssh <ops-user>@<ops-dev-01>           # ops host (credentials out-of-band)
 cd ~/akalynth-ops/repos/akalynth
 git fetch && git reset --hard origin/main      # bring in the chronicle scaffolding
 

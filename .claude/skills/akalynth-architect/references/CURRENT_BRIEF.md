@@ -1,6 +1,7 @@
 # Akalynth Architect — Current Brief
 
-Last updated: **2026-08-20** against checkout HEAD `948c944` (`fix(beta): bind stranger cohorts to release manifests`).
+Last updated: **2026-08-20** against archival branch `cursor/portfolio-archive-4905`
+(`03dfefa` + this note), targeting post-merge `main` after [PR #430](https://github.com/akalynth/akalynth/pull/430).
 
 This brief orients the standing architect. It is **not** a proof artifact and
 **not** a release claim. Binding claim order: `docs/CURRENT_STAGE.md` →
@@ -8,10 +9,34 @@ This brief orients the standing architect. It is **not** a proof artifact and
 
 ---
 
+## Status (2026-08-20)
+
+**`PORTFOLIO_READY_AFTER_PR_MERGE` / `PUBLICATION_GATE_CLOSED`**
+
+Repository-side cleanup is complete. Akalynth is a completed historical
+engineering project, not an operating company, product, or active roadmap.
+Public visibility is a **separate gate** from portfolio readiness.
+
+| Gate | State |
+|---|---|
+| PR #430 (README, archived banner, cron removed, ops Caddyfile removed, hygiene fold, last tree user@host scrub) | Open, ready to merge |
+| Current-tree credentials | Clean (gitleaks; remaining hits are 8-char false positives) |
+| Current-tree user@host pairs | Zero |
+| Historical opaque `*.witnessops.com` hostname | Recoverable from Git history — **publication consideration, not a credential** |
+| Repo visibility | **Private** — do not flip until the WitnessOps hostname is rotated/retired **or** that historical disclosure is explicitly accepted |
+| Live infra | Owner-side: preserve beta receipt chain + SQLite if irreconstructable, then decommission |
+| LinkedIn | After public: title **Akalynth — Server-Authoritative MMO Prototype**, Jan 2026 – Aug 2026, not currently active |
+
+Owner sequence after merge: **merge → preserve → decommission → metadata → public → LinkedIn**.
+
+---
+
 ## Decision (this charter)
 
 Akalynth now has a canonical architect skill. Cross-cutting work starts here,
 then routes to stewards. Specialist skills stay owners of their domains.
+No new Akalynth product development, roadmap, experiments, or commercial
+activity is in scope.
 
 ---
 
@@ -127,23 +152,27 @@ Confirm with `akalynth-system-audit` before opening new issues.
 
 ---
 
-## Next architect decisions (unresolved)
+## Remaining owner-side actions (not this checkout)
 
-1. Re-verify #399–#403 on `948c944` (or successor) and move each to
-   `state:ready` or close with evidence.
-2. Whether `docs/CURRENT_STAGE.md` should be re-reviewed against current
-   `main` (schema 27, play-surface contract, first-session work) without
-   raising the stage label.
-3. Whether `CONTINUATION_STATE.md` should be refreshed for post-July beta
-   / first-session work, or left as a dated ops snapshot.
-4. F-Droid remains a **human signing-authority** decision, not an agent
-   implement lane.
+1. Merge [PR #430](https://github.com/akalynth/akalynth/pull/430).
+2. Rotate or retire the historical `*.witnessops.com` staging hostname, **or**
+   explicitly accept that historical disclosure.
+3. Before decommissioning: preserve the beta receipt chain and SQLite state
+   if they are materially useful as irreconstructable project evidence.
+4. Decommission `beta.akalynth.com` and remaining Akalynth infrastructure.
+5. Set GitHub description and topics.
+6. Re-run a post-merge full-history + current-tree scan if anything else
+   landed on `main` after #430.
+7. Only then decide private → public.
+8. LinkedIn: **Akalynth — Server-Authoritative MMO Prototype**, January 2026 –
+   August 2026, not currently active; repo as primary media once public.
 
 ---
 
 ## Forbidden claims (repeat)
 
-- Game launch-ready / content-alpha / production-ready
+- Game launch-ready / content-alpha / production-ready / current venture
+- Repository is PUBLICATION_READY (it is not; the publication gate is closed)
 - F-Droid refreshed or aligned with the direct Android channel
 - Schema 27 or play-surface contract implies a live cohort or public launch
 - This charter "resolves" #399–#403
