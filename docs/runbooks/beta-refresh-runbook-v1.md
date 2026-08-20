@@ -21,11 +21,17 @@ Hard stop if preconditions fail.
 
 ## 2. Required target selection rules
 
-- Must be schema25 (SCHEMA_VERSION=25 + migrateToV25 + outfit_color_* columns + Outfits engine).
-- Must contain matching `infra/android/beta-client-update.json` with version_code 12 (direct channel).
+- Target must carry the **current source SCHEMA_VERSION** from
+  `apps/server/src/persist/schema.ts` (27 as of 2026-08-20, incl. `beta_cohorts`
+  release/rollback manifest-binding columns). Never trust a hardcoded schema
+  number in docs — re-read the source constant and the live DB each lane.
+- Must contain matching `infra/android/beta-client-update.json` with the
+  **current direct-channel version_code** (long-date ladder; 2026080704 as of
+  2026-08-20). Confirm against live
+  `/v1/client/android-update?lane=beta` before selecting.
 - Verify vs live DB: target schema >= live persisted (never regress). Use preflight.
 - Prefer container-built artifact over host-built.
-- Do not select targets with known 54c6-class schema mismatch (24 vs 25).
+- Do not select targets with known 54c6-class schema mismatch (historical example: code=24 vs db=25).
 - Record intended full SHA in every receipt and continuation update.
 
 ## 3. Build requirements
@@ -80,7 +86,9 @@ Hard stop if preconditions fail.
 - After 54c6 failure: schema gate is mandatory and must run against real DB (not just :memory:).
 - If target < live: block, abort, record, rollback if partial.
 - Record in receipt and continuation: "schema gate PASS" + versions.
-- For schema25: confirm migrateToV25 + 4 outfit_color_* columns present in dist.
+- Confirm the target's latest migration (`migrateToV<current>`) and its columns
+  are present in dist (v27: `beta_cohorts.release_manifest_sha256` +
+  `rollback_manifest_sha256`; earlier example — v25: outfit_color_* columns).
 
 ## 7. Runtime dependency requirements
 
@@ -93,11 +101,13 @@ Hard stop if preconditions fail.
 
 ## 8. Android direct-channel separation
 
-- Direct v12 is independent of runtime beta commit.
-- Verify: `beta-client-update.json` version_code=12, APK URL/SHA match on disk + HTTP, live API reports same.
+- The direct channel is independent of the runtime beta commit (long-date
+  version_code ladder; 2026080704 as of 2026-08-20; formerly fixed v12).
+- Verify: `beta-client-update.json` carries the current ladder version_code,
+  APK URL/SHA match on disk + HTTP, live API reports same.
 - Do not mutate direct APK or update JSON in runtime refresh lane.
 - Self-update resolver routes F-Droid vs direct appropriately.
-- Record in every receipt: "android_version_code": 12, "apk_url", sha if known.
+- Record in every receipt: "android_version_code": <current ladder value>, "apk_url", sha if known.
 - Never claim synchronization with F-Droid.
 
 ## 9. F-Droid hold rule
@@ -157,6 +167,11 @@ STOP and abort (do not proceed to live mutation) if:
 On stop: record failure receipt, preserve evidence, rollback if partial, update continuation.
 
 ---
+
+**Update log**:
+- 2026-08-20: generalized §2/§6/§8 target rules from hardcoded schema25/v12 to
+  current-source invariants (schema 27, direct-channel ladder 2026080704
+  observed live). Historical 54c6/V5 lessons retained unchanged.
 
 **Usage**: Source or reference in approved beta publish lanes. Combined with gates script and publish.sh staging logic.
 
