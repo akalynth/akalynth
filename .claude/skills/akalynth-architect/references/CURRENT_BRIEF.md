@@ -11,20 +11,19 @@ This brief orients the standing architect. It is **not** a proof artifact and
 
 ## Status (2026-08-20, final)
 
-**`PORTFOLIO_READY` / `PUBLICATION_GATE_CLOSED` / `INFRA_DECOMMISSIONED`**
+**`PORTFOLIO_READY` / `PUBLICATION_GATE_PASSED` / `INFRA_DECOMMISSIONED`**
 
 Repository-side cleanup is complete and merged (PR #430, `9cadd35`).
 Akalynth is a completed historical engineering project, not an operating
-company, product, or active roadmap. Public visibility is a **separate
-gate** from portfolio readiness.
+company, product, or active roadmap.
 
 | Gate | State |
 |---|---|
 | PR #430 (README, archived banner, cron removed, ops Caddyfile removed, hygiene fold, tree user@host scrub) | **Merged** (`9cadd35`) |
 | Current-tree credentials | Clean (gitleaks full-history; remaining hits are 8-char false positives) |
 | Current-tree user@host pairs | Zero |
-| Historical opaque `*.witnessops.com` hostname | Recoverable from Git history — **publication consideration, not a credential** |
-| Repo visibility | **Private** — do not flip until the WitnessOps hostname is rotated/retired **or** that historical disclosure is explicitly accepted |
+| Historical opaque `*.witnessops.com` hostname | **`DISCLOSURE_ACCEPTED`** — owner decision 2026-08-20: the historical hostname in Git history is explicitly accepted; no history rewrite, no rotation required. Publication gate satisfied by acceptance. |
+| Repo visibility | **Private** — publication gate passed; the private → public flip is now an unblocked owner action |
 | LinkedIn | After public: title **Akalynth — Server-Authoritative MMO Prototype**, Jan 2026 – Aug 2026, not currently active |
 
 ### Infrastructure decommission record (2026-08-20)
@@ -50,8 +49,8 @@ gate** from portfolio readiness.
   WitnessOps action is recorded here.
 
 Remaining owner sequence: **off-box archive copy → host destroy + DNS
-deletions → WitnessOps hostname rotation (or accepted disclosure) →
-metadata → public → LinkedIn**.
+deletions → metadata → public → LinkedIn**. (The WitnessOps hostname step
+is resolved by the accepted-disclosure decision above.)
 
 ---
 
