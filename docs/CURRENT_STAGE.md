@@ -1,5 +1,10 @@
 # Akalynth Current Stage
 
+> **ARCHIVED (2026-08-20):** Akalynth is a completed/archived project preserved
+> as a technical portfolio and reference implementation. It is not under active
+> development, and no operating company, product, or roadmap is implied. The
+> stage boundary below is retained as the historical claim record.
+>
 > **Purpose:** The repo-local boundary on what may be claimed/shown about Akalynth's maturity. If code and this doc disagree, treat the more conservative statement as binding until a verifier or proof run says otherwise.
 >
 > **Repo version:** `0.1.0` (see `package.json`). Last reviewed against `main` on 2026-05-30.

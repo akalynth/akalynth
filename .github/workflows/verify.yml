@@ -1,13 +1,14 @@
 name: Verification Spine
 
+# Archived project: the nightly schedule trigger was removed 2026-08-20 so the
+# repository carries no recurring automation. Push/PR/dispatch triggers remain
+# functional if self-hosted runners are ever reattached.
 on:
   pull_request:
     branches: [main]
   push:
     branches: [main]
   workflow_dispatch:
-  schedule:
-    - cron: "25 3 * * *"
 
 env:
   ANDROID_HOME: /usr/lib/android-sdk
@@ -25,7 +26,7 @@ jobs:
           {
             echo "## Verification Spine"
             echo ""
-            echo "Deep verification runs on push to main, manual dispatch, or the nightly schedule."
+            echo "Deep verification runs on push to main or manual dispatch."
             echo "Pull requests are gated by CI / PR merge gate (fast)."
           } >> "$GITHUB_STEP_SUMMARY"
 
