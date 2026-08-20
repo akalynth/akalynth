@@ -1,7 +1,8 @@
 # Akalynth Architect — Current Brief
 
-Last updated: **2026-08-20** against archival branch `cursor/portfolio-archive-4905`
-(`03dfefa` + this note), targeting post-merge `main` after [PR #430](https://github.com/akalynth/akalynth/pull/430).
+Last updated: **2026-08-20** against `main` at `1f0e71b`
+([PR #431](https://github.com/akalynth/akalynth/pull/431)), after the origin-point
+re-probe that found the repository already public.
 
 This brief orients the standing architect. It is **not** a proof artifact and
 **not** a release claim. Binding claim order: `docs/CURRENT_STAGE.md` →
@@ -13,18 +14,19 @@ This brief orients the standing architect. It is **not** a proof artifact and
 
 **`PORTFOLIO_READY` / `PUBLICATION_GATE_PASSED` / `INFRA_DECOMMISSIONED`**
 
-Repository-side cleanup is complete and merged (PR #430, `9cadd35`).
-Akalynth is a completed historical engineering project, not an operating
-company, product, or active roadmap.
+Repository-side cleanup is complete and merged (PR #430, `9cadd35`; PR #431,
+`1f0e71b`). Akalynth is a completed historical engineering project, not an
+operating company, product, or active roadmap.
 
 | Gate | State |
 |---|---|
 | PR #430 (README, archived banner, cron removed, ops Caddyfile removed, hygiene fold, tree user@host scrub) | **Merged** (`9cadd35`) |
+| PR #431 (decommission receipt anchors, accepted disclosures, 10/10 presentation) | **Merged** (`1f0e71b`) |
 | Current-tree credentials | Clean (gitleaks full-history; remaining hits are 8-char false positives) |
 | Current-tree user@host pairs | Zero |
 | Historical opaque `*.witnessops.com` hostname | **`DISCLOSURE_ACCEPTED`** — owner decision 2026-08-20: the historical hostname in Git history is explicitly accepted; no history rewrite, no rotation required. Publication gate satisfied by acceptance. |
-| Repo visibility | **Private** — publication gate passed; the private → public flip is now an unblocked owner action |
-| LinkedIn | After public: title **Akalynth — Server-Authoritative MMO Prototype**, Jan 2026 – Aug 2026, not currently active |
+| Repo visibility | **Public** — probed 2026-08-20 via `gh repo view` (`visibility=PUBLIC`, `isPrivate=false`). Description and topics are still empty. |
+| LinkedIn | Still owner-side: title **Akalynth — Server-Authoritative MMO Prototype**, Jan 2026 – Aug 2026, not currently active |
 
 ### Infrastructure decommission record (2026-08-20)
 
@@ -45,12 +47,15 @@ company, product, or active roadmap.
   SHA-256:
   `47916904da7f6b6c4fd84ad5327422ddbc5405b789b9e9eed40b35b90d34177d`
 - The retire archives live **outside Git** in operator custody; the hashes
-  above anchor them. No provider, DNS, deletion, GitHub-visibility, or
-  WitnessOps action is recorded here.
+  above anchor them. No provider, DNS, or deletion action is recorded here.
+  GitHub visibility is now public (probed; this brief does not claim who
+  flipped it). The WitnessOps hostname step is resolved by the accepted
+  disclosure.
 
 Remaining owner sequence: **off-box archive copy → host destroy + DNS
-deletions → metadata → public → LinkedIn**. (The WitnessOps hostname step
-is resolved by the accepted-disclosure decision above.)
+deletions → GitHub description/topics → LinkedIn**. The public flip is
+done. The WitnessOps hostname step is resolved by the accepted-disclosure
+decision above.
 
 ---
 
@@ -95,8 +100,8 @@ until a later review updates it.
 | Skills | Canonical `.claude/skills/` only | this skill + `release-steward` |
 
 World: Rookguard onboarding + High City player-facing name over legacy `Azura`
-runtime map id. Chill-zone gather → refine → deliver exists in source; live
-beta proof is a separate lane.
+runtime map id. Chill-zone gather → refine → deliver exists in source. Live
+beta proof is closed; hosts are retired.
 
 ---
 
@@ -104,16 +109,17 @@ beta proof is a separate lane.
 
 | Lane | Identity | Architect rule |
 |---|---|---|
-| Dev checkout | this tree; local `chronicle.key` / `ALLOW_INSECURE_LOCAL` | Safe to design and verify locally |
-| Beta | `beta-api.akalynth.com`, `/opt/akalynth-beta` on ops-dev-01 | Deploy only via `deploy-steward` + runbooks |
-| Prod | `api.akalynth.com`, `/opt/akalynth` | Separate host; no automatic beta→prod |
-| Direct Android | independent APK + update JSON | Do not reuse signer onto F-Droid |
-| F-Droid | held pending signing authority | No publication, no keystore inspection |
+| Dev checkout | this tree; local `chronicle.key` / `ALLOW_INSECURE_LOCAL` | Safe to verify locally; no new product work |
+| Beta | `beta-api.akalynth.com`, `/opt/akalynth-beta` | **Retired 2026-08-20.** Do not deploy or treat as live |
+| Prod | `api.akalynth.com`, `/opt/akalynth` | **Unreachable / unpreserved.** `PROD_CHAIN_UNPRESERVED_UNRECOVERABLE_ACCEPTED` |
+| Direct Android | historical APK + update JSON | Do not reuse signer onto F-Droid; no new publish |
+| F-Droid | held / frozen | No publication, no keystore inspection |
 
 Continuation-state file
-`.claude/skills/akalynth-continue/references/CONTINUATION_STATE.md` still
-describes 2026-07-09 beta V5 / F-Droid hold in detail. Treat it as **ops
-handoff**, then re-probe before acting. This brief is newer for **source HEAD**.
+`.claude/skills/akalynth-continue/references/CONTINUATION_STATE.md` opens
+with the 2026-08-20 origin point. Pre-2026-08-20 sections remain historical
+ops handoff (beta V5, F-Droid hold, Frozen First Playable Proof A1) and are
+not a current work queue. Re-probe before acting.
 
 ---
 
@@ -172,11 +178,11 @@ this section.
    destination.
 2. Provider console: destroy the two decommissioned VMs; delete the
    recorded Akalynth DNS records.
-3. Set GitHub description and topics.
-4. Flip the repository private → public (publication gate **passed** by the
-   accepted-disclosure decision).
+3. Set GitHub description and topics (still empty on the public repo).
+4. ~~Flip the repository private → public~~ — **done** (probed public
+   2026-08-20).
 5. LinkedIn: **Akalynth — Server-Authoritative MMO Prototype**, January 2026 –
-   August 2026, not currently active; repo as primary media once public.
+   August 2026, not currently active; repo as primary media.
 
 ---
 
@@ -186,7 +192,9 @@ this section.
 - An operating company, active roadmap, or maintenance programme exists
 - F-Droid refreshed or aligned with the direct Android channel
 - Schema 27 or play-surface contract implies a live cohort or public launch
-- Continuation state is a complete picture of final `main`
+- Live beta or prod is up
+- The repository is still private
+- Continuation history below the 2026-08-20 origin point is a current work queue
 
 ---
 

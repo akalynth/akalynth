@@ -1,10 +1,65 @@
 # Akalynth continuation state
 
-Last updated: **2026-08-12** (Frozen First Playable Proof A1 source lane implemented and locally verified; A2–A5 remain closed).
+Last updated: **2026-08-20** (origin point: archived public repo at `1f0e71b`; no in-repo product lane is open).
 
 Read this before implementing. For skill routing see `AGENTS.md` and `.codex/CODEX_MAP.md`.
+Binding claim order: `docs/CURRENT_STAGE.md` → `docs/KNOWN_GAPS.md` → `docs/V1_SCOPE.md` → a named verifier on a named commit.
+Standing architect map: `.claude/skills/akalynth-architect/references/CURRENT_BRIEF.md`.
 
-**Postmortem / Runbook cross-ref (AKALYNTH_BETA_REFRESH_POSTMORTEM_AND_RUNBOOK_APPLY_V1)**:
+**Sections dated before 2026-08-20 are historical ops handoff.** They describe beta V5, F-Droid hold, and Frozen First Playable Proof A1 as those lanes existed when they were live. They are **not** current work orders. Infra is decommissioned. Do not deploy, restart beta, inspect keystores, or treat A2 as next.
+
+---
+
+## 2026-08-20 — Origin point (archived portfolio)
+
+**Status:** `PORTFOLIO_READY` / `PUBLICATION_GATE_PASSED` / `INFRA_DECOMMISSIONED`
+
+**Probed this session (2026-08-20):**
+
+- `main` HEAD `1f0e71b` — `docs(archive): decommission receipts, accepted disclosures, 10/10 presentation` ([PR #431](https://github.com/akalynth/akalynth/pull/431))
+- Prior archive merge: `9cadd35` ([PR #430](https://github.com/akalynth/akalynth/pull/430))
+- GitHub `akalynth/akalynth`: **public**; description empty; topics unset
+- Open GitHub issues: 0
+- Open pull requests: 0
+- Linear Akalynth issues: 0
+
+**What this origin authorizes**
+
+- Read-only orientation and local verification of the archived tree
+- Handoff and docs hygiene so agents do not reopen closed lanes
+- Owner-requested metadata, LinkedIn, or provider actions only when explicitly asked
+
+**What this origin forbids**
+
+- New product development, roadmap, experiments, or commercial activity
+- A2–A5 (trusted proof-manifest install, beta restart, live cohort)
+- Beta or prod deploy, `/opt/akalynth*` mutation, signing-keystore inspection
+- F-Droid publication or signer reuse
+- Claims of launch-ready, content-alpha, or an operating company
+
+**Remaining owner-side (not granted by "Start")**
+
+1. Off-box copy of the retire archive and remanifest at the destination
+2. Provider console: destroy the two decommissioned VMs; delete recorded Akalynth DNS
+3. GitHub description and topics (still empty on the now-public repo)
+4. LinkedIn: title **Akalynth — Server-Authoritative MMO Prototype**, January 2026 – August 2026, not currently active
+
+**Safe claims**
+
+- Akalynth is a completed historical engineering project and a public portfolio repository
+- The source vertical slice and first-playable harness remain in tree (`npm run verify:beta-first-playable-proof` is a local loopback proof, not a live-beta claim)
+- Publication gate passed by the accepted WitnessOps-hostname disclosure; the private → public flip is done
+
+**Forbidden claims**
+
+- Live beta or prod is up
+- F-Droid aligned or refreshed
+- A2 is next
+- Continuation history below this section is a current work queue
+
+---
+
+**Postmortem / Runbook cross-ref (AKALYNTH_BETA_REFRESH_POSTMORTEM_AND_RUNBOOK_APPLY_V1)** — historical:
 - Postmortem: `docs/postmortems/AKALYNTH_BETA_REFRESH_V5_AND_PUBLIC_PROJECTION_POSTMORTEM_20260709.md` (timeline, failures 54c6/V3, root causes, controls, V5 success, evidence index, safe/forbidden claims, unresolved).
 - Runbook: `docs/runbooks/beta-refresh-runbook-v1.md` (preconditions, target rules, build/container, stage/preflight, schema gate, Android separation, F-Droid hold, public claim rule, rollback, receipts, hard stops).
 - Evidence summary: `docs/evidence/beta-refresh-v5-postmortem-summary.json`.
@@ -29,8 +84,8 @@ unauthorized.
 - Primary gate: `npm run verify:beta-first-playable-proof`.
 - No protocol, receipt schema, economy, combat, anti-cheat, database schema,
   deployment, active manifest, invite, or cohort behavior changed.
-- Next authority is A2: trusted proof-manifest installation and beta restart.
-  A2 is not granted by this handoff.
+- Next authority at the time was A2: trusted proof-manifest installation and
+  beta restart. **A2 was never granted and is closed at archival (2026-08-20).**
 
 ---
 
@@ -224,11 +279,11 @@ no more drift.
 
 | Item | Value |
 |------|--------|
-| Repo | `https://github.com/akalynth/akalynth` |
+| Repo | `https://github.com/akalynth/akalynth` (public; description and topics still empty) |
 | Branch | `main` |
-| Head | `c537ce0` — docs(continuation): update handoff for 2026-06-22 session (#349) |
-| Last merged | #345 Origin Act fix → #346 226dd25 reconcile + chronicle CI fix (`d088eb8`) → #348 web /play/ UI polish (`0504381`) → #349 handoff (`c537ce0`). Beta deployed clean from `origin/main`. |
-| Local source | `/home/sovereign/akalynth-ops/repos/akalynth` |
+| Head | `1f0e71b` — docs(archive): decommission receipts, accepted disclosures, 10/10 presentation (#431) |
+| Last merged | #430 portfolio archive (`9cadd35`) → #431 decommission receipts + presentation (`1f0e71b`). Historical 2026-06-22 line (`c537ce0`) is superseded. |
+| Local source | this checkout; historical ops path `/home/sovereign/akalynth-ops/repos/akalynth` is not this Cloud workspace |
 
 **Included in main since `8ee2d90` (2026-06-20 → 2026-06-21):**
 
@@ -453,21 +508,21 @@ Azura via `/play/`, with live smoke + evidence.
 
 ---
 
-## Open / next work (as of 2026-06-23 handoff)
+## Open / next work (historical 2026-06-23 list — closed at archival)
 
-1. ~~**Merge PR #348** (web `/play/` UI polish)~~ — **done** (merged `0504381`; #346 reconcile
-   `d088eb8` and #349 handoff `c537ce0` also merged). `origin/main` == what's live on beta.
-2. ~~**Full clean deploy of beta from `origin/main`**~~ — **done 2026-06-22** (`/opt` reconciled
-   `bceaf10 → c537ce0`, rebuilt + restarted + `/play/` republished + live smoke 28/28). See the
-   "Beta runtime — RECONCILED" note above. No drift remains.
-3. **AZURA_LOOP_ALIVE_V1 — publish + live proof** — implementation landed 2026-06-23; run
-   `npm run smoke:beta-azura-loop:browser` on ops-dev-01, then `publish-account-play` if UI diff
-   not yet on beta.
-4. **Chronicle-rust now on main (`crates/chronicle/`).** Rust parity gate still needs `cargo` on
-   runners (per `CI_WIRING.md`). Deferred until AZURA_LOOP_ALIVE_V1 accepted.
-5. ~~**Chill-zone refine step 4**~~ — **done** (#332 token-only keystone + refine_cadence heat;
-   beta flags on per `systemctl show`).
-6. **Prod** — every 2026-06-22+ change is **beta-only**; prod has NOT received any of it.
+The 2026-06-23 queue is **not current**. Infra is decommissioned; no beta or prod
+lane is live. Remaining work is owner-side only (see the 2026-08-20 origin-point
+section). Historical close notes below are retained as record.
+
+1. ~~**Merge PR #348** (web `/play/` UI polish)~~ — done (`0504381`).
+2. ~~**Full clean deploy of beta from `origin/main`**~~ — done 2026-06-22; later
+   superseded by V5 then by 2026-08-20 decommission.
+3. ~~**AZURA_LOOP_ALIVE_V1 — publish + live proof**~~ — closed with archival;
+   do not run live smokes against retired hosts.
+4. ~~**Chronicle-rust CI cargo gate**~~ — closed with archival.
+5. ~~**Chill-zone refine step 4**~~ — done (#332) while beta existed.
+6. ~~**Prod**~~ — never received the 2026-06-22+ line;
+   `PROD_CHAIN_UNPRESERVED_UNRECOVERABLE_ACCEPTED`.
 
 ---
 
